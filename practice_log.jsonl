@@ -1,0 +1,22 @@
+{"ts": "2026-11-13T19:31:46.842163-08:00", "id": "G-20261114-01", "subject": "文法", "point": "〜てくれる／もらう", "choice": "不知道，直接给我讲", "correct": false, "source": "chat_tutor"}
+{"ts": "2026-11-13T21:56:34.133605-08:00", "id": "G-20261114-01-twin", "subject": "文法", "point": "〜てくれる／もらう", "choice": "不知道，再讲一下", "correct": false, "source": "chat_tutor"}
+{"id": "G-20261114-01", "point": "〜てくれる／もらう", "choice": "不知道", "correct": "false", "ask_again": "false", "ts": "2026-11-13T22:02:37.291624-08:00"}
+{"id": "G-20261114-01", "point": "〜てくれる／もらう", "choice": "くれた", "correct": "false", "ask_again": "false", "ts": "2026-11-13T22:03:24.665050-08:00"}
+{"id": "G-20261114-01", "point": "〜てくれる／もらう", "choice": "くれた", "correct": "false", "ask_again": "true", "ts": "2026-11-13T22:03:34.201781-08:00"}
+{"id": "G-20261114-01", "point": "〜てくれる／もらう", "choice": "もらった", "correct": "true", "ask_again": "false", "ts": "2026-11-13T22:15:33.916316-08:00"}
+{"id": "Q-20261114-001", "point": "口语听辨", "choice": "夕飯、おいしかったね。", "correct": "false", "ask_again": "false", "ts": "2026-11-13T22:16:58.072918-08:00"}
+{"id": "V-20261114-01", "point": "しゃがむ", "choice": "さけんで", "correct": "false", "ask_again": "false", "ts": "2026-11-13T22:21:31.458713-08:00"}
+{"id": "H-20261114-01", "point": "召し上がる vs いただく", "choice": "召し上がって", "correct": "true", "ask_again": "false", "ts": "2026-11-13T22:22:06.649207-08:00"}
+{"id": "G-20261114-02", "point": "〜ところだ", "choice": "ところ", "correct": "true", "ask_again": "false", "ts": "2026-11-13T22:22:31.120965-08:00"}
+{"id": "Q-20261114-002", "point": "口语听辨", "choice": "袋はいらない。", "correct": "true", "ask_again": "false", "ts": "2026-11-13T22:22:51.942184-08:00"}
+{"id": "V-20261114-02", "point": "がらがら", "choice": "がらがら", "correct": "true", "ask_again": "false", "ts": "2026-11-13T22:26:42.965571-08:00"}
+{"id": "H-20261114-02", "point": "受身 vs 使役", "choice": "踏まれて", "correct": "true", "ask_again": "false", "ts": "2026-11-13T22:26:57.859554-08:00"}
+{"id": "G-20261114-03", "point": "〜からこそ", "choice": "からこそ", "correct": "true", "ask_again": "false", "ts": "2026-11-13T22:27:12.614827-08:00"}
+{"id": "Q-20261114-003", "point": "口语听辨", "choice": "不知道", "correct": "false", "ask_again": "false", "ts": "2026-11-13T22:28:55.570105-08:00"}
+{"id": "V-20261114-03", "point": "内緒", "choice": "ないしゅ", "correct": "false", "ask_again": "false", "ts": "2026-11-13T22:32:19.029873-08:00"}
+{"id": "H-20261114-03", "point": "落ちる vs 落とす", "choice": "落として", "correct": "true", "ask_again": "false", "ts": "2026-11-13T22:32:26.514998-08:00"}
+{"id": "G-20261114-04", "point": "〜ものだ", "choice": "もの", "correct": "true", "ask_again": "false", "ts": "2026-11-13T22:32:39.539612-08:00"}
+{"id": "Q-20261114-004", "point": "口语听辨", "choice": "不知道", "correct": "false", "ask_again": "false", "ts": "2026-11-13T22:32:53.054434-08:00"}
+{"id": "V-20261114-04", "point": "貯める", "choice": "ためる", "correct": "true", "ask_again": "false", "ts": "2026-11-13T22:33:16.479536-08:00"}
+{"id": "H-20261114-04", "point": "消える vs 消す", "choice": "消した", "correct": "false", "ask_again": "false", "ts": "2026-11-13T22:33:31.544371-08:00"}
+{"id": "G-20261114-01", "point": "〜てくれる／もらう", "choice": "もらった", "correct": "true", "ask_again": "false", "ts": "2026-11-13T22:40:32.759071-08:00"}
