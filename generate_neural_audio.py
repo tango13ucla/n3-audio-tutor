@@ -66,7 +66,7 @@ KANJI_FORCE_KANA = {
 }
 
 JA_PHRASE_OVERRIDES = [
-    ("みんなの前で日本語でスピーチを話させられた", "みんなのまえで、にほんごですぴーちを、はなさせられた"),
+    ("みんなの前で日本語でスピーチを話させられた", "みんなのまえで、にほんごでスピーチを、はなさせられた"),
     ("みんなの前で話させられた", "みんなのまえで、はなさせられた"),
     ("お風呂に入らないで", "おふろに、はいらないで"),
     ("私が払っておく", "わたしが、はらっておく"),
@@ -77,12 +77,13 @@ JA_PHRASE_OVERRIDES = [
     ("しゃがんで話しかけた", "しゃがんで、はなしかけた"),
     ("会議で話し合った", "かいぎで、はなしあった"),
     ("みんなには内緒", "みんなには、ないしょ"),
+    ("レシートはここにある", "レシートは、ここにある"),
     ("解き方", "ときかた"),
     ("昼ご飯", "ひるごはん"),
     ("隣の人に", "となりのひとに"),
     ("親切な人が", "しんせつなひとが"),
     ("お金", "おかね"),
-    ("ダイエット中", "だいえっとちゅう"),
+    ("ダイエット中", "ダイエットちゅう"),
     ("後にして", "あとにして"),
     ("雨が降りそうだ", "あめがふりそうだ"),
     ("野菜嫌い", "やさいぎらい"),
@@ -129,7 +130,14 @@ def ja_sentence_to_kana(text: str) -> str:
         s = s.replace(src, dst)
     if _KKS is not None:
         conv = _KKS.convert(s)
-        s = "".join(item.get("hira") or item.get("orig", "") for item in conv)
+        out_parts = []
+        for item in conv:
+            orig = item.get("orig", "")
+            if re.search(r"[\u4e00-\u9fff0-9０-９]", orig):
+                out_parts.append(item.get("hira") or orig)
+            else:
+                out_parts.append(orig)
+        s = "".join(out_parts)
     # Guard against では/には particle misparse before word-initial は
     s = s.replace("まえではなさせ", "まえで、はなさせ").replace("おふろにはいら", "おふろに、はいら")
     return s
@@ -429,17 +437,17 @@ async def main():
                 q_expanded.extend(expand_q_turn(spk, val))
             to_build_q[qid] = q_expanded
 
-        e_sig = f"v17e:{det_tag}:" + json.dumps(card["exp_turns"], ensure_ascii=False)
+        spk_set = {s for s, _ in card["exp_turns"]}
+        two_spk = ("JF" in spk_set and "JM" in spk_set)
+        e_expanded = []
+        for spk, val in card["exp_turns"]:
+            e_expanded.extend(expand_exp_turn(spk, val, two_spk))
+        e_sig = f"v17e:{det_tag}:" + json.dumps(e_expanded, ensure_ascii=False)
         e_hash = hashlib.sha256(e_sig.encode("utf-8")).hexdigest()[:12]
         hashes_exp[qid] = e_hash
         e_file = f"{qid}_exp.mp3"
         e_abs = os.path.join(AUDIO_DIR, e_file)
         if old_manifest.get(e_file) != e_hash or not os.path.exists(e_abs):
-            spk_set = {s for s, _ in card["exp_turns"]}
-            two_spk = ("JF" in spk_set and "JM" in spk_set)
-            e_expanded = []
-            for spk, val in card["exp_turns"]:
-                e_expanded.extend(expand_exp_turn(spk, val, two_spk))
             to_build_exp[qid] = e_expanded
 
     sem = asyncio.Semaphore(12)
