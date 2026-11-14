@@ -1,4 +1,4 @@
-const CACHE_NAME = "n3-studio-tutor-v6";
+const CACHE_NAME = "n3-studio-tutor-v7";
 const CORE_SHELL = [
   "./",
   "./index.html",
