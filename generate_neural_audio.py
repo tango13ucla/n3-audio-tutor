@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Synthesizes & stitches Studio Human-Teacher Neural TTS MP3 files (generate_neural_audio.py — Zen v11):
-- Voice Tier 1 (Optional Studio Key): Google Gemini 2.5 Flash Preview TTS when GEMINI_API_KEY is set.
-- Voice Tier 2 (Default Keyless SOTA): Microsoft Conversational Multilingual LLM-Prosody Voice
-  (`zh-CN-XiaoxiaoMultilingualNeural` at natural +0% pace) so ONE warm bilingual teacher ("T") speaks
-  both Mandarin and inline Japanese kana in a single uninterrupted human breath (zero mid-sentence voice chopping).
-- Pure Japanese Question Reading (`q_turns`): `ja-JP-NanamiNeural` / `ja-JP-KeitaNeural` at `-2%`
-  with ZERO "请听题", ZERO "空欄", ZERO "选", ZERO spoilers.
-- Strips leading/trailing <-55dB digital silence AND applies 12ms cosine micro-fades for zero clicks.
-- Synthesizes word pronunciations across WORD_DICT + EXTRA_WORDS + SENTENCE_LEXICON so every tapped word
-  has instant meaning + native Japanese audio.
+Synthesizes & stitches Studio Human-Teacher Neural TTS MP3 files (generate_neural_audio.py — Zen v15):
+- Pure Japanese Question & Blind-Listening Reading (`q_turns` -> `*_q.mp3`):
+  `ja-JP-NanamiNeural` / `ja-JP-KeitaNeural` slowed to `-28%` (~30% slower for crystal-clear moras),
+  with ZERO "请听题", ZERO "空欄", ZERO spoilers.
+- 100% Same-Person Bilingual Teacher Explanation (`exp_turns` -> `*_exp.mp3`):
+  Uses warm conversational `en-US-AndrewMultilingualNeural` speaking brisk Mandarin at `+5%` (`T`)
+  AND slow, crystal-clear Japanese at `-34%` (`T_JA`) — including converting the opening Japanese
+  sentence to Kana via `pykakasi` + N3 reading overrides so ONE human voice reads both the Japanese
+  sentence and the Chinese+Japanese explanation with zero "tape-recorder" voice jumps!
 """
 import asyncio
 import hashlib
@@ -29,6 +28,12 @@ try:
     import edge_tts
 except Exception:
     edge_tts = None
+
+try:
+    import pykakasi
+    _KKS = pykakasi.kakasi()
+except Exception:
+    _KKS = None
 
 try:
     from google import genai
@@ -52,109 +57,163 @@ MAX_TRIES = 4 if os.environ.get("GITHUB_ACTIONS") == "true" else 1
 GEMINI_API_KEY = (os.environ.get("GEMINI_API_KEY") or "").strip()
 GEMINI_TTS_MODEL = os.environ.get("GEMINI_TTS_MODEL", "gemini-2.5-flash-preview-tts")
 
-KANA_RE = re.compile(r"([\u3040-\u30ffー]+)")
+JA_SPAN_RE = re.compile(r"([\u3040-\u30ffー]+(?:[、。！？\s]+[\u3040-\u30ffー]+)*[。！？]?)")
 
 KANJI_FORCE_KANA = {
     "半年", "内緒", "貯める", "貯金", "出張", "主張", "書類", "万年筆",
     "封筒", "終電", "寮", "私用", "風邪", "一日中", "三日間", "今週中", "夜中",
 }
 
+JA_PHRASE_OVERRIDES = [
+    ("みんなの前で日本語でスピーチを話させられた", "みんなのまえで、にほんごですぴーちを、はなさせられた"),
+    ("みんなの前で話させられた", "みんなのまえで、はなさせられた"),
+    ("お風呂に入らないで", "おふろに、はいらないで"),
+    ("私が払っておく", "わたしが、はらっておく"),
+    ("１０年", "じゅうねん"),
+    ("十年", "じゅうねん"),
+    ("１１時", "じゅういちじ"),
+    ("十一時", "じゅういちじ"),
+    ("九時", "くじ"),
+    ("五時", "ごじ"),
+    ("三日間", "みっかかん"),
+    ("一日中", "いちにちじゅう"),
+    ("今週中", "こんしゅうじゅう"),
+    ("今週じゅう", "こんしゅうじゅう"),
+    ("夜中", "よなか"),
+    ("半年", "はんとし"),
+    ("内緒", "ないしょ"),
+    ("海外出張中", "かいがいしゅっちょうちゅう"),
+    ("出張", "しゅっちょう"),
+    ("主張", "しゅちょう"),
+    ("書類", "しょるい"),
+    ("種類", "しゅるい"),
+    ("私用", "しよう"),
+    ("お宅", "おたく"),
+    ("風邪", "かぜ"),
+    ("人数分", "にんずうぶん"),
+    ("夕飯", "ゆうはん"),
+    ("支度", "したく"),
+    ("昨日", "きのう"),
+    ("今日", "きょう"),
+    ("明日", "あした"),
+    ("上手", "じょうず"),
+    ("本当", "ほんとう"),
+    ("少子化", "しょうしか"),
+]
 
-async def detect_voice_map() -> tuple[dict, set]:
-    vmap = {
-        "JF": ("ja-JP-NanamiNeural", "-2%"),
-        "JM": ("ja-JP-KeitaNeural", "-2%"),
-        "T": ("zh-CN-XiaoxiaoNeural", "+0%"),
-        "F": ("zh-CN-XiaoxiaoNeural", "+0%"),
-        "M": ("zh-CN-YunxiNeural", "+0%"),
+
+def ja_sentence_to_kana(text: str) -> str:
+    s = str(text).strip()
+    for src, dst in JA_PHRASE_OVERRIDES:
+        s = s.replace(src, dst)
+    if _KKS is not None:
+        conv = _KKS.convert(s)
+        s = "".join(item.get("hira") or item.get("orig", "") for item in conv)
+    # Guard against では/には particle misparse before word-initial は
+    s = s.replace("まえではなさせ", "まえで、はなさせ").replace("おふろにはいら", "おふろに、はいら")
+    return s
+
+
+async def detect_voice_map() -> dict:
+    t_voice = "en-US-AndrewMultilingualNeural"
+    f_ja_voice = "en-US-AvaMultilingualNeural"
+    if edge_tts is not None:
+        try:
+            voices = await edge_tts.list_voices(**COMM_KWARGS)
+            short_names = {v.get("ShortName", "") for v in voices}
+            for cand_t in (
+                "en-US-AndrewMultilingualNeural",
+                "en-US-BrianMultilingualNeural",
+                "en-US-EmmaMultilingualNeural",
+            ):
+                if cand_t in short_names:
+                    t_voice = cand_t
+                    break
+            for cand_f in ("en-US-AvaMultilingualNeural", "en-US-EmmaMultilingualNeural"):
+                if cand_f in short_names:
+                    f_ja_voice = cand_f
+                    break
+            print(f"Quiz Zen v15 voices: T={t_voice} (+5% ZH / -34% JA), JF/JM=-28%")
+        except Exception as e:
+            print(f"[info] list_voices fallback: {e}")
+
+    return {
+        "JF": ("ja-JP-NanamiNeural", "-28%"),
+        "JM": ("ja-JP-KeitaNeural", "-28%"),
+        "T": (t_voice, "+5%"),
+        "T_JA": (t_voice, "-34%"),
+        "EXP_F_JA": (f_ja_voice, "-34%"),
     }
-    multilingual_speakers = set()
-    if edge_tts is None:
-        return vmap, multilingual_speakers
-    try:
-        voices = await edge_tts.list_voices(**COMM_KWARGS)
-        short_names = {v.get("ShortName", "") for v in voices}
-        for cand_t in (
-            "en-US-EmmaMultilingualNeural",
-            "en-US-AvaMultilingualNeural",
-            "zh-CN-XiaoxiaoMultilingualNeural",
-        ):
-            if cand_t in short_names:
-                vmap["T"] = (cand_t, "+0%")
-                vmap["F"] = (cand_t, "+0%")
-                multilingual_speakers.update({"T", "F"})
-                break
-        for cand_m in (
-            "ko-KR-HyunsuMultilingualNeural",
-            "fr-FR-RemyMultilingualNeural",
-            "en-US-BrianMultilingualNeural",
-        ):
-            if cand_m in short_names:
-                vmap["M"] = (cand_m, "+0%")
-                multilingual_speakers.add("M")
-                break
-        print(
-            f"Card voices selected: T={vmap['T'][0]} ({vmap['T'][1]}), "
-            f"JF={vmap['JF'][0]}, JM={vmap['JM'][0]}, multilingual={sorted(multilingual_speakers)}"
-        )
-    except Exception as e:
-        print(f"[info] list_voices fallback: {e}")
-    return vmap, multilingual_speakers
 
 
-def expand_turn_events(spk: str, val, multilingual_speakers: set) -> list:
+def expand_q_turn(spk: str, val) -> list:
     if spk == "PAUSE":
         return [("PAUSE", float(val))]
+    return [(spk, str(val).strip())]
+
+
+def expand_exp_turn(spk: str, val, two_speaker_dialogue: bool) -> list:
+    if spk == "PAUSE":
+        return [("PAUSE", round(max(float(val), 0.34), 2))]
     txt = str(val).strip()
-    if spk in ("T", "F", "M") and KANA_RE.search(txt):
-        kana_spk = spk if spk in multilingual_speakers else ("JM" if spk == "M" else "JF")
-        parts = KANA_RE.split(txt)
+    if spk in ("JF", "JM"):
+        kana_txt = ja_sentence_to_kana(txt)
+        if not kana_txt.endswith(("。", "！", "？")):
+            kana_txt += "。"
+        target_spk = "EXP_F_JA" if (two_speaker_dialogue and spk == "JF") else "T_JA"
+        return [(target_spk, kana_txt)]
+
+    # Teacher bilingual turn ("T"): brisk +5% Mandarin + slow -34% inline Japanese in the SAME voice!
+    if JA_SPAN_RE.search(txt):
+        parts = JA_SPAN_RE.split(txt)
         out = []
         pending_pause = 0.0
         for idx, pt in enumerate(parts):
             if not pt:
                 continue
             if idx % 2 == 1:
-                ks = pt.strip()
+                ks = re.sub(r"\s+", "", pt.strip())
                 if not ks:
                     continue
+                ks = ks.replace("まえではなさせ", "まえで、はなさせ").replace("おふろにはいら", "おふろに、はいら")
                 if out:
-                    out.append(("PAUSE", round(pending_pause or 0.04, 2)))
-                out.append((kana_spk, ks if ks.endswith("。") else ks + "。"))
-                pending_pause = 0.04
+                    out.append(("PAUSE", round(max(pending_pause, 0.16), 2)))
+                ended_punct = ks[-1] in "。！？"
+                out.append(("T_JA", ks if ended_punct else (ks + "。")))
+                pending_pause = 0.32 if len(ks) >= 6 else 0.20
             else:
                 lead_m = re.match(r"^[\s』」）]*([。！？；，、：]+)[\s『「（]*", pt)
                 if lead_m:
                     pchars = lead_m.group(1)
                     if any(c in pchars for c in "。！？；"):
-                        pending_pause = max(pending_pause, 0.24)
+                        pending_pause = max(pending_pause, 0.30)
                     else:
-                        pending_pause = max(pending_pause, 0.13)
+                        pending_pause = max(pending_pause, 0.18)
                     pt = pt[lead_m.end():]
                 pt_s = pt.strip()
                 if not pt_s or not re.search(r"[\w\u3040-\u9fff]", pt_s):
                     continue
                 if out:
-                    out.append(("PAUSE", round(pending_pause or 0.04, 2)))
-                out.append((spk, pt_s))
+                    out.append(("PAUSE", round(max(pending_pause, 0.14), 2)))
+                out.append(("T", pt_s))
                 if pt_s[-1] in "。！？；":
-                    pending_pause = 0.22
+                    pending_pause = 0.24
                 elif pt_s[-1] in "，、：":
-                    pending_pause = 0.12
+                    pending_pause = 0.16
                 else:
-                    pending_pause = 0.04
-        return out if out else [(spk, txt)]
-    return [(spk, txt)]
+                    pending_pause = 0.14
+        return out if out else [("T", txt)]
+    return [("T", txt)]
 
 
 def synth_gemini_tts_sync(spk: str, text: str, out_mp3: str) -> bool:
     if not (GEMINI_API_KEY and genai is not None and genai_types is not None):
         return False
-    voice_name = "Aoede" if spk in ("T", "F", "JF") else "Puck"
+    voice_name = "Aoede" if spk in ("JF", "EXP_F_JA") else "Charon"
     prompt = (
-        f"Speak naturally like a calm, warm, real human Japanese teacher in a quiet room: {text}"
-        if spk in ("T", "F", "M")
-        else text
+        f"Speak briskly, warmly, and naturally in Mandarin like a witty friend: {text}"
+        if spk == "T"
+        else f"Speak this Japanese slowly, clearly, and distinctly: {text}"
     )
     try:
         client = genai.Client(api_key=GEMINI_API_KEY)
@@ -195,7 +254,7 @@ def synth_gemini_tts_sync(spk: str, text: str, out_mp3: str) -> bool:
 
 async def synth_raw_clip(spk: str, voice: str, rate: str, text: str, out_path: str, sem: asyncio.Semaphore) -> bool:
     async with sem:
-        if GEMINI_API_KEY and genai is not None and spk in ("T", "F", "M"):
+        if GEMINI_API_KEY and genai is not None and spk in ("T", "T_JA", "EXP_F_JA"):
             ok = await asyncio.to_thread(synth_gemini_tts_sync, spk, text, out_path)
             if ok:
                 return True
@@ -315,8 +374,8 @@ async def main():
     new_manifest = {"words": dict(old_words)}
     can_synth = (edge_tts is not None) and (shutil.which("ffmpeg") is not None)
 
-    voice_map, multilingual_speakers = await detect_voice_map()
-    engine_tag = f"gemini:{GEMINI_TTS_MODEL}" if (GEMINI_API_KEY and genai is not None) else f"edge:{voice_map['T'][0]}:{voice_map['T'][1]}"
+    voice_map = await detect_voice_map()
+    det_tag = f"gemini:{GEMINI_TTS_MODEL}" if (GEMINI_API_KEY and genai is not None) else "edge:Andrew+5_-34"
 
     to_build_q = {}
     to_build_exp = {}
@@ -324,32 +383,34 @@ async def main():
     hashes_exp = {}
 
     for qid, card in CARDS_75.items():
-        q_expanded = []
-        for spk, val in card["q_turns"]:
-            q_expanded.extend(expand_turn_events(spk, val, multilingual_speakers))
-        q_sig = f"v12q:{voice_map['JF'][0]}:" + json.dumps(q_expanded, ensure_ascii=False)
+        q_sig = "v15q:-28%:" + json.dumps(card["q_turns"], ensure_ascii=False)
         q_hash = hashlib.sha256(q_sig.encode("utf-8")).hexdigest()[:12]
         hashes_q[qid] = q_hash
         q_file = f"{qid}_q.mp3"
         q_abs = os.path.join(AUDIO_DIR, q_file)
         if old_manifest.get(q_file) != q_hash or not os.path.exists(q_abs):
+            q_expanded = []
+            for spk, val in card["q_turns"]:
+                q_expanded.extend(expand_q_turn(spk, val))
             to_build_q[qid] = q_expanded
 
-        e_expanded = []
-        for spk, val in card["exp_turns"]:
-            e_expanded.extend(expand_turn_events(spk, val, multilingual_speakers))
-        e_sig = f"v12e:{engine_tag}:" + json.dumps(e_expanded, ensure_ascii=False)
+        e_sig = f"v15e:{det_tag}:" + json.dumps(card["exp_turns"], ensure_ascii=False)
         e_hash = hashlib.sha256(e_sig.encode("utf-8")).hexdigest()[:12]
         hashes_exp[qid] = e_hash
         e_file = f"{qid}_exp.mp3"
         e_abs = os.path.join(AUDIO_DIR, e_file)
         if old_manifest.get(e_file) != e_hash or not os.path.exists(e_abs):
+            spk_set = {s for s, _ in card["exp_turns"]}
+            two_spk = ("JF" in spk_set and "JM" in spk_set)
+            e_expanded = []
+            for spk, val in card["exp_turns"]:
+                e_expanded.extend(expand_exp_turn(spk, val, two_spk))
             to_build_exp[qid] = e_expanded
 
     sem = asyncio.Semaphore(8)
 
     if can_synth and (to_build_q or to_build_exp):
-        tmpdir = tempfile.mkdtemp(prefix="n3_cards_v12_")
+        tmpdir = tempfile.mkdtemp(prefix="n3_cards_v15_")
         try:
             needed_clips = {}
             needed_pauses = set()
@@ -396,7 +457,7 @@ async def main():
                 if stitch_turns(turns, clip_lookup, silence_lookup, e_abs, tmpdir, f"e_{qid}"):
                     built_e_cnt += 1
 
-            print(f"Synthesized & trimmed {built_q_cnt}/{len(to_build_q)} Q MP3s and {built_e_cnt}/{len(to_build_exp)} Exp MP3s.")
+            print(f"Synthesized & trimmed {built_q_cnt}/{len(to_build_q)} Q MP3s (-28%) and {built_e_cnt}/{len(to_build_exp)} Exp MP3s (+5% ZH / -34% JA).")
         finally:
             shutil.rmtree(tmpdir, ignore_errors=True)
 
@@ -451,14 +512,14 @@ async def main():
         w_file = f"w_{w_hash}.mp3"
         w_abs = os.path.join(WORDS_AUDIO_DIR, w_file)
         if not os.path.exists(w_abs) and can_synth:
-            await synth_raw_clip("JF", "ja-JP-NanamiNeural", "-3%", speak_str, w_abs, word_sem)
+            await synth_raw_clip("JF", "ja-JP-NanamiNeural", "-22%", speak_str, w_abs, word_sem)
         if os.path.exists(w_abs):
             new_manifest["words"][surface] = f"./audio/words/{w_file}"
 
     await asyncio.gather(*(process_word(surf, info) for surf, info in merged_words.items()))
 
-    done_txt = "今天这五十个考点全部过关了。再把随身听顺完，一百二十分就稳稳拿住了，好好休息吧。"
-    done_hash = hashlib.sha256((f"v11:{engine_tag}:" + done_txt).encode("utf-8")).hexdigest()[:12]
+    done_txt = "今天这五十个考点全部过关了。再去听一段三人闲聊，一百二十分就稳稳拿住了，好好歇会儿吧。"
+    done_hash = hashlib.sha256((f"v15:{det_tag}:" + done_txt).encode("utf-8")).hexdigest()[:12]
     done_abs = os.path.join(AUDIO_DIR, "done.mp3")
     if (old_manifest.get("done.mp3") != done_hash or not os.path.exists(done_abs)) and can_synth:
         await synth_raw_clip("T", voice_map["T"][0], voice_map["T"][1], done_txt, done_abs, sem)
@@ -467,7 +528,7 @@ async def main():
 
     with open(MANIFEST_PATH, "w", encoding="utf-8") as f:
         json.dump(new_manifest, f, ensure_ascii=False, indent=2)
-    print(f"Verified {len(CARDS_75)} studio v11 Q/Exp pairs + {len(new_manifest['words'])} word pronunciations.")
+    print(f"Verified {len(CARDS_75)} studio Zen v15 Q/Exp pairs + {len(new_manifest['words'])} word pronunciations.")
 
 
 if __name__ == "__main__":

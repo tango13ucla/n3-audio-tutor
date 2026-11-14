@@ -47,18 +47,18 @@ if os.path.exists(AUDIO_MANIFEST_PATH):
 
 radio_meta = {
     "date": live_state.get("updated_at", "2026-11-14")[:10],
-    "display_date": "三人闲聊",
+    "display_date": "锵锵三人",
     "audio_url": "./audio/daily_radio.mp3",
     "duration_sec": 2100.0,
-    "duration_label": "35 分钟",
-    "hosts": "老文 · 老梁 · 小夏",
+    "duration_label": "36 分钟",
+    "hosts": "文涛 · 文道 · 子东",
     "chapters": [
-        {"idx": 0, "title": "便利店", "start": 0},
-        {"idx": 1, "title": "饭局", "start": 420},
-        {"idx": 2, "title": "早高峰", "start": 780},
-        {"idx": 3, "title": "夸与损", "start": 1140},
-        {"idx": 4, "title": "末班车", "start": 1460},
-        {"idx": 5, "title": "去大阪", "start": 1820},
+        {"idx": 0, "title": "逐客茶", "start": 0},
+        {"idx": 1, "title": "圆山町", "start": 380},
+        {"idx": 2, "title": "早高峰", "start": 740},
+        {"idx": 3, "title": "银座夜话", "start": 1100},
+        {"idx": 4, "title": "阴翳之美", "start": 1460},
+        {"idx": 5, "title": "歌舞伎町", "start": 1820},
     ],
     "segments": [],
 }
@@ -68,9 +68,9 @@ if os.path.exists(RADIO_META_PATH):
             loaded_rm = json.load(f)
             if loaded_rm.get("audio_url"):
                 radio_meta = loaded_rm
-                radio_meta["display_date"] = "三人闲聊"
-                if not radio_meta.get("hosts") or "阿哲" in radio_meta.get("hosts", ""):
-                    radio_meta["hosts"] = "老文 · 老梁 · 小夏"
+                radio_meta["display_date"] = "锵锵三人"
+                if not radio_meta.get("hosts") or any(old_h in radio_meta.get("hosts", "") for old_h in ("阿哲", "老文", "小夏")):
+                    radio_meta["hosts"] = "文涛 · 文道 · 子东"
     except Exception:
         pass
 
@@ -1597,15 +1597,15 @@ html = r"""<!DOCTYPE html>
   <section class="zen-panel hidden" id="radio-view">
     <div class="stage-wrap">
       <div class="meta-bar">
-        <span class="overline" id="radio-date-pill">三人圆桌 · 老文 · 老梁 · 小夏</span>
+        <span class="overline" id="radio-date-pill">锵锵三人 · 文涛 · 文道 · 子东</span>
         <div class="quiet-actions">
           <button class="text-btn" id="radio-spd-btn" onclick="cycleRadioSpeed()">1.0x</button>
         </div>
       </div>
 
       <div class="radio-center">
-        <div class="radio-chap" id="radio-chap-lbl">便利店</div>
-        <h2 class="radio-topic" id="radio-live-title">三人圆桌闲聊</h2>
+        <div class="radio-chap" id="radio-chap-lbl">逐客茶</div>
+        <h2 class="radio-topic" id="radio-live-title">日本文化夜话</h2>
         <p class="radio-ja" id="radio-live-ja"></p>
         <div class="inline-lex empty" id="radio-inline-lex"></div>
       </div>
@@ -2891,8 +2891,8 @@ function ensureRadioReady() {
     if (savedPos > 3 && savedPos < (DATA.radio.duration_sec || 2400) - 10) {
       radioPlayer.currentTime = savedPos;
     }
-    const hostsLabel = DATA.radio.hosts || "老文 · 老梁 · 小夏";
-    document.getElementById("radio-date-pill").textContent = `三人圆桌 · ${hostsLabel}`;
+    const hostsLabel = DATA.radio.hosts || "文涛 · 文道 · 子东";
+    document.getElementById("radio-date-pill").textContent = `锵锵三人 · ${hostsLabel}`;
     document.getElementById("radio-spd-btn").textContent = `${radioSpeed}x`;
     const seekEl = document.getElementById("radio-seek");
     seekEl.max = Math.ceil(DATA.radio.duration_sec || 2100);
@@ -2909,8 +2909,8 @@ function setupMediaSession(segTitle) {
   if (!("mediaSession" in navigator)) return;
   try {
     navigator.mediaSession.metadata = new MediaMetadata({
-      title: segTitle || "N3 三人圆桌随身听",
-      artist: DATA.radio.hosts || "老文 · 老梁 · 小夏",
+      title: segTitle || "锵锵三人 · 日本文化随身听",
+      artist: DATA.radio.hosts || "文涛 · 文道 · 子东",
       album: "JLPT N3"
     });
     navigator.mediaSession.setActionHandler("play", () => toggleRadioPlay(true));

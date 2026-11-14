@@ -35,3 +35,7 @@
 {"id": "GROK-480", "point": "N3L-025", "correct": true, "ask_again": true, "source": "grok", "ts": "grok:480:2026-11-14 10:17"}
 {"id": "G-20261114-12", "point": "〜ことになる", "choice": "行くことになった", "correct": "true", "ask_again": "false", "ts": "2026-11-14T20:46:52.000Z"}
 {"id": "G-20261114-10", "point": "〜はずだ", "choice": "不确定", "correct": "false", "ask_again": "false", "ts": "2026-11-14T20:47:30.000Z"}
+{"id": "G-20261114-06", "point": "〜にしては", "choice": "にとって", "correct": "false", "ask_again": "false", "ts": "2026-11-14T21:39:37.000Z"}
+{"id": "VAR-L01", "point": "N3L-015", "choice": "不确定", "correct": "false", "ask_again": "false", "ts": "2026-11-14T21:40:08.000Z"}
+{"id": "Q-20261114-003", "point": "N3L-025", "choice": "えっ、本当？あそこ好きだったのに。", "correct": "true", "ask_again": "false", "ts": "2026-11-14T21:41:14.000Z"}
+{"id": "V-20261114-03", "point": "内緒", "choice": "ないしょう", "correct": "false", "ask_again": "false", "ts": "2026-11-14T22:01:39.000Z"}
