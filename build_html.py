@@ -1,14 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Compiles the JLPT N3 Real-Time Adaptive Platform (index.html).
-1) Exam-Score ROI Priority (Official N3 Pillar Weight x Weakness toward 120+/180)
-2) Mastery-Driven Pedagogical Routing (Weak -> Teach Point First, Quiz 4 Steps Later;
-   Semi-Familiar -> Direct Quiz; Wrong -> Confusion-Family Contrast + Reverse-Angle Variant Quiz)
-3) Dual Goals:
-   - Home: 50-Cell "All-Green Before Sleep" Matrix + Live 120-Point Exam Readiness %
-   - Secondary Tab ("总表"): Unified 4 Official JLPT N3 Pillars (Grammar, Conjugation/Keigo, Listening, Core Vocab)
-4) Zero Vibration, Large Crisp Fonts, Locked 100dvh Native Viewport, Instant Web Auto-Sync.
+Compiles the Japanese Zen Edition of the JLPT N3 Adaptive & Two-Host Radio Platform (index.html — v9).
+Aesthetic Philosophy: 禅 (Zen) · 余白 (Ma) · 墨と和紙 (Sumi & Washi) · 幾何学整列 (Strict Grid Precision)
+- Zero nested boxes, zero biscuit pills, zero emoji clutter, zero vibration, zero line-wrap.
+- Strict symmetric vertical gridlines, tabular numerals, traditional Japanese pigments (生成り · 墨 · 苔緑 · 弁柄).
+- Unified Master Algorithm linking 35-40m Two-Host Chinese-Japanese Radio (`audioPrimed`) <-> Short-Time Adaptive Quiz.
 """
 import glob
 import json
@@ -22,12 +19,14 @@ from adaptive_bank import (
     POINT_META,
     VARIANT_CARDS,
 )
+from radio_dialogue_bank import MODALITY_MAP
 from tutor_data import TUTOR_ITEMS, WORD_DICT
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 HTML_PATH = os.path.join(BASE_DIR, "index.html")
 STATE_PATH = os.path.join(BASE_DIR, "n3_live_state.json")
 AUDIO_MANIFEST_PATH = os.path.join(BASE_DIR, "audio", "audio_manifest.json")
+RADIO_META_PATH = os.path.join(BASE_DIR, "audio", "daily_radio_meta.json")
 
 plans = sorted(glob.glob(os.path.join(BASE_DIR, "brain_plan_*.json")))
 with open(plans[-1], encoding="utf-8") as f:
@@ -40,6 +39,30 @@ audio_manifest = {}
 if os.path.exists(AUDIO_MANIFEST_PATH):
     with open(AUDIO_MANIFEST_PATH, encoding="utf-8") as f:
         audio_manifest = json.load(f)
+
+radio_meta = {
+    "date": live_state.get("updated_at", "2026-11-14")[:10],
+    "display_date": "今日",
+    "audio_url": "./audio/daily_radio.mp3",
+    "duration_sec": 2220.0,
+    "duration_label": "37 分钟",
+    "hosts": "阿哲 · 小夏",
+    "chapters": [
+        {"idx": 0, "title": "深聊", "start": 0},
+        {"idx": 1, "title": "听力", "start": 1350},
+        {"idx": 2, "title": "词汇", "start": 1700},
+        {"idx": 3, "title": "纯日", "start": 2050},
+    ],
+    "segments": [],
+}
+if os.path.exists(RADIO_META_PATH):
+    try:
+        with open(RADIO_META_PATH, encoding="utf-8") as f:
+            loaded_rm = json.load(f)
+            if loaded_rm.get("audio_url"):
+                radio_meta = loaded_rm
+    except Exception:
+        pass
 
 word_audio_map = audio_manifest.get("words", {})
 merged_raw_words = dict(WORD_DICT)
@@ -62,26 +85,48 @@ h_state_map = {p["id"]: p for p in live_state.get("henkei_points", [])}
 v_state_map = {p["word"]: p for p in live_state.get("vocab_tracked", [])}
 l_state_map = {p["id"]: p for p in live_state.get("listening_points", [])}
 
+SUBJ_CN = {"文法": "语法", "活用": "活用", "語彙": "词汇", "聴解": "听力"}
+
 
 def strip_opt_prefix(s: str) -> str:
     return re.sub(r"^[a-dA-D]\.\s*", "", str(s)).strip()
 
 
-def clean_prompt(s: str, is_listening: bool) -> str:
-    txt = re.sub(r"^🎧\s*", "", str(s or "")).strip()
-    if is_listening and ("1·2·3" in txt or "最自然的一句" in txt):
-        return "先点上方按钮听对话，再选最自然的回答"
-    return txt
-
-
-def clean_rule_text(s: str) -> str:
+def clean_zen_text(s: str) -> str:
     txt = str(s or "").strip()
+    txt = re.sub(r"[✅❌⭕✕✓↑↓🎧]", "", txt)
     txt = re.sub(
         r"^(?:听力保命铁律|声音\+画面双锚|双重铁证|考场秒杀铁律|考试卷面铁律|秒杀铁律|记忆铁律|一眼锁死助词|看动词时态定画面|这对双胞胎反着记)[：:]\s*",
         "",
         txt,
     )
+    txt = re.sub(r"\s+", " ", txt).strip()
+    txt = re.sub(r"[！!]+$", "。", txt)
     return txt
+
+
+def clean_ja_head(s: str) -> str:
+    txt = re.sub(r"^[✓✕〇×↑↓↔\s]+", "", str(s or "")).strip()
+    txt = re.sub(r"[✅❌⭕]+$", "", txt).strip()
+    return txt
+
+
+def clean_prompt(s: str, is_listening: bool) -> str:
+    txt = re.sub(r"^🎧\s*", "", str(s or "")).strip()
+    if is_listening:
+        if any(k in txt for k in ("怎么说", "哪句", "什么意思", "最合适", "怎么回应", "先做什么", "做什么")):
+            return clean_zen_text(txt)
+        return "听对话，选最自然的回应"
+    return txt
+
+
+def concise_sub(sub_a: str, sub_b: str, fallback: str) -> str:
+    parts = [clean_zen_text(x).rstrip("。") for x in (sub_a, sub_b) if x and clean_zen_text(x)]
+    if parts:
+        joined = " · ".join(parts)
+        return joined[:36] + ("…" if len(joined) > 36 else "")
+    fb = clean_zen_text(fallback).rstrip("。")
+    return fb[:36] + ("…" if len(fb) > 36 else "")
 
 
 def resolve_point_status(point_key: str) -> str:
@@ -97,7 +142,6 @@ def resolve_point_status(point_key: str) -> str:
 
 
 def weakness_multiplier(status: str) -> float:
-    # Unmastered / weak points get highest priority; yellow gets verification priority
     if status == "red":
         return 1.00
     if status in ("orange", "gray"):
@@ -117,21 +161,21 @@ def has_mp3_pair(q_rel: str, exp_rel: str) -> bool:
     return True
 
 
-# Build Variant lookup by base card ID
 variants_by_base = {}
 for vc in VARIANT_CARDS:
     meta = audio_manifest.get(f"meta:{vc['id']}", {})
     q_rel = meta.get("q_audio", "")
     exp_rel = meta.get("exp_audio", "")
     if has_mp3_pair(q_rel, exp_rel):
+        opt_clean = {k: clean_zen_text(v) for k, v in (vc.get("option_notes") or {}).items()}
         v_obj = {
             "id": vc["id"],
             "prompt": clean_prompt(vc["prompt"], vc["subject"] == "聴解"),
             "choices": vc["choices"],
             "answer": vc["answer"],
             "full_ja": vc["full_ja"],
-            "core_rule": clean_rule_text(vc["core_rule"]),
-            "option_notes": vc.get("option_notes", {}),
+            "core_rule": clean_zen_text(vc["core_rule"]),
+            "option_notes": opt_clean,
             "q_audio": q_rel,
             "exp_audio": exp_rel,
             "is_listening": vc["subject"] == "聴解",
@@ -167,21 +211,22 @@ def build_base_point(q: dict, subject: str, fallback_point_label: str) -> dict:
     pmeta = POINT_META.get(qid, {"family": "general", "weight": 2.2})
     exam_weight = float(pmeta["weight"])
     roi_score = round(exam_weight * weakness_multiplier(pt_status), 3)
+    modality = MODALITY_MAP.get(qid, "listen" if is_listening else "both")
 
     raw_micro = t_item.get("micro_lesson") or {}
-    opt_notes = t_item.get("option_notes") or {}
-    core_rule = clean_rule_text(raw_micro.get("hook") or opt_notes.get(answer) or explain)
+    opt_notes = {k: clean_zen_text(v) for k, v in (t_item.get("option_notes") or {}).items()}
+    core_rule = clean_zen_text(raw_micro.get("hook") or opt_notes.get(answer) or explain)
 
     left_m = raw_micro.get("left") or {}
     right_m = raw_micro.get("right") or {}
     teach_left = {
-        "ja": left_m.get("ja") or answer,
-        "sub": " · ".join(x for x in [left_m.get("sub", ""), left_m.get("desc", "")] if x) or opt_notes.get(answer, ""),
+        "ja": clean_ja_head(left_m.get("ja") or answer),
+        "sub": concise_sub(left_m.get("sub", ""), left_m.get("desc", ""), opt_notes.get(answer, "") or core_rule),
     }
     other_opt = next((c for c in choices if c != answer), "")
     teach_right = {
-        "ja": right_m.get("ja") or other_opt,
-        "sub": " · ".join(x for x in [right_m.get("sub", ""), right_m.get("desc", "")] if x) or opt_notes.get(other_opt, ""),
+        "ja": clean_ja_head(right_m.get("ja") or other_opt),
+        "sub": concise_sub(right_m.get("sub", ""), right_m.get("desc", ""), opt_notes.get(other_opt, "")),
     }
 
     q_rel = meta.get("q_audio", "")
@@ -189,20 +234,21 @@ def build_base_point(q: dict, subject: str, fallback_point_label: str) -> dict:
     if not has_mp3_pair(q_rel, exp_rel):
         return None
 
+    initial_weak = (pt_status in ("red", "orange", "gray")) and (not is_listening)
+
     return {
         "id": qid,
-        "subject": subject,
+        "subject": SUBJ_CN.get(subject, subject),
         "point": display_point,
         "point_key": point_key,
         "family": pmeta["family"],
+        "modality": modality,
         "exam_weight": exam_weight,
         "roi_score": roi_score,
-        "initial_weak": pt_status in ("red", "orange", "gray"),
-        "walk_slot": t_item.get("walk_slot", "morning"),
+        "initial_weak": initial_weak,
         "teach": {
             "left": teach_left,
             "right": teach_right,
-            "rule": core_rule,
             "example_ja": full_ja,
             "audio": exp_rel,
         },
@@ -250,20 +296,22 @@ for ext in EXTRA_PRIMARY_CARDS:
     pt_status = resolve_point_status(ext["point_key"])
     w = float(ext["weight"])
     is_l = ext["subject"] == "聴解"
+    tl = {"ja": clean_ja_head(ext["teach_left"]["ja"]), "sub": clean_zen_text(ext["teach_left"]["sub"]).rstrip("。")}
+    tr = {"ja": clean_ja_head(ext["teach_right"]["ja"]), "sub": clean_zen_text(ext["teach_right"]["sub"]).rstrip("。")}
+    opt_c = {k: clean_zen_text(v) for k, v in (ext.get("option_notes") or {}).items()}
     raw_points.append({
         "id": qid,
-        "subject": ext["subject"],
+        "subject": SUBJ_CN.get(ext["subject"], ext["subject"]),
         "point": ext["point_display"],
         "point_key": ext["point_key"],
         "family": ext["family"],
+        "modality": MODALITY_MAP.get(qid, "listen" if is_l else "both"),
         "exam_weight": w,
         "roi_score": round(w * weakness_multiplier(pt_status), 3),
-        "initial_weak": pt_status in ("red", "orange", "gray"),
-        "walk_slot": "morning" if ext["subject"] == "文法" else ("midday" if ext["subject"] in ("語彙", "活用") else "evening"),
+        "initial_weak": (pt_status in ("red", "orange", "gray")) and (not is_l),
         "teach": {
-            "left": ext["teach_left"],
-            "right": ext["teach_right"],
-            "rule": clean_rule_text(ext["core_rule"]),
+            "left": tl,
+            "right": tr,
             "example_ja": ext["full_ja"],
             "audio": exp_rel,
         },
@@ -273,8 +321,8 @@ for ext in EXTRA_PRIMARY_CARDS:
             "choices": ext["choices"],
             "answer": ext["answer"],
             "full_ja": ext["full_ja"],
-            "core_rule": clean_rule_text(ext["core_rule"]),
-            "option_notes": ext["option_notes"],
+            "core_rule": clean_zen_text(ext["core_rule"]),
+            "option_notes": opt_c,
             "q_audio": q_rel,
             "exp_audio": exp_rel,
             "is_listening": is_l,
@@ -282,18 +330,15 @@ for ext in EXTRA_PRIMARY_CARDS:
         "variants": variants_by_base.get(qid, []),
     })
 
-# Sort strictly by Official N3 Score ROI (Exam Importance x Weakness), cap at Top 50 Pillars, then interleave smoothly
 raw_points.sort(key=lambda x: (-x["roi_score"], -x["exam_weight"], x["id"]))
 raw_points = raw_points[:50]
 
-# Smoothly interleave top-priority buckets so user doesn't hit 10 listening or 10 grammar in a row,
-# and ensure point #0 is non-listening so first-open shows Japanese text before browser audio unlock
-buckets = {"文法": [], "活用": [], "語彙": [], "聴解": []}
+buckets = {"语法": [], "活用": [], "词汇": [], "听力": []}
 for p in raw_points:
     buckets[p["subject"]].append(p)
 
 ordered_points = []
-subj_cycle = ["文法", "活用", "語彙", "聴解"]
+subj_cycle = ["语法", "活用", "词汇", "听力"]
 while any(buckets.values()):
     for s in subj_cycle:
         if buckets[s]:
@@ -313,7 +358,6 @@ def norm_tier(status: str) -> str:
     return "wip"
 
 
-# ================= UNIFIED 4 OFFICIAL JLPT N3 PILLARS FOR "总表" =================
 grammar_items = []
 for p in live_state.get("grammar_points", []):
     nm = p.get("name", "")
@@ -325,7 +369,7 @@ for p in live_state.get("grammar_points", []):
         "family": re.sub(r"^\d+\.\s*", "", p.get("family", "")),
         "tier": norm_tier(st),
         "point_id": point_id_by_key.get(nm, ""),
-        "note": p.get("exam_alert") or p.get("note", ""),
+        "note": clean_zen_text(p.get("exam_alert") or p.get("note", "")),
     })
 
 henkei_items = []
@@ -341,7 +385,7 @@ for p in live_state.get("henkei_points", []):
         "family": re.sub(r"^\d+(?:\.\d+)?\s*", "", p.get("subcategory") or p.get("category", "")),
         "tier": norm_tier(st),
         "point_id": point_id_by_key.get(pid, ""),
-        "note": p.get("note", ""),
+        "note": clean_zen_text(p.get("note", "")),
     })
 
 listening_items = []
@@ -357,10 +401,9 @@ for p in live_state.get("listening_points", []):
         "family": p.get("category", ""),
         "tier": norm_tier(st),
         "point_id": point_id_by_key.get(pid, ""),
-        "note": p.get("trap", "") or p.get("note", ""),
+        "note": clean_zen_text(p.get("trap", "") or p.get("note", "")),
     })
 
-# Fold genuine high-frequency N3 Kana Adverbs cleanly into Core Vocab (dropping non-N3 casual chat words!)
 DROP_CASUAL_WORDS = {"ぱさぱさ", "ずしっと", "万年筆"}
 vocab_items = []
 seen_vocab_words = set()
@@ -381,7 +424,7 @@ for p in live_state.get("vocab_tracked", []):
         "tier": norm_tier(st),
         "point_id": point_id_by_key.get(w, ""),
         "audio": resolve_word_audio(w),
-        "note": w_info.get("tip") or p.get("classroom_note") or "",
+        "note": clean_zen_text(w_info.get("tip") or p.get("classroom_note") or ""),
     })
 
 for kw, pitch, desc in CORE_N3_KANA_VOCAB:
@@ -392,7 +435,7 @@ for kw, pitch, desc in CORE_N3_KANA_VOCAB:
         "key": kw,
         "name": kw,
         "sub": desc.split("（")[0],
-        "family": "高频假名副词（真题占3–5分）",
+        "family": "高频假名副词",
         "tier": "wip",
         "point_id": point_id_by_key.get(kw, ""),
         "audio": resolve_word_audio(kw),
@@ -409,17 +452,18 @@ def count_tiers(items):
 
 
 mastery_data = {
-    "grammar": {"label": "语法（147核心点）", "short": "语法", "exam_pts": 38, "counts": count_tiers(grammar_items), "items": grammar_items},
-    "henkei": {"label": "活用与敬语（语法+听力双跨）", "short": "活用敬语", "exam_pts": 28, "counts": count_tiers(henkei_items), "items": henkei_items},
-    "listening": {"label": "听力口语（占卷面 60 分）", "short": "听力口语", "exam_pts": 60, "counts": count_tiers(listening_items), "items": listening_items},
-    "vocab": {"label": "核心词汇（含高频假名副词）", "short": "核心词汇", "exam_pts": 24, "counts": count_tiers(vocab_items), "items": vocab_items},
+    "grammar": {"label": "语法", "detail": "147 核心考点", "exam_pts": 38, "counts": count_tiers(grammar_items), "items": grammar_items},
+    "henkei": {"label": "活用与敬语", "detail": "变形与授受尊谦", "exam_pts": 28, "counts": count_tiers(henkei_items), "items": henkei_items},
+    "listening": {"label": "听力口语", "detail": "卷面 60 分", "exam_pts": 60, "counts": count_tiers(listening_items), "items": listening_items},
+    "vocab": {"label": "核心词汇", "detail": "含常考假名副词", "exam_pts": 24, "counts": count_tiers(vocab_items), "items": vocab_items},
 }
 
 payload = json.dumps({
-    "plan_date": plan.get("plan_date", "2026-11-14"),
+    "plan_date": live_state.get("updated_at", plan.get("plan_date", "2026-11-14"))[:10],
     "exam_date": "2026-12-06",
-    "days_to_exam": plan.get("days_to_exam", 22),
+    "days_to_exam": live_state.get("days_left", plan.get("days_to_exam", 22)),
     "done_audio": "./audio/done.mp3",
+    "radio": radio_meta,
     "points": ordered_points,
     "words": rich_words,
     "mastery": mastery_data,
@@ -430,8 +474,8 @@ html = r"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-<meta name="description" content="JLPT N3 自适应冲刺 120+ 语音私教" />
-<meta name="theme-color" content="#F3EFE8" />
+<meta name="description" content="JLPT N3 · 自适应冲刺与双人随身电台" />
+<meta name="theme-color" content="#F5F2EB" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -440,33 +484,24 @@ html = r"""<!DOCTYPE html>
 <link rel="apple-touch-icon" href="./icon-192.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
-<title>JLPT N3 · 冲刺 120+</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600&family=Noto+Serif+JP:wght@500;600&display=swap" rel="stylesheet" />
+<title>N3</title>
 <style>
   :root {
-    --bg: #F3EFE8;
-    --card: #FFFFFF;
-    --surface: #FAF8F4;
-    --subtle: #E6E0D4;
-    --line: rgba(24, 22, 19, 0.10);
-    --line-strong: rgba(24, 22, 19, 0.20);
-    --ink: #181613;
-    --ink-2: #4A453E;
-    --ink-3: #7A7368;
-    --green: #1B7A58;
-    --green-bright: #22946B;
-    --green-bg: #E7F5EF;
-    --green-border: rgba(27, 122, 88, 0.34);
-    --amber: #B86E14;
-    --amber-cell: #E09B36;
-    --amber-bg: #FCF4E6;
-    --amber-border: rgba(184, 110, 20, 0.30);
-    --red: #B8372E;
-    --red-bg: #FCEEEB;
-    --red-border: rgba(184, 55, 46, 0.30);
-    --sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans", "Noto Sans JP", sans-serif;
-    --jp: "Noto Sans JP", "Hiragino Sans", "PingFang SC", sans-serif;
-    --shadow-card: 0 14px 34px -14px rgba(24, 22, 19, 0.10), 0 2px 6px rgba(24, 22, 19, 0.03);
+    /* Traditional Japanese Pigments (日本の伝統色): 生成り · 白練 · 墨 · 苔色 · 黄土 · 弁柄 */
+    --washi: #F5F2EB;
+    --sheet: #FCFBF8;
+    --sumi: #1C1B18;
+    --ink-2: #57534A;
+    --ink-3: #8E887C;
+    --hairline: rgba(28, 27, 24, 0.09);
+    --hairline-strong: rgba(28, 27, 24, 0.18);
+    --track: #E5E0D5;
+    --moss: #2B5F49;
+    --ochre: #B07D3A;
+    --bengara: #9E3E36;
+    --sans: "Noto Sans JP", -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans", sans-serif;
+    --serif-jp: "Noto Serif JP", "Hiragino Mincho ProN", "Noto Sans JP", serif;
   }
 
   * {
@@ -474,7 +509,6 @@ html = r"""<!DOCTYPE html>
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Locked 100dvh viewport: zero rubber-band bounce or annoying vertical wobble */
   html, body {
     margin: 0;
     padding: 0;
@@ -483,8 +517,8 @@ html = r"""<!DOCTYPE html>
     height: 100dvh;
     overflow: hidden;
     overscroll-behavior: none;
-    background: var(--bg);
-    color: var(--ink);
+    background: var(--washi);
+    color: var(--sumi);
     font-family: var(--sans);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
@@ -494,932 +528,895 @@ html = r"""<!DOCTYPE html>
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: calc(8px + env(safe-area-inset-top)) 15px calc(10px + env(safe-area-inset-bottom));
+    padding: calc(14px + env(safe-area-inset-top)) 26px calc(18px + env(safe-area-inset-bottom));
   }
 
-  .app-shell {
+  .zen-shell {
     width: 100%;
-    max-width: 500px;
+    max-width: 480px;
     height: 100%;
     display: flex;
     flex-direction: column;
     min-height: 0;
   }
 
-  @media (min-width: 900px) {
-    body { padding: 20px 36px 20px; }
-    .app-shell { max-width: 1020px; }
+  @media (min-width: 860px) {
+    body { padding: 32px 48px 32px; }
+    .zen-shell { max-width: 560px; }
+    .zen-shell.wide-mode { max-width: 780px; }
   }
 
-  /* ================= TOP HEADER ================= */
-  .app-header {
+  button {
+    font-family: inherit;
+    white-space: nowrap;
+    background: none;
+    border: none;
+    padding: 0;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  /* ================= 1. STRICT GRID HEADER ================= */
+  .zen-header {
     flex-shrink: 0;
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
+    align-items: baseline;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--hairline);
   }
-  .brand-left {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .n3-seal {
-    background: var(--ink);
-    color: #FFFFFF;
-    font-size: 13px;
-    font-weight: 800;
-    padding: 3px 8px;
-    border-radius: 8px;
-  }
-  .countdown {
-    font-size: 16.5px;
-    font-weight: 700;
-    color: var(--ink);
+
+  .zen-brand {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink-3);
+    letter-spacing: 0.06em;
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
-  .countdown strong {
-    font-size: 21px;
-    font-weight: 800;
-    color: var(--green);
+  .zen-brand strong {
+    font-weight: 600;
+    color: var(--sumi);
     margin: 0 2px;
   }
 
-  .header-right {
+  .zen-nav {
     display: flex;
-    align-items: center;
-    gap: 7px;
+    align-items: baseline;
+    gap: 22px;
   }
-  .walk-icon-btn {
-    border: 1.5px solid var(--line);
-    background: var(--card);
-    color: var(--ink);
-    font-family: var(--sans);
-    font-size: 14px;
-    font-weight: 700;
-    height: 38px;
-    padding: 0 12px;
-    border-radius: 999px;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-  }
-  .walk-icon-btn svg { width: 16px; height: 16px; }
-  .walk-icon-btn.active {
-    background: var(--green);
-    color: #FFFFFF;
-    border-color: var(--green);
-  }
-
-  .mode-switch {
-    display: inline-flex;
-    background: var(--subtle);
-    padding: 3.5px;
-    border-radius: 999px;
-  }
-  .mode-btn {
-    border: none;
-    background: transparent;
-    color: var(--ink-2);
-    font-family: var(--sans);
+  .nav-link {
     font-size: 15px;
+    font-weight: 500;
+    color: var(--ink-3);
+    letter-spacing: 0.04em;
+    padding-bottom: 5px;
+    position: relative;
+    transition: color 0.2s ease;
+  }
+  .nav-link.active {
+    color: var(--sumi);
     font-weight: 600;
-    padding: 6px 14px;
-    border-radius: 999px;
-    cursor: pointer;
   }
-  .mode-btn.active {
-    background: var(--card);
-    color: var(--ink);
-    font-weight: 700;
-    box-shadow: 0 2px 6px rgba(24, 22, 19, 0.10);
+  .nav-link.active::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -15px;
+    height: 1.5px;
+    background: var(--sumi);
+  }
+  .nav-link.is-playing {
+    color: var(--moss);
   }
 
-  /* ================= GOAL 2: HOME "ALL-GREEN BEFORE SLEEP" BOARD ================= */
-  .tutor-wrap {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    max-width: 500px;
-    margin: 0 auto;
-  }
-  @media (min-width: 900px) {
-    .tutor-wrap { max-width: 700px; }
-  }
-  .tutor-wrap.hidden { display: none; }
-
-  .green-mission-board {
+  /* ================= 2. ZEN MOSS HORIZON (BEDTIME GREEN GOAL) ================= */
+  .zen-horizon {
     flex-shrink: 0;
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 18px;
-    padding: 10px 13px 11px;
-    margin-bottom: 10px;
+    padding: 14px 0 4px;
     cursor: pointer;
   }
-  .gm-top {
+  .horizon-meta {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    margin-bottom: 7px;
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-3);
+    letter-spacing: 0.04em;
     font-variant-numeric: tabular-nums;
   }
-  .gm-left {
-    font-size: 14.5px;
-    font-weight: 700;
-    color: var(--ink);
+  .horizon-meta b {
+    font-weight: 600;
+    color: var(--moss);
   }
-  .gm-left strong {
-    color: var(--green);
-    font-size: 16.5px;
-    font-weight: 800;
+  .horizon-track {
+    width: 100%;
+    height: 2.5px;
+    background: var(--track);
+    position: relative;
+    overflow: hidden;
   }
-  .gm-right {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--ink-2);
-  }
-  .gm-right strong {
-    color: var(--green);
-    font-size: 16px;
-    font-weight: 800;
-  }
-  .gm-cells {
-    display: grid;
-    grid-template-columns: repeat(25, 1fr);
-    gap: 3px;
-  }
-  .gm-cell {
-    height: 7px;
-    border-radius: 2.5px;
-    background: #E2DDD2;
-    transition: background 0.25s ease, transform 0.2s ease;
-  }
-  .gm-cell.learning {
-    background: var(--amber-cell);
-  }
-  .gm-cell.green {
-    background: var(--green-bright);
-  }
-  .gm-cell.current {
-    box-shadow: 0 0 0 1.8px var(--ink);
-    transform: scaleY(1.22);
+  .horizon-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background: var(--moss);
+    transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  /* Scroll container: locked solid unless tiny viewport overflows */
-  .tutor-scroll {
+  /* ================= 3. OPEN WASHI STAGE (余白 MA) ================= */
+  .zen-panel {
     flex: 1;
     min-height: 0;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
     display: flex;
     flex-direction: column;
   }
-  .tutor-scroll::-webkit-scrollbar { display: none; }
+  .zen-panel.hidden {
+    display: none;
+  }
 
-  .voice-card {
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 26px;
-    padding: 18px 19px 20px;
-    box-shadow: var(--shadow-card);
+  .stage-wrap {
+    flex: 1;
+    min-height: 0;
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
+    padding-top: 18px;
+    animation: fadeTurn 0.18s ease-out;
   }
-  @media (min-width: 900px) {
-    .voice-card {
-      border-radius: 30px;
-      padding: 28px 40px 30px;
-    }
+  @keyframes fadeTurn {
+    from { opacity: 0.45; }
+    to { opacity: 1; }
   }
 
-  .card-top-row {
+  .meta-bar {
+    flex-shrink: 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 12px;
+    min-height: 26px;
   }
-  .stage-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 5px 12px;
-    border-radius: 999px;
-    font-size: 14.5px;
-    font-weight: 700;
+  .overline {
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: var(--ink-3);
   }
-  .stage-pill.teach {
-    background: var(--amber-bg);
-    color: var(--amber);
-    border: 1px solid var(--amber-border);
-  }
-  .stage-pill.quiz {
-    background: var(--surface);
-    color: var(--ink);
-    border: 1px solid var(--line);
-  }
-  .stage-pill.variant {
-    background: var(--green-bg);
-    color: var(--green);
-    border: 1px solid var(--green-border);
-  }
+  .overline.ok { color: var(--moss); font-weight: 600; }
+  .overline.ng { color: var(--bengara); font-weight: 600; }
+  .overline.warm { color: var(--ochre); }
 
-  .mini-audio-btn {
-    border: 1.5px solid var(--line);
-    background: var(--surface);
-    color: var(--ink);
-    font-family: var(--sans);
-    font-size: 14px;
-    font-weight: 700;
-    min-height: 36px;
-    padding: 5px 12px;
-    border-radius: 999px;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-  }
-  .mini-audio-btn.playing {
-    background: var(--green-bg);
-    color: var(--green);
-    border-color: var(--green-border);
-  }
-
-  /* ================= CARD TYPE 1: TEACH POINT FIRST (For Low Mastery!) ================= */
-  .teach-title {
-    font-family: var(--jp);
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--ink);
-    margin: 0 0 12px;
-    line-height: 1.35;
-  }
-  @media (min-width: 900px) {
-    .teach-title { font-size: 25px; }
-  }
-  .contrast-stack {
+  .quiet-actions {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 12px;
+    align-items: center;
+    gap: 16px;
   }
-  .contrast-item {
-    border-radius: 16px;
-    padding: 12px 15px;
-    border: 1.5px solid var(--line);
-    background: var(--surface);
-  }
-  .contrast-item.primary {
-    background: var(--green-bg);
-    border-color: var(--green-border);
-  }
-  .ci-ja {
-    font-family: var(--jp);
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--ink);
-    margin-bottom: 3px;
-  }
-  .contrast-item.primary .ci-ja { color: var(--green); }
-  .ci-sub {
-    font-size: 15px;
-    font-weight: 600;
+  .text-btn {
+    font-size: 13.5px;
+    font-weight: 500;
     color: var(--ink-2);
-    line-height: 1.45;
+    letter-spacing: 0.03em;
+    font-variant-numeric: tabular-nums;
+    padding: 4px 0;
+  }
+  .text-btn.playing {
+    color: var(--moss);
+    font-weight: 600;
   }
 
-  /* ================= CARD TYPE 2: ADAPTIVE QUIZ ================= */
-  .orb-stage {
+  /* Center focal space with generous Ma (whitespace) */
+  .focal-space {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    margin: 2px 0 14px;
-  }
-  .voice-orb {
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
-    border: none;
-    background: var(--ink);
-    color: #FFFFFF;
-    display: flex;
-    align-items: center;
     justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 10px 22px -6px rgba(24, 22, 19, 0.28);
-    transition: transform 0.14s ease, background 0.18s ease;
+    padding: 16px 0;
+    scrollbar-width: none;
   }
-  @media (min-width: 900px) {
-    .voice-orb { width: 80px; height: 80px; }
-  }
-  .voice-orb:active { transform: scale(0.94); }
-  .voice-orb.listening-emphasis {
-    background: var(--green);
-    box-shadow: 0 0 0 7px rgba(27, 122, 88, 0.14);
-  }
-  .voice-orb.speaking {
-    background: var(--green);
-    box-shadow: 0 0 0 9px rgba(27, 122, 88, 0.16);
-    animation: orbPulse 1.5s ease-in-out infinite;
-  }
-  .voice-orb.thinking { background: var(--amber); }
-  @keyframes orbPulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.04); }
-  }
-  .orb-play-ic { width: 26px; height: 26px; margin-left: 3px; }
-  .orb-bars { display: none; align-items: center; gap: 4px; height: 22px; }
-  .voice-orb.speaking .orb-play-ic { display: none; }
-  .voice-orb.speaking .orb-bars { display: inline-flex; }
-  .orb-bars span { display: block; width: 4px; height: 9px; background: #FFFFFF; border-radius: 99px; }
-  .voice-orb.speaking .orb-bars span:nth-child(1) { animation: wave 0.65s ease-in-out infinite; }
-  .voice-orb.speaking .orb-bars span:nth-child(2) { animation: wave 0.65s ease-in-out 0.14s infinite; }
-  .voice-orb.speaking .orb-bars span:nth-child(3) { animation: wave 0.65s ease-in-out 0.28s infinite; }
-  .voice-orb.speaking .orb-bars span:nth-child(4) { animation: wave 0.65s ease-in-out 0.1s infinite; }
-  @keyframes wave {
-    0%, 100% { height: 7px; }
-    50% { height: 21px; }
-  }
-  .orb-caption {
-    margin-top: 7px;
-    font-size: 14.5px;
-    font-weight: 600;
-    color: var(--ink-2);
+  .focal-space::-webkit-scrollbar { display: none; }
+
+  .action-dock {
+    flex-shrink: 0;
+    padding-top: 12px;
   }
 
-  .prompt-cue {
-    font-family: var(--jp);
-    font-size: 22.5px;
+  /* -------- TEACH VIEW -------- */
+  .point-heading {
+    margin: 0 0 22px;
+    font-family: var(--serif-jp);
+    font-size: 27px;
     font-weight: 600;
-    line-height: 1.56;
-    text-align: center;
-    color: var(--ink);
-    margin: 0 0 18px;
+    line-height: 1.35;
+    letter-spacing: 0.03em;
+    color: var(--sumi);
   }
-  .prompt-cue.is-listening-cue {
-    font-family: var(--sans);
-    font-size: 19.5px;
-    color: var(--ink-2);
+  .zen-pair {
+    border-top: 1px solid var(--hairline);
+    border-bottom: 1px solid var(--hairline);
+    margin-bottom: 22px;
   }
-  @media (min-width: 900px) {
-    .prompt-cue { font-size: 26.5px; margin-bottom: 22px; }
-    .prompt-cue.is-listening-cue { font-size: 22px; }
-  }
-
-  .choices-stack {
+  .zen-pair-row {
+    padding: 14px 0;
     display: flex;
     flex-direction: column;
+    gap: 4px;
+  }
+  .zen-pair-row + .zen-pair-row {
+    border-top: 1px solid var(--hairline);
+  }
+  .zp-ja {
+    font-family: var(--serif-jp);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--sumi);
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
     gap: 10px;
   }
-  .choice-btn {
-    width: 100%;
-    background: var(--surface);
-    border: 1.5px solid var(--line-strong);
-    border-radius: 18px;
-    min-height: 58px;
-    padding: 13px 18px;
-    font-family: var(--jp);
-    font-size: 20px;
-    font-weight: 600;
-    color: var(--ink);
-    text-align: left;
-    cursor: pointer;
-    box-shadow: 0 2px 0 rgba(24, 22, 19, 0.04);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    line-height: 1.4;
-  }
-  @media (min-width: 900px) {
-    .choice-btn { min-height: 62px; font-size: 22px; padding: 14px 22px; }
-  }
-  .choice-btn:hover { background: #FFFFFF; border-color: var(--ink); }
-  .choice-btn:active { transform: scale(0.988); }
-
-  .kbd-hint {
-    display: none;
-    font-family: var(--sans);
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--ink-3);
-    background: rgba(24, 22, 19, 0.06);
-    border: 1px solid rgba(24, 22, 19, 0.10);
-    border-radius: 6px;
-    padding: 2px 7px;
+  .zp-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--moss);
     flex-shrink: 0;
   }
-  @media (hover: hover) and (pointer: fine) {
-    .kbd-hint { display: inline-block; }
-  }
-
-  .skip-btn {
-    margin-top: 8px;
-    width: 100%;
-    border: none;
+  .zp-dot.muted {
     background: transparent;
-    color: var(--ink-3);
-    font-family: var(--sans);
-    font-size: 15px;
-    font-weight: 600;
-    min-height: 42px;
-    border-radius: 13px;
-    cursor: pointer;
+    border: 1.5px solid var(--ink-3);
   }
-  .skip-btn:hover { background: var(--surface); color: var(--ink); }
-
-  /* ================= CARD TYPE 3: INSTANT RESULT ================= */
-  .verdict-badge {
-    font-size: 17.5px;
-    font-weight: 800;
-  }
-  .verdict-badge.ok { color: var(--green); }
-  .verdict-badge.ng { color: var(--red); }
-
-  .ans-answer-box {
-    background: var(--green-bg);
-    border: 1.5px solid var(--green-border);
-    border-radius: 16px;
-    padding: 11px 14px;
-    margin-bottom: 9px;
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-  }
-  .ans-mark-ok { font-size: 17px; font-weight: 800; color: var(--green); }
-  .ans-ja-text {
-    font-family: var(--jp);
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--green);
-    line-height: 1.42;
+  .zp-sub {
+    padding-left: 16px;
+    font-size: 14.5px;
+    font-weight: 400;
+    color: var(--ink-2);
+    line-height: 1.5;
   }
 
-  .ans-wrong-box {
-    background: var(--red-bg);
-    border: 1px solid var(--red-border);
-    border-radius: 14px;
-    padding: 9px 13px;
-    margin-bottom: 9px;
-    font-size: 15px;
-    line-height: 1.48;
-    color: var(--ink);
-  }
-  .ans-wrong-head {
-    font-family: var(--jp);
-    font-weight: 700;
-    color: var(--red);
-    margin-right: 6px;
-  }
-
-  .core-rule-box {
-    background: #F6F3EC;
-    border-left: 4px solid var(--green);
-    border-radius: 13px;
-    padding: 11px 14px;
-    margin-bottom: 10px;
-    font-size: 17px;
-    font-weight: 600;
-    line-height: 1.55;
-    color: var(--ink);
-  }
-
-  .full-sentence-box {
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: 16px;
-    padding: 11px 14px;
-    margin-bottom: 14px;
-  }
-  .full-sentence-hint {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--ink-3);
-    margin-bottom: 5px;
-    display: flex;
-    justify-content: space-between;
-  }
-  .full-sentence-ja {
-    font-family: var(--jp);
-    font-size: 20px;
+  .example-line {
+    font-family: var(--serif-jp);
+    font-size: 20.5px;
     font-weight: 500;
     line-height: 1.78;
-    color: var(--ink);
+    letter-spacing: 0.03em;
+    color: var(--sumi);
     white-space: pre-line;
   }
-  @media (min-width: 900px) {
-    .full-sentence-ja { font-size: 22.5px; }
+
+  /* -------- QUIZ VIEW -------- */
+  .quiz-focal {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 140px;
+    margin-bottom: 28px;
+  }
+  .quiz-ja {
+    margin: 0;
+    font-family: var(--serif-jp);
+    font-size: 24.5px;
+    font-weight: 600;
+    line-height: 1.68;
+    letter-spacing: 0.03em;
+    color: var(--sumi);
+  }
+  @media (min-width: 860px) {
+    .quiz-ja { font-size: 27px; }
   }
 
-  .w-tok {
-    border-bottom: 2px dotted rgba(27, 122, 88, 0.48);
-    padding-bottom: 1px;
-    border-radius: 3px;
-    cursor: pointer;
+  .listen-medallion-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    padding: 12px 0;
   }
-  .w-tok:hover, .w-tok.active-tok {
-    background: rgba(27, 122, 88, 0.14);
-    color: var(--green);
-    border-bottom-style: solid;
-    border-bottom-color: var(--green);
-  }
-
-  .nav-row { display: flex; gap: 10px; }
-  .again-btn {
-    background: var(--surface);
-    color: var(--ink-2);
-    border: 1.5px solid var(--line);
-    border-radius: 16px;
-    min-height: 54px;
-    padding: 12px 16px;
-    font-family: var(--sans);
-    font-size: 16px;
-    font-weight: 700;
-    cursor: pointer;
-  }
-  .next-btn {
-    flex: 1;
-    background: var(--ink);
-    color: #FFFFFF;
-    border: none;
-    border-radius: 16px;
-    min-height: 54px;
-    padding: 12px 20px;
-    font-family: var(--sans);
-    font-size: 18px;
-    font-weight: 700;
-    cursor: pointer;
-    display: inline-flex;
+  .listen-medallion {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    border: 1px solid var(--hairline-strong);
+    background: var(--sheet);
+    color: var(--sumi);
+    display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    transition: border-color 0.2s ease, transform 0.15s ease;
   }
-  .next-btn .kbd-hint {
-    color: rgba(255,255,255,0.8);
-    background: rgba(255,255,255,0.16);
-    border-color: rgba(255,255,255,0.22);
+  .listen-medallion:active { transform: scale(0.96); }
+  .listen-medallion.speaking {
+    border-color: var(--moss);
+    color: var(--moss);
   }
-
-  .studio-footer {
-    display: none;
-    flex-shrink: 0;
-    margin-top: 10px;
+  .med-ic { width: 24px; height: 24px; margin-left: 2px; }
+  .med-waves { display: none; align-items: center; gap: 3.5px; height: 20px; }
+  .listen-medallion.speaking .med-ic { display: none; }
+  .listen-medallion.speaking .med-waves { display: flex; }
+  .med-waves span {
+    width: 2.5px;
+    height: 8px;
+    background: var(--moss);
+    animation: zenWave 0.9s ease-in-out infinite;
+  }
+  .med-waves span:nth-child(2) { animation-delay: 0.16s; }
+  .med-waves span:nth-child(3) { animation-delay: 0.32s; }
+  @keyframes zenWave {
+    0%, 100% { height: 6px; opacity: 0.45; }
+    50% { height: 18px; opacity: 1; }
+  }
+  .listen-prompt {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--ink-2);
+    letter-spacing: 0.04em;
     text-align: center;
-    font-size: 13px;
-    color: var(--ink-3);
-  }
-  @media (hover: hover) and (pointer: fine) and (min-width: 900px) {
-    .studio-footer { display: block; }
   }
 
-  /* ================= WORD DICTIONARY POPOVER ================= */
-  .sheet-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(24, 22, 19, 0.28);
-    z-index: 990;
-    display: none;
+  .choice-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
   }
-  .sheet-backdrop.open { display: block; }
-  .word-popover {
-    position: fixed;
-    z-index: 999;
-    background: #1C1917;
-    color: #F7F6F2;
-    box-shadow: 0 22px 52px rgba(0, 0, 0, 0.32);
-    display: none;
+  .zen-choice {
+    width: 100%;
+    min-height: 58px;
+    padding: 14px 20px;
+    background: var(--sheet);
+    border: 1px solid var(--hairline-strong);
+    border-radius: 8px;
+    font-family: var(--serif-jp);
+    font-size: 20.5px;
+    font-weight: 500;
+    color: var(--sumi);
+    letter-spacing: 0.03em;
+    line-height: 1.4;
+    text-align: left;
+    white-space: normal;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: border-color 0.16s ease, background 0.16s ease;
   }
-  .word-popover.open { display: block; }
-  @media (max-width: 767px) {
-    .word-popover {
-      left: 12px !important;
-      right: 12px !important;
-      bottom: calc(12px + env(safe-area-inset-bottom)) !important;
-      top: auto !important;
-      border-radius: 24px;
-      padding: 20px 20px 22px;
+  .zen-choice:active { background: #EDEAE1; }
+  .kbd-tag { display: none; }
+  @media (min-width: 860px) {
+    .zen-choice:hover { border-color: var(--sumi); background: #FFFFFF; }
+    .kbd-tag {
+      display: inline-block;
+      font-family: var(--sans);
+      font-size: 12px;
+      color: var(--ink-3);
+      font-variant-numeric: tabular-nums;
     }
   }
-  @media (min-width: 768px) {
-    .sheet-backdrop.open { display: none; }
-    .word-popover { width: 360px; border-radius: 20px; padding: 18px 20px; }
+
+  .quiet-skip {
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: 12px 0 2px;
+    font-size: 13.5px;
+    color: var(--ink-3);
+    letter-spacing: 0.05em;
   }
-  .wp-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; }
-  .wp-head { font-family: var(--jp); font-size: 23px; font-weight: 700; color: #FFFFFF; }
-  .wp-kana { font-family: var(--jp); font-size: 16px; color: #E0DDD6; margin-left: 8px; }
-  .wp-pitch { font-size: 14px; color: #8CE0C2; margin-left: 5px; }
-  .wp-speak {
-    border: 1px solid rgba(255,255,255,0.24);
-    background: rgba(255,255,255,0.13);
-    color: #FFFFFF;
-    border-radius: 999px;
-    padding: 8px 15px;
-    font-family: var(--sans);
-    font-size: 15px;
+
+  /* -------- RESULT VIEW -------- */
+  .result-answer {
+    margin: 0 0 12px;
+    font-family: var(--serif-jp);
+    font-size: 26px;
     font-weight: 600;
+    color: var(--moss);
+    line-height: 1.4;
+    letter-spacing: 0.03em;
+  }
+  .result-wrong-note {
+    margin: 0 0 12px;
+    font-size: 14.5px;
+    color: var(--bengara);
+    line-height: 1.5;
+  }
+  .result-insight {
+    margin: 0 0 22px;
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--ink-2);
+    line-height: 1.65;
+  }
+  .result-divider {
+    height: 1px;
+    background: var(--hairline);
+    margin-bottom: 20px;
+  }
+
+  /* Tappable dictionary words */
+  .w-tok {
+    border-bottom: 1px dotted rgba(28, 27, 24, 0.36);
+    cursor: pointer;
+    padding-bottom: 1px;
+  }
+  .w-tok:hover, .w-tok.active-tok {
+    color: var(--moss);
+    border-bottom-color: var(--moss);
+  }
+
+  /* Architectural Sumi Buttons */
+  .dock-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .sumi-btn {
+    flex: 1;
+    height: 52px;
+    background: var(--sumi);
+    color: var(--sheet);
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .ghost-btn {
+    height: 52px;
+    padding: 0 18px;
+    border: 1px solid var(--hairline-strong);
+    border-radius: 8px;
+    font-size: 14.5px;
+    font-weight: 500;
+    color: var(--ink-2);
+    letter-spacing: 0.04em;
+  }
+
+  /* ================= 4. TWO-HOST RADIO SANCTUARY ("随身听") ================= */
+  .radio-center {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 16px;
+  }
+  .radio-chap {
+    font-size: 12.5px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    color: var(--moss);
+  }
+  .radio-topic {
+    margin: 0;
+    font-family: var(--serif-jp);
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1.45;
+    color: var(--sumi);
+  }
+  .radio-ja {
+    margin: 0;
+    font-family: var(--serif-jp);
+    font-size: 19px;
+    font-weight: 400;
+    line-height: 1.7;
+    color: var(--ink-2);
+  }
+
+  .radio-dock {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding-top: 12px;
+  }
+  .scrub-wrap {
+    width: 100%;
+  }
+  .zen-range {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 2px;
+    background: var(--track);
+    outline: none;
+    margin: 10px 0;
     cursor: pointer;
   }
-  .wp-pos {
-    display: inline-block;
-    font-size: 13.5px;
-    color: #D4CFC5;
-    background: rgba(255,255,255,0.10);
-    padding: 3px 9px;
-    border-radius: 7px;
-    margin-bottom: 10px;
+  .zen-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--sumi);
+    cursor: pointer;
   }
-  .wp-zh { font-size: 18px; font-weight: 700; color: #FFFFFF; margin-bottom: 6px; line-height: 1.45; }
-  .wp-tip { font-size: 15px; color: #C4BEB3; line-height: 1.55; }
+  .time-pair {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12.5px;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.04em;
+  }
 
-  /* ================= GOAL 1: GLOBAL DASHBOARD ("总表" - 4 Official N3 Pillars) ================= */
-  .dash-wrap {
-    display: none;
+  .transport-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .step-time-btn {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink-2);
+    padding: 10px 6px;
+    font-variant-numeric: tabular-nums;
+  }
+  .play-toggle-btn {
+    min-width: 124px;
+    height: 48px;
+    border-radius: 8px;
+    background: var(--sumi);
+    color: var(--sheet);
+    font-size: 15.5px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+  }
+
+  .chapter-strip {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 14px;
+    border-top: 1px solid var(--hairline);
+  }
+  .chap-link {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--ink-3);
+    letter-spacing: 0.05em;
+    padding: 4px 2px;
+  }
+  .chap-link.active {
+    color: var(--sumi);
+    font-weight: 600;
+  }
+
+  /* ================= 5. ZEN LEDGER ("总表" — ZERO NESTED CARDS) ================= */
+  .ledger-scroll {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
-    flex-direction: column;
-    gap: 14px;
-    padding-bottom: 20px;
-    width: 100%;
+    padding: 16px 0 8px;
+    scrollbar-width: none;
   }
-  .dash-wrap.active { display: flex; }
+  .ledger-scroll::-webkit-scrollbar { display: none; }
 
-  @media (min-width: 900px) {
-    .dash-wrap.active {
+  @media (min-width: 860px) {
+    .ledger-layout {
       display: grid;
-      grid-template-columns: 350px 1fr;
-      gap: 22px;
+      grid-template-columns: 260px 1fr;
+      gap: 44px;
       align-items: start;
     }
   }
 
-  .dash-left-col { display: flex; flex-direction: column; gap: 12px; }
-  .score-goal-card, .summary-card, .detail-card {
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 22px;
-    padding: 18px;
-    box-shadow: var(--shadow-card);
+  .pillar-list {
+    margin-bottom: 24px;
   }
-  .sg-head {
+  .pillar-row {
+    padding: 13px 0;
+    border-bottom: 1px solid var(--hairline);
+    cursor: pointer;
+    opacity: 0.62;
+    transition: opacity 0.18s ease;
+  }
+  .pillar-row.active {
+    opacity: 1;
+  }
+  .pillar-head {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
     margin-bottom: 8px;
   }
-  .sg-title { font-size: 16px; font-weight: 700; color: var(--ink-2); }
-  .sg-pct { font-size: 26px; font-weight: 800; color: var(--green); font-variant-numeric: tabular-nums; }
-  .sg-bar {
-    height: 10px;
-    background: var(--subtle);
-    border-radius: 999px;
-    overflow: hidden;
-    margin-bottom: 8px;
-  }
-  .sg-fill { height: 100%; background: var(--green-bright); border-radius: 999px; transition: width 0.3s ease; }
-  .sg-sub { font-size: 14px; color: var(--ink-2); line-height: 1.5; }
-
-  .sum-row {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 12px 10px;
-    margin: 0 -10px;
-    border-radius: 13px;
-    border-bottom: 1px solid var(--line);
-    cursor: pointer;
-  }
-  .sum-row:last-child { border-bottom: none; }
-  .sum-row.selected-mod { background: var(--surface); }
-  .sum-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-  .sum-title { font-size: 16.5px; font-weight: 700; color: var(--ink); }
-  .sum-nums { font-size: 14px; font-weight: 600; color: var(--ink-2); font-variant-numeric: tabular-nums; }
-  .tri-bar { height: 8px; background: var(--subtle); border-radius: 999px; overflow: hidden; display: flex; }
-  .tri-seg-done { background: var(--green-bright); height: 100%; }
-  .tri-seg-wip { background: #D9A441; height: 100%; }
-  .tri-seg-todo { background: var(--red); height: 100%; }
-
-  @media (min-width: 900px) {
-    .mobile-only-mod-tabs { display: none !important; }
-  }
-  .mod-tabs {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
-    margin-bottom: 12px;
-  }
-  .mod-tab {
-    border: 1px solid var(--line);
-    background: var(--surface);
-    color: var(--ink-2);
-    font-family: var(--sans);
-    font-size: 14.5px;
-    font-weight: 700;
-    padding: 8px 4px;
-    border-radius: 11px;
-    cursor: pointer;
-    text-align: center;
-  }
-  .mod-tab.active { background: var(--ink); color: #FFFFFF; border-color: var(--ink); }
-
-  .tier-tabs {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 5px;
-    background: var(--subtle);
-    padding: 4px;
-    border-radius: 13px;
-    margin-bottom: 12px;
-  }
-  .tier-tab {
-    border: none;
-    background: transparent;
-    color: var(--ink-2);
-    font-family: var(--sans);
-    font-size: 15px;
+  .pillar-name {
+    font-size: 15.5px;
     font-weight: 600;
-    padding: 8px 6px;
-    border-radius: 10px;
-    cursor: pointer;
+    color: var(--sumi);
+    letter-spacing: 0.03em;
+  }
+  .pillar-stat {
+    font-size: 12.5px;
+    color: var(--ink-3);
     font-variant-numeric: tabular-nums;
   }
-  .tier-tab.active { background: var(--card); color: var(--ink); font-weight: 700; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+  .pillar-line {
+    height: 2px;
+    background: var(--track);
+    display: flex;
+    overflow: hidden;
+  }
+  .seg-moss { background: var(--moss); }
+  .seg-ochre { background: var(--ochre); }
+  .seg-bengara { background: var(--bengara); }
 
-  .search-input {
-    width: 100%;
-    border: 1.5px solid var(--line);
-    background: var(--surface);
-    border-radius: 14px;
-    padding: 11px 14px;
-    font-family: var(--sans);
-    font-size: 16px;
-    color: var(--ink);
-    margin-bottom: 10px;
+  .ledger-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--hairline);
+    margin-bottom: 8px;
+  }
+  .tier-links {
+    display: flex;
+    gap: 18px;
+  }
+  .tier-link {
+    font-size: 14px;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .tier-link.active {
+    color: var(--sumi);
+    font-weight: 600;
+  }
+  .zen-search {
+    width: 124px;
+    border: none;
+    border-bottom: 1px solid var(--hairline-strong);
+    background: transparent;
+    padding: 4px 0;
+    font-family: inherit;
+    font-size: 13.5px;
+    color: var(--sumi);
     outline: none;
   }
-  .search-input:focus { border-color: var(--ink); background: #FFFFFF; }
+  .zen-search::placeholder { color: var(--ink-3); }
 
-  .point-list { display: flex; flex-direction: column; }
-  .pt-item { padding: 14px 6px; border-bottom: 1px solid var(--line); cursor: pointer; }
-  .pt-item:last-child { border-bottom: none; }
-  .pt-main { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-  .pt-left { display: flex; align-items: center; gap: 9px; min-width: 0; }
-  .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-  .dot.todo { background: var(--red); }
-  .dot.wip { background: #D9A441; }
-  .dot.done { background: var(--green-bright); }
-  .pt-name { font-family: var(--jp); font-size: 17.5px; font-weight: 600; color: var(--ink); }
-  .pt-right { display: flex; align-items: center; gap: 7px; max-width: 58%; }
-  .pt-sub {
-    font-size: 14.5px;
-    color: var(--ink-2);
-    text-align: right;
+  .ledger-item {
+    padding: 13px 0;
+    border-bottom: 1px solid var(--hairline);
+    cursor: pointer;
+  }
+  .li-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .li-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+  .li-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .li-dot.todo { background: var(--bengara); }
+  .li-dot.wip { background: var(--ochre); }
+  .li-dot.done { background: var(--moss); }
+  .li-name {
+    font-family: var(--serif-jp);
+    font-size: 16.5px;
+    font-weight: 500;
+    color: var(--sumi);
+  }
+  .li-right {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .li-sub {
+    font-size: 13px;
+    color: var(--ink-3);
+    max-width: 136px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .pt-jump-btn {
-    border: 1.5px solid var(--green-border);
-    background: var(--green-bg);
-    color: var(--green);
-    font-family: var(--sans);
-    font-size: 13.5px;
-    font-weight: 700;
-    padding: 5px 10px;
-    border-radius: 999px;
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-  .pt-audio-btn {
-    border: none;
-    background: var(--subtle);
-    color: var(--ink);
-    font-family: var(--sans);
+  .li-act {
     font-size: 13px;
-    font-weight: 600;
-    padding: 5px 9px;
-    border-radius: 999px;
-    cursor: pointer;
-    flex-shrink: 0;
+    color: var(--moss);
+    font-weight: 500;
   }
-  .pt-note { margin-top: 8px; padding-left: 18px; font-size: 15px; color: var(--ink-2); line-height: 1.55; }
+  .li-note {
+    margin-top: 8px;
+    padding-left: 16px;
+    font-size: 13.5px;
+    color: var(--ink-2);
+    line-height: 1.55;
+  }
 
-  .modal-overlay {
+  /* ================= 6. DICTIONARY SHEET & MODAL ================= */
+  .zen-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(24, 22, 19, 0.36);
-    z-index: 1000;
+    background: rgba(28, 27, 24, 0.22);
+    z-index: 89;
+    display: none;
+  }
+  .zen-backdrop.open { display: block; }
+
+  .word-sheet {
+    position: fixed;
+    z-index: 90;
+    background: var(--sheet);
+    color: var(--sumi);
+    border: 1px solid var(--hairline-strong);
+    box-shadow: 0 18px 40px rgba(28, 27, 24, 0.12);
+    display: none;
+  }
+  .word-sheet.open { display: block; }
+
+  @media (max-width: 767px) {
+    .word-sheet {
+      left: 20px !important;
+      right: 20px !important;
+      bottom: calc(18px + env(safe-area-inset-bottom)) !important;
+      top: auto !important;
+      border-radius: 10px;
+      padding: 20px 22px;
+    }
+  }
+  @media (min-width: 768px) {
+    .word-sheet {
+      width: 320px;
+      border-radius: 8px;
+      padding: 18px 20px;
+    }
+  }
+  .ws-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+  }
+  .ws-head { font-family: var(--serif-jp); font-size: 22px; font-weight: 600; }
+  .ws-kana { font-size: 14.5px; color: var(--ink-2); margin-left: 8px; }
+  .ws-pitch { font-size: 12.5px; color: var(--ink-3); margin-left: 4px; }
+  .ws-speak { font-size: 13.5px; font-weight: 600; color: var(--moss); }
+  .ws-pos { font-size: 12.5px; color: var(--ink-3); margin-bottom: 4px; }
+  .ws-zh { font-size: 16.5px; font-weight: 500; color: var(--sumi); }
+  .ws-tip { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--hairline); font-size: 13.5px; color: var(--ink-2); line-height: 1.5; }
+
+  .modal-mask {
+    position: fixed;
+    inset: 0;
+    background: rgba(28, 27, 24, 0.28);
     display: none;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    padding: 26px;
+    z-index: 100;
   }
-  .modal-overlay.open { display: flex; }
-  .modal-box {
+  .modal-mask.open { display: flex; }
+  .modal-card {
     width: 100%;
-    max-width: 390px;
-    background: var(--card);
-    border-radius: 24px;
+    max-width: 340px;
+    background: var(--sheet);
+    border: 1px solid var(--hairline-strong);
+    border-radius: 10px;
     padding: 24px;
-    box-shadow: 0 24px 60px rgba(0,0,0,0.2);
   }
-  .modal-title { font-size: 20px; font-weight: 800; margin: 0 0 10px; }
-  .modal-p { font-size: 16px; line-height: 1.6; color: var(--ink-2); margin: 0 0 18px; }
-  .modal-actions { display: flex; gap: 10px; }
-
-  .done-wrap { text-align: center; padding: 28px 8px; }
-  .done-title { font-size: 24px; font-weight: 800; color: var(--green); margin: 0 0 10px; }
-  .done-sub { font-size: 17px; color: var(--ink-2); margin: 0 0 24px; line-height: 1.6; }
+  .modal-h { margin: 0 0 12px; font-size: 17px; font-weight: 600; letter-spacing: 0.04em; }
+  .modal-body { margin: 0 0 22px; font-size: 14.5px; color: var(--ink-2); line-height: 1.75; font-variant-numeric: tabular-nums; }
 </style>
 </head>
 <body>
-<div class="app-shell">
-  <header class="app-header">
-    <div class="brand-left">
-      <span class="n3-seal">N3</span>
-      <span class="countdown" id="countdown-txt">距考试 <strong>22</strong> 天</span>
-    </div>
-    <div class="header-right">
-      <button class="walk-icon-btn" id="walk-btn" onclick="toggleWalkMode()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
-        <span id="walk-btn-label">随身听</span>
-      </button>
-      <div class="mode-switch" role="tablist">
-        <button class="mode-btn active" id="tab-tutor" onclick="switchMode('tutor')">今日学习</button>
-        <button class="mode-btn" id="tab-dash" onclick="switchMode('dash')">总表</button>
-      </div>
-    </div>
+
+<div class="zen-shell" id="app-shell">
+  <!-- 1. STRICT GRID HEADER -->
+  <header class="zen-header">
+    <div class="zen-brand" id="countdown-txt">残 <strong>22</strong> 日</div>
+    <nav class="zen-nav">
+      <button class="nav-link active" id="tab-tutor" onclick="switchMode('tutor')">做题</button>
+      <button class="nav-link" id="tab-radio" onclick="switchMode('radio', true)">随身听</button>
+      <button class="nav-link" id="tab-dash" onclick="switchMode('dash')">总表</button>
+    </nav>
   </header>
 
-  <!-- VIEW 1: ADAPTIVE LEARNING + ALL-GREEN MISSION BOARD -->
-  <main class="tutor-wrap" id="tutor-view">
-    <div class="green-mission-board" onclick="openSessionModal()">
-      <div class="gm-top">
-        <span class="gm-left" id="gm-left-txt">今日全绿通关 <strong>0 / 50</strong></span>
-        <span class="gm-right" id="gm-right-txt">120分把握 <strong>66%</strong></span>
-      </div>
-      <div class="gm-cells" id="gm-cells"></div>
+  <!-- 2. ZEN MOSS HORIZON -->
+  <div class="zen-horizon" id="green-board" onclick="openSessionModal()">
+    <div class="horizon-meta">
+      <span id="gm-left-txt">今日 <b>0</b> / 50</span>
+      <span id="gm-right-txt">120分把握 <b>86%</b></span>
     </div>
-
-    <div class="tutor-scroll" id="tutor-scroll">
-      <div class="voice-card" id="voice-card"></div>
+    <div class="horizon-track">
+      <div class="horizon-fill" id="gm-fill" style="width:0%"></div>
     </div>
+  </div>
 
-    <footer class="studio-footer">
-      电脑快捷键：Space 播放/重听 · 1/2/3 作答 · Enter 继续 · S 语速
-    </footer>
+  <!-- 3A. ADAPTIVE QUIZ STAGE -->
+  <main class="zen-panel" id="tutor-view">
+    <div class="stage-wrap" id="voice-card"></div>
   </main>
 
-  <!-- VIEW 2: UNIFIED 4-PILLAR DASHBOARD ("总表") -->
-  <section class="dash-wrap" id="dash-view">
-    <div class="dash-left-col">
-      <div class="score-goal-card">
-        <div class="sg-head">
-          <span class="sg-title">冲刺 120+ 分当前把握度</span>
-          <span class="sg-pct" id="dash-readiness-pct">66%</span>
+  <!-- 3B. TWO-HOST CONVERSATIONAL RADIO SANCTUARY -->
+  <section class="zen-panel hidden" id="radio-view">
+    <div class="stage-wrap">
+      <div class="meta-bar">
+        <span class="overline" id="radio-date-pill">双人对谈</span>
+        <div class="quiet-actions">
+          <button class="text-btn" id="radio-spd-btn" onclick="cycleRadioSpeed()">1.0x</button>
         </div>
-        <div class="sg-bar"><div class="sg-fill" id="dash-readiness-fill" style="width:66%"></div></div>
-        <div class="sg-sub" id="dash-readiness-sub">按真题分值权重计算（阅读基础已稳，当前集中补齐听力60分与高分语法活用盲区）。</div>
       </div>
-      <div class="summary-card" id="dash-summary"></div>
-    </div>
 
-    <div class="detail-card">
-      <div class="mod-tabs mobile-only-mod-tabs" id="mod-tabs"></div>
-      <div class="tier-tabs" id="tier-tabs"></div>
-      <input type="search" class="search-input" id="pt-search" placeholder="搜语法、活用或词汇…" oninput="renderMasteryList()" />
-      <div class="point-list" id="point-list"></div>
+      <div class="radio-center">
+        <div class="radio-chap" id="radio-chap-lbl">易混深聊</div>
+        <h2 class="radio-topic" id="radio-live-title">阿哲 · 小夏　今日重点对谈</h2>
+        <p class="radio-ja" id="radio-live-ja"></p>
+      </div>
+
+      <div class="radio-dock">
+        <div class="scrub-wrap">
+          <input type="range" class="zen-range" id="radio-seek" min="0" max="2220" value="0" step="1" oninput="onRadioScrub(this.value)" />
+          <div class="time-pair">
+            <span id="radio-cur-time">00:00</span>
+            <span id="radio-tot-time">37:00</span>
+          </div>
+        </div>
+
+        <div class="transport-row">
+          <button class="step-time-btn" onclick="seekRadioBy(-15)">-15s</button>
+          <button class="play-toggle-btn" id="radio-play-btn" onclick="toggleRadioPlay()">播放</button>
+          <button class="step-time-btn" onclick="seekRadioBy(15)">+15s</button>
+        </div>
+
+        <div class="chapter-strip" id="radio-chap-pills"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3C. ZEN LEDGER ("总表") -->
+  <section class="zen-panel hidden" id="dash-view">
+    <div class="ledger-scroll">
+      <div class="ledger-layout">
+        <div class="pillar-list" id="dash-summary"></div>
+        <div>
+          <div class="ledger-controls">
+            <div class="tier-links" id="tier-tabs"></div>
+            <input type="search" class="zen-search" id="pt-search" placeholder="检索…" oninput="renderMasteryList()" />
+          </div>
+          <div id="point-list"></div>
+        </div>
+      </div>
     </div>
   </section>
 </div>
 
-<div class="sheet-backdrop" id="sheet-backdrop" onclick="hideWordPopover()"></div>
-<div class="word-popover" id="word-popover"></div>
+<div class="zen-backdrop" id="sheet-backdrop" onclick="hideWordPopover()"></div>
+<div class="word-sheet" id="word-popover"></div>
 
-<div class="modal-overlay" id="app-modal" onclick="if(event.target===this)closeModal()">
-  <div class="modal-box" id="modal-content"></div>
+<div class="modal-mask" id="app-modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-card" id="modal-content"></div>
 </div>
 
 <script>
 const DATA = __PAYLOAD__;
 const SPEEDS = [1.0, 1.2, 1.3, 1.5];
-const ADAPTIVE_KEY = "n3_adaptive_v7_" + DATA.plan_date;
+const RADIO_SPEEDS = [1.0, 1.15, 1.3];
+const ADAPTIVE_KEY = "n3_adaptive_v9_" + DATA.plan_date;
+const RADIO_POS_KEY = "n3_radio_pos_" + (DATA.radio.date || DATA.plan_date);
 
 let expSpeed = parseFloat(localStorage.getItem("n3_exp_speed") || "1.3");
 if (!SPEEDS.includes(expSpeed)) expSpeed = 1.3;
+let radioSpeed = parseFloat(localStorage.getItem("n3_radio_speed") || "1.0");
+if (!RADIO_SPEEDS.includes(radioSpeed)) radioSpeed = 1.0;
 
 let activeKind = null;
+let activeMode = "tutor";
 
-// Instant Web Auto-Sync (Zero Manual Cache Clearing)
 if ("serviceWorker" in navigator) {
   let swRefreshing = false;
   navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" }).then(reg => {
@@ -1428,11 +1425,10 @@ if ("serviceWorker" in navigator) {
       if (document.visibilityState === "visible") reg.update().catch(() => {});
     });
   }).catch(() => {});
-
   navigator.serviceWorker.addEventListener("controllerchange", () => {
     if (swRefreshing) return;
     swRefreshing = true;
-    if (!activeKind) location.reload();
+    if (!activeKind && radioPlayer.paused) location.reload();
   });
 }
 
@@ -1452,13 +1448,14 @@ function computeDaysLeft() {
   }
 }
 
-// ================= REAL-TIME ADAPTIVE ENGINE =================
+// ================= MASTER ALGORITHM (RADIO <-> QUIZ CLOSED LOOP) =================
 function createFreshAdaptiveState() {
   const pts = {};
   DATA.points.forEach(p => {
     pts[p.id] = {
-      status: "unseen",            // "unseen" (gray) -> "learning" (amber) -> "green" (done)
-      needsTeach: !!p.initial_weak, // Weak points ALWAYS teach knowledge card first, quiz 4 steps later!
+      status: "unseen",
+      needsTeach: !!p.initial_weak,
+      audioPrimed: false,
       variantIdx: 0,
       useVariant: false,
       dueStep: 0,
@@ -1497,9 +1494,7 @@ function loadAdaptiveState() {
 let A = loadAdaptiveState();
 
 function saveAdaptiveState() {
-  try {
-    localStorage.setItem(ADAPTIVE_KEY, JSON.stringify(A));
-  } catch (e) {}
+  try { localStorage.setItem(ADAPTIVE_KEY, JSON.stringify(A)); } catch (e) {}
 }
 
 function applyMasteryOverrides() {
@@ -1513,9 +1508,8 @@ function applyMasteryOverrides() {
 }
 applyMasteryOverrides();
 
-// Exam-Weighted 120-Point Readiness Model (Reading 60pt strong baseline + 4 Tracked N3 Pillars)
 function compute120ReadinessPct() {
-  let earnedPts = 47.0; // Reading comprehension strong baseline (~78-81% of 60 pts)
+  let earnedPts = 47.0;
   Object.keys(DATA.mastery).forEach(modKey => {
     const mod = DATA.mastery[modKey];
     const items = mod.items;
@@ -1526,10 +1520,8 @@ function compute120ReadinessPct() {
       else if (it.tier === "wip") sum += 0.58;
       else sum += 0.12;
     });
-    const ratio = sum / items.length;
-    earnedPts += ratio * mod.exam_pts * 0.72;
+    earnedPts += (sum / items.length) * mod.exam_pts * 0.72;
   });
-  // Direct high-ROI boost from today's 50 core exam points turning green
   let greenWeight = 0;
   let totalWeight = 0;
   DATA.points.forEach(p => {
@@ -1538,17 +1530,12 @@ function compute120ReadinessPct() {
     if (st === "green") greenWeight += p.exam_weight;
     else if (st === "learning") greenWeight += p.exam_weight * 0.35;
   });
-  const missionRatio = greenWeight / Math.max(1, totalWeight);
-  const estScore = earnedPts + missionRatio * 20.5;
-  const pct = Math.min(99, Math.max(55, Math.round((estScore / 125.0) * 100)));
-  return pct;
+  const estScore = earnedPts + (greenWeight / Math.max(1, totalWeight)) * 20.5;
+  return Math.min(99, Math.max(55, Math.round((estScore / 125.0) * 100)));
 }
 
-// Pick the optimal next point & card mode ("teach" vs "quiz") based on current mastery & confusion graph
 function selectNextPointId(forcedId) {
-  if (forcedId && A.pts[forcedId] && A.pts[forcedId].status !== "green") {
-    return forcedId;
-  }
+  if (forcedId && A.pts[forcedId] && A.pts[forcedId].status !== "green") return forcedId;
   const remaining = DATA.points.filter(p => A.pts[p.id].status !== "green");
   if (!remaining.length) return null;
   if (remaining.length === 1) return remaining[0].id;
@@ -1556,46 +1543,43 @@ function selectNextPointId(forcedId) {
   const nonRepeat = remaining.filter(p => p.id !== A.lastPointId);
   const pool = nonRepeat.length ? nonRepeat : remaining;
 
-  // 1. Due spaced quizzes (learned Teach Card 4+ steps ago, or due Reverse-Angle Variant after mistake!)
   const dueQuizzes = pool.filter(p => {
     const s = A.pts[p.id];
     return s.status === "learning" && !s.needsTeach && s.dueStep <= A.step;
   });
   if (dueQuizzes.length) {
-    dueQuizzes.sort((a, b) => A.pts[a.id].dueStep - A.pts[b.id].dueStep || b.roi_score - a.roi_score);
+    dueQuizzes.sort((a, b) => {
+      const pa = A.pts[a.id].audioPrimed ? 1 : 0;
+      const pb = A.pts[b.id].audioPrimed ? 1 : 0;
+      return A.pts[a.id].dueStep - A.pts[b.id].dueStep || pb - pa || b.roi_score - a.roi_score;
+    });
     return dueQuizzes[0].id;
   }
 
-  // 2. Confusion-Family Pivot: if user just missed a point in family F, pull a ready sibling in family F!
   if (A.hotFamily) {
     const famSiblings = pool.filter(p => p.family === A.hotFamily && A.pts[p.id].dueStep <= A.step);
-    if (famSiblings.length) {
-      return famSiblings[0].id;
-    }
+    if (famSiblings.length) return famSiblings[0].id;
   }
 
-  // 3. Next highest Exam-Weight x Weakness point whose dueStep <= A.step
   const ready = pool.filter(p => A.pts[p.id].dueStep <= A.step);
   if (ready.length) {
+    ready.sort((a, b) => {
+      const ma = a.modality === "memorize" ? 0.25 : (a.modality === "both" ? 0.12 : 0);
+      const mb = b.modality === "memorize" ? 0.25 : (b.modality === "both" ? 0.12 : 0);
+      return (b.roi_score + mb) - (a.roi_score + ma);
+    });
     return ready[0].id;
   }
 
-  // 4. Near end of session when only a couple cooling-down items remain: pick earliest dueStep
   pool.sort((a, b) => A.pts[a.id].dueStep - A.pts[b.id].dueStep);
   return pool[0].id;
 }
 
 let curPointId = selectNextPointId();
-let viewStage = "active"; // "teach" | "quiz" | "result" | "done"
+let viewStage = "quiz";
 let activeQuizObj = null;
 let currentChoices = [];
 let pickedVal = null;
-let quizShownAt = Date.now();
-let walkMode = false;
-let walkTimer = null;
-let thinkingCountdown = 0;
-let activeMode = "tutor";
-let wakeLockSentinel = null;
 
 function getPointById(pid) {
   return DATA.points.find(p => p.id === pid) || null;
@@ -1621,9 +1605,6 @@ function prepareChoices(qObj, salt) {
 function setupCurrentTurn(forcedId) {
   curPointId = selectNextPointId(forcedId);
   pickedVal = null;
-  const sc = document.getElementById("tutor-scroll");
-  if (sc) sc.scrollTop = 0;
-
   if (!curPointId) {
     viewStage = "done";
     activeQuizObj = null;
@@ -1631,22 +1612,24 @@ function setupCurrentTurn(forcedId) {
   }
   const p = getPointById(curPointId);
   const ps = A.pts[curPointId];
-  if (ps.needsTeach && !walkMode) {
+  if (ps.needsTeach && !ps.audioPrimed && !p.primary.is_listening) {
     viewStage = "teach";
     activeQuizObj = null;
   } else {
     viewStage = "quiz";
     activeQuizObj = getQuizForPoint(p, ps);
     currentChoices = prepareChoices(activeQuizObj, ps.wrongCount);
-    quizShownAt = Date.now();
   }
 }
 setupCurrentTurn();
 
+// ================= AUDIO PLAYERS =================
 const player = new Audio();
 player.preload = "auto";
 const wordPlayer = new Audio();
 wordPlayer.preload = "auto";
+const radioPlayer = new Audio();
+radioPlayer.preload = "metadata";
 
 const DICT_KEYS = Object.keys(DATA.words).sort((a, b) => b.length - a.length);
 
@@ -1697,7 +1680,6 @@ function applyPlaybackRate(kind) {
   player.defaultPlaybackRate = rate;
   player.playbackRate = rate;
   if ("preservesPitch" in player) player.preservesPitch = true;
-  if ("webkitPreservesPitch" in player) player.webkitPreservesPitch = true;
 }
 
 function cycleExpSpeed() {
@@ -1708,17 +1690,7 @@ function cycleExpSpeed() {
   if (spdBtn) spdBtn.textContent = `${expSpeed.toFixed(1)}x`;
 }
 
-function clearWalkTimer() {
-  if (walkTimer) {
-    clearInterval(walkTimer);
-    clearTimeout(walkTimer);
-    walkTimer = null;
-  }
-  thinkingCountdown = 0;
-}
-
-function stopAudio() {
-  clearWalkTimer();
+function stopQuizAudio() {
   try {
     player.pause();
     player.currentTime = 0;
@@ -1730,9 +1702,9 @@ function stopAudio() {
 
 function playMainClip(url, kind, toggleIfSame) {
   if (!url) return;
-  clearWalkTimer();
+  if (!radioPlayer.paused) radioPlayer.pause();
   if (toggleIfSame && activeKind === kind && !player.paused) {
-    stopAudio();
+    stopQuizAudio();
     return;
   }
   activeKind = kind;
@@ -1755,81 +1727,188 @@ player.addEventListener("play", () => {
 });
 player.addEventListener("pause", syncAudioButtons);
 player.addEventListener("ended", () => {
-  const finishedKind = activeKind;
   activeKind = null;
   syncAudioButtons();
-
-  if (!walkMode || activeMode !== "tutor" || viewStage === "done") return;
-  if (finishedKind === "q" && viewStage === "quiz") {
-    thinkingCountdown = 4;
-    syncAudioButtons();
-    walkTimer = setInterval(() => {
-      thinkingCountdown -= 1;
-      syncAudioButtons();
-      if (thinkingCountdown <= 0) {
-        clearWalkTimer();
-        if (walkMode && viewStage === "quiz" && activeQuizObj) {
-          submitAnswer(activeQuizObj.answer, true);
-        }
-      }
-    }, 900);
-  } else if (finishedKind === "exp" && viewStage === "result") {
-    walkTimer = setTimeout(() => {
-      if (walkMode && viewStage === "result") advanceNext(false);
-    }, 900);
-  }
 });
 
 function syncAudioButtons() {
   const orb = document.getElementById("voice-orb");
-  const cap = document.getElementById("orb-caption");
-  if (orb && cap) {
-    const speaking = activeKind === "q" && !player.paused;
-    orb.classList.toggle("speaking", !!speaking);
-    orb.classList.toggle("thinking", thinkingCountdown > 0);
-    if (thinkingCountdown > 0) {
-      cap.textContent = `心里想一下答案… ${thinkingCountdown}s`;
-    } else if (speaking) {
-      cap.textContent = "播放中 · 点此暂停";
-    } else {
-      cap.textContent = (activeQuizObj && activeQuizObj.is_listening) ? "点此听对话" : "点此听题";
-    }
+  if (orb) orb.classList.toggle("speaking", activeKind === "q" && !player.paused);
+  const qBtn = document.getElementById("q-play-btn");
+  if (qBtn) {
+    const onQ = activeKind === "q" && !player.paused;
+    qBtn.classList.toggle("playing", onQ);
+    qBtn.textContent = onQ ? "暂停" : "读题";
   }
   const repBtn = document.getElementById("exp-replay-btn");
   if (repBtn) {
     const on = (activeKind === "exp" || activeKind === "teach") && !player.paused;
     repBtn.classList.toggle("playing", on);
-    repBtn.textContent = on ? "暂停讲解" : (viewStage === "teach" ? "听讲解" : "重听讲解");
+    repBtn.textContent = on ? "暂停" : "讲解";
   }
 }
 
-async function requestWakeLock(enable) {
-  try {
-    if (enable && "wakeLock" in navigator && !wakeLockSentinel) {
-      wakeLockSentinel = await navigator.wakeLock.request("screen");
-    } else if (!enable && wakeLockSentinel) {
-      await wakeLockSentinel.release();
-      wakeLockSentinel = null;
+// ================= TWO-HOST RADIO ENGINE =================
+let radioInitialized = false;
+let lastSavedSec = -1;
+
+function formatMMSS(sec) {
+  const s = Math.max(0, Math.floor(sec || 0));
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return `${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
+}
+
+function ensureRadioReady() {
+  if (!radioInitialized) {
+    radioInitialized = true;
+    radioPlayer.src = DATA.radio.audio_url;
+    const savedPos = parseFloat(localStorage.getItem(RADIO_POS_KEY) || "0");
+    if (savedPos > 3 && savedPos < (DATA.radio.duration_sec || 2400) - 10) {
+      radioPlayer.currentTime = savedPos;
     }
+    document.getElementById("radio-date-pill").textContent = `${DATA.radio.display_date || "今日"} · 双人对谈`;
+    document.getElementById("radio-spd-btn").textContent = `${radioSpeed}x`;
+    const seekEl = document.getElementById("radio-seek");
+    seekEl.max = Math.ceil(DATA.radio.duration_sec || 2220);
+    document.getElementById("radio-tot-time").textContent = formatMMSS(DATA.radio.duration_sec || 2220);
+    renderRadioChapters(0);
+    updateRadioLiveDisplay(radioPlayer.currentTime || savedPos || 0);
+  }
+  radioPlayer.defaultPlaybackRate = radioSpeed;
+  radioPlayer.playbackRate = radioSpeed;
+  if ("preservesPitch" in radioPlayer) radioPlayer.preservesPitch = true;
+}
+
+function setupMediaSession(segTitle) {
+  if (!("mediaSession" in navigator)) return;
+  try {
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: segTitle || "N3 双人随身电台",
+      artist: "阿哲 · 小夏",
+      album: "JLPT N3"
+    });
+    navigator.mediaSession.setActionHandler("play", () => toggleRadioPlay(true));
+    navigator.mediaSession.setActionHandler("pause", () => toggleRadioPlay(false));
+    navigator.mediaSession.setActionHandler("seekbackward", () => seekRadioBy(-15));
+    navigator.mediaSession.setActionHandler("seekforward", () => seekRadioBy(15));
+    navigator.mediaSession.setActionHandler("previoustrack", () => seekRadioBy(-15));
+    navigator.mediaSession.setActionHandler("nexttrack", () => seekRadioBy(15));
   } catch (e) {}
 }
 
-function toggleWalkMode(forceState) {
-  walkMode = typeof forceState === "boolean" ? forceState : !walkMode;
-  const btn = document.getElementById("walk-btn");
-  const lbl = document.getElementById("walk-btn-label");
-  if (btn) btn.classList.toggle("active", walkMode);
-  if (lbl) lbl.textContent = walkMode ? "随身听中" : "随身听";
-  requestWakeLock(walkMode);
+function toggleRadioPlay(forcePlay) {
+  stopQuizAudio();
+  ensureRadioReady();
+  const wantPlay = typeof forcePlay === "boolean" ? forcePlay : radioPlayer.paused;
+  if (wantPlay) {
+    radioPlayer.playbackRate = radioSpeed;
+    radioPlayer.play().catch(() => {});
+  } else {
+    radioPlayer.pause();
+  }
+  syncRadioUI();
+}
 
-  stopAudio();
-  setupCurrentTurn(curPointId);
-  renderTutor();
-  if (walkMode && activeQuizObj) {
-    playMainClip(activeQuizObj.q_audio, "q", false);
+function seekRadioBy(delta) {
+  ensureRadioReady();
+  const dur = radioPlayer.duration || DATA.radio.duration_sec || 2220;
+  radioPlayer.currentTime = Math.max(0, Math.min(dur - 1, (radioPlayer.currentTime || 0) + delta));
+  updateRadioLiveDisplay(radioPlayer.currentTime);
+}
+
+function jumpRadioChapter(startSec) {
+  ensureRadioReady();
+  radioPlayer.currentTime = startSec;
+  if (radioPlayer.paused) toggleRadioPlay(true);
+  updateRadioLiveDisplay(startSec);
+}
+
+function onRadioScrub(val) {
+  ensureRadioReady();
+  radioPlayer.currentTime = parseFloat(val) || 0;
+  updateRadioLiveDisplay(radioPlayer.currentTime);
+}
+
+function cycleRadioSpeed() {
+  radioSpeed = RADIO_SPEEDS[(RADIO_SPEEDS.indexOf(radioSpeed) + 1) % RADIO_SPEEDS.length];
+  try { localStorage.setItem("n3_radio_speed", String(radioSpeed)); } catch (e) {}
+  radioPlayer.defaultPlaybackRate = radioSpeed;
+  radioPlayer.playbackRate = radioSpeed;
+  document.getElementById("radio-spd-btn").textContent = `${radioSpeed}x`;
+}
+
+function renderRadioChapters(activeChapIdx) {
+  const chaps = DATA.radio.chapters || [];
+  document.getElementById("radio-chap-pills").innerHTML = chaps.map(c => `
+    <button class="chap-link ${c.idx === activeChapIdx ? 'active' : ''}" onclick="jumpRadioChapter(${c.start})">${escapeHtml(c.title.replace(/^[①②③④]\s*/, ""))}</button>
+  `).join("");
+}
+
+function updateRadioLiveDisplay(t) {
+  const seekEl = document.getElementById("radio-seek");
+  if (seekEl) seekEl.value = Math.floor(t);
+  document.getElementById("radio-cur-time").textContent = formatMMSS(t);
+  if (radioPlayer.duration && isFinite(radioPlayer.duration)) {
+    seekEl.max = Math.ceil(radioPlayer.duration);
+    document.getElementById("radio-tot-time").textContent = formatMMSS(radioPlayer.duration);
+  }
+
+  const segs = DATA.radio.segments || [];
+  let curSeg = null;
+  for (let i = 0; i < segs.length; i++) {
+    if (t >= segs[i].start && t < segs[i].end) {
+      curSeg = segs[i];
+      break;
+    }
+  }
+
+  if (curSeg) {
+    const chaps = DATA.radio.chapters || [];
+    const chapObj = chaps[curSeg.chapter] || chaps[0];
+    if (chapObj) {
+      document.getElementById("radio-chap-lbl").textContent = chapObj.title.replace(/^[①②③④]\s*/, "");
+      renderRadioChapters(chapObj.idx);
+    }
+    document.getElementById("radio-live-title").textContent = curSeg.title;
+    document.getElementById("radio-live-ja").innerHTML = annotateJapanese(curSeg.ja_focus || "");
+    setupMediaSession(curSeg.title);
+
+    if (curSeg.point_id && A.pts[curSeg.point_id] && t >= curSeg.end - 6) {
+      const ps = A.pts[curSeg.point_id];
+      if (!ps.audioPrimed) {
+        ps.audioPrimed = true;
+        ps.needsTeach = false;
+        if (ps.status === "unseen") ps.status = "learning";
+        saveAdaptiveState();
+        renderGreenBoard();
+      }
+    }
   }
 }
 
+function syncRadioUI() {
+  const playing = !radioPlayer.paused;
+  const btn = document.getElementById("radio-play-btn");
+  if (btn) btn.textContent = playing ? "暂停" : "播放";
+  const tabBtn = document.getElementById("tab-radio");
+  if (tabBtn) tabBtn.classList.toggle("is-playing", playing);
+}
+
+radioPlayer.addEventListener("play", syncRadioUI);
+radioPlayer.addEventListener("pause", syncRadioUI);
+radioPlayer.addEventListener("ended", syncRadioUI);
+radioPlayer.addEventListener("loadedmetadata", () => updateRadioLiveDisplay(radioPlayer.currentTime || 0));
+radioPlayer.addEventListener("timeupdate", () => {
+  const t = radioPlayer.currentTime || 0;
+  updateRadioLiveDisplay(t);
+  if (Math.abs(t - lastSavedSec) >= 3) {
+    lastSavedSec = t;
+    try { localStorage.setItem(RADIO_POS_KEY, String(Math.floor(t))); } catch (e) {}
+  }
+});
+
+// ================= QUIZ ACTIONS =================
 function syncBackendRecord(p, qid, choice, isCorrect, askAgain, newTier) {
   A.masteryOverrides[p.point_key] = newTier;
   A.masteryOverrides[p.point] = newTier;
@@ -1853,16 +1932,15 @@ function syncBackendRecord(p, qid, choice, isCorrect, askAgain, newTier) {
   }
 }
 
-// Step 1A: User finishes studying a Knowledge Teaching Card -> schedule real Quiz 4 steps later!
 function completeTeachCard() {
-  stopAudio();
+  stopQuizAudio();
   hideWordPopover();
   const p = getPointById(curPointId);
   if (p) {
     const ps = A.pts[p.id];
     ps.status = "learning";
     ps.needsTeach = false;
-    ps.dueStep = A.step + 4; // Spaced retrieval: come back 4 steps later to test!
+    ps.dueStep = A.step + 4;
     A.step += 1;
     A.lastPointId = p.id;
     A.hotFamily = null;
@@ -1873,9 +1951,8 @@ function completeTeachCard() {
   autoPlayCurrentTurn();
 }
 
-// If user taps "不确定，先看知识点" on a semi-familiar Quiz -> flip immediately to its Knowledge Card!
 function switchToTeachForCurrent() {
-  stopAudio();
+  stopQuizAudio();
   hideWordPopover();
   const p = getPointById(curPointId);
   if (!p) return;
@@ -1883,45 +1960,31 @@ function switchToTeachForCurrent() {
   ps.status = "learning";
   ps.needsTeach = true;
   ps.wrongCount += 1;
-  if (p.variants && p.variants.length > 0) {
-    ps.useVariant = true; // Next quiz will use a fresh angle!
-  }
+  if (p.variants && p.variants.length > 0) ps.useVariant = true;
   A.hotFamily = p.family;
-  syncBackendRecord(p, activeQuizObj ? activeQuizObj.id : p.id, "先学考点", false, false, "todo");
+  syncBackendRecord(p, activeQuizObj ? activeQuizObj.id : p.id, "先看考点", false, false, "todo");
   viewStage = "teach";
   renderTutor();
   playMainClip(p.teach.audio, "teach", false);
 }
 
-let lastFromWalk = false;
-
-// Step 1B: User answers a Quiz -> Adaptive Engine updates Green Matrix & schedules next path!
-function submitAnswer(val, fromWalk) {
+function submitAnswer(val) {
   if (viewStage !== "quiz" || !activeQuizObj) return;
   hideWordPopover();
-  stopAudio();
+  stopQuizAudio();
   pickedVal = val;
-  lastFromWalk = !!fromWalk;
   viewStage = "result";
 
   const p = getPointById(curPointId);
   const ps = A.pts[p.id];
   const isCorrect = (val === activeQuizObj.answer);
 
-  if (fromWalk) {
-    // Passive Walk Mode: warm up point and cycle through all 50 points without faking green mastery!
-    if (ps.status === "unseen") {
-      ps.status = "learning";
-      ps.needsTeach = false;
-    }
-    ps.dueStep = A.step + DATA.points.length;
-  } else if (isCorrect) {
-    ps.status = "green"; // Cell turns SOLID EMERALD GREEN!
+  if (isCorrect) {
+    ps.status = "green";
     ps.needsTeach = false;
     A.hotFamily = null;
     syncBackendRecord(p, activeQuizObj.id, val, true, false, "done");
   } else {
-    // Wrong: stays Amber, activates Confusion-Family contrast next, and schedules Reverse-Angle Variant 4 steps later!
     ps.status = "learning";
     ps.needsTeach = false;
     ps.wrongCount += 1;
@@ -1937,13 +2000,12 @@ function submitAnswer(val, fromWalk) {
   A.step += 1;
   A.lastPointId = p.id;
   saveAdaptiveState();
-
   renderTutor();
   playMainClip(activeQuizObj.exp_audio, "exp", false);
 }
 
 function advanceNext(forceRetestCurrent) {
-  stopAudio();
+  stopQuizAudio();
   hideWordPopover();
   if (forceRetestCurrent && curPointId) {
     const p = getPointById(curPointId);
@@ -1960,6 +2022,7 @@ function advanceNext(forceRetestCurrent) {
 }
 
 function autoPlayCurrentTurn() {
+  if (activeMode !== "tutor") return;
   if (viewStage === "teach") {
     const p = getPointById(curPointId);
     if (p && p.teach.audio) playMainClip(p.teach.audio, "teach", false);
@@ -1972,7 +2035,8 @@ function autoPlayCurrentTurn() {
 
 function jumpToPointById(pid) {
   if (!pid || !A.pts[pid]) return;
-  stopAudio();
+  stopQuizAudio();
+  if (!radioPlayer.paused) radioPlayer.pause();
   if (A.pts[pid].status === "green") {
     A.pts[pid].status = "learning";
     A.pts[pid].needsTeach = false;
@@ -1985,7 +2049,7 @@ function jumpToPointById(pid) {
 }
 
 function resetTodayMission() {
-  stopAudio();
+  stopQuizAudio();
   const keepOverrides = A.masteryOverrides || {};
   A = createFreshAdaptiveState();
   A.masteryOverrides = keepOverrides;
@@ -1996,23 +2060,15 @@ function resetTodayMission() {
 }
 
 function renderGreenBoard() {
-  document.getElementById("countdown-txt").innerHTML = `距考试 <strong>${computeDaysLeft()}</strong> 天`;
+  document.getElementById("countdown-txt").innerHTML = `残 <strong>${computeDaysLeft()}</strong> 日`;
   const total = DATA.points.length;
-  let greenCnt = 0;
-  const cellsHTML = DATA.points.map(p => {
-    const st = A.pts[p.id].status;
-    if (st === "green") greenCnt += 1;
-    let cls = "gm-cell";
-    if (st === "green") cls += " green";
-    else if (st === "learning") cls += " learning";
-    if (p.id === curPointId && viewStage !== "done") cls += " current";
-    return `<div class="${cls}"></div>`;
-  }).join("");
-
+  const greenCnt = DATA.points.filter(p => A.pts[p.id].status === "green").length;
+  const pct = Math.round((greenCnt / Math.max(1, total)) * 100);
   const readiness = compute120ReadinessPct();
-  document.getElementById("gm-left-txt").innerHTML = `今日全绿通关 <strong>${greenCnt} / ${total}</strong>`;
-  document.getElementById("gm-right-txt").innerHTML = `120分把握 <strong>${readiness}%</strong>`;
-  document.getElementById("gm-cells").innerHTML = cellsHTML;
+
+  document.getElementById("gm-left-txt").innerHTML = `今日 <b>${greenCnt}</b> / ${total}`;
+  document.getElementById("gm-right-txt").innerHTML = `120分把握 <b>${readiness}%</b>`;
+  document.getElementById("gm-fill").style.width = `${pct}%`;
 }
 
 function renderTutor() {
@@ -2022,12 +2078,15 @@ function renderTutor() {
   if (viewStage === "done" || !curPointId) {
     const readiness = compute120ReadinessPct();
     box.innerHTML = `
-      <div class="done-wrap">
-        <h2 class="done-title">50 格全部变绿！今日通关</h2>
-        <p class="done-sub">今天最重要的 50 个 N3 核心提分考点已全部拿下，冲刺 120+ 把握度已推升至 <strong>${readiness}%</strong>。安心去睡觉吧！</p>
-        <div class="nav-row">
-          <button class="again-btn" onclick="switchMode('dash')">看全局总表</button>
-          <button class="next-btn" onclick="resetTodayMission()">再刷一轮</button>
+      <div class="meta-bar"><span class="overline ok">今日圆满</span></div>
+      <div class="focal-space">
+        <h2 class="point-heading">五十考点皆已过关</h2>
+        <p class="result-insight">120 分把握度已升至 ${readiness}%，今夜可以安心休息了。</p>
+      </div>
+      <div class="action-dock">
+        <div class="dock-row">
+          <button class="ghost-btn" onclick="switchMode('dash')">总表</button>
+          <button class="sumi-btn" onclick="resetTodayMission()">重新一轮</button>
         </div>
       </div>
     `;
@@ -2037,145 +2096,133 @@ function renderTutor() {
   const p = getPointById(curPointId);
   const ps = A.pts[curPointId];
 
-  // -------- CARD 1: TEACH KNOWLEDGE POINT FIRST (When Mastery is Low!) --------
+  // -------- TEACH --------
   if (viewStage === "teach") {
     warmAudio(p.teach.audio);
     warmAudio(p.primary.q_audio);
     box.innerHTML = `
-      <div class="card-top-row">
-        <span class="stage-pill teach">${escapeHtml(p.subject)} · 先记考点（稍后考你）</span>
-        <div style="display:flex;gap:6px;">
-          <button class="mini-audio-btn" id="exp-replay-btn" onclick="playMainClip('${p.teach.audio}', 'teach', true)">听讲解</button>
-          <button class="mini-audio-btn" id="ans-spd-btn" onclick="cycleExpSpeed()">${expSpeed.toFixed(1)}x</button>
+      <div class="meta-bar">
+        <span class="overline warm">${escapeHtml(p.subject)} · 先看考点</span>
+        <div class="quiet-actions">
+          <button class="text-btn" id="exp-replay-btn" onclick="playMainClip('${p.teach.audio}', 'teach', true)">讲解</button>
+          <button class="text-btn" id="ans-spd-btn" onclick="cycleExpSpeed()">${expSpeed.toFixed(1)}x</button>
         </div>
       </div>
 
-      <h2 class="teach-title">${escapeHtml(p.point)}</h2>
-
-      <div class="contrast-stack">
-        <div class="contrast-item primary">
-          <div class="ci-ja">✓ ${escapeHtml(p.teach.left.ja)}</div>
-          <div class="ci-sub">${escapeHtml(p.teach.left.sub)}</div>
+      <div class="focal-space">
+        <h2 class="point-heading">${escapeHtml(p.point)}</h2>
+        <div class="zen-pair">
+          <div class="zen-pair-row">
+            <div class="zp-ja"><span class="zp-dot"></span><span>${escapeHtml(p.teach.left.ja)}</span></div>
+            <div class="zp-sub">${escapeHtml(p.teach.left.sub)}</div>
+          </div>
+          ${p.teach.right && p.teach.right.ja ? `
+          <div class="zen-pair-row">
+            <div class="zp-ja"><span class="zp-dot muted"></span><span>${escapeHtml(p.teach.right.ja)}</span></div>
+            <div class="zp-sub">${escapeHtml(p.teach.right.sub)}</div>
+          </div>` : ""}
         </div>
-        ${p.teach.right && p.teach.right.ja ? `
-        <div class="contrast-item">
-          <div class="ci-ja">↔ ${escapeHtml(p.teach.right.ja)}</div>
-          <div class="ci-sub">${escapeHtml(p.teach.right.sub)}</div>
-        </div>` : ""}
+        <div class="example-line">${annotateJapanese(p.teach.example_ja)}</div>
       </div>
 
-      <div class="core-rule-box">${escapeHtml(p.teach.rule)}</div>
-
-      <div class="full-sentence-box">
-        <div class="full-sentence-hint">
-          <span>代表例句</span>
-          <span>点划线词看意思·听发音</span>
-        </div>
-        <div class="full-sentence-ja">${annotateJapanese(p.teach.example_ja)}</div>
-      </div>
-
-      <div class="nav-row">
-        <button class="next-btn" onclick="completeTeachCard()">记住了，继续 → <span class="kbd-hint">Enter</span></button>
+      <div class="action-dock">
+        <button class="sumi-btn" style="width:100%;" onclick="completeTeachCard()">继续</button>
       </div>
     `;
     syncAudioButtons();
     return;
   }
 
-  // -------- CARD 2: ADAPTIVE QUIZ (Primary or Reverse-Angle Variant) --------
+  // -------- QUIZ --------
   if (viewStage === "quiz" && activeQuizObj) {
     warmAudio(activeQuizObj.q_audio);
     warmAudio(activeQuizObj.exp_audio);
     const isVariant = activeQuizObj.id !== p.primary.id;
-    const pillCls = isVariant ? "stage-pill variant" : "stage-pill quiz";
-    const pillTxt = isVariant ? `${escapeHtml(p.subject)} · 换角度复检` : `${escapeHtml(p.subject)} · 实战检验`;
+    let label = p.subject;
+    if (isVariant) label += " · 换题复考";
+    else if (ps.audioPrimed) label += " · 电台已听";
 
     const choicesHTML = currentChoices.map((c, cIdx) => `
-      <button class="choice-btn" onclick='submitAnswer(${JSON.stringify(c)}, false)'>
+      <button class="zen-choice" onclick='submitAnswer(${JSON.stringify(c)})'>
         <span>${escapeHtml(c)}</span>
-        <span class="kbd-hint">${cIdx + 1}</span>
+        <span class="kbd-tag">${cIdx + 1}</span>
       </button>
     `).join("");
 
     box.innerHTML = `
-      <div class="card-top-row">
-        <span class="${pillCls}">${pillTxt}</span>
-        <span></span>
+      <div class="meta-bar">
+        <span class="overline">${escapeHtml(label)}</span>
+        <div class="quiet-actions">
+          ${!activeQuizObj.is_listening ? `<button class="text-btn" id="q-play-btn" onclick="playMainClip(activeQuizObj.q_audio, 'q', true)">读题</button>` : ""}
+        </div>
       </div>
-      <div class="orb-stage">
-        <button class="voice-orb ${activeQuizObj.is_listening ? 'listening-emphasis' : ''}" id="voice-orb" onclick="playMainClip(activeQuizObj.q_audio, 'q', true)" aria-label="播放题目">
-          <svg class="orb-play-ic" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86A1 1 0 0 0 8 5.14z"/></svg>
-          <div class="orb-bars"><span></span><span></span><span></span><span></span></div>
-        </button>
-        <div class="orb-caption" id="orb-caption">${activeQuizObj.is_listening ? "点此听对话" : "点此听题"}</div>
+
+      <div class="focal-space">
+        <div class="quiz-focal">
+          ${activeQuizObj.is_listening ? `
+          <div class="listen-medallion-wrap">
+            <button class="listen-medallion" id="voice-orb" onclick="playMainClip(activeQuizObj.q_audio, 'q', true)" aria-label="播放">
+              <svg class="med-ic" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86A1 1 0 0 0 8 5.14z"/></svg>
+              <div class="med-waves"><span></span><span></span><span></span></div>
+            </button>
+            <p class="listen-prompt">${escapeHtml(activeQuizObj.prompt)}</p>
+          </div>` : `<p class="quiz-ja">${escapeHtml(activeQuizObj.prompt)}</p>`}
+        </div>
+
+        <div class="choice-list">
+          ${choicesHTML}
+        </div>
       </div>
-      <p class="prompt-cue ${activeQuizObj.is_listening ? 'is-listening-cue' : ''}">${escapeHtml(activeQuizObj.prompt)}</p>
-      <div class="choices-stack">
-        ${choicesHTML}
+
+      <div class="action-dock">
+        ${!activeQuizObj.is_listening ? `<button class="quiet-skip" onclick="switchToTeachForCurrent()">先看考点</button>` : `<div style="height:12px;"></div>`}
       </div>
-      ${!walkMode ? `<button class="skip-btn" onclick="switchToTeachForCurrent()">没把握，先看知识点</button>` : ""}
     `;
     syncAudioButtons();
     return;
   }
 
-  // -------- CARD 3: INSTANT RESULT + ADAPTIVE NEXT ROUTING --------
+  // -------- RESULT --------
   const q = activeQuizObj || p.primary;
   const isCorrect = pickedVal === q.answer;
-  const verdictCls = isCorrect ? "ok" : "ng";
-  const verdictTxt = lastFromWalk
-    ? "随身听精讲 · 亲手答对即变绿"
-    : (isCorrect ? "✓ 答对了 · 本格已变绿！" : "✕ 答错了 · 稍后换角度再考");
+  const overCls = isCorrect ? "overline ok" : "overline ng";
+  const overTxt = isCorrect ? "已变绿" : "稍后复考";
 
-  let wrongBoxHTML = "";
+  let wrongNoteHTML = "";
   if (!isCorrect && pickedVal) {
-    const wNote = (q.option_notes && q.option_notes[pickedVal]) || "语义或接续不符";
-    wrongBoxHTML = `
-      <div class="ans-wrong-box">
-        <span class="ans-wrong-head">✕ ${annotateJapanese(pickedVal)}</span>
-        <span>${escapeHtml(wNote)}</span>
-      </div>
-    `;
+    const wNote = (q.option_notes && q.option_notes[pickedVal]) || "";
+    wrongNoteHTML = `<p class="result-wrong-note">误选「${annotateJapanese(pickedVal)}」${wNote ? " · " + escapeHtml(wNote) : ""}</p>`;
   }
 
   box.innerHTML = `
-    <div id="answer-zone">
-      <div class="card-top-row">
-        <span class="verdict-badge ${verdictCls}">${verdictTxt}</span>
-        <div style="display:flex;gap:6px;">
-          <button class="mini-audio-btn" onclick="playMainClip(activeQuizObj.q_audio, 'q', true)">原题</button>
-          <button class="mini-audio-btn" id="exp-replay-btn" onclick="playMainClip(activeQuizObj.exp_audio, 'exp', true)">重听讲解</button>
-          <button class="mini-audio-btn" id="ans-spd-btn" onclick="cycleExpSpeed()">${expSpeed.toFixed(1)}x</button>
-        </div>
+    <div class="meta-bar">
+      <span class="${overCls}">${overTxt}</span>
+      <div class="quiet-actions">
+        <button class="text-btn" onclick="playMainClip(activeQuizObj.q_audio, 'q', true)">原题</button>
+        <button class="text-btn" id="exp-replay-btn" onclick="playMainClip(activeQuizObj.exp_audio, 'exp', true)">讲解</button>
+        <button class="text-btn" id="ans-spd-btn" onclick="cycleExpSpeed()">${expSpeed.toFixed(1)}x</button>
       </div>
+    </div>
 
-      <div class="ans-answer-box">
-        <span class="ans-mark-ok">✓</span>
-        <div class="ans-ja-text">${annotateJapanese(q.answer)}</div>
-      </div>
+    <div class="focal-space">
+      <h2 class="result-answer">${annotateJapanese(q.answer)}</h2>
+      ${wrongNoteHTML}
+      <p class="result-insight">${escapeHtml(q.core_rule)}</p>
+      <div class="result-divider"></div>
+      <div class="example-line">${annotateJapanese(q.full_ja)}</div>
+    </div>
 
-      ${wrongBoxHTML}
-
-      <div class="core-rule-box">${escapeHtml(q.core_rule)}</div>
-
-      <div class="full-sentence-box">
-        <div class="full-sentence-hint">
-          <span>完整原句</span>
-          <span>点划线词看意思·听发音</span>
-        </div>
-        <div class="full-sentence-ja">${annotateJapanese(q.full_ja)}</div>
-      </div>
-
-      <div class="nav-row">
-        ${isCorrect ? `<button class="again-btn" onclick="advanceNext(true)">还不稳，再考</button>` : ""}
-        <button class="next-btn" onclick="advanceNext(false)">继续 → <span class="kbd-hint">Enter</span></button>
+    <div class="action-dock">
+      <div class="dock-row">
+        ${isCorrect ? `<button class="ghost-btn" onclick="advanceNext(true)">再考</button>` : ""}
+        <button class="sumi-btn" onclick="advanceNext(false)">下一题</button>
       </div>
     </div>
   `;
   syncAudioButtons();
 }
 
-// ================= WORD DICTIONARY POPOVER =================
+// ================= DICTIONARY SHEET =================
 const popEl = document.getElementById("word-popover");
 const backdropEl = document.getElementById("sheet-backdrop");
 let activeTokEl = null;
@@ -2214,17 +2261,17 @@ function showWordPopover(surface, anchorEl, autoSpeak) {
 
   const hasAudio = !!info.audio;
   popEl.innerHTML = `
-    <div class="wp-top">
+    <div class="ws-top">
       <div>
-        <span class="wp-head">${escapeHtml(surface)}</span>
-        <span class="wp-kana">${escapeHtml(info.kana || "")}</span>
-        <span class="wp-pitch">${escapeHtml(info.pitch || "")}</span>
+        <span class="ws-head">${escapeHtml(surface)}</span>
+        <span class="ws-kana">${escapeHtml(info.kana || "")}</span>
+        <span class="ws-pitch">${escapeHtml(info.pitch || "")}</span>
       </div>
-      ${hasAudio ? `<button class="wp-speak" onclick='playWordAudio(${JSON.stringify(surface)})'>发音</button>` : ""}
+      ${hasAudio ? `<button class="ws-speak" onclick='playWordAudio(${JSON.stringify(surface)})'>发音</button>` : ""}
     </div>
-    ${info.pos ? `<div class="wp-pos">${escapeHtml(info.head && info.head !== surface ? "原形 " + info.head + " · " + info.pos : info.pos)}</div>` : ""}
-    <div class="wp-zh">${escapeHtml(info.zh || "")}</div>
-    ${info.tip ? `<div class="wp-tip">${escapeHtml(info.tip)}</div>` : ""}
+    ${info.pos ? `<div class="ws-pos">${escapeHtml(info.head && info.head !== surface ? "原形 " + info.head + " · " + info.pos : info.pos)}</div>` : ""}
+    <div class="ws-zh">${escapeHtml(info.zh || "")}</div>
+    ${info.tip ? `<div class="ws-tip">${escapeHtml(info.tip)}</div>` : ""}
   `;
   popEl.classList.add("open");
 
@@ -2232,12 +2279,11 @@ function showWordPopover(surface, anchorEl, autoSpeak) {
     backdropEl.classList.add("open");
   } else if (anchorEl && anchorEl.getBoundingClientRect) {
     const r = anchorEl.getBoundingClientRect();
-    const pw = popEl.offsetWidth || 360;
-    const ph = popEl.offsetHeight || 150;
-    let left = r.left + r.width / 2 - pw / 2;
-    left = Math.max(16, Math.min(window.innerWidth - pw - 16, left));
+    const pw = popEl.offsetWidth || 320;
+    const ph = popEl.offsetHeight || 140;
+    let left = Math.max(20, Math.min(window.innerWidth - pw - 20, r.left + r.width / 2 - pw / 2));
     let top = r.top - ph - 10;
-    if (top < 14) top = r.bottom + 10;
+    if (top < 16) top = r.bottom + 10;
     popEl.style.left = `${left}px`;
     popEl.style.top = `${top}px`;
   }
@@ -2256,7 +2302,7 @@ function hideWordPopover() {
 document.addEventListener("mouseover", e => {
   if (isMobileSheetViewport()) return;
   const tok = e.target.closest && e.target.closest(".w-tok");
-  if (!tok || (viewStage !== "result" && viewStage !== "teach")) return;
+  if (!tok || (activeMode === "tutor" && viewStage === "quiz")) return;
   showWordPopover(tok.dataset.w, tok, false);
 });
 
@@ -2274,7 +2320,7 @@ popEl.addEventListener("mouseleave", () => { if (!isMobileSheetViewport()) hideW
 
 document.addEventListener("click", e => {
   const tok = e.target.closest && e.target.closest(".w-tok");
-  if (tok && (viewStage === "result" || viewStage === "teach")) {
+  if (tok && !(activeMode === "tutor" && viewStage === "quiz")) {
     e.stopPropagation();
     showWordPopover(tok.dataset.w, tok, true);
     return;
@@ -2284,7 +2330,7 @@ document.addEventListener("click", e => {
   }
 });
 
-// ================= DESKTOP KEYBOARD SHORTCUTS =================
+// ================= KEYBOARD =================
 document.addEventListener("keydown", e => {
   const tag = (e.target && e.target.tagName || "").toLowerCase();
   if (tag === "input" || tag === "textarea") {
@@ -2295,83 +2341,69 @@ document.addEventListener("keydown", e => {
     if (e.key === "Escape") closeModal();
     return;
   }
-  if (e.key === "Escape") {
-    hideWordPopover();
-    if (walkMode) toggleWalkMode(false);
-    return;
-  }
-  if (e.key === "/" && activeMode === "dash") {
-    e.preventDefault();
-    const sEl = document.getElementById("pt-search");
-    if (sEl) sEl.focus();
+  if (e.key === "Escape") { hideWordPopover(); return; }
+
+  if (activeMode === "radio") {
+    if (e.key === " ") { e.preventDefault(); toggleRadioPlay(); }
+    else if (e.key === "ArrowLeft") { e.preventDefault(); seekRadioBy(-15); }
+    else if (e.key === "ArrowRight") { e.preventDefault(); seekRadioBy(15); }
     return;
   }
   if (activeMode !== "tutor") return;
-
-  if (e.key.toLowerCase() === "s") {
-    e.preventDefault();
-    cycleExpSpeed();
-    return;
-  }
+  if (e.key.toLowerCase() === "s") { e.preventDefault(); cycleExpSpeed(); return; }
 
   if (viewStage === "teach") {
     const p = getPointById(curPointId);
-    if (e.key === " ") {
-      e.preventDefault();
-      if (p) playMainClip(p.teach.audio, "teach", true);
-    } else if (e.key === "Enter" || e.key === "ArrowRight") {
-      e.preventDefault();
-      completeTeachCard();
-    }
+    if (e.key === " ") { e.preventDefault(); if (p) playMainClip(p.teach.audio, "teach", true); }
+    else if (e.key === "Enter" || e.key === "ArrowRight") { e.preventDefault(); completeTeachCard(); }
     return;
   }
-
   if (viewStage === "quiz" && activeQuizObj) {
-    if (e.key === " ") {
-      e.preventDefault();
-      playMainClip(activeQuizObj.q_audio, "q", true);
-    } else if (e.key === "1" && currentChoices[0]) {
-      e.preventDefault();
-      submitAnswer(currentChoices[0], false);
-    } else if (e.key === "2" && currentChoices[1]) {
-      e.preventDefault();
-      submitAnswer(currentChoices[1], false);
-    } else if (e.key === "3" && currentChoices[2]) {
-      e.preventDefault();
-      submitAnswer(currentChoices[2], false);
-    } else if (e.key === "0") {
-      e.preventDefault();
-      switchToTeachForCurrent();
-    }
+    if (e.key === " ") { e.preventDefault(); playMainClip(activeQuizObj.q_audio, "q", true); }
+    else if (e.key === "1" && currentChoices[0]) { e.preventDefault(); submitAnswer(currentChoices[0]); }
+    else if (e.key === "2" && currentChoices[1]) { e.preventDefault(); submitAnswer(currentChoices[1]); }
+    else if (e.key === "3" && currentChoices[2]) { e.preventDefault(); submitAnswer(currentChoices[2]); }
+    else if (e.key === "0" && !activeQuizObj.is_listening) { e.preventDefault(); switchToTeachForCurrent(); }
     return;
   }
-
   if (viewStage === "result" && activeQuizObj) {
-    if (e.key === " ") {
-      e.preventDefault();
-      playMainClip(activeQuizObj.exp_audio, "exp", true);
-    } else if (e.key === "Enter" || e.key === "ArrowRight") {
-      e.preventDefault();
-      advanceNext(false);
-    }
+    if (e.key === " ") { e.preventDefault(); playMainClip(activeQuizObj.exp_audio, "exp", true); }
+    else if (e.key === "Enter" || e.key === "ArrowRight") { e.preventDefault(); advanceNext(false); }
   }
 });
 
-// ================= GOAL 1: UNIFIED 4-PILLAR DASHBOARD ("总表") =================
+// ================= ZEN LEDGER ("总表") =================
 let dashMod = "grammar";
 let dashTier = "todo";
 let expandedPt = null;
 
-function switchMode(m) {
+function switchMode(m, autoPlayRadio) {
   activeMode = m;
   hideWordPopover();
-  if (m === "dash") stopAudio();
+  if (m !== "tutor") stopQuizAudio();
+
+  document.getElementById("app-shell").classList.toggle("wide-mode", m === "dash");
   document.getElementById("tab-tutor").classList.toggle("active", m === "tutor");
+  document.getElementById("tab-radio").classList.toggle("active", m === "radio");
   document.getElementById("tab-dash").classList.toggle("active", m === "dash");
+
+  document.getElementById("green-board").style.display = (m === "dash") ? "none" : "block";
   document.getElementById("tutor-view").classList.toggle("hidden", m !== "tutor");
-  document.getElementById("dash-view").classList.toggle("active", m === "dash");
-  if (m === "dash") renderDashboard();
-  else renderGreenBoard();
+  document.getElementById("radio-view").classList.toggle("hidden", m !== "radio");
+  document.getElementById("dash-view").classList.toggle("hidden", m !== "dash");
+
+  if (m === "radio") {
+    ensureRadioReady();
+    if (autoPlayRadio && radioPlayer.paused) {
+      toggleRadioPlay(true);
+    } else {
+      syncRadioUI();
+    }
+  } else if (m === "dash") {
+    renderDashboard();
+  } else {
+    renderTutor();
+  }
 }
 
 function recalcCounts(modKey) {
@@ -2399,10 +2431,6 @@ function selectDashTier(t) {
 }
 
 function renderDashboard() {
-  const readiness = compute120ReadinessPct();
-  document.getElementById("dash-readiness-pct").textContent = `${readiness}%`;
-  document.getElementById("dash-readiness-fill").style.width = `${readiness}%`;
-
   const order = ["grammar", "henkei", "listening", "vocab"];
   document.getElementById("dash-summary").innerHTML = order.map(k => {
     const m = DATA.mastery[k];
@@ -2411,30 +2439,25 @@ function renderDashboard() {
     const pWip = ((c.wip / Math.max(1, c.total)) * 100).toFixed(1);
     const pTodo = ((c.todo / Math.max(1, c.total)) * 100).toFixed(1);
     return `
-      <div class="sum-row ${dashMod === k ? 'selected-mod' : ''}" onclick="selectDashMod('${k}')">
-        <div class="sum-head">
-          <span class="sum-title">${m.label}</span>
-          <span class="sum-nums">已会 ${c.done} · 待练 ${c.todo}</span>
+      <div class="pillar-row ${dashMod === k ? 'active' : ''}" onclick="selectDashMod('${k}')">
+        <div class="pillar-head">
+          <span class="pillar-name">${m.label}</span>
+          <span class="pillar-stat">已会 ${c.done} / ${c.total}</span>
         </div>
-        <div class="tri-bar">
-          <div class="tri-seg-done" style="width:${pDone}%"></div>
-          <div class="tri-seg-wip" style="width:${pWip}%"></div>
-          <div class="tri-seg-todo" style="width:${pTodo}%"></div>
+        <div class="pillar-line">
+          <div class="seg-moss" style="width:${pDone}%"></div>
+          <div class="seg-ochre" style="width:${pWip}%"></div>
+          <div class="seg-bengara" style="width:${pTodo}%"></div>
         </div>
       </div>
     `;
   }).join("");
 
-  document.getElementById("mod-tabs").innerHTML = order.map(k => {
-    const m = DATA.mastery[k];
-    return `<button class="mod-tab ${dashMod === k ? "active" : ""}" onclick="selectDashMod('${k}')">${m.short}</button>`;
-  }).join("");
-
   const curCounts = DATA.mastery[dashMod].counts;
   document.getElementById("tier-tabs").innerHTML = `
-    <button class="tier-tab ${dashTier === 'todo' ? 'active' : ''}" onclick="selectDashTier('todo')">待练 ${curCounts.todo}</button>
-    <button class="tier-tab ${dashTier === 'wip' ? 'active' : ''}" onclick="selectDashTier('wip')">巩固 ${curCounts.wip}</button>
-    <button class="tier-tab ${dashTier === 'done' ? 'active' : ''}" onclick="selectDashTier('done')">已会 ${curCounts.done}</button>
+    <button class="tier-link ${dashTier === 'todo' ? 'active' : ''}" onclick="selectDashTier('todo')">待练 ${curCounts.todo}</button>
+    <button class="tier-link ${dashTier === 'wip' ? 'active' : ''}" onclick="selectDashTier('wip')">巩固 ${curCounts.wip}</button>
+    <button class="tier-link ${dashTier === 'done' ? 'active' : ''}" onclick="selectDashTier('done')">已会 ${curCounts.done}</button>
   `;
 
   renderMasteryList();
@@ -2454,24 +2477,24 @@ function renderMasteryList() {
 
   const listEl = document.getElementById("point-list");
   if (!items.length) {
-    listEl.innerHTML = `<div style="padding:32px 4px;text-align:center;color:var(--ink-3);font-size:15.5px;">这一栏已经清空了</div>`;
+    listEl.innerHTML = `<div style="padding:36px 0;color:var(--ink-3);font-size:14px;">此处已清空</div>`;
     return;
   }
 
   listEl.innerHTML = items.map((it, i) => `
-    <div class="pt-item" onclick="togglePtNote(${i})">
-      <div class="pt-main">
-        <div class="pt-left">
-          <span class="dot ${it.tier}"></span>
-          <span class="pt-name">${escapeHtml(it.name)}</span>
+    <div class="ledger-item" onclick="togglePtNote(${i})">
+      <div class="li-row">
+        <div class="li-left">
+          <span class="li-dot ${it.tier}"></span>
+          <span class="li-name">${escapeHtml(it.name)}</span>
         </div>
-        <div class="pt-right">
-          <span class="pt-sub">${escapeHtml(it.sub)}</span>
-          ${it.audio ? `<button class="pt-audio-btn" onclick="event.stopPropagation();playDirectUrl('${it.audio}')">发音</button>` : ""}
-          ${it.point_id ? `<button class="pt-jump-btn" onclick="event.stopPropagation();jumpToPointById('${it.point_id}')">去练</button>` : ""}
+        <div class="li-right">
+          <span class="li-sub">${escapeHtml(it.sub)}</span>
+          ${it.audio ? `<button class="li-act" onclick="event.stopPropagation();playDirectUrl('${it.audio}')">听音</button>` : ""}
+          ${it.point_id ? `<button class="li-act" onclick="event.stopPropagation();jumpToPointById('${it.point_id}')">练习</button>` : ""}
         </div>
       </div>
-      ${expandedPt === i && (it.note || it.family) ? `<div class="pt-note">${escapeHtml([it.family, it.note].filter(Boolean).join(" · "))}</div>` : ""}
+      ${expandedPt === i && (it.note || it.family) ? `<div class="li-note">${escapeHtml([it.family, it.note].filter(Boolean).join(" · "))}</div>` : ""}
     </div>
   `).join("");
 }
@@ -2482,20 +2505,18 @@ function closeModal() {
 
 function openSessionModal() {
   const greenCnt = DATA.points.filter(p => A.pts[p.id].status === "green").length;
-  const learningCnt = DATA.points.filter(p => A.pts[p.id].status === "learning").length;
+  const primedCnt = DATA.points.filter(p => A.pts[p.id].audioPrimed).length;
   const readiness = compute120ReadinessPct();
-  const el = document.getElementById("modal-content");
-  el.innerHTML = `
-    <h3 class="modal-title">今日冲刺 120+ 进度</h3>
-    <p class="modal-p">
-      已变绿过关：<strong>${greenCnt} / ${DATA.points.length}</strong> 格<br/>
-      已看考点待考：<strong>${learningCnt}</strong> 格<br/>
-      当前 120 分把握度：<strong>${readiness}%</strong><br/>
-      <span style="font-size:14.5px;color:var(--ink-3);">把上面 50 格全部刷成绿色，今天就能安心睡觉了。</span>
+  document.getElementById("modal-content").innerHTML = `
+    <h3 class="modal-h">今日修行进度</h3>
+    <p class="modal-body">
+      已过关　<strong>${greenCnt} / ${DATA.points.length}</strong><br/>
+      电台已听　<strong>${primedCnt}</strong> 项<br/>
+      120 分把握　<strong>${readiness}%</strong>
     </p>
-    <div class="modal-actions">
-      <button class="again-btn" onclick="resetTodayMission()">重置今日绿格</button>
-      <button class="next-btn" onclick="closeModal()">继续通关</button>
+    <div class="dock-row">
+      <button class="ghost-btn" onclick="resetTodayMission()">重置</button>
+      <button class="sumi-btn" onclick="closeModal()">继续</button>
     </div>
   `;
   document.getElementById("app-modal").classList.add("open");
@@ -2503,15 +2524,11 @@ function openSessionModal() {
 
 function initApp() {
   const params = new URLSearchParams(location.search);
-  const urlMode = params.get("mode");
-  if (urlMode === "dash") {
-    switchMode("dash");
-  } else {
-    renderTutor();
-    if (urlMode === "walk") toggleWalkMode(true);
-  }
+  const m = params.get("mode");
+  if (m === "dash") switchMode("dash");
+  else if (m === "radio" || m === "walk") switchMode("radio", false);
+  else renderTutor();
 }
-
 initApp();
 </script>
 </body>
@@ -2522,7 +2539,7 @@ final_html = html.replace("__PAYLOAD__", payload)
 with open(HTML_PATH, "w", encoding="utf-8") as f:
     f.write(final_html)
 print(
-    "Wrote Adaptive 120+ N3 Platform:",
+    "Wrote Zen v9 N3 Platform:",
     HTML_PATH,
     "points:",
     len(ordered_points),

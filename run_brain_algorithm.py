@@ -118,8 +118,9 @@ def main():
 
     import sys
     subprocess.run([sys.executable, os.path.join(BASE_DIR, "generate_neural_audio.py")], check=True)
+    subprocess.run([sys.executable, os.path.join(BASE_DIR, "generate_daily_radio.py")], check=True)
     subprocess.run([sys.executable, os.path.join(BASE_DIR, "build_html.py")], check=True)
-    print(f"Brain algorithm v2 synced {count} records across all 4 modules; days_left={days_left}.")
+    print(f"Brain algorithm v3 synced {count} records + daily two-host radio; days_left={days_left}.")
 
 
 if __name__ == "__main__":
