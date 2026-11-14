@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Generates the Daily ~36 Minute "Qiang Qiang Three" Cultural Salon Podcast (audio/daily_radio.mp3)
-+ Exact Segment & Chapter Timestamp Map (audio/daily_radio_meta.json) — Zen v15 Trio Edition.
+Generates the Daily ~38 Minute "Qiang Qiang Three" Cultural Salon Podcast (audio/daily_radio.mp3)
++ Exact Segment & Chapter Timestamp Map (audio/daily_radio_meta.json) — Zen v23 Human Prosody Edition.
 
 Hosts: 文涛 (W) · 文道 (D) · 子东 (X)
 Key Design:
 1) Zero date announcements, zero exam countdowns, zero classroom tone — cold-opens at 00:00.0
    into witty, culturally rich Japanese anthropology, literature, and everyday urban stories.
-2) 100% Same-Person Bilingual Vocal Cords with Exact Speed Differential:
-    - W (文涛): `en-US-BrianMultilingualNeural` (+6% Mandarin / -35% Japanese, +2Hz lively warmth)
-    - D (文道): `it-IT-GiuseppeMultilingualNeural` (+4% Mandarin / -35% Japanese, -2Hz warm scholar baritone)
-    - X (子东): `fr-FR-RemyMultilingualNeural` (+5% Mandarin / -35% Japanese, -2Hz dry scholar wit)
+2) 5-Gear Dynamic Mandarin Prosody Sculptor (抑扬顿挫 · 有快有慢 · 口误改口 · 停顿找词)
+   + 100% Same-Person Bilingual Vocal Cords (each host speaks slow Japanese in his OWN voice & accent):
+    - W (文涛): `en-US-BrianMultilingualNeural` (bright, quick, lively northern host cadence; -4% to +19%)
+    - D (文道): `ko-KR-HyunsuMultilingualNeural` (deep, warm, unhurried East Asian scholar baritone; -6% to +11%)
+    - X (子东): `fr-FR-RemyMultilingualNeural` (crisp, dry intellectual critic wit; -5% to +15%)
 3) Smart Daily Morning Selection & Fresh Rotation:
    - Pulls live mastery + recent misses & "不确定" clicks from `practice_log.jsonl`, while rotating
      against `audio/radio_history.json` so consecutive mornings serve fresh stories from the 12-story bank.
@@ -65,8 +66,28 @@ MAX_TRIES = 4 if os.environ.get("GITHUB_ACTIONS") == "true" else 1
 GEMINI_API_KEY = (os.environ.get("GEMINI_API_KEY") or "").strip()
 GEMINI_TTS_MODEL = os.environ.get("GEMINI_TTS_MODEL", "gemini-2.5-flash-preview-tts")
 
-# Keeps multi-clause Japanese quotes together in ONE continuous slow (-35%) utterance by the SAME speaker!
+# Keeps multi-clause Japanese quotes together in ONE continuous slow (-33%) utterance by the SAME speaker!
 JA_SPAN_RE = re.compile(r"([\u3040-\u30ffー]+(?:[、。！？\s]+[\u3040-\u30ffー]+)*[。！？]?)")
+
+# Prosodic gear cue detectors for human-like fast/slow & pitch modulation
+RUSH_CUE_RE = re.compile(
+    r"(呸[，！]?|嘴瓢|说反了|说劈叉|不对不对|哦不对|哎不对|不是里见|不是东京|"
+    r"哪有十把|哪有扫码枪|少说了俩零|哦四回|哦一千|哦不用两大碗|哦三分钟|哦日本哪儿|"
+    r"害，|等会儿|等等[，！]|你先打住|神了！|好家伙|我的天|我的老天爷|哎哟喂|啧，你听听|啧啧)"
+)
+LOW_CUE_RE = re.compile(
+    r"(说白了|讲句老实话|潜台词就是|背地里|片叶不沾身|杀人诛心|憋出内伤|心酸|"
+    r"叹口气|神神秘秘|压低声音|柔声细气|特温柔地问|轻声嘱咐|低眉顺眼|全靠舌头底下|连根头发丝儿)"
+)
+FAST_CUE_RE = re.compile(
+    r"(结果你们猜|一拍大腿|一拍胸脯|噌一下|百米冲刺|傻眼了|可不嘛|真绝了|"
+    r"太准了|一点儿没错|完全正确|对极了|问到点子上了|那我肯定)"
+)
+LATCH_START_RE = re.compile(
+    r"^(神了|等会儿|等等|那我肯定|对极了|对啊|对，|可不嘛|一点儿没错|一点儿不差|"
+    r"完全正确|太准了|问到点子上了|哎哟|哦！|妙啊|我知道|我就干过)"
+)
+REFLECT_START_RE = re.compile(r"^(其实|前两天|如果有人|话说回来|而且讲句老实话)")
 
 
 def resolve_point_key(point_id: str) -> str:
@@ -166,7 +187,6 @@ def save_today_stories(today_str: str, story_ids: list) -> None:
             hist = {"recent_days": {}}
     hist["last_date"] = today_str
     hist["recent_days"][today_str] = list(story_ids)
-    # Keep last 10 days clean
     keep_dates = sorted(hist["recent_days"].keys())[-10:]
     hist["recent_days"] = {k: hist["recent_days"][k] for k in keep_dates}
     with open(RADIO_HISTORY_PATH, "w", encoding="utf-8") as f:
@@ -175,29 +195,29 @@ def save_today_stories(today_str: str, story_ids: list) -> None:
 
 async def detect_voice_map() -> dict:
     """
-    Maps brisk conversational Mandarin (+4% to +6%) and crystal-clear slow Japanese (-35%)
-    to the EXACT SAME Multilingual Conversational Neural voice for each of the 3 male hosts:
-    - W (文涛): BrianMultilingualNeural (lively, cheeky, casual Copilot prosody)
-    - D (文道): GiuseppeMultilingualNeural (warm, steady, scholarly baritone prosody)
-    - X (子东): RemyMultilingualNeural (crisp, dry intellectual scholar cadence)
+    Maps 5 dynamic Mandarin prosody gears + slow Japanese (-33%/-34%) to the
+    EXACT SAME Multilingual Neural voice for each of the 3 male hosts:
+    - W (文涛): en-US-BrianMultilingualNeural (bright, quick, lively chatterbox; +2Hz center)
+    - D (文道): ko-KR-HyunsuMultilingualNeural (deep, warm East Asian scholar baritone; -4Hz center)
+    - X (子东): fr-FR-RemyMultilingualNeural (crisp, dry intellectual critic cadence; -1Hz center)
     """
     w_voice = "en-US-BrianMultilingualNeural"
-    d_voice = "it-IT-GiuseppeMultilingualNeural"
+    d_voice = "ko-KR-HyunsuMultilingualNeural"
     x_voice = "fr-FR-RemyMultilingualNeural"
 
     if edge_tts is not None:
         try:
             voices = await edge_tts.list_voices(**COMM_KWARGS)
             short_names = {v.get("ShortName", "") for v in voices}
-            for cand_w in ("en-US-BrianMultilingualNeural", "ko-KR-HyunsuMultilingualNeural"):
+            for cand_w in ("en-US-BrianMultilingualNeural", "en-AU-WilliamMultilingualNeural"):
                 if cand_w in short_names:
                     w_voice = cand_w
                     break
-            for cand_d in ("it-IT-GiuseppeMultilingualNeural", "ko-KR-HyunsuMultilingualNeural"):
+            for cand_d in ("ko-KR-HyunsuMultilingualNeural", "it-IT-GiuseppeMultilingualNeural"):
                 if cand_d in short_names and cand_d != w_voice:
                     d_voice = cand_d
                     break
-            for cand_x in ("fr-FR-RemyMultilingualNeural", "ko-KR-HyunsuMultilingualNeural", "en-AU-WilliamMultilingualNeural"):
+            for cand_x in ("fr-FR-RemyMultilingualNeural", "en-AU-WilliamMultilingualNeural", "it-IT-GiuseppeMultilingualNeural"):
                 if cand_x in short_names and cand_x not in (w_voice, d_voice):
                     x_voice = cand_x
                     break
@@ -206,90 +226,234 @@ async def detect_voice_map() -> dict:
             print(f"[info] list_voices fallback to default trio voices: {e}")
 
     vmap = {
-        "W": (w_voice, "+6%", "+2Hz"),
-        "W_JA": (w_voice, "-35%", "+2Hz"),
-        "D": (d_voice, "+4%", "-2Hz"),
-        "D_JA": (d_voice, "-35%", "-2Hz"),
-        "X": (x_voice, "+5%", "-2Hz"),
-        "X_JA": (x_voice, "-35%", "-2Hz"),
+        # W (文涛): 清亮偏高半度、跳脱脆生、快慢急转
+        "W":      (w_voice, "+7%", "+2Hz"),
+        "W_MID":  (w_voice, "+7%", "+2Hz"),
+        "W_FAST": (w_voice, "+13%", "+4Hz"),
+        "W_RUSH": (w_voice, "+19%", "+6Hz"),
+        "W_HES":  (w_voice, "-3%", "+1Hz"),
+        "W_LOW":  (w_voice, "-4%", "-1Hz"),
+        "W_JA":   (w_voice, "-33%", "+2Hz"),
+        # D (文道): 东亚温厚低沉、从容儒雅的书房男中音
+        "D":      (d_voice, "+1%", "-4Hz"),
+        "D_MID":  (d_voice, "+1%", "-4Hz"),
+        "D_FAST": (d_voice, "+6%", "-3Hz"),
+        "D_RUSH": (d_voice, "+11%", "-2Hz"),
+        "D_HES":  (d_voice, "-6%", "-5Hz"),
+        "D_LOW":  (d_voice, "-6%", "-6Hz"),
+        "D_JA":   (d_voice, "-34%", "-4Hz"),
+        # X (子东): 清瘦干脆、冷面毒舌的学者腔调
+        "X":      (x_voice, "+5%", "-1Hz"),
+        "X_MID":  (x_voice, "+5%", "-1Hz"),
+        "X_FAST": (x_voice, "+10%", "+1Hz"),
+        "X_RUSH": (x_voice, "+15%", "+2Hz"),
+        "X_HES":  (x_voice, "-3%", "-2Hz"),
+        "X_LOW":  (x_voice, "-5%", "-3Hz"),
+        "X_JA":   (x_voice, "-33%", "-1Hz"),
     }
-    # Legacy speaker code aliases for safety
-    vmap["M"] = vmap["W"]
-    vmap["M_JA"] = vmap["W_JA"]
-    vmap["F"] = vmap["X"]
-    vmap["F_JA"] = vmap["X_JA"]
+    for g in ("", "_MID", "_FAST", "_RUSH", "_HES", "_LOW", "_JA"):
+        vmap[f"M{g}"] = vmap[f"W{g}"]
+        vmap[f"F{g}"] = vmap[f"X{g}"]
     return vmap
+
+
+def _split_long_clause_on_comma(clause: str, max_len: int = 44) -> list[str]:
+    if len(clause) <= max_len or "…" in clause or "，" not in clause:
+        return [clause]
+    commas = [m.start() for m in re.finditer(r"，", clause)]
+    mid = len(clause) // 2
+    best = None
+    best_dist = 10**9
+    for pos in commas:
+        left_len = pos + 1
+        right_len = len(clause) - left_len
+        if left_len >= 12 and right_len >= 12:
+            dist = abs(left_len - mid)
+            if dist < best_dist:
+                best_dist = dist
+                best = pos
+    if best is None:
+        return [clause]
+    left = clause[: best + 1].strip()
+    right = clause[best + 1 :].strip()
+    out = []
+    for sub in (left, right):
+        if len(sub) > 48 and "，" in sub:
+            out.extend(_split_long_clause_on_comma(sub, max_len=48))
+        else:
+            out.append(sub)
+    return out
+
+
+def split_mandarin_breath_groups(text: str) -> list[str]:
+    norm = re.sub(r"…+", "……", text.strip())
+    if not norm:
+        return []
+    raw_atoms = [
+        a.strip()
+        for a in re.findall(r"[^…！？。；：]+(?:…+|[！？。；：]+)?", norm)
+        if a and a.strip()
+    ]
+    sized = []
+    for atom in raw_atoms:
+        sized.extend(_split_long_clause_on_comma(atom))
+
+    if len(sized) <= 1:
+        return sized
+
+    # Merge tiny (<8 visible chars) non-hesitation fragments so every clip has smooth phrase prosody
+    merged = []
+    carry = ""
+    for seg in sized:
+        cur = (carry + seg).strip() if carry else seg
+        carry = ""
+        vis_len = len(re.sub(r"[\s，、。！？；：…「」『』（）]", "", cur))
+        if vis_len < 8 and not cur.endswith("…"):
+            carry = cur
+        else:
+            merged.append(cur)
+    if carry:
+        if merged and not merged[-1].endswith("…"):
+            merged[-1] = merged[-1] + carry
+        else:
+            merged.append(carry)
+    return merged
+
+
+def expand_mandarin_prosody(base_spk: str, pt_s: str, gear_state: list[str]) -> list[tuple[str, object]]:
+    groups = split_mandarin_breath_groups(pt_s)
+    if not groups:
+        return []
+    total = len(groups)
+    events = []
+    for idx, seg in enumerate(groups):
+        prev_gear = gear_state[0]
+        if seg.endswith("…"):
+            gear = "HES"
+            clean = re.sub(r"…+$", "。" if idx == total - 1 else "，", seg)
+            clean = re.sub(r"…+", "，", clean)
+            pause_after = 0.38
+        elif RUSH_CUE_RE.search(seg):
+            gear = "RUSH"
+            clean = re.sub(r"…+", "，", seg)
+            pause_after = 0.13
+        elif LOW_CUE_RE.search(seg) or (
+            idx == total - 1 and total >= 3 and "！" not in seg and "？" not in seg and not seg.endswith("：")
+        ):
+            gear = "LOW"
+            clean = re.sub(r"…+", "，", seg)
+            pause_after = 0.20 if clean.endswith("：") else 0.27
+        elif seg.endswith(("？", "！", "？！", "！？")) or FAST_CUE_RE.search(seg):
+            gear = "FAST"
+            clean = re.sub(r"…+", "，", seg)
+            pause_after = 0.18
+        else:
+            gear = "MID"
+            clean = re.sub(r"…+", "，", seg)
+            pause_after = 0.21 if clean[-1] in "。；" else 0.16
+
+        # Guarantee adjacent breath-groups never lock into uniform speed & pitch
+        if gear == prev_gear and gear not in ("HES", "RUSH"):
+            if gear == "MID":
+                gear = "FAST" if (idx % 2 == 1 or clean.endswith("：")) else "LOW"
+            elif gear == "FAST":
+                gear = "RUSH" if (base_spk == "W" and len(clean) <= 18) else "MID"
+            elif gear == "LOW":
+                gear = "MID"
+
+        gear_state[0] = gear
+        events.append((f"{base_spk}_{gear}", clean))
+        if idx + 1 < total:
+            events.append(("PAUSE", round(pause_after, 2)))
+    return events
 
 
 def expand_turn_events(spk: str, val) -> list:
     if spk == "PAUSE":
         return [("PAUSE", float(val))]
     txt = str(val).strip()
-    if spk in ("W", "D", "X", "M", "F") and JA_SPAN_RE.search(txt):
-        ja_spk = f"{spk}_JA"
-        parts = JA_SPAN_RE.split(txt)
-        out = []
-        pending_pause = 0.0
-        for idx, pt in enumerate(parts):
-            if not pt:
+    if spk not in ("W", "D", "X", "M", "F"):
+        return [(spk, txt)]
+
+    ja_spk = f"{spk}_JA"
+    parts = JA_SPAN_RE.split(txt) if JA_SPAN_RE.search(txt) else [txt]
+    out = []
+    pending_pause = 0.0
+    gear_state = [""]
+
+    for idx, pt in enumerate(parts):
+        if not pt:
+            continue
+        if idx % 2 == 1:
+            ks = re.sub(r"\s+", "", pt.strip())
+            if not ks:
                 continue
-            if idx % 2 == 1:
-                ks = re.sub(r"\s+", "", pt.strip())
-                if not ks:
-                    continue
-                if out:
-                    out.append(("PAUSE", round(max(pending_pause, 0.20), 2)))
-                ended_punct = ks[-1] in "。！？"
-                ja_utterance = ks if ended_punct else (ks + "。")
-                out.append((ja_spk, ja_utterance))
-                # Clear breathing echo after slow (-35%) Japanese so every mora settles into memory
-                if ended_punct and len(ks) >= 7:
-                    pending_pause = 0.56
-                elif ended_punct:
-                    pending_pause = 0.34
-                else:
-                    pending_pause = 0.22
+            if out:
+                out.append(("PAUSE", round(max(pending_pause, 0.20), 2)))
+            ended_punct = ks[-1] in "。！？"
+            ja_utterance = ks if ended_punct else (ks + "。")
+            out.append((ja_spk, ja_utterance))
+            if ended_punct and len(ks) >= 7:
+                pending_pause = 0.52
+            elif ended_punct:
+                pending_pause = 0.32
             else:
-                lead_m = re.match(r"^[\s』」）]*([。！？；，、：]+)[\s『「（]*", pt)
-                if lead_m:
-                    pchars = lead_m.group(1)
-                    if any(c in pchars for c in "。！？；"):
-                        pending_pause = max(pending_pause, 0.36)
-                    else:
-                        pending_pause = max(pending_pause, 0.20)
-                    pt = pt[lead_m.end():]
-                pt_s = pt.strip()
-                if not pt_s or not re.search(r"[\w\u3040-\u9fff]", pt_s):
-                    continue
-                if out:
-                    out.append(("PAUSE", round(max(pending_pause, 0.16), 2)))
-                out.append((spk, pt_s))
-                if pt_s[-1] in "。！？；":
-                    pending_pause = 0.24
-                elif pt_s[-1] in "，、：":
-                    pending_pause = 0.18
+                pending_pause = 0.22
+        else:
+            lead_m = re.match(r"^[\s』」）]*([。！？；，、：…]+)[\s『「（]*", pt)
+            if lead_m:
+                pchars = lead_m.group(1)
+                if "…" in pchars:
+                    pending_pause = max(pending_pause, 0.36)
+                elif any(c in pchars for c in "。！？；"):
+                    pending_pause = max(pending_pause, 0.32)
                 else:
-                    pending_pause = 0.16
-        return out if out else [(spk, txt)]
-    return [(spk, txt)]
+                    pending_pause = max(pending_pause, 0.18)
+                pt = pt[lead_m.end() :]
+            pt_s = pt.strip()
+            if not pt_s or not re.search(r"[\w\u3040-\u9fff]", pt_s):
+                continue
+            zh_evs = expand_mandarin_prosody(spk, pt_s, gear_state)
+            if not zh_evs:
+                continue
+            if out:
+                out.append(("PAUSE", round(max(pending_pause, 0.16), 2)))
+            out.extend(zh_evs)
+            last_txt = str(zh_evs[-1][1])
+            if pt_s.endswith("…"):
+                pending_pause = 0.38
+            elif last_txt[-1] in "。！？；":
+                pending_pause = 0.24
+            elif last_txt[-1] in "，、：":
+                pending_pause = 0.18
+            else:
+                pending_pause = 0.16
+    return out if out else [(f"{spk}_MID", txt)]
+
+
+def turn_switch_pause(next_spk: str, next_txt: str) -> float:
+    s = str(next_txt).strip()
+    if LATCH_START_RE.search(s):
+        return 0.15
+    if REFLECT_START_RE.search(s):
+        return 0.40
+    if next_spk == "W":
+        return 0.24
+    if next_spk == "D":
+        return 0.33
+    return 0.27
 
 
 def synth_gemini_turn_sync(spk: str, text: str, out_mp3: str) -> bool:
     if not (GEMINI_API_KEY and genai is not None and genai_types is not None):
         return False
-    voice_map_g = {
-        "W": "Puck",
-        "W_JA": "Puck",
-        "D": "Charon",
-        "D_JA": "Charon",
-        "X": "Orus",
-        "X_JA": "Orus",
-    }
-    voice_name = voice_map_g.get(spk, "Puck")
+    base = spk.split("_")[0]
+    voice_map_g = {"W": "Puck", "D": "Charon", "X": "Orus"}
+    voice_name = voice_map_g.get(base, "Puck")
     prompt = (
-        f"Speak briskly and warmly with lively human wit like three close male friends on Qiang Qiang Three: {text}"
+        f"Speak naturally with varied human tempo and warm conversational wit like Qiang Qiang Three: {text}"
         if not spk.endswith("_JA")
-        else f"Speak this Japanese phrase slowly, clearly, and distinctly: {text}"
+        else f"Speak this Japanese phrase slowly, clearly, and distinctly in your own voice: {text}"
     )
     try:
         client = genai.Client(api_key=GEMINI_API_KEY)
@@ -340,7 +504,8 @@ async def synth_turn(spk: str, voice_cfg: tuple, text: str, out_path: str, sem: 
         if len(speak_txt) <= 2 and speak_txt[-1] not in "。！？，、：":
             speak_txt = speak_txt + "。"
         for attempt in range(MAX_TRIES):
-            use_voice = "ko-KR-HyunsuMultilingualNeural" if (attempt == MAX_TRIES - 1 and MAX_TRIES > 1 and attempt >= 2) else voice
+            # Strictly keep each host's OWN voice across all retries — never swap TTS voices!
+            use_voice = voice
             use_txt = (speak_txt + "。") if (attempt >= 1 and speak_txt[-1] not in "。！？") else speak_txt
             try:
                 buf = bytearray()
@@ -369,9 +534,9 @@ async def synth_turn(spk: str, voice_cfg: tuple, text: str, out_path: str, sem: 
 
 def trim_clip_silence(raw_path: str, trimmed_path: str) -> None:
     af_chain = (
-        "silenceremove=start_periods=1:start_duration=0.0:start_threshold=-68dB,"
-        "areverse,silenceremove=start_periods=1:start_duration=0.0:start_threshold=-68dB,areverse,"
-        "afade=t=in:st=0:d=0.008,areverse,afade=t=in:st=0:d=0.008,areverse"
+        "silenceremove=start_periods=1:start_duration=0.0:start_threshold=-62dB,"
+        "areverse,silenceremove=start_periods=1:start_duration=0.0:start_threshold=-62dB,areverse,"
+        "afade=t=in:st=0:d=0.010,areverse,afade=t=in:st=0:d=0.010,areverse"
     )
     res = subprocess.run(
         [
@@ -463,9 +628,9 @@ async def main():
     save_today_stories(today_str, [st["id"] for st in selected_stories])
 
     closing_turns = [
-        ("D", "哎，不知不觉咱们这壶热茶又喝见底了。其实你看，不管是在涩谷赶末班车，还是在京都喝那碗不敢真喝的茶泡饭，日本人的性子全藏在他们说话留的那半截尾巴里。"),
-        ("X", "对，平时当闲篇儿听个乐呵，把这些市井掌故和男女心眼儿听熟了，下次再听见那些词尾，不用过脑子，画面自己就跳出来了。"),
-        ("W", "得嘞，那咱们今儿就先侃到这儿，您路上慢点儿骑，咱们下回接着聊！"),
+        ("D", "其实啊……不知不觉咱们这壶热茶又喝见底了。你想想看，不管是在涩谷撒丫子赶末班车，还是在京都面对那碗不敢真喝的茶泡饭，日本人的脾气秉性，全藏在他们说话留的那半截尾巴里。"),
+        ("X", "对，平时当闲篇儿听个乐呵，把这些风月掌故和男女心眼儿听熟了，下回再听见那些尾巴，根本不用过脑子，画面自个儿就蹦出来了。"),
+        ("W", "得嘞，今儿咱们仨就先白活到这儿！您路上慢点儿走……哦要是骑车就慢点儿蹬，咱们下回接着聊！"),
     ]
 
     # ZERO INTRO PREAMBLE, ZERO DATE, ZERO COUNTDOWN — COLD OPEN INTO CULTURAL SALON AT 00:00.0!
@@ -483,10 +648,11 @@ async def main():
             else:
                 evs.append((spk, str(val)))
                 if idx + 1 < len(turns) and turns[idx + 1][0] != "PAUSE":
-                    evs.append(("PAUSE", 0.34))
+                    next_spk, next_val = turns[idx + 1]
+                    evs.append(("PAUSE", turn_switch_pause(next_spk, str(next_val))))
 
         # Calm tea-sipping breather between round-table stories
-        evs.append(("PAUSE", 1.50 if ch_idx + 1 < len(selected_stories) else 0.45))
+        evs.append(("PAUSE", 1.45 if ch_idx + 1 < len(selected_stories) else 0.45))
         pids = list(st.get("point_ids") or [])
         raw_blocks.append({
             "chapter": ch_idx,
@@ -507,7 +673,7 @@ async def main():
         nb["events"] = expanded_evs
         blocks.append(nb)
 
-    sig_payload = f"v17_qq3_wdx:{engine_tag}:" + json.dumps(voice_map, sort_keys=True) + json.dumps(blocks, ensure_ascii=False)
+    sig_payload = f"v23_qq3_prosody:{engine_tag}:" + json.dumps(voice_map, sort_keys=True) + json.dumps(blocks, ensure_ascii=False)
     script_sig = hashlib.sha256(sig_payload.encode("utf-8")).hexdigest()[:14]
     if os.path.exists(RADIO_MP3_PATH) and os.path.exists(RADIO_META_PATH):
         try:
@@ -518,7 +684,7 @@ async def main():
         except Exception:
             pass
 
-    tmpdir = tempfile.mkdtemp(prefix="n3_radio_v17_")
+    tmpdir = tempfile.mkdtemp(prefix="n3_radio_v23_")
     try:
         pause_durations = sorted({round(float(val), 2) for b in blocks for k, val in b["events"] if k == "PAUSE"})
         silence_files = {}
@@ -539,11 +705,11 @@ async def main():
                             os.path.join(tmpdir, f"trim_{thash}.mp3"),
                         )
 
-        sem = asyncio.Semaphore(12)
+        sem = asyncio.Semaphore(14)
         ok_results = await asyncio.gather(
             *(synth_turn(k, voice_map[k], txt, raw_p, sem) for (k, txt), (raw_p, _) in unique_turns.items())
         )
-        print(f"Synthesized {sum(1 for x in ok_results if x)} / {len(unique_turns)} unique Qiang-Qiang trio clips.")
+        print(f"Synthesized {sum(1 for x in ok_results if x)} / {len(unique_turns)} unique Qiang-Qiang trio prosody clips.")
 
         turn_durs = {}
         trimmed_paths = {}
