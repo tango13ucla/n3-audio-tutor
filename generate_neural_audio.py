@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Synthesizes Studio Neural TTS MP3 files (Cloud-Resilient + Local Studio Cache):
+Synthesizes & verifies Studio Neural TTS MP3 files:
 1) Conversational Voice-Tutor Question Prompts (*_q.mp3)
 2) Explanations + Complete Sentence Read-Throughs (*_exp.mp3)
 3) Individual Word Pronunciation Clips for Answer-Zone Hover/Tap Dictionary (audio/words/*.mp3)
-If studio MP3s already exist on disk and network/edge-tts is offline in a sandbox,
-preserves all cached studio MP3s cleanly without failing.
+
+Cloud-resilient: preserves verified cached studio MP3s on disk and resolves audio_alias links
+gracefully when running inside an offline/sandboxed VM without outbound Bing Speech WebSocket access.
 """
 import asyncio
 import glob
@@ -19,15 +20,11 @@ try:
     import certifi
     if os.environ.get("SSL_CERT_FILE") and os.path.exists(os.environ["SSL_CERT_FILE"]):
         certifi.where = lambda: os.environ["SSL_CERT_FILE"]
-except Exception:
-    pass
-
-try:
     import edge_tts
-except ImportError:
+except Exception:
     edge_tts = None
 
-from tutor_data import TUTOR_ITEMS, WORD_DICT
+from tutor_data import KANA_ADVERBS_36, TUTOR_ITEMS, WORD_DICT
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 AUDIO_DIR = os.path.join(BASE_DIR, "audio")
@@ -89,20 +86,20 @@ def split_zh_ja_segments(text: str):
     return segs
 
 
-async def synth_ja(text: str, out_path: str, rate: str = "-4%"):
+async def synth_ja(text: str, out_path: str, rate: str = "-4%") -> bool:
     if edge_tts is None:
-        return
+        return False
     try:
         comm = edge_tts.Communicate(text, "ja-JP-NanamiNeural", rate=rate, proxy=PROXY_URL)
         await comm.save(out_path)
-    except Exception as exc:
-        if not os.path.exists(out_path):
-            print(f"[audio] skipped offline synthesis for {os.path.basename(out_path)}: {exc}")
+        return True
+    except Exception:
+        return False
 
 
-async def synth_dialogue(turns, out_path: str):
+async def synth_dialogue(turns, out_path: str) -> bool:
     if edge_tts is None:
-        return
+        return False
     try:
         buf = bytearray()
         for voice, rate, line in turns:
@@ -110,16 +107,18 @@ async def synth_dialogue(turns, out_path: str):
             async for chunk in comm.stream():
                 if chunk["type"] == "audio":
                     buf.extend(chunk["data"])
-        with open(out_path, "wb") as f:
-            f.write(buf)
-    except Exception as exc:
-        if not os.path.exists(out_path):
-            print(f"[audio] skipped offline dialogue for {os.path.basename(out_path)}: {exc}")
+        if buf:
+            with open(out_path, "wb") as f:
+                f.write(buf)
+            return True
+    except Exception:
+        pass
+    return False
 
 
-async def synth_bilingual(text: str, out_path: str):
+async def synth_bilingual(text: str, out_path: str) -> bool:
     if edge_tts is None:
-        return
+        return False
     try:
         segs = split_zh_ja_segments(text)
         buf = bytearray()
@@ -130,11 +129,13 @@ async def synth_bilingual(text: str, out_path: str):
             async for chunk in comm.stream():
                 if chunk["type"] == "audio":
                     buf.extend(chunk["data"])
-        with open(out_path, "wb") as f:
-            f.write(buf)
-    except Exception as exc:
-        if not os.path.exists(out_path):
-            print(f"[audio] skipped offline bilingual for {os.path.basename(out_path)}: {exc}")
+        if buf:
+            with open(out_path, "wb") as f:
+                f.write(buf)
+            return True
+    except Exception:
+        pass
+    return False
 
 
 async def main():
@@ -149,6 +150,7 @@ async def main():
         except Exception:
             old_manifest = {}
 
+    old_words = old_manifest.get("words", {})
     plans = sorted(glob.glob(os.path.join(BASE_DIR, "brain_plan_*.json")))
     with open(plans[-1], encoding="utf-8") as f:
         plan = json.load(f)
@@ -159,8 +161,8 @@ async def main():
             for q in plan.get(sec, {}).get(kind, []):
                 all_qs.append((sec, q))
 
-    sem = asyncio.Semaphore(10)
-    new_manifest = {"words": dict(old_manifest.get("words", {}))}
+    sem = asyncio.Semaphore(6)
+    new_manifest = {"words": dict(old_words)}
 
     async def process_question(sec, q):
         qid = q["id"]
@@ -172,29 +174,29 @@ async def main():
         if turns:
             q_sig = "dlg:" + json.dumps(turns, ensure_ascii=False)
             q_hash = hashlib.sha256(q_sig.encode("utf-8")).hexdigest()[:12]
-            if (old_manifest.get(q_file) != q_hash and not os.path.exists(q_abs)) or not os.path.exists(q_abs):
+            if (old_manifest.get(q_file) != q_hash or not os.path.exists(q_abs)) and edge_tts is not None:
                 async with sem:
                     await synth_dialogue(turns, q_abs)
-            new_manifest[q_file] = old_manifest.get(q_file, q_hash) if os.path.exists(q_abs) else q_hash
-            q_rel = f"./audio/{q_file}"
+            new_manifest[q_file] = q_hash if os.path.exists(q_abs) else old_manifest.get(q_file, "")
+            q_rel = f"./audio/{q_file}" if os.path.exists(q_abs) else ""
         else:
             vq = t_item.get("voice_q") or q.get("stem", "")
             q_hash = hashlib.sha256(vq.encode("utf-8")).hexdigest()[:12]
-            if not os.path.exists(q_abs):
+            if (old_manifest.get(q_file) != q_hash or not os.path.exists(q_abs)) and edge_tts is not None:
                 async with sem:
                     await synth_bilingual(vq, q_abs)
-            new_manifest[q_file] = old_manifest.get(q_file, q_hash) if os.path.exists(q_abs) else q_hash
-            q_rel = f"./audio/{q_file}"
+            new_manifest[q_file] = q_hash if os.path.exists(q_abs) else old_manifest.get(q_file, "")
+            q_rel = f"./audio/{q_file}" if os.path.exists(q_abs) else ""
 
         exp_txt = t_item.get("voice_exp") or q.get("hook_zh") or ""
         exp_hash = hashlib.sha256(exp_txt.encode("utf-8")).hexdigest()[:12]
         exp_file = f"{qid}_exp.mp3"
         exp_abs = os.path.join(AUDIO_DIR, exp_file)
-        if not os.path.exists(exp_abs):
+        if (old_manifest.get(exp_file) != exp_hash or not os.path.exists(exp_abs)) and edge_tts is not None:
             async with sem:
                 await synth_bilingual(exp_txt, exp_abs)
-        new_manifest[exp_file] = old_manifest.get(exp_file, exp_hash) if os.path.exists(exp_abs) else exp_hash
-        exp_rel = f"./audio/{exp_file}"
+        new_manifest[exp_file] = exp_hash if os.path.exists(exp_abs) else old_manifest.get(exp_file, "")
+        exp_rel = f"./audio/{exp_file}" if os.path.exists(exp_abs) else ""
 
         new_manifest[f"meta:{qid}"] = {
             "q_audio": q_rel,
@@ -203,32 +205,50 @@ async def main():
         }
 
     async def process_word(surface, info):
+        alias = info.get("audio_alias")
+        if alias and alias in old_words:
+            alias_abs = os.path.join(BASE_DIR, old_words[alias].lstrip("./"))
+            if os.path.exists(alias_abs):
+                new_manifest["words"][surface] = old_words[alias]
+                return
+
         speak_str = surface.replace("〜", "")
         if surface in ("半年", "内緒", "貯める", "貯金"):
             speak_str = info["kana"]
         w_hash = hashlib.sha256(speak_str.encode("utf-8")).hexdigest()[:10]
         w_file = f"w_{w_hash}.mp3"
         w_abs = os.path.join(WORDS_AUDIO_DIR, w_file)
-        if not os.path.exists(w_abs):
+        if not os.path.exists(w_abs) and edge_tts is not None:
             async with sem:
                 await synth_ja(speak_str, w_abs, rate="-4%")
-        new_manifest["words"][surface] = f"./audio/words/{w_file}"
+        if os.path.exists(w_abs):
+            new_manifest["words"][surface] = f"./audio/words/{w_file}"
+
+    extra_kana_words = {}
+    for fam in KANA_ADVERBS_36:
+        for pr in fam.get("pairs", []):
+            for side in ("a", "b"):
+                w = pr[side]["w"]
+                if w not in WORD_DICT:
+                    extra_kana_words[w] = {"kana": w}
 
     await asyncio.gather(
         *(process_question(sec, q) for sec, q in all_qs),
         *(process_word(surf, info) for surf, info in WORD_DICT.items()),
+        *(process_word(surf, info) for surf, info in extra_kana_words.items()),
     )
 
     done_txt = "今天这一组全部过关了，去休息吧，明天继续。"
     done_hash = hashlib.sha256(done_txt.encode("utf-8")).hexdigest()[:12]
     done_abs = os.path.join(AUDIO_DIR, "done.mp3")
-    if not os.path.exists(done_abs):
+    if (old_manifest.get("done.mp3") != done_hash or not os.path.exists(done_abs)) and edge_tts is not None:
         await synth_bilingual(done_txt, done_abs)
-    new_manifest["done.mp3"] = old_manifest.get("done.mp3", done_hash) if os.path.exists(done_abs) else done_hash
+    if os.path.exists(done_abs):
+        new_manifest["done.mp3"] = done_hash
 
     with open(MANIFEST_PATH, "w", encoding="utf-8") as f:
         json.dump(new_manifest, f, ensure_ascii=False, indent=2)
-    print(f"Verified/synthesized {len(all_qs)} tutor Q/Exp pairs + {len(WORD_DICT)} word pronunciations.")
+    print(f"Verified {len(all_qs)} studio Q/Exp pairs + {len(new_manifest['words'])} word pronunciations.")
 
 
 if __name__ == "__main__":

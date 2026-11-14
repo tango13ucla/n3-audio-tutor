@@ -1,9 +1,11 @@
 {
-  "name": "N3 语音陪练",
-  "short_name": "N3",
+  "name": "JLPT N3 语音私教 · 掌握度全景",
+  "short_name": "N3 私教",
+  "description": "真人级神经网络语音私教 · 15秒声画微课 · 走路随身电台 · 全局掌握度沙盘",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
-  "orientation": "portrait",
+  "orientation": "any",
   "background_color": "#F7F6F2",
   "theme_color": "#F7F6F2",
   "icons": [
@@ -11,13 +13,41 @@
       "src": "./icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "./icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "走路随身电台",
+      "short_name": "走路听",
+      "description": "免手点按当前时段自动连播",
+      "url": "./index.html?mode=walk",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "掌握度与假名副词 36",
+      "short_name": "掌握度",
+      "description": "查看四科掌握度与纯假名副词 Top 36",
+      "url": "./index.html?mode=dash",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
 }
