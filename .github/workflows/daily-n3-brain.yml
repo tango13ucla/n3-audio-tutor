@@ -2,18 +2,9 @@ name: Daily JLPT N3 Brain Refresh
 
 on:
   schedule:
-    # Full Podcast + Brain Refresh at 07:00 AM PT (15:00 UTC) and 09:00 PM PT (05:00 UTC)
-    - cron: '0 15 * * *'
-    - cron: '0 5 * * *'
-    # Fast 6-Hour Phone Answer Log Drain at 01:00 AM PT (09:00 UTC) and 01:00 PM PT (21:00 UTC)
-    - cron: '0 9 * * *'
-    - cron: '0 21 * * *'
+    # Archive multi-platform cloud sync every 4 hours + full daily audio refresh at 07:00 AM PT (15:00 UTC)
+    - cron: '0 */4 * * *'
   workflow_dispatch:
-    inputs:
-      audition_only:
-        description: 'Run 20s voice audition artifact only'
-        required: false
-        default: 'false'
 
 permissions:
   contents: write
@@ -30,51 +21,30 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Drain Phone Answers Only (Midday / Midnight Fast Tick)
-        if: ${{ github.event.schedule == '0 9 * * *' || github.event.schedule == '0 21 * * *' }}
-        run: python run_brain_algorithm.py --drain-only
-
-      - name: Install Neural TTS & Audio Stitching dependencies
-        if: ${{ github.event.schedule != '0 9 * * *' && github.event.schedule != '0 21 * * *' }}
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq --no-install-recommends ffmpeg
-          pip install --quiet -U edge-tts certifi google-genai
-
-      - name: Voice Audition Probe
-        if: ${{ inputs.audition_only == 'true' }}
-        run: |
-          mkdir -p /tmp/audition
-          python - << 'PY'
-          import asyncio, edge_tts
-          SAMPLE_F = "这句是说，他在日本只待了半年，日语却出乎意料地好。按半年的标准本来以为不会太熟练，实际却远超预期，这种反差就用 にしては。"
-          comm = edge_tts.Communicate(SAMPLE_F, "zh-CN-XiaoxiaoMultilingualNeural", rate="+0%")
-          asyncio.run(comm.save("/tmp/audition/sample.mp3"))
-          PY
-
-      - name: Upload Voice Audition Artifact
-        if: ${{ inputs.audition_only == 'true' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: voice-audition
-          path: /tmp/audition/
-          retention-days: 1
-
-      - name: Run Full N3 Brain Algorithm & Rebuild Podcast + PWA
-        if: ${{ inputs.audition_only != 'true' && github.event.schedule != '0 9 * * *' && github.event.schedule != '0 21 * * *' }}
+      - name: Run Cloud Sync or Full N3 Brain Audio Refresh
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: python run_brain_algorithm.py
+          EVENT_NAME: ${{ github.event_name }}
+          CRON_SCHEDULE: ${{ github.event.schedule }}
+        run: |
+          HOUR_UTC=$(date -u +%H)
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] || [ "$HOUR_UTC" = "15" ]; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq --no-install-recommends ffmpeg
+            pip install --quiet -U edge-tts certifi google-genai
+            python run_brain_algorithm.py
+          else
+            python run_brain_algorithm.py --sync-only
+          fi
 
       - name: Commit & Push Updated State
-        if: ${{ inputs.audition_only != 'true' }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add practice_log.jsonl n3_live_state.json index.html audio/ sw.js
+          git add n3_live_state.json practice_log.jsonl cloud_sync_config.json cloud_state_snapshot.json index.html sw.js audio/
           if ! git diff --cached --quiet; then
-            git commit -m "chore(brain): sync phone answers, N3 mastery state & daily tutor"
             git pull --rebase origin main || true
+            git commit -m "chore(sync): multi-platform N3 progress & studio audio sync"
             git push
           else
             echo "No changes to commit."

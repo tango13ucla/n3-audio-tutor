@@ -1,4 +1,4 @@
-const CACHE_NAME = "n3-studio-tutor-v12";
+const CACHE_NAME = "n3-studio-tutor-v13";
 const CORE_SHELL = [
   "./",
   "./index.html",
@@ -40,7 +40,8 @@ self.addEventListener("fetch", event => {
   const req = event.request;
   if (req.method !== "GET" || req.headers.has("range")) return;
   const url = new URL(req.url);
-  if (url.origin !== self.location.origin || url.pathname.includes("/api/") || url.pathname.endsWith("daily_radio.mp3")) return;
+  if (url.origin !== self.location.origin) return;
+  if (url.pathname.includes("/api/") || url.pathname.endsWith("daily_radio.mp3")) return;
 
   // Cache-First keyed by ?v=<hash> for short studio MP3s and icons, fetching fresh from network on cache miss
   if (url.pathname.endsWith(".mp3") || url.pathname.endsWith(".png")) {

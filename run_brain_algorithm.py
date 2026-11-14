@@ -1,19 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Antigravity N3 Central Brain Algorithm v4.0 (Live Cloud Relay + Dual-Hand Sync)
-1. Drains real-time phone/desktop answers from silent cloud relay into practice_log.jsonl.
-2. Merges answers from Phone/Desktop Audio PWA and Grok Bots across ALL 4 modules.
-3. Recomputes S0-S3 mastery state, summary counts, and PT countdown.
-4. Supports --drain-only (fast 6h persistence + HTML update) and full mode (with neural audio + 35m custom podcast).
+Antigravity N3 Central Brain Algorithm v2.0 (Dual-Hand + All-4-Module Sync)
+Merges answers from Phone/Desktop Audio PWA (practice_log.jsonl) and Grok Bots,
+updates S0-S3 mastery state across ALL 4 modules (grammar, henkei, vocab, listening),
+recomputes summary counts and PT countdown, and compiles index.html.
 """
-import argparse
 import datetime
 import json
 import os
 import subprocess
-import sys
-import urllib.request
 from zoneinfo import ZoneInfo
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -21,73 +17,6 @@ STATE_PATH = os.path.join(BASE_DIR, "n3_live_state.json")
 LOG_PATH = os.path.join(BASE_DIR, "practice_log.jsonl")
 EXAM_DATE = datetime.date(2026, 12, 6)
 PT_TZ = ZoneInfo("America/Los_Angeles")
-CLOUD_SYNC_TOPIC = "n3pwa_8c4e91f2a7d03b65e2194f8a0c7d3e52"
-
-
-def drain_cloud_relay() -> int:
-    """Pulls recent phone/desktop quiz answers from silent cloud relay into practice_log.jsonl."""
-    existing_ts = set()
-    if os.path.exists(LOG_PATH):
-        try:
-            with open(LOG_PATH, encoding="utf-8") as f:
-                for ln in f:
-                    ln = ln.strip()
-                    if not ln:
-                        continue
-                    try:
-                        existing_ts.add(str(json.loads(ln).get("ts", "")))
-                    except Exception:
-                        pass
-        except Exception:
-            pass
-
-    url = f"https://ntfy.sh/{CLOUD_SYNC_TOPIC}/json?since=all&poll=1"
-    try:
-        req = urllib.request.Request(url, headers={"User-Agent": "n3-brain-sync/4.0"})
-        with urllib.request.urlopen(req, timeout=12) as resp:
-            raw_text = resp.read().decode("utf-8", errors="replace")
-    except Exception as exc:
-        print(f"[relay] Cloud relay check skipped ({exc}).")
-        return 0
-
-    new_records = {}
-    for ln in raw_text.splitlines():
-        ln = ln.strip()
-        if not ln:
-            continue
-        try:
-            ev = json.loads(ln)
-            if ev.get("event") != "message" or not ev.get("message"):
-                continue
-            payload = json.loads(ev["message"])
-            batch = payload.get("logs", []) if isinstance(payload, dict) and "logs" in payload else [payload]
-            for rec in batch:
-                if not isinstance(rec, dict):
-                    continue
-                ts = str(rec.get("ts", "")).strip()
-                pt = str(rec.get("point", "")).strip()
-                if not ts or not pt or ts in existing_ts or ts in new_records:
-                    continue
-                new_records[ts] = {
-                    "id": str(rec.get("id", ""))[:40],
-                    "point": pt[:80],
-                    "correct": str(rec.get("correct", "false")).lower() == "true",
-                    "ask_again": str(rec.get("ask_again", "false")).lower() == "true",
-                    "source": "pwa",
-                    "ts": ts,
-                }
-        except Exception:
-            continue
-
-    if not new_records:
-        return 0
-
-    sorted_recs = [new_records[k] for k in sorted(new_records.keys())]
-    with open(LOG_PATH, "a", encoding="utf-8") as f:
-        for r in sorted_recs:
-            f.write(json.dumps(r, ensure_ascii=False) + "\n")
-    print(f"[relay] Drained {len(sorted_recs)} new phone/desktop answer(s) into practice_log.jsonl.")
-    return len(sorted_recs)
 
 
 def step_status(cur_status: str, ok: bool, again: bool) -> str:
@@ -176,11 +105,11 @@ def recompute_summary(state: dict) -> None:
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--drain-only", action="store_true", help="Drain cloud answers & rebuild HTML without re-synthesizing podcast")
-    args = parser.parse_args()
+    import sys
+    sync_only = ("--sync-only" in sys.argv) or ("--drain-only" in sys.argv)
 
-    drained = drain_cloud_relay()
+    # 1. Pull latest cross-platform answers from Cloud CRDT Bus into practice_log.jsonl & cloud_state_snapshot.json
+    subprocess.run([sys.executable, os.path.join(BASE_DIR, "sync_cloud_store.py")], check=True)
 
     with open(STATE_PATH, encoding="utf-8") as f:
         state = json.load(f)
@@ -196,11 +125,12 @@ def main():
     with open(STATE_PATH, "w", encoding="utf-8") as f:
         json.dump(state, f, ensure_ascii=False, indent=2)
 
-    if not args.drain_only:
+    if not sync_only:
         subprocess.run([sys.executable, os.path.join(BASE_DIR, "generate_neural_audio.py")], check=True)
         subprocess.run([sys.executable, os.path.join(BASE_DIR, "generate_daily_radio.py")], check=True)
+
     subprocess.run([sys.executable, os.path.join(BASE_DIR, "build_html.py")], check=True)
-    print(f"Brain algorithm v4 synced {count} records (drained={drained}, drain_only={args.drain_only}); days_left={days_left}.")
+    print(f"Brain algorithm v4 synced {count} records (sync_only={sync_only}); days_left={days_left}.")
 
 
 if __name__ == "__main__":

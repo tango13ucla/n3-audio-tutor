@@ -74,14 +74,20 @@ async def detect_voice_map() -> tuple[dict, set]:
     try:
         voices = await edge_tts.list_voices(**COMM_KWARGS)
         short_names = {v.get("ShortName", "") for v in voices}
-        if "zh-CN-XiaoxiaoMultilingualNeural" in short_names:
-            vmap["T"] = ("zh-CN-XiaoxiaoMultilingualNeural", "+0%")
-            vmap["F"] = ("zh-CN-XiaoxiaoMultilingualNeural", "+0%")
-            multilingual_speakers.update({"T", "F"})
+        for cand_t in (
+            "en-US-EmmaMultilingualNeural",
+            "en-US-AvaMultilingualNeural",
+            "zh-CN-XiaoxiaoMultilingualNeural",
+        ):
+            if cand_t in short_names:
+                vmap["T"] = (cand_t, "+0%")
+                vmap["F"] = (cand_t, "+0%")
+                multilingual_speakers.update({"T", "F"})
+                break
         for cand_m in (
-            "zh-CN-YunxiaoMultilingualNeural",
-            "zh-CN-YunyiMultilingualNeural",
-            "zh-CN-YunfanMultilingualNeural",
+            "ko-KR-HyunsuMultilingualNeural",
+            "fr-FR-RemyMultilingualNeural",
+            "en-US-BrianMultilingualNeural",
         ):
             if cand_m in short_names:
                 vmap["M"] = (cand_m, "+0%")
@@ -99,18 +105,44 @@ async def detect_voice_map() -> tuple[dict, set]:
 def expand_turn_events(spk: str, val, multilingual_speakers: set) -> list:
     if spk == "PAUSE":
         return [("PAUSE", float(val))]
-    txt = str(val)
-    if spk in ("T", "F", "M") and spk not in multilingual_speakers and KANA_RE.search(txt):
-        ja_spk = "JM" if spk == "M" else "JF"
+    txt = str(val).strip()
+    if spk in ("T", "F", "M") and KANA_RE.search(txt):
+        kana_spk = spk if spk in multilingual_speakers else ("JM" if spk == "M" else "JF")
         parts = KANA_RE.split(txt)
         out = []
+        pending_pause = 0.0
         for idx, pt in enumerate(parts):
-            pt_s = pt.strip()
-            if not pt_s or not re.search(r"[\w\u3040-\u9fff]", pt_s):
+            if not pt:
                 continue
-            if out:
-                out.append(("PAUSE", 0.05))
-            out.append((ja_spk if idx % 2 == 1 else spk, pt_s))
+            if idx % 2 == 1:
+                ks = pt.strip()
+                if not ks:
+                    continue
+                if out:
+                    out.append(("PAUSE", round(pending_pause or 0.04, 2)))
+                out.append((kana_spk, ks if ks.endswith("。") else ks + "。"))
+                pending_pause = 0.04
+            else:
+                lead_m = re.match(r"^[\s』」）]*([。！？；，、：]+)[\s『「（]*", pt)
+                if lead_m:
+                    pchars = lead_m.group(1)
+                    if any(c in pchars for c in "。！？；"):
+                        pending_pause = max(pending_pause, 0.24)
+                    else:
+                        pending_pause = max(pending_pause, 0.13)
+                    pt = pt[lead_m.end():]
+                pt_s = pt.strip()
+                if not pt_s or not re.search(r"[\w\u3040-\u9fff]", pt_s):
+                    continue
+                if out:
+                    out.append(("PAUSE", round(pending_pause or 0.04, 2)))
+                out.append((spk, pt_s))
+                if pt_s[-1] in "。！？；":
+                    pending_pause = 0.22
+                elif pt_s[-1] in "，、：":
+                    pending_pause = 0.12
+                else:
+                    pending_pause = 0.04
         return out if out else [(spk, txt)]
     return [(spk, txt)]
 
@@ -190,9 +222,9 @@ async def synth_raw_clip(spk: str, voice: str, rate: str, text: str, out_path: s
 
 def trim_clip_silence(raw_path: str, trimmed_path: str) -> None:
     af_chain = (
-        "silenceremove=start_periods=1:start_duration=0.0:start_threshold=-55dB,"
-        "areverse,silenceremove=start_periods=1:start_duration=0.0:start_threshold=-55dB,areverse,"
-        "afade=t=in:st=0:d=0.012,areverse,afade=t=in:st=0:d=0.012,areverse"
+        "silenceremove=start_periods=1:start_duration=0.0:start_threshold=-68dB,"
+        "areverse,silenceremove=start_periods=1:start_duration=0.0:start_threshold=-68dB,areverse,"
+        "afade=t=in:st=0:d=0.008,areverse,afade=t=in:st=0:d=0.008,areverse"
     )
     res = subprocess.run(
         [
@@ -295,7 +327,7 @@ async def main():
         q_expanded = []
         for spk, val in card["q_turns"]:
             q_expanded.extend(expand_turn_events(spk, val, multilingual_speakers))
-        q_sig = f"v11q:{voice_map['JF'][0]}:" + json.dumps(q_expanded, ensure_ascii=False)
+        q_sig = f"v12q:{voice_map['JF'][0]}:" + json.dumps(q_expanded, ensure_ascii=False)
         q_hash = hashlib.sha256(q_sig.encode("utf-8")).hexdigest()[:12]
         hashes_q[qid] = q_hash
         q_file = f"{qid}_q.mp3"
@@ -306,7 +338,7 @@ async def main():
         e_expanded = []
         for spk, val in card["exp_turns"]:
             e_expanded.extend(expand_turn_events(spk, val, multilingual_speakers))
-        e_sig = f"v11e:{engine_tag}:" + json.dumps(e_expanded, ensure_ascii=False)
+        e_sig = f"v12e:{engine_tag}:" + json.dumps(e_expanded, ensure_ascii=False)
         e_hash = hashlib.sha256(e_sig.encode("utf-8")).hexdigest()[:12]
         hashes_exp[qid] = e_hash
         e_file = f"{qid}_exp.mp3"
@@ -314,10 +346,10 @@ async def main():
         if old_manifest.get(e_file) != e_hash or not os.path.exists(e_abs):
             to_build_exp[qid] = e_expanded
 
-    sem = asyncio.Semaphore(6)
+    sem = asyncio.Semaphore(8)
 
     if can_synth and (to_build_q or to_build_exp):
-        tmpdir = tempfile.mkdtemp(prefix="n3_cards_v11_")
+        tmpdir = tempfile.mkdtemp(prefix="n3_cards_v12_")
         try:
             needed_clips = {}
             needed_pauses = set()

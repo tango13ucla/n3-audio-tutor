@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Compiles the Japanese Zen Edition of the JLPT N3 Adaptive & Two-Coach Podcast Platform (index.html — Zen v11).
+Compiles the Japanese Zen Edition of the JLPT N3 Adaptive & Three-Host Salon Platform (index.html — Zen v12).
 Aesthetic Philosophy: 禅 (Zen) · 余白 (Ma) · 新潮文庫級組版 (Optimal Literary Editorial Typography)
 - Pure native Japanese question reading (zero "请听题", zero "空欄", zero "选", zero spoilers).
-- 3-step human teacher explanation (both text & voice):
-  ① 句意 (what the sentence means) -> ② 为什么用 (context) -> ③ 变形与辨析 (conjugation / contrast).
-- Instant inline word meaning on tap (100% sentence lexicon coverage + zero Android Chrome Google Search popup).
-- Dual Daily Lock Horizon ("做题 50 + 随身听 = 稳过 120 分"): visibly locks projected N3 score from 108 -> 132+.
+- True blind-ear JLPT N3 listening: spoken 1/2/3 choices in audio, crisp [1] [2] [3] buttons on screen.
+- Calm "不确定 · 直接看讲解" on every card so zero blind guessing ever turns a weak point green.
+- Distinct Desktop vs Phone ergonomics: Desktop optical-center cursor-adjacent Next + scroll-wheel advance; Phone thumb-zone + swipe-left advance.
+- 《锵锵三人行》 3-host cultural salon podcast starting directly at 00:00 with zero date or countdown clutter.
+- Local storage historical union-merge + 1-tap cross-device sync link (#sync=...).
 """
 import glob
 import json
@@ -46,11 +47,11 @@ if os.path.exists(AUDIO_MANIFEST_PATH):
 
 radio_meta = {
     "date": live_state.get("updated_at", "2026-11-14")[:10],
-    "display_date": "今日",
+    "display_date": "三人闲聊",
     "audio_url": "./audio/daily_radio.mp3",
     "duration_sec": 2100.0,
     "duration_label": "35 分钟",
-    "hosts": "阿哲 · 小夏",
+    "hosts": "老文 · 老梁 · 小夏",
     "chapters": [
         {"idx": 0, "title": "语法", "start": 0},
         {"idx": 1, "title": "听力", "start": 1200},
@@ -65,6 +66,9 @@ if os.path.exists(RADIO_META_PATH):
             loaded_rm = json.load(f)
             if loaded_rm.get("audio_url"):
                 radio_meta = loaded_rm
+                radio_meta["display_date"] = "三人闲聊"
+                if not radio_meta.get("hosts") or "阿哲" in radio_meta.get("hosts", ""):
+                    radio_meta["hosts"] = "老文 · 老梁 · 小夏"
     except Exception:
         pass
 
@@ -125,9 +129,7 @@ def clean_prompt(s: str, is_listening: bool) -> str:
     txt = re.sub(r"^🎧\s*", "", str(s or "")).strip()
     txt = re.sub(r"^（向[^）]+）\s*", "", txt).strip()
     if is_listening:
-        if any(k in txt for k in ("怎么说", "哪句", "什么意思", "最合适", "怎么回应", "先做什么", "做什么", "处理")):
-            return clean_zen_text(txt)
-        return "听对话，选出最自然的回应"
+        return ""
     return txt
 
 
@@ -184,7 +186,7 @@ for vc in VARIANT_CARDS:
         v_obj = {
             "id": vid,
             "prompt": c75.get("prompt_clean") or clean_prompt(vc["prompt"], vc["subject"] == "聴解"),
-            "choices": vc["choices"],
+            "choices": c75.get("choices") or vc["choices"],
             "answer": vc["answer"],
             "full_ja": c75.get("full_ja") or vc["full_ja"],
             "zh_meaning": c75.get("zh_meaning", ""),
@@ -207,7 +209,7 @@ def build_base_point(q: dict, subject: str, fallback_point_label: str) -> dict:
     fallback_opts = [strip_opt_prefix(o) for o in q.get("options", []) if o != "不知道"]
     fallback_ans = strip_opt_prefix(q.get("answer", ""))
 
-    choices = t_item.get("choices") or fallback_opts
+    choices = c75.get("choices") or t_item.get("choices") or fallback_opts
     answer = t_item.get("answer") or fallback_ans
     raw_prompt = c75.get("prompt_clean") or t_item.get("prompt_display") or re.sub(r"\s*\[[A-Z0-9-]+\]", "", str(q.get("stem", ""))).strip()
     prompt_display = clean_prompt(raw_prompt, is_listening)
@@ -334,7 +336,7 @@ for ext in EXTRA_PRIMARY_CARDS:
         "primary": {
             "id": qid,
             "prompt": c75.get("prompt_clean") or clean_prompt(ext["prompt"], is_l),
-            "choices": ext["choices"],
+            "choices": c75.get("choices") or ext["choices"],
             "answer": ext["answer"],
             "full_ja": full_ja,
             "zh_meaning": c75.get("zh_meaning", ""),
@@ -475,8 +477,30 @@ mastery_data = {
     "vocab": {"label": "核心词汇", "detail": "含常考假名副词", "exam_pts": 24, "counts": count_tiers(vocab_items), "items": vocab_items},
 }
 
+plan_date_str = live_state.get("updated_at", plan.get("plan_date", "2026-11-14"))[:10]
+cloud_cfg_path = os.path.join(BASE_DIR, "cloud_sync_config.json")
+cloud_snap_path = os.path.join(BASE_DIR, "cloud_state_snapshot.json")
+cloud_cfg = {}
+if os.path.exists(cloud_cfg_path):
+    try:
+        with open(cloud_cfg_path, encoding="utf-8") as f:
+            cloud_cfg = json.load(f)
+    except Exception:
+        pass
+
+cloud_snap = {}
+if os.path.exists(cloud_snap_path):
+    try:
+        with open(cloud_snap_path, encoding="utf-8") as f:
+            cloud_snap = json.load(f)
+    except Exception:
+        pass
+
+seeded_day = (cloud_snap.get("dates") or {}).get(plan_date_str) or {}
+seeded_overrides = cloud_snap.get("masteryOverrides") or {}
+
 payload = json.dumps({
-    "plan_date": live_state.get("updated_at", plan.get("plan_date", "2026-11-14"))[:10],
+    "plan_date": plan_date_str,
     "exam_date": "2026-12-06",
     "days_to_exam": live_state.get("days_left", plan.get("days_to_exam", 22)),
     "done_audio": "./audio/done.mp3",
@@ -484,6 +508,11 @@ payload = json.dumps({
     "points": ordered_points,
     "words": rich_words,
     "mastery": mastery_data,
+    "cloud_sync": {
+        "ntfy_topic": cloud_cfg.get("ntfy_topic", ""),
+        "seeded_day": seeded_day,
+        "seeded_overrides": seeded_overrides,
+    },
 }, ensure_ascii=False)
 
 html = r"""<!DOCTYPE html>
@@ -759,6 +788,25 @@ html = r"""<!DOCTYPE html>
     padding-top: 12px;
   }
 
+  /* Desktop vs Mobile Ergonomics:
+     - Mobile (<860px): Content floats comfortably above, interactive controls stay in bottom one-hand thumb zone.
+     - Desktop (>=860px): Content + controls group together in the optical center right under the cursor (zero bottom-edge mouse travel!). */
+  @media (min-width: 860px) {
+    #tutor-view .stage-wrap {
+      justify-content: flex-start;
+    }
+    #tutor-view .focal-space {
+      flex: 0 1 auto;
+      justify-content: flex-start;
+      margin-top: auto;
+      padding: 18px 0 0;
+    }
+    #tutor-view .action-dock {
+      margin-bottom: auto;
+      padding-top: 26px;
+    }
+  }
+
   /* -------- TEACH VIEW -------- */
   .point-heading {
     margin: 0 0 20px;
@@ -828,13 +876,12 @@ html = r"""<!DOCTYPE html>
     line-height: 1.62;
   }
 
-  /* -------- QUIZ VIEW (Optimal Literary Reading Scale + Zen Ma) -------- */
+  /* -------- QUIZ VIEW (Optimal Literary Reading Scale + Blind-Ear Listening) -------- */
   .quiz-focal {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    min-height: 140px;
-    margin-bottom: 32px;
+    min-height: 116px;
   }
   .quiz-ja {
     margin: 0;
@@ -853,12 +900,12 @@ html = r"""<!DOCTYPE html>
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
-    padding: 12px 0;
+    justify-content: center;
+    padding: 20px 0;
   }
   .listen-medallion {
-    width: 74px;
-    height: 74px;
+    width: 82px;
+    height: 82px;
     border-radius: 50%;
     border: 1px solid var(--hairline-strong);
     background: var(--sheet);
@@ -873,8 +920,8 @@ html = r"""<!DOCTYPE html>
     border-color: var(--moss);
     color: var(--moss);
   }
-  .med-ic { width: 25px; height: 25px; margin-left: 2px; }
-  .med-waves { display: none; align-items: center; gap: 3.5px; height: 22px; }
+  .med-ic { width: 27px; height: 27px; margin-left: 2px; }
+  .med-waves { display: none; align-items: center; gap: 3.5px; height: 24px; }
   .listen-medallion.speaking .med-ic { display: none; }
   .listen-medallion.speaking .med-waves { display: flex; }
   .med-waves span {
@@ -887,26 +934,18 @@ html = r"""<!DOCTYPE html>
   .med-waves span:nth-child(3) { animation-delay: 0.32s; }
   @keyframes zenWave {
     0%, 100% { height: 6px; opacity: 0.45; }
-    50% { height: 19px; opacity: 1; }
-  }
-  .listen-prompt {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 400;
-    color: var(--ink-2);
-    letter-spacing: 0.03em;
-    text-align: center;
+    50% { height: 20px; opacity: 1; }
   }
 
   .choice-list {
     display: flex;
     flex-direction: column;
-    gap: 13px;
+    gap: 12px;
   }
   .zen-choice {
     width: 100%;
-    min-height: 64px;
-    padding: 15px 22px;
+    min-height: 62px;
+    padding: 14px 22px;
     background: var(--sheet);
     border: 1px solid var(--hairline-strong);
     border-radius: 8px;
@@ -924,9 +963,52 @@ html = r"""<!DOCTYPE html>
     transition: border-color 0.16s ease, background 0.16s ease;
   }
   .zen-choice:active { background: #EDEAE1; }
-  .kbd-tag { display: none; }
+
+  .listen-num-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  .listen-num-btn {
+    min-height: 68px;
+    background: var(--sheet);
+    border: 1px solid var(--hairline-strong);
+    border-radius: 8px;
+    font-family: var(--serif-jp);
+    font-size: 25px;
+    font-weight: 600;
+    color: var(--sumi);
+    font-variant-numeric: tabular-nums;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.16s ease, background 0.16s ease;
+  }
+  .listen-num-btn:active { background: #EDEAE1; }
+
+  .unsure-btn {
+    margin-top: 12px;
+    width: 100%;
+    min-height: 46px;
+    padding: 0 18px;
+    border: 1px dashed var(--hairline-strong);
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--ink-2);
+    letter-spacing: 0.04em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: border-color 0.16s ease, color 0.16s ease, background 0.16s ease;
+  }
+  .unsure-btn:active { background: #EDEAE1; }
+
+  .kbd-tag, .desk-hint { display: none; }
   @media (min-width: 860px) {
-    .zen-choice:hover { border-color: var(--sumi); background: #FFFFFF; }
+    .zen-choice:hover, .listen-num-btn:hover { border-color: var(--sumi); background: #FFFFFF; }
+    .unsure-btn:hover { border-color: var(--sumi); color: var(--sumi); background: rgba(252, 251, 248, 0.72); }
     .kbd-tag {
       display: inline-block;
       font-family: var(--sans);
@@ -934,16 +1016,14 @@ html = r"""<!DOCTYPE html>
       color: var(--ink-3);
       font-variant-numeric: tabular-nums;
     }
-  }
-
-  .quiet-skip {
-    display: block;
-    width: 100%;
-    text-align: center;
-    padding: 12px 0 2px;
-    font-size: 14.5px;
-    color: var(--ink-3);
-    letter-spacing: 0.05em;
+    .desk-hint {
+      display: inline-block;
+      font-size: 12.5px;
+      font-weight: 400;
+      opacity: 0.68;
+      letter-spacing: 0.03em;
+      margin-left: 10px;
+    }
   }
 
   /* -------- RESULT VIEW (3-Step Human Clarity: 句意 -> 为什么用 -> 变形与辨析) -------- */
@@ -969,8 +1049,37 @@ html = r"""<!DOCTYPE html>
     line-height: 1.62;
     letter-spacing: 0.015em;
   }
+  .listen-opt-review {
+    margin-top: 12px;
+    padding: 10px 14px;
+    border-radius: 7px;
+    background: rgba(252, 251, 248, 0.62);
+    border: 1px solid var(--hairline);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .lor-row {
+    font-family: var(--serif-jp);
+    font-size: 17px;
+    line-height: 1.56;
+    color: var(--ink-2);
+    display: flex;
+    gap: 8px;
+  }
+  .lor-row.ok {
+    color: var(--moss);
+    font-weight: 600;
+  }
+  .lor-row.ng {
+    color: var(--bengara);
+  }
+  .lor-num {
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
 
-  /* Tappable Japanese words + Instant Inline Zen Meaning Strip (Zero Google Search, Zero Modal Trap) */
+  /* Tappable Japanese words + Instant Inline Zen Meaning Strip (Zero Google Search, Zero Small-Print Clutter) */
   .w-tok {
     border-bottom: 1px solid rgba(28, 27, 24, 0.15);
     cursor: pointer;
@@ -997,15 +1106,7 @@ html = r"""<!DOCTYPE html>
     gap: 12px;
   }
   .inline-lex.empty {
-    background: transparent;
-    border-color: transparent;
-    padding: 4px 0 0;
-    min-height: 24px;
-  }
-  .ilex-hint {
-    font-size: 13px;
-    color: var(--ink-3);
-    letter-spacing: 0.04em;
+    display: none;
   }
   .ilex-main {
     min-width: 0;
@@ -1349,7 +1450,7 @@ html = r"""<!DOCTYPE html>
     line-height: 1.62;
   }
 
-  /* ================= 6. PROGRESS MODAL ================= */
+  /* ================= 6. PROGRESS & CROSS-DEVICE SYNC MODAL ================= */
   .modal-mask {
     position: fixed;
     inset: 0;
@@ -1363,7 +1464,7 @@ html = r"""<!DOCTYPE html>
   .modal-mask.open { display: flex; }
   .modal-card {
     width: 100%;
-    max-width: 365px;
+    max-width: 380px;
     background: var(--sheet);
     border: 1px solid var(--hairline-strong);
     border-radius: 10px;
@@ -1371,15 +1472,43 @@ html = r"""<!DOCTYPE html>
   }
   .modal-h { margin: 0 0 12px; font-size: 18px; font-weight: 600; letter-spacing: 0.04em; }
   .modal-body { margin: 0 0 14px; font-size: 16px; color: var(--ink-2); line-height: 1.85; font-variant-numeric: tabular-nums; }
-  .modal-promise { margin: 0 0 22px; padding-top: 12px; border-top: 1px solid var(--hairline); font-size: 14.5px; color: var(--moss); line-height: 1.65; font-weight: 500; }
+  .modal-promise { margin: 0 0 16px; padding-top: 12px; border-top: 1px solid var(--hairline); font-size: 14.5px; color: var(--moss); line-height: 1.65; font-weight: 500; }
+  .sync-box {
+    margin: 0 0 20px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: rgba(245, 242, 235, 0.7);
+    border: 1px solid var(--hairline);
+  }
+  .sync-note {
+    margin: 0 0 10px;
+    font-size: 13.5px;
+    color: var(--ink-2);
+    line-height: 1.55;
+  }
+  .sync-btn {
+    width: 100%;
+    height: 40px;
+    border: 1px solid var(--hairline-strong);
+    border-radius: 6px;
+    background: var(--sheet);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--sumi);
+    letter-spacing: 0.03em;
+  }
+  .sync-btn.copied {
+    border-color: var(--moss);
+    color: var(--moss);
+  }
 </style>
 </head>
 <body>
 
 <div class="zen-shell" id="app-shell">
-  <!-- 1. STRICT GRID HEADER -->
+  <!-- 1. STRICT GRID HEADER (Zero Date / Zero Countdown) -->
   <header class="zen-header">
-    <div class="zen-brand" id="countdown-txt">残 <strong>22</strong> 日</div>
+    <div class="zen-brand"><strong>N3</strong></div>
     <nav class="zen-nav">
       <button class="nav-link active" id="tab-tutor" onclick="switchMode('tutor')">做题</button>
       <button class="nav-link" id="tab-radio" onclick="switchMode('radio', true)">随身听</button>
@@ -1403,11 +1532,11 @@ html = r"""<!DOCTYPE html>
     <div class="stage-wrap" id="voice-card"></div>
   </main>
 
-  <!-- 3B. TWO-COACH CONVERSATIONAL PODCAST SANCTUARY -->
+  <!-- 3B. THREE-HOST CULTURAL SALON SANCTUARY ("随身听") -->
   <section class="zen-panel hidden" id="radio-view">
     <div class="stage-wrap">
       <div class="meta-bar">
-        <span class="overline" id="radio-date-pill">双人对谈</span>
+        <span class="overline" id="radio-date-pill">三人圆桌 · 老文 · 老梁 · 小夏</span>
         <div class="quiet-actions">
           <button class="text-btn" id="radio-spd-btn" onclick="cycleRadioSpeed()">1.0x</button>
         </div>
@@ -1415,9 +1544,9 @@ html = r"""<!DOCTYPE html>
 
       <div class="radio-center">
         <div class="radio-chap" id="radio-chap-lbl">语法</div>
-        <h2 class="radio-topic" id="radio-live-title">阿哲 · 小夏　今日重点对谈</h2>
+        <h2 class="radio-topic" id="radio-live-title">三人圆桌闲聊</h2>
         <p class="radio-ja" id="radio-live-ja"></p>
-        <div class="inline-lex empty" id="radio-inline-lex"><span class="ilex-hint">点日文词即显词义</span></div>
+        <div class="inline-lex empty" id="radio-inline-lex"></div>
       </div>
 
       <div class="radio-dock">
@@ -1465,9 +1594,7 @@ html = r"""<!DOCTYPE html>
 const DATA = __PAYLOAD__;
 const SPEEDS = [1.0, 1.15, 1.3, 1.5];
 const RADIO_SPEEDS = [1.0, 1.15, 1.3];
-const ADAPTIVE_KEY = "n3_adaptive_v11_" + DATA.plan_date;
-const LEGACY_V10_KEY = "n3_adaptive_v10_" + DATA.plan_date;
-const LEGACY_V9_KEY = "n3_adaptive_v9_" + DATA.plan_date;
+const ADAPTIVE_KEY = "n3_adaptive_v12_" + DATA.plan_date;
 const RADIO_POS_KEY = "n3_radio_pos_" + (DATA.radio.date || DATA.plan_date);
 
 let expSpeed = parseFloat(localStorage.getItem("n3_exp_speed") || "1.0");
@@ -1500,28 +1627,27 @@ document.addEventListener("contextmenu", e => {
   }
 });
 
-function computeDaysLeft() {
-  try {
-    const fmt = new Intl.DateTimeFormat("en-CA", {
-      timeZone: "America/Los_Angeles",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit"
-    });
-    const [y, m, d] = fmt.format(new Date()).split("-").map(Number);
-    const diff = Math.round((Date.UTC(2026, 11, 6) - Date.UTC(y, m - 1, d)) / 86400000);
-    return diff >= 0 ? diff : 0;
-  } catch (e) {
-    return DATA.days_to_exam;
-  }
+// ================= MASTER ALGORITHM + REAL-TIME CLOUD CRDT SYNC =================
+const CARD_TO_POINT_ID = {};
+DATA.points.forEach(p => {
+  CARD_TO_POINT_ID[p.id] = p.id;
+  if (p.primary && p.primary.id) CARD_TO_POINT_ID[p.primary.id] = p.id;
+  (p.variants || []).forEach(v => {
+    if (v && v.id) CARD_TO_POINT_ID[v.id] = p.id;
+  });
+});
+
+function nowUnixSec() {
+  return Math.floor(Date.now() / 1000);
 }
 
-// ================= MASTER ALGORITHM (QUIZ-FIRST + PODCAST DUAL LOCK FOR 120+) =================
 function createFreshAdaptiveState() {
   const pts = {};
   DATA.points.forEach(p => {
     pts[p.id] = {
       status: "unseen",
+      greenAt: 0,
+      retestAt: 0,
       audioPrimed: false,
       variantIdx: 0,
       useVariant: false,
@@ -1531,41 +1657,169 @@ function createFreshAdaptiveState() {
   });
   return {
     step: 0,
+    resetAt: 0,
     lastPointId: null,
     hotFamily: null,
     radioMaxSec: 0,
+    radioPos: [0, 0],
     pts: pts,
-    masteryOverrides: {}
+    masteryOverrides: {},
+    masteryOverrideTs: {},
+    recentRecords: []
   };
 }
 
+function recomputeStatusesFromCRDT(st) {
+  const rAt = Math.floor(st.resetAt || 0);
+  DATA.points.forEach(p => {
+    const ps = st.pts[p.id];
+    if (!ps) return;
+    ps.greenAt = Math.floor(ps.greenAt || 0);
+    ps.retestAt = Math.floor(ps.retestAt || 0);
+    ps.wrongCount = Math.floor(ps.wrongCount || 0);
+    ps.variantIdx = Math.floor(ps.variantIdx || 0);
+    if (ps.greenAt > rAt && ps.greenAt >= ps.retestAt) {
+      ps.status = "green";
+    } else if (ps.retestAt > rAt || ps.wrongCount > 0 || ps.audioPrimed) {
+      ps.status = "learning";
+      if (ps.wrongCount > 0 && p.variants && p.variants.length > 0) {
+        ps.useVariant = true;
+      }
+    } else {
+      ps.status = "unseen";
+    }
+  });
+}
+
+// Seed from repo cloud_state_snapshot + union-merge ALL historical localStorage keys (v5..v12)
 function loadAdaptiveState() {
   const base = createFreshAdaptiveState();
+
+  // 1. Seed from cloud_state_snapshot.json / practice_log.jsonl baked into DATA.cloud_sync
   try {
-    const raw = localStorage.getItem(ADAPTIVE_KEY) || localStorage.getItem(LEGACY_V10_KEY) || localStorage.getItem(LEGACY_V9_KEY);
-    if (raw) {
-      const saved = JSON.parse(raw);
-      if (saved && saved.pts) {
-        base.step = saved.step || 0;
-        base.lastPointId = saved.lastPointId || null;
-        base.hotFamily = saved.hotFamily || null;
-        base.radioMaxSec = saved.radioMaxSec || 0;
-        base.masteryOverrides = saved.masteryOverrides || {};
-        Object.keys(base.pts).forEach(id => {
-          if (saved.pts[id]) {
-            base.pts[id].status = saved.pts[id].status || "unseen";
-            base.pts[id].audioPrimed = !!saved.pts[id].audioPrimed;
-            base.pts[id].variantIdx = saved.pts[id].variantIdx || 0;
-            base.pts[id].useVariant = !!saved.pts[id].useVariant;
-            base.pts[id].dueStep = saved.pts[id].dueStep || 0;
-            base.pts[id].wrongCount = saved.pts[id].wrongCount || 0;
-          }
-        });
+    const cs = DATA.cloud_sync || {};
+    const sd = cs.seeded_day || {};
+    if (typeof sd.resetAt === "number" && sd.resetAt > base.resetAt) base.resetAt = Math.floor(sd.resetAt);
+    if (typeof sd.radioMaxSec === "number" && sd.radioMaxSec > base.radioMaxSec) base.radioMaxSec = Math.floor(sd.radioMaxSec);
+    if (Array.isArray(sd.radioPos) && sd.radioPos.length === 2 && (sd.radioPos[1] || 0) > (base.radioPos[1] || 0)) {
+      base.radioPos = [Math.floor(sd.radioPos[0] || 0), Math.floor(sd.radioPos[1] || 0)];
+    }
+    const gMap = sd.greenAt || {};
+    Object.keys(gMap).forEach(rawId => {
+      const pid = CARD_TO_POINT_ID[rawId] || rawId;
+      if (base.pts[pid]) base.pts[pid].greenAt = Math.max(base.pts[pid].greenAt, Math.floor(gMap[rawId] || 0));
+    });
+    const tMap = sd.retestAt || {};
+    Object.keys(tMap).forEach(rawId => {
+      const pid = CARD_TO_POINT_ID[rawId] || rawId;
+      if (base.pts[pid]) base.pts[pid].retestAt = Math.max(base.pts[pid].retestAt, Math.floor(tMap[rawId] || 0));
+    });
+    const wMap = sd.learning || {};
+    Object.keys(wMap).forEach(rawId => {
+      const pid = CARD_TO_POINT_ID[rawId] || rawId;
+      const arr = wMap[rawId];
+      if (base.pts[pid] && Array.isArray(arr)) {
+        base.pts[pid].wrongCount = Math.max(base.pts[pid].wrongCount, Math.floor(arr[0] || 0));
+        base.pts[pid].variantIdx = Math.max(base.pts[pid].variantIdx, Math.floor(arr[1] || 0));
+      }
+    });
+    const sov = cs.seeded_overrides || {};
+    Object.keys(sov).forEach(mk => {
+      const v = sov[mk];
+      if (Array.isArray(v) && v.length === 2) {
+        base.masteryOverrides[mk] = String(v[0]);
+        base.masteryOverrideTs[mk] = Math.floor(v[1] || 1);
+      } else if (typeof v === "string") {
+        base.masteryOverrides[mk] = v;
+        base.masteryOverrideTs[mk] = 1;
+      }
+    });
+  } catch (e) {}
+
+  // 2. Union-merge all local browser keys (n3_session_v5..v6, n3_adaptive_v7..v12)
+  try {
+    const suffix = "_" + DATA.plan_date;
+    const candidateKeys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k) continue;
+      if ((k.startsWith("n3_adaptive_") || k.startsWith("n3_session_")) && k.endsWith(suffix)) {
+        candidateKeys.push(k);
       }
     }
+    candidateKeys.sort((a, b) => (a === ADAPTIVE_KEY ? 1 : (b === ADAPTIVE_KEY ? -1 : a.localeCompare(b))));
+
+    candidateKeys.forEach(k => {
+      try {
+        const saved = JSON.parse(localStorage.getItem(k) || "null");
+        if (!saved) return;
+        if (typeof saved.step === "number" && saved.step > base.step) base.step = saved.step;
+        if (typeof saved.resetAt === "number" && saved.resetAt > base.resetAt) base.resetAt = Math.floor(saved.resetAt);
+        if (saved.lastPointId) base.lastPointId = saved.lastPointId;
+        if (saved.hotFamily !== undefined) base.hotFamily = saved.hotFamily;
+        if (typeof saved.radioMaxSec === "number" && saved.radioMaxSec > base.radioMaxSec) {
+          base.radioMaxSec = Math.floor(saved.radioMaxSec);
+        }
+        if (Array.isArray(saved.radioPos) && saved.radioPos.length === 2 && (saved.radioPos[1] || 0) > (base.radioPos[1] || 0)) {
+          base.radioPos = [Math.floor(saved.radioPos[0] || 0), Math.floor(saved.radioPos[1] || 0)];
+        }
+        if (saved.masteryOverrides && typeof saved.masteryOverrides === "object") {
+          const tsObj = saved.masteryOverrideTs || {};
+          Object.keys(saved.masteryOverrides).forEach(mk => {
+            const val = saved.masteryOverrides[mk];
+            const mts = Math.floor(tsObj[mk] || (val === "done" ? 2 : 1));
+            if (mts >= (base.masteryOverrideTs[mk] || 0)) {
+              base.masteryOverrides[mk] = val;
+              base.masteryOverrideTs[mk] = mts;
+            }
+          });
+        }
+        if (Array.isArray(saved.recentRecords)) {
+          saved.recentRecords.forEach(r => {
+            if (r && r.id) base.recentRecords.push(r);
+          });
+        }
+        if (saved.pts && typeof saved.pts === "object") {
+          Object.keys(saved.pts).forEach(rawId => {
+            const pid = CARD_TO_POINT_ID[rawId] || rawId;
+            const sp = saved.pts[rawId];
+            const cur = base.pts[pid];
+            if (!sp || !cur) return;
+            if (typeof sp.greenAt === "number" && sp.greenAt > cur.greenAt) {
+              cur.greenAt = Math.floor(sp.greenAt);
+            } else if (sp.status === "green") {
+              cur.greenAt = Math.max(cur.greenAt, 2);
+            }
+            if (typeof sp.retestAt === "number" && sp.retestAt > cur.retestAt) {
+              cur.retestAt = Math.floor(sp.retestAt);
+            }
+            cur.audioPrimed = cur.audioPrimed || !!sp.audioPrimed;
+            cur.variantIdx = Math.max(cur.variantIdx || 0, sp.variantIdx || 0);
+            cur.useVariant = cur.useVariant || !!sp.useVariant;
+            cur.dueStep = Math.max(cur.dueStep || 0, sp.dueStep || 0);
+            cur.wrongCount = Math.max(cur.wrongCount || 0, sp.wrongCount || 0);
+          });
+        }
+        if (Array.isArray(saved.doneIds)) {
+          saved.doneIds.forEach(rawId => {
+            const pid = CARD_TO_POINT_ID[rawId] || rawId;
+            if (base.pts[pid]) base.pts[pid].greenAt = Math.max(base.pts[pid].greenAt, 2);
+          });
+        }
+      } catch (innerErr) {}
+    });
+
     const savedRadioPos = parseFloat(localStorage.getItem(RADIO_POS_KEY) || "0");
-    if (savedRadioPos > base.radioMaxSec) base.radioMaxSec = savedRadioPos;
+    if (savedRadioPos > base.radioMaxSec) base.radioMaxSec = Math.floor(savedRadioPos);
+    if (savedRadioPos > 0 && (base.radioPos[1] || 0) === 0) {
+      base.radioPos = [Math.floor(savedRadioPos), 2];
+    }
   } catch (e) {}
+
+  if (base.recentRecords.length > 25) {
+    base.recentRecords = base.recentRecords.slice(-25);
+  }
+  recomputeStatusesFromCRDT(base);
   return base;
 }
 
@@ -1575,7 +1829,24 @@ function saveAdaptiveState() {
   try { localStorage.setItem(ADAPTIVE_KEY, JSON.stringify(A)); } catch (e) {}
 }
 
+function setMasteryTier(key, tier, tsSec) {
+  if (!key) return;
+  const ts = Math.floor(tsSec || nowUnixSec());
+  if (ts >= (A.masteryOverrideTs[key] || 0)) {
+    A.masteryOverrides[key] = tier;
+    A.masteryOverrideTs[key] = ts;
+  }
+}
+
 function applyMasteryOverrides() {
+  DATA.points.forEach(p => {
+    const ps = A.pts[p.id];
+    if (ps && ps.status === "green") {
+      const gts = Math.max(ps.greenAt || 2, 2);
+      setMasteryTier(p.point_key, "done", gts);
+      setMasteryTier(p.point, "done", gts);
+    }
+  });
   const ov = A.masteryOverrides || {};
   Object.keys(DATA.mastery).forEach(mod => {
     DATA.mastery[mod].items.forEach(it => {
@@ -1584,7 +1855,415 @@ function applyMasteryOverrides() {
     });
   });
 }
+
+// Legacy URL #sync fallback kept compatible alongside automatic real-time cloud sync
+function encodeSyncCode() {
+  const bytes = new Uint8Array(8);
+  DATA.points.forEach((p, idx) => {
+    if (idx < 56 && A.pts[p.id] && A.pts[p.id].status === "green") {
+      bytes[idx >> 3] |= (1 << (idx & 7));
+    }
+  });
+  bytes[7] = Math.min(255, Math.floor((A.radioMaxSec || 0) / 60));
+  let bin = "";
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  const b64 = btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  const dateTag = String(DATA.plan_date || "").slice(5).replace("-", "");
+  return `${dateTag}_${b64}`;
+}
+
+function applySyncCodeFromUrl() {
+  try {
+    const m = (location.hash || "").match(/sync=([0-9]{4})_([A-Za-z0-9_-]+)/);
+    if (!m) return false;
+    const dateTag = String(DATA.plan_date || "").slice(5).replace("-", "");
+    if (m[1] !== dateTag) return false;
+    let b64 = m[2].replace(/-/g, "+").replace(/_/g, "/");
+    while (b64.length % 4 !== 0) b64 += "=";
+    const bin = atob(b64);
+    if (bin.length < 8) return false;
+    const stamp = nowUnixSec();
+    DATA.points.forEach((p, idx) => {
+      if (idx < 56 && (bin.charCodeAt(idx >> 3) & (1 << (idx & 7))) !== 0) {
+        if (A.pts[p.id]) A.pts[p.id].greenAt = Math.max(A.pts[p.id].greenAt || 0, stamp);
+      }
+    });
+    const syncedSec = (bin.charCodeAt(7) || 0) * 60;
+    if (syncedSec > (A.radioMaxSec || 0)) A.radioMaxSec = syncedSec;
+    recomputeStatusesFromCRDT(A);
+    history.replaceState(null, "", location.pathname + location.search);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+// ================= REAL-TIME ZERO-LOGIN MULTI-PLATFORM CLOUD SYNC =================
+const NTFY_TOPIC = (DATA.cloud_sync && DATA.cloud_sync.ntfy_topic) ? String(DATA.cloud_sync.ntfy_topic).trim() : "";
+let cloudSyncState = NTFY_TOPIC ? "connecting" : "local";
+let cloudLastSyncTs = 0;
+let lastSyncedFp = "";
+let cloudPushTimer = null;
+let cloudInFlight = false;
+let cloudPendingPush = false;
+let cloudSSE = null;
+let cloudSSERetryTimer = null;
+let lastRadioCloudPushMs = 0;
+
+function sortedMap(obj) {
+  const out = {};
+  Object.keys(obj || {}).sort().forEach(k => { out[k] = obj[k]; });
+  return out;
+}
+
+function buildCompactPacket() {
+  const g = {};
+  const t = {};
+  const w = {};
+  DATA.points.forEach(p => {
+    const ps = A.pts[p.id];
+    if (!ps) return;
+    if ((ps.greenAt || 0) > 0) g[p.id] = Math.floor(ps.greenAt);
+    if ((ps.retestAt || 0) > 0) t[p.id] = Math.floor(ps.retestAt);
+    if ((ps.wrongCount || 0) > 0 || (ps.variantIdx || 0) > 0) {
+      w[p.id] = [Math.floor(ps.wrongCount || 0), Math.floor(ps.variantIdx || 0)];
+    }
+  });
+
+  const ovEntries = Object.keys(A.masteryOverrides || {}).map(k => [
+    k,
+    [String(A.masteryOverrides[k]), Math.floor((A.masteryOverrideTs && A.masteryOverrideTs[k]) || 1)]
+  ]).sort((a, b) => b[1][1] - a[1][1]).slice(0, 40);
+  const o = {};
+  ovEntries.forEach(kv => { o[kv[0]] = kv[1]; });
+
+  const compactRecs = (A.recentRecords || []).slice(-15).map(r => [
+    String(r.id || ""),
+    String(r.point || ""),
+    String(r.choice || ""),
+    String(r.correct) === "true" || r.correct === 1 || r.correct === true ? 1 : 0,
+    String(r.ts || "")
+  ]);
+
+  const pkt = {
+    a: "n3z",
+    u: nowUnixSec(),
+    d: DATA.plan_date,
+    r: Math.floor(A.resetAt || 0),
+    m: Math.floor(A.radioMaxSec || 0),
+    rp: Array.isArray(A.radioPos) ? [Math.floor(A.radioPos[0] || 0), Math.floor(A.radioPos[1] || 0)] : [0, 0],
+    g: sortedMap(g),
+    t: sortedMap(t),
+    w: sortedMap(w),
+    o: sortedMap(o),
+    l: compactRecs
+  };
+
+  if (JSON.stringify(pkt).length > 3400) {
+    pkt.o = {};
+    pkt.l = compactRecs.slice(-6);
+  }
+  return pkt;
+}
+
+function packetFingerprint(pkt) {
+  if (!pkt || pkt.a !== "n3z") return "";
+  return JSON.stringify({
+    d: pkt.d || "",
+    r: Math.floor(pkt.r || 0),
+    m: Math.floor((pkt.m || 0) / 30),
+    g: sortedMap(pkt.g || {}),
+    t: sortedMap(pkt.t || {}),
+    w: sortedMap(pkt.w || {})
+  });
+}
+
+function mergeIncomingRecords(compactList) {
+  if (!Array.isArray(compactList) || !compactList.length) return;
+  const seen = new Set((A.recentRecords || []).map(r => `${String(r.ts || "").slice(0, 19)}|${r.id}|${r.choice}`));
+  compactList.forEach(item => {
+    if (!Array.isArray(item) || item.length < 4) return;
+    const rec = {
+      id: String(item[0] || ""),
+      point: String(item[1] || ""),
+      choice: String(item[2] || ""),
+      correct: item[3] ? "true" : "false",
+      ask_again: "false",
+      ts: String(item[4] || "")
+    };
+    const key = `${rec.ts.slice(0, 19)}|${rec.id}|${rec.choice}`;
+    if (rec.id && !seen.has(key)) {
+      seen.add(key);
+      A.recentRecords.push(rec);
+    }
+  });
+  A.recentRecords.sort((a, b) => String(a.ts || "").localeCompare(String(b.ts || "")));
+  if (A.recentRecords.length > 25) A.recentRecords = A.recentRecords.slice(-25);
+}
+
+function applyIncomingPacket(pkt) {
+  if (!pkt || pkt.a !== "n3z") return false;
+  let changed = false;
+
+  if (pkt.o && typeof pkt.o === "object") {
+    Object.keys(pkt.o).forEach(mk => {
+      const v = pkt.o[mk];
+      if (Array.isArray(v) && v.length === 2) {
+        const tier = String(v[0]);
+        const ts = Math.floor(v[1] || 1);
+        if (ts > (A.masteryOverrideTs[mk] || 0) || (ts === (A.masteryOverrideTs[mk] || 0) && A.masteryOverrides[mk] !== tier)) {
+          A.masteryOverrides[mk] = tier;
+          A.masteryOverrideTs[mk] = ts;
+          changed = true;
+        }
+      }
+    });
+  }
+
+  if (pkt.d !== DATA.plan_date) {
+    if (changed) {
+      applyMasteryOverrides();
+      saveAdaptiveState();
+    }
+    return changed;
+  }
+
+  const rIn = Math.floor(pkt.r || 0);
+  if (rIn > (A.resetAt || 0)) {
+    A.resetAt = rIn;
+    changed = true;
+  }
+
+  const mIn = Math.floor(pkt.m || 0);
+  if (mIn > (A.radioMaxSec || 0)) {
+    A.radioMaxSec = mIn;
+    changed = true;
+  }
+
+  if (Array.isArray(pkt.rp) && pkt.rp.length === 2) {
+    const rpSec = Math.floor(pkt.rp[0] || 0);
+    const rpTs = Math.floor(pkt.rp[1] || 0);
+    if (rpTs > ((A.radioPos && A.radioPos[1]) || 0)) {
+      A.radioPos = [rpSec, rpTs];
+      if (radioPlayer.paused && rpSec > 3) {
+        try { localStorage.setItem(RADIO_POS_KEY, String(rpSec)); } catch (e) {}
+        if (radioInitialized && Math.abs((radioPlayer.currentTime || 0) - rpSec) > 5) {
+          radioPlayer.currentTime = rpSec;
+          updateRadioLiveDisplay(rpSec);
+        }
+      }
+      changed = true;
+    }
+  }
+
+  const gIn = pkt.g || {};
+  Object.keys(gIn).forEach(rawId => {
+    const pid = CARD_TO_POINT_ID[rawId] || rawId;
+    const ts = Math.floor(gIn[rawId] || 0);
+    if (A.pts[pid] && ts > (A.pts[pid].greenAt || 0)) {
+      A.pts[pid].greenAt = ts;
+      changed = true;
+    }
+  });
+
+  const tIn = pkt.t || {};
+  Object.keys(tIn).forEach(rawId => {
+    const pid = CARD_TO_POINT_ID[rawId] || rawId;
+    const ts = Math.floor(tIn[rawId] || 0);
+    if (A.pts[pid] && ts > (A.pts[pid].retestAt || 0)) {
+      A.pts[pid].retestAt = ts;
+      changed = true;
+    }
+  });
+
+  const wIn = pkt.w || {};
+  Object.keys(wIn).forEach(rawId => {
+    const pid = CARD_TO_POINT_ID[rawId] || rawId;
+    const arr = wIn[rawId];
+    if (A.pts[pid] && Array.isArray(arr)) {
+      const wc = Math.floor(arr[0] || 0);
+      const vi = Math.floor(arr[1] || 0);
+      if (wc > (A.pts[pid].wrongCount || 0)) {
+        A.pts[pid].wrongCount = wc;
+        changed = true;
+      }
+      if (vi > (A.pts[pid].variantIdx || 0)) {
+        A.pts[pid].variantIdx = vi;
+        changed = true;
+      }
+    }
+  });
+
+  mergeIncomingRecords(pkt.l);
+
+  if (changed) {
+    recomputeStatusesFromCRDT(A);
+    applyMasteryOverrides();
+    saveAdaptiveState();
+    if (curPointId && A.pts[curPointId] && A.pts[curPointId].status === "green" && viewStage === "quiz" && !activeKind) {
+      setupCurrentTurn();
+      stageEnteredAt = performance.now();
+    }
+    renderGreenBoard();
+    if (activeMode === "tutor") renderTutor();
+    else if (activeMode === "dash") renderDashboard();
+  }
+  return changed;
+}
+
+function updateSyncModalBadge() {
+  const el = document.getElementById("cloud-sync-status-line");
+  if (!el) return;
+  if (!NTFY_TOPIC) {
+    el.textContent = "本地保存模式";
+    return;
+  }
+  if (cloudSyncState === "live") {
+    el.textContent = "多端实时自动同步：已连接（手机与电脑做题秒级合并）";
+  } else if (cloudSyncState === "synced") {
+    el.textContent = "多端自动同步：已对齐最新进度";
+  } else if (cloudSyncState === "offline") {
+    el.textContent = "当前离线：做题已存本机，联网后自动同步";
+  } else {
+    el.textContent = "多端自动同步：正在对齐云端进度…";
+  }
+}
+
+function pushCloudSync(useKeepalive) {
+  if (!NTFY_TOPIC) return Promise.resolve(false);
+  const pkt = buildCompactPacket();
+  const fp = packetFingerprint(pkt);
+  if (!useKeepalive && fp === lastSyncedFp) return Promise.resolve(false);
+
+  if (cloudInFlight && !useKeepalive) {
+    cloudPendingPush = true;
+    return Promise.resolve(false);
+  }
+
+  cloudInFlight = true;
+  return fetch(`https://ntfy.sh/${NTFY_TOPIC}`, {
+    method: "POST",
+    body: JSON.stringify(pkt),
+    keepalive: !!useKeepalive
+  }).then(resp => {
+    cloudInFlight = false;
+    if (resp && resp.ok) {
+      lastSyncedFp = fp;
+      cloudLastSyncTs = Date.now();
+      if (cloudSyncState !== "live") cloudSyncState = "synced";
+      updateSyncModalBadge();
+    }
+    if (cloudPendingPush) {
+      cloudPendingPush = false;
+      scheduleCloudPush(250);
+    }
+    return !!(resp && resp.ok);
+  }).catch(() => {
+    cloudInFlight = false;
+    if (cloudSyncState !== "live") cloudSyncState = "offline";
+    updateSyncModalBadge();
+    return false;
+  });
+}
+
+function scheduleCloudPush(delayMs) {
+  if (!NTFY_TOPIC) return;
+  if (cloudPushTimer) clearTimeout(cloudPushTimer);
+  cloudPushTimer = setTimeout(() => {
+    cloudPushTimer = null;
+    pushCloudSync(false);
+  }, typeof delayMs === "number" ? delayMs : 120);
+}
+
+function pullCloudSync(pushIfLocalAhead) {
+  if (!NTFY_TOPIC) return Promise.resolve(false);
+  return fetch(`https://ntfy.sh/${NTFY_TOPIC}/json?poll=1&since=all`, {
+    cache: "no-store"
+  }).then(resp => resp.ok ? resp.text() : "").then(raw => {
+    let latestRemoteFp = "";
+    if (raw) {
+      raw.split("\n").forEach(line => {
+        const s = line.trim();
+        if (!s) return;
+        try {
+          const env = JSON.parse(s);
+          if (env && env.event === "message" && typeof env.message === "string") {
+            const pkt = JSON.parse(env.message);
+            if (pkt && pkt.a === "n3z") {
+              if (pkt.d === DATA.plan_date) latestRemoteFp = packetFingerprint(pkt);
+              applyIncomingPacket(pkt);
+            }
+          }
+        } catch (e) {}
+      });
+    }
+    cloudLastSyncTs = Date.now();
+    if (cloudSyncState !== "live") cloudSyncState = "synced";
+    updateSyncModalBadge();
+
+    const myFp = packetFingerprint(buildCompactPacket());
+    if (latestRemoteFp && myFp === latestRemoteFp) {
+      lastSyncedFp = myFp;
+      return true;
+    }
+    if (pushIfLocalAhead && myFp !== latestRemoteFp) {
+      // Automatically upload any local-only historical progress (e.g. from Phone or Desktop) so every device converges!
+      return pushCloudSync(false);
+    }
+    return true;
+  }).catch(() => {
+    if (cloudSyncState !== "live") cloudSyncState = "offline";
+    updateSyncModalBadge();
+    return false;
+  });
+}
+
+function connectCloudSSE() {
+  if (!NTFY_TOPIC || typeof EventSource === "undefined") return;
+  if (cloudSSE && cloudSSE.readyState !== 2) return;
+  try {
+    if (cloudSSE) cloudSSE.close();
+  } catch (e) {}
+
+  try {
+    cloudSSE = new EventSource(`https://ntfy.sh/${NTFY_TOPIC}/sse`);
+    cloudSSE.onopen = () => {
+      cloudSyncState = "live";
+      updateSyncModalBadge();
+    };
+    cloudSSE.onmessage = ev => {
+      if (!ev || !ev.data) return;
+      try {
+        const env = JSON.parse(ev.data);
+        const msgStr = (env && env.event === "message" && typeof env.message === "string") ? env.message : ev.data;
+        const pkt = JSON.parse(msgStr);
+        if (pkt && pkt.a === "n3z") {
+          const inFp = packetFingerprint(pkt);
+          applyIncomingPacket(pkt);
+          const myFp = packetFingerprint(buildCompactPacket());
+          if (myFp === inFp) lastSyncedFp = myFp;
+          cloudLastSyncTs = Date.now();
+          cloudSyncState = "live";
+          updateSyncModalBadge();
+        }
+      } catch (e) {}
+    };
+    cloudSSE.onerror = () => {
+      try { cloudSSE.close(); } catch (e) {}
+      cloudSSE = null;
+      if (cloudSyncState === "live") cloudSyncState = "synced";
+      updateSyncModalBadge();
+      if (cloudSSERetryTimer) clearTimeout(cloudSSERetryTimer);
+      cloudSSERetryTimer = setTimeout(() => {
+        if (document.visibilityState === "visible") connectCloudSSE();
+      }, 6000);
+    };
+  } catch (e) {}
+}
+
+applySyncCodeFromUrl();
 applyMasteryOverrides();
+saveAdaptiveState();
 
 function computeDaily120Metrics() {
   const totalCards = Math.max(1, DATA.points.length);
@@ -1618,7 +2297,7 @@ function computeDaily120Metrics() {
 }
 
 function selectNextPointId(forcedId) {
-  if (forcedId && A.pts[forcedId] && A.pts[forcedId].status !== "green") return forcedId;
+  if (forcedId && A.pts[forcedId]) return forcedId;
   const remaining = DATA.points.filter(p => A.pts[p.id].status !== "green");
   if (!remaining.length) return null;
   if (remaining.length === 1) return remaining[0].id;
@@ -1899,11 +2578,14 @@ function ensureRadioReady() {
   if (!radioInitialized) {
     radioInitialized = true;
     radioPlayer.src = DATA.radio.audio_url;
-    const savedPos = parseFloat(localStorage.getItem(RADIO_POS_KEY) || "0");
+    const localPos = parseFloat(localStorage.getItem(RADIO_POS_KEY) || "0");
+    const cloudPos = (Array.isArray(A.radioPos) && A.radioPos.length === 2) ? (A.radioPos[0] || 0) : 0;
+    const savedPos = Math.max(localPos, cloudPos);
     if (savedPos > 3 && savedPos < (DATA.radio.duration_sec || 2400) - 10) {
       radioPlayer.currentTime = savedPos;
     }
-    document.getElementById("radio-date-pill").textContent = `${DATA.radio.display_date || "今日"} · 双人对谈`;
+    const hostsLabel = DATA.radio.hosts || "老文 · 老梁 · 小夏";
+    document.getElementById("radio-date-pill").textContent = `三人圆桌 · ${hostsLabel}`;
     document.getElementById("radio-spd-btn").textContent = `${radioSpeed}x`;
     const seekEl = document.getElementById("radio-seek");
     seekEl.max = Math.ceil(DATA.radio.duration_sec || 2100);
@@ -1920,8 +2602,8 @@ function setupMediaSession(segTitle) {
   if (!("mediaSession" in navigator)) return;
   try {
     navigator.mediaSession.metadata = new MediaMetadata({
-      title: segTitle || "N3 每日随身听",
-      artist: "阿哲 · 小夏",
+      title: segTitle || "N3 三人圆桌随身听",
+      artist: DATA.radio.hosts || "老文 · 老梁 · 小夏",
       album: "JLPT N3"
     });
     navigator.mediaSession.setActionHandler("play", () => toggleRadioPlay(true));
@@ -1994,8 +2676,13 @@ function updateRadioLiveDisplay(t) {
     const prevMin = Math.floor((A.radioMaxSec || 0) / 60);
     A.radioMaxSec = Math.floor(t);
     if (Math.floor(A.radioMaxSec / 60) !== prevMin) {
+      A.radioPos = [Math.floor(t), nowUnixSec()];
       saveAdaptiveState();
       renderGreenBoard();
+      if (Date.now() - lastRadioCloudPushMs > 55000) {
+        lastRadioCloudPushMs = Date.now();
+        scheduleCloudPush(400);
+      }
     }
   }
 
@@ -2048,15 +2735,24 @@ function syncRadioUI() {
 radioPlayer.addEventListener("play", syncRadioUI);
 radioPlayer.addEventListener("pause", () => {
   syncRadioUI();
-  scheduleCloudPush();
+  const t = Math.floor(radioPlayer.currentTime || 0);
+  if (t > 2) {
+    A.radioPos = [t, nowUnixSec()];
+    if (t > (A.radioMaxSec || 0)) A.radioMaxSec = t;
+    try { localStorage.setItem(RADIO_POS_KEY, String(t)); } catch (e) {}
+    saveAdaptiveState();
+    scheduleCloudPush(200);
+  }
 });
 radioPlayer.addEventListener("ended", () => {
-  const dur = radioPlayer.duration || DATA.radio.duration_sec || 2100;
-  A.radioMaxSec = Math.ceil(dur);
+  const dur = Math.ceil(radioPlayer.duration || DATA.radio.duration_sec || 2100);
+  A.radioMaxSec = dur;
+  A.radioPos = [0, nowUnixSec()];
+  try { localStorage.setItem(RADIO_POS_KEY, "0"); } catch (e) {}
   saveAdaptiveState();
   renderGreenBoard();
   syncRadioUI();
-  scheduleCloudPush();
+  scheduleCloudPush(100);
 });
 radioPlayer.addEventListener("loadedmetadata", () => {
   updateRadioLiveDisplay(radioPlayer.currentTime || 0);
@@ -2067,143 +2763,36 @@ radioPlayer.addEventListener("timeupdate", () => {
   updateRadioLiveDisplay(t);
   if (Math.abs(t - lastSavedSec) >= 3) {
     lastSavedSec = t;
+    A.radioPos = [Math.floor(t), nowUnixSec()];
     try { localStorage.setItem(RADIO_POS_KEY, String(Math.floor(t))); } catch (e) {}
     saveAdaptiveState();
   }
 });
 
-// ================= SILENT CLOUD SYNC & QUIZ ACTIONS =================
-const CLOUD_SYNC_TOPIC = "n3pwa_8c4e91f2a7d03b65e2194f8a0c7d3e52";
-const CLOUD_BUF_KEY = "n3_cloud_log_buf_v1";
-const CLOUD_SENT_SIG_KEY = "n3_cloud_sent_sig_v1";
-let cloudPushTimer = null;
+// ================= QUIZ ACTIONS =================
+let stageEnteredAt = performance.now();
 
-function loadCloudLogBuf() {
-  try {
-    const raw = localStorage.getItem(CLOUD_BUF_KEY);
-    const arr = raw ? JSON.parse(raw) : [];
-    return Array.isArray(arr) ? arr : [];
-  } catch (e) {
-    return [];
-  }
-}
-
-function saveCloudLogBuf(arr) {
-  try {
-    localStorage.setItem(CLOUD_BUF_KEY, JSON.stringify(arr.slice(-35)));
-  } catch (e) {}
-}
-
-function flushCloudSyncNow() {
-  if (!navigator.onLine) return;
-  const buf = loadCloudLogBuf();
-  const rSec = Math.floor(A.radioMaxSec || 0);
-  const lastTs = buf.length ? buf[buf.length - 1].ts : "";
-  const sig = `${DATA.plan_date}|${lastTs}|${Math.floor(rSec / 30)}`;
-  try {
-    if (localStorage.getItem(CLOUD_SENT_SIG_KEY) === sig) return;
-  } catch (e) {}
-  if (!buf.length && rSec < 15) return;
-
-  const payload = JSON.stringify({
-    v: 1,
-    date: DATA.plan_date,
-    radioSec: rSec,
-    logs: buf.slice(-25)
-  });
-  fetch(`https://ntfy.sh/${CLOUD_SYNC_TOPIC}`, {
-    method: "POST",
-    mode: "cors",
-    keepalive: true,
-    body: payload
-  }).then(res => {
-    if (res && res.ok) {
-      try { localStorage.setItem(CLOUD_SENT_SIG_KEY, sig); } catch (e) {}
-    }
-  }).catch(() => {});
-}
-
-function scheduleCloudPush() {
-  if (cloudPushTimer) clearTimeout(cloudPushTimer);
-  cloudPushTimer = setTimeout(flushCloudSyncNow, 1100);
-}
-
-function pullCloudSync() {
-  if (!navigator.onLine) return;
-  fetch(`https://ntfy.sh/${CLOUD_SYNC_TOPIC}/json?since=12h&poll=1`, { cache: "no-store" })
-    .then(r => r.ok ? r.text() : "")
-    .then(txt => {
-      if (!txt) return;
-      const lines = txt.split("\n").filter(Boolean);
-      const localBuf = loadCloudLogBuf();
-      const seenTs = new Set(localBuf.map(x => x.ts));
-      let changed = false;
-
-      lines.forEach(ln => {
-        try {
-          const ev = JSON.parse(ln);
-          if (ev.event !== "message" || !ev.message) return;
-          const msg = JSON.parse(ev.message);
-          if (msg.date === DATA.plan_date && typeof msg.radioSec === "number" && msg.radioSec > (A.radioMaxSec || 0)) {
-            A.radioMaxSec = msg.radioSec;
-            changed = true;
-          }
-          const logs = Array.isArray(msg.logs) ? msg.logs : (msg.ts ? [msg] : []);
-          logs.forEach(rec => {
-            if (!rec || !rec.ts) return;
-            if (!seenTs.has(rec.ts)) {
-              seenTs.add(rec.ts);
-              localBuf.push(rec);
-            }
-            const ok = String(rec.correct) === "true";
-            const again = String(rec.ask_again) === "true";
-            const tier = (ok && !again) ? "done" : "todo";
-            if (rec.point && A.masteryOverrides[rec.point] !== tier) {
-              A.masteryOverrides[rec.point] = tier;
-              changed = true;
-            }
-            if (rec.date === DATA.plan_date && rec.pid && A.pts[rec.pid]) {
-              const targetStatus = (ok && !again) ? "green" : "learning";
-              if (A.pts[rec.pid].status !== targetStatus) {
-                A.pts[rec.pid].status = targetStatus;
-                changed = true;
-              }
-            }
-          });
-        } catch (e) {}
-      });
-
-      if (changed) {
-        localBuf.sort((a, b) => String(a.ts).localeCompare(String(b.ts)));
-        saveCloudLogBuf(localBuf);
-        applyMasteryOverrides();
-        saveAdaptiveState();
-        renderGreenBoard();
-        if (activeMode === "dash") renderDash();
-      }
-    })
-    .catch(() => {});
-}
-
-function syncBackendRecord(p, qid, choice, isCorrect, askAgain, newTier) {
-  A.masteryOverrides[p.point_key] = newTier;
-  A.masteryOverrides[p.point] = newTier;
+function syncBackendRecord(p, qid, choice, isCorrect, askAgain, newTier, stampSec) {
+  const tsSec = stampSec || nowUnixSec();
+  setMasteryTier(p.point_key, newTier, tsSec);
+  setMasteryTier(p.point, newTier, tsSec);
   applyMasteryOverrides();
-  saveAdaptiveState();
 
   const rec = {
-    pid: p.id,
     id: qid,
     point: p.point_key || p.point,
+    choice: String(choice || ""),
     correct: String(!!isCorrect),
     ask_again: String(!!askAgain),
-    date: DATA.plan_date,
-    ts: new Date().toISOString()
+    ts: new Date(tsSec * 1000).toISOString()
   };
-  const buf = loadCloudLogBuf();
-  buf.push(rec);
-  saveCloudLogBuf(buf);
-  scheduleCloudPush();
+  if (!Array.isArray(A.recentRecords)) A.recentRecords = [];
+  A.recentRecords.push(rec);
+  if (A.recentRecords.length > 25) A.recentRecords = A.recentRecords.slice(-25);
+  saveAdaptiveState();
+
+  // Real-time cloud CRDT publish across Phone & Desktop
+  scheduleCloudPush(60);
 
   if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
     fetch("./api/record", {
@@ -2220,33 +2809,50 @@ function completeTeachCard() {
   const p = getPointById(curPointId);
   if (p) {
     const ps = A.pts[p.id];
+    ps.retestAt = nowUnixSec();
     ps.status = "learning";
     ps.dueStep = A.step + 4;
     A.step += 1;
     A.lastPointId = p.id;
     A.hotFamily = null;
     saveAdaptiveState();
+    scheduleCloudPush(120);
   }
   setupCurrentTurn();
+  stageEnteredAt = performance.now();
   renderTutor();
   autoPlayCurrentTurn();
 }
 
-function switchToTeachForCurrent() {
-  stopQuizAudio();
+// Calm zero-guess escape hatch: never force a blind 50/50 guess (which risks lucky false-greens).
+// Reveals THIS sentence's full 3-step explanation + voice immediately, and schedules a variant re-test 4 steps later.
+function revealWithoutGuess() {
+  if (viewStage !== "quiz" || !activeQuizObj) return;
   clearActiveWordToken();
+  stopQuizAudio();
+  pickedVal = "__UNSURE__";
+  viewStage = "result";
+  stageEnteredAt = performance.now();
+
+  const stamp = nowUnixSec();
   const p = getPointById(curPointId);
-  if (!p) return;
   const ps = A.pts[p.id];
+  ps.retestAt = Math.max(stamp, (ps.greenAt || 0) + 1);
   ps.status = "learning";
   ps.wrongCount += 1;
-  if (p.variants && p.variants.length > 0) ps.useVariant = true;
+  if (p.variants && p.variants.length > 0) {
+    if (ps.useVariant) ps.variantIdx += 1;
+    ps.useVariant = true;
+  }
   ps.dueStep = A.step + 4;
   A.hotFamily = p.family;
-  syncBackendRecord(p, activeQuizObj ? activeQuizObj.id : p.id, "先看考点", false, false, "todo");
-  viewStage = "teach";
+  A.step += 1;
+  A.lastPointId = p.id;
+  recomputeStatusesFromCRDT(A);
+  syncBackendRecord(p, activeQuizObj.id, "不确定", false, false, "todo", stamp);
+
   renderTutor();
-  playMainClip(p.teach.audio, "teach", false);
+  playMainClip(activeQuizObj.exp_audio, "exp", false);
 }
 
 function submitAnswer(val) {
@@ -2255,16 +2861,23 @@ function submitAnswer(val) {
   stopQuizAudio();
   pickedVal = val;
   viewStage = "result";
+  stageEnteredAt = performance.now();
 
+  const stamp = nowUnixSec();
   const p = getPointById(curPointId);
   const ps = A.pts[p.id];
   const isCorrect = (val === activeQuizObj.answer);
 
   if (isCorrect) {
+    ps.greenAt = Math.max(stamp, (ps.retestAt || 0), (A.resetAt || 0) + 1);
     ps.status = "green";
     A.hotFamily = null;
-    syncBackendRecord(p, activeQuizObj.id, val, true, false, "done");
+    A.step += 1;
+    A.lastPointId = p.id;
+    recomputeStatusesFromCRDT(A);
+    syncBackendRecord(p, activeQuizObj.id, val, true, false, "done", ps.greenAt);
   } else {
+    ps.retestAt = Math.max(stamp, (ps.greenAt || 0) + 1);
     ps.status = "learning";
     ps.wrongCount += 1;
     if (p.variants && p.variants.length > 0) {
@@ -2273,12 +2886,12 @@ function submitAnswer(val) {
     }
     ps.dueStep = A.step + 4;
     A.hotFamily = p.family;
-    syncBackendRecord(p, activeQuizObj.id, val, false, false, "todo");
+    A.step += 1;
+    A.lastPointId = p.id;
+    recomputeStatusesFromCRDT(A);
+    syncBackendRecord(p, activeQuizObj.id, val, false, false, "todo", ps.retestAt);
   }
 
-  A.step += 1;
-  A.lastPointId = p.id;
-  saveAdaptiveState();
   renderTutor();
   playMainClip(activeQuizObj.exp_audio, "exp", false);
 }
@@ -2287,14 +2900,18 @@ function advanceNext(forceRetestCurrent) {
   stopQuizAudio();
   clearActiveWordToken();
   if (forceRetestCurrent && curPointId) {
+    const stamp = nowUnixSec();
     const p = getPointById(curPointId);
     const ps = A.pts[curPointId];
+    ps.retestAt = Math.max(stamp, (ps.greenAt || 0) + 1);
     ps.status = "learning";
     if (p && p.variants && p.variants.length > 0) ps.useVariant = true;
     ps.dueStep = A.step + 4;
-    if (p) syncBackendRecord(p, p.id, pickedVal, false, true, "todo");
+    recomputeStatusesFromCRDT(A);
+    if (p) syncBackendRecord(p, p.id, pickedVal, false, true, "todo", ps.retestAt);
   }
   setupCurrentTurn();
+  stageEnteredAt = performance.now();
   renderTutor();
   autoPlayCurrentTurn();
 }
@@ -2315,11 +2932,8 @@ function jumpToPointById(pid) {
   if (!pid || !A.pts[pid]) return;
   stopQuizAudio();
   if (!radioPlayer.paused) radioPlayer.pause();
-  if (A.pts[pid].status === "green") {
-    A.pts[pid].status = "learning";
-    A.pts[pid].dueStep = A.step;
-  }
   setupCurrentTurn(pid);
+  stageEnteredAt = performance.now();
   switchMode("tutor");
   renderTutor();
   autoPlayCurrentTurn();
@@ -2327,19 +2941,27 @@ function jumpToPointById(pid) {
 
 function resetTodayMission() {
   stopQuizAudio();
+  const stamp = nowUnixSec();
   const keepOverrides = A.masteryOverrides || {};
+  const keepOverrideTs = A.masteryOverrideTs || {};
   const keepRadio = A.radioMaxSec || 0;
+  const keepRadioPos = A.radioPos || [0, 0];
   A = createFreshAdaptiveState();
+  A.resetAt = stamp;
   A.masteryOverrides = keepOverrides;
+  A.masteryOverrideTs = keepOverrideTs;
   A.radioMaxSec = keepRadio;
+  A.radioPos = keepRadioPos;
+  recomputeStatusesFromCRDT(A);
   saveAdaptiveState();
+  scheduleCloudPush(60);
   closeModal();
   setupCurrentTurn();
+  stageEnteredAt = performance.now();
   renderTutor();
 }
 
 function renderGreenBoard() {
-  document.getElementById("countdown-txt").innerHTML = `残 <strong>${computeDaysLeft()}</strong> 日`;
   const m = computeDaily120Metrics();
 
   const quizPart = m.quizDone ? `做题 <b class="moss">✓</b>` : `做题 <b>${m.greenCnt}/${m.totalCards}</b>`;
@@ -2361,12 +2983,12 @@ function renderTutor() {
   if (viewStage === "done" || !curPointId) {
     const m = computeDaily120Metrics();
     box.innerHTML = `
-      <div class="meta-bar"><span class="overline ok">${m.radioDone ? "今日双项圆满 · 稳过 120 分" : "五十道题已全部刷绿"}</span></div>
+      <div class="meta-bar"><span class="overline ok">${m.radioDone ? "双项圆满 · 稳过 120 分" : "五十道题已全部刷绿"}</span></div>
       <div class="focal-space">
-        <h2 class="point-heading">${m.radioDone ? "今日题与随身听皆已完成" : "今日五十题已过关"}</h2>
+        <h2 class="point-heading">${m.radioDone ? "做题与随身听皆已完成" : "五十道题已全部过关"}</h2>
         <p class="logic-line">${m.radioDone
-          ? `今日预计总分已锁定在 ${m.projScore} 分。每天保持这一套节奏，十二月考场上稳稳站上 120 分以上。`
-          : `做题部分已拿满，当前预计 ${m.projScore} 分。再去把今日随身听顺完，就能稳稳锁定 132 分。`}</p>
+          ? `预计总分已稳稳锁在 ${m.projScore} 分。保持这一套做题加三人闲聊的节奏，考场上一定稳站 120 分以上。`
+          : `做题部分已拿满，当前预计 ${m.projScore} 分。再去把随身听顺完，就能直接锁死 132 分。`}</p>
       </div>
       <div class="action-dock">
         <div class="dock-row">
@@ -2383,7 +3005,7 @@ function renderTutor() {
   const p = getPointById(curPointId);
   const ps = A.pts[curPointId];
 
-  // -------- TEACH (on demand when user taps 先看考点) --------
+  // -------- TEACH --------
   if (viewStage === "teach") {
     warmAudio(p.teach.audio);
     warmAudio(p.primary.q_audio);
@@ -2411,11 +3033,11 @@ function renderTutor() {
         </div>
         <div class="example-line">${annotateJapanese(p.teach.example_ja)}</div>
         ${p.teach.zh_meaning ? `<p class="example-zh">${escapeHtml(p.teach.zh_meaning)}</p>` : ""}
-        <div class="inline-lex empty" id="tutor-inline-lex"><span class="ilex-hint">点日文词即显词义</span></div>
+        <div class="inline-lex empty" id="tutor-inline-lex"></div>
       </div>
 
       <div class="action-dock">
-        <button class="sumi-btn" style="width:100%;" onclick="completeTeachCard()">继续</button>
+        <button class="sumi-btn" style="width:100%;" onclick="completeTeachCard()"><span>继续</span><span class="desk-hint">滚轮下滑 · Enter</span></button>
       </div>
     `;
     syncAudioButtons();
@@ -2429,14 +3051,22 @@ function renderTutor() {
     const isVariant = activeQuizObj.id !== p.primary.id;
     let label = p.subject;
     if (isVariant) label += " · 换题复考";
-    else if (ps.audioPrimed) label += " · 随身听已讲";
+    else if (ps.audioPrimed) label += " · 随身听已聊";
 
-    const choicesHTML = currentChoices.map((c, cIdx) => `
-      <button class="zen-choice" onclick='submitAnswer(${JSON.stringify(c)})'>
-        <span>${escapeHtml(c)}</span>
-        <span class="kbd-tag">${cIdx + 1}</span>
-      </button>
-    `).join("");
+    const controlsHTML = activeQuizObj.is_listening
+      ? `<div class="listen-num-grid">
+          ${currentChoices.map((c, cIdx) => `
+            <button class="listen-num-btn" onclick="submitAnswer(currentChoices[${cIdx}])">${cIdx + 1}</button>
+          `).join("")}
+        </div>`
+      : `<div class="choice-list">
+          ${currentChoices.map((c, cIdx) => `
+            <button class="zen-choice" onclick="submitAnswer(currentChoices[${cIdx}])">
+              <span>${escapeHtml(c)}</span>
+              <span class="kbd-tag">${cIdx + 1}</span>
+            </button>
+          `).join("")}
+        </div>`;
 
     box.innerHTML = `
       <div class="meta-bar">
@@ -2454,17 +3084,16 @@ function renderTutor() {
               <svg class="med-ic" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86A1 1 0 0 0 8 5.14z"/></svg>
               <div class="med-waves"><span></span><span></span><span></span></div>
             </button>
-            <p class="listen-prompt">${escapeHtml(activeQuizObj.prompt)}</p>
           </div>` : `<p class="quiz-ja">${escapeHtml(activeQuizObj.prompt)}</p>`}
-        </div>
-
-        <div class="choice-list">
-          ${choicesHTML}
         </div>
       </div>
 
       <div class="action-dock">
-        ${!activeQuizObj.is_listening ? `<button class="quiet-skip" onclick="switchToTeachForCurrent()">先看考点</button>` : `<div style="height:12px;"></div>`}
+        ${controlsHTML}
+        <button class="unsure-btn" onclick="revealWithoutGuess()">
+          <span>不确定 · 直接看讲解</span>
+          <span class="kbd-tag">0</span>
+        </button>
       </div>
     `;
     syncAudioButtons();
@@ -2473,9 +3102,34 @@ function renderTutor() {
 
   // -------- RESULT (3-Step Clear Human Order: ① 句意 -> ② 为什么用 -> ③ 变形与辨析) --------
   const q = activeQuizObj || p.primary;
-  const isCorrect = pickedVal === q.answer;
-  const overCls = isCorrect ? "overline ok" : "overline ng";
-  const overTxt = isCorrect ? "已变绿" : `误选「${pickedVal}」 · 稍后复考`;
+  const isUnsure = pickedVal === "__UNSURE__";
+  const isCorrect = !isUnsure && pickedVal === q.answer;
+  const ansIdx = currentChoices.indexOf(q.answer) + 1;
+  const pickedIdx = currentChoices.indexOf(pickedVal) + 1;
+
+  let overCls = "overline ng";
+  let overTxt = "";
+  if (isCorrect) {
+    overCls = "overline ok";
+    overTxt = q.is_listening && ansIdx > 0 ? `已变绿 · 正确答案 ${ansIdx}` : "已变绿";
+  } else if (isUnsure) {
+    overCls = "overline warm";
+    overTxt = q.is_listening && ansIdx > 0 ? `直接看讲解 · 正确答案 ${ansIdx} · 稍后复考` : "直接看讲解 · 稍后复考";
+  } else {
+    overCls = "overline ng";
+    overTxt = q.is_listening && ansIdx > 0
+      ? `误选 ${pickedIdx || ""} · 正确答案 ${ansIdx} · 稍后复考`
+      : `误选「${pickedVal}」 · 稍后复考`;
+  }
+
+  const listenOptsReviewHTML = q.is_listening
+    ? `<div class="listen-opt-review">
+        ${currentChoices.map((opt, idx) => {
+          const cls = opt === q.answer ? "lor-row ok" : (opt === pickedVal ? "lor-row ng" : "lor-row");
+          return `<div class="${cls}"><span class="lor-num">${idx + 1}.</span><span>${annotateJapanese(opt)}</span></div>`;
+        }).join("")}
+      </div>`
+    : "";
 
   box.innerHTML = `
     <div class="meta-bar">
@@ -2490,7 +3144,8 @@ function renderTutor() {
     <div class="focal-space">
       <div class="result-ja">${annotateSentenceWithAnswer(q.full_ja, q.answer)}</div>
       ${q.zh_meaning ? `<p class="result-zh">${escapeHtml(q.zh_meaning)}</p>` : ""}
-      <div class="inline-lex empty" id="tutor-inline-lex"><span class="ilex-hint">点日文词即显词义</span></div>
+      ${listenOptsReviewHTML}
+      <div class="inline-lex empty" id="tutor-inline-lex"></div>
       <div class="result-divider"></div>
       <div class="result-logic">
         ${q.why_line ? `<p class="logic-line">${escapeHtml(q.why_line)}</p>` : ""}
@@ -2501,7 +3156,7 @@ function renderTutor() {
     <div class="action-dock">
       <div class="dock-row">
         ${isCorrect ? `<button class="ghost-btn" onclick="advanceNext(true)">再考</button>` : ""}
-        <button class="sumi-btn" onclick="advanceNext(false)">下一题</button>
+        <button class="sumi-btn" onclick="advanceNext(false)"><span>下一题</span><span class="desk-hint">滚轮下滑 · Enter</span></button>
       </div>
     </div>
   `;
@@ -2522,7 +3177,7 @@ function clearInlineLexicon(boxId) {
   const el = document.getElementById(boxId);
   if (!el) return;
   el.className = "inline-lex empty";
-  el.innerHTML = `<span class="ilex-hint">点日文词即显词义</span>`;
+  el.innerHTML = "";
 }
 
 function speakJapaneseFallback(text) {
@@ -2589,8 +3244,6 @@ function showInlineWordMeaning(surface, tokEl) {
     <button class="ilex-speak" onclick='event.stopPropagation();playWordAudio(${JSON.stringify(surface)}, true)'>发音</button>
   `;
 
-  // Auto-pronounce the tapped word ONLY if teacher explanation / podcast is currently quiet,
-  // so looking up a word while listening never cuts off the teacher mid-sentence!
   if (player.paused && radioPlayer.paused) {
     playWordAudio(surface, false);
   }
@@ -2604,6 +3257,54 @@ document.addEventListener("click", e => {
     showInlineWordMeaning(tok.dataset.w, tok);
   }
 });
+
+// ================= DESKTOP MOUSE WHEEL & MOBILE SWIPE ERGONOMICS =================
+let lastWheelAdvanceAt = 0;
+
+window.addEventListener("wheel", e => {
+  if (activeMode !== "tutor") return;
+  if (viewStage !== "result" && viewStage !== "teach") return;
+  if (document.getElementById("app-modal").classList.contains("open")) return;
+  if (e.deltaY < 24 || Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+
+  const now = performance.now();
+  if (now - stageEnteredAt < 480 || now - lastWheelAdvanceAt < 750) return;
+
+  const fs = document.querySelector("#tutor-view .focal-space");
+  if (fs && fs.scrollHeight > fs.clientHeight + 8) {
+    if (fs.scrollTop + fs.clientHeight < fs.scrollHeight - 8) return;
+  }
+
+  lastWheelAdvanceAt = now;
+  if (viewStage === "teach") completeTeachCard();
+  else advanceNext(false);
+}, { passive: true });
+
+let touchStartX = 0;
+let touchStartY = 0;
+let touchStartTime = 0;
+
+document.getElementById("tutor-view").addEventListener("touchstart", e => {
+  if (!e.touches || e.touches.length !== 1) return;
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+  touchStartTime = performance.now();
+}, { passive: true });
+
+document.getElementById("tutor-view").addEventListener("touchend", e => {
+  if (activeMode !== "tutor") return;
+  if (viewStage !== "result" && viewStage !== "teach") return;
+  if (document.getElementById("app-modal").classList.contains("open")) return;
+  if (!e.changedTouches || e.changedTouches.length !== 1) return;
+
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  const dy = e.changedTouches[0].clientY - touchStartY;
+  const dt = performance.now() - touchStartTime;
+  if (dx <= -56 && Math.abs(dx) > Math.abs(dy) * 1.7 && dt < 650) {
+    if (viewStage === "teach") completeTeachCard();
+    else advanceNext(false);
+  }
+}, { passive: true });
 
 // ================= KEYBOARD =================
 document.addEventListener("keydown", e => {
@@ -2629,7 +3330,7 @@ document.addEventListener("keydown", e => {
   if (viewStage === "teach") {
     const p = getPointById(curPointId);
     if (e.key === " ") { e.preventDefault(); if (p) playMainClip(p.teach.audio, "teach", true); }
-    else if (e.key === "Enter" || e.key === "ArrowRight") { e.preventDefault(); completeTeachCard(); }
+    else if (e.key === "Enter" || e.key === "ArrowRight" || e.key === "ArrowDown") { e.preventDefault(); completeTeachCard(); }
     return;
   }
   if (viewStage === "quiz" && activeQuizObj) {
@@ -2637,12 +3338,13 @@ document.addEventListener("keydown", e => {
     else if (e.key === "1" && currentChoices[0]) { e.preventDefault(); submitAnswer(currentChoices[0]); }
     else if (e.key === "2" && currentChoices[1]) { e.preventDefault(); submitAnswer(currentChoices[1]); }
     else if (e.key === "3" && currentChoices[2]) { e.preventDefault(); submitAnswer(currentChoices[2]); }
-    else if (e.key === "0" && !activeQuizObj.is_listening) { e.preventDefault(); switchToTeachForCurrent(); }
+    else if (e.key === "0") { e.preventDefault(); revealWithoutGuess(); }
     return;
   }
   if (viewStage === "result" && activeQuizObj) {
     if (e.key === " ") { e.preventDefault(); playMainClip(activeQuizObj.exp_audio, "exp", true); }
-    else if (e.key === "Enter" || e.key === "ArrowRight") { e.preventDefault(); advanceNext(false); }
+    else if (e.key === "Enter" || e.key === "ArrowRight" || e.key === "ArrowDown") { e.preventDefault(); advanceNext(false); }
+    else if (e.key.toLowerCase() === "r") { e.preventDefault(); advanceNext(true); }
   }
 });
 
@@ -2779,47 +3481,128 @@ function closeModal() {
   document.getElementById("app-modal").classList.remove("open");
 }
 
+function manualCloudSync(btnEl) {
+  if (btnEl) {
+    btnEl.disabled = true;
+    btnEl.textContent = "正在对齐手机与电脑进度…";
+  }
+  pullCloudSync(true).then(() => {
+    connectCloudSSE();
+    const m = computeDaily120Metrics();
+    if (btnEl) {
+      btnEl.disabled = false;
+      btnEl.classList.add("copied");
+      btnEl.textContent = `已同步最新进度（${m.greenCnt} / ${m.totalCards} 题）`;
+    }
+    const cntEl = document.getElementById("modal-green-cnt");
+    if (cntEl) cntEl.textContent = `${m.greenCnt} / ${m.totalCards} 题`;
+    const minEl = document.getElementById("modal-radio-min");
+    if (minEl) minEl.textContent = `${m.listenedMins} / ${m.targetMins} 分钟`;
+    const scEl = document.getElementById("modal-proj-score");
+    if (scEl) scEl.textContent = `${m.projScore} / 180 分`;
+  });
+}
+
 function openSessionModal() {
   const m = computeDaily120Metrics();
   document.getElementById("modal-content").innerHTML = `
-    <h3 class="modal-h">今日 120+ 锁定进度</h3>
+    <h3 class="modal-h">120+ 锁定进度</h3>
     <p class="modal-body">
-      今日做题　　<strong>${m.greenCnt} / ${m.totalCards} 题</strong><br/>
-      今日随身听　<strong>${m.listenedMins} / ${m.targetMins} 分钟</strong><br/>
-      当前预计分　<strong>${m.projScore} / 180 分</strong><br/>
-      今日双项满　<strong>132 分（稳过 120 分线）</strong>
+      做题进度　　<strong id="modal-green-cnt">${m.greenCnt} / ${m.totalCards} 题</strong><br/>
+      随身听　　　<strong id="modal-radio-min">${m.listenedMins} / ${m.targetMins} 分钟</strong><br/>
+      当前预计分　<strong id="modal-proj-score">${m.projScore} / 180 分</strong><br/>
+      双项完成后　<strong>132 分（稳过 120 分线）</strong>
     </p>
-    <p class="modal-promise">每天把 50 道题刷绿、把一期随身听听完，十二月考场上一定稳站 120 分以上。</p>
+    <p class="modal-promise">做完 50 道题、听完一期三人圆桌随身听，考场上一定稳站 120 分以上。</p>
+    <div class="sync-box">
+      <p class="sync-note" id="cloud-sync-status-line">正在对齐云端进度…</p>
+      <button class="sync-btn" onclick="manualCloudSync(this)">立即对齐多端进度</button>
+    </div>
     <div class="dock-row">
       <button class="ghost-btn" onclick="resetTodayMission()">重做题</button>
       <button class="sumi-btn" onclick="closeModal()">继续</button>
     </div>
   `;
+  updateSyncModalBadge();
   document.getElementById("app-modal").classList.add("open");
 }
 
-document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "hidden") {
-    flushCloudSyncNow();
-  } else if (document.visibilityState === "visible") {
-    pullCloudSync();
+window.addEventListener("hashchange", () => {
+  if (applySyncCodeFromUrl()) {
+    applyMasteryOverrides();
+    saveAdaptiveState();
+    scheduleCloudPush(80);
+    if (curPointId && A.pts[curPointId] && A.pts[curPointId].status === "green" && viewStage === "quiz") {
+      setupCurrentTurn();
+    }
+    renderGreenBoard();
+    if (activeMode === "tutor") renderTutor();
+    else if (activeMode === "dash") renderDashboard();
   }
 });
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") {
+    pullCloudSync(true);
+    connectCloudSSE();
+  } else {
+    if (cloudPushTimer) {
+      clearTimeout(cloudPushTimer);
+      cloudPushTimer = null;
+      pushCloudSync(true);
+    }
+  }
+});
+
 window.addEventListener("online", () => {
-  flushCloudSyncNow();
-  pullCloudSync();
+  pullCloudSync(true);
+  connectCloudSSE();
+});
+
+window.addEventListener("pagehide", () => {
+  if (cloudPushTimer) {
+    clearTimeout(cloudPushTimer);
+    cloudPushTimer = null;
+    pushCloudSync(true);
+  }
 });
 
 function initApp() {
+  // When running on local tutor_server.py, also union-merge local server state if present
+  if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
+    fetch("./api/state").then(r => r.ok ? r.json() : null).then(st => {
+      if (!st || !st.session || !Array.isArray(st.session.doneIds)) return;
+      let changed = false;
+      st.session.doneIds.forEach(rawId => {
+        const pid = CARD_TO_POINT_ID[rawId] || rawId;
+        if (A.pts[pid] && A.pts[pid].status !== "green") {
+          A.pts[pid].greenAt = Math.max(A.pts[pid].greenAt || 0, 2);
+          changed = true;
+        }
+      });
+      if (changed) {
+        recomputeStatusesFromCRDT(A);
+        applyMasteryOverrides();
+        saveAdaptiveState();
+        if (curPointId && A.pts[curPointId] && A.pts[curPointId].status === "green" && viewStage === "quiz") {
+          setupCurrentTurn();
+        }
+        renderGreenBoard();
+        if (activeMode === "tutor") renderTutor();
+      }
+    }).catch(() => {});
+  }
+
   const params = new URLSearchParams(location.search);
   const m = params.get("mode");
   if (m === "dash") switchMode("dash");
   else if (m === "radio" || m === "walk") switchMode("radio", false);
   else renderTutor();
-  setTimeout(() => {
-    flushCloudSyncNow();
-    pullCloudSync();
-  }, 400);
+
+  // Pull latest multi-platform cloud snapshot & auto-upload any local-only answers, then keep SSE live
+  pullCloudSync(true).then(() => {
+    connectCloudSSE();
+  });
 }
 initApp();
 </script>
@@ -2831,7 +3614,7 @@ final_html = html.replace("__PAYLOAD__", payload)
 with open(HTML_PATH, "w", encoding="utf-8") as f:
     f.write(final_html)
 print(
-    "Wrote Zen v11 N3 Platform:",
+    "Wrote Zen v12 N3 Platform:",
     HTML_PATH,
     "points:",
     len(ordered_points),
