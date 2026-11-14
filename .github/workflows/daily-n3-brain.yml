@@ -26,9 +26,11 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq --no-install-recommends ffmpeg
-          pip install --quiet edge-tts certifi
+          pip install --quiet edge-tts certifi google-genai
 
       - name: Run N3 Brain Algorithm & Rebuild PWA
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python run_brain_algorithm.py
 
       - name: Commit & Push Updated State

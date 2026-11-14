@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Generates the Daily 35–40 Minute Two-Host Conversational N3 Radio Show (audio/daily_radio.mp3)
-+ Exact Segment & Chapter Timestamp Map (audio/daily_radio_meta.json).
+Generates the Daily ~35 Minute Real-Coach Two-Speaker N3 Podcast (audio/daily_radio.mp3)
++ Exact Segment & Chapter Timestamp Map (audio/daily_radio_meta.json) — Zen v11 Human Studio Edition.
 
-Driven by the Master Algorithm:
-1) Reads n3_live_state.json + practice_log.jsonl summary (yesterday's mistakes & current mastery).
-2) Prioritizes weak/unmastered & ear-suited points (modality="listen" / "both"), rotating daily by PT date.
-3) Synthesizes natural two-person Chinese banter (阿哲 YunxiNeural + 小夏 XiaoxiaoNeural) interleaved with
-   authentic Japanese scene examples (NanamiNeural + KeitaNeural) and active-recall pauses.
-4) Stitches a single continuous lock-screen-proof 48kbps CBR MP3 for 30-40 min walking/biking/commuting.
+Human Voice & Zero-Choppiness Pipeline:
+1) Voice Tier 1 (Optional Studio Key): Google Gemini 2.5 Flash Preview TTS when GEMINI_API_KEY is set.
+2) Voice Tier 2 (Default Keyless SOTA): Microsoft Conversational Multilingual LLM-Prosody Voices
+   - M (阿哲): `zh-CN-YunxiaoMultilingualNeural` at natural `+0%` conversational pace
+   - F (小夏): `zh-CN-XiaoxiaoMultilingualNeural` at natural `+0%` conversational pace
+   Inline Japanese is written in pure Hiragana/Katakana so both coaches speak Mandarin + Japanese
+   in ONE uninterrupted human breath with zero mid-sentence voice chopping.
+3) Strips leading & trailing <-55dB digital silence + applies 12ms micro-fades on every clip via ffmpeg.
+4) Natural 0.22s human turn-taking breath between speakers; calm, grounded coaching tone (zero DJ hype).
 """
 import asyncio
 import datetime
@@ -17,9 +20,11 @@ import hashlib
 import json
 import os
 import random
+import re
 import shutil
 import subprocess
 import tempfile
+import wave
 from zoneinfo import ZoneInfo
 
 try:
@@ -29,6 +34,13 @@ try:
     import edge_tts
 except Exception:
     edge_tts = None
+
+try:
+    from google import genai
+    from google.genai import types as genai_types
+except Exception:
+    genai = None
+    genai_types = None
 
 from adaptive_bank import EXTRA_PRIMARY_CARDS, POINT_META
 from radio_dialogue_bank import DEEP_BANTER_TOPICS, LISTENING_THEATRE, MODALITY_MAP, VOCAB_RECALL_ITEMS
@@ -46,14 +58,10 @@ EXAM_DATE = datetime.date(2026, 12, 6)
 PROXY_URL = os.environ.get("HTTPS_PROXY") or os.environ.get("HTTP_PROXY") or None
 COMM_KWARGS = {"proxy": PROXY_URL} if PROXY_URL else {}
 MAX_TRIES = 4 if os.environ.get("GITHUB_ACTIONS") == "true" else 1
+GEMINI_API_KEY = (os.environ.get("GEMINI_API_KEY") or "").strip()
+GEMINI_TTS_MODEL = os.environ.get("GEMINI_TTS_MODEL", "gemini-2.5-flash-preview-tts")
 
-VOICE_MAP = {
-    "M": ("zh-CN-YunxiNeural", "+4%"),
-    "F": ("zh-CN-XiaoxiaoNeural", "+5%"),
-    "JF": ("ja-JP-NanamiNeural", "-2%"),
-    "JM": ("ja-JP-KeitaNeural", "-2%"),
-    "JFS": ("ja-JP-NanamiNeural", "-12%"),
-}
+KANA_RE = re.compile(r"([\u3040-\u30ffー]+)")
 
 
 def resolve_point_key(point_id: str) -> str:
@@ -83,7 +91,7 @@ def load_mastery_priority(state: dict, recent_wrong_keys: set) -> dict:
         w = float(meta.get("weight", 2.4))
         mult = 1.0 if st == "red" else (0.92 if st in ("orange", "gray") else (0.65 if st == "yellow" else 0.18))
         if pkey in recent_wrong_keys or pid in recent_wrong_keys:
-            mult += 0.45  # Yesterday's / recent mistakes jump to top of today's radio show!
+            mult += 0.45
         mod = MODALITY_MAP.get(pid, "both")
         mod_boost = 1.15 if mod == "listen" else (1.08 if mod == "both" else 0.92)
         scores[pid] = round(w * mult * mod_boost, 4)
@@ -107,11 +115,111 @@ def load_recent_mistakes() -> set:
     return wrong
 
 
-async def synth_turn(speaker: str, text: str, out_path: str, sem: asyncio.Semaphore) -> bool:
+async def detect_voice_map() -> tuple[dict, set]:
+    vmap = {
+        "M": ("zh-CN-YunxiNeural", "+0%"),
+        "F": ("zh-CN-XiaoxiaoNeural", "+0%"),
+        "JF": ("ja-JP-NanamiNeural", "-2%"),
+        "JM": ("ja-JP-KeitaNeural", "-2%"),
+        "JFS": ("ja-JP-NanamiNeural", "-8%"),
+    }
+    multilingual_speakers = set()
     if edge_tts is None:
+        return vmap, multilingual_speakers
+    try:
+        voices = await edge_tts.list_voices(**COMM_KWARGS)
+        short_names = {v.get("ShortName", "") for v in voices}
+        if "zh-CN-XiaoxiaoMultilingualNeural" in short_names:
+            vmap["F"] = ("zh-CN-XiaoxiaoMultilingualNeural", "+0%")
+            multilingual_speakers.add("F")
+        # Prioritize YunxiaoMultilingualNeural (Microsoft's Conversational Multilingual Male) first
+        for cand_m in (
+            "zh-CN-YunxiaoMultilingualNeural",
+            "zh-CN-YunyiMultilingualNeural",
+            "zh-CN-YunfanMultilingualNeural",
+        ):
+            if cand_m in short_names:
+                vmap["M"] = (cand_m, "+0%")
+                multilingual_speakers.add("M")
+                break
+        print(f"Radio voices selected: M={vmap['M'][0]} ({vmap['M'][1]}), F={vmap['F'][0]} ({vmap['F'][1]}), multilingual={sorted(multilingual_speakers)}")
+    except Exception as e:
+        print(f"[info] list_voices fallback to standard neural voices: {e}")
+    return vmap, multilingual_speakers
+
+
+def expand_turn_events(spk: str, val, multilingual_speakers: set) -> list:
+    if spk == "PAUSE":
+        return [("PAUSE", float(val))]
+    txt = str(val)
+    if spk in ("M", "F") and spk not in multilingual_speakers and KANA_RE.search(txt):
+        ja_spk = "JM" if spk == "M" else "JF"
+        parts = KANA_RE.split(txt)
+        out = []
+        for idx, pt in enumerate(parts):
+            pt_s = pt.strip()
+            if not pt_s or not re.search(r"[\w\u3040-\u9fff]", pt_s):
+                continue
+            if out:
+                out.append(("PAUSE", 0.05))
+            out.append((ja_spk if idx % 2 == 1 else spk, pt_s))
+        return out if out else [(spk, txt)]
+    return [(spk, txt)]
+
+
+def synth_gemini_turn_sync(spk: str, text: str, out_mp3: str) -> bool:
+    if not (GEMINI_API_KEY and genai is not None and genai_types is not None):
         return False
-    voice, rate = VOICE_MAP[speaker]
+    voice_name = "Aoede" if spk in ("F", "JF", "JFS") else "Puck"
+    prompt = (
+        f"Speak naturally like a calm, grounded, real human Japanese teacher chatting across a table: {text}"
+        if spk in ("M", "F")
+        else text
+    )
+    try:
+        client = genai.Client(api_key=GEMINI_API_KEY)
+        resp = client.models.generate_content(
+            model=GEMINI_TTS_MODEL,
+            contents=prompt,
+            config=genai_types.GenerateContentConfig(
+                response_modalities=["AUDIO"],
+                speech_config=genai_types.SpeechConfig(
+                    voice_config=genai_types.VoiceConfig(
+                        prebuilt_voice_config=genai_types.PrebuiltVoiceConfig(voice_name=voice_name)
+                    )
+                ),
+            ),
+        )
+        pcm = resp.candidates[0].content.parts[0].inline_data.data
+        if not pcm:
+            return False
+        wav_path = out_mp3 + ".wav"
+        with wave.open(wav_path, "wb") as wf:
+            wf.setnchannels(1)
+            wf.setsampwidth(2)
+            wf.setframerate(24000)
+            wf.writeframes(pcm)
+        subprocess.run(
+            ["ffmpeg", "-y", "-loglevel", "error", "-i", wav_path, "-ar", "24000", "-ac", "1", "-b:a", "48k", "-c:a", "libmp3lame", out_mp3],
+            check=True,
+        )
+        try:
+            os.remove(wav_path)
+        except OSError:
+            pass
+        return os.path.exists(out_mp3) and os.path.getsize(out_mp3) > 0
+    except Exception:
+        return False
+
+
+async def synth_turn(spk: str, voice: str, rate: str, text: str, out_path: str, sem: asyncio.Semaphore) -> bool:
     async with sem:
+        if GEMINI_API_KEY and genai is not None and spk in ("M", "F"):
+            ok = await asyncio.to_thread(synth_gemini_turn_sync, spk, text, out_path)
+            if ok:
+                return True
+        if edge_tts is None:
+            return False
         for attempt in range(MAX_TRIES):
             try:
                 buf = bytearray()
@@ -127,8 +235,36 @@ async def synth_turn(speaker: str, text: str, out_path: str, sem: asyncio.Semaph
                 if attempt + 1 < MAX_TRIES:
                     await asyncio.sleep(0.7 * (attempt + 1))
                 elif MAX_TRIES > 1:
-                    print(f"[warn] radio turn synth failed ({speaker}): {e}")
+                    print(f"[warn] radio turn synth failed ({voice}): {e}")
     return False
+
+
+def trim_clip_silence(raw_path: str, trimmed_path: str) -> None:
+    af_chain = (
+        "silenceremove=start_periods=1:start_duration=0.0:start_threshold=-55dB,"
+        "areverse,silenceremove=start_periods=1:start_duration=0.0:start_threshold=-55dB,areverse,"
+        "afade=t=in:st=0:d=0.012,areverse,afade=t=in:st=0:d=0.012,areverse"
+    )
+    res = subprocess.run(
+        [
+            "ffmpeg", "-y", "-loglevel", "error",
+            "-i", raw_path,
+            "-af", af_chain,
+            "-ar", "24000", "-ac", "1", "-b:a", "48k", "-c:a", "libmp3lame",
+            trimmed_path,
+        ],
+        check=False,
+    )
+    if res.returncode != 0 or not os.path.exists(trimmed_path) or os.path.getsize(trimmed_path) < 256:
+        subprocess.run(
+            [
+                "ffmpeg", "-y", "-loglevel", "error",
+                "-i", raw_path,
+                "-ar", "24000", "-ac", "1", "-b:a", "48k", "-c:a", "libmp3lame",
+                trimmed_path,
+            ],
+            check=True,
+        )
 
 
 def make_silence_mp3(sec: float, out_path: str) -> None:
@@ -137,7 +273,7 @@ def make_silence_mp3(sec: float, out_path: str) -> None:
             "ffmpeg", "-y", "-loglevel", "error",
             "-f", "lavfi", "-i", "anullsrc=r=24000:cl=mono",
             "-t", f"{sec:.2f}",
-            "-c:a", "libmp3lame", "-b:a", "48k",
+            "-ar", "24000", "-ac", "1", "-c:a", "libmp3lame", "-b:a", "48k",
             out_path,
         ],
         check=True,
@@ -166,6 +302,9 @@ async def main():
         print("Skipping live radio MP3 synthesis (edge_tts or ffmpeg unavailable in local sandbox).")
         return
 
+    voice_map, multilingual_speakers = await detect_voice_map()
+    engine_tag = f"gemini:{GEMINI_TTS_MODEL}" if (GEMINI_API_KEY and genai is not None) else f"edge:{voice_map['M'][0]}:{voice_map['F'][0]}"
+
     with open(STATE_PATH, encoding="utf-8") as f:
         state = json.load(f)
 
@@ -177,8 +316,6 @@ async def main():
 
     recent_wrong = load_recent_mistakes()
     scores = load_mastery_priority(state, recent_wrong)
-
-    # Deterministic daily rotation + priority weighting so every day's episode is fresh & tailored!
     rng = random.Random(today_str)
 
     def daily_rank(item):
@@ -186,45 +323,43 @@ async def main():
         jitter = rng.uniform(-0.18, 0.18)
         return -(scores.get(pid, 2.0) + jitter)
 
-    ch1_topics = sorted(DEEP_BANTER_TOPICS, key=daily_rank)[:15]
+    ch1_topics = sorted(DEEP_BANTER_TOPICS, key=daily_rank)[:19]
     ch2_scenes = sorted(LISTENING_THEATRE, key=daily_rank)[:6]
     ch3_vocabs = sorted(VOCAB_RECALL_ITEMS, key=daily_rank)[:14]
 
     done_g = state.get("summary", {}).get("grammar", {}).get("green", 27)
-    red_g = state.get("summary", {}).get("grammar", {}).get("red", 15)
 
-    # Build Master Timeline Script: list of timeline blocks
-    # Each block: {"chapter": int, "point_id": str|None, "title": str, "ja_focus": str, "events": [(kind, val), ...]}
-    blocks = []
-
-    blocks.append({
+    raw_blocks = []
+    raw_blocks.append({
         "chapter": 0,
         "point_id": None,
-        "title": f"{month_num}月{day_num}日 · 双人随身电台",
-        "ja_focus": "今日も一緒に頑張りましょう！",
+        "title": f"{month_num}月{day_num}日 · 今日重点对谈",
+        "ja_focus": "今日も一歩ずつ、着実に進めよう。",
         "events": [
-            ("M", f"哈喽，欢迎打开今天专属的日语随身电台！我是阿哲。今天是{month_num}月{day_num}号，距离十二月六号的考试还有{days_left}天。"),
-            ("PAUSE", 0.32),
-            ("F", f"嗨，我是小夏！不管你现在是在走路、骑单车、坐公交还是在开车，接下来这三十多分钟都完全不用看屏幕，眼睛放心看路，交给耳朵就行。"),
-            ("PAUSE", 0.35),
-            ("M", f"小夏，我看了一眼咱们最新的掌握度总账，目前语法已经有{done_g}个点稳稳变绿了，阅读更是你的强项，咱们完全不用在已经会的地方浪费时间。"),
-            ("PAUSE", 0.32),
-            ("F", f"没错！今天这期节目，我们专门挑出了目前最能帮你往一百二十分以上冲刺的薄弱双胞胎语法、占六十分大头的口语听力陷阱，还有中国人最容易按汉字瞎猜的词汇，咱们用大白话一个一个聊透！先进入第一部分：易混语法与敬语深聊。"),
-            ("PAUSE", 1.0),
+            ("M", f"小夏，今天是{month_num}月{day_num}号，离十二月六号考试还有{days_left}天。今天这三十多分钟，我们重点带大家顺哪些内容？"),
+            ("PAUSE", 0.22),
+            ("F", f"今天我们把最容易混的成对语法、职场敬语，还有占卷面六十分的口语听力放在一起聊透。现在语法已经有{done_g}个点稳住了，阅读本来就是强项。只要每天把这一期随身听顺下来，再把那五十道题刷绿，十二月考场上稳稳站上一百二十分是水到渠成的事。"),
+            ("PAUSE", 0.22),
+            ("M", "好，走路或者坐车的时候不用看屏幕，顺着听就行。我们先从第一组最常考的语法开始。"),
+            ("PAUSE", 0.65),
         ],
     })
 
-    # Chapter 1: 15 Deep Two-Host Banter Topics
-    for idx, tp in enumerate(ch1_topics):
+    for tp in ch1_topics:
         evs = []
-        for spk, val in tp["turns"]:
+        turns = tp["turns"]
+        for idx, (spk, val) in enumerate(turns):
             if spk == "PAUSE":
                 evs.append(("PAUSE", float(val)))
             else:
                 evs.append((spk, str(val)))
-                evs.append(("PAUSE", 0.34))
-        evs.append(("PAUSE", 0.9))
-        blocks.append({
+                # Add natural breath unless the next item is already an explicit PAUSE
+                if idx + 1 < len(turns) and turns[idx + 1][0] != "PAUSE":
+                    next_spk = turns[idx + 1][0]
+                    gap = 0.26 if next_spk in ("JF", "JM", "JFS") or spk in ("JF", "JM", "JFS") else 0.22
+                    evs.append(("PAUSE", gap))
+        evs.append(("PAUSE", 0.65))
+        raw_blocks.append({
             "chapter": 0,
             "point_id": tp["point_id"],
             "title": tp["title"],
@@ -232,40 +367,36 @@ async def main():
             "events": evs,
         })
 
-    # Chapter 2 Intro + 6 Listening Theatre Scenes
-    blocks.append({
+    raw_blocks.append({
         "chapter": 1,
         "point_id": None,
-        "title": "听力真题剧场",
-        "ja_focus": "耳をすまして聞いてみよう",
+        "title": "听力真题对话",
+        "ja_focus": "耳をすまして聞いてみよう。",
         "events": [
-            ("M", "聊完了最容易混的语法和敬语，接下来咱们进入第二部分：占卷面整整六十分的听力实战剧场！"),
-            ("PAUSE", 0.32),
-            ("F", "这一部分最适合走路骑车练耳朵了！每一段我们先不给提示，直接放男女双人原速日语对话，听完给你留两秒钟在脑子里反应，然后我们拆开里面的口语缩音和潜台词，再带你复听一遍！"),
-            ("PAUSE", 0.9),
+            ("M", "语法和敬语先聊到这里。接下来进入占卷面六十分的听力部分，我们直接听男女原速对话。"),
+            ("PAUSE", 0.22),
+            ("F", "每一段先盲听一遍，留两秒钟反应一下意思，接着我们把里面的口语缩音和弦外之音拆开，再复听一遍。"),
+            ("PAUSE", 0.65),
         ],
     })
 
     for sc in ch2_scenes:
-        evs = [
-            ("M", sc["intro_m"]),
-            ("PAUSE", 0.5),
-        ]
+        evs = [("M", sc["intro_m"]), ("PAUSE", 0.30)]
         for d_spk, d_line in sc["dialogue"]:
             evs.append((d_spk, d_line))
-            evs.append(("PAUSE", 0.38))
+            evs.append(("PAUSE", 0.24))
         evs.extend([
-            ("PAUSE", 2.2),
+            ("PAUSE", 1.8),
             ("M", sc["unpack_m"]),
-            ("PAUSE", 0.32),
+            ("PAUSE", 0.22),
             ("F", sc["unpack_f"]),
-            ("PAUSE", 0.5),
+            ("PAUSE", 0.30),
         ])
         for d_spk, d_line in sc["dialogue"]:
             evs.append((d_spk, d_line))
-            evs.append(("PAUSE", 0.36))
-        evs.append(("PAUSE", 1.0))
-        blocks.append({
+            evs.append(("PAUSE", 0.24))
+        evs.append(("PAUSE", 0.65))
+        raw_blocks.append({
             "chapter": 1,
             "point_id": sc["point_id"],
             "title": sc["title"],
@@ -273,32 +404,31 @@ async def main():
             "events": evs,
         })
 
-    # Chapter 3 Intro + 14 Eyes-Free Active Recall Vocab & Kana Adverbs
-    blocks.append({
+    raw_blocks.append({
         "chapter": 2,
         "point_id": None,
         "title": "词汇与假名副词",
-        "ja_focus": "リズムで覚える重要語彙",
+        "ja_focus": "リズムで覚える重要語彙。",
         "events": [
-            ("F", "耳朵热身得差不多啦！第三部分咱们来玩一个路上最提神的快问快答：专治没有汉字的假名副词和咱们中国人最容易念错长短音的词。"),
-            ("PAUSE", 0.32),
-            ("M", "规则超简单：先听日文原声念词和短句，停顿两秒钟你在脑子里抢答意思，紧接着我们揭晓画面口诀！"),
-            ("PAUSE", 0.9),
+            ("F", "听力对话过完了，第三部分我们来顺一遍常考的假名副词和读音容易错的词。"),
+            ("PAUSE", 0.22),
+            ("M", "先听日文原声，停顿两秒在心里想一下画面，接着我们核对意思和例句。"),
+            ("PAUSE", 0.65),
         ],
     })
 
     for vc in ch3_vocabs:
         evs = [
             ("JF", vc["word_ja"]),
-            ("PAUSE", 2.2),
+            ("PAUSE", 1.8),
             ("M", vc["hook_m"]),
-            ("PAUSE", 0.30),
+            ("PAUSE", 0.20),
             ("F", vc["hook_f"]),
-            ("PAUSE", 0.35),
+            ("PAUSE", 0.26),
             ("JM", vc["sent_ja"]),
-            ("PAUSE", 1.0),
+            ("PAUSE", 0.65),
         ]
-        blocks.append({
+        raw_blocks.append({
             "chapter": 2,
             "point_id": vc["point_id"],
             "title": vc["title"],
@@ -306,7 +436,6 @@ async def main():
             "events": evs,
         })
 
-    # Chapter 4: Pure Native Japanese Wash-Ear Cooldown
     cooldown_sentences = []
     for tp in ch1_topics[:12]:
         cooldown_sentences.append((tp["point_id"], tp["title"], tp["ja_main"]))
@@ -315,44 +444,53 @@ async def main():
     cooldown_sentences = cooldown_sentences[:18]
 
     ch4_evs = [
-        ("M", "不知不觉已经走到最后一部分啦！最后这几分钟，我们把今天聊过的全部地道日文原句，彻底撤掉中文拐杖，纯日语原速连播一遍！"),
-        ("PAUSE", 0.32),
-        ("F", "你就放松肩膀，像听日剧台词一样顺着听，感受一下刚才聊透的画面是不是已经在耳朵里自动浮现出来了。开始喽！"),
-        ("PAUSE", 0.9),
+        ("M", "最后几分钟，我们把今天聊过的日文原句撤掉中文，从头到尾原速连听一遍。"),
+        ("PAUSE", 0.22),
+        ("F", "放松听就行，感受一下刚才讲过的画面和意思能不能直接在脑海里浮现出来。"),
+        ("PAUSE", 0.65),
     ]
     for i, (_, _, ja_s) in enumerate(cooldown_sentences):
         spk = "JF" if i % 2 == 0 else "JM"
         ch4_evs.append((spk, ja_s))
-        ch4_evs.append(("PAUSE", 1.8))
+        ch4_evs.append(("PAUSE", 1.4))
 
     ch4_evs.extend([
-        ("F", "太棒了！今天这一整期三十多分钟的随身节目到这里就全部听完啦！今天耳熟的这些考点，已经自动帮你记进学习记录里了。"),
-        ("PAUSE", 0.32),
-        ("M", "等你一会儿有两三分钟空隙掏出手机做题的时候，今天听过的点会直接出题考你，答对就能秒变绿格！路上注意安全，咱们明天见！"),
-        ("PAUSE", 0.6),
+        ("F", "好，今天这一期随身听就到这里。刚才听熟的这些考点都已经记进今天的进度里了。"),
+        ("PAUSE", 0.22),
+        ("M", "有空的时候打开做题，把今天这五十道题刷绿，今天的任务就圆满了。每天把这一套做完听完，一百二十分稳稳拿到手。明天见。"),
+        ("PAUSE", 0.4),
     ])
 
-    blocks.append({
+    raw_blocks.append({
         "chapter": 3,
         "point_id": None,
         "title": "纯日语原速复听",
-        "ja_focus": "日本語だけで総復習",
+        "ja_focus": "日本語だけで総復習。",
         "events": ch4_evs,
     })
 
-    script_sig = hashlib.sha256(json.dumps(blocks, ensure_ascii=False).encode("utf-8")).hexdigest()[:14]
+    blocks = []
+    for b in raw_blocks:
+        expanded_evs = []
+        for spk, val in b["events"]:
+            expanded_evs.extend(expand_turn_events(spk, val, multilingual_speakers))
+        nb = dict(b)
+        nb["events"] = expanded_evs
+        blocks.append(nb)
+
+    sig_payload = f"v11_human_studio:{engine_tag}:" + json.dumps(voice_map, sort_keys=True) + json.dumps(blocks, ensure_ascii=False)
+    script_sig = hashlib.sha256(sig_payload.encode("utf-8")).hexdigest()[:14]
     if os.path.exists(RADIO_MP3_PATH) and os.path.exists(RADIO_META_PATH):
         try:
             old_meta = json.load(open(RADIO_META_PATH, encoding="utf-8"))
             if old_meta.get("date") == today_str and old_meta.get("script_sig") == script_sig and os.path.getsize(RADIO_MP3_PATH) > 1_000_000:
-                print(f"Daily two-host radio already up-to-date for {today_str} ({old_meta.get('duration_label')}).")
+                print(f"Daily human studio radio already up-to-date for {today_str} ({old_meta.get('duration_label')}).")
                 return
         except Exception:
             pass
 
-    tmpdir = tempfile.mkdtemp(prefix="n3_radio_")
+    tmpdir = tempfile.mkdtemp(prefix="n3_radio_v11_")
     try:
-        # Pre-build silence clips
         pause_durations = sorted({round(float(val), 2) for b in blocks for k, val in b["events"] if k == "PAUSE"})
         silence_files = {}
         for sec in pause_durations:
@@ -360,7 +498,6 @@ async def main():
             make_silence_mp3(sec, sf)
             silence_files[sec] = (sf, probe_duration(sf))
 
-        # Deduplicate & synthesize all spoken turns concurrently
         unique_turns = {}
         for b in blocks:
             for k, val in b["events"]:
@@ -368,20 +505,25 @@ async def main():
                     key = (k, val)
                     if key not in unique_turns:
                         thash = hashlib.sha256(f"{k}:{val}".encode("utf-8")).hexdigest()[:12]
-                        unique_turns[key] = os.path.join(tmpdir, f"t_{thash}.mp3")
+                        unique_turns[key] = (
+                            os.path.join(tmpdir, f"raw_{thash}.mp3"),
+                            os.path.join(tmpdir, f"trim_{thash}.mp3"),
+                        )
 
         sem = asyncio.Semaphore(5)
         ok_results = await asyncio.gather(
-            *(synth_turn(k, txt, path, sem) for (k, txt), path in unique_turns.items())
+            *(synth_turn(k, voice_map[k][0], voice_map[k][1], txt, raw_p, sem) for (k, txt), (raw_p, _) in unique_turns.items())
         )
-        print(f"Synthesized {sum(1 for x in ok_results if x)} / {len(unique_turns)} unique two-host dialogue turns.")
+        print(f"Synthesized {sum(1 for x in ok_results if x)} / {len(unique_turns)} unique radio turns.")
 
         turn_durs = {}
-        for key, path in unique_turns.items():
-            if os.path.exists(path) and os.path.getsize(path) > 0:
-                turn_durs[key] = probe_duration(path)
+        trimmed_paths = {}
+        for key, (raw_p, trim_p) in unique_turns.items():
+            if os.path.exists(raw_p) and os.path.getsize(raw_p) > 0:
+                trim_clip_silence(raw_p, trim_p)
+                trimmed_paths[key] = trim_p
+                turn_durs[key] = probe_duration(trim_p)
 
-        # Build concat list & exact chapter/segment timestamps
         concat_lines = []
         cursor = 0.0
         chapter_starts = {}
@@ -400,9 +542,8 @@ async def main():
                     cursor += sdur
                 else:
                     key = (k, val)
-                    path = unique_turns[key]
                     if key in turn_durs:
-                        concat_lines.append(f"file '{path}'")
+                        concat_lines.append(f"file '{trimmed_paths[key]}'")
                         cursor += turn_durs[key]
             seg_end = cursor
             segments_meta.append({
@@ -432,7 +573,7 @@ async def main():
         final_dur = round(probe_duration(RADIO_MP3_PATH), 1)
         mins = max(1, round(final_dur / 60.0))
         chapters_meta = [
-            {"idx": 0, "title": "深聊", "start": chapter_starts.get(0, 0.0)},
+            {"idx": 0, "title": "语法", "start": chapter_starts.get(0, 0.0)},
             {"idx": 1, "title": "听力", "start": chapter_starts.get(1, 0.0)},
             {"idx": 2, "title": "词汇", "start": chapter_starts.get(2, 0.0)},
             {"idx": 3, "title": "纯日", "start": chapter_starts.get(3, 0.0)},
@@ -451,7 +592,7 @@ async def main():
         }
         with open(RADIO_META_PATH, "w", encoding="utf-8") as f:
             json.dump(meta_obj, f, ensure_ascii=False, indent=2)
-        print(f"Built daily two-host radio episode: {final_dur:.1f}s ({mins} mins), size={os.path.getsize(RADIO_MP3_PATH)} bytes.")
+        print(f"Built human studio radio episode: {final_dur:.1f}s ({mins} mins), size={os.path.getsize(RADIO_MP3_PATH)} bytes.")
     finally:
         shutil.rmtree(tmpdir, ignore_errors=True)
 
