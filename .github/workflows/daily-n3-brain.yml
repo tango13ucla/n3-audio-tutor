@@ -6,6 +6,11 @@ on:
     - cron: '0 15 * * *'
     - cron: '0 5 * * *'
   workflow_dispatch:
+    inputs:
+      audition_only:
+        description: 'Run 20s voice audition artifact only'
+        required: false
+        default: 'false'
 
 permissions:
   contents: write
@@ -26,14 +31,79 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq --no-install-recommends ffmpeg
-          pip install --quiet edge-tts certifi google-genai
+          pip install --quiet -U edge-tts certifi google-genai
+
+      - name: Voice Audition Probe
+        if: ${{ inputs.audition_only == 'true' }}
+        run: |
+          mkdir -p /tmp/audition
+          python - << 'PY'
+          import asyncio, edge_tts
+
+          SAMPLE_F = "这句是说，他在日本只待了半年，日语却出乎意料地好。按半年的标准本来以为不会太熟练，实际却远超预期，这种反差就用 にしては。另一个 にとって 是对某人来说的意思。"
+          SAMPLE_M = "小夏，中文里说好像要下雨，还有听说要下雨，到了日语末尾都是 そうだ，做题的时候怎么最快分清？"
+
+          CANDIDATES = [
+              ("F_zh_XiaoxiaoMulti", "zh-CN-XiaoxiaoMultilingualNeural", SAMPLE_F),
+              ("M_zh_YunxiaoMulti", "zh-CN-YunxiaoMultilingualNeural", SAMPLE_M),
+              ("M_zh_YunfanMulti", "zh-CN-YunfanMultilingualNeural", SAMPLE_M),
+              ("F_AvaMulti", "en-US-AvaMultilingualNeural", SAMPLE_F),
+              ("F_EmmaMulti", "en-US-EmmaMultilingualNeural", SAMPLE_F),
+              ("F_VivienneMulti", "fr-FR-VivienneMultilingualNeural", SAMPLE_F),
+              ("F_SeraphinaMulti", "de-DE-SeraphinaMultilingualNeural", SAMPLE_F),
+              ("M_AndrewMulti", "en-US-AndrewMultilingualNeural", SAMPLE_M),
+              ("M_BrianMulti", "en-US-BrianMultilingualNeural", SAMPLE_M),
+              ("M_HyunsuMulti", "ko-KR-HyunsuMultilingualNeural", SAMPLE_M),
+              ("M_RemyMulti", "fr-FR-RemyMultilingualNeural", SAMPLE_M),
+              ("M_FlorianMulti", "de-DE-FlorianMultilingualNeural", SAMPLE_M),
+              ("F_tw_HsiaoChen", "zh-TW-HsiaoChenNeural", SAMPLE_F),
+              ("M_tw_YunJhe", "zh-TW-YunJheNeural", SAMPLE_M),
+              ("M_cn_Yunyang", "zh-CN-YunyangNeural", SAMPLE_M),
+          ]
+
+          async def main():
+              voices = await edge_tts.list_voices()
+              with open("/tmp/audition/voices.txt", "w", encoding="utf-8") as vf:
+                  vf.write(f"edge_tts version: {getattr(edge_tts, '__version__', 'unknown')}, total={len(voices)}\n")
+                  for v in voices:
+                      sn = v.get("ShortName", "")
+                      if sn.startswith(("zh-", "ja-")) or "Multilingual" in sn:
+                          vf.write(f"{sn} | {v.get('Gender')} | {v.get('VoiceTag', {})}\n")
+              for label, vname, txt in CANDIDATES:
+                  try:
+                      buf = bytearray()
+                      comm = edge_tts.Communicate(txt, vname, rate="+0%")
+                      async for ch in comm.stream():
+                          if ch["type"] == "audio":
+                              buf.extend(ch["data"])
+                      if buf:
+                          with open(f"/tmp/audition/{label}.mp3", "wb") as f:
+                              f.write(buf)
+                          print(f"OK {label} ({vname}): {len(buf)} bytes")
+                      else:
+                          print(f"EMPTY {label} ({vname})")
+                  except Exception as e:
+                      print(f"ERR {label} ({vname}): {e}")
+
+          asyncio.run(main())
+          PY
+
+      - name: Upload Voice Audition Artifact
+        if: ${{ inputs.audition_only == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: voice-audition
+          path: /tmp/audition/
+          retention-days: 1
 
       - name: Run N3 Brain Algorithm & Rebuild PWA
+        if: ${{ inputs.audition_only != 'true' }}
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python run_brain_algorithm.py
 
       - name: Commit & Push Updated State
+        if: ${{ inputs.audition_only != 'true' }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
