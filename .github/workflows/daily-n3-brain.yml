@@ -2,9 +2,12 @@ name: Daily JLPT N3 Brain Refresh
 
 on:
   schedule:
-    # 07:00 AM PT (15:00 UTC in PST) and 09:00 PM PT (05:00 UTC in PST)
+    # Full Podcast + Brain Refresh at 07:00 AM PT (15:00 UTC) and 09:00 PM PT (05:00 UTC)
     - cron: '0 15 * * *'
     - cron: '0 5 * * *'
+    # Fast 6-Hour Phone Answer Log Drain at 01:00 AM PT (09:00 UTC) and 01:00 PM PT (21:00 UTC)
+    - cron: '0 9 * * *'
+    - cron: '0 21 * * *'
   workflow_dispatch:
     inputs:
       audition_only:
@@ -27,7 +30,12 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Drain Phone Answers Only (Midday / Midnight Fast Tick)
+        if: ${{ github.event.schedule == '0 9 * * *' || github.event.schedule == '0 21 * * *' }}
+        run: python run_brain_algorithm.py --drain-only
+
       - name: Install Neural TTS & Audio Stitching dependencies
+        if: ${{ github.event.schedule != '0 9 * * *' && github.event.schedule != '0 21 * * *' }}
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq --no-install-recommends ffmpeg
@@ -39,53 +47,9 @@ jobs:
           mkdir -p /tmp/audition
           python - << 'PY'
           import asyncio, edge_tts
-
-          SAMPLE_F = "这句是说，他在日本只待了半年，日语却出乎意料地好。按半年的标准本来以为不会太熟练，实际却远超预期，这种反差就用 にしては。另一个 にとって 是对某人来说的意思。"
-          SAMPLE_M = "小夏，中文里说好像要下雨，还有听说要下雨，到了日语末尾都是 そうだ，做题的时候怎么最快分清？"
-
-          CANDIDATES = [
-              ("F_zh_XiaoxiaoMulti", "zh-CN-XiaoxiaoMultilingualNeural", SAMPLE_F),
-              ("M_zh_YunxiaoMulti", "zh-CN-YunxiaoMultilingualNeural", SAMPLE_M),
-              ("M_zh_YunfanMulti", "zh-CN-YunfanMultilingualNeural", SAMPLE_M),
-              ("F_AvaMulti", "en-US-AvaMultilingualNeural", SAMPLE_F),
-              ("F_EmmaMulti", "en-US-EmmaMultilingualNeural", SAMPLE_F),
-              ("F_VivienneMulti", "fr-FR-VivienneMultilingualNeural", SAMPLE_F),
-              ("F_SeraphinaMulti", "de-DE-SeraphinaMultilingualNeural", SAMPLE_F),
-              ("M_AndrewMulti", "en-US-AndrewMultilingualNeural", SAMPLE_M),
-              ("M_BrianMulti", "en-US-BrianMultilingualNeural", SAMPLE_M),
-              ("M_HyunsuMulti", "ko-KR-HyunsuMultilingualNeural", SAMPLE_M),
-              ("M_RemyMulti", "fr-FR-RemyMultilingualNeural", SAMPLE_M),
-              ("M_FlorianMulti", "de-DE-FlorianMultilingualNeural", SAMPLE_M),
-              ("F_tw_HsiaoChen", "zh-TW-HsiaoChenNeural", SAMPLE_F),
-              ("M_tw_YunJhe", "zh-TW-YunJheNeural", SAMPLE_M),
-              ("M_cn_Yunyang", "zh-CN-YunyangNeural", SAMPLE_M),
-          ]
-
-          async def main():
-              voices = await edge_tts.list_voices()
-              with open("/tmp/audition/voices.txt", "w", encoding="utf-8") as vf:
-                  vf.write(f"edge_tts version: {getattr(edge_tts, '__version__', 'unknown')}, total={len(voices)}\n")
-                  for v in voices:
-                      sn = v.get("ShortName", "")
-                      if sn.startswith(("zh-", "ja-")) or "Multilingual" in sn:
-                          vf.write(f"{sn} | {v.get('Gender')} | {v.get('VoiceTag', {})}\n")
-              for label, vname, txt in CANDIDATES:
-                  try:
-                      buf = bytearray()
-                      comm = edge_tts.Communicate(txt, vname, rate="+0%")
-                      async for ch in comm.stream():
-                          if ch["type"] == "audio":
-                              buf.extend(ch["data"])
-                      if buf:
-                          with open(f"/tmp/audition/{label}.mp3", "wb") as f:
-                              f.write(buf)
-                          print(f"OK {label} ({vname}): {len(buf)} bytes")
-                      else:
-                          print(f"EMPTY {label} ({vname})")
-                  except Exception as e:
-                      print(f"ERR {label} ({vname}): {e}")
-
-          asyncio.run(main())
+          SAMPLE_F = "这句是说，他在日本只待了半年，日语却出乎意料地好。按半年的标准本来以为不会太熟练，实际却远超预期，这种反差就用 にしては。"
+          comm = edge_tts.Communicate(SAMPLE_F, "zh-CN-XiaoxiaoMultilingualNeural", rate="+0%")
+          asyncio.run(comm.save("/tmp/audition/sample.mp3"))
           PY
 
       - name: Upload Voice Audition Artifact
@@ -96,8 +60,8 @@ jobs:
           path: /tmp/audition/
           retention-days: 1
 
-      - name: Run N3 Brain Algorithm & Rebuild PWA
-        if: ${{ inputs.audition_only != 'true' }}
+      - name: Run Full N3 Brain Algorithm & Rebuild Podcast + PWA
+        if: ${{ inputs.audition_only != 'true' && github.event.schedule != '0 9 * * *' && github.event.schedule != '0 21 * * *' }}
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python run_brain_algorithm.py
@@ -107,9 +71,10 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add n3_live_state.json index.html audio/
+          git add practice_log.jsonl n3_live_state.json index.html audio/ sw.js
           if ! git diff --cached --quiet; then
-            git commit -m "chore(brain): daily N3 countdown & tutor refresh"
+            git commit -m "chore(brain): sync phone answers, N3 mastery state & daily tutor"
+            git pull --rebase origin main || true
             git push
           else
             echo "No changes to commit."

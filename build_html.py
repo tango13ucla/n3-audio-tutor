@@ -2046,13 +2046,17 @@ function syncRadioUI() {
 }
 
 radioPlayer.addEventListener("play", syncRadioUI);
-radioPlayer.addEventListener("pause", syncRadioUI);
+radioPlayer.addEventListener("pause", () => {
+  syncRadioUI();
+  scheduleCloudPush();
+});
 radioPlayer.addEventListener("ended", () => {
   const dur = radioPlayer.duration || DATA.radio.duration_sec || 2100;
   A.radioMaxSec = Math.ceil(dur);
   saveAdaptiveState();
   renderGreenBoard();
   syncRadioUI();
+  scheduleCloudPush();
 });
 radioPlayer.addEventListener("loadedmetadata", () => {
   updateRadioLiveDisplay(radioPlayer.currentTime || 0);
@@ -2068,7 +2072,119 @@ radioPlayer.addEventListener("timeupdate", () => {
   }
 });
 
-// ================= QUIZ ACTIONS =================
+// ================= SILENT CLOUD SYNC & QUIZ ACTIONS =================
+const CLOUD_SYNC_TOPIC = "n3pwa_8c4e91f2a7d03b65e2194f8a0c7d3e52";
+const CLOUD_BUF_KEY = "n3_cloud_log_buf_v1";
+const CLOUD_SENT_SIG_KEY = "n3_cloud_sent_sig_v1";
+let cloudPushTimer = null;
+
+function loadCloudLogBuf() {
+  try {
+    const raw = localStorage.getItem(CLOUD_BUF_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveCloudLogBuf(arr) {
+  try {
+    localStorage.setItem(CLOUD_BUF_KEY, JSON.stringify(arr.slice(-35)));
+  } catch (e) {}
+}
+
+function flushCloudSyncNow() {
+  if (!navigator.onLine) return;
+  const buf = loadCloudLogBuf();
+  const rSec = Math.floor(A.radioMaxSec || 0);
+  const lastTs = buf.length ? buf[buf.length - 1].ts : "";
+  const sig = `${DATA.plan_date}|${lastTs}|${Math.floor(rSec / 30)}`;
+  try {
+    if (localStorage.getItem(CLOUD_SENT_SIG_KEY) === sig) return;
+  } catch (e) {}
+  if (!buf.length && rSec < 15) return;
+
+  const payload = JSON.stringify({
+    v: 1,
+    date: DATA.plan_date,
+    radioSec: rSec,
+    logs: buf.slice(-25)
+  });
+  fetch(`https://ntfy.sh/${CLOUD_SYNC_TOPIC}`, {
+    method: "POST",
+    mode: "cors",
+    keepalive: true,
+    body: payload
+  }).then(res => {
+    if (res && res.ok) {
+      try { localStorage.setItem(CLOUD_SENT_SIG_KEY, sig); } catch (e) {}
+    }
+  }).catch(() => {});
+}
+
+function scheduleCloudPush() {
+  if (cloudPushTimer) clearTimeout(cloudPushTimer);
+  cloudPushTimer = setTimeout(flushCloudSyncNow, 1100);
+}
+
+function pullCloudSync() {
+  if (!navigator.onLine) return;
+  fetch(`https://ntfy.sh/${CLOUD_SYNC_TOPIC}/json?since=12h&poll=1`, { cache: "no-store" })
+    .then(r => r.ok ? r.text() : "")
+    .then(txt => {
+      if (!txt) return;
+      const lines = txt.split("\n").filter(Boolean);
+      const localBuf = loadCloudLogBuf();
+      const seenTs = new Set(localBuf.map(x => x.ts));
+      let changed = false;
+
+      lines.forEach(ln => {
+        try {
+          const ev = JSON.parse(ln);
+          if (ev.event !== "message" || !ev.message) return;
+          const msg = JSON.parse(ev.message);
+          if (msg.date === DATA.plan_date && typeof msg.radioSec === "number" && msg.radioSec > (A.radioMaxSec || 0)) {
+            A.radioMaxSec = msg.radioSec;
+            changed = true;
+          }
+          const logs = Array.isArray(msg.logs) ? msg.logs : (msg.ts ? [msg] : []);
+          logs.forEach(rec => {
+            if (!rec || !rec.ts) return;
+            if (!seenTs.has(rec.ts)) {
+              seenTs.add(rec.ts);
+              localBuf.push(rec);
+            }
+            const ok = String(rec.correct) === "true";
+            const again = String(rec.ask_again) === "true";
+            const tier = (ok && !again) ? "done" : "todo";
+            if (rec.point && A.masteryOverrides[rec.point] !== tier) {
+              A.masteryOverrides[rec.point] = tier;
+              changed = true;
+            }
+            if (rec.date === DATA.plan_date && rec.pid && A.pts[rec.pid]) {
+              const targetStatus = (ok && !again) ? "green" : "learning";
+              if (A.pts[rec.pid].status !== targetStatus) {
+                A.pts[rec.pid].status = targetStatus;
+                changed = true;
+              }
+            }
+          });
+        } catch (e) {}
+      });
+
+      if (changed) {
+        localBuf.sort((a, b) => String(a.ts).localeCompare(String(b.ts)));
+        saveCloudLogBuf(localBuf);
+        applyMasteryOverrides();
+        saveAdaptiveState();
+        renderGreenBoard();
+        if (activeMode === "dash") renderDash();
+      }
+    })
+    .catch(() => {});
+}
+
 function syncBackendRecord(p, qid, choice, isCorrect, askAgain, newTier) {
   A.masteryOverrides[p.point_key] = newTier;
   A.masteryOverrides[p.point] = newTier;
@@ -2076,14 +2192,20 @@ function syncBackendRecord(p, qid, choice, isCorrect, askAgain, newTier) {
   saveAdaptiveState();
 
   const rec = {
+    pid: p.id,
     id: qid,
     point: p.point_key || p.point,
-    choice: String(choice || ""),
     correct: String(!!isCorrect),
     ask_again: String(!!askAgain),
+    date: DATA.plan_date,
     ts: new Date().toISOString()
   };
-  if (location.protocol.startsWith("http")) {
+  const buf = loadCloudLogBuf();
+  buf.push(rec);
+  saveCloudLogBuf(buf);
+  scheduleCloudPush();
+
+  if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
     fetch("./api/record", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -2676,12 +2798,28 @@ function openSessionModal() {
   document.getElementById("app-modal").classList.add("open");
 }
 
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") {
+    flushCloudSyncNow();
+  } else if (document.visibilityState === "visible") {
+    pullCloudSync();
+  }
+});
+window.addEventListener("online", () => {
+  flushCloudSyncNow();
+  pullCloudSync();
+});
+
 function initApp() {
   const params = new URLSearchParams(location.search);
   const m = params.get("mode");
   if (m === "dash") switchMode("dash");
   else if (m === "radio" || m === "walk") switchMode("radio", false);
   else renderTutor();
+  setTimeout(() => {
+    flushCloudSyncNow();
+    pullCloudSync();
+  }, 400);
 }
 initApp();
 </script>
