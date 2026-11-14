@@ -260,11 +260,16 @@
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    padding: 16px 0;
+    justify-content: flex-start;
+    padding: 16px 0 26px;
     scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 26px), transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 26px), transparent 100%);
   }
   .focal-space::-webkit-scrollbar { display: none; }
+  /* Center when it fits, start from the very top when it does not (never cut off the first line) */
+  .focal-space > :first-child { margin-top: auto; }
+  .focal-space > :last-child { margin-bottom: auto; }
 
   .action-dock {
     flex-shrink: 0;
@@ -526,25 +531,72 @@
   }
   .result-zh {
     margin: 10px 0 0;
-    font-size: 18px;
-    font-weight: 500;
-    color: var(--sumi);
-    line-height: 1.62;
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--ink-2);
+    line-height: 1.66;
     letter-spacing: 0.015em;
   }
+  .dlg {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .dlg-row {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 10px;
+    align-items: baseline;
+  }
+  .dlg-who {
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-3);
+    text-align: center;
+    min-width: 24px;
+    padding: 0 5px;
+    box-sizing: border-box;
+    white-space: nowrap;
+    border: 1px solid var(--hairline);
+    border-radius: 5px;
+    line-height: 22px;
+    height: 22px;
+    transform: translateY(-2px);
+  }
+  .dlg-ja {
+    font-family: var(--serif-jp);
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 1.62;
+    letter-spacing: 0.02em;
+    color: var(--sumi);
+  }
+  .dlg-row.is-ans .dlg-who {
+    color: var(--moss);
+    border-color: rgba(43, 95, 73, 0.35);
+  }
+  .dlg-zh {
+    margin-top: 2px;
+    font-size: 14.5px;
+    font-weight: 400;
+    color: var(--ink-3);
+    line-height: 1.55;
+    letter-spacing: 0.01em;
+  }
   .listen-opt-review {
-    margin-top: 12px;
+    margin-top: 16px;
     padding: 10px 14px;
     border-radius: 7px;
     background: rgba(252, 251, 248, 0.62);
     border: 1px solid var(--hairline);
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
   }
   .lor-row {
     font-family: var(--serif-jp);
-    font-size: 17px;
+    font-size: 15.5px;
     line-height: 1.56;
     color: var(--ink-2);
     display: flex;
@@ -564,7 +616,7 @@
 
   /* Tappable Japanese words + Instant Inline Zen Meaning Strip (Zero Google Search, Zero Small-Print Clutter) */
   .w-tok {
-    border-bottom: 1px solid rgba(28, 27, 24, 0.15);
+    border-bottom: 1px solid transparent;
     cursor: pointer;
     padding: 0 1px 1px;
     border-radius: 3px;
@@ -642,7 +694,7 @@
   }
   .logic-line {
     margin: 0;
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 400;
     color: var(--ink-2);
     line-height: 1.74;
@@ -1970,6 +2022,30 @@ function annotateSentenceWithAnswer(fullJa, ans) {
   return renderJapaneseWithHighlight(fullJa, ans);
 }
 
+const SPEAKER_RE = /^\s*([男女ＡＢAB]|[^\s：:「」]{1,3})\s*[：:]\s*/;
+function splitSpeakerLines(text) {
+  const src = String(text || "").trim();
+  if (!src) return [];
+  // Break before every "男：" / "女：" style label, even if the source put them on one line
+  const parts = src.split(/\n+|\s*(?=[男女][：:])|\s+(?=[^\s：:「」。、]{1,3}[：:])/).map(x => x.trim()).filter(Boolean);
+  return parts.map(t => {
+    const m = t.match(SPEAKER_RE);
+    return m ? { who: m[1], text: t.slice(m[0].length) } : { who: "", text: t };
+  });
+}
+
+function renderDialogueHTML(fullJa, ans, zh) {
+  const ja = splitSpeakerLines(fullJa);
+  if (ja.length < 2 || ja.some(l => !l.who)) return "";
+  const zl = splitSpeakerLines(zh);
+  const zhOk = zl.length === ja.length && zl.every(l => l.who);
+  return `<div class="dlg">${ja.map((l, i) => {
+    const isAns = ans && l.text.indexOf(ans) >= 0;
+    const zhTxt = zhOk ? zl[i].text.replace(/^「|」$/g, "") : "";
+    return `<div class="dlg-row${isAns ? " is-ans" : ""}"><span class="dlg-who">${escapeHtml(l.who)}</span><div><div class="dlg-ja">${renderJapaneseWithHighlight(l.text, isAns ? ans : "")}</div>${zhTxt ? `<div class="dlg-zh">${escapeHtml(zhTxt)}</div>` : ""}</div></div>`;
+  }).join("")}</div>${!zhOk && zh ? `<p class="result-zh">${escapeHtml(zh)}</p>` : ""}`;
+}
+
 const preloadSet = new Set();
 function warmAudio(url) {
   if (!url || preloadSet.has(url)) return;
@@ -2641,8 +2717,8 @@ function renderTutor() {
     </div>
 
     <div class="focal-space">
-      <div class="result-ja">${annotateSentenceWithAnswer(q.full_ja, q.answer)}</div>
-      ${q.zh_meaning ? `<p class="result-zh">${escapeHtml(q.zh_meaning)}</p>` : ""}
+      ${(q.is_listening && renderDialogueHTML(q.full_ja, q.answer, q.zh_meaning)) || `<div class="result-ja">${annotateSentenceWithAnswer(q.full_ja, q.answer)}</div>
+      ${q.zh_meaning ? `<p class="result-zh">${escapeHtml(q.zh_meaning)}</p>` : ""}`}
       ${listenOptsReviewHTML}
       <div class="inline-lex empty" id="tutor-inline-lex"></div>
       <div class="result-divider"></div>
