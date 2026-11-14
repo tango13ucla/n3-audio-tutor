@@ -354,7 +354,7 @@ async def synth_turn(spk: str, voice_cfg: tuple, text: str, out_path: str, sem: 
                         if chunk["type"] == "audio":
                             buf.extend(chunk["data"])
 
-                await asyncio.wait_for(_pull(), timeout=22.0)
+                await asyncio.wait_for(_pull(), timeout=48.0)
                 if buf:
                     with open(out_path, "wb") as f:
                         f.write(buf)
@@ -363,7 +363,7 @@ async def synth_turn(spk: str, voice_cfg: tuple, text: str, out_path: str, sem: 
                 if attempt + 1 < MAX_TRIES:
                     await asyncio.sleep(0.6 * (attempt + 1))
                 elif MAX_TRIES > 1:
-                    print(f"[warn] radio turn synth failed ({use_voice}): {e}")
+                    print(f"[warn] radio turn synth failed ({use_voice}): {e!r}")
     return False
 
 

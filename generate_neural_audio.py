@@ -301,7 +301,7 @@ async def synth_raw_clip(spk: str, voice: str, rate: str, text: str, out_path: s
                         if chunk["type"] == "audio":
                             buf.extend(chunk["data"])
 
-                await asyncio.wait_for(_pull(), timeout=22.0)
+                await asyncio.wait_for(_pull(), timeout=48.0)
                 if buf:
                     with open(out_path, "wb") as f:
                         f.write(buf)
@@ -310,7 +310,7 @@ async def synth_raw_clip(spk: str, voice: str, rate: str, text: str, out_path: s
                 if attempt + 1 < MAX_TRIES:
                     await asyncio.sleep(0.6 * (attempt + 1))
                 elif MAX_TRIES > 1:
-                    print(f"[warn] synth_raw_clip failed ({use_voice} | {speak_txt!r}): {e}")
+                    print(f"[warn] synth_raw_clip failed ({use_voice} | {speak_txt!r}): {e!r}")
     return False
 
 
