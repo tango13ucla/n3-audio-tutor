@@ -9,14 +9,15 @@ Key Design:
 1) Zero date announcements, zero exam countdowns, zero classroom tone — cold-opens at 00:00.0
    into witty, culturally rich Japanese anthropology, literature, and everyday urban stories.
 2) 100% Same-Person Bilingual Vocal Cords with Exact Speed Differential:
-   - W (文涛): `en-US-BrianMultilingualNeural` (+6% Mandarin / -35% Japanese, +2Hz lively warmth)
-   - D (文道): `en-US-AndrewMultilingualNeural` (+4% Mandarin / -35% Japanese, -2Hz velvet baritone)
-   - X (子东): `fr-FR-RemyMultilingualNeural` (+5% Mandarin / -35% Japanese, -2Hz dry scholar wit)
+    - W (文涛): `en-US-BrianMultilingualNeural` (+6% Mandarin / -35% Japanese, +2Hz lively warmth)
+    - D (文道): `it-IT-GiuseppeMultilingualNeural` (+4% Mandarin / -35% Japanese, -2Hz warm scholar baritone)
+    - X (子东): `fr-FR-RemyMultilingualNeural` (+5% Mandarin / -35% Japanese, -2Hz dry scholar wit)
 3) Smart Daily Morning Selection & Fresh Rotation:
    - Pulls live mastery + recent misses & "不确定" clicks from `practice_log.jsonl`, while rotating
      against `audio/radio_history.json` so consecutive mornings serve fresh stories from the 12-story bank.
 """
 import asyncio
+import concurrent.futures
 import datetime
 import hashlib
 import json
@@ -177,11 +178,11 @@ async def detect_voice_map() -> dict:
     Maps brisk conversational Mandarin (+4% to +6%) and crystal-clear slow Japanese (-35%)
     to the EXACT SAME Multilingual Conversational Neural voice for each of the 3 male hosts:
     - W (文涛): BrianMultilingualNeural (lively, cheeky, casual Copilot prosody)
-    - D (文道): AndrewMultilingualNeural (warm, authentic velvet baritone Copilot prosody)
+    - D (文道): GiuseppeMultilingualNeural (warm, steady, scholarly baritone prosody)
     - X (子东): RemyMultilingualNeural (crisp, dry intellectual scholar cadence)
     """
     w_voice = "en-US-BrianMultilingualNeural"
-    d_voice = "en-US-AndrewMultilingualNeural"
+    d_voice = "it-IT-GiuseppeMultilingualNeural"
     x_voice = "fr-FR-RemyMultilingualNeural"
 
     if edge_tts is not None:
@@ -192,11 +193,11 @@ async def detect_voice_map() -> dict:
                 if cand_w in short_names:
                     w_voice = cand_w
                     break
-            for cand_d in ("en-US-AndrewMultilingualNeural", "it-IT-GiuseppeMultilingualNeural"):
+            for cand_d in ("it-IT-GiuseppeMultilingualNeural", "ko-KR-HyunsuMultilingualNeural"):
                 if cand_d in short_names and cand_d != w_voice:
                     d_voice = cand_d
                     break
-            for cand_x in ("fr-FR-RemyMultilingualNeural", "it-IT-GiuseppeMultilingualNeural", "ko-KR-HyunsuMultilingualNeural"):
+            for cand_x in ("fr-FR-RemyMultilingualNeural", "ko-KR-HyunsuMultilingualNeural", "en-AU-WilliamMultilingualNeural"):
                 if cand_x in short_names and cand_x not in (w_voice, d_voice):
                     x_voice = cand_x
                     break
@@ -335,25 +336,34 @@ async def synth_turn(spk: str, voice_cfg: tuple, text: str, out_path: str, sem: 
                 return True
         if edge_tts is None:
             return False
+        speak_txt = text
+        if len(speak_txt) <= 2 and speak_txt[-1] not in "。！？，、：":
+            speak_txt = speak_txt + "。"
         for attempt in range(MAX_TRIES):
+            use_voice = "ko-KR-HyunsuMultilingualNeural" if (attempt == MAX_TRIES - 1 and MAX_TRIES > 1 and attempt >= 2) else voice
+            use_txt = (speak_txt + "。") if (attempt >= 1 and speak_txt[-1] not in "。！？") else speak_txt
             try:
                 buf = bytearray()
                 try:
-                    comm = edge_tts.Communicate(text, voice, rate=rate, pitch=pitch, **COMM_KWARGS)
+                    comm = edge_tts.Communicate(use_txt, use_voice, rate=rate, pitch=pitch, **COMM_KWARGS)
                 except TypeError:
-                    comm = edge_tts.Communicate(text, voice, rate=rate, **COMM_KWARGS)
-                async for chunk in comm.stream():
-                    if chunk["type"] == "audio":
-                        buf.extend(chunk["data"])
+                    comm = edge_tts.Communicate(use_txt, use_voice, rate=rate, **COMM_KWARGS)
+
+                async def _pull():
+                    async for chunk in comm.stream():
+                        if chunk["type"] == "audio":
+                            buf.extend(chunk["data"])
+
+                await asyncio.wait_for(_pull(), timeout=22.0)
                 if buf:
                     with open(out_path, "wb") as f:
                         f.write(buf)
                     return True
             except Exception as e:
                 if attempt + 1 < MAX_TRIES:
-                    await asyncio.sleep(0.7 * (attempt + 1))
+                    await asyncio.sleep(0.6 * (attempt + 1))
                 elif MAX_TRIES > 1:
-                    print(f"[warn] radio turn synth failed ({voice}): {e}")
+                    print(f"[warn] radio turn synth failed ({use_voice}): {e}")
     return False
 
 
@@ -497,7 +507,7 @@ async def main():
         nb["events"] = expanded_evs
         blocks.append(nb)
 
-    sig_payload = f"v15_qq3_wdx:{engine_tag}:" + json.dumps(voice_map, sort_keys=True) + json.dumps(blocks, ensure_ascii=False)
+    sig_payload = f"v17_qq3_wdx:{engine_tag}:" + json.dumps(voice_map, sort_keys=True) + json.dumps(blocks, ensure_ascii=False)
     script_sig = hashlib.sha256(sig_payload.encode("utf-8")).hexdigest()[:14]
     if os.path.exists(RADIO_MP3_PATH) and os.path.exists(RADIO_META_PATH):
         try:
@@ -508,7 +518,7 @@ async def main():
         except Exception:
             pass
 
-    tmpdir = tempfile.mkdtemp(prefix="n3_radio_v15_")
+    tmpdir = tempfile.mkdtemp(prefix="n3_radio_v17_")
     try:
         pause_durations = sorted({round(float(val), 2) for b in blocks for k, val in b["events"] if k == "PAUSE"})
         silence_files = {}
@@ -529,7 +539,7 @@ async def main():
                             os.path.join(tmpdir, f"trim_{thash}.mp3"),
                         )
 
-        sem = asyncio.Semaphore(8)
+        sem = asyncio.Semaphore(12)
         ok_results = await asyncio.gather(
             *(synth_turn(k, voice_map[k], txt, raw_p, sem) for (k, txt), (raw_p, _) in unique_turns.items())
         )
@@ -537,11 +547,19 @@ async def main():
 
         turn_durs = {}
         trimmed_paths = {}
-        for key, (raw_p, trim_p) in unique_turns.items():
+
+        def _trim_and_probe(item):
+            key, (raw_p, trim_p) = item
             if os.path.exists(raw_p) and os.path.getsize(raw_p) > 0:
                 trim_clip_silence(raw_p, trim_p)
-                trimmed_paths[key] = trim_p
-                turn_durs[key] = probe_duration(trim_p)
+                return key, trim_p, probe_duration(trim_p)
+            return key, None, 0.0
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
+            for key, trim_p, dur in pool.map(_trim_and_probe, unique_turns.items()):
+                if trim_p:
+                    trimmed_paths[key] = trim_p
+                    turn_durs[key] = dur
 
         concat_lines = []
         cursor = 0.0

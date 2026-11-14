@@ -6,12 +6,13 @@ Synthesizes & stitches Studio Human-Teacher Neural TTS MP3 files (generate_neura
   `ja-JP-NanamiNeural` / `ja-JP-KeitaNeural` slowed to `-28%` (~30% slower for crystal-clear moras),
   with ZERO "请听题", ZERO "空欄", ZERO spoilers.
 - 100% Same-Person Bilingual Teacher Explanation (`exp_turns` -> `*_exp.mp3`):
-  Uses warm conversational `en-US-AndrewMultilingualNeural` speaking brisk Mandarin at `+5%` (`T`)
+  Uses warm conversational `en-US-BrianMultilingualNeural` speaking brisk Mandarin at `+5%` (`T`)
   AND slow, crystal-clear Japanese at `-34%` (`T_JA`) — including converting the opening Japanese
   sentence to Kana via `pykakasi` + N3 reading overrides so ONE human voice reads both the Japanese
   sentence and the Chinese+Japanese explanation with zero "tape-recorder" voice jumps!
 """
 import asyncio
+import concurrent.futures
 import hashlib
 import json
 import os
@@ -69,6 +70,25 @@ JA_PHRASE_OVERRIDES = [
     ("みんなの前で話させられた", "みんなのまえで、はなさせられた"),
     ("お風呂に入らないで", "おふろに、はいらないで"),
     ("私が払っておく", "わたしが、はらっておく"),
+    ("早く払わなくちゃ", "はやく、はらわなくちゃ"),
+    ("泣かずにはいられなかった", "なかずには、いられなかった"),
+    ("仕事が入って", "しごとが、はいって"),
+    ("四月に入って", "しがつに、はいって"),
+    ("しゃがんで話しかけた", "しゃがんで、はなしかけた"),
+    ("会議で話し合った", "かいぎで、はなしあった"),
+    ("みんなには内緒", "みんなには、ないしょ"),
+    ("解き方", "ときかた"),
+    ("昼ご飯", "ひるごはん"),
+    ("隣の人に", "となりのひとに"),
+    ("親切な人が", "しんせつなひとが"),
+    ("お金", "おかね"),
+    ("ダイエット中", "だいえっとちゅう"),
+    ("後にして", "あとにして"),
+    ("雨が降りそうだ", "あめがふりそうだ"),
+    ("野菜嫌い", "やさいぎらい"),
+    ("子どもの頃", "こどものころ"),
+    ("日本語", "にほんご"),
+    ("日本", "にほん"),
     ("１０年", "じゅうねん"),
     ("十年", "じゅうねん"),
     ("１１時", "じゅういちじ"),
@@ -77,6 +97,7 @@ JA_PHRASE_OVERRIDES = [
     ("五時", "ごじ"),
     ("三日間", "みっかかん"),
     ("一日中", "いちにちじゅう"),
+    ("一日じゅう", "いちにちじゅう"),
     ("今週中", "こんしゅうじゅう"),
     ("今週じゅう", "こんしゅうじゅう"),
     ("夜中", "よなか"),
@@ -115,15 +136,16 @@ def ja_sentence_to_kana(text: str) -> str:
 
 
 async def detect_voice_map() -> dict:
-    t_voice = "en-US-AndrewMultilingualNeural"
+    t_voice = "en-US-BrianMultilingualNeural"
     f_ja_voice = "en-US-AvaMultilingualNeural"
     if edge_tts is not None:
         try:
             voices = await edge_tts.list_voices(**COMM_KWARGS)
             short_names = {v.get("ShortName", "") for v in voices}
             for cand_t in (
-                "en-US-AndrewMultilingualNeural",
                 "en-US-BrianMultilingualNeural",
+                "ko-KR-HyunsuMultilingualNeural",
+                "it-IT-GiuseppeMultilingualNeural",
                 "en-US-EmmaMultilingualNeural",
             ):
                 if cand_t in short_names:
@@ -133,7 +155,7 @@ async def detect_voice_map() -> dict:
                 if cand_f in short_names:
                     f_ja_voice = cand_f
                     break
-            print(f"Quiz Zen v15 voices: T={t_voice} (+5% ZH / -34% JA), JF/JM=-28%")
+            print(f"Quiz Zen v17 voices: T={t_voice} (+5% ZH / -34% JA), JF/JM=-28%")
         except Exception as e:
             print(f"[info] list_voices fallback: {e}")
 
@@ -260,22 +282,35 @@ async def synth_raw_clip(spk: str, voice: str, rate: str, text: str, out_path: s
                 return True
         if edge_tts is None:
             return False
+        speak_txt = text
+        if spk in ("T", "T_JA", "EXP_F_JA") and len(speak_txt) <= 2 and speak_txt[-1] not in "。！？，、：":
+            speak_txt = speak_txt + "。"
         for attempt in range(MAX_TRIES):
+            use_voice = (
+                "ko-KR-HyunsuMultilingualNeural"
+                if (spk in ("T", "T_JA") and attempt == MAX_TRIES - 1 and MAX_TRIES > 1 and attempt >= 2)
+                else voice
+            )
+            use_txt = (speak_txt + "。") if (attempt >= 1 and speak_txt[-1] not in "。！？") else speak_txt
             try:
                 buf = bytearray()
-                comm = edge_tts.Communicate(text, voice, rate=rate, **COMM_KWARGS)
-                async for chunk in comm.stream():
-                    if chunk["type"] == "audio":
-                        buf.extend(chunk["data"])
+                comm = edge_tts.Communicate(use_txt, use_voice, rate=rate, **COMM_KWARGS)
+
+                async def _pull():
+                    async for chunk in comm.stream():
+                        if chunk["type"] == "audio":
+                            buf.extend(chunk["data"])
+
+                await asyncio.wait_for(_pull(), timeout=22.0)
                 if buf:
                     with open(out_path, "wb") as f:
                         f.write(buf)
                     return True
             except Exception as e:
                 if attempt + 1 < MAX_TRIES:
-                    await asyncio.sleep(0.7 * (attempt + 1))
+                    await asyncio.sleep(0.6 * (attempt + 1))
                 elif MAX_TRIES > 1:
-                    print(f"[warn] synth_raw_clip failed ({voice}): {e}")
+                    print(f"[warn] synth_raw_clip failed ({use_voice} | {speak_txt!r}): {e}")
     return False
 
 
@@ -375,7 +410,7 @@ async def main():
     can_synth = (edge_tts is not None) and (shutil.which("ffmpeg") is not None)
 
     voice_map = await detect_voice_map()
-    det_tag = f"gemini:{GEMINI_TTS_MODEL}" if (GEMINI_API_KEY and genai is not None) else "edge:Andrew+5_-34"
+    det_tag = f"gemini:{GEMINI_TTS_MODEL}" if (GEMINI_API_KEY and genai is not None) else "edge:Brian+5_-34_v17"
 
     to_build_q = {}
     to_build_exp = {}
@@ -394,7 +429,7 @@ async def main():
                 q_expanded.extend(expand_q_turn(spk, val))
             to_build_q[qid] = q_expanded
 
-        e_sig = f"v15e:{det_tag}:" + json.dumps(card["exp_turns"], ensure_ascii=False)
+        e_sig = f"v17e:{det_tag}:" + json.dumps(card["exp_turns"], ensure_ascii=False)
         e_hash = hashlib.sha256(e_sig.encode("utf-8")).hexdigest()[:12]
         hashes_exp[qid] = e_hash
         e_file = f"{qid}_exp.mp3"
@@ -407,10 +442,10 @@ async def main():
                 e_expanded.extend(expand_exp_turn(spk, val, two_spk))
             to_build_exp[qid] = e_expanded
 
-    sem = asyncio.Semaphore(8)
+    sem = asyncio.Semaphore(12)
 
     if can_synth and (to_build_q or to_build_exp):
-        tmpdir = tempfile.mkdtemp(prefix="n3_cards_v15_")
+        tmpdir = tempfile.mkdtemp(prefix="n3_cards_v17_")
         try:
             needed_clips = {}
             needed_pauses = set()
@@ -440,10 +475,18 @@ async def main():
             )
 
             clip_lookup = {}
-            for key, (raw_p, trim_p) in needed_clips.items():
+
+            def _trim_one(item):
+                key, (raw_p, trim_p) = item
                 if os.path.exists(raw_p) and os.path.getsize(raw_p) > 0:
                     trim_clip_silence(raw_p, trim_p)
-                    clip_lookup[key] = trim_p
+                    return key, trim_p
+                return key, None
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
+                for key, trim_p in pool.map(_trim_one, needed_clips.items()):
+                    if trim_p:
+                        clip_lookup[key] = trim_p
 
             built_q_cnt = 0
             for qid, turns in to_build_q.items():
