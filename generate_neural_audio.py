@@ -538,6 +538,17 @@ async def main():
                 w = pr[side]["w"]
                 if w not in merged_words:
                     merged_words[w] = {"kana": w}
+    live_path = os.path.join(BASE_DIR, "n3_live_state.json")
+    if os.path.exists(live_path):
+        try:
+            with open(live_path, encoding="utf-8") as lf:
+                for vp in json.load(lf).get("vocab_tracked", []):
+                    vw = vp.get("word", "")
+                    if vw and vw not in merged_words:
+                        merged_words[vw] = {"kana": vw}
+        except Exception:
+            pass
+
 
     word_sem = asyncio.Semaphore(8)
 

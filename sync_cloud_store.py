@@ -216,6 +216,15 @@ def merge_day_bucket(dst: dict, src: dict) -> dict:
             max(int(cur[0] or 0), int(linfo[0] or 0)),
             max(int(cur[1] or 0), int(linfo[1] or 0)),
         ]
+    tw = []
+    seen_tw = set()
+    for w in list(dst.get("tappedWords") or []) + list(src.get("tappedWords") or []):
+        ws = str(w or "").strip()
+        if ws and ws not in seen_tw:
+            seen_tw.add(ws)
+            tw.append(ws)
+    if tw:
+        out["tappedWords"] = tw[-80:]
     return out
 
 
@@ -295,6 +304,8 @@ def unpack_compact_ntfy(pkt: dict) -> dict | None:
         day["cursor"] = pkt["c"]
     if isinstance(pkt.get("sp"), list) and len(pkt["sp"]) >= 3:
         day["speeds"] = pkt["sp"]
+    if isinstance(pkt.get("tw"), list):
+        day["tappedWords"] = [str(x) for x in pkt["tw"] if x][:80]
     recs = []
     for item in pkt.get("l") or []:
         if isinstance(item, list) and len(item) >= 4:
@@ -353,6 +364,8 @@ def pack_compact_ntfy(state: dict, plan_date: str) -> dict:
         pkt["c"] = day["cursor"]
     if isinstance(day.get("speeds"), list):
         pkt["sp"] = day["speeds"]
+    if day.get("tappedWords"):
+        pkt["tw"] = list(day["tappedWords"])[-40:]
 
     def size(obj) -> int:
         return len(json.dumps(obj, ensure_ascii=False, separators=(",", ":")).encode("utf-8"))

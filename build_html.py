@@ -25,7 +25,7 @@ from adaptive_bank import (
 from clear_explanations import CARDS_75
 from radio_dialogue_bank import MODALITY_MAP
 from sentence_lexicon import SENTENCE_LEXICON
-from tutor_data import TUTOR_ITEMS, WORD_DICT
+from tutor_data import KANA_ADVERBS_36, TUTOR_ITEMS, WORD_DICT
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 HTML_PATH = os.path.join(BASE_DIR, "index.html")
@@ -82,6 +82,30 @@ for src_dict in (SENTENCE_LEXICON, WORD_DICT, EXTRA_WORDS):
             merged_raw_words[surf] = {**merged_raw_words[surf], **info}
         else:
             merged_raw_words[surf] = dict(info)
+for kw, pitch, desc in CORE_N3_KANA_VOCAB:
+    if kw not in merged_raw_words:
+        merged_raw_words[kw] = {
+            "head": kw,
+            "kana": kw,
+            "pitch": pitch,
+            "pos": "副詞",
+            "zh": desc.split("（")[0],
+            "tip": desc,
+        }
+for fam in KANA_ADVERBS_36:
+    for pr in fam.get("pairs", []):
+        for side in ("a", "b"):
+            ad = pr[side]
+            aw = ad["w"]
+            if aw not in merged_raw_words:
+                merged_raw_words[aw] = {
+                    "head": aw,
+                    "kana": aw,
+                    "pitch": ad.get("pitch", ""),
+                    "pos": "副詞",
+                    "zh": ad.get("zh", ""),
+                    "tip": ad.get("colloc", ""),
+                }
 
 rich_words = {}
 for surf, info in merged_raw_words.items():
@@ -1562,6 +1586,204 @@ html = r"""<!DOCTYPE html>
     border-color: var(--moss);
     color: var(--moss);
   }
+
+  /* ================= 7. BEDTIME VOCAB FLASHCARD SANCTUARY ================= */
+  .night-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    padding: 13px 16px;
+    margin-bottom: 18px;
+    border-radius: 9px;
+    background: var(--sheet);
+    border: 1px solid var(--hairline-strong);
+  }
+  .night-bar-txt { min-width: 0; }
+  .night-bar-title {
+    font-size: 15.5px;
+    font-weight: 600;
+    color: var(--sumi);
+    letter-spacing: 0.02em;
+  }
+  .night-bar-sub {
+    margin-top: 3px;
+    font-size: 13px;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .night-go-btn {
+    flex-shrink: 0;
+    height: 38px;
+    padding: 0 16px;
+    border-radius: 7px;
+    background: var(--sumi);
+    color: var(--sheet);
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+  }
+
+  .flash-mask {
+    position: fixed;
+    inset: 0;
+    background: var(--washi);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    padding: calc(16px + env(safe-area-inset-top)) 28px calc(20px + env(safe-area-inset-bottom));
+    z-index: 120;
+  }
+  .flash-mask.open { display: flex; }
+  .flash-shell {
+    width: 100%;
+    max-width: 496px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .flash-top {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .flash-prog {
+    font-size: 14px;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.04em;
+  }
+  .flash-top-acts {
+    display: flex;
+    align-items: baseline;
+    gap: 18px;
+  }
+  .flash-track {
+    height: 2px;
+    background: var(--track);
+    flex-shrink: 0;
+  }
+  .flash-fill {
+    height: 100%;
+    background: var(--moss);
+    transition: width 0.25s ease;
+  }
+  .flash-stage {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 20px 6px;
+    cursor: pointer;
+  }
+  .flash-tag {
+    font-size: 12.5px;
+    color: var(--ink-3);
+    letter-spacing: 0.08em;
+    margin-bottom: 18px;
+  }
+  .flash-tag.marked { color: var(--bengara); font-weight: 600; }
+  .flash-word {
+    font-family: var(--serif-jp);
+    font-size: 40px;
+    font-weight: 500;
+    color: var(--sumi);
+    line-height: 1.3;
+    letter-spacing: 0.03em;
+    word-break: keep-all;
+  }
+  .flash-back {
+    margin-top: 22px;
+    min-height: 112px;
+    max-width: 390px;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.22s ease, transform 0.22s ease;
+    pointer-events: none;
+  }
+  .flash-back.shown {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  .flash-kana {
+    font-size: 18px;
+    color: var(--ink-2);
+    letter-spacing: 0.04em;
+    margin-bottom: 10px;
+  }
+  .flash-zh {
+    font-size: 21px;
+    font-weight: 600;
+    color: var(--sumi);
+    line-height: 1.45;
+  }
+  .flash-tip {
+    margin-top: 10px;
+    font-size: 14.5px;
+    color: var(--ink-3);
+    line-height: 1.6;
+  }
+  .flash-hint {
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--ink-3);
+  }
+  .flash-dock {
+    flex-shrink: 0;
+    padding-top: 14px;
+    border-top: 1px solid var(--hairline);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .flash-SubRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 4px;
+  }
+  .flash-nav-btn {
+    font-size: 14px;
+    color: var(--ink-3);
+    padding: 6px 4px;
+  }
+  .flash-mark-btn {
+    height: 52px;
+    padding: 0 20px;
+    border-radius: 8px;
+    border: 1px solid rgba(158, 62, 54, 0.34);
+    color: var(--bengara);
+    font-size: 15.5px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+  .flash-mark-btn.done-mark {
+    background: rgba(158, 62, 54, 0.09);
+    border-color: var(--bengara);
+  }
+  .flash-play-btn {
+    flex: 1;
+    height: 52px;
+    border-radius: 8px;
+    background: var(--sumi);
+    color: var(--sheet);
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+  }
+  .flash-play-btn.paused {
+    background: var(--sheet);
+    color: var(--sumi);
+    border: 1px solid var(--hairline-strong);
+  }
 </style>
 </head>
 <body>
@@ -1633,6 +1855,7 @@ html = r"""<!DOCTYPE html>
   <!-- 3C. ZEN LEDGER ("总表") -->
   <section class="zen-panel hidden" id="dash-view">
     <div class="ledger-scroll">
+      <div id="night-flash-entry"></div>
       <div class="ledger-layout">
         <div class="pillar-list" id="dash-summary"></div>
         <div>
@@ -1649,6 +1872,10 @@ html = r"""<!DOCTYPE html>
 
 <div class="modal-mask" id="app-modal" onclick="if(event.target===this)closeModal()">
   <div class="modal-card" id="modal-content"></div>
+</div>
+
+<div class="flash-mask" id="flash-modal">
+  <div class="flash-shell" id="flash-shell"></div>
 </div>
 
 <script>
@@ -1730,6 +1957,7 @@ function createFreshAdaptiveState() {
     radioMaxSec: 0,
     radioPos: [0, 0],
     pts: pts,
+    tappedWords: [],
     masteryOverrides: {},
     masteryOverrideTs: {},
     recentRecords: []
@@ -1797,6 +2025,12 @@ function loadAdaptiveState() {
     });
     if (Array.isArray(sd.cursor)) applyCursorTuple(base, sd.cursor);
     if (Array.isArray(sd.speeds)) applySpeedTuple(base, sd.speeds);
+    if (Array.isArray(sd.tappedWords)) {
+      sd.tappedWords.forEach(w => {
+        const ws = String(w || "").trim();
+        if (ws && !base.tappedWords.includes(ws)) base.tappedWords.push(ws);
+      });
+    }
     const sov = cs.seeded_overrides || {};
     Object.keys(sov).forEach(mk => {
       const v = sov[mk];
@@ -1836,6 +2070,12 @@ function loadAdaptiveState() {
           if (saved.hotFamily !== undefined) base.hotFamily = saved.hotFamily;
         }
         if (typeof saved.st === "number" && saved.st > (base.st || 0)) applySpeedTuple(base, [saved.es, saved.rs, saved.st]);
+        if (Array.isArray(saved.tappedWords)) {
+          saved.tappedWords.forEach(w => {
+            const ws = String(w || "").trim();
+            if (ws && !base.tappedWords.includes(ws)) base.tappedWords.push(ws);
+          });
+        }
         if (typeof saved.radioMaxSec === "number" && saved.radioMaxSec > base.radioMaxSec) {
           base.radioMaxSec = Math.floor(saved.radioMaxSec);
         }
@@ -2173,6 +2413,14 @@ function buildCompactPacket() {
     sentKeys.push(recKey(item));
     size += add;
   }
+  if (Array.isArray(A.tappedWords) && A.tappedWords.length) {
+    const twSlice = A.tappedWords.slice(-30);
+    const twAdd = byteLen(JSON.stringify(twSlice)) + 7;
+    if (size + twAdd <= CLOUD_BYTE_LIMIT - 120) {
+      pkt.tw = twSlice;
+      size += twAdd;
+    }
+  }
   const ovEntries = Object.keys(A.masteryOverrides || {}).map(k => [
     k,
     [String(A.masteryOverrides[k]), Math.floor((A.masteryOverrideTs && A.masteryOverrideTs[k]) || 1)]
@@ -2198,6 +2446,8 @@ function packetFingerprint(pkt) {
     z: String(pkt.z || "").split(";").filter(Boolean).sort().join(";"),
     c: pkt.c || [],
     sp: pkt.sp || [],
+    tw: Array.isArray(pkt.tw) ? pkt.tw.slice().sort() : [],
+    o: sortedMap(pkt.o || {}),
     g: pkt.z ? {} : sortedMap(pkt.g || {}),
     t: pkt.z ? {} : sortedMap(pkt.t || {}),
     w: pkt.z ? {} : sortedMap(pkt.w || {})
@@ -2332,6 +2582,18 @@ function applyIncomingPacket(pkt) {
       const rb = document.getElementById("radio-spd-btn");
       if (rb) rb.textContent = `${radioSpeed}x`;
       changed = true;
+    }
+
+    if (Array.isArray(pkt.tw)) {
+      if (!Array.isArray(A.tappedWords)) A.tappedWords = [];
+      pkt.tw.forEach(w => {
+        const ws = String(w || "").trim();
+        if (ws && !A.tappedWords.includes(ws)) {
+          A.tappedWords.push(ws);
+          changed = true;
+        }
+      });
+      if (A.tappedWords.length > 80) A.tappedWords = A.tappedWords.slice(-80);
     }
 
     mergeIncomingRecords(pkt.l);
@@ -3277,6 +3539,7 @@ function resetTodayMission() {
   const stamp = nowUnixSec();
   const keepOverrides = A.masteryOverrides || {};
   const keepOverrideTs = A.masteryOverrideTs || {};
+  const keepTapped = A.tappedWords || [];
   const keepRadio = A.radioMaxSec || 0;
   const keepRadioPos = A.radioPos || [0, 0];
   const keepSt = A.st || 0;
@@ -3284,6 +3547,7 @@ function resetTodayMission() {
   A.resetAt = stamp;
   A.masteryOverrides = keepOverrides;
   A.masteryOverrideTs = keepOverrideTs;
+  A.tappedWords = keepTapped;
   A.radioMaxSec = keepRadio;
   A.radioPos = keepRadioPos;
   A.es = expSpeed;
@@ -3554,9 +3818,28 @@ function playDirectUrl(url) {
   wordPlayer.play().catch(() => {});
 }
 
+const TRIVIAL_TAP_WORDS = new Set([
+  "この", "その", "あの", "ここ", "そこ", "あそこ", "これ", "それ", "あれ", "どれ", "どちら",
+  "私", "僕", "彼", "彼女", "人", "今日", "明日", "昨日", "今", "もう", "また", "もっと", "だけ", "だから"
+]);
+
+function recordTappedWord(surface) {
+  if (!surface || PARTICLE_FALLBACK[surface] || TRIVIAL_TAP_WORDS.has(surface)) return;
+  const info = DATA.words[surface];
+  if (!info || !info.zh) return;
+  if (!Array.isArray(A.tappedWords)) A.tappedWords = [];
+  if (!A.tappedWords.includes(surface)) {
+    A.tappedWords.push(surface);
+    if (A.tappedWords.length > 80) A.tappedWords = A.tappedWords.slice(-80);
+    saveAdaptiveState();
+    scheduleCloudPush(450);
+  }
+}
+
 function showInlineWordMeaning(surface, tokEl) {
   const info = DATA.words[surface];
   if (!info) return;
+  recordTappedWord(surface);
   clearActiveWordToken();
   if (tokEl && tokEl.classList) {
     activeTokEl = tokEl;
@@ -3599,6 +3882,7 @@ document.addEventListener("click", e => {
 let lastWheelAdvanceAt = 0;
 
 window.addEventListener("wheel", e => {
+  if (flashOpen) return;
   if (activeMode !== "tutor") return;
   if (viewStage !== "result" && viewStage !== "teach") return;
   if (document.getElementById("app-modal").classList.contains("open")) return;
@@ -3629,6 +3913,7 @@ document.getElementById("tutor-view").addEventListener("touchstart", e => {
 }, { passive: true });
 
 document.getElementById("tutor-view").addEventListener("touchend", e => {
+  if (flashOpen) return;
   if (activeMode !== "tutor") return;
   if (viewStage !== "result" && viewStage !== "teach") return;
   if (document.getElementById("app-modal").classList.contains("open")) return;
@@ -3648,6 +3933,14 @@ document.addEventListener("keydown", e => {
   const tag = (e.target && e.target.tagName || "").toLowerCase();
   if (tag === "input" || tag === "textarea") {
     if (e.key === "Escape") e.target.blur();
+    return;
+  }
+  if (flashOpen) {
+    if (e.key === "Escape") { e.preventDefault(); closeNightFlash(); }
+    else if (e.key === " ") { e.preventDefault(); toggleFlashPlay(); }
+    else if (e.key === "ArrowRight" || e.key === "Enter") { e.preventDefault(); flashStepNext(true); }
+    else if (e.key === "ArrowLeft") { e.preventDefault(); flashStepPrev(); }
+    else if (e.key.toLowerCase() === "r" || e.key === "1") { e.preventDefault(); markFlashUnfamiliar(); }
     return;
   }
   if (document.getElementById("app-modal").classList.contains("open")) {
@@ -3745,6 +4038,395 @@ function selectDashTier(t) {
   renderDashboard();
 }
 
+// ================= BEDTIME VOCAB FLASHCARD CONTROLLER =================
+let flashOpen = false;
+let flashDeck = [];
+let flashIdx = 0;
+let flashRevealed = false;
+let flashPlaying = true;
+let flashMarkedSet = new Set();
+let flashTimerA = null;
+let flashTimerB = null;
+let flashRunToken = 0;
+
+function buildNightFlashDeck(onlyList) {
+  if (Array.isArray(onlyList) && onlyList.length) return onlyList.slice();
+  applyMasteryOverrides();
+  const deck = [];
+  const seen = new Set();
+  const seenHead = new Set();
+  const vItems = (DATA.mastery.vocab && DATA.mastery.vocab.items) ? DATA.mastery.vocab.items : [];
+  const byKey = {};
+  vItems.forEach(it => { byKey[it.key] = it; byKey[it.name] = it; });
+
+  function pushCard(surface, vItem, srcLabel) {
+    if (!surface || seen.has(surface)) return;
+    const w = DATA.words[surface] || {};
+    const head = w.head || surface;
+    if (srcLabel === "今日查过" && seenHead.has(head)) return;
+    const zh = w.zh || (vItem && vItem.sub) || "";
+    if (!zh) return;
+    seen.add(surface);
+    seenHead.add(head);
+    const tipParts = [];
+    if (w.head && w.head !== surface) tipParts.push(`原形 ${w.head}`);
+    if (w.tip) tipParts.push(w.tip);
+    else if (vItem && vItem.note) tipParts.push(vItem.note);
+    deck.push({
+      word: surface,
+      key: (vItem && vItem.key) || surface,
+      pointId: (vItem && vItem.point_id) || "",
+      kana: w.kana || "",
+      pitch: w.pitch || "",
+      zh: zh,
+      tip: tipParts.join(" · "),
+      audio: (vItem && vItem.audio) || w.audio || "",
+      source: srcLabel
+    });
+  }
+
+  // 1) Tapped words today (newest first)
+  const tapped = Array.isArray(A.tappedWords) ? A.tappedWords.slice().reverse() : [];
+  tapped.forEach(sw => pushCard(sw, byKey[sw] || null, "今日查过"));
+  // 2) Todo vocab
+  vItems.forEach(it => { if (it.tier === "todo") pushCard(it.name, it, "待练"); });
+  // 3) Consolidating vocab
+  vItems.forEach(it => { if (it.tier === "wip") pushCard(it.name, it, "巩固"); });
+  return deck;
+}
+
+function clearFlashTimers() {
+  if (flashTimerA) { clearTimeout(flashTimerA); flashTimerA = null; }
+  if (flashTimerB) { clearTimeout(flashTimerB); flashTimerB = null; }
+}
+
+function stopFlashSpeech() {
+  try { wordPlayer.pause(); } catch (e) {}
+  try { if ("speechSynthesis" in window) window.speechSynthesis.cancel(); } catch (e) {}
+}
+
+function speakFlashCard(card, onDone) {
+  const token = ++flashRunToken;
+  let finished = false;
+  const finish = () => {
+    if (finished || token !== flashRunToken) return;
+    finished = true;
+    if (onDone) onDone();
+  };
+  // Safety ceiling so a missing/stalled voice never freezes bedtime playback
+  const safety = setTimeout(finish, 2400);
+  const doneWrap = () => { clearTimeout(safety); finish(); };
+
+  if (card.audio) {
+    try {
+      wordPlayer.onended = doneWrap;
+      wordPlayer.onerror = () => {
+        wordPlayer.onended = null;
+        wordPlayer.onerror = null;
+        speakUtteranceWithCallback(card.kana || card.word, doneWrap);
+      };
+      wordPlayer.src = card.audio;
+      wordPlayer.currentTime = 0;
+      wordPlayer.playbackRate = 0.96;
+      const pr = wordPlayer.play();
+      if (pr && pr.catch) {
+        pr.catch(() => {
+          wordPlayer.onended = null;
+          wordPlayer.onerror = null;
+          speakUtteranceWithCallback(card.kana || card.word, doneWrap);
+        });
+      }
+      return;
+    } catch (e) {}
+  }
+  speakUtteranceWithCallback(card.kana || card.word, doneWrap);
+}
+
+function speakUtteranceWithCallback(text, cb) {
+  if (!("speechSynthesis" in window)) {
+    setTimeout(cb, 650);
+    return;
+  }
+  try {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "ja-JP";
+    u.rate = 0.9;
+    u.onend = cb;
+    u.onerror = cb;
+    window.speechSynthesis.speak(u);
+  } catch (e) {
+    setTimeout(cb, 650);
+  }
+}
+
+function openNightFlash(customList) {
+  stopQuizAudio();
+  if (!radioPlayer.paused) {
+    radioPlayer.pause();
+    syncRadioUI();
+  }
+  flashDeck = buildNightFlashDeck(customList);
+  flashIdx = 0;
+  flashRevealed = false;
+  flashPlaying = true;
+  flashMarkedSet = new Set();
+  flashOpen = true;
+  document.getElementById("flash-modal").classList.add("open");
+  runFlashCardAt(0);
+}
+
+function closeNightFlash() {
+  flashOpen = false;
+  flashRunToken++;
+  clearFlashTimers();
+  stopFlashSpeech();
+  wordPlayer.onended = null;
+  wordPlayer.onerror = null;
+  document.getElementById("flash-modal").classList.remove("open");
+  if (activeMode === "dash") renderDashboard();
+}
+
+function runFlashCardAt(idx) {
+  clearFlashTimers();
+  stopFlashSpeech();
+  if (!flashDeck.length) {
+    renderFlashFinished();
+    return;
+  }
+  if (idx >= flashDeck.length) {
+    renderFlashFinished();
+    return;
+  }
+  flashIdx = Math.max(0, idx);
+  flashRevealed = false;
+  renderFlashStage();
+
+  const card = flashDeck[flashIdx];
+  const myToken = flashRunToken + 1;
+  speakFlashCard(card, () => {
+    if (!flashOpen || flashRunToken !== myToken) return;
+    if (!flashPlaying) return;
+    flashTimerA = setTimeout(() => {
+      if (!flashOpen || !flashPlaying || flashRunToken !== myToken) return;
+      flashRevealed = true;
+      const backEl = document.getElementById("flash-back-box");
+      const hintEl = document.getElementById("flash-tap-hint");
+      if (backEl) backEl.classList.add("shown");
+      if (hintEl) hintEl.textContent = "点卡片重听";
+      flashTimerB = setTimeout(() => {
+        if (!flashOpen || !flashPlaying || flashRunToken !== myToken) return;
+        runFlashCardAt(flashIdx + 1);
+      }, 2150);
+    }, 1050);
+  });
+}
+
+function renderFlashStage() {
+  const shell = document.getElementById("flash-shell");
+  const card = flashDeck[flashIdx];
+  const total = flashDeck.length;
+  const pct = (((flashIdx + 1) / Math.max(1, total)) * 100).toFixed(1);
+  const marked = flashMarkedSet.has(card.word);
+  const kanaPart = (card.kana && card.kana !== card.word)
+    ? `${card.kana}${card.pitch ? " " + card.pitch : ""}`
+    : (card.pitch ? card.pitch : "");
+
+  shell.innerHTML = `
+    <div class="flash-top">
+      <span class="flash-prog">${flashIdx + 1} / ${total} · ${escapeHtml(card.source)}</span>
+      <div class="flash-top-acts">
+        <button class="text-btn" onclick="replayFlashAudio()">重听</button>
+        <button class="text-btn" onclick="closeNightFlash()">收起</button>
+      </div>
+    </div>
+    <div class="flash-track"><div class="flash-fill" style="width:${pct}%"></div></div>
+
+    <div class="flash-stage" onclick="onFlashCardTap()">
+      <div class="flash-tag ${marked ? 'marked' : ''}" id="flash-tag-line">${marked ? "已记入待练" : "先听发音 · 想一下意思"}</div>
+      <div class="flash-word">${escapeHtml(card.word)}</div>
+      <div class="flash-back ${flashRevealed ? 'shown' : ''}" id="flash-back-box">
+        ${kanaPart ? `<div class="flash-kana">${escapeHtml(kanaPart)}</div>` : ""}
+        <div class="flash-zh">${escapeHtml(card.zh)}</div>
+        ${card.tip ? `<div class="flash-tip">${escapeHtml(card.tip)}</div>` : ""}
+      </div>
+      <div class="flash-hint" id="flash-tap-hint">${flashRevealed ? "点卡片重听" : "点一下直接看中文"}</div>
+    </div>
+
+    <div class="flash-dock">
+      <div class="dock-row">
+        <button class="flash-mark-btn ${marked ? 'done-mark' : ''}" id="flash-mark-btn" onclick="markFlashUnfamiliar()">${marked ? "已标不熟" : "不熟"}</button>
+        <button class="flash-play-btn ${flashPlaying ? '' : 'paused'}" id="flash-play-btn" onclick="toggleFlashPlay()">${flashPlaying ? "暂停自动播" : "继续自动播"}</button>
+      </div>
+      <div class="flash-SubRow">
+        <button class="flash-nav-btn" onclick="flashStepPrev()" ${flashIdx === 0 ? "style='opacity:0.32;pointer-events:none'" : ""}>上一个</button>
+        <button class="flash-nav-btn" onclick="flashStepNext(true)">下一个</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderFlashFinished() {
+  const shell = document.getElementById("flash-shell");
+  const markedCards = flashDeck.filter(c => flashMarkedSet.has(c.word));
+  shell.innerHTML = `
+    <div class="flash-top">
+      <span class="flash-prog">已完成 ${flashDeck.length} 个词</span>
+      <div class="flash-top-acts">
+        <button class="text-btn" onclick="closeNightFlash()">收起</button>
+      </div>
+    </div>
+    <div class="flash-track"><div class="flash-fill" style="width:100%"></div></div>
+    <div class="flash-stage" style="cursor:default">
+      <div class="flash-word" style="font-size:28px">今晚过完啦</div>
+      <div class="flash-back shown" style="min-height:0;margin-top:16px">
+        <div class="flash-tip" style="font-size:16px;color:var(--ink-2)">${markedCards.length
+          ? `标了 ${markedCards.length} 个不熟的词，已经放进待练。要不要只把这 ${markedCards.length} 个再顺一遍？`
+          : "这一轮都很顺，安心休息吧。"}</div>
+      </div>
+    </div>
+    <div class="flash-dock">
+      <div class="dock-row">
+        ${markedCards.length
+          ? `<button class="ghost-btn" onclick="closeNightFlash()">休息了</button>
+             <button class="sumi-btn" onclick="replayMarkedFlash()">只过这 ${markedCards.length} 个不熟词</button>`
+          : `<button class="ghost-btn" onclick="openNightFlash()">再来一遍</button>
+             <button class="sumi-btn" onclick="closeNightFlash()">安心休息</button>`}
+      </div>
+    </div>
+  `;
+}
+
+function replayMarkedFlash() {
+  const sub = flashDeck.filter(c => flashMarkedSet.has(c.word));
+  if (sub.length) openNightFlash(sub);
+}
+
+function replayFlashAudio() {
+  const card = flashDeck[flashIdx];
+  if (!card) return;
+  clearFlashTimers();
+  speakFlashCard(card, () => {
+    if (flashOpen && flashPlaying) {
+      flashTimerB = setTimeout(() => {
+        if (flashOpen && flashPlaying) runFlashCardAt(flashIdx + 1);
+      }, flashRevealed ? 1900 : 2500);
+    }
+  });
+}
+
+function onFlashCardTap() {
+  const card = flashDeck[flashIdx];
+  if (!card) return;
+  if (!flashRevealed) {
+    clearFlashTimers();
+    flashRevealed = true;
+    const backEl = document.getElementById("flash-back-box");
+    const hintEl = document.getElementById("flash-tap-hint");
+    if (backEl) backEl.classList.add("shown");
+    if (hintEl) hintEl.textContent = "点卡片重听";
+    if (flashPlaying) {
+      flashTimerB = setTimeout(() => {
+        if (flashOpen && flashPlaying) runFlashCardAt(flashIdx + 1);
+      }, 2200);
+    }
+  } else {
+    replayFlashAudio();
+  }
+}
+
+function toggleFlashPlay() {
+  flashPlaying = !flashPlaying;
+  const btn = document.getElementById("flash-play-btn");
+  if (btn) {
+    btn.textContent = flashPlaying ? "暂停自动播" : "继续自动播";
+    btn.classList.toggle("paused", !flashPlaying);
+  }
+  if (!flashPlaying) {
+    clearFlashTimers();
+    flashRevealed = true;
+    const backEl = document.getElementById("flash-back-box");
+    if (backEl) backEl.classList.add("shown");
+  } else {
+    if (flashRevealed) {
+      clearFlashTimers();
+      flashTimerB = setTimeout(() => {
+        if (flashOpen && flashPlaying) runFlashCardAt(flashIdx + 1);
+      }, 1500);
+    } else {
+      runFlashCardAt(flashIdx);
+    }
+  }
+}
+
+function flashStepNext() {
+  runFlashCardAt(flashIdx + 1);
+}
+
+function flashStepPrev() {
+  if (flashIdx > 0) runFlashCardAt(flashIdx - 1);
+}
+
+function markFlashUnfamiliar() {
+  const card = flashDeck[flashIdx];
+  if (!card) return;
+  flashMarkedSet.add(card.word);
+  const stamp = nowUnixSec();
+  setMasteryTier(card.key, "todo", stamp);
+  setMasteryTier(card.word, "todo", stamp);
+  if (card.pointId && A.pts[card.pointId]) {
+    const ps = A.pts[card.pointId];
+    ps.retestAt = Math.max(stamp, (ps.greenAt || 0) + 1);
+    ps.status = "learning";
+    ps.dueStep = A.step + 2;
+    recomputeStatusesFromCRDT(A);
+  }
+  applyMasteryOverrides();
+  saveAdaptiveState();
+  renderGreenBoard();
+  scheduleCloudPush(120);
+
+  // Reveal meaning immediately and give extra reading time + replay pronunciation once
+  clearFlashTimers();
+  flashRevealed = true;
+  const backEl = document.getElementById("flash-back-box");
+  const tagEl = document.getElementById("flash-tag-line");
+  const markBtn = document.getElementById("flash-mark-btn");
+  if (backEl) backEl.classList.add("shown");
+  if (tagEl) { tagEl.textContent = "已记入待练"; tagEl.classList.add("marked"); }
+  if (markBtn) { markBtn.textContent = "已标不熟"; markBtn.classList.add("done-mark"); }
+  speakFlashCard(card, () => {
+    if (flashOpen && flashPlaying) {
+      flashTimerB = setTimeout(() => {
+        if (flashOpen && flashPlaying) runFlashCardAt(flashIdx + 1);
+      }, 2200);
+    }
+  });
+}
+
+// Swipe left/right inside flashcard modal (isolated here, never touches tabs)
+(function bindFlashSwipe() {
+  let fx = 0, fy = 0, ft = 0;
+  const fm = document.getElementById("flash-modal");
+  fm.addEventListener("touchstart", e => {
+    if (!e.touches || e.touches.length !== 1) return;
+    fx = e.touches[0].clientX;
+    fy = e.touches[0].clientY;
+    ft = performance.now();
+  }, { passive: true });
+  fm.addEventListener("touchend", e => {
+    if (!flashOpen || !flashDeck.length || flashIdx >= flashDeck.length) return;
+    if (!e.changedTouches || e.changedTouches.length !== 1) return;
+    const dx = e.changedTouches[0].clientX - fx;
+    const dy = e.changedTouches[0].clientY - fy;
+    const dt = performance.now() - ft;
+    if (Math.abs(dx) >= 52 && Math.abs(dx) > Math.abs(dy) * 1.6 && dt < 650) {
+      if (dx < 0) flashStepNext();
+      else flashStepPrev();
+    }
+  }, { passive: true });
+})();
+
 function renderDashboard() {
   const order = ["grammar", "henkei", "listening", "vocab"];
   document.getElementById("dash-summary").innerHTML = order.map(k => {
@@ -3768,6 +4450,21 @@ function renderDashboard() {
     `;
   }).join("");
 
+  const deckPreview = buildNightFlashDeck();
+  const tappedCnt = deckPreview.filter(c => c.source === "今日查过").length;
+  const entryEl = document.getElementById("night-flash-entry");
+  if (entryEl) {
+    entryEl.innerHTML = deckPreview.length ? `
+      <div class="night-bar">
+        <div class="night-bar-txt">
+          <div class="night-bar-title">睡前过生词</div>
+          <div class="night-bar-sub">${deckPreview.length} 个词${tappedCnt ? ` · 含今日查过 ${tappedCnt} 个` : " · 自动发音翻面"}</div>
+        </div>
+        <button class="night-go-btn" onclick="openNightFlash()">开始</button>
+      </div>
+    ` : "";
+  }
+
   const curCounts = DATA.mastery[dashMod].counts;
   document.getElementById("tier-tabs").innerHTML = `
     <button class="tier-link ${dashTier === 'todo' ? 'active' : ''}" onclick="selectDashTier('todo')">待练 ${curCounts.todo}</button>
@@ -3783,6 +4480,16 @@ function togglePtNote(i) {
   renderMasteryList();
 }
 
+function speakLedgerItem(name, audioUrl) {
+  if (audioUrl) {
+    playDirectUrl(audioUrl);
+  } else if (DATA.words[name]) {
+    playWordAudio(name, true);
+  } else {
+    speakJapaneseFallback(name);
+  }
+}
+
 function renderMasteryList() {
   const q = (document.getElementById("pt-search").value || "").trim().toLowerCase();
   const items = DATA.mastery[dashMod].items.filter(it => {
@@ -3796,7 +4503,9 @@ function renderMasteryList() {
     return;
   }
 
-  listEl.innerHTML = items.map((it, i) => `
+  listEl.innerHTML = items.map((it, i) => {
+    const canSpeak = !!(it.audio || dashMod === "vocab" || DATA.words[it.name]);
+    return `
     <div class="ledger-item" onclick="togglePtNote(${i})">
       <div class="li-row">
         <div class="li-left">
@@ -3805,13 +4514,14 @@ function renderMasteryList() {
         </div>
         <div class="li-right">
           <span class="li-sub">${escapeHtml(it.sub)}</span>
-          ${it.audio ? `<button class="li-act" onclick="event.stopPropagation();playDirectUrl('${it.audio}')">听音</button>` : ""}
+          ${canSpeak ? `<button class="li-act" onclick='event.stopPropagation();speakLedgerItem(${JSON.stringify(it.name)}, ${JSON.stringify(it.audio || "")})'>听音</button>` : ""}
           ${it.point_id ? `<button class="li-act" onclick="event.stopPropagation();jumpToPointById('${it.point_id}')">练习</button>` : ""}
         </div>
       </div>
       ${expandedPt === i && (it.note || it.family) ? `<div class="li-note">${escapeHtml([it.family, it.note].filter(Boolean).join(" · "))}</div>` : ""}
     </div>
-  `).join("");
+  `;
+  }).join("");
 }
 
 function closeModal() {
