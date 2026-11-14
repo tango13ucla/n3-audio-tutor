@@ -74,10 +74,26 @@ if os.path.exists(RADIO_META_PATH):
     except Exception:
         pass
 
+g_state_map = {p["name"]: p for p in live_state.get("grammar_points", [])}
+h_state_map = {p["id"]: p for p in live_state.get("henkei_points", [])}
+v_state_map = {p["word"]: p for p in live_state.get("vocab_tracked", [])}
+l_state_map = {p["id"]: p for p in live_state.get("listening_points", [])}
+
+# Exclude non-idiomatic multi-word phrases so users can tap specific individual words cleanly
+DROP_MULTIWORD_PHRASES = {
+    "小さな子ども", "目線を合わせる", "ひざを曲げて", "耳をすまして", "手が滑って",
+    "道に迷っていたら", "走っている途中", "話し合った結果", "大きな声", "強い風",
+    "急な仕事", "親切な人", "混む前に", "あの二人", "この本", "寝る前",
+    "子どもの頃", "後ろの席", "降りる駅", "隣の人", "十一時以降", "１１時以降",
+    "夜遅くまで", "甘い物", "目の前", "予約しておく", "コピーしといて",
+}
+
 word_audio_map = audio_manifest.get("words", {})
 merged_raw_words = {}
 for src_dict in (SENTENCE_LEXICON, WORD_DICT, EXTRA_WORDS):
     for surf, info in src_dict.items():
+        if surf in DROP_MULTIWORD_PHRASES and surf not in v_state_map:
+            continue
         if surf in merged_raw_words:
             merged_raw_words[surf] = {**merged_raw_words[surf], **info}
         else:
@@ -117,12 +133,6 @@ for surf, info in merged_raw_words.items():
 
 def resolve_word_audio(w: str) -> str:
     return rich_words.get(w, {}).get("audio") or word_audio_map.get(w, "")
-
-
-g_state_map = {p["name"]: p for p in live_state.get("grammar_points", [])}
-h_state_map = {p["id"]: p for p in live_state.get("henkei_points", [])}
-v_state_map = {p["word"]: p for p in live_state.get("vocab_tracked", [])}
-l_state_map = {p["id"]: p for p in live_state.get("listening_points", [])}
 
 SUBJ_CN = {"文法": "语法", "活用": "活用", "語彙": "词汇", "聴解": "听力"}
 
@@ -743,6 +753,7 @@ html = r"""<!DOCTYPE html>
   }
 
   .stage-wrap {
+    position: relative;
     flex: 1;
     min-height: 0;
     display: flex;
@@ -796,7 +807,7 @@ html = r"""<!DOCTYPE html>
     font-weight: 600;
   }
 
-  /* Center focal space with balanced Japanese Ma (余白) */
+  /* Center focal space on quiz/done; pin reading views (teach/result) cleanly from the top */
   .focal-space {
     flex: 1;
     min-height: 0;
@@ -804,15 +815,16 @@ html = r"""<!DOCTYPE html>
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    padding: 16px 0 26px;
+    padding: 20px 0 26px;
     scrollbar-width: none;
     -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 26px), transparent 100%);
     mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 26px), transparent 100%);
   }
   .focal-space::-webkit-scrollbar { display: none; }
-  /* Center when it fits, start from the very top when it does not (never cut off the first line) */
-  .focal-space > :first-child { margin-top: auto; }
-  .focal-space > :last-child { margin-bottom: auto; }
+  .stage-quiz .focal-space > :first-child,
+  .stage-done .focal-space > :first-child { margin-top: auto; }
+  .stage-quiz .focal-space > :last-child,
+  .stage-done .focal-space > :last-child { margin-bottom: auto; }
 
   .action-dock {
     flex-shrink: 0;
@@ -820,8 +832,8 @@ html = r"""<!DOCTYPE html>
   }
 
   /* Desktop vs Mobile Ergonomics:
-     - Mobile (<860px): Content floats comfortably above, interactive controls stay in bottom one-hand thumb zone.
-     - Desktop (>=860px): Content + controls group together in the optical center right under the cursor (zero bottom-edge mouse travel!). */
+     - Mobile (<860px): Content starts cleanly from top, interactive controls stay in bottom one-hand thumb zone.
+     - Desktop (>=860px): Quiz centers optically; reading views stay anchored from top so tapping words shifts 0px. */
   @media (min-width: 860px) {
     #tutor-view .stage-wrap {
       justify-content: flex-start;
@@ -829,12 +841,20 @@ html = r"""<!DOCTYPE html>
     #tutor-view .focal-space {
       flex: 0 1 auto;
       justify-content: flex-start;
+      padding: 22px 0 2px;
+      -webkit-mask-image: none;
+      mask-image: none;
+    }
+    #tutor-view .stage-quiz .focal-space,
+    #tutor-view .stage-done .focal-space {
       margin-top: auto;
-      padding: 18px 0 0;
     }
     #tutor-view .action-dock {
-      margin-bottom: auto;
       padding-top: 26px;
+    }
+    #tutor-view .stage-quiz .action-dock,
+    #tutor-view .stage-done .action-dock {
+      margin-bottom: auto;
     }
   }
 
@@ -1157,70 +1177,111 @@ html = r"""<!DOCTYPE html>
     font-variant-numeric: tabular-nums;
   }
 
-  /* Tappable Japanese words + Instant Inline Zen Meaning Strip (Zero Google Search, Zero Small-Print Clutter) */
+  /* Tappable Japanese words + Fixed-Geometry Zen Meaning Card (Zero Layout Shift, Zero Touch Flicker) */
   .w-tok {
-    border-bottom: 1px solid transparent;
     cursor: pointer;
-    padding: 0 1px 1px;
+    padding: 1px 0;
     border-radius: 3px;
-    transition: color 0.14s ease, background 0.14s ease, border-color 0.14s ease;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
   }
-  .w-tok:active, .w-tok.active-tok {
+  .w-tok.active-tok {
     color: var(--moss);
     background: var(--moss-soft);
-    border-bottom-color: var(--moss);
+    box-shadow: inset 0 -1.5px 0 var(--moss);
   }
 
   .inline-lex {
-    margin-top: 12px;
-    min-height: 36px;
-    padding: 8px 12px;
-    border-radius: 7px;
-    background: rgba(252, 251, 248, 0.78);
-    border: 1px solid var(--hairline);
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 76px;
+    z-index: 20;
+    height: 114px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: var(--sheet);
+    border: 1px solid var(--hairline-strong);
+    box-shadow: 0 6px 20px rgba(28, 27, 24, 0.06);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 3px;
+    overflow: hidden;
+  }
+  #radio-inline-lex {
+    bottom: 12px;
+    box-shadow: none;
+  }
+  @media (min-width: 860px) {
+    #tutor-inline-lex {
+      position: static;
+      margin-top: 18px;
+      box-shadow: none;
+    }
+  }
+  .inline-lex.empty {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .ilex-top {
+    height: 26px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
   }
-  .inline-lex.empty {
-    display: none;
-  }
-  .ilex-main {
+  .ilex-head {
     min-width: 0;
     display: flex;
-    flex-wrap: wrap;
     align-items: baseline;
-    gap: 6px 9px;
-    line-height: 1.48;
+    gap: 8px;
+    overflow: hidden;
+    white-space: nowrap;
   }
   .ilex-surf {
     font-family: var(--serif-jp);
     font-size: 18px;
     font-weight: 600;
     color: var(--sumi);
+    flex-shrink: 0;
   }
   .ilex-kana {
     font-size: 14.5px;
     color: var(--moss);
     font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .ilex-zh {
-    font-size: 16px;
+    height: 22px;
+    line-height: 22px;
+    font-size: 15.5px;
     font-weight: 500;
     color: var(--sumi);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .ilex-meta {
-    width: 100%;
-    font-size: 13.5px;
+    min-height: 36px;
+    max-height: 36px;
+    line-height: 18px;
+    font-size: 13px;
     color: var(--ink-3);
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
   }
   .ilex-speak {
     flex-shrink: 0;
-    font-size: 14px;
+    height: 26px;
+    font-size: 13.5px;
     font-weight: 600;
     color: var(--moss);
-    padding: 4px 8px;
+    padding: 0 9px;
     border-radius: 5px;
     border: 1px solid rgba(43, 95, 73, 0.25);
   }
@@ -1276,10 +1337,12 @@ html = r"""<!DOCTYPE html>
 
   /* ================= 4. TWO-COACH PODCAST SANCTUARY ("随身听") ================= */
   .radio-center {
+    position: relative;
     flex: 1;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
+    padding-top: 34px;
     gap: 16px;
   }
   .radio-chap {
@@ -1829,7 +1892,14 @@ html = r"""<!DOCTYPE html>
         <div class="radio-chap" id="radio-chap-lbl">逐客茶</div>
         <h2 class="radio-topic" id="radio-live-title">日本文化夜话</h2>
         <p class="radio-ja" id="radio-live-ja"></p>
-        <div class="inline-lex empty" id="radio-inline-lex"></div>
+        <div class="inline-lex empty" id="radio-inline-lex" data-surface="">
+          <div class="ilex-top">
+            <div class="ilex-head"><span class="ilex-surf"></span><span class="ilex-kana"></span></div>
+            <button class="ilex-speak" type="button">发音</button>
+          </div>
+          <div class="ilex-zh"></div>
+          <div class="ilex-meta"></div>
+        </div>
       </div>
 
       <div class="radio-dock">
@@ -2942,7 +3012,8 @@ const PARTICLE_FALLBACK = {
   "へ": { kana: "へ（读え）", pos: "方向助词", zh: "朝向，往……去" },
   "よ": { kana: "よ", pos: "终助词", zh: "句尾提醒或告知语气（哦、呀）" },
   "ね": { kana: "ね", pos: "终助词", zh: "句尾确认或共鸣语气（吧、呢）" },
-  "か": { kana: "か", pos: "疑问助词", zh: "吗（句尾表疑问）" }
+  "か": { kana: "か", pos: "疑问助词", zh: "吗（句尾表疑问）" },
+  "な": { kana: "な", pos: "助动词・终助词", zh: "连接修饰语与名词（如：はずなのに），或句尾感叹" }
 };
 
 Object.keys(PARTICLE_FALLBACK).forEach(pk => {
@@ -2950,6 +3021,15 @@ Object.keys(PARTICLE_FALLBACK).forEach(pk => {
 });
 
 const DICT_KEYS = Object.keys(DATA.words).sort((a, b) => b.length - a.length);
+const CONTENT_KEYS = DICT_KEYS.filter(k => k.length >= 3 && !PARTICLE_FALLBACK[k]);
+const INTERJECTION_SET = new Set(["はい", "ええ", "うん", "いや", "あれ", "ほら"]);
+
+function hasLongerContentWordAt(src, pos) {
+  for (let c = 0; c < CONTENT_KEYS.length; c++) {
+    if (src.startsWith(CONTENT_KEYS[c], pos)) return true;
+  }
+  return false;
+}
 
 function escapeHtml(s) {
   return String(s || "")
@@ -2972,10 +3052,15 @@ function renderJapaneseWithHighlight(text, highlightTarget) {
     let matched = null;
     for (let k = 0; k < DICT_KEYS.length; k++) {
       const w = DICT_KEYS[k];
-      if (src.startsWith(w, i)) {
-        matched = w;
-        break;
+      if (!src.startsWith(w, i)) continue;
+      if (INTERJECTION_SET.has(w) && i > 0 && !"「『（(、。！？!? \n\t：:".includes(src[i - 1])) {
+        continue;
       }
+      if (w.length === 2 && PARTICLE_FALLBACK[w] && hasLongerContentWordAt(src, i + 1)) {
+        continue;
+      }
+      matched = w;
+      break;
     }
     if (matched) {
       const tStart = i;
@@ -3577,9 +3662,26 @@ function renderGreenBoard() {
   document.getElementById("gm-fill").style.width = `${m.dailyLockPct}%`;
 }
 
+function lexBoxHTML(id) {
+  return `
+    <div class="inline-lex empty" id="${id}" data-surface="">
+      <div class="ilex-top">
+        <div class="ilex-head"><span class="ilex-surf"></span><span class="ilex-kana"></span></div>
+        <button class="ilex-speak" type="button">发音</button>
+      </div>
+      <div class="ilex-zh"></div>
+      <div class="ilex-meta"></div>
+    </div>`;
+}
+
 function renderTutor() {
   renderGreenBoard();
+  clearActiveWordToken();
   const box = document.getElementById("voice-card");
+  const effStage = (viewStage === "done" || !curPointId)
+    ? "done"
+    : ((viewStage === "quiz" && activeQuizObj) ? "quiz" : viewStage);
+  box.className = "stage-wrap stage-" + effStage;
 
   if (viewStage === "done" || !curPointId) {
     const m = computeDaily120Metrics();
@@ -3634,12 +3736,12 @@ function renderTutor() {
         </div>
         <div class="example-line">${annotateJapanese(p.teach.example_ja)}</div>
         ${p.teach.zh_meaning ? `<p class="example-zh">${escapeHtml(p.teach.zh_meaning)}</p>` : ""}
-        <div class="inline-lex empty" id="tutor-inline-lex"></div>
       </div>
 
       <div class="action-dock">
         <button class="sumi-btn" style="width:100%;" onclick="completeTeachCard()"><span>继续</span><span class="desk-hint">滚轮下滑 · Enter</span></button>
       </div>
+      ${lexBoxHTML("tutor-inline-lex")}
     `;
     syncAudioButtons();
     return;
@@ -3746,7 +3848,6 @@ function renderTutor() {
       ${(q.is_listening && renderDialogueHTML(q.full_ja, q.answer, q.zh_meaning)) || `<div class="result-ja">${annotateSentenceWithAnswer(q.full_ja, q.answer)}</div>
       ${q.zh_meaning ? `<p class="result-zh">${escapeHtml(q.zh_meaning)}</p>` : ""}`}
       ${listenOptsReviewHTML}
-      <div class="inline-lex empty" id="tutor-inline-lex"></div>
       <div class="result-divider"></div>
       <div class="result-logic">
         ${q.why_line ? `<p class="logic-line">${escapeHtml(q.why_line)}</p>` : ""}
@@ -3760,6 +3861,7 @@ function renderTutor() {
         <button class="sumi-btn" onclick="advanceNext(false)"><span>下一题</span><span class="desk-hint">滚轮下滑 · Enter</span></button>
       </div>
     </div>
+    ${lexBoxHTML("tutor-inline-lex")}
   `;
   syncAudioButtons();
 }
@@ -3777,8 +3879,8 @@ function clearActiveWordToken() {
 function clearInlineLexicon(boxId) {
   const el = document.getElementById(boxId);
   if (!el) return;
-  el.className = "inline-lex empty";
-  el.innerHTML = "";
+  el.classList.add("empty");
+  el.dataset.surface = "";
 }
 
 function speakJapaneseFallback(text) {
@@ -3839,6 +3941,17 @@ function recordTappedWord(surface) {
 function showInlineWordMeaning(surface, tokEl) {
   const info = DATA.words[surface];
   if (!info) return;
+
+  const targetBoxId = activeMode === "radio" ? "radio-inline-lex" : "tutor-inline-lex";
+  const box = document.getElementById(targetBoxId);
+  if (!box) return;
+
+  if (tokEl && tokEl === activeTokEl && !box.classList.contains("empty")) {
+    clearActiveWordToken();
+    clearInlineLexicon(targetBoxId);
+    return;
+  }
+
   recordTappedWord(surface);
   clearActiveWordToken();
   if (tokEl && tokEl.classList) {
@@ -3846,23 +3959,22 @@ function showInlineWordMeaning(surface, tokEl) {
     activeTokEl.classList.add("active-tok");
   }
 
-  const targetBoxId = activeMode === "radio" ? "radio-inline-lex" : "tutor-inline-lex";
-  const box = document.getElementById(targetBoxId);
-  if (!box) return;
-
   const headDiff = info.head && info.head !== surface ? `原形 ${info.head}` : "";
   const metaLine = [headDiff, info.pos, info.tip].filter(Boolean).join(" · ");
+  const kanaTxt = info.kana && info.kana !== surface
+    ? (info.kana + (info.pitch ? " " + info.pitch : ""))
+    : (info.pitch || "");
 
-  box.className = "inline-lex";
-  box.innerHTML = `
-    <div class="ilex-main">
-      <span class="ilex-surf">${escapeHtml(surface)}</span>
-      ${info.kana && info.kana !== surface ? `<span class="ilex-kana">${escapeHtml(info.kana)}${info.pitch ? " " + escapeHtml(info.pitch) : ""}</span>` : (info.pitch ? `<span class="ilex-kana">${escapeHtml(info.pitch)}</span>` : "")}
-      <span class="ilex-zh">${escapeHtml(info.zh || "")}</span>
-      ${metaLine ? `<div class="ilex-meta">${escapeHtml(metaLine)}</div>` : ""}
-    </div>
-    <button class="ilex-speak" onclick='event.stopPropagation();playWordAudio(${JSON.stringify(surface)}, true)'>发音</button>
-  `;
+  box.dataset.surface = surface;
+  const surfEl = box.querySelector(".ilex-surf");
+  const kanaEl = box.querySelector(".ilex-kana");
+  const zhEl = box.querySelector(".ilex-zh");
+  const metaEl = box.querySelector(".ilex-meta");
+  if (surfEl) surfEl.textContent = surface;
+  if (kanaEl) kanaEl.textContent = kanaTxt;
+  if (zhEl) zhEl.textContent = info.zh || "";
+  if (metaEl) metaEl.textContent = metaLine;
+  box.classList.remove("empty");
 
   if (player.paused && radioPlayer.paused) {
     playWordAudio(surface, false);
@@ -3870,11 +3982,29 @@ function showInlineWordMeaning(surface, tokEl) {
 }
 
 document.addEventListener("click", e => {
+  if (flashOpen) return;
+  const speakBtn = e.target.closest && e.target.closest(".ilex-speak");
+  if (speakBtn) {
+    e.preventDefault();
+    e.stopPropagation();
+    const box = speakBtn.closest(".inline-lex");
+    if (box && box.dataset.surface) playWordAudio(box.dataset.surface, true);
+    return;
+  }
   const tok = e.target.closest && e.target.closest(".w-tok");
   if (tok && !(activeMode === "tutor" && viewStage === "quiz")) {
     e.preventDefault();
     e.stopPropagation();
     showInlineWordMeaning(tok.dataset.w, tok);
+    return;
+  }
+  if (!e.target.closest || !e.target.closest(".inline-lex")) {
+    const targetBoxId = activeMode === "radio" ? "radio-inline-lex" : "tutor-inline-lex";
+    const box = document.getElementById(targetBoxId);
+    if (box && !box.classList.contains("empty") && (e.target.closest(".focal-space") || e.target.closest(".radio-center"))) {
+      clearActiveWordToken();
+      clearInlineLexicon(targetBoxId);
+    }
   }
 });
 
