@@ -45,7 +45,7 @@ PT_TZ = ZoneInfo("America/Los_Angeles")
 EXAM_DATE = datetime.date(2026, 12, 6)
 PROXY_URL = os.environ.get("HTTPS_PROXY") or os.environ.get("HTTP_PROXY") or None
 COMM_KWARGS = {"proxy": PROXY_URL} if PROXY_URL else {}
-MAX_TRIES = 3 if os.environ.get("GITHUB_ACTIONS") == "true" else 1
+MAX_TRIES = 4 if os.environ.get("GITHUB_ACTIONS") == "true" else 1
 
 VOICE_MAP = {
     "M": ("zh-CN-YunxiNeural", "+4%"),
@@ -200,7 +200,7 @@ async def main():
     blocks.append({
         "chapter": 0,
         "point_id": None,
-        "title": f"{month_num}月{day_num}日 · 双人随身带教开场",
+        "title": f"{month_num}月{day_num}日 · 双人随身电台",
         "ja_focus": "今日も一緒に頑張りましょう！",
         "events": [
             ("M", f"哈喽，欢迎打开今天专属的日语随身电台！我是阿哲。今天是{month_num}月{day_num}号，距离十二月六号的考试还有{days_left}天。"),
@@ -236,7 +236,7 @@ async def main():
     blocks.append({
         "chapter": 1,
         "point_id": None,
-        "title": "第二章 · 听力60分真题潜台词剧场",
+        "title": "听力真题剧场",
         "ja_focus": "耳をすまして聞いてみよう",
         "events": [
             ("M", "聊完了最容易混的语法和敬语，接下来咱们进入第二部分：占卷面整整六十分的听力实战剧场！"),
@@ -277,7 +277,7 @@ async def main():
     blocks.append({
         "chapter": 2,
         "point_id": None,
-        "title": "第三章 · 词汇读音与假名副词快问快答",
+        "title": "词汇与假名副词",
         "ja_focus": "リズムで覚える重要語彙",
         "events": [
             ("F", "耳朵热身得差不多啦！第三部分咱们来玩一个路上最提神的快问快答：专治没有汉字的假名副词和咱们中国人最容易念错长短音的词。"),
@@ -335,7 +335,7 @@ async def main():
     blocks.append({
         "chapter": 3,
         "point_id": None,
-        "title": "第四章 · 纯日语原速洗耳回炉",
+        "title": "纯日语原速复听",
         "ja_focus": "日本語だけで総復習",
         "events": ch4_evs,
     })
@@ -370,7 +370,7 @@ async def main():
                         thash = hashlib.sha256(f"{k}:{val}".encode("utf-8")).hexdigest()[:12]
                         unique_turns[key] = os.path.join(tmpdir, f"t_{thash}.mp3")
 
-        sem = asyncio.Semaphore(6)
+        sem = asyncio.Semaphore(5)
         ok_results = await asyncio.gather(
             *(synth_turn(k, txt, path, sem) for (k, txt), path in unique_turns.items())
         )
@@ -432,10 +432,10 @@ async def main():
         final_dur = round(probe_duration(RADIO_MP3_PATH), 1)
         mins = max(1, round(final_dur / 60.0))
         chapters_meta = [
-            {"idx": 0, "title": "① 易混双人深聊", "start": chapter_starts.get(0, 0.0)},
-            {"idx": 1, "title": "② 听力真题剧场", "start": chapter_starts.get(1, 0.0)},
-            {"idx": 2, "title": "③ 词汇快问快答", "start": chapter_starts.get(2, 0.0)},
-            {"idx": 3, "title": "④ 纯日原速洗耳", "start": chapter_starts.get(3, 0.0)},
+            {"idx": 0, "title": "深聊", "start": chapter_starts.get(0, 0.0)},
+            {"idx": 1, "title": "听力", "start": chapter_starts.get(1, 0.0)},
+            {"idx": 2, "title": "词汇", "start": chapter_starts.get(2, 0.0)},
+            {"idx": 3, "title": "纯日", "start": chapter_starts.get(3, 0.0)},
         ]
         meta_obj = {
             "date": today_str,
@@ -445,7 +445,7 @@ async def main():
             "audio_url": f"./audio/daily_radio.mp3?v={today_str}_{script_sig[:6]}",
             "duration_sec": final_dur,
             "duration_label": f"{mins} 分钟",
-            "hosts": "阿哲 & 小夏",
+            "hosts": "阿哲 · 小夏",
             "chapters": chapters_meta,
             "segments": segments_meta,
         }
