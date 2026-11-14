@@ -1,4 +1,4 @@
-const CACHE_NAME = "n3-studio-tutor-v5";
+const CACHE_NAME = "n3-studio-tutor-v6";
 const CORE_SHELL = [
   "./",
   "./index.html",
@@ -10,7 +10,15 @@ const CORE_SHELL = [
 
 self.addEventListener("install", event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(CORE_SHELL)).catch(() => {})
+    caches.open(CACHE_NAME).then(cache =>
+      Promise.all(
+        CORE_SHELL.map(url =>
+          fetch(url, { cache: "no-store" })
+            .then(res => (res && res.ok ? cache.put(url, res) : null))
+            .catch(() => {})
+        )
+      )
+    )
   );
   self.skipWaiting();
 });
@@ -23,13 +31,19 @@ self.addEventListener("activate", event => {
   );
 });
 
+self.addEventListener("message", event => {
+  if (event.data === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener("fetch", event => {
   const req = event.request;
   if (req.method !== "GET" || req.headers.has("range")) return;
   const url = new URL(req.url);
   if (url.pathname.includes("/api/")) return;
 
-  // Cache-First for immutable studio MP3s and icons (instant replay + offline subway/walk)
+  // Cache-First for studio MP3s and icons (instant replay + offline walk/commute)
   if (url.pathname.endsWith(".mp3") || url.pathname.endsWith(".png")) {
     event.respondWith(
       caches.match(req).then(cached => {
@@ -46,9 +60,9 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  // Network-First with cache update & offline fallback for HTML/manifest
+  // Fresh Network-First (bypassing browser HTTP cache) for HTML & manifest so home-screen icon auto-syncs immediately
   event.respondWith(
-    fetch(req).then(res => {
+    fetch(req, { cache: "no-store" }).then(res => {
       if (res && res.status === 200) {
         const copy = res.clone();
         caches.open(CACHE_NAME).then(c => c.put(req, copy)).catch(() => {});

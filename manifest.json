@@ -1,13 +1,13 @@
 {
-  "name": "JLPT N3 语音私教 · 掌握度全景",
+  "name": "JLPT N3 语音私教",
   "short_name": "N3 私教",
-  "description": "真人级神经网络语音私教 · 15秒声画微课 · 走路随身电台 · 全局掌握度沙盘",
+  "description": "JLPT N3 真人语音私教 · 点选即练 · 随身听",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#F7F6F2",
-  "theme_color": "#F7F6F2",
+  "background_color": "#F3EFE8",
+  "theme_color": "#F3EFE8",
   "icons": [
     {
       "src": "./icon-192.png",
@@ -36,16 +36,16 @@
   ],
   "shortcuts": [
     {
-      "name": "走路随身电台",
-      "short_name": "走路听",
-      "description": "免手点按当前时段自动连播",
+      "name": "随身听自动连播",
+      "short_name": "随身听",
+      "description": "走路免手点自动听题与讲解",
       "url": "./index.html?mode=walk",
       "icons": [{ "src": "./icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
-      "name": "掌握度与假名副词 36",
-      "short_name": "掌握度",
-      "description": "查看四科掌握度与纯假名副词 Top 36",
+      "name": "考点总表",
+      "short_name": "总表",
+      "description": "查看四科进度与假名副词成对速记",
       "url": "./index.html?mode=dash",
       "icons": [{ "src": "./icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }

@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Compiles the JLPT N3 Studio Neural Audio Tutor + Mastery Panorama PWA (index.html).
-Designed with Mobile-First Ergonomics (Android Chrome PWA, Thumb Zone, Bottom-Sheet Dict,
-Walk Radio + MediaSession + WakeLock) AND Desktop Studio Perfection (2-Column Mastery Split,
-Full Keyboard Hotkeys, Hover Popover Dict, Architectural Typography & Whitespace).
+Compiles the JLPT N3 Neural Audio Tutor + Mastery Panorama PWA (index.html).
+Ultra-simple 2-step flow ("只留最重要的字"), large high-contrast typography for Phone & Desktop,
+locked 100dvh native-app viewport (zero annoying bounce/scroll on home screen), and instant auto-sync.
 """
 import glob
 import json
@@ -41,11 +40,9 @@ for surf, info in WORD_DICT.items():
 
 
 def resolve_word_audio(w: str) -> str:
-    return (rich_words.get(w, {}).get("audio") or word_audio_map.get(w, ""))
+    return rich_words.get(w, {}).get("audio") or word_audio_map.get(w, "")
 
 
-# Analyze latest practice_log.jsonl so Brain orders unseen/missed P0 items FIRST
-# and marks recently-correct items as consolidation (direct retrieval, no redundant lecture)
 latest_by_qid = {}
 if os.path.exists(LOG_PATH):
     with open(LOG_PATH, encoding="utf-8") as f:
@@ -75,87 +72,73 @@ def strip_opt_prefix(s: str) -> str:
     return re.sub(r"^[a-dA-D]\.\s*", "", str(s)).strip()
 
 
-def resolve_point_status(point_key: str) -> str:
-    if point_key in g_state_map:
-        return g_state_map[point_key].get("status", "yellow")
-    if point_key in h_state_map:
-        return h_state_map[point_key].get("status", "red")
-    if point_key in v_state_map:
-        return v_state_map[point_key].get("status", "red")
-    if point_key in l_state_map:
-        return l_state_map[point_key].get("status", "red")
-    return "red"
+def clean_prompt(s: str, is_listening: bool) -> str:
+    txt = re.sub(r"^🎧\s*", "", str(s or "")).strip()
+    if is_listening and ("1·2·3" in txt or "最自然的一句" in txt):
+        return "先点上方按钮听对话，再选最自然的回答"
+    return txt
+
+
+def clean_rule_text(s: str) -> str:
+    txt = str(s or "").strip()
+    txt = re.sub(
+        r"^(?:听力保命铁律|声音\+画面双锚|双重铁证|考场秒杀铁律|考试卷面铁律|秒杀铁律|记忆铁律|一眼锁死助词|看动词时态定画面|这对双胞胎反着记)[：:]\s*",
+        "",
+        txt,
+    )
+    return txt
 
 
 def build_card(q: dict, subject: str, fallback_point_label: str) -> dict:
     qid = q["id"]
     t_item = TUTOR_ITEMS.get(qid, {})
     meta = audio_manifest.get(f"meta:{qid}", {})
+    is_listening = subject == "聴解"
 
     fallback_opts = [strip_opt_prefix(o) for o in q.get("options", []) if o != "不知道"]
     fallback_ans = strip_opt_prefix(q.get("answer", ""))
 
     choices = t_item.get("choices") or fallback_opts
     answer = t_item.get("answer") or fallback_ans
-    prompt_display = t_item.get("prompt_display") or re.sub(r"\s*\[[A-Z0-9-]+\]", "", str(q.get("stem", ""))).strip()
-    full_ja = t_item.get("full_ja") or prompt_display
+    raw_prompt = t_item.get("prompt_display") or re.sub(r"\s*\[[A-Z0-9-]+\]", "", str(q.get("stem", ""))).strip()
+    prompt_display = clean_prompt(raw_prompt, is_listening)
+    full_ja = t_item.get("full_ja") or raw_prompt
     explain = meta.get("spoken_text") or t_item.get("voice_exp") or q.get("hook_zh") or ""
 
     point_key = t_item.get("point_key") or fallback_point_label
     if point_key in l_state_map:
-        lp = l_state_map[point_key]
-        display_point = lp.get("name") or fallback_point_label
+        display_point = l_state_map[point_key].get("name") or fallback_point_label
     elif point_key in h_state_map:
         display_point = h_state_map[point_key].get("name") or fallback_point_label
     else:
         display_point = fallback_point_label or point_key
 
-    pt_status = resolve_point_status(point_key)
     hist = latest_by_qid.get(qid)
-
     if hist is not None:
-        if not hist["ok"]:
-            priority_group = 0
-            needs_teach = True
-        else:
-            priority_group = 2
-            needs_teach = False
+        priority_group = 0 if not hist["ok"] else 2
     else:
         priority_group = 1
-        needs_teach = pt_status in ("red", "orange", "gray")
 
-    micro = None
-    raw_micro = t_item.get("micro_lesson")
-    if raw_micro:
-        audio_urls = [resolve_word_audio(w) for w in raw_micro.get("audio_words", []) if resolve_word_audio(w)]
-        micro = {
-            "scene": raw_micro.get("scene", "contrast_box"),
-            "left": raw_micro.get("left", {}),
-            "right": raw_micro.get("right", {}),
-            "hook": raw_micro.get("hook", ""),
-            "audio_words": raw_micro.get("audio_words", []),
-            "audio_urls": audio_urls,
-        }
+    raw_micro = t_item.get("micro_lesson") or {}
+    opt_notes = t_item.get("option_notes") or {}
+    core_rule = clean_rule_text(raw_micro.get("hook") or opt_notes.get(answer) or explain)
 
     return {
         "id": qid,
         "subject": subject,
         "point": display_point,
         "point_key": point_key,
-        "roi_tag": t_item.get("roi_tag", "高频核心"),
         "walk_slot": t_item.get("walk_slot", "morning"),
         "priority_group": priority_group,
-        "needs_teach": bool(needs_teach and micro),
         "prompt": prompt_display,
         "choices": choices,
         "answer": answer,
         "full_ja": full_ja,
-        "explain": explain,
-        "option_notes": t_item.get("option_notes", {}),
-        "micro": micro,
+        "core_rule": core_rule,
+        "option_notes": opt_notes,
         "q_audio": meta.get("q_audio", ""),
         "exp_audio": meta.get("exp_audio", ""),
-        "is_listening": subject == "聴解",
+        "is_listening": is_listening,
     }
 
 
@@ -198,11 +181,13 @@ l_list = [
     if has_studio_mp3(c)
 ]
 
+# Put written sentences before listening on card #1 so first-open shows a clear Japanese sentence immediately,
+# and tapping option #1 unlocks browser audio so subsequent listening cards auto-play out loud!
 cards = []
 for p_tier in (0, 1, 2):
     tier_buckets = [
         [c for c in bucket if c["priority_group"] == p_tier]
-        for bucket in (g_list, l_list, v_list, h_list)
+        for bucket in (v_list, h_list, g_list, l_list)
     ]
     max_len = max((len(b) for b in tier_buckets), default=0)
     for i in range(max_len):
@@ -234,7 +219,6 @@ for p in live_state.get("grammar_points", []):
         "sub": p.get("meaning", ""),
         "family": re.sub(r"^\d+\.\s*", "", p.get("family", "")),
         "tier": norm_tier(st),
-        "roi": bool(st in ("red", "orange") or p.get("exam_alert")),
         "card_id": card_by_point_key.get(nm, ""),
         "note": p.get("exam_alert") or p.get("note", ""),
     })
@@ -251,7 +235,6 @@ for p in live_state.get("henkei_points", []):
         "sub": p.get("example", ""),
         "family": re.sub(r"^\d+(?:\.\d+)?\s*", "", p.get("subcategory") or p.get("category", "")),
         "tier": norm_tier(st),
-        "roi": bool(st in ("red", "orange")),
         "card_id": card_by_point_key.get(pid, ""),
         "note": p.get("note", ""),
     })
@@ -268,7 +251,6 @@ for p in live_state.get("vocab_tracked", []):
         "sub": re.sub(r"^\d+\.\s*", "", p.get("category", "")),
         "family": re.sub(r"^\d+\.\s*", "", p.get("category", "")),
         "tier": norm_tier(st),
-        "roi": bool(st in ("red", "orange") or p.get("wrong", 0) >= 2 or p.get("classroom_note")),
         "card_id": card_by_point_key.get(w, ""),
         "audio": resolve_word_audio(w),
         "note": v_note,
@@ -286,23 +268,21 @@ for p in live_state.get("listening_points", []):
         "sub": p.get("meaning", "") or p.get("full", ""),
         "family": p.get("category", ""),
         "tier": norm_tier(st),
-        "roi": bool(st in ("red", "orange") or p.get("trap")),
         "card_id": card_by_point_key.get(pid, ""),
         "note": p.get("trap", "") or p.get("note", ""),
     })
 
 
 def count_tiers(items):
-    c = {"todo": 0, "wip": 0, "done": 0, "roi": 0}
+    c = {"todo": 0, "wip": 0, "done": 0}
     for it in items:
         c[it["tier"]] += 1
-        if it.get("roi") and it["tier"] != "done":
-            c["roi"] += 1
     c["total"] = len(items)
     return c
 
 
 kana36_enriched = []
+kana_word_total = 0
 for fam in KANA_ADVERBS_36:
     pairs_out = []
     for pr in fam["pairs"]:
@@ -310,9 +290,8 @@ for fam in KANA_ADVERBS_36:
         b = dict(pr["b"])
         a["audio"] = resolve_word_audio(a["w"])
         b["audio"] = resolve_word_audio(b["w"])
-        a["card_id"] = card_by_point_key.get(a["w"], "")
-        b["card_id"] = card_by_point_key.get(b["w"], "")
         pairs_out.append({"a": a, "b": b, "scene": pr["scene"]})
+        kana_word_total += 2
     kana36_enriched.append({
         "family": fam["family"],
         "tag": fam["tag"],
@@ -321,7 +300,7 @@ for fam in KANA_ADVERBS_36:
 
 mastery_data = {
     "grammar": {"label": "语法", "counts": count_tiers(grammar_items), "items": grammar_items},
-    "henkei": {"label": "核心活用", "counts": count_tiers(henkei_items), "items": henkei_items},
+    "henkei": {"label": "活用变形", "counts": count_tiers(henkei_items), "items": henkei_items},
     "listening": {"label": "听力口语", "counts": count_tiers(listening_items), "items": listening_items},
     "vocab": {"label": "重点词", "counts": count_tiers(vocab_items), "items": vocab_items},
 }
@@ -335,15 +314,16 @@ payload = json.dumps({
     "words": rich_words,
     "mastery": mastery_data,
     "kana36": kana36_enriched,
+    "kana_total": kana_word_total,
 }, ensure_ascii=False)
 
 html = r"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<meta name="description" content="JLPT N3 真人级神经网络语音私教 · 声画微课 · 走路随身电台 · 全局掌握度沙盘" />
-<meta name="theme-color" content="#F7F6F2" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="description" content="JLPT N3 语音私教" />
+<meta name="theme-color" content="#F3EFE8" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -352,41 +332,46 @@ html = r"""<!DOCTYPE html>
 <link rel="apple-touch-icon" href="./icon-192.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
 <title>JLPT N3 · 语音私教</title>
 <style>
   :root {
-    --bg: #F7F6F2;
+    --bg: #F3EFE8;
     --card: #FFFFFF;
-    --subtle: #F0EEE8;
-    --subtle-2: #E8E5DC;
-    --line: rgba(28, 25, 23, 0.08);
-    --line-strong: rgba(28, 25, 23, 0.18);
-    --ink: #1C1917;
-    --ink-2: #57534E;
-    --ink-3: #8C857B;
-    --green: #246E53;
-    --green-bg: #ECF7F2;
-    --green-border: rgba(36, 110, 83, 0.30);
-    --amber: #B4741A;
-    --amber-bg: #FCF6EC;
-    --amber-border: rgba(180, 116, 26, 0.28);
-    --red: #BF3E35;
-    --red-bg: #FDF2F1;
-    --red-border: rgba(191, 62, 53, 0.30);
-    --sans: "Inter", -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans", "Noto Sans JP", sans-serif;
+    --surface: #FAF8F4;
+    --subtle: #E8E2D7;
+    --line: rgba(24, 22, 19, 0.10);
+    --line-strong: rgba(24, 22, 19, 0.20);
+    --ink: #181613;
+    --ink-2: #4A453E;
+    --ink-3: #7A7368;
+    --green: #1B6B50;
+    --green-bg: #E8F5EF;
+    --green-border: rgba(27, 107, 80, 0.34);
+    --amber: #A66314;
+    --amber-bg: #FBF3E4;
+    --red: #B8372E;
+    --red-bg: #FCEEEB;
+    --red-border: rgba(184, 55, 46, 0.30);
+    --sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans", "Noto Sans JP", sans-serif;
     --jp: "Noto Sans JP", "Hiragino Sans", "PingFang SC", sans-serif;
-    --radius-xl: 28px;
-    --radius-lg: 20px;
-    --radius-md: 14px;
-    --shadow-card: 0 16px 44px -20px rgba(28, 25, 23, 0.08), 0 2px 6px rgba(28, 25, 23, 0.02);
+    --shadow-card: 0 14px 36px -14px rgba(24, 22, 19, 0.10), 0 2px 6px rgba(24, 22, 19, 0.03);
   }
 
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
 
+  /* Lock viewport 100% solid: prevents rubber-band bounce & annoying vertical wobble on mobile home screen */
   html, body {
     margin: 0;
     padding: 0;
+    width: 100%;
+    height: 100%;
+    height: 100dvh;
+    overflow: hidden;
+    overscroll-behavior: none;
     background: var(--bg);
     color: var(--ink);
     font-family: var(--sans);
@@ -395,73 +380,74 @@ html = r"""<!DOCTYPE html>
   }
 
   body {
-    min-height: 100dvh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: calc(14px + env(safe-area-inset-top)) 16px calc(22px + env(safe-area-inset-bottom));
+    padding: calc(10px + env(safe-area-inset-top)) 16px calc(12px + env(safe-area-inset-bottom));
   }
 
-  /* ================= RESPONSIVE SHELL (Mobile-First + Desktop Studio) ================= */
   .app-shell {
     width: 100%;
-    max-width: 480px;
+    max-width: 500px;
+    height: 100%;
     display: flex;
     flex-direction: column;
-    min-height: calc(100dvh - 36px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    min-height: 0;
   }
 
   @media (min-width: 900px) {
     body {
-      padding: 28px 36px 32px;
+      padding: 24px 36px 24px;
     }
     .app-shell {
-      max-width: 980px;
-      min-height: calc(100dvh - 60px);
+      max-width: 1020px;
     }
   }
 
   /* ================= CLEAN TOP HEADER ================= */
   .app-header {
+    flex-shrink: 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 12px;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
     padding: 0 2px;
   }
   .brand-left {
     display: flex;
     align-items: baseline;
-    gap: 10px;
+    gap: 8px;
   }
-  .visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
+  .n3-seal {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ink);
+    color: #FFFFFF;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    padding: 3px 8px;
+    border-radius: 8px;
+    transform: translateY(-1px);
   }
   .countdown {
-    font-size: 14px;
-    font-weight: 600;
-    letter-spacing: -0.01em;
+    font-size: 17px;
+    font-weight: 700;
     color: var(--ink);
     font-variant-numeric: tabular-nums;
   }
-  .exam-date-sub {
-    display: none;
-    font-size: 12.5px;
-    color: var(--ink-3);
+  .countdown strong {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--green);
+    margin: 0 2px;
   }
   @media (min-width: 900px) {
-    .app-header { margin-bottom: 24px; }
-    .countdown { font-size: 15px; }
-    .exam-date-sub { display: inline; }
+    .app-header { margin-bottom: 18px; }
+    .countdown { font-size: 18px; }
+    .countdown strong { font-size: 24px; }
   }
 
   .header-right {
@@ -471,309 +457,206 @@ html = r"""<!DOCTYPE html>
   }
   .install-pill {
     display: none;
-    border: 1px solid var(--green-border);
+    border: 1.5px solid var(--green-border);
     background: var(--green-bg);
     color: var(--green);
     font-family: var(--sans);
-    font-size: 12px;
-    font-weight: 600;
-    padding: 6px 11px;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 7px 12px;
     border-radius: 999px;
     cursor: pointer;
   }
-  .install-pill.visible { display: inline-flex; align-items: center; gap: 4px; }
+  .install-pill.visible {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
 
   .mode-switch {
     display: inline-flex;
     background: var(--subtle);
-    padding: 3px;
+    padding: 4px;
     border-radius: 999px;
-    border: 1px solid var(--line);
   }
   .mode-btn {
     border: none;
     background: transparent;
     color: var(--ink-2);
     font-family: var(--sans);
-    font-size: 12.5px;
-    font-weight: 500;
-    padding: 6px 14px;
+    font-size: 15.5px;
+    font-weight: 600;
+    padding: 7px 16px;
     border-radius: 999px;
     cursor: pointer;
-    transition: all 0.16s ease;
+    transition: all 0.15s ease;
   }
   .mode-btn.active {
     background: var(--card);
     color: var(--ink);
-    font-weight: 600;
-    box-shadow: 0 2px 8px rgba(28, 25, 23, 0.08);
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(24, 22, 19, 0.10);
   }
 
-  /* ================= VIEW 1: VOICE TUTOR (Primary) ================= */
+  /* ================= VIEW 1: ULTRA-CLEAN TUTOR ================= */
   .tutor-wrap {
     flex: 1;
+    min-height: 0;
     display: flex;
     flex-direction: column;
-    justify-content: center;
     width: 100%;
-    max-width: 480px;
+    max-width: 500px;
     margin: 0 auto;
   }
   @media (min-width: 900px) {
     .tutor-wrap {
-      max-width: 680px;
+      max-width: 700px;
     }
   }
   .tutor-wrap.hidden { display: none; }
 
   .session-bar {
+    flex-shrink: 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 10px;
-    padding: 0 4px;
-    font-size: 12.5px;
-    color: var(--ink-3);
-    font-variant-numeric: tabular-nums;
+    margin-bottom: 8px;
+    padding: 0 2px;
   }
   .counter-btn {
     border: none;
     background: transparent;
-    color: var(--ink-3);
+    color: var(--ink-2);
     font-family: var(--sans);
-    font-size: 12.5px;
+    font-size: 16px;
+    font-weight: 700;
     font-variant-numeric: tabular-nums;
-    padding: 4px 6px;
-    margin-left: -6px;
-    border-radius: 8px;
+    padding: 5px 8px;
+    margin-left: -8px;
+    border-radius: 10px;
     cursor: pointer;
-    transition: background 0.14s ease, color 0.14s ease;
   }
-  .counter-btn:hover {
+  .counter-btn:active, .counter-btn:hover {
     background: var(--subtle);
     color: var(--ink);
   }
-  .session-controls {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-  }
-  .pill-ctrl {
-    border: 1px solid var(--line);
+
+  .walk-pill {
+    border: 1.5px solid var(--line);
     background: var(--card);
-    color: var(--ink-2);
+    color: var(--ink);
     font-family: var(--sans);
-    font-size: 12px;
-    font-weight: 500;
-    padding: 5px 11px;
+    font-size: 15px;
+    font-weight: 600;
+    min-height: 38px;
+    padding: 6px 14px;
     border-radius: 999px;
     cursor: pointer;
-    transition: all 0.15s ease;
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
+    transition: all 0.15s ease;
   }
-  .pill-ctrl:hover {
-    border-color: var(--line-strong);
-    color: var(--ink);
+  .walk-pill svg {
+    width: 17px;
+    height: 17px;
+    flex-shrink: 0;
   }
-  .pill-ctrl.active {
-    background: var(--ink);
+  .walk-pill.active {
+    background: var(--green);
     color: #FFFFFF;
-    border-color: var(--ink);
+    border-color: var(--green);
   }
 
   .progress-rail {
-    height: 3px;
-    background: rgba(28, 25, 23, 0.06);
+    flex-shrink: 0;
+    height: 6px;
+    background: var(--subtle);
     border-radius: 999px;
     overflow: hidden;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
   }
   .progress-fill {
     height: 100%;
     background: var(--green);
     border-radius: 999px;
-    transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    transition: width 0.3s cubic-bezier(0.22, 1, 0.36, 1);
   }
+
+  /* Scrollable ONLY if content ever exceeds viewport on tiny screens; locked solid otherwise */
+  .tutor-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    display: flex;
+    flex-direction: column;
+  }
+  .tutor-scroll::-webkit-scrollbar { display: none; }
 
   .voice-card {
     background: var(--card);
     border: 1px solid var(--line);
-    border-radius: var(--radius-xl);
-    padding: 26px 20px 22px;
+    border-radius: 26px;
+    padding: 20px 20px 22px;
     box-shadow: var(--shadow-card);
-    transition: padding 0.2s ease;
+    display: flex;
+    flex-direction: column;
   }
   @media (min-width: 900px) {
     .voice-card {
-      padding: 38px 44px 32px;
+      border-radius: 30px;
+      padding: 32px 42px 32px;
     }
   }
 
-  /* Subtle Point Context Chip */
-  .card-eyebrow {
+  .card-top-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
-    font-size: 12px;
-    color: var(--ink-3);
+    margin-bottom: 12px;
   }
-  .subj-tag {
+  .subj-pill {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    font-weight: 500;
-    color: var(--ink-2);
+    gap: 7px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
   }
   .subj-dot {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     background: var(--green);
   }
-
-  /* ================= STAGE A: 15s VISUAL+AUDIO MICRO-LESSON (Teach-Before-Test) ================= */
-  .teach-stage {
-    animation: fadeUp 0.2s ease;
-  }
-  .teach-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 14px;
-  }
-  .teach-badge {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--amber);
-    background: var(--amber-bg);
-    border: 1px solid var(--amber-border);
-    padding: 4px 10px;
-    border-radius: 999px;
-  }
-  .pair-audio-btn {
-    border: 1px solid var(--line);
-    background: var(--bg);
-    color: var(--ink);
-    font-family: var(--sans);
-    font-size: 12px;
-    font-weight: 500;
-    padding: 5px 12px;
-    border-radius: 999px;
-    cursor: pointer;
-    transition: all 0.14s ease;
-  }
-  .pair-audio-btn.speaking {
-    background: var(--green-bg);
-    color: var(--green);
-    border-color: var(--green-border);
-  }
-
-  .scene-art {
-    background: var(--bg);
-    border: 1px solid var(--line);
-    border-radius: 18px;
-    padding: 14px 16px;
-    margin-bottom: 12px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 76px;
-  }
-  .scene-art svg {
-    width: 100%;
-    max-width: 340px;
-    height: 58px;
-    overflow: visible;
-  }
-
-  .pair-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 14px;
-  }
-  @media (max-width: 390px) {
-    .pair-grid { grid-template-columns: 1fr; }
-  }
-  .pair-box {
-    background: var(--bg);
-    border: 1.5px solid var(--line);
-    border-radius: 16px;
-    padding: 14px 13px;
-    text-align: left;
-    cursor: pointer;
-    transition: all 0.16s ease;
-    position: relative;
-  }
-  .pair-box:hover {
-    border-color: var(--line-strong);
-    background: #FFFFFF;
-  }
-  .pair-box.primary-anchor {
-    border-color: var(--green-border);
-    background: rgba(236, 247, 242, 0.45);
-  }
-  .pair-box.speaking-box {
-    border-color: var(--green);
-    background: var(--green-bg);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 18px -8px rgba(36, 110, 83, 0.28);
-  }
-  .pair-ja {
-    font-family: var(--jp);
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--ink);
-    margin-bottom: 4px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 6px;
-  }
-  .pair-spk-ic {
-    font-size: 11px;
+  .prev-link {
+    border: none;
+    background: transparent;
     color: var(--ink-3);
     font-family: var(--sans);
-    font-weight: 400;
-    flex-shrink: 0;
-  }
-  .pair-sub {
-    font-size: 11.5px;
+    font-size: 15px;
     font-weight: 600;
-    color: var(--green);
-    margin-bottom: 4px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    cursor: pointer;
   }
-  .pair-box.contrast-anchor .pair-sub {
-    color: var(--ink-2);
-  }
-  .pair-desc {
-    font-size: 12.5px;
-    color: var(--ink-2);
-    line-height: 1.45;
-  }
+  .prev-link:hover { color: var(--ink); background: var(--surface); }
 
-  .teach-hook {
-    font-size: 13.5px;
-    line-height: 1.6;
-    color: var(--ink);
-    background: var(--subtle);
-    border-radius: 13px;
-    padding: 11px 14px;
-    margin-bottom: 16px;
-  }
-
-  /* ================= STAGE B: TACTILE VOICE ORB & TEST ================= */
+  /* ================= STEP 1: LISTEN & PICK ================= */
   .orb-stage {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 18px;
+    margin: 4px 0 16px;
   }
   .voice-orb {
-    position: relative;
     width: 76px;
     height: 76px;
     border-radius: 50%;
@@ -784,388 +667,319 @@ html = r"""<!DOCTYPE html>
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 10px 26px -6px rgba(28, 25, 23, 0.26);
-    transition: transform 0.16s ease, background 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 10px 24px -6px rgba(24, 22, 19, 0.28);
+    transition: transform 0.14s ease, background 0.18s ease, box-shadow 0.18s ease;
   }
   @media (min-width: 900px) {
-    .voice-orb { width: 82px; height: 82px; }
+    .voice-orb { width: 84px; height: 84px; }
   }
-  .voice-orb:hover { transform: translateY(-1px); }
-  .voice-orb:active { transform: scale(0.95); }
+  .voice-orb:active { transform: scale(0.94); }
+  .voice-orb.listening-emphasis {
+    background: var(--green);
+    box-shadow: 0 0 0 7px rgba(27, 107, 80, 0.14), 0 10px 24px -6px rgba(27, 107, 80, 0.34);
+  }
   .voice-orb.speaking {
     background: var(--green);
-    box-shadow: 0 0 0 8px rgba(36, 110, 83, 0.13), 0 10px 26px -6px rgba(36, 110, 83, 0.35);
-    animation: orbPulse 1.6s ease-in-out infinite;
+    box-shadow: 0 0 0 9px rgba(27, 107, 80, 0.16), 0 10px 24px -6px rgba(27, 107, 80, 0.36);
+    animation: orbPulse 1.5s ease-in-out infinite;
   }
   .voice-orb.thinking {
     background: var(--amber);
-    box-shadow: 0 0 0 8px rgba(180, 116, 26, 0.15);
+    box-shadow: 0 0 0 8px rgba(166, 99, 20, 0.16);
   }
   @keyframes orbPulse {
     0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.045); }
+    50% { transform: scale(1.04); }
+  }
+
+  .orb-play-ic {
+    width: 28px;
+    height: 28px;
+    margin-left: 3px;
   }
   .orb-bars {
-    display: inline-flex;
+    display: none;
     align-items: center;
     gap: 4px;
-    height: 22px;
+    height: 24px;
   }
+  .voice-orb.speaking .orb-play-ic { display: none; }
+  .voice-orb.speaking .orb-bars { display: inline-flex; }
   .orb-bars span {
     display: block;
-    width: 3.5px;
+    width: 4px;
     height: 10px;
     background: #FFFFFF;
     border-radius: 99px;
-    transition: height 0.15s ease;
   }
-  .voice-orb.speaking .orb-bars span:nth-child(1) { animation: wave 0.7s ease-in-out infinite; }
-  .voice-orb.speaking .orb-bars span:nth-child(2) { animation: wave 0.7s ease-in-out 0.15s infinite; height: 18px; }
-  .voice-orb.speaking .orb-bars span:nth-child(3) { animation: wave 0.7s ease-in-out 0.3s infinite; height: 14px; }
-  .voice-orb.speaking .orb-bars span:nth-child(4) { animation: wave 0.7s ease-in-out 0.1s infinite; }
+  .voice-orb.speaking .orb-bars span:nth-child(1) { animation: wave 0.65s ease-in-out infinite; }
+  .voice-orb.speaking .orb-bars span:nth-child(2) { animation: wave 0.65s ease-in-out 0.14s infinite; }
+  .voice-orb.speaking .orb-bars span:nth-child(3) { animation: wave 0.65s ease-in-out 0.28s infinite; }
+  .voice-orb.speaking .orb-bars span:nth-child(4) { animation: wave 0.65s ease-in-out 0.1s infinite; }
   @keyframes wave {
-    0%, 100% { height: 7px; }
-    50% { height: 21px; }
+    0%, 100% { height: 8px; }
+    50% { height: 23px; }
   }
+
   .orb-caption {
-    margin-top: 9px;
-    font-size: 12.5px;
-    color: var(--ink-3);
+    margin-top: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink-2);
   }
 
   .prompt-cue {
     font-family: var(--jp);
-    font-size: 18.5px;
-    font-weight: 500;
-    line-height: 1.65;
+    font-size: 23px;
+    font-weight: 600;
+    line-height: 1.58;
     text-align: center;
     color: var(--ink);
-    margin: 0 0 22px;
-    padding: 0 4px;
+    margin: 0 0 20px;
+    padding: 0 2px;
+  }
+  .prompt-cue.is-listening-cue {
+    font-family: var(--sans);
+    font-size: 20px;
+    color: var(--ink-2);
   }
   @media (min-width: 900px) {
     .prompt-cue {
-      font-size: 21px;
-      margin-bottom: 26px;
+      font-size: 27px;
+      margin-bottom: 24px;
+    }
+    .prompt-cue.is-listening-cue {
+      font-size: 22px;
     }
   }
 
-  /* Thumb-Ergonomic + Desktop Keycap Choices */
-  .choices-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+  .choices-stack {
+    display: flex;
+    flex-direction: column;
     gap: 10px;
-  }
-  .choices-grid.stacked {
-    grid-template-columns: 1fr;
   }
   .choice-btn {
     position: relative;
-    background: var(--bg);
-    border: 1.5px solid var(--line);
-    border-radius: 16px;
-    min-height: 56px;
-    padding: 15px 14px;
+    width: 100%;
+    background: var(--surface);
+    border: 1.5px solid var(--line-strong);
+    border-radius: 18px;
+    min-height: 60px;
+    padding: 14px 18px;
     font-family: var(--jp);
-    font-size: 16.5px;
-    font-weight: 500;
+    font-size: 20.5px;
+    font-weight: 600;
     color: var(--ink);
-    text-align: center;
+    text-align: left;
     cursor: pointer;
-    transition: all 0.14s ease;
-    line-height: 1.45;
+    box-shadow: 0 2px 0 rgba(24, 22, 19, 0.04);
+    transition: transform 0.12s ease, background 0.14s ease, border-color 0.14s ease;
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 8px;
-  }
-  .choices-grid.stacked .choice-btn {
     justify-content: space-between;
-    text-align: left;
-    padding: 14px 16px;
+    gap: 12px;
+    line-height: 1.42;
   }
-  .choice-btn:hover:not(:disabled) {
-    border-color: var(--line-strong);
+  @media (min-width: 900px) {
+    .choice-btn {
+      min-height: 64px;
+      font-size: 22px;
+      padding: 15px 22px;
+    }
+  }
+  .choice-btn:hover {
     background: #FFFFFF;
-    transform: translateY(-1px);
+    border-color: var(--ink);
   }
-  .choice-btn:active:not(:disabled) {
-    transform: scale(0.985);
-  }
-  .choice-btn.correct {
-    background: var(--green-bg);
-    border-color: var(--green-border);
-    color: var(--green);
-    font-weight: 600;
-  }
-  .choice-btn.wrong {
-    background: var(--red-bg);
-    border-color: var(--red-border);
-    color: var(--red);
+  .choice-btn:active {
+    transform: scale(0.988);
   }
 
-  /* Subtle Desktop Keycaps (Hidden on touch devices!) */
   .kbd-hint {
     display: none;
     font-family: var(--sans);
-    font-size: 11px;
-    font-weight: 500;
+    font-size: 12px;
+    font-weight: 600;
     color: var(--ink-3);
-    background: rgba(28, 25, 23, 0.05);
-    border: 1px solid rgba(28, 25, 23, 0.09);
-    border-radius: 5px;
-    padding: 1px 5px;
-    line-height: 1.3;
+    background: rgba(24, 22, 19, 0.06);
+    border: 1px solid rgba(24, 22, 19, 0.10);
+    border-radius: 6px;
+    padding: 2px 7px;
     flex-shrink: 0;
   }
   @media (hover: hover) and (pointer: fine) {
     .kbd-hint { display: inline-block; }
-    .choices-grid:not(.stacked) .choice-btn .kbd-hint {
-      position: absolute;
-      top: 7px;
-      right: 8px;
-      font-size: 10.5px;
-    }
   }
 
-  .quick-assist-row {
-    display: flex;
-    gap: 8px;
-    margin-top: 12px;
-  }
-  .assist-btn {
-    flex: 1;
+  .skip-btn {
+    margin-top: 10px;
+    width: 100%;
+    border: none;
     background: transparent;
-    border: 1px dashed var(--line-strong);
-    border-radius: 14px;
+    color: var(--ink-3);
+    font-family: var(--sans);
+    font-size: 15.5px;
+    font-weight: 600;
     min-height: 44px;
-    padding: 10px 10px;
-    font-family: var(--sans);
-    font-size: 12.5px;
-    color: var(--ink-2);
-    cursor: pointer;
-    transition: all 0.14s ease;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-  }
-  .assist-btn:hover {
-    background: var(--bg);
-    color: var(--ink);
-    border-style: solid;
-  }
-  .assist-btn.listening-mic {
-    background: var(--green-bg);
-    border-style: solid;
-    border-color: var(--green-border);
-    color: var(--green);
-    font-weight: 600;
-  }
-
-  /* ================= STAGE C: WALK RADIO MODE (Zero-Prompt Eyes-Free) ================= */
-  .walk-banner {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: var(--green-bg);
-    border: 1px solid var(--green-border);
-    color: var(--green);
-    padding: 9px 14px;
     border-radius: 14px;
-    margin-bottom: 18px;
-    font-size: 12.5px;
-    font-weight: 500;
-  }
-  .walk-controls-row {
-    display: grid;
-    grid-template-columns: 1fr 1.3fr 1fr;
-    gap: 10px;
-    margin-top: 18px;
-  }
-  .walk-nav-btn {
-    border: 1px solid var(--line);
-    background: var(--bg);
-    color: var(--ink);
-    border-radius: 16px;
-    min-height: 52px;
-    font-family: var(--sans);
-    font-size: 13.5px;
-    font-weight: 500;
     cursor: pointer;
   }
-  .walk-nav-btn.primary {
-    background: var(--ink);
-    color: #FFFFFF;
-    border-color: var(--ink);
-    font-weight: 600;
+  .skip-btn:hover, .skip-btn:active {
+    background: var(--surface);
+    color: var(--ink);
   }
 
-  /* ================= ANSWER ZONE (Full Option Breakdown + Anti-Spoiler Dict!) ================= */
-  .answer-zone {
-    margin-top: 22px;
-    padding-top: 20px;
-    border-top: 1px solid var(--line);
-    animation: fadeUp 0.2s ease;
+  /* ================= STEP 2: 1-SCREEN INSTANT EXPLANATION ================= */
+  .ans-stage {
+    animation: fadeIn 0.16s ease;
   }
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(5px); }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(3px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
-  .exp-controls {
+  .ans-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 8px;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
     flex-wrap: wrap;
   }
-  .replay-exp-btn {
-    border: 1px solid var(--line);
-    background: var(--bg);
+  .verdict-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 18px;
+    font-weight: 800;
+  }
+  .verdict-badge.ok { color: var(--green); }
+  .verdict-badge.ng { color: var(--red); }
+  .verdict-badge.peek { color: var(--ink); }
+
+  .ans-audio-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .mini-audio-btn {
+    border: 1.5px solid var(--line);
+    background: var(--surface);
     color: var(--ink);
     font-family: var(--sans);
-    font-size: 12.5px;
-    font-weight: 500;
+    font-size: 14.5px;
+    font-weight: 600;
+    min-height: 38px;
     padding: 6px 13px;
     border-radius: 999px;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
   }
-  .replay-exp-btn.playing {
+  .mini-audio-btn.playing {
     background: var(--green-bg);
     color: var(--green);
     border-color: var(--green-border);
   }
-  .speed-group {
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-    background: var(--subtle);
-    padding: 2.5px;
-    border-radius: 999px;
+
+  .ans-answer-box {
+    background: var(--green-bg);
+    border: 1.5px solid var(--green-border);
+    border-radius: 16px;
+    padding: 12px 15px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
   }
-  .spd-btn {
-    border: none;
-    background: transparent;
-    color: var(--ink-2);
-    font-family: var(--sans);
-    font-size: 11.5px;
-    padding: 4px 8px;
-    border-radius: 999px;
-    cursor: pointer;
-    font-variant-numeric: tabular-nums;
+  .ans-mark-ok {
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--green);
+    flex-shrink: 0;
   }
-  .spd-btn.active {
-    background: var(--card);
+  .ans-ja-text {
+    font-family: var(--jp);
+    font-size: 20.5px;
+    font-weight: 700;
+    color: var(--green);
+    line-height: 1.45;
+  }
+
+  .ans-wrong-box {
+    background: var(--red-bg);
+    border: 1px solid var(--red-border);
+    border-radius: 15px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    font-size: 15.5px;
+    line-height: 1.52;
     color: var(--ink);
+  }
+  .ans-wrong-head {
+    font-family: var(--jp);
+    font-weight: 700;
+    color: var(--red);
+    margin-right: 6px;
+  }
+
+  .core-rule-box {
+    background: #F6F3EC;
+    border-left: 4px solid var(--green);
+    border-radius: 13px;
+    padding: 12px 15px;
+    margin-bottom: 12px;
+    font-size: 17.5px;
     font-weight: 600;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    line-height: 1.58;
+    color: var(--ink);
+  }
+  @media (min-width: 900px) {
+    .core-rule-box { font-size: 18.5px; }
   }
 
   .full-sentence-box {
-    background: var(--bg);
+    background: var(--surface);
+    border: 1px solid var(--line);
     border-radius: 16px;
-    padding: 14px 16px;
-    margin-bottom: 12px;
+    padding: 12px 15px;
+    margin-bottom: 16px;
   }
   .full-sentence-hint {
-    font-size: 11px;
+    font-size: 13.5px;
+    font-weight: 600;
     color: var(--ink-3);
     margin-bottom: 6px;
     display: flex;
     justify-content: space-between;
+    align-items: center;
   }
   .full-sentence-ja {
     font-family: var(--jp);
-    font-size: 16.5px;
-    line-height: 1.85;
+    font-size: 20.5px;
+    font-weight: 500;
+    line-height: 1.82;
     color: var(--ink);
     white-space: pre-line;
   }
   @media (min-width: 900px) {
-    .full-sentence-ja { font-size: 18px; }
+    .full-sentence-ja { font-size: 23px; }
   }
 
-  /* Interactive Dictionary Token (ONLY rendered inside .answer-zone!) */
+  /* Tappable Dictionary Word */
   .w-tok {
-    border-bottom: 1.5px dashed rgba(28, 25, 23, 0.28);
+    border-bottom: 2px dotted rgba(27, 107, 80, 0.48);
     padding-bottom: 1px;
     border-radius: 3px;
     cursor: pointer;
     transition: background 0.12s ease, color 0.12s ease;
   }
   .w-tok:hover, .w-tok.active-tok {
-    background: rgba(36, 110, 83, 0.13);
+    background: rgba(27, 107, 80, 0.14);
     color: var(--green);
+    border-bottom-style: solid;
     border-bottom-color: var(--green);
-  }
-
-  /* Option-by-Option Breakdown List */
-  .opt-breakdown {
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
-    margin-bottom: 16px;
-  }
-  .opt-row {
-    display: flex;
-    align-items: baseline;
-    gap: 9px;
-    padding: 10px 12px;
-    border-radius: 13px;
-    background: var(--bg);
-    border: 1px solid transparent;
-    font-size: 13.5px;
-    line-height: 1.55;
-  }
-  .opt-row.is-ans {
-    background: rgba(236, 247, 242, 0.65);
-    border-color: rgba(36, 110, 83, 0.20);
-  }
-  .opt-mark {
-    font-size: 11.5px;
-    font-weight: 700;
-    flex-shrink: 0;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .opt-row.is-ans .opt-mark {
-    background: var(--green);
-    color: #FFFFFF;
-  }
-  .opt-row.is-dist .opt-mark {
-    background: rgba(28, 25, 23, 0.08);
-    color: var(--ink-2);
-  }
-  .opt-body {
-    flex: 1;
-    min-width: 0;
-  }
-  .opt-head-ja {
-    font-family: var(--jp);
-    font-weight: 600;
-    color: var(--ink);
-    margin-right: 6px;
-  }
-  .opt-note-zh {
-    color: var(--ink-2);
-  }
-  .spaced-hint {
-    font-size: 12px;
-    color: var(--amber);
-    background: var(--amber-bg);
-    border: 1px solid var(--amber-border);
-    border-radius: 11px;
-    padding: 7px 12px;
-    margin-bottom: 14px;
   }
 
   .nav-row {
@@ -1173,81 +987,102 @@ html = r"""<!DOCTYPE html>
     gap: 10px;
   }
   .again-btn {
-    background: var(--bg);
+    background: var(--surface);
     color: var(--ink-2);
-    border: 1px solid var(--line);
-    border-radius: 15px;
-    min-height: 50px;
-    padding: 13px 16px;
+    border: 1.5px solid var(--line);
+    border-radius: 17px;
+    min-height: 56px;
+    padding: 13px 18px;
     font-family: var(--sans);
-    font-size: 13.5px;
-    font-weight: 500;
+    font-size: 16.5px;
+    font-weight: 700;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
   }
   .again-btn:hover { border-color: var(--line-strong); color: var(--ink); }
+
   .next-btn {
     flex: 1;
     background: var(--ink);
     color: #FFFFFF;
     border: none;
-    border-radius: 15px;
-    min-height: 50px;
-    padding: 13px 20px;
+    border-radius: 17px;
+    min-height: 56px;
+    padding: 13px 22px;
     font-family: var(--sans);
-    font-size: 15px;
-    font-weight: 600;
+    font-size: 18px;
+    font-weight: 700;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    transition: opacity 0.14s ease, transform 0.12s ease;
   }
-  .next-btn:hover { opacity: 0.93; }
-  .next-btn:active { transform: scale(0.99); }
+  .next-btn:active { transform: scale(0.988); }
   .next-btn .kbd-hint {
-    color: rgba(255,255,255,0.75);
-    background: rgba(255,255,255,0.14);
-    border-color: rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.8);
+    background: rgba(255,255,255,0.16);
+    border-color: rgba(255,255,255,0.22);
   }
 
-  /* Whisper-Quiet Desktop Hotkey Footer + Sync Trigger */
-  .studio-footer {
-    margin-top: 16px;
+  /* Walk Mode Controls */
+  .walk-banner {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 6px;
-    font-size: 12px;
-    color: var(--ink-3);
+    background: var(--green-bg);
+    border: 1px solid var(--green-border);
+    color: var(--green);
+    padding: 10px 14px;
+    border-radius: 14px;
+    margin-bottom: 12px;
+    font-size: 15px;
+    font-weight: 700;
   }
-  .desktop-hotkeys {
+  .walk-controls-row {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr 1fr;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .walk-nav-btn {
+    border: 1.5px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    border-radius: 16px;
+    min-height: 54px;
+    font-family: var(--sans);
+    font-size: 15.5px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .walk-nav-btn.primary {
+    background: var(--ink);
+    color: #FFFFFF;
+    border-color: var(--ink);
+  }
+
+  /* Desktop-only quiet shortcut bar (completely hidden on phones!) */
+  .studio-footer {
     display: none;
+    flex-shrink: 0;
+    margin-top: 12px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--ink-3);
   }
   @media (hover: hover) and (pointer: fine) and (min-width: 900px) {
-    .desktop-hotkeys { display: inline; }
+    .studio-footer { display: block; }
   }
-  .footer-link {
-    border: none;
-    background: transparent;
-    color: var(--ink-3);
-    font-family: var(--sans);
-    font-size: 12px;
-    padding: 4px 6px;
-    cursor: pointer;
-    text-decoration: underline;
-    text-underline-offset: 3px;
-  }
-  .footer-link:hover { color: var(--ink); }
 
-  /* ================= WORD DICTIONARY POPOVER (Desktop Floating + Mobile Bottom Sheet!) ================= */
+  /* ================= WORD DICTIONARY POPOVER (Big Font!) ================= */
   .sheet-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(28, 25, 23, 0.22);
+    background: rgba(24, 22, 19, 0.28);
     z-index: 990;
     display: none;
   }
@@ -1258,7 +1093,7 @@ html = r"""<!DOCTYPE html>
     z-index: 999;
     background: #1C1917;
     color: #F7F6F2;
-    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.28);
+    box-shadow: 0 22px 52px rgba(0, 0, 0, 0.32);
     display: none;
   }
   .word-popover.open { display: block; }
@@ -1270,92 +1105,94 @@ html = r"""<!DOCTYPE html>
       bottom: calc(12px + env(safe-area-inset-bottom)) !important;
       top: auto !important;
       width: auto;
-      border-radius: 22px;
-      padding: 18px 18px 18px;
+      border-radius: 24px;
+      padding: 20px 20px 22px;
       animation: slideSheetUp 0.18s cubic-bezier(0.22, 1, 0.36, 1);
     }
   }
   @media (min-width: 768px) {
     .sheet-backdrop.open { display: none; }
     .word-popover {
-      width: 330px;
-      border-radius: 18px;
-      padding: 15px 17px;
-      animation: popIn 0.14s ease;
+      width: 360px;
+      border-radius: 20px;
+      padding: 18px 20px;
+      animation: fadeIn 0.14s ease;
     }
   }
   @keyframes slideSheetUp {
     from { opacity: 0; transform: translateY(18px); }
     to { opacity: 1; transform: translateY(0); }
   }
-  @keyframes popIn {
-    from { opacity: 0; transform: translateY(4px) scale(0.98); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
-  }
 
   .wp-top {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 7px;
+    gap: 10px;
+    margin-bottom: 8px;
   }
   .wp-head {
     font-family: var(--jp);
-    font-size: 18px;
-    font-weight: 600;
+    font-size: 23px;
+    font-weight: 700;
     color: #FFFFFF;
   }
   .wp-kana {
     font-family: var(--jp);
-    font-size: 13.5px;
-    color: #D6D3CD;
-    margin-left: 6px;
+    font-size: 16px;
+    color: #E0DDD6;
+    margin-left: 8px;
   }
   .wp-pitch {
-    font-size: 12px;
+    font-size: 14px;
     color: #8CE0C2;
-    margin-left: 4px;
+    margin-left: 5px;
   }
   .wp-speak {
-    border: 1px solid rgba(255,255,255,0.20);
-    background: rgba(255,255,255,0.11);
+    border: 1px solid rgba(255,255,255,0.24);
+    background: rgba(255,255,255,0.13);
     color: #FFFFFF;
     border-radius: 999px;
-    padding: 6px 12px;
-    font-size: 12.5px;
-    font-weight: 500;
+    padding: 8px 15px;
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 600;
     cursor: pointer;
     flex-shrink: 0;
   }
   .wp-pos {
     display: inline-block;
-    font-size: 11.5px;
-    color: #C7C2B8;
-    background: rgba(255,255,255,0.09);
-    padding: 2.5px 8px;
-    border-radius: 6px;
-    margin-bottom: 8px;
+    font-size: 13.5px;
+    color: #D4CFC5;
+    background: rgba(255,255,255,0.10);
+    padding: 3px 9px;
+    border-radius: 7px;
+    margin-bottom: 10px;
   }
   .wp-zh {
-    font-size: 14.5px;
-    font-weight: 500;
+    font-size: 18px;
+    font-weight: 700;
     color: #FFFFFF;
-    margin-bottom: 5px;
+    margin-bottom: 6px;
     line-height: 1.45;
   }
   .wp-tip {
-    font-size: 12.5px;
-    color: #B8B2A7;
-    line-height: 1.5;
+    font-size: 15px;
+    color: #C4BEB3;
+    line-height: 1.55;
   }
 
-  /* ================= VIEW 2: MASTERY DASHBOARD (Mobile Stack + Desktop 2-Col Split!) ================= */
+  /* ================= VIEW 2: MASTERY OVERVIEW ("总表") ================= */
   .dash-wrap {
     display: none;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
     flex-direction: column;
     gap: 14px;
-    padding-bottom: 24px;
+    padding-bottom: 20px;
     width: 100%;
   }
   .dash-wrap.active { display: flex; }
@@ -1363,7 +1200,7 @@ html = r"""<!DOCTYPE html>
   @media (min-width: 900px) {
     .dash-wrap.active {
       display: grid;
-      grid-template-columns: 330px 1fr;
+      grid-template-columns: 340px 1fr;
       gap: 22px;
       align-items: start;
     }
@@ -1374,30 +1211,25 @@ html = r"""<!DOCTYPE html>
     flex-direction: column;
     gap: 12px;
   }
-
-  .summary-card {
+  .summary-card, .detail-card, .kana36-entry {
     background: var(--card);
     border: 1px solid var(--line);
     border-radius: 22px;
-    padding: 18px 18px;
+    padding: 18px;
     box-shadow: var(--shadow-card);
   }
   .sum-row {
     display: flex;
     flex-direction: column;
-    gap: 7px;
-    padding: 11px 10px;
+    gap: 8px;
+    padding: 12px 10px;
     margin: 0 -10px;
-    border-radius: 12px;
+    border-radius: 13px;
     border-bottom: 1px solid var(--line);
     cursor: pointer;
-    transition: background 0.14s ease;
   }
   .sum-row:last-child { border-bottom: none; }
-  .sum-row:hover { background: var(--bg); }
-  .sum-row.selected-mod {
-    background: var(--subtle);
-  }
+  .sum-row.selected-mod { background: var(--surface); }
   .sum-head {
     display: flex;
     justify-content: space-between;
@@ -1405,18 +1237,19 @@ html = r"""<!DOCTYPE html>
     gap: 8px;
   }
   .sum-title {
-    font-size: 14.5px;
-    font-weight: 600;
+    font-size: 17px;
+    font-weight: 700;
     color: var(--ink);
   }
   .sum-nums {
-    font-size: 11.5px;
+    font-size: 14px;
+    font-weight: 600;
     color: var(--ink-2);
     font-variant-numeric: tabular-nums;
   }
   .tri-bar {
-    height: 6px;
-    background: var(--subtle-2);
+    height: 8px;
+    background: var(--subtle);
     border-radius: 999px;
     overflow: hidden;
     display: flex;
@@ -1425,60 +1258,40 @@ html = r"""<!DOCTYPE html>
   .tri-seg-wip { background: #D9A441; height: 100%; }
   .tri-seg-todo { background: var(--red); height: 100%; }
 
-  /* Dedicated Kana Adverbs Top 36 Entry Card */
   .kana36-entry {
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 20px;
-    padding: 16px 18px;
     cursor: pointer;
-    transition: all 0.15s ease;
-    box-shadow: var(--shadow-card);
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 12px;
   }
-  .kana36-entry:hover { border-color: var(--line-strong); }
-  .kana36-entry.selected-mod {
-    border-color: var(--ink);
-    background: #FFFFFF;
-  }
+  .kana36-entry.selected-mod { border-color: var(--ink); }
   .kana36-title {
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 17px;
+    font-weight: 700;
     color: var(--ink);
     margin-bottom: 3px;
   }
   .kana36-sub {
-    font-size: 12px;
+    font-size: 14px;
     color: var(--ink-2);
   }
   .kana36-pill {
-    font-size: 11.5px;
-    font-weight: 600;
+    font-size: 14px;
+    font-weight: 700;
     color: var(--green);
     background: var(--green-bg);
-    padding: 4px 10px;
+    padding: 6px 12px;
     border-radius: 999px;
     white-space: nowrap;
   }
 
-  .detail-card {
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 22px;
-    padding: 18px 18px;
-    box-shadow: var(--shadow-card);
-  }
   @media (min-width: 900px) {
-    .detail-card { padding: 22px 24px; }
     .mobile-only-mod-tabs { display: none !important; }
   }
-
   .mod-tabs {
     display: flex;
-    gap: 6px;
+    gap: 7px;
     margin-bottom: 12px;
     overflow-x: auto;
     scrollbar-width: none;
@@ -1486,12 +1299,12 @@ html = r"""<!DOCTYPE html>
   .mod-tabs::-webkit-scrollbar { display: none; }
   .mod-tab {
     border: 1px solid var(--line);
-    background: var(--bg);
+    background: var(--surface);
     color: var(--ink-2);
     font-family: var(--sans);
-    font-size: 12.5px;
-    font-weight: 500;
-    padding: 6px 12px;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 8px 14px;
     border-radius: 999px;
     cursor: pointer;
     white-space: nowrap;
@@ -1504,11 +1317,11 @@ html = r"""<!DOCTYPE html>
 
   .tier-tabs {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 4px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
     background: var(--subtle);
-    padding: 3px;
-    border-radius: 12px;
+    padding: 4px;
+    border-radius: 13px;
     margin-bottom: 12px;
   }
   .tier-tab {
@@ -1516,52 +1329,43 @@ html = r"""<!DOCTYPE html>
     background: transparent;
     color: var(--ink-2);
     font-family: var(--sans);
-    font-size: 12px;
-    font-weight: 500;
-    padding: 7px 4px;
-    border-radius: 9px;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 8px 6px;
+    border-radius: 10px;
     cursor: pointer;
     font-variant-numeric: tabular-nums;
-    white-space: nowrap;
   }
   .tier-tab.active {
     background: var(--card);
     color: var(--ink);
-    font-weight: 600;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    font-weight: 700;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
   }
 
   .search-input {
     width: 100%;
-    border: 1px solid var(--line);
-    background: var(--bg);
-    border-radius: 12px;
-    padding: 9px 13px;
+    border: 1.5px solid var(--line);
+    background: var(--surface);
+    border-radius: 14px;
+    padding: 11px 14px;
     font-family: var(--sans);
-    font-size: 13px;
+    font-size: 16px;
     color: var(--ink);
     margin-bottom: 10px;
     outline: none;
   }
-  .search-input:focus { border-color: var(--line-strong); background: #FFFFFF; }
+  .search-input:focus { border-color: var(--ink); background: #FFFFFF; }
 
   .point-list {
     display: flex;
     flex-direction: column;
-    max-height: 480px;
-    overflow-y: auto;
-  }
-  @media (min-width: 900px) {
-    .point-list { max-height: 620px; }
   }
   .pt-item {
-    padding: 12px 6px;
+    padding: 14px 6px;
     border-bottom: 1px solid var(--line);
     cursor: pointer;
-    transition: background 0.12s ease;
-    border-radius: 8px;
   }
-  .pt-item:hover { background: rgba(240, 238, 232, 0.45); }
   .pt-item:last-child { border-bottom: none; }
   .pt-main {
     display: flex;
@@ -1572,12 +1376,12 @@ html = r"""<!DOCTYPE html>
   .pt-left {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 9px;
     min-width: 0;
   }
   .dot {
-    width: 7px;
-    height: 7px;
+    width: 9px;
+    height: 9px;
     border-radius: 50%;
     flex-shrink: 0;
   }
@@ -1586,18 +1390,18 @@ html = r"""<!DOCTYPE html>
   .dot.done { background: var(--green); }
   .pt-name {
     font-family: var(--jp);
-    font-size: 14.5px;
-    font-weight: 500;
+    font-size: 17.5px;
+    font-weight: 600;
     color: var(--ink);
   }
   .pt-right {
     display: flex;
     align-items: center;
     gap: 8px;
-    max-width: 56%;
+    max-width: 55%;
   }
   .pt-sub {
-    font-size: 12.5px;
+    font-size: 15px;
     color: var(--ink-2);
     text-align: right;
     overflow: hidden;
@@ -1605,175 +1409,116 @@ html = r"""<!DOCTYPE html>
     white-space: nowrap;
   }
   .pt-jump-btn {
-    border: 1px solid var(--green-border);
+    border: 1.5px solid var(--green-border);
     background: var(--green-bg);
     color: var(--green);
     font-family: var(--sans);
-    font-size: 11px;
-    font-weight: 600;
-    padding: 3px 8px;
+    font-size: 13.5px;
+    font-weight: 700;
+    padding: 5px 11px;
     border-radius: 999px;
     cursor: pointer;
     flex-shrink: 0;
   }
   .pt-note {
-    margin-top: 7px;
-    padding-left: 15px;
-    font-size: 12px;
-    color: var(--ink-3);
+    margin-top: 8px;
+    padding-left: 18px;
+    font-size: 15px;
+    color: var(--ink-2);
     line-height: 1.55;
   }
 
-  /* Kana Adverbs 36 Paired Cards */
-  .kana36-banner {
-    background: var(--bg);
-    border-radius: 14px;
-    padding: 12px 14px;
-    font-size: 12.5px;
-    line-height: 1.55;
-    color: var(--ink-2);
-    margin-bottom: 14px;
-  }
-  .kana-fam-block {
-    margin-bottom: 18px;
-  }
+  /* Kana Adverbs Paired Cards */
+  .kana-fam-block { margin-bottom: 20px; }
   .kana-fam-head {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 8px;
-    padding: 0 2px;
+    margin-bottom: 9px;
   }
-  .kana-fam-title {
-    font-size: 13.5px;
-    font-weight: 600;
-    color: var(--ink);
-  }
-  .kana-fam-tag {
-    font-size: 11px;
-    color: var(--ink-3);
-  }
+  .kana-fam-title { font-size: 16.5px; font-weight: 700; color: var(--ink); }
+  .kana-fam-tag { font-size: 13.5px; color: var(--ink-3); }
   .kana-pair-card {
-    background: var(--bg);
+    background: var(--surface);
     border: 1px solid var(--line);
-    border-radius: 15px;
-    padding: 12px 13px;
-    margin-bottom: 8px;
+    border-radius: 16px;
+    padding: 13px 14px;
+    margin-bottom: 10px;
   }
   .kana-pair-scene {
-    font-size: 11.5px;
-    font-weight: 600;
+    font-size: 14px;
+    font-weight: 700;
     color: var(--green);
-    margin-bottom: 8px;
+    margin-bottom: 9px;
   }
   .kana-twins {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
   }
-  @media (max-width: 400px) {
+  @media (max-width: 430px) {
     .kana-twins { grid-template-columns: 1fr; }
   }
   .kana-twin-item {
     background: var(--card);
     border: 1px solid var(--line);
-    border-radius: 11px;
-    padding: 9px 11px;
+    border-radius: 13px;
+    padding: 11px 13px;
   }
   .kt-top {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 3px;
+    margin-bottom: 4px;
   }
   .kt-word {
     font-family: var(--jp);
-    font-size: 15px;
-    font-weight: 600;
+    font-size: 18.5px;
+    font-weight: 700;
     color: var(--ink);
   }
-  .kt-pitch {
-    font-size: 11px;
-    color: var(--ink-3);
-    margin-left: 4px;
-  }
+  .kt-pitch { font-size: 13px; color: var(--ink-3); margin-left: 5px; }
   .kt-audio-btn {
     border: none;
     background: var(--subtle);
     color: var(--ink);
-    font-size: 11px;
-    padding: 2px 7px;
+    font-family: var(--sans);
+    font-size: 13.5px;
+    font-weight: 600;
+    padding: 4px 10px;
     border-radius: 999px;
     cursor: pointer;
   }
-  .kt-zh {
-    font-size: 12.5px;
-    color: var(--ink);
-    margin-bottom: 2px;
-  }
-  .kt-colloc {
-    font-family: var(--jp);
-    font-size: 11.5px;
-    color: var(--ink-3);
-  }
+  .kt-zh { font-size: 15.5px; font-weight: 600; color: var(--ink); margin-bottom: 3px; }
+  .kt-colloc { font-family: var(--jp); font-size: 14px; color: var(--ink-2); }
 
-  /* Modal Dialog */
+  /* Simple Progress Reset Modal */
   .modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(28, 25, 23, 0.34);
+    background: rgba(24, 22, 19, 0.36);
     z-index: 1000;
     display: none;
     align-items: center;
     justify-content: center;
-    padding: 18px;
+    padding: 20px;
   }
   .modal-overlay.open { display: flex; }
   .modal-box {
     width: 100%;
-    max-width: 420px;
+    max-width: 390px;
     background: var(--card);
     border-radius: 24px;
-    padding: 22px 22px 20px;
-    box-shadow: 0 24px 60px rgba(0,0,0,0.18);
-    animation: popIn 0.16s ease;
+    padding: 24px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.2);
   }
-  .modal-title {
-    font-size: 16px;
-    font-weight: 600;
-    margin: 0 0 8px;
-  }
-  .modal-p {
-    font-size: 13px;
-    line-height: 1.6;
-    color: var(--ink-2);
-    margin: 0 0 14px;
-  }
-  .modal-actions {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-  .sync-textarea {
-    width: 100%;
-    height: 68px;
-    border: 1px solid var(--line-strong);
-    border-radius: 12px;
-    background: var(--bg);
-    padding: 8px 10px;
-    font-family: monospace;
-    font-size: 11.5px;
-    color: var(--ink);
-    margin-bottom: 10px;
-    resize: none;
-  }
+  .modal-title { font-size: 20px; font-weight: 800; margin: 0 0 10px; }
+  .modal-p { font-size: 16px; line-height: 1.6; color: var(--ink-2); margin: 0 0 18px; }
+  .modal-actions { display: flex; gap: 10px; }
 
-  .done-wrap {
-    text-align: center;
-    padding: 22px 8px;
-  }
-  .done-title { font-size: 22px; font-weight: 600; margin: 0 0 8px; }
-  .done-sub { font-size: 14px; color: var(--ink-2); margin: 0 0 22px; line-height: 1.6; }
+  .done-wrap { text-align: center; padding: 28px 8px; }
+  .done-title { font-size: 24px; font-weight: 800; margin: 0 0 10px; }
+  .done-sub { font-size: 16.5px; color: var(--ink-2); margin: 0 0 24px; line-height: 1.6; }
 </style>
 </head>
 <body>
@@ -1789,50 +1534,50 @@ html = r"""<!DOCTYPE html>
 <div class="app-shell">
   <header class="app-header">
     <div class="brand-left">
-      <h1 class="visually-hidden">JLPT N3 语音私教与掌握度全景</h1>
-      <span class="countdown" id="countdown-txt">距考试 22 天</span>
-      <span class="exam-date-sub">12月6日 JLPT N3</span>
+      <span class="n3-seal">N3</span>
+      <span class="countdown" id="countdown-txt">距考试 <strong>22</strong> 天</span>
     </div>
     <div class="header-right">
-      <button class="install-pill" id="pwa-install-btn" onclick="triggerPwaInstall()">📲 安装到桌面</button>
+      <button class="install-pill" id="pwa-install-btn" onclick="triggerPwaInstall()">加到桌面</button>
       <div class="mode-switch" role="tablist">
-        <button class="mode-btn active" id="tab-tutor" onclick="switchMode('tutor')">语音私教</button>
-        <button class="mode-btn" id="tab-dash" onclick="switchMode('dash')">掌握度</button>
+        <button class="mode-btn active" id="tab-tutor" onclick="switchMode('tutor')">做题</button>
+        <button class="mode-btn" id="tab-dash" onclick="switchMode('dash')">总表</button>
       </div>
     </div>
   </header>
 
-  <!-- VIEW 1: PRIMARY CONVERSATIONAL VOICE TUTOR -->
+  <!-- VIEW 1: SIMPLE 2-STEP TUTOR -->
   <main class="tutor-wrap" id="tutor-view">
     <div class="session-bar">
-      <button class="counter-btn" id="card-counter" onclick="openSessionModal()" title="查看本轮进度或重置">1 / 25</button>
-      <div class="session-controls">
-        <button class="pill-ctrl" id="walk-btn" onclick="toggleWalkMode()">🚶 走路听</button>
-        <button class="pill-ctrl" id="top-speed-btn" onclick="cycleExpSpeed()">讲解 1.3x</button>
-      </div>
+      <button class="counter-btn" id="card-counter" onclick="openSessionModal()">1 / 35</button>
+      <button class="walk-pill" id="walk-btn" onclick="toggleWalkMode()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+        <span id="walk-btn-label">随身听</span>
+      </button>
     </div>
     <div class="progress-rail">
       <div class="progress-fill" id="prog-fill" style="width: 0%"></div>
     </div>
 
-    <div class="voice-card" id="voice-card"></div>
+    <div class="tutor-scroll" id="tutor-scroll">
+      <div class="voice-card" id="voice-card"></div>
+    </div>
 
     <footer class="studio-footer">
-      <span class="desktop-hotkeys">快捷键：Space 播放 · 1/2/3 作答 · Enter 下一题 · ← 上一题 · R 还要考 · S 倍速 · W 走路听 · D 掌握度</span>
-      <button class="footer-link" id="sync-guide-btn" onclick="openSyncModal()">手机安装与双端同步</button>
+      电脑快捷键：Space 听题/重听 · 1/2/3 作答 · Enter 下一题 · ← 上一题 · S 语速
     </footer>
   </main>
 
-  <!-- VIEW 2: SECONDARY MASTERY DASHBOARD (2-Column Split on Desktop, Clean Stack on Mobile) -->
+  <!-- VIEW 2: MASTERY OVERVIEW ("总表") -->
   <section class="dash-wrap" id="dash-view">
     <div class="dash-left-col">
       <div class="summary-card" id="dash-summary"></div>
       <div class="kana36-entry" id="kana36-entry" onclick="selectDashMod('kana36')">
         <div>
-          <div class="kana36-title">纯假名副词 Top 36</div>
-          <div class="kana36-sub">真题 3–5 题封顶 · 6 组成对画面</div>
+          <div class="kana36-title" id="kana36-title">纯假名副词 42 词</div>
+          <div class="kana36-sub">成对反义速记</div>
         </div>
-        <span class="kana36-pill">专项攻克 →</span>
+        <span class="kana36-pill">查看 →</span>
       </div>
     </div>
 
@@ -1840,39 +1585,61 @@ html = r"""<!DOCTYPE html>
       <div class="mod-tabs mobile-only-mod-tabs" id="mod-tabs"></div>
       <div id="dash-filter-zone">
         <div class="tier-tabs" id="tier-tabs"></div>
-        <input type="search" class="search-input" id="pt-search" placeholder="搜索语法、假名或词义…（按 / 快速搜索）" oninput="renderMasteryList()" />
+        <input type="search" class="search-input" id="pt-search" placeholder="搜语法或单词…" oninput="renderMasteryList()" />
       </div>
       <div class="point-list" id="point-list"></div>
     </div>
   </section>
 </div>
 
-<!-- Backdrop + Word Dictionary Popover (Mobile Bottom Sheet / Desktop Hover Card) -->
+<!-- Word Dictionary Bottom Sheet / Popover -->
 <div class="sheet-backdrop" id="sheet-backdrop" onclick="hideWordPopover()"></div>
 <div class="word-popover" id="word-popover"></div>
 
-<!-- Lightweight Session / Install & Sync Modal -->
+<!-- Lightweight Progress Reset Modal -->
 <div class="modal-overlay" id="app-modal" onclick="if(event.target===this)closeModal()">
   <div class="modal-box" id="modal-content"></div>
 </div>
 
 <script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("./sw.js").then(r => r.update()).catch(() => {});
-}
-
 const DATA = __PAYLOAD__;
-const SPEEDS = [1.0, 1.2, 1.3, 1.5, 1.8];
-const SESSION_KEY = "n3_session_v5_" + DATA.plan_date;
+const SPEEDS = [1.0, 1.2, 1.3, 1.5];
+const SESSION_KEY = "n3_session_v6_" + DATA.plan_date;
 
 let expSpeed = parseFloat(localStorage.getItem("n3_exp_speed") || "1.3");
 if (!SPEEDS.includes(expSpeed)) expSpeed = 1.3;
 
+let activeKind = null;
+
+// Seamless Auto-Sync with Web Updates (Zero Manual Cache Clearing!)
+if ("serviceWorker" in navigator) {
+  let swRefreshing = false;
+  navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" }).then(reg => {
+    reg.update().catch(() => {});
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") reg.update().catch(() => {});
+    });
+  }).catch(() => {});
+
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (swRefreshing) return;
+    swRefreshing = true;
+    if (!activeKind) location.reload();
+  });
+}
+
 function computeDaysLeft() {
   try {
-    const now = new Date();
-    const exam = new Date("2026-12-06T09:00:00-08:00");
-    const diff = Math.ceil((exam.getTime() - now.getTime()) / 86400000);
+    const fmt = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Los_Angeles",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    });
+    const [y, m, d] = fmt.format(new Date()).split("-").map(Number);
+    const todayUTC = Date.UTC(y, m - 1, d);
+    const examUTC = Date.UTC(2026, 11, 6);
+    const diff = Math.round((examUTC - todayUTC) / 86400000);
     return diff >= 0 ? diff : 0;
   } catch (e) {
     return DATA.days_to_exam;
@@ -1881,10 +1648,10 @@ function computeDaysLeft() {
 
 function loadSavedSession() {
   try {
-    const raw = localStorage.getItem(SESSION_KEY);
+    const raw = localStorage.getItem(SESSION_KEY) || localStorage.getItem("n3_session_v5_" + DATA.plan_date);
     if (raw) return JSON.parse(raw);
   } catch (e) {}
-  return { doneIds: [], requeuedIds: [], masteryOverrides: {} };
+  return { doneIds: [], masteryOverrides: {} };
 }
 
 let sessionState = loadSavedSession();
@@ -1909,16 +1676,12 @@ function buildInitialQueue() {
 let queue = buildInitialQueue();
 let idx = 0;
 let stage = "quiz";
-let usedTeachOnCurrent = false;
-let spacedScheduledOnCurrent = false;
 let currentChoices = [];
 let pickedVal = null;
 let walkMode = false;
 let walkTimer = null;
 let thinkingCountdown = 0;
-let activeKind = null;
 let activeMode = "tutor";
-let pairPlayToken = 0;
 let wakeLockSentinel = null;
 
 function prepareChoicesForCard(q) {
@@ -1927,23 +1690,16 @@ function prepareChoicesForCard(q) {
   if (!q.is_listening && arr.length === 2) {
     let h = 0;
     for (let i = 0; i < q.id.length; i++) h = (h * 31 + q.id.charCodeAt(i)) >>> 0;
-    const flip = (h + (q._spaced ? 1 : 0)) % 2 === 1;
-    if (flip) arr.reverse();
+    if ((h + (q._requeue ? 1 : 0)) % 2 === 1) arr.reverse();
   }
   return arr;
 }
 
 function syncCurrentCardSetup() {
-  const cur = queue[idx];
-  spacedScheduledOnCurrent = false;
-  if (!cur) {
-    currentChoices = [];
-    usedTeachOnCurrent = false;
-    return;
-  }
-  stage = cur.needs_teach ? "teach" : "quiz";
-  usedTeachOnCurrent = (stage === "teach");
-  currentChoices = prepareChoicesForCard(cur);
+  stage = "quiz";
+  currentChoices = prepareChoicesForCard(queue[idx]);
+  const sc = document.getElementById("tutor-scroll");
+  if (sc) sc.scrollTop = 0;
 }
 syncCurrentCardSetup();
 
@@ -1952,18 +1708,17 @@ let dashTier = "todo";
 let expandedPt = null;
 
 let deferredInstallPrompt = null;
+const isStandalone = window.matchMedia && window.matchMedia("(display-mode: standalone)").matches;
 window.addEventListener("beforeinstallprompt", e => {
   e.preventDefault();
+  if (isStandalone) return;
   deferredInstallPrompt = e;
   const btn = document.getElementById("pwa-install-btn");
   if (btn) btn.classList.add("visible");
 });
 
 function triggerPwaInstall() {
-  if (!deferredInstallPrompt) {
-    openSyncModal();
-    return;
-  }
+  if (!deferredInstallPrompt) return;
   deferredInstallPrompt.prompt();
   deferredInstallPrompt.userChoice.finally(() => {
     deferredInstallPrompt = null;
@@ -2018,97 +1773,6 @@ function annotateJapanese(text) {
   return out;
 }
 
-function renderSceneSVG(sceneType) {
-  switch (sceneType) {
-    case "flame_pair":
-      return `<svg viewBox="0 0 320 56" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M55 46h30M70 46V32" stroke="#57534E"/>
-        <path d="M70 12c6 8 6 16 0 18-6-2-6-10 0-18z" stroke="#246E53" fill="#ECF7F2"/>
-        <path d="M26 20h18M22 26h22" stroke="#8C857B" stroke-dasharray="3 3"/>
-        <text x="96" y="30" font-size="11" fill="#246E53" stroke="none" font-weight="600">自然熄灭 (が)</text>
-        <line x1="164" y1="8" x2="164" y2="48" stroke="rgba(28,25,23,0.12)"/>
-        <path d="M225 46h30M240 46V32" stroke="#57534E"/>
-        <path d="M196 18l24 6M196 28l24-2" stroke="#BF3E35"/>
-        <circle cx="240" cy="24" r="4" stroke="#8C857B" stroke-dasharray="2 2"/>
-        <text x="260" y="30" font-size="11" fill="#57534E" stroke="none" font-weight="500">人为吹灭 (を)</text>
-      </svg>`;
-    case "posture_pair":
-      return `<svg viewBox="0 0 320 56" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="54" cy="22" r="5.5" stroke="#246E53" fill="#ECF7F2"/>
-        <path d="M54 28l-10 9 11 5-6 8" stroke="#246E53"/>
-        <circle cx="88" cy="24" r="4.5" stroke="#57534E"/>
-        <path d="M88 29v15M64 23h16" stroke="#246E53" stroke-dasharray="2.5 2.5"/>
-        <text x="102" y="30" font-size="11" fill="#246E53" font-weight="600">屈膝平视＝しゃがむ</text>
-        <line x1="186" y1="8" x2="186" y2="48" stroke="rgba(28,25,23,0.12)"/>
-        <circle cx="218" cy="20" r="6" stroke="#57534E"/>
-        <path d="M218 26v20M232 14c4 4 4 10 0 14" stroke="#8C857B"/>
-        <text x="244" y="30" font-size="11" fill="#57534E" font-weight="500">点头＝うなずく</text>
-      </svg>`;
-    case "seats_pair":
-      return `<svg viewBox="0 0 320 56" fill="none" stroke-width="1.7" stroke-linecap="round">
-        <rect x="20" y="18" width="18" height="18" rx="4" stroke="#246E53" fill="#ECF7F2"/>
-        <rect x="44" y="18" width="18" height="18" rx="4" stroke="#246E53" fill="#ECF7F2"/>
-        <rect x="68" y="18" width="18" height="18" rx="4" stroke="#246E53" fill="#ECF7F2"/>
-        <rect x="92" y="18" width="18" height="18" rx="4" stroke="#246E53" fill="#ECF7F2"/>
-        <text x="20" y="49" font-size="10.5" fill="#246E53" font-weight="600">空席没人＝がらがら</text>
-        <line x1="158" y1="8" x2="158" y2="48" stroke="rgba(28,25,23,0.12)"/>
-        <circle cx="190" cy="18" r="4" fill="#8C857B"/>
-        <circle cx="226" cy="33" r="4" fill="#8C857B"/>
-        <circle cx="252" cy="15" r="4" fill="#8C857B"/>
-        <circle cx="278" cy="30" r="4" fill="#8C857B"/>
-        <text x="186" y="49" font-size="10.5" fill="#57534E">零散不齐＝ばらばら</text>
-      </svg>`;
-    case "rhythm_beats":
-      return `<svg viewBox="0 0 320 56" fill="none">
-        <rect x="24" y="14" width="34" height="28" rx="8" fill="#ECF7F2" stroke="#246E53" stroke-width="1.6"/>
-        <text x="41" y="33" text-anchor="middle" font-size="13" font-weight="600" fill="#246E53">な</text>
-        <rect x="64" y="14" width="34" height="28" rx="8" fill="#ECF7F2" stroke="#246E53" stroke-width="1.6"/>
-        <text x="81" y="33" text-anchor="middle" font-size="13" font-weight="600" fill="#246E53">い</text>
-        <rect x="104" y="14" width="42" height="28" rx="8" fill="#246E53"/>
-        <text x="125" y="33" text-anchor="middle" font-size="13" font-weight="600" fill="#FFFFFF">しょ!</text>
-        <rect x="172" y="14" width="40" height="28" rx="8" fill="#FDF2F1" stroke="#BF3E35" stroke-dasharray="3 2"/>
-        <text x="192" y="33" text-anchor="middle" font-size="13" font-weight="600" fill="#BF3E35">×う</text>
-        <text x="224" y="32" font-size="11" fill="#57534E">尾音短促收住</text>
-      </svg>`;
-    case "elevation":
-      return `<svg viewBox="0 0 320 56" fill="none" stroke-width="1.8" stroke-linecap="round">
-        <circle cx="72" cy="16" r="10" fill="#ECF7F2" stroke="#246E53"/>
-        <path d="M44 34l14-14M44 20h14v14" stroke="#246E53"/>
-        <text x="90" y="20" font-size="11.5" fill="#246E53" font-weight="600">先生：召し上がる ↑</text>
-        <line x1="182" y1="8" x2="182" y2="48" stroke="rgba(28,25,23,0.12)"/>
-        <circle cx="216" cy="38" r="9" fill="#F0EEE8" stroke="#57534E"/>
-        <text x="232" y="42" font-size="11.5" fill="#57534E">私：いただく ↓</text>
-      </svg>`;
-    case "timeline":
-      return `<svg viewBox="0 0 320 56" fill="none" stroke-width="1.8">
-        <line x1="36" y1="26" x2="284" y2="26" stroke="rgba(28,25,23,0.18)"/>
-        <circle cx="56" cy="26" r="6" fill="#FFFFFF" stroke="#8C857B"/>
-        <text x="56" y="46" text-anchor="middle" font-size="10.5" fill="#8C857B">食べるところ</text>
-        <circle cx="160" cy="26" r="6" fill="#FFFFFF" stroke="#8C857B"/>
-        <text x="160" y="46" text-anchor="middle" font-size="10.5" fill="#8C857B">食べているところ</text>
-        <circle cx="264" cy="26" r="8" fill="#246E53"/>
-        <text x="264" y="46" text-anchor="middle" font-size="11" font-weight="600" fill="#246E53">★食べたところ</text>
-      </svg>`;
-    case "slope_pair":
-      return `<svg viewBox="0 0 320 56" fill="none" stroke-width="2" stroke-linecap="round">
-        <path d="M26 42 Q80 38 134 12" stroke="#246E53"/>
-        <path d="M125 11h10v10" stroke="#246E53"/>
-        <text x="26" y="22" font-size="11" fill="#246E53" font-weight="600">同步渐变 ↗ にしたがって</text>
-        <line x1="168" y1="8" x2="168" y2="48" stroke="rgba(28,25,23,0.12)" stroke-width="1.5"/>
-        <path d="M188 30h96M236 30c6-14 22-14 28 0" stroke="#8C857B" stroke-width="1.7"/>
-        <text x="190" y="48" font-size="10.5" fill="#57534E">人顺手做B＝ついでに</text>
-      </svg>`;
-    default:
-      return `<svg viewBox="0 0 320 56" fill="none" stroke-width="1.7" stroke-linecap="round">
-        <rect x="24" y="13" width="116" height="30" rx="9" fill="#ECF7F2" stroke="#246E53"/>
-        <text x="82" y="32" text-anchor="middle" font-size="11.5" font-weight="600" fill="#246E53">核心锁定项 ✓</text>
-        <path d="M150 28h20" stroke="#8C857B" stroke-dasharray="3 3"/>
-        <rect x="180" y="13" width="116" height="30" rx="9" fill="#F0EEE8" stroke="rgba(28,25,23,0.18)"/>
-        <text x="238" y="32" text-anchor="middle" font-size="11.5" fill="#57534E">易混干扰项 ↔</text>
-      </svg>`;
-  }
-}
-
 const preloadSet = new Set();
 function warmAudio(url) {
   if (!url || preloadSet.has(url)) return;
@@ -2119,28 +1783,19 @@ function warmAudio(url) {
 }
 
 function applyPlaybackRate(kind) {
-  const rate = (kind === "exp" || kind === "done") ? expSpeed : 1.02;
+  const rate = (kind === "exp" || kind === "done") ? expSpeed : 1.0;
   player.defaultPlaybackRate = rate;
   player.playbackRate = rate;
   if ("preservesPitch" in player) player.preservesPitch = true;
   if ("webkitPreservesPitch" in player) player.webkitPreservesPitch = true;
 }
 
-function setExpSpeed(s) {
-  expSpeed = s;
-  try { localStorage.setItem("n3_exp_speed", String(s)); } catch (e) {}
-  const topBtn = document.getElementById("top-speed-btn");
-  if (topBtn) topBtn.textContent = `讲解 ${s.toFixed(1)}x`;
-  if (activeKind === "exp") applyPlaybackRate("exp");
-  document.querySelectorAll(".spd-btn").forEach(b => {
-    b.classList.toggle("active", parseFloat(b.dataset.spd) === s);
-  });
-  syncOrbState();
-}
-
 function cycleExpSpeed() {
-  const next = SPEEDS[(SPEEDS.indexOf(expSpeed) + 1) % SPEEDS.length];
-  setExpSpeed(next);
+  expSpeed = SPEEDS[(SPEEDS.indexOf(expSpeed) + 1) % SPEEDS.length];
+  try { localStorage.setItem("n3_exp_speed", String(expSpeed)); } catch (e) {}
+  if (activeKind === "exp") applyPlaybackRate("exp");
+  const spdBtn = document.getElementById("ans-spd-btn");
+  if (spdBtn) spdBtn.textContent = `${expSpeed.toFixed(1)}x`;
 }
 
 function clearWalkTimer() {
@@ -2153,7 +1808,6 @@ function clearWalkTimer() {
 }
 
 function stopAudio() {
-  pairPlayToken += 1;
   clearWalkTimer();
   try {
     player.pause();
@@ -2161,81 +1815,16 @@ function stopAudio() {
     wordPlayer.pause();
   } catch (e) {}
   activeKind = null;
-  document.querySelectorAll(".pair-box").forEach(el => el.classList.remove("speaking-box"));
   syncOrbState();
-}
-
-function playMicroPairAudio(onComplete) {
-  const q = queue[idx];
-  if (!q || !q.micro || !q.micro.audio_urls || !q.micro.audio_urls.length) {
-    if (onComplete) onComplete();
-    return;
-  }
-  stopAudio();
-  const token = ++pairPlayToken;
-  activeKind = "pair";
-  syncOrbState();
-  const urls = q.micro.audio_urls;
-
-  function step(k) {
-    if (token !== pairPlayToken) return;
-    document.querySelectorAll(".pair-box").forEach(el => el.classList.remove("speaking-box"));
-    if (k >= urls.length) {
-      activeKind = null;
-      syncOrbState();
-      if (onComplete) onComplete();
-      return;
-    }
-    const boxEl = document.getElementById(k === 0 ? "pair-box-0" : "pair-box-1");
-    if (boxEl) boxEl.classList.add("speaking-box");
-    wordPlayer.src = urls[k];
-    wordPlayer.currentTime = 0;
-    wordPlayer.playbackRate = 1.0;
-    wordPlayer.onended = () => {
-      setTimeout(() => step(k + 1), 380);
-    };
-    wordPlayer.onerror = () => step(k + 1);
-    const p = wordPlayer.play();
-    if (p && typeof p.catch === "function") {
-      p.catch(() => {
-        activeKind = null;
-        document.querySelectorAll(".pair-box").forEach(el => el.classList.remove("speaking-box"));
-        syncOrbState();
-        if (onComplete) onComplete();
-      });
-    }
-  }
-  step(0);
-}
-
-function playSinglePairSide(sideIdx) {
-  const q = queue[idx];
-  if (!q || !q.micro || !q.micro.audio_words) return;
-  const w = q.micro.audio_words[sideIdx];
-  if (!w) return;
-  const info = DATA.words[w];
-  const url = (info && info.audio) || (q.micro.audio_urls && q.micro.audio_urls[sideIdx]);
-  if (!url) return;
-  stopAudio();
-  const boxEl = document.getElementById(sideIdx === 0 ? "pair-box-0" : "pair-box-1");
-  if (boxEl) boxEl.classList.add("speaking-box");
-  wordPlayer.src = url;
-  wordPlayer.currentTime = 0;
-  wordPlayer.playbackRate = 1.0;
-  wordPlayer.onended = () => { if (boxEl) boxEl.classList.remove("speaking-box"); };
-  wordPlayer.play().catch(() => {});
 }
 
 function updateMediaSession() {
   if (!("mediaSession" in navigator) || idx >= queue.length) return;
   const q = queue[idx];
-  const msTitle = (stage === "quiz")
-    ? `${q.subject} · 第 ${idx + 1} 题`
-    : `${q.subject} · ${q.point}`;
   try {
     navigator.mediaSession.metadata = new MediaMetadata({
-      title: msTitle,
-      artist: walkMode ? getWalkProgramLabel() : "JLPT N3 语音私教",
+      title: stage === "quiz" ? `${q.subject} · 第 ${idx + 1} 题` : `${q.subject} · ${q.point}`,
+      artist: "JLPT N3 语音私教",
       album: `距考试 ${computeDaysLeft()} 天`,
       artwork: [{ src: "./icon-192.png", sizes: "192x192", type: "image/png" }]
     });
@@ -2252,7 +1841,6 @@ function updateMediaSession() {
 
 function playMainClip(url, kind, toggleIfSame) {
   if (!url) return;
-  pairPlayToken += 1;
   clearWalkTimer();
   if (toggleIfSame && activeKind === kind && !player.paused) {
     stopAudio();
@@ -2292,15 +1880,13 @@ player.addEventListener("ended", () => {
       syncOrbState();
       if (thinkingCountdown <= 0) {
         clearWalkTimer();
-        if (walkMode && stage !== "answered") {
-          choose("__walk__", true);
-        }
+        if (walkMode && stage !== "answered") choose("__walk__", true);
       }
     }, 900);
   } else if (finishedKind === "exp" && stage === "answered") {
     walkTimer = setTimeout(() => {
       if (walkMode && stage === "answered") nextCard(false);
-    }, 950);
+    }, 900);
   }
 });
 
@@ -2308,47 +1894,23 @@ function syncOrbState() {
   const orb = document.getElementById("voice-orb");
   const cap = document.getElementById("orb-caption");
   if (orb && cap) {
-    const speaking = (activeKind === "q" || activeKind === "exp") && !player.paused;
+    const speaking = activeKind === "q" && !player.paused;
     orb.classList.toggle("speaking", !!speaking);
     orb.classList.toggle("thinking", thinkingCountdown > 0);
     if (thinkingCountdown > 0) {
-      cap.textContent = `脑内回想一下答案… ${thinkingCountdown}s`;
-    } else if (speaking && activeKind === "q") {
-      cap.textContent = "私教提问中 · 点圆球暂停";
-    } else if (speaking && activeKind === "exp") {
-      cap.textContent = `私教讲解中（${expSpeed.toFixed(1)}x）· 点圆球暂停`;
+      cap.textContent = `心里想一下答案… ${thinkingCountdown}s`;
+    } else if (speaking) {
+      cap.textContent = "播放中 · 点此暂停";
     } else {
-      cap.textContent = stage === "answered" ? "点圆球重听题目" : "点圆球听私教提问";
+      cap.textContent = (queue[idx] && queue[idx].is_listening) ? "点此听对话" : "点此听题";
     }
   }
   const repBtn = document.getElementById("exp-replay-btn");
   if (repBtn) {
     const expOn = activeKind === "exp" && !player.paused;
     repBtn.classList.toggle("playing", expOn);
-    repBtn.innerHTML = `${expOn ? "⏸ 讲解中" : "▶ 重听讲解"} <span class="kbd-hint">Space</span>`;
+    repBtn.textContent = expOn ? "暂停讲解" : "重听讲解";
   }
-  const pairBtn = document.getElementById("pair-audio-btn");
-  if (pairBtn) {
-    const pOn = activeKind === "pair";
-    pairBtn.classList.toggle("speaking", pOn);
-    pairBtn.textContent = pOn ? "🔊 播报对比中…" : "🔊 听成对发音";
-  }
-}
-
-// ================= ZERO-PROMPT LIVE TIME-OF-DAY WALK RADIO =================
-function getCurrentWalkSlot() {
-  const h = new Date().getHours();
-  if (h >= 5 && h < 11) return "morning";
-  if (h >= 11 && h < 17) return "midday";
-  return "evening";
-}
-
-function getWalkProgramLabel() {
-  const h = new Date().getHours();
-  if (h >= 5 && h < 11) return "晨间唤醒电台 · 错题声画＋核心语法";
-  if (h >= 11 && h < 17) return "午间散步电台 · 假名副词＋口语快反";
-  if (h >= 17 && h < 21) return "傍晚通勤电台 · 真题双人聴解＋活用";
-  return "夜间轻复盘电台 · 1.3x 原句沉浸";
 }
 
 async function requestWakeLock(enable) {
@@ -2362,21 +1924,17 @@ async function requestWakeLock(enable) {
   } catch (e) {}
 }
 
+function getCurrentWalkSlot() {
+  const h = new Date().getHours();
+  if (h >= 5 && h < 11) return "morning";
+  if (h >= 11 && h < 17) return "midday";
+  return "evening";
+}
+
 function startWalkCurrentCard() {
   if (!walkMode || idx >= queue.length) return;
   const q = queue[idx];
-  if (stage === "teach" && q.micro && q.micro.audio_urls && q.micro.audio_urls.length) {
-    playMicroPairAudio(() => {
-      if (!walkMode) return;
-      stage = "quiz";
-      renderTutor();
-      setTimeout(() => {
-        if (walkMode && idx < queue.length) playMainClip(queue[idx].q_audio, "q", false);
-      }, 350);
-    });
-  } else if (stage !== "answered") {
-    stage = "quiz";
-    renderTutor();
+  if (stage !== "answered") {
     playMainClip(q.q_audio, "q", false);
   } else {
     playMainClip(q.exp_audio, "exp", false);
@@ -2386,20 +1944,19 @@ function startWalkCurrentCard() {
 function toggleWalkMode(forceState) {
   walkMode = typeof forceState === "boolean" ? forceState : !walkMode;
   const btn = document.getElementById("walk-btn");
-  if (btn) {
-    btn.textContent = walkMode ? "🚶 走路听 开" : "🚶 走路听";
-    btn.classList.toggle("active", walkMode);
-  }
+  const lbl = document.getElementById("walk-btn-label");
+  if (btn) btn.classList.toggle("active", walkMode);
+  if (lbl) lbl.textContent = walkMode ? "随身听中" : "随身听";
   requestWakeLock(walkMode);
 
   if (walkMode) {
-    const targetSlot = getCurrentWalkSlot();
+    const target = getCurrentWalkSlot();
     const head = queue.slice(0, idx);
     const tail = queue.slice(idx);
     tail.sort((a, b) => {
-      const aHit = a.walk_slot === targetSlot ? 0 : 1;
-      const bHit = b.walk_slot === targetSlot ? 0 : 1;
-      return aHit - bHit;
+      const aMatch = (a.walk_slot === target || (target === "midday" && a.walk_slot === "afternoon")) ? 0 : 1;
+      const bMatch = (b.walk_slot === target || (target === "midday" && b.walk_slot === "afternoon")) ? 0 : 1;
+      return aMatch - bMatch;
     });
     queue = head.concat(tail);
     syncCurrentCardSetup();
@@ -2411,68 +1968,13 @@ function toggleWalkMode(forceState) {
   }
 }
 
-// Optional Voice Input (SpeechRecognition)
-let recog = null;
-let micActive = false;
-function toggleVoiceAnswer() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) {
-    alert("当前浏览器不支持麦克风语音识别，可直接点选上方按钮作答。");
-    return;
-  }
-  if (micActive && recog) {
-    recog.stop();
-    return;
-  }
-  stopAudio();
-  recog = new SR();
-  recog.lang = "ja-JP";
-  recog.interimResults = false;
-  micActive = true;
-  const micBtn = document.getElementById("mic-btn");
-  if (micBtn) {
-    micBtn.classList.add("listening-mic");
-    micBtn.textContent = "🎙 正在听你说…";
-  }
-  recog.onresult = e => {
-    const said = (e.results[0] && e.results[0][0] && e.results[0][0].transcript || "").trim();
-    const q = queue[idx];
-    if (!q || stage === "answered") return;
-    if (/不知道|パス|わからない/.test(said)) {
-      choose("不知道", false);
-      return;
-    }
-    const choices = currentChoices.length ? currentChoices : q.choices;
-    const cleanSaid = said.replace(/[。、！？\s]/g, "");
-    const hit = choices.find(c => {
-      const cc = c.replace(/（.*）|[。、\s]/g, "");
-      return cleanSaid.includes(cc) || cc.includes(cleanSaid);
-    });
-    if (hit) choose(hit, false);
-    else if (/1|一|いち/.test(cleanSaid) && choices[0]) choose(choices[0], false);
-    else if (/2|二|に/.test(cleanSaid) && choices[1]) choose(choices[1], false);
-    else if (/3|三|さん/.test(cleanSaid) && choices[2]) choose(choices[2], false);
-    else choose("不知道", false);
-  };
-  recog.onend = () => {
-    micActive = false;
-    const b = document.getElementById("mic-btn");
-    if (b) {
-      b.classList.remove("listening-mic");
-      b.innerHTML = `🎙 开口答 <span class="kbd-hint">M</span>`;
-    }
-  };
-  recog.onerror = () => { micActive = false; };
-  recog.start();
-}
-
 function persistSessionLocal() {
   try {
     localStorage.setItem(SESSION_KEY, JSON.stringify(sessionState));
   } catch (e) {}
 }
 
-function saveRecord(q, choice, result, askAgain, consolidationOnly) {
+function saveRecord(q, choice, result, askAgain) {
   const rec = {
     id: q.id,
     point: q.point_key || q.point,
@@ -2488,12 +1990,12 @@ function saveRecord(q, choice, result, askAgain, consolidationOnly) {
     localStorage.setItem("n3_tutor_log", JSON.stringify(hist.slice(-500)));
   } catch (e) {}
 
-  const newTier = (!result || askAgain) ? "todo" : (consolidationOnly ? "wip" : "done");
+  const newTier = (!result || askAgain) ? "todo" : "done";
   sessionState.masteryOverrides[q.point_key] = newTier;
   sessionState.masteryOverrides[q.point] = newTier;
-  if (result && !askAgain && !consolidationOnly) {
+  if (result && !askAgain) {
     if (!sessionState.doneIds.includes(q.id)) sessionState.doneIds.push(q.id);
-  } else if (!result || askAgain) {
+  } else {
     sessionState.doneIds = sessionState.doneIds.filter(id => id !== q.id);
   }
   persistSessionLocal();
@@ -2504,34 +2006,8 @@ function saveRecord(q, choice, result, askAgain, consolidationOnly) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(Object.assign({}, rec, { session: sessionState }))
-    }).catch(() => {
-      const body = new URLSearchParams(Object.assign({ "form-name": "n3-answers" }, rec)).toString();
-      fetch("/", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: body
-      }).catch(() => {});
-    });
+    }).catch(() => {});
   }
-}
-
-function finishMicroLesson() {
-  stopAudio();
-  stage = "quiz";
-  renderTutor();
-  if (idx < queue.length && queue[idx].q_audio) {
-    playMainClip(queue[idx].q_audio, "q", false);
-  }
-}
-
-function openMicroLessonPeek() {
-  const q = queue[idx];
-  if (!q || !q.micro) return;
-  stopAudio();
-  usedTeachOnCurrent = true;
-  stage = "teach";
-  renderTutor();
-  playMicroPairAudio();
 }
 
 function choose(val, fromWalk) {
@@ -2541,19 +2017,11 @@ function choose(val, fromWalk) {
   pickedVal = val;
   const q = queue[idx];
   const isCorrect = fromWalk ? true : (val === q.answer);
-  spacedScheduledOnCurrent = false;
   if (!fromWalk) {
     vibrate(isCorrect ? 10 : [14, 30, 14]);
-    const needsSpacedVerify = isCorrect && usedTeachOnCurrent && !q._spaced;
-    spacedScheduledOnCurrent = needsSpacedVerify;
-    saveRecord(q, val, isCorrect, false, needsSpacedVerify);
-    if (!isCorrect) {
-      const copy = Object.assign({}, q, { needs_teach: false, _spaced: true, roi_tag: "错题复仇" });
-      queue.push(copy);
-    } else if (needsSpacedVerify) {
-      const insertAt = Math.min(queue.length, idx + 6);
-      const spacedCopy = Object.assign({}, q, { needs_teach: false, _spaced: true, roi_tag: "间隔盲测复检" });
-      queue.splice(insertAt, 0, spacedCopy);
+    saveRecord(q, val, isCorrect, false);
+    if (!isCorrect && !q._requeue) {
+      queue.push(Object.assign({}, q, { _requeue: true }));
     }
   }
   renderTutor();
@@ -2569,6 +2037,7 @@ function prevCard() {
   syncCurrentCardSetup();
   renderTutor();
   if (walkMode) startWalkCurrentCard();
+  else if (queue[idx] && queue[idx].q_audio) playMainClip(queue[idx].q_audio, "q", false);
 }
 
 function nextCard(requeue) {
@@ -2577,21 +2046,15 @@ function nextCard(requeue) {
   const q = queue[idx];
   if (requeue && q) {
     vibrate(12);
-    saveRecord(q, pickedVal, false, true, false);
-    queue.push(Object.assign({}, q, { needs_teach: false, _spaced: true, roi_tag: "主动加练" }));
+    saveRecord(q, pickedVal, false, true);
+    queue.push(Object.assign({}, q, { _requeue: true }));
   }
   idx += 1;
   pickedVal = null;
   syncCurrentCardSetup();
   renderTutor();
-  if (idx < queue.length) {
-    if (walkMode) {
-      startWalkCurrentCard();
-    } else if (stage === "teach") {
-      playMicroPairAudio();
-    } else if (queue[idx].q_audio) {
-      playMainClip(queue[idx].q_audio, "q", false);
-    }
+  if (idx < queue.length && queue[idx].q_audio) {
+    playMainClip(queue[idx].q_audio, "q", false);
   }
 }
 
@@ -2608,8 +2071,7 @@ function jumpToCardById(cardId) {
   syncCurrentCardSetup();
   switchMode("tutor");
   renderTutor();
-  if (stage === "teach") playMicroPairAudio();
-  else playMainClip(queue[idx].q_audio, "q", false);
+  if (queue[idx] && queue[idx].q_audio) playMainClip(queue[idx].q_audio, "q", false);
 }
 
 function resetDailySession() {
@@ -2625,22 +2087,21 @@ function resetDailySession() {
 }
 
 function renderTutor() {
-  document.getElementById("countdown-txt").textContent = `距考试 ${computeDaysLeft()} 天`;
-  document.getElementById("top-speed-btn").textContent = `讲解 ${expSpeed.toFixed(1)}x`;
+  document.getElementById("countdown-txt").innerHTML = `距考试 <strong>${computeDaysLeft()}</strong> 天`;
 
   const total = queue.length;
   const pct = Math.min(100, Math.round((idx / Math.max(1, total)) * 100));
-  document.getElementById("card-counter").textContent = idx < total ? `${idx + 1} / ${total}` : "本组已完成";
+  document.getElementById("card-counter").textContent = idx < total ? `${idx + 1} / ${total}` : "已完成";
   document.getElementById("prog-fill").style.width = `${pct}%`;
 
   const box = document.getElementById("voice-card");
   if (idx >= total) {
     box.innerHTML = `
       <div class="done-wrap">
-        <h2 class="done-title">今天这一组全部过关了</h2>
-        <p class="done-sub">重点盲区与复仇题都已记入掌握度账本，去休息吧。</p>
-        <div class="nav-row" style="max-width:340px;margin:0 auto;">
-          <button class="again-btn" onclick="switchMode('dash')">看掌握度</button>
+        <h2 class="done-title">今天这一组全部练完了</h2>
+        <p class="done-sub">共 ${total} 题已全部过关，去休息一下吧。</p>
+        <div class="nav-row">
+          <button class="again-btn" onclick="switchMode('dash')">看总表</button>
           <button class="next-btn" onclick="resetDailySession()">再练一遍</button>
         </div>
       </div>
@@ -2652,7 +2113,6 @@ function renderTutor() {
   const q = queue[idx];
   warmAudio(q.q_audio);
   warmAudio(q.exp_audio);
-  if (q.micro && q.micro.audio_urls) q.micro.audio_urls.forEach(warmAudio);
   if (idx + 1 < total) {
     warmAudio(queue[idx + 1].q_audio);
     warmAudio(queue[idx + 1].exp_audio);
@@ -2660,163 +2120,110 @@ function renderTutor() {
 
   const walkBannerHTML = walkMode ? `
     <div class="walk-banner">
-      <span>🎧 ${escapeHtml(getWalkProgramLabel())}</span>
-      <span style="font-size:11.5px;opacity:0.85;">免手点自动连播</span>
-    </div>
-  ` : "";
-
-  const eyebrowLabel = (stage === "quiz")
-    ? escapeHtml(q.subject)
-    : `${escapeHtml(q.subject)} · ${escapeHtml(q.point)}`;
-
-  const eyebrowHTML = `
-    <div class="card-eyebrow">
-      <span class="subj-tag"><span class="subj-dot"></span>${eyebrowLabel}</span>
-      <span>${escapeHtml(q.roi_tag)}</span>
-    </div>
-  `;
-
-  // -------- STAGE A: 15-SECOND VISUAL + STUDIO AUDIO MICRO-LESSON --------
-  if (stage === "teach" && q.micro) {
-    const m = q.micro;
-    box.innerHTML = `
-      ${walkBannerHTML}
-      ${eyebrowHTML}
-      <div class="teach-stage">
-        <div class="teach-header">
-          <span class="teach-badge">先讲后考 · 15秒声画微课</span>
-          <button class="pair-audio-btn" id="pair-audio-btn" onclick="playMicroPairAudio()">🔊 听成对发音</button>
-        </div>
-        <div class="scene-art">${renderSceneSVG(m.scene)}</div>
-        <div class="pair-grid">
-          <div class="pair-box primary-anchor" id="pair-box-0" onclick="playSinglePairSide(0)">
-            <div class="pair-ja"><span>${escapeHtml(m.left.ja || "")}</span><span class="pair-spk-ic">🔊</span></div>
-            <div class="pair-sub">${escapeHtml(m.left.sub || "")}</div>
-            <div class="pair-desc">${escapeHtml(m.left.desc || "")}</div>
-          </div>
-          <div class="pair-box contrast-anchor" id="pair-box-1" onclick="playSinglePairSide(1)">
-            <div class="pair-ja"><span>${escapeHtml(m.right.ja || "")}</span><span class="pair-spk-ic">🔊</span></div>
-            <div class="pair-sub">${escapeHtml(m.right.sub || "")}</div>
-            <div class="pair-desc">${escapeHtml(m.right.desc || "")}</div>
-          </div>
-        </div>
-        <div class="teach-hook">${escapeHtml(m.hook)}</div>
-        <div class="nav-row">
-          <button class="next-btn" onclick="finishMicroLesson()">记住了，考我 → <span class="kbd-hint">Enter</span></button>
-        </div>
-      </div>
-    `;
-    syncOrbState();
-    return;
-  }
-
-  // -------- STAGE B & C: VOICE TUTOR QUESTION + ANSWER ZONE --------
-  const isAns = stage === "answered";
-  const choices = currentChoices.length ? currentChoices : q.choices;
-  const gridCls = choices.length > 2 || choices.some(c => c.length > 9) ? "choices-grid stacked" : "choices-grid";
-  const choicesHTML = choices.map((c, cIdx) => {
-    let cls = "choice-btn";
-    if (isAns) {
-      if (c === q.answer) cls += " correct";
-      else if (c === pickedVal) cls += " wrong";
-    }
-    const innerLabel = isAns ? `<span>${annotateJapanese(c)}</span>` : `<span>${escapeHtml(c)}</span>`;
-    const kbdBadge = !isAns ? `<span class="kbd-hint">${cIdx + 1}</span>` : "";
-    return `<button class="${cls}" ${isAns ? "disabled" : ""} onclick='choose(${JSON.stringify(c)}, false)'>${innerLabel}${kbdBadge}</button>`;
-  }).join("");
-
-  const microPeekBtn = q.micro
-    ? `<button class="assist-btn" onclick="openMicroLessonPeek()">画面微课 <span class="kbd-hint">H</span></button>`
-    : "";
-
-  const assistHTML = (!isAns && !walkMode) ? `
-    <div class="quick-assist-row">
-      <button class="assist-btn" id="mic-btn" onclick="toggleVoiceAnswer()">🎙 开口答 <span class="kbd-hint">M</span></button>
-      ${microPeekBtn}
-      <button class="assist-btn" onclick='choose("不知道", false)'>直接听讲解 <span class="kbd-hint">0</span></button>
+      <span>随身听自动连播中</span>
+      <span style="font-size:13.5px;opacity:0.85;">听题 → 想4秒 → 听讲解</span>
     </div>
   ` : "";
 
   const walkNavHTML = walkMode ? `
     <div class="walk-controls-row">
-      <button class="walk-nav-btn" onclick="prevCard()">⏮ 上一条</button>
-      <button class="walk-nav-btn primary" onclick="toggleWalkMode(false)">退出走路电台</button>
-      <button class="walk-nav-btn" onclick="nextCard(false)">下一条 ⏭</button>
+      <button class="walk-nav-btn" onclick="prevCard()">上一题</button>
+      <button class="walk-nav-btn primary" onclick="toggleWalkMode(false)">退出随身听</button>
+      <button class="walk-nav-btn" onclick="nextCard(false)">下一题</button>
     </div>
   ` : "";
 
-  const speedBtnsHTML = SPEEDS.map(s =>
-    `<button class="spd-btn ${s === expSpeed ? "active" : ""}" data-spd="${s}" onclick="setExpSpeed(${s})">${s.toFixed(1)}x</button>`
-  ).join("");
+  // -------- STEP 1: LISTEN & PICK --------
+  if (stage === "quiz") {
+    const choices = currentChoices.length ? currentChoices : q.choices;
+    const choicesHTML = choices.map((c, cIdx) => `
+      <button class="choice-btn" onclick='choose(${JSON.stringify(c)}, false)'>
+        <span>${escapeHtml(c)}</span>
+        <span class="kbd-hint">${cIdx + 1}</span>
+      </button>
+    `).join("");
 
-  let breakdownHTML = "";
-  if (isAns) {
-    const rows = choices.map(c => {
-      const right = c === q.answer;
-      const note = (q.option_notes && q.option_notes[c]) || (right ? q.explain : "干扰项（语义或接续不符）");
-      return `
-        <div class="opt-row ${right ? "is-ans" : "is-dist"}">
-          <span class="opt-mark">${right ? "✓" : "✕"}</span>
-          <div class="opt-body">
-            <span class="opt-head-ja">${annotateJapanese(c)}</span>
-            <span class="opt-note-zh">${escapeHtml(note)}</span>
-          </div>
-        </div>
-      `;
-    }).join("");
-    breakdownHTML = `<div class="opt-breakdown">${rows}</div>`;
+    box.innerHTML = `
+      ${walkBannerHTML}
+      <div class="card-top-row">
+        <span class="subj-pill"><span class="subj-dot"></span>${escapeHtml(q.subject)}</span>
+        ${idx > 0 ? `<button class="prev-link" onclick="prevCard()">← 上一题</button>` : `<span></span>`}
+      </div>
+      <div class="orb-stage">
+        <button class="voice-orb ${q.is_listening ? 'listening-emphasis' : ''}" id="voice-orb" onclick="playMainClip(queue[idx].q_audio, 'q', true)" aria-label="播放题目">
+          <svg class="orb-play-ic" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86A1 1 0 0 0 8 5.14z"/></svg>
+          <div class="orb-bars"><span></span><span></span><span></span><span></span></div>
+        </button>
+        <div class="orb-caption" id="orb-caption">${q.is_listening ? "点此听对话" : "点此听题"}</div>
+      </div>
+      <p class="prompt-cue ${q.is_listening ? 'is-listening-cue' : ''}">${escapeHtml(q.prompt)}</p>
+      <div class="choices-stack">
+        ${choicesHTML}
+      </div>
+      ${!walkMode ? `<button class="skip-btn" onclick='choose("不知道", false)'>不确定，直接看讲解</button>` : ""}
+      ${walkNavHTML}
+    `;
+    syncOrbState();
+    return;
   }
 
-  const spacedNoticeHTML = (isAns && spacedScheduledOnCurrent)
-    ? `<div class="spaced-hint">✓ 初学答对 · 已排入 5 题后无提示盲测，确认真正记住</div>`
-    : "";
+  // -------- STEP 2: 1-SCREEN INSTANT EXPLANATION ("只留最重要的字") --------
+  const isPeek = pickedVal === "不知道" || pickedVal === "__walk__";
+  const isCorrect = !isPeek && pickedVal === q.answer;
+  const verdictCls = isPeek ? "peek" : (isCorrect ? "ok" : "ng");
+  const verdictTxt = isPeek ? `${escapeHtml(q.subject)} · ${escapeHtml(q.point)}` : (isCorrect ? "✓ 答对了" : "✕ 答错了");
 
-  const answerZoneHTML = isAns ? `
-    <div class="answer-zone" id="answer-zone">
-      <div class="exp-controls">
-        <button class="replay-exp-btn" id="exp-replay-btn" onclick="playMainClip(queue[idx].exp_audio, 'exp', true)">▶ 重听讲解 <span class="kbd-hint">Space</span></button>
-        <div class="speed-group" title="讲解语速（快捷键 S）">
-          ${speedBtnsHTML}
-        </div>
+  let wrongBoxHTML = "";
+  if (!isPeek && !isCorrect && pickedVal) {
+    const wNote = (q.option_notes && q.option_notes[pickedVal]) || "语义或接续不符";
+    wrongBoxHTML = `
+      <div class="ans-wrong-box">
+        <span class="ans-wrong-head">✕ ${annotateJapanese(pickedVal)}</span>
+        <span>${escapeHtml(wNote)}</span>
       </div>
-      <div class="full-sentence-box">
-        <div class="full-sentence-hint">
-          <span>完整原句</span>
-          <span>点词听发音 · 悬停看原形与声调</span>
-        </div>
-        <div class="full-sentence-ja">${annotateJapanese(q.full_ja)}</div>
-      </div>
-      ${spacedNoticeHTML}
-      ${breakdownHTML}
-      ${!walkMode ? `
-      <div class="nav-row">
-        <button class="again-btn" onclick="nextCard(true)">还要考 <span class="kbd-hint">R</span></button>
-        <button class="next-btn" onclick="nextCard(false)">下一题 → <span class="kbd-hint">Enter</span></button>
-      </div>` : ""}
-    </div>
-  ` : "";
+    `;
+  }
 
   box.innerHTML = `
     ${walkBannerHTML}
-    ${eyebrowHTML}
-    <div class="orb-stage">
-      <button class="voice-orb" id="voice-orb" onclick="playMainClip(queue[idx].q_audio, 'q', true)" aria-label="播放题目语音">
-        <div class="orb-bars"><span></span><span></span><span></span><span></span></div>
-      </button>
-      <div class="orb-caption" id="orb-caption">点圆球听私教提问</div>
+    <div class="ans-stage" id="answer-zone">
+      <div class="ans-header">
+        <span class="verdict-badge ${verdictCls}">${verdictTxt}</span>
+        <div class="ans-audio-bar">
+          <button class="mini-audio-btn" onclick="playMainClip(queue[idx].q_audio, 'q', true)">听原题</button>
+          <button class="mini-audio-btn" id="exp-replay-btn" onclick="playMainClip(queue[idx].exp_audio, 'exp', true)">重听讲解</button>
+          <button class="mini-audio-btn" id="ans-spd-btn" onclick="cycleExpSpeed()">${expSpeed.toFixed(1)}x</button>
+        </div>
+      </div>
+
+      <div class="ans-answer-box">
+        <span class="ans-mark-ok">✓</span>
+        <div class="ans-ja-text">${annotateJapanese(q.answer)}</div>
+      </div>
+
+      ${wrongBoxHTML}
+
+      <div class="core-rule-box">${escapeHtml(q.core_rule)}</div>
+
+      <div class="full-sentence-box">
+        <div class="full-sentence-hint">
+          <span>完整原句</span>
+          <span>点划线词看意思·听发音</span>
+        </div>
+        <div class="full-sentence-ja">${annotateJapanese(q.full_ja)}</div>
+      </div>
+
+      ${!walkMode ? `
+      <div class="nav-row">
+        <button class="again-btn" onclick="nextCard(true)">再练一次</button>
+        <button class="next-btn" onclick="nextCard(false)">下一题 → <span class="kbd-hint">Enter</span></button>
+      </div>` : walkNavHTML}
     </div>
-    <p class="prompt-cue">${escapeHtml(q.prompt)}</p>
-    <div class="${gridCls}">
-      ${choicesHTML}
-    </div>
-    ${assistHTML}
-    ${answerZoneHTML}
-    ${walkNavHTML}
   `;
   syncOrbState();
 }
 
-// ================= ANSWER-ZONE WORD POPOVER (Desktop Hover + Mobile Bottom Sheet!) =================
+// ================= WORD DICTIONARY POPUP =================
 const popEl = document.getElementById("word-popover");
 const backdropEl = document.getElementById("sheet-backdrop");
 let activeTokEl = null;
@@ -2861,7 +2268,7 @@ function showWordPopover(surface, anchorEl, autoSpeak) {
         <span class="wp-kana">${escapeHtml(info.kana)}</span>
         <span class="wp-pitch">${escapeHtml(info.pitch || "")}</span>
       </div>
-      ${hasAudio ? `<button class="wp-speak" onclick='playWordAudio(${JSON.stringify(surface)})'>🔊 发音</button>` : ""}
+      ${hasAudio ? `<button class="wp-speak" onclick='playWordAudio(${JSON.stringify(surface)})'>发音</button>` : ""}
     </div>
     <div class="wp-pos">${escapeHtml(info.head && info.head !== surface ? "原形 " + info.head + " · " + info.pos : info.pos)}</div>
     <div class="wp-zh">${escapeHtml(info.zh)}</div>
@@ -2873,8 +2280,8 @@ function showWordPopover(surface, anchorEl, autoSpeak) {
     backdropEl.classList.add("open");
   } else if (anchorEl && anchorEl.getBoundingClientRect) {
     const r = anchorEl.getBoundingClientRect();
-    const pw = popEl.offsetWidth || 330;
-    const ph = popEl.offsetHeight || 135;
+    const pw = popEl.offsetWidth || 360;
+    const ph = popEl.offsetHeight || 150;
     let left = r.left + r.width / 2 - pw / 2;
     left = Math.max(16, Math.min(window.innerWidth - pw - 16, left));
     let top = r.top - ph - 10;
@@ -2926,22 +2333,7 @@ document.addEventListener("click", e => {
   }
 });
 
-document.addEventListener("mouseup", () => {
-  if (stage !== "answered" || isMobileSheetViewport()) return;
-  const sel = window.getSelection && window.getSelection();
-  if (!sel || sel.isCollapsed) return;
-  const az = document.getElementById("answer-zone");
-  if (!az || !az.contains(sel.anchorNode)) return;
-  const txt = sel.toString().trim();
-  if (!txt || txt.length > 18) return;
-  const hit = DICT_KEYS.find(k => k === txt || k.includes(txt) || txt.includes(k));
-  if (hit) {
-    const range = sel.getRangeAt(0);
-    showWordPopover(hit, range, false);
-  }
-});
-
-// ================= DESKTOP FULL KEYBOARD STUDIO HOTKEYS =================
+// ================= DESKTOP KEYBOARD SHORTCUTS =================
 document.addEventListener("keydown", e => {
   const tag = (e.target && e.target.tagName || "").toLowerCase();
   if (tag === "input" || tag === "textarea") {
@@ -2952,7 +2344,6 @@ document.addEventListener("keydown", e => {
     if (e.key === "Escape") closeModal();
     return;
   }
-
   if (e.key === "Escape") {
     hideWordPopover();
     if (walkMode) toggleWalkMode(false);
@@ -2991,17 +2382,6 @@ document.addEventListener("keydown", e => {
     return;
   }
 
-  if (stage === "teach") {
-    if (e.key === " ") {
-      e.preventDefault();
-      playMicroPairAudio();
-    } else if (e.key === "Enter" || e.key === "ArrowRight") {
-      e.preventDefault();
-      finishMicroLesson();
-    }
-    return;
-  }
-
   if (stage === "quiz") {
     const choices = currentChoices.length ? currentChoices : q.choices;
     if (e.key === " ") {
@@ -3019,12 +2399,6 @@ document.addEventListener("keydown", e => {
     } else if (e.key === "0") {
       e.preventDefault();
       choose("不知道", false);
-    } else if (e.key.toLowerCase() === "h" && q.micro) {
-      e.preventDefault();
-      openMicroLessonPeek();
-    } else if (e.key.toLowerCase() === "m") {
-      e.preventDefault();
-      toggleVoiceAnswer();
     }
     return;
   }
@@ -3043,7 +2417,7 @@ document.addEventListener("keydown", e => {
   }
 });
 
-// ================= SECONDARY VIEW: MASTERY DASHBOARD + KANA ADVERBS 36 =================
+// ================= VIEW 2: MASTERY OVERVIEW ("总表") =================
 function switchMode(m) {
   activeMode = m;
   hideWordPopover();
@@ -3057,11 +2431,8 @@ function switchMode(m) {
 
 function recalcCounts(modKey) {
   const items = DATA.mastery[modKey].items;
-  const c = { todo: 0, wip: 0, done: 0, roi: 0, total: items.length };
-  items.forEach(it => {
-    c[it.tier] += 1;
-    if (it.roi && it.tier !== "done") c.roi += 1;
-  });
+  const c = { todo: 0, wip: 0, done: 0, total: items.length };
+  items.forEach(it => { c[it.tier] += 1; });
   DATA.mastery[modKey].counts = c;
   return c;
 }
@@ -3071,7 +2442,7 @@ function selectDashMod(modKey) {
   expandedPt = null;
   if (modKey !== "kana36") {
     const c = recalcCounts(modKey);
-    if (dashTier !== "roi" && c[dashTier] === 0) {
+    if (c[dashTier] === 0) {
       dashTier = c.todo > 0 ? "todo" : (c.wip > 0 ? "wip" : "done");
     }
   }
@@ -3097,7 +2468,7 @@ function renderDashboard() {
       <div class="sum-row ${dashMod === k ? 'selected-mod' : ''}" onclick="selectDashMod('${k}')">
         <div class="sum-head">
           <span class="sum-title">${m.label}</span>
-          <span class="sum-nums">过关 ${c.done} · 巩固 ${c.wip} · 待攻克 ${c.todo}</span>
+          <span class="sum-nums">已会 ${c.done} · 待练 ${c.todo}</span>
         </div>
         <div class="tri-bar">
           <div class="tri-seg-done" style="width:${pDone}%"></div>
@@ -3108,12 +2479,14 @@ function renderDashboard() {
     `;
   }).join("");
 
+  const kTitle = document.getElementById("kana36-title");
+  if (kTitle) kTitle.textContent = `纯假名副词 ${DATA.kana_total} 词`;
   document.getElementById("kana36-entry").classList.toggle("selected-mod", dashMod === "kana36");
 
   const mobileTabsHTML = order.map(k => {
     const m = DATA.mastery[k];
-    return `<button class="mod-tab ${dashMod === k ? "active" : ""}" onclick="selectDashMod('${k}')">${m.label} ${m.counts.total}</button>`;
-  }).join("") + `<button class="mod-tab ${dashMod === 'kana36' ? 'active' : ''}" onclick="selectDashMod('kana36')">假名副词 36</button>`;
+    return `<button class="mod-tab ${dashMod === k ? "active" : ""}" onclick="selectDashMod('${k}')">${m.label}</button>`;
+  }).join("") + `<button class="mod-tab ${dashMod === 'kana36' ? 'active' : ''}" onclick="selectDashMod('kana36')">假名副词</button>`;
   document.getElementById("mod-tabs").innerHTML = mobileTabsHTML;
 
   const filterZone = document.getElementById("dash-filter-zone");
@@ -3126,10 +2499,9 @@ function renderDashboard() {
   filterZone.style.display = "block";
   const curCounts = DATA.mastery[dashMod].counts;
   document.getElementById("tier-tabs").innerHTML = `
-    <button class="tier-tab ${dashTier === 'todo' ? 'active' : ''}" onclick="selectDashTier('todo')">待攻克 ${curCounts.todo}</button>
-    <button class="tier-tab ${dashTier === 'roi' ? 'active' : ''}" onclick="selectDashTier('roi')">提分重点 ${curCounts.roi}</button>
-    <button class="tier-tab ${dashTier === 'wip' ? 'active' : ''}" onclick="selectDashTier('wip')">巩固中 ${curCounts.wip}</button>
-    <button class="tier-tab ${dashTier === 'done' ? 'active' : ''}" onclick="selectDashTier('done')">已过关 ${curCounts.done}</button>
+    <button class="tier-tab ${dashTier === 'todo' ? 'active' : ''}" onclick="selectDashTier('todo')">待练 ${curCounts.todo}</button>
+    <button class="tier-tab ${dashTier === 'wip' ? 'active' : ''}" onclick="selectDashTier('wip')">巩固 ${curCounts.wip}</button>
+    <button class="tier-tab ${dashTier === 'done' ? 'active' : ''}" onclick="selectDashTier('done')">已会 ${curCounts.done}</button>
   `;
 
   renderMasteryList();
@@ -3137,36 +2509,31 @@ function renderDashboard() {
 
 function renderKana36View() {
   const listEl = document.getElementById("point-list");
-  listEl.innerHTML = `
-    <div class="kana36-banner">
-      <strong>考情定心丸：</strong>JLPT N3 纯假名副词/拟态词在真题中固定只占 <strong>3–5 题（约 6 分）</strong>。无需盲背偏僻词，用「成对反义/画面」锁死以下 <strong>36 个核心词（6 组×3 对）</strong>即 100% 封顶。
-    </div>
-    ${DATA.kana36.map(fam => `
-      <div class="kana-fam-block">
-        <div class="kana-fam-head">
-          <span class="kana-fam-title">${escapeHtml(fam.family)}</span>
-          <span class="kana-fam-tag">${escapeHtml(fam.tag)}</span>
-        </div>
-        ${fam.pairs.map(pr => `
-          <div class="kana-pair-card">
-            <div class="kana-pair-scene">画面对比：${escapeHtml(pr.scene)}</div>
-            <div class="kana-twins">
-              ${[pr.a, pr.b].map(item => `
-                <div class="kana-twin-item">
-                  <div class="kt-top">
-                    <div><span class="kt-word">${escapeHtml(item.w)}</span><span class="kt-pitch">${escapeHtml(item.pitch)}</span></div>
-                    ${item.audio ? `<button class="kt-audio-btn" onclick='playDirectUrl(${JSON.stringify(item.audio)})'>🔊 发音</button>` : ""}
-                  </div>
-                  <div class="kt-zh">${escapeHtml(item.zh)}</div>
-                  <div class="kt-colloc">${escapeHtml(item.colloc)}</div>
-                </div>
-              `).join("")}
-            </div>
-          </div>
-        `).join("")}
+  listEl.innerHTML = DATA.kana36.map(fam => `
+    <div class="kana-fam-block">
+      <div class="kana-fam-head">
+        <span class="kana-fam-title">${escapeHtml(fam.family)}</span>
+        <span class="kana-fam-tag">${escapeHtml(fam.tag)}</span>
       </div>
-    `).join("")}
-  `;
+      ${fam.pairs.map(pr => `
+        <div class="kana-pair-card">
+          <div class="kana-pair-scene">${escapeHtml(pr.scene)}</div>
+          <div class="kana-twins">
+            ${[pr.a, pr.b].map(item => `
+              <div class="kana-twin-item">
+                <div class="kt-top">
+                  <div><span class="kt-word">${escapeHtml(item.w)}</span><span class="kt-pitch">${escapeHtml(item.pitch)}</span></div>
+                  ${item.audio ? `<button class="kt-audio-btn" onclick='playDirectUrl(${JSON.stringify(item.audio)})'>发音</button>` : ""}
+                </div>
+                <div class="kt-zh">${escapeHtml(item.zh)}</div>
+                <div class="kt-colloc">${escapeHtml(item.colloc)}</div>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `).join("")}
+    </div>
+  `).join("");
 }
 
 function togglePtNote(i) {
@@ -3178,13 +2545,12 @@ function renderMasteryList() {
   const q = (document.getElementById("pt-search").value || "").trim().toLowerCase();
   const items = DATA.mastery[dashMod].items.filter(it => {
     if (q) return it.name.toLowerCase().includes(q) || (it.sub || "").toLowerCase().includes(q) || (it.family || "").toLowerCase().includes(q);
-    if (dashTier === "roi") return it.roi && it.tier !== "done";
     return it.tier === dashTier;
   });
 
   const listEl = document.getElementById("point-list");
   if (!items.length) {
-    listEl.innerHTML = `<div style="padding:28px 4px;text-align:center;color:var(--ink-3);font-size:13px;">这一栏目前已经清空了</div>`;
+    listEl.innerHTML = `<div style="padding:32px 4px;text-align:center;color:var(--ink-3);font-size:15.5px;">这一栏已经清空了</div>`;
     return;
   }
 
@@ -3197,7 +2563,7 @@ function renderMasteryList() {
         </div>
         <div class="pt-right">
           <span class="pt-sub">${escapeHtml(it.sub)}</span>
-          ${it.card_id ? `<button class="pt-jump-btn" onclick="event.stopPropagation();jumpToCardById('${it.card_id}')">练这题</button>` : ""}
+          ${it.card_id ? `<button class="pt-jump-btn" onclick="event.stopPropagation();jumpToCardById('${it.card_id}')">去练</button>` : ""}
         </div>
       </div>
       ${expandedPt === i && (it.note || it.family) ? `<div class="pt-note">${escapeHtml([it.family, it.note].filter(Boolean).join(" · "))}</div>` : ""}
@@ -3205,7 +2571,6 @@ function renderMasteryList() {
   `).join("");
 }
 
-// ================= MODALS: SESSION CONTROL + INSTALL & CROSS-DEVICE SYNC =================
 function closeModal() {
   document.getElementById("app-modal").classList.remove("open");
 }
@@ -3214,66 +2579,11 @@ function openSessionModal() {
   const doneCount = (sessionState.doneIds || []).length;
   const el = document.getElementById("modal-content");
   el.innerHTML = `
-    <h3 class="modal-title">本组学习进度</h3>
-    <p class="modal-p">当前已自动续接进度（已完成 <strong>${doneCount}</strong> / ${DATA.cards.length} 题）。排在最前面的是错题复仇与未测高分重点，并自动开启「15秒先讲后考声画微课」。</p>
+    <h3 class="modal-title">本轮进度</h3>
+    <p class="modal-p">当前已完成 <strong>${doneCount} / ${DATA.cards.length}</strong> 题。</p>
     <div class="modal-actions">
-      <button class="again-btn" onclick="resetDailySession()">从第 1 题重练本组</button>
-      <button class="next-btn" onclick="closeModal()">继续当前进度</button>
-    </div>
-  `;
-  document.getElementById("app-modal").classList.add("open");
-}
-
-function exportSyncCode() {
-  const code = btoa(unescape(encodeURIComponent(JSON.stringify(sessionState))));
-  const ta = document.getElementById("sync-code-box");
-  if (ta) {
-    ta.value = code;
-    ta.select();
-    navigator.clipboard && navigator.clipboard.writeText(code).catch(() => {});
-  }
-}
-
-function importSyncCode() {
-  const ta = document.getElementById("sync-code-box");
-  if (!ta || !ta.value.trim()) return;
-  try {
-    const parsed = JSON.parse(decodeURIComponent(escape(atob(ta.value.trim()))));
-    if (parsed && typeof parsed === "object") {
-      sessionState = {
-        doneIds: Array.from(new Set([...(sessionState.doneIds || []), ...(parsed.doneIds || [])])),
-        requeuedIds: parsed.requeuedIds || [],
-        masteryOverrides: Object.assign({}, sessionState.masteryOverrides, parsed.masteryOverrides || {})
-      };
-      persistSessionLocal();
-      applyMasteryOverrides(sessionState.masteryOverrides);
-      queue = buildInitialQueue();
-      idx = 0;
-      pickedVal = null;
-      syncCurrentCardSetup();
-      closeModal();
-      renderTutor();
-    }
-  } catch (e) {
-    alert("同步码格式有误，请重新复制粘贴。");
-  }
-}
-
-function openSyncModal() {
-  const el = document.getElementById("modal-content");
-  el.innerHTML = `
-    <h3 class="modal-title">公司 Android 手机免 APK 安装 & 双端同步</h3>
-    <p class="modal-p">
-      <strong>1. 手机变原生全屏 App（绕过公司禁装 APK 限制）：</strong><br/>
-      用手机 Chrome 打开本页 → 点右上角 <strong>⋮</strong> → 点 <strong>「添加到主屏幕 / 安装应用」</strong>，桌面即生成独立全屏 <strong>N3</strong> 图标（长按图标可直接进「走路随身听」）。<br/><br/>
-      <strong>2. 手机 ↔ 电脑进度无缝合并：</strong><br/>
-      在线同源环境下自动后台同步；离线或跨浏览器时，可一键复制/粘贴下方进度同步码：
-    </p>
-    <textarea class="sync-textarea" id="sync-code-box" placeholder="点「复制本机同步码」生成，或粘贴另一端同步码后点「粘贴合并进度」…"></textarea>
-    <div class="modal-actions">
-      <button class="again-btn" onclick="exportSyncCode()">复制本机同步码</button>
-      <button class="again-btn" onclick="importSyncCode()">粘贴合并进度</button>
-      <button class="next-btn" onclick="closeModal()">完成</button>
+      <button class="again-btn" onclick="resetDailySession()">从头开始</button>
+      <button class="next-btn" onclick="closeModal()">继续做题</button>
     </div>
   `;
   document.getElementById("app-modal").classList.add("open");
@@ -3286,9 +2596,7 @@ function initApp() {
     switchMode("dash");
   } else {
     renderTutor();
-    if (urlMode === "walk") {
-      toggleWalkMode(true);
-    }
+    if (urlMode === "walk") toggleWalkMode(true);
   }
 
   if (location.protocol.startsWith("http")) {
@@ -3320,4 +2628,4 @@ initApp();
 final_html = html.replace("__PAYLOAD__", payload)
 with open(HTML_PATH, "w", encoding="utf-8") as f:
     f.write(final_html)
-print("Wrote Perfected Mobile-First + Desktop-Studio N3 Tutor HTML:", HTML_PATH, "size:", len(final_html), "bytes")
+print("Wrote Ultra-Simple Big-Type N3 Tutor HTML:", HTML_PATH, "size:", len(final_html), "bytes")
