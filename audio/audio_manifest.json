@@ -499,280 +499,280 @@
     "exp_audio": "./audio/Q-20261114-005_exp.mp3",
     "spoken_text": "选第一个，「うん、引き継ぎをしておけば大丈夫だよ」。男下属用「休ませていただけないでしょうか」请求批准下周五请假，女部长回答只要提前做好工作交接就没问题。"
   },
-  "N3-G14_q.mp3": "3278293a8d46",
-  "N3-G16_q.mp3": "e34c42828f5c",
-  "N3-G15_q.mp3": "ed87d8749a63",
-  "N3-G17_q.mp3": "ad035125199e",
   "N3-G13_q.mp3": "eaa4ed477b78",
-  "N3-G21_q.mp3": "526640bb68e5",
-  "N3-G19_q.mp3": "bed162dd0544",
-  "N3-G20_q.mp3": "c0bd2189a05b",
-  "N3-G18_q.mp3": "018d8641feb8",
-  "N3-H09_q.mp3": "8da429efd11c",
-  "N3-L06_q.mp3": "d707b017f8e0",
-  "N3-H10_q.mp3": "b9364578c9a2",
-  "N3-V10_q.mp3": "83978e2e80b8",
-  "N3-V09_q.mp3": "3eb5162e634e",
-  "N3-V11_q.mp3": "773921022df1",
-  "VAR-G02_q.mp3": "51aeffec7dc4",
-  "VAR-G01_q.mp3": "5102d3fe70ad",
-  "VAR-G05_q.mp3": "89de59ea77ae",
-  "VAR-G06_q.mp3": "8a2cedbb9764",
-  "VAR-G08_q.mp3": "d0feb360d397",
-  "VAR-G09_q.mp3": "03c13e1e3f99",
-  "VAR-G10_q.mp3": "0faa8ca78a1b",
-  "VAR-G12_q.mp3": "8c7ce77b7e62",
-  "VAR-G13_q.mp3": "720de418e9a0",
-  "VAR-G11_q.mp3": "3e808de9cdf9",
-  "VAR-G20_q.mp3": "596517b665d6",
-  "VAR-H02_q.mp3": "b5b01ce69ddc",
-  "VAR-H01_q.mp3": "35b3c3eb2c98",
-  "VAR-H03_q.mp3": "e588ecce7ea9",
-  "VAR-G14_q.mp3": "f9bc2469838b",
-  "VAR-H04_q.mp3": "ddab07b1251f",
-  "VAR-H05_q.mp3": "0a0bfeef43c2",
-  "VAR-H06_q.mp3": "25c1dfc27e17",
-  "VAR-L01_q.mp3": "59a88caeafe4",
-  "VAR-H10_q.mp3": "40dd96a54bde",
-  "VAR-L04_q.mp3": "6bf10d4f03f8",
-  "VAR-L06_q.mp3": "275743b0ebce",
-  "VAR-V06_q.mp3": "ea87dd8ab0af",
-  "VAR-V10_q.mp3": "4b5f5f64bccf",
-  "VAR-V11_q.mp3": "2c661e86be15",
-  "N3-G17_exp.mp3": "b7469aa32b88",
-  "meta:N3-G17": {
-    "q_audio": "./audio/N3-G17_q.mp3",
-    "exp_audio": "./audio/N3-G17_exp.mp3",
-    "spoken_text": "选「どころか」。表示别说前项了，实际情况完全相反、严重得多，别说闲了连吃饭都没空。整句：「今週は暇どころか、昼ご飯を食べる時間もない。」"
-  },
-  "N3-G16_exp.mp3": "25fbd6ae5284",
-  "meta:N3-G16": {
-    "q_audio": "./audio/N3-G16_q.mp3",
-    "exp_audio": "./audio/N3-G16_exp.mp3",
-    "spoken_text": "选「決まりしだい」。接在动词ます形去掉ます的词干后面，「決まりしだい」表示一旦定下来就立刻做某事。整句：「日程が決まりしだい、すぐメールでご連絡します。」"
-  },
-  "N3-G14_exp.mp3": "2b59b23ccb77",
-  "meta:N3-G14": {
-    "q_audio": "./audio/N3-G14_q.mp3",
-    "exp_audio": "./audio/N3-G14_exp.mp3",
-    "spoken_text": "选「なってきた」。从过去某个时间点一直变化到说话的现在，箭头朝向自己，用「てきた」；从现在往未来继续变才用「ていく」。整句：「４月に入ってから、だんだん暖かくなってきた。」"
-  },
-  "N3-G15_exp.mp3": "558b40b81e85",
-  "meta:N3-G15": {
-    "q_audio": "./audio/N3-G15_q.mp3",
-    "exp_audio": "./audio/N3-G15_exp.mp3",
-    "spoken_text": "选「読めば」。固定双呼应句型「読めば読むほど」，同一个词先变假定形「ば」，再接原形加「ほど」，意思是越读越有趣。整句：「この本は読めば読むほど面白くなる。」"
-  },
   "N3-G13_exp.mp3": "a5c7feeb1495",
   "meta:N3-G13": {
     "q_audio": "./audio/N3-G13_q.mp3",
     "exp_audio": "./audio/N3-G13_exp.mp3",
     "spoken_text": "选「降るそうだ」。前面有「によると」表示听说，必须用动词原形加「そうだ」；去掉「る」接「降りそうだ」是抬头看乌云眼看要下。整句：「天気予報によると、明日は一日中雨が降るそうだ。」"
   },
-  "N3-G19_exp.mp3": "31ad37f20f05",
-  "meta:N3-G19": {
-    "q_audio": "./audio/N3-G19_q.mp3",
-    "exp_audio": "./audio/N3-G19_exp.mp3",
-    "spoken_text": "选「ひきがち」。ます形词干加「がち」，专门表示动不动就发生生病、迟到、忘事这类消极倾向。整句：「冬は空気が乾燥して、風邪をひきがちだ。」"
+  "N3-G14_q.mp3": "3278293a8d46",
+  "N3-G14_exp.mp3": "2b59b23ccb77",
+  "meta:N3-G14": {
+    "q_audio": "./audio/N3-G14_q.mp3",
+    "exp_audio": "./audio/N3-G14_exp.mp3",
+    "spoken_text": "选「なってきた」。从过去某个时间点一直变化到说话的现在，箭头朝向自己，用「てきた」；从现在往未来继续变才用「ていく」。整句：「４月に入ってから、だんだん暖かくなってきた。」"
   },
-  "N3-G21_exp.mp3": "883db8979ce8",
-  "meta:N3-G21": {
-    "q_audio": "./audio/N3-G21_q.mp3",
-    "exp_audio": "./audio/N3-G21_exp.mp3",
-    "spoken_text": "选「ことはない」。动词原形加「ことはない」专门用来安慰对方没必要、用不着那么做；「はずがない」是绝对不可能。整句：「軽い風邪だから、そんなに心配することはないよ。」"
+  "N3-G15_q.mp3": "ed87d8749a63",
+  "N3-G15_exp.mp3": "558b40b81e85",
+  "meta:N3-G15": {
+    "q_audio": "./audio/N3-G15_q.mp3",
+    "exp_audio": "./audio/N3-G15_exp.mp3",
+    "spoken_text": "选「読めば」。固定双呼应句型「読めば読むほど」，同一个词先变假定形「ば」，再接原形加「ほど」，意思是越读越有趣。整句：「この本は読めば読むほど面白くなる。」"
   },
-  "N3-G20_exp.mp3": "db7fbe13c223",
-  "meta:N3-G20": {
-    "q_audio": "./audio/N3-G20_q.mp3",
-    "exp_audio": "./audio/N3-G20_exp.mp3",
-    "spoken_text": "选「ことになっている」。宿舍规则、公司制度、法律规定都是外部客观定好的规矩，用自动词「なっている」；自己给自己立习惯才用他动词「している」。整句：「この寮では、夜１１時以降は静かにすることになっている。」"
+  "N3-G16_q.mp3": "e34c42828f5c",
+  "N3-G16_exp.mp3": "25fbd6ae5284",
+  "meta:N3-G16": {
+    "q_audio": "./audio/N3-G16_q.mp3",
+    "exp_audio": "./audio/N3-G16_exp.mp3",
+    "spoken_text": "选「決まりしだい」。接在动词ます形去掉ます的词干后面，「決まりしだい」表示一旦定下来就立刻做某事。整句：「日程が決まりしだい、すぐメールでご連絡します。」"
   },
+  "N3-G17_q.mp3": "ad035125199e",
+  "N3-G17_exp.mp3": "b7469aa32b88",
+  "meta:N3-G17": {
+    "q_audio": "./audio/N3-G17_q.mp3",
+    "exp_audio": "./audio/N3-G17_exp.mp3",
+    "spoken_text": "选「どころか」。表示别说前项了，实际情况完全相反、严重得多，别说闲了连吃饭都没空。整句：「今週は暇どころか、昼ご飯を食べる時間もない。」"
+  },
+  "N3-G18_q.mp3": "018d8641feb8",
   "N3-G18_exp.mp3": "48c9de4ef141",
   "meta:N3-G18": {
     "q_audio": "./audio/N3-G18_q.mp3",
     "exp_audio": "./audio/N3-G18_exp.mp3",
     "spoken_text": "选「めったに」。「めったに」必须和句尾否定「ない」绑死，意思是极少、难得做某事。整句：「父はお酒をめったに飲まない。」"
   },
-  "N3-L06_exp.mp3": "dee264b1e0eb",
-  "meta:N3-L06": {
-    "q_audio": "./audio/N3-L06_q.mp3",
-    "exp_audio": "./audio/N3-L06_exp.mp3",
-    "spoken_text": "选「資料を印刷する」。N3听力第一大题必考套路：听到「会議室は後にして」意思是会议室先放一放晚点弄，「先に資料を印刷してくれる」才是现在马上第一件要做的事！"
+  "N3-G19_q.mp3": "bed162dd0544",
+  "N3-G19_exp.mp3": "31ad37f20f05",
+  "meta:N3-G19": {
+    "q_audio": "./audio/N3-G19_q.mp3",
+    "exp_audio": "./audio/N3-G19_exp.mp3",
+    "spoken_text": "选「ひきがち」。ます形词干加「がち」，专门表示动不动就发生生病、迟到、忘事这类消极倾向。整句：「冬は空気が乾燥して、風邪をひきがちだ。」"
   },
-  "N3-V10_exp.mp3": "fad391d8f5cf",
-  "meta:N3-V10": {
-    "q_audio": "./audio/N3-V10_q.mp3",
-    "exp_audio": "./audio/N3-V10_exp.mp3",
-    "spoken_text": "选「ぎりぎり」。专门配「間に合う」，表示卡着极限死线勉强赶上；「ぐっすり」是香甜熟睡。整句：「駅まで走って、終電にぎりぎり間に合った。」"
+  "N3-G20_q.mp3": "c0bd2189a05b",
+  "N3-G20_exp.mp3": "db7fbe13c223",
+  "meta:N3-G20": {
+    "q_audio": "./audio/N3-G20_q.mp3",
+    "exp_audio": "./audio/N3-G20_exp.mp3",
+    "spoken_text": "选「ことになっている」。宿舍规则、公司制度、法律规定都是外部客观定好的规矩，用自动词「なっている」；自己给自己立习惯才用他动词「している」。整句：「この寮では、夜１１時以降は静かにすることになっている。」"
   },
-  "N3-H10_exp.mp3": "ea26eba6b5b5",
-  "meta:N3-H10": {
-    "q_audio": "./audio/N3-H10_q.mp3",
-    "exp_audio": "./audio/N3-H10_exp.mp3",
-    "spoken_text": "选「閉まった」。看助词「ドアが」，门自己关上用自动词「閉まる」过去式「閉まった」；人把门关上才说「ドアを閉めた」。整句：「風が強くて、ドアが勝手に閉まった。」"
+  "N3-G21_q.mp3": "526640bb68e5",
+  "N3-G21_exp.mp3": "883db8979ce8",
+  "meta:N3-G21": {
+    "q_audio": "./audio/N3-G21_q.mp3",
+    "exp_audio": "./audio/N3-G21_exp.mp3",
+    "spoken_text": "选「ことはない」。动词原形加「ことはない」专门用来安慰对方没必要、用不着那么做；「はずがない」是绝对不可能。整句：「軽い風邪だから、そんなに心配することはないよ。」"
   },
+  "N3-H09_q.mp3": "8da429efd11c",
   "N3-H09_exp.mp3": "c0acb869b0a8",
   "meta:N3-H09": {
     "q_audio": "./audio/N3-H09_q.mp3",
     "exp_audio": "./audio/N3-H09_exp.mp3",
     "spoken_text": "选「読める」。五段动词「読む」变可能形，把词尾 u 段的「む」推到 e 段「め」加「る」，就是能读「読める」；「読まれる」是被动。整句：「辞書がなくても、日本の新聞が少し読めるようになった。」"
   },
-  "N3-V11_exp.mp3": "549481ee1a5d",
-  "meta:N3-V11": {
-    "q_audio": "./audio/N3-V11_q.mp3",
-    "exp_audio": "./audio/N3-V11_exp.mp3",
-    "spoken_text": "选「こっそり」。瞒着别人悄悄做某事就是「こっそり」；「ばったり」是在街上迎面撞见熟人。整句：「ダイエット中なのに、夜中にこっそりケーキを食べた。」"
+  "N3-H10_q.mp3": "b9364578c9a2",
+  "N3-H10_exp.mp3": "ea26eba6b5b5",
+  "meta:N3-H10": {
+    "q_audio": "./audio/N3-H10_q.mp3",
+    "exp_audio": "./audio/N3-H10_exp.mp3",
+    "spoken_text": "选「閉まった」。看助词「ドアが」，门自己关上用自动词「閉まる」过去式「閉まった」；人把门关上才说「ドアを閉めた」。整句：「風が強くて、ドアが勝手に閉まった。」"
   },
+  "N3-L06_q.mp3": "d707b017f8e0",
+  "N3-L06_exp.mp3": "dee264b1e0eb",
+  "meta:N3-L06": {
+    "q_audio": "./audio/N3-L06_q.mp3",
+    "exp_audio": "./audio/N3-L06_exp.mp3",
+    "spoken_text": "选「資料を印刷する」。N3听力第一大题必考套路：听到「会議室は後にして」意思是会议室先放一放晚点弄，「先に資料を印刷してくれる」才是现在马上第一件要做的事！"
+  },
+  "N3-V09_q.mp3": "3eb5162e634e",
   "N3-V09_exp.mp3": "d4f7909fe6aa",
   "meta:N3-V09": {
     "q_audio": "./audio/N3-V09_q.mp3",
     "exp_audio": "./audio/N3-V09_exp.mp3",
     "spoken_text": "选短音「しょるい」。「書」在「辞書」「図書館」「書類」里全都是干脆利落的一拍短音「しょ」，千万别多加长音「う」！整句：「大事な書類を封筒に入れた。」"
   },
-  "VAR-G02_exp.mp3": "b023e70183eb",
-  "meta:VAR-G02": {
-    "q_audio": "./audio/VAR-G02_q.mp3",
-    "exp_audio": "./audio/VAR-G02_exp.mp3",
-    "spoken_text": "选「ところ」。「今から」配动词原形「出るところ」，表示正要跨出门的那一瞬间；「ばかり」接原形就变成光出门不干别的了。"
+  "N3-V10_q.mp3": "83978e2e80b8",
+  "N3-V10_exp.mp3": "fad391d8f5cf",
+  "meta:N3-V10": {
+    "q_audio": "./audio/N3-V10_q.mp3",
+    "exp_audio": "./audio/N3-V10_exp.mp3",
+    "spoken_text": "选「ぎりぎり」。专门配「間に合う」，表示卡着极限死线勉强赶上；「ぐっすり」是香甜熟睡。整句：「駅まで走って、終電にぎりぎり間に合った。」"
   },
-  "VAR-G05_exp.mp3": "2248d40c2e92",
-  "meta:VAR-G05": {
-    "q_audio": "./audio/VAR-G05_q.mp3",
-    "exp_audio": "./audio/VAR-G05_exp.mp3",
-    "spoken_text": "选「ついでに」！这次是人出门办事顺手做第二件事，正是「ついでに」的标准主场；两边同步渐变才用「にしたがって」。"
+  "N3-V11_q.mp3": "773921022df1",
+  "N3-V11_exp.mp3": "549481ee1a5d",
+  "meta:N3-V11": {
+    "q_audio": "./audio/N3-V11_q.mp3",
+    "exp_audio": "./audio/N3-V11_exp.mp3",
+    "spoken_text": "选「こっそり」。瞒着别人悄悄做某事就是「こっそり」；「ばったり」是在街上迎面撞见熟人。整句：「ダイエット中なのに、夜中にこっそりケーキを食べた。」"
   },
-  "VAR-G06_exp.mp3": "4f5acca77865",
-  "meta:VAR-G06": {
-    "q_audio": "./audio/VAR-G06_q.mp3",
-    "exp_audio": "./audio/VAR-G06_exp.mp3",
-    "spoken_text": "选「にしては」。按价格高这个标准本来应该好用，结果却不好用，打破预期尺子必选「にしては」。"
-  },
+  "VAR-G01_q.mp3": "5102d3fe70ad",
   "VAR-G01_exp.mp3": "a5077e534de8",
   "meta:VAR-G01": {
     "q_audio": "./audio/VAR-G01_q.mp3",
     "exp_audio": "./audio/VAR-G01_exp.mp3",
     "spoken_text": "选「くれた」！这次别人后面跟的是主语助词「親切な人が」，别人主动帮我做某事必选「くれた」；如果是「親切な人に」才选「もらった」。"
   },
-  "VAR-G10_exp.mp3": "a1f01062ccfa",
-  "meta:VAR-G10": {
-    "q_audio": "./audio/VAR-G10_q.mp3",
-    "exp_audio": "./audio/VAR-G10_exp.mp3",
-    "spoken_text": "选「はずがない」。人在海外出差，100%不可能同时在公司，有铁证排除可能性时用「はずがない」。"
+  "VAR-G02_q.mp3": "51aeffec7dc4",
+  "VAR-G02_exp.mp3": "b023e70183eb",
+  "meta:VAR-G02": {
+    "q_audio": "./audio/VAR-G02_q.mp3",
+    "exp_audio": "./audio/VAR-G02_exp.mp3",
+    "spoken_text": "选「ところ」。「今から」配动词原形「出るところ」，表示正要跨出门的那一瞬间；「ばかり」接原形就变成光出门不干别的了。"
   },
+  "VAR-G05_q.mp3": "89de59ea77ae",
+  "VAR-G05_exp.mp3": "2248d40c2e92",
+  "meta:VAR-G05": {
+    "q_audio": "./audio/VAR-G05_q.mp3",
+    "exp_audio": "./audio/VAR-G05_exp.mp3",
+    "spoken_text": "选「ついでに」！这次是人出门办事顺手做第二件事，正是「ついでに」的标准主场；两边同步渐变才用「にしたがって」。"
+  },
+  "VAR-G06_q.mp3": "8a2cedbb9764",
+  "VAR-G06_exp.mp3": "4f5acca77865",
+  "meta:VAR-G06": {
+    "q_audio": "./audio/VAR-G06_q.mp3",
+    "exp_audio": "./audio/VAR-G06_exp.mp3",
+    "spoken_text": "选「にしては」。按价格高这个标准本来应该好用，结果却不好用，打破预期尺子必选「にしては」。"
+  },
+  "VAR-G08_q.mp3": "d0feb360d397",
   "VAR-G08_exp.mp3": "3c673f77803d",
   "meta:VAR-G08": {
     "q_audio": "./audio/VAR-G08_q.mp3",
     "exp_audio": "./audio/VAR-G08_exp.mp3",
     "spoken_text": "选「さえ」。动词ます形词干加「さえすれば」等于只要做这件事就够了，后半句「すれば」就是铁证！"
   },
+  "VAR-G09_q.mp3": "03c13e1e3f99",
   "VAR-G09_exp.mp3": "dd95ace45811",
   "meta:VAR-G09": {
     "q_audio": "./audio/VAR-G09_q.mp3",
     "exp_audio": "./audio/VAR-G09_exp.mp3",
     "spoken_text": "选「わけだ」。前有住了十年这个充分理由，顺理成章感叹难怪这么懂，用肯定「わけだ」；「わけがない」是绝不可能。"
   },
-  "VAR-G12_exp.mp3": "bf5132f05696",
-  "meta:VAR-G12": {
-    "q_audio": "./audio/VAR-G12_q.mp3",
-    "exp_audio": "./audio/VAR-G12_exp.mp3",
-    "spoken_text": "选「ことになった」。动词「中止する」后面必须先加形式名词「こと」打包，才能接「になった」！"
+  "VAR-G10_q.mp3": "0faa8ca78a1b",
+  "VAR-G10_exp.mp3": "a1f01062ccfa",
+  "meta:VAR-G10": {
+    "q_audio": "./audio/VAR-G10_q.mp3",
+    "exp_audio": "./audio/VAR-G10_exp.mp3",
+    "spoken_text": "选「はずがない」。人在海外出差，100%不可能同时在公司，有铁证排除可能性时用「はずがない」。"
   },
+  "VAR-G11_q.mp3": "3e808de9cdf9",
   "VAR-G11_exp.mp3": "e77ab8c9b412",
   "meta:VAR-G11": {
     "q_audio": "./audio/VAR-G11_q.mp3",
     "exp_audio": "./audio/VAR-G11_exp.mp3",
     "spoken_text": "选「らしい」。简体形直接接「らしい」，中间绝对不加引用助词「と」！"
   },
-  "VAR-G20_exp.mp3": "232a64d43178",
-  "meta:VAR-G20": {
-    "q_audio": "./audio/VAR-G20_q.mp3",
-    "exp_audio": "./audio/VAR-G20_exp.mp3",
-    "spoken_text": "选「ことにしている」！这是我自己主观坚持的好习惯，用他动词「ことにしている」；校规制度才用「ことになっている」。"
+  "VAR-G12_q.mp3": "8c7ce77b7e62",
+  "VAR-G12_exp.mp3": "bf5132f05696",
+  "meta:VAR-G12": {
+    "q_audio": "./audio/VAR-G12_q.mp3",
+    "exp_audio": "./audio/VAR-G12_exp.mp3",
+    "spoken_text": "选「ことになった」。动词「中止する」后面必须先加形式名词「こと」打包，才能接「になった」！"
   },
+  "VAR-G13_q.mp3": "720de418e9a0",
   "VAR-G13_exp.mp3": "7cfbb5d96d08",
   "meta:VAR-G13": {
     "q_audio": "./audio/VAR-G13_q.mp3",
     "exp_audio": "./audio/VAR-G13_exp.mp3",
     "spoken_text": "选「降りそうだ」！「今にも」配亲眼看见黑云，表示眼看快要下雨，必须把「降る」变成ます干「降り」加「そうだ」！"
   },
-  "VAR-H01_exp.mp3": "2105d0e9bd15",
-  "meta:VAR-H01": {
-    "q_audio": "./audio/VAR-H01_q.mp3",
-    "exp_audio": "./audio/VAR-H01_exp.mp3",
-    "spoken_text": "选「いただいた」！在老师家喝茶的是我自己，自己的动作绝不能用尊敬语抬高自己，必须用谦让语「いただく」！"
-  },
-  "VAR-H02_exp.mp3": "c2b6b1565c5b",
-  "meta:VAR-H02": {
-    "q_audio": "./audio/VAR-H02_q.mp3",
-    "exp_audio": "./audio/VAR-H02_exp.mp3",
-    "spoken_text": "选「食べさせた」！妈妈让孩子去吃，中间有「せ」音就是使役「食べさせた」；「食べられた」变成妈妈被吃了或被偷吃了。"
-  },
+  "VAR-G14_q.mp3": "f9bc2469838b",
   "VAR-G14_exp.mp3": "00ccf665a0c6",
   "meta:VAR-G14": {
     "q_audio": "./audio/VAR-G14_q.mp3",
     "exp_audio": "./audio/VAR-G14_exp.mp3",
     "spoken_text": "选「いく」！「これから」是从现在往未来走，箭头远离现在，必用「減っていく」！"
   },
-  "VAR-H04_exp.mp3": "7fdafc9718bb",
-  "meta:VAR-H04": {
-    "q_audio": "./audio/VAR-H04_q.mp3",
-    "exp_audio": "./audio/VAR-H04_exp.mp3",
-    "spoken_text": "选「消して」！前面是宾语「電気を」，人为把灯关掉必须用带「す」的他动词「消す→消して」！"
+  "VAR-G20_q.mp3": "596517b665d6",
+  "VAR-G20_exp.mp3": "232a64d43178",
+  "meta:VAR-G20": {
+    "q_audio": "./audio/VAR-G20_q.mp3",
+    "exp_audio": "./audio/VAR-G20_exp.mp3",
+    "spoken_text": "选「ことにしている」！这是我自己主观坚持的好习惯，用他动词「ことにしている」；校规制度才用「ことになっている」。"
   },
+  "VAR-H01_q.mp3": "35b3c3eb2c98",
+  "VAR-H01_exp.mp3": "2105d0e9bd15",
+  "meta:VAR-H01": {
+    "q_audio": "./audio/VAR-H01_q.mp3",
+    "exp_audio": "./audio/VAR-H01_exp.mp3",
+    "spoken_text": "选「いただいた」！在老师家喝茶的是我自己，自己的动作绝不能用尊敬语抬高自己，必须用谦让语「いただく」！"
+  },
+  "VAR-H02_q.mp3": "b5b01ce69ddc",
+  "VAR-H02_exp.mp3": "c2b6b1565c5b",
+  "meta:VAR-H02": {
+    "q_audio": "./audio/VAR-H02_q.mp3",
+    "exp_audio": "./audio/VAR-H02_exp.mp3",
+    "spoken_text": "选「食べさせた」！妈妈让孩子去吃，中间有「せ」音就是使役「食べさせた」；「食べられた」变成妈妈被吃了或被偷吃了。"
+  },
+  "VAR-H03_q.mp3": "e588ecce7ea9",
   "VAR-H03_exp.mp3": "7b739d9a1e96",
   "meta:VAR-H03": {
     "q_audio": "./audio/VAR-H03_q.mp3",
     "exp_audio": "./audio/VAR-H03_exp.mp3",
     "spoken_text": "选「落ちて」！这次前面是主格「スマホが」，手机自己掉下去必用自动词「落ちる→落ちて」；有「を」才选「落として」！"
   },
+  "VAR-H04_q.mp3": "ddab07b1251f",
+  "VAR-H04_exp.mp3": "7fdafc9718bb",
+  "meta:VAR-H04": {
+    "q_audio": "./audio/VAR-H04_q.mp3",
+    "exp_audio": "./audio/VAR-H04_exp.mp3",
+    "spoken_text": "选「消して」！前面是宾语「電気を」，人为把灯关掉必须用带「す」的他动词「消す→消して」！"
+  },
+  "VAR-H05_q.mp3": "0a0bfeef43c2",
   "VAR-H05_exp.mp3": "3662a21b8425",
   "meta:VAR-H05": {
     "q_audio": "./audio/VAR-H05_q.mp3",
     "exp_audio": "./audio/VAR-H05_exp.mp3",
     "spoken_text": "选「帰らせて」！是我自己想早退求批准，必须用使役「帰らせていただけませんか」；如果说「帰っていただけませんか」就变成赶上司回家了！"
   },
-  "VAR-L01_exp.mp3": "4d4cec34e4c7",
-  "meta:VAR-L01": {
-    "q_audio": "./audio/VAR-L01_q.mp3",
-    "exp_audio": "./audio/VAR-L01_exp.mp3",
-    "spoken_text": "选「うん、今すぐ払わないとね」。男生说电费今天截止，「払わなくちゃ」等于必须赶紧交，千万别再听反成不用交！"
-  },
+  "VAR-H06_q.mp3": "25c1dfc27e17",
   "VAR-H06_exp.mp3": "609142c61a45",
   "meta:VAR-H06": {
     "q_audio": "./audio/VAR-H06_q.mp3",
     "exp_audio": "./audio/VAR-H06_exp.mp3",
     "spoken_text": "选「飲まされた」！除了「話す」这种「す」结尾不能缩约，其他五段动词像「飲む→飲まされる」「書く→書かされる」直接把词尾变あ段加「された」最自然！"
   },
+  "VAR-H10_q.mp3": "40dd96a54bde",
   "VAR-H10_exp.mp3": "768b91ba5524",
   "meta:VAR-H10": {
     "q_audio": "./audio/VAR-H10_q.mp3",
     "exp_audio": "./audio/VAR-H10_exp.mp3",
     "spoken_text": "选「閉めて」！前面是「窓を」，让人动手把窗关上用他动词「閉める→閉めて」！"
   },
-  "VAR-V06_exp.mp3": "dc5c96ab4000",
-  "meta:VAR-V06": {
-    "q_audio": "./audio/VAR-V06_q.mp3",
-    "exp_audio": "./audio/VAR-V06_exp.mp3",
-    "spoken_text": "选「しっかり」！牢牢抓稳扶手不松开是「しっかり」；走神坐过站才是「うっかり」。"
+  "VAR-L01_q.mp3": "59a88caeafe4",
+  "VAR-L01_exp.mp3": "4d4cec34e4c7",
+  "meta:VAR-L01": {
+    "q_audio": "./audio/VAR-L01_q.mp3",
+    "exp_audio": "./audio/VAR-L01_exp.mp3",
+    "spoken_text": "选「うん、今すぐ払わないとね」。男生说电费今天截止，「払わなくちゃ」等于必须赶紧交，千万别再听反成不用交！"
   },
-  "VAR-L06_exp.mp3": "f2d30a17423f",
-  "meta:VAR-L06": {
-    "q_audio": "./audio/VAR-L06_q.mp3",
-    "exp_audio": "./audio/VAR-L06_exp.mp3",
-    "spoken_text": "选「メールを返信する」。男生本来想去银行，但前辈说「その前にこのメールだけ返信しといて」，在去银行之前先回这封邮件，所以第一顺位是回邮件！"
-  },
+  "VAR-L04_q.mp3": "6bf10d4f03f8",
   "VAR-L04_exp.mp3": "04808f7b3893",
   "meta:VAR-L04": {
     "q_audio": "./audio/VAR-L04_q.mp3",
     "exp_audio": "./audio/VAR-L04_exp.mp3",
     "spoken_text": "选「わかった、今すぐ予約しておくね」。女生说的「予約しとかないと」是双重口语缩约，等于「予約しておかないといけない」，得提前把酒店订好！"
   },
+  "VAR-L06_q.mp3": "275743b0ebce",
+  "VAR-L06_exp.mp3": "f2d30a17423f",
+  "meta:VAR-L06": {
+    "q_audio": "./audio/VAR-L06_q.mp3",
+    "exp_audio": "./audio/VAR-L06_exp.mp3",
+    "spoken_text": "选「メールを返信する」。男生本来想去银行，但前辈说「その前にこのメールだけ返信しといて」，在去银行之前先回这封邮件，所以第一顺位是回邮件！"
+  },
+  "VAR-V06_q.mp3": "ea87dd8ab0af",
+  "VAR-V06_exp.mp3": "dc5c96ab4000",
+  "meta:VAR-V06": {
+    "q_audio": "./audio/VAR-V06_q.mp3",
+    "exp_audio": "./audio/VAR-V06_exp.mp3",
+    "spoken_text": "选「しっかり」！牢牢抓稳扶手不松开是「しっかり」；走神坐过站才是「うっかり」。"
+  },
+  "VAR-V10_q.mp3": "4b5f5f64bccf",
   "VAR-V10_exp.mp3": "79fd56cbe5e4",
   "meta:VAR-V10": {
     "q_audio": "./audio/VAR-V10_q.mp3",
     "exp_audio": "./audio/VAR-V10_exp.mp3",
     "spoken_text": "选「ぴったり」！衣服鞋子尺码严丝合缝合身用「ぴったり」；赶死线勉强不迟到才用「ぎりぎり」。"
   },
+  "VAR-V11_q.mp3": "2c661e86be15",
   "VAR-V11_exp.mp3": "94926cf49351",
   "meta:VAR-V11": {
     "q_audio": "./audio/VAR-V11_q.mp3",
