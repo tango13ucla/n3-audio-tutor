@@ -56,6 +56,12 @@ LISTENING_DIALOGUES = {
         ("ja-JP-NanamiNeural", "-5%", "2番。昨日もう会議は終わりましたよ。"),
         ("ja-JP-NanamiNeural", "-5%", "3番。コピー機は使いません。"),
     ],
+    "Q-20261114-005": [
+        ("ja-JP-KeitaNeural", "-4%", "部長、実は来週の金曜日、私用で会社を休ませていただけないでしょうか。"),
+        ("ja-JP-NanamiNeural", "-5%", "1番。うん、引き継ぎをしておけば大丈夫だよ。"),
+        ("ja-JP-NanamiNeural", "-5%", "2番。えっ、私に来週休んでほしいの？"),
+        ("ja-JP-NanamiNeural", "-5%", "3番。金曜日ならもう休みましたよ。"),
+    ],
 }
 
 
@@ -69,7 +75,7 @@ def split_zh_ja_segments(text: str):
             inner = tok[1:-1].strip()
             if not inner:
                 continue
-            if re.search(r"[\u3040-\u30ffー]", inner) or inner in ("貯金", "内緒"):
+            if re.search(r"[\u3040-\u30ffー]", inner) or inner in ("貯金", "内緒", "出張", "主張", "書類", "万年筆"):
                 segs.append(("ja", inner))
             else:
                 segs.append(("zh", inner))
@@ -90,11 +96,18 @@ async def synth_ja(text: str, out_path: str, rate: str = "-4%") -> bool:
     if edge_tts is None:
         return False
     try:
+        buf = bytearray()
         comm = edge_tts.Communicate(text, "ja-JP-NanamiNeural", rate=rate, proxy=PROXY_URL)
-        await comm.save(out_path)
-        return True
+        async for chunk in comm.stream():
+            if chunk["type"] == "audio":
+                buf.extend(chunk["data"])
+        if buf:
+            with open(out_path, "wb") as f:
+                f.write(buf)
+            return True
     except Exception:
-        return False
+        pass
+    return False
 
 
 async def synth_dialogue(turns, out_path: str) -> bool:
@@ -213,7 +226,7 @@ async def main():
                 return
 
         speak_str = surface.replace("〜", "")
-        if surface in ("半年", "内緒", "貯める", "貯金"):
+        if surface in ("半年", "内緒", "貯める", "貯金", "出張", "主張", "書類", "万年筆"):
             speak_str = info["kana"]
         w_hash = hashlib.sha256(speak_str.encode("utf-8")).hexdigest()[:10]
         w_file = f"w_{w_hash}.mp3"

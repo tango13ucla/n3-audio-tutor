@@ -159,21 +159,43 @@ def build_card(q: dict, subject: str, fallback_point_label: str) -> dict:
     }
 
 
+def has_studio_mp3(c: dict) -> bool:
+    for rel in (c.get("q_audio", ""), c.get("exp_audio", "")):
+        if not rel:
+            return False
+        abs_p = os.path.join(BASE_DIR, rel.lstrip("./"))
+        if not (os.path.exists(abs_p) and os.path.getsize(abs_p) > 0):
+            return False
+    return True
+
+
 g_list = [
-    build_card(q, "文法", q.get("point", ""))
-    for q in plan.get("grammar", {}).get("formal", []) + plan.get("grammar", {}).get("quick", [])
+    c for c in (
+        build_card(q, "文法", q.get("point", ""))
+        for q in plan.get("grammar", {}).get("formal", []) + plan.get("grammar", {}).get("quick", [])
+    )
+    if has_studio_mp3(c)
 ]
 h_list = [
-    build_card(q, "活用", re.sub(r"^[A-Z]-\d+(?:/[A-Z]-\d+)?\s*", "", q.get("point", "")))
-    for q in plan.get("henkei", {}).get("formal", []) + plan.get("henkei", {}).get("quick", [])
+    c for c in (
+        build_card(q, "活用", re.sub(r"^[A-Z]-\d+(?:/[A-Z]-\d+)?\s*", "", q.get("point", "")))
+        for q in plan.get("henkei", {}).get("formal", []) + plan.get("henkei", {}).get("quick", [])
+    )
+    if has_studio_mp3(c)
 ]
 v_list = [
-    build_card(q, "語彙", q.get("word", ""))
-    for q in plan.get("vocab", {}).get("formal", []) + plan.get("vocab", {}).get("quick", [])
+    c for c in (
+        build_card(q, "語彙", q.get("word", ""))
+        for q in plan.get("vocab", {}).get("formal", []) + plan.get("vocab", {}).get("quick", [])
+    )
+    if has_studio_mp3(c)
 ]
 l_list = [
-    build_card(q, "聴解", "口语听辨")
-    for q in plan.get("listening", {}).get("formal", [])
+    c for c in (
+        build_card(q, "聴解", "口语听辨")
+        for q in plan.get("listening", {}).get("formal", [])
+    )
+    if has_studio_mp3(c)
 ]
 
 cards = []
@@ -238,16 +260,18 @@ vocab_items = []
 for p in live_state.get("vocab_tracked", []):
     w = p.get("word", "")
     st = p.get("status", "red")
+    base_stat = f"练过 {p.get('seen', 0)} 次 · 错 {p.get('wrong', 0)} 次"
+    v_note = f"{p['classroom_note']}（{base_stat}）" if p.get("classroom_note") else base_stat
     vocab_items.append({
         "key": w,
         "name": w,
         "sub": re.sub(r"^\d+\.\s*", "", p.get("category", "")),
         "family": re.sub(r"^\d+\.\s*", "", p.get("category", "")),
         "tier": norm_tier(st),
-        "roi": bool(st in ("red", "orange") or p.get("wrong", 0) >= 2),
+        "roi": bool(st in ("red", "orange") or p.get("wrong", 0) >= 2 or p.get("classroom_note")),
         "card_id": card_by_point_key.get(w, ""),
         "audio": resolve_word_audio(w),
-        "note": f"练过 {p.get('seen', 0)} 次 · 错 {p.get('wrong', 0)} 次",
+        "note": v_note,
     })
 
 listening_items = []
