@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Generates the Daily ~35 Minute "Qiang Qiang Three" Round-Table Salon Podcast (audio/daily_radio.mp3)
-+ Exact Segment & Chapter Timestamp Map (audio/daily_radio_meta.json) — Zen v12 Edition.
+Generates the Daily ~36 Minute "Qiang Qiang Three" Round-Table Salon Podcast (audio/daily_radio.mp3)
++ Exact Segment & Chapter Timestamp Map (audio/daily_radio_meta.json) — Zen v14 Same-Voice Salon Edition.
 
 Key Design:
-1) Zero date announcements, zero exam countdowns, zero stiff intro preambles — jumps straight into
-   three friends chatting at 00:00.0!
-2) Three Distinct Real-Human Conversational Multilingual Voices:
-   - M (老文): `ko-KR-HyunsuMultilingualNeural` (+0%)
-   - D (老梁): `fr-FR-RemyMultilingualNeural` (+0%)
-   - F (小夏): `en-US-AvaMultilingualNeural` (+0%)
-   - JF / JM: `ja-JP-NanamiNeural` / `ja-JP-KeitaNeural` (-2%) for native Japanese scenes & examples
-3) Same-speaker punctuation-aware Mandarin/Kana prosody + -68dB digital-zero-only trim so voiceless
-   Japanese consonants and human breath remain 100% intact.
+1) Zero date announcements, zero exam countdowns, zero classroom tone — jumps straight into
+   a funny real-life Japanese anecdote at 00:00.0!
+2) 100% Same-Person Bilingual Vocal Cords (中文与日文由同一个人自然说出, ZERO JF/JM "tape-recorder" cuts!):
+   - M (老文): `ko-KR-HyunsuMultilingualNeural` (-6% Mandarin / -11% Japanese Kana)
+   - D (老梁): `fr-FR-RemyMultilingualNeural` (-6% Mandarin / -11% Japanese Kana)
+   - F (小夏): `en-US-AvaMultilingualNeural` or `en-US-EmmaMultilingualNeural` (-6% Mandarin / -11% Japanese Kana)
+3) Relaxed, Unhurried Bike-Safe Pacing:
+   - 6 deep ~6-minute cultural stories per episode (~36 minutes total), each repeating 3–4 N3 expressions
+     4–5 times naturally through jokes, cultural lore, and personal fiascos.
+   - Generous pauses before/after Japanese quotes (0.62s echo breath after full Japanese sentences) and
+     between speaker turns (0.42s) so cycling or zoning out at a traffic light feels effortless.
 """
 import asyncio
 import datetime
@@ -44,7 +46,7 @@ except Exception:
     genai_types = None
 
 from adaptive_bank import EXTRA_PRIMARY_CARDS, POINT_META
-from radio_dialogue_bank import DEEP_BANTER_TOPICS, LISTENING_THEATRE, MODALITY_MAP, VOCAB_RECALL_ITEMS
+from radio_dialogue_bank import MODALITY_MAP, SALON_STORIES
 from tutor_data import TUTOR_ITEMS
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -62,7 +64,9 @@ MAX_TRIES = 4 if os.environ.get("GITHUB_ACTIONS") == "true" else 1
 GEMINI_API_KEY = (os.environ.get("GEMINI_API_KEY") or "").strip()
 GEMINI_TTS_MODEL = os.environ.get("GEMINI_TTS_MODEL", "gemini-2.5-flash-preview-tts")
 
-KANA_RE = re.compile(r"([\u3040-\u30ffー]+)")
+# Keeps multi-clause Japanese quotes (e.g. "ああ、もうごじだ。はやくかえって、ゆうはんのしたくしないと。")
+# together in ONE continuous natural Japanese utterance by the SAME speaker!
+JA_SPAN_RE = re.compile(r"([\u3040-\u30ffー]+(?:[、。！？\s]+[\u3040-\u30ffー]+)*[。！？]?)")
 
 
 def resolve_point_key(point_id: str) -> str:
@@ -116,95 +120,94 @@ def load_recent_mistakes() -> set:
     return wrong
 
 
-async def detect_voice_map() -> tuple[dict, set]:
-    vmap = {
-        "M": ("zh-CN-YunxiNeural", "+0%"),
-        "D": ("zh-CN-YunyangNeural", "+0%"),
-        "F": ("zh-CN-XiaoxiaoNeural", "+0%"),
-        "JF": ("ja-JP-NanamiNeural", "-2%"),
-        "JM": ("ja-JP-KeitaNeural", "-2%"),
-        "JFS": ("ja-JP-NanamiNeural", "-8%"),
+async def detect_voice_map() -> dict:
+    """
+    Maps both Mandarin (`M`, `D`, `F` at -6%) and Japanese spans (`M_JA`, `D_JA`, `F_JA` at -11%)
+    to the EXACT SAME Multilingual Neural human voice for each of the 3 friends!
+    """
+    m_voice = "ko-KR-HyunsuMultilingualNeural"
+    d_voice = "fr-FR-RemyMultilingualNeural"
+    f_voice = "en-US-AvaMultilingualNeural"
+
+    if edge_tts is not None:
+        try:
+            voices = await edge_tts.list_voices(**COMM_KWARGS)
+            short_names = {v.get("ShortName", "") for v in voices}
+            for cand_m in ("ko-KR-HyunsuMultilingualNeural", "en-US-BrianMultilingualNeural"):
+                if cand_m in short_names:
+                    m_voice = cand_m
+                    break
+            for cand_d in ("fr-FR-RemyMultilingualNeural", "en-US-BrianMultilingualNeural"):
+                if cand_d in short_names and cand_d != m_voice:
+                    d_voice = cand_d
+                    break
+            for cand_f in ("en-US-AvaMultilingualNeural", "en-US-EmmaMultilingualNeural"):
+                if cand_f in short_names:
+                    f_voice = cand_f
+                    break
+            print(f"Salon same-person bilingual voices: M={m_voice}, D={d_voice}, F={f_voice}")
+        except Exception as e:
+            print(f"[info] list_voices fallback to default multilingual voices: {e}")
+
+    return {
+        "M": (m_voice, "-6%"),
+        "M_JA": (m_voice, "-11%"),
+        "D": (d_voice, "-6%"),
+        "D_JA": (d_voice, "-11%"),
+        "F": (f_voice, "-6%"),
+        "F_JA": (f_voice, "-11%"),
     }
-    multilingual_speakers = set()
-    if edge_tts is None:
-        return vmap, multilingual_speakers
-    try:
-        voices = await edge_tts.list_voices(**COMM_KWARGS)
-        short_names = {v.get("ShortName", "") for v in voices}
-        for cand_m in (
-            "ko-KR-HyunsuMultilingualNeural",
-            "en-US-BrianMultilingualNeural",
-        ):
-            if cand_m in short_names:
-                vmap["M"] = (cand_m, "+0%")
-                multilingual_speakers.add("M")
-                break
-        for cand_d in (
-            "fr-FR-RemyMultilingualNeural",
-            "en-US-BrianMultilingualNeural",
-        ):
-            if cand_d in short_names and cand_d != vmap["M"][0]:
-                vmap["D"] = (cand_d, "+0%")
-                multilingual_speakers.add("D")
-                break
-        for cand_f in (
-            "en-US-AvaMultilingualNeural",
-            "en-US-EmmaMultilingualNeural",
-        ):
-            if cand_f in short_names:
-                vmap["F"] = (cand_f, "+0%")
-                multilingual_speakers.add("F")
-                break
-        print(
-            f"Salon 3-host voices: M={vmap['M'][0]}, D={vmap['D'][0]}, F={vmap['F'][0]}, "
-            f"multilingual={sorted(multilingual_speakers)}"
-        )
-    except Exception as e:
-        print(f"[info] list_voices fallback: {e}")
-    return vmap, multilingual_speakers
 
 
-def expand_turn_events(spk: str, val, multilingual_speakers: set) -> list:
+def expand_turn_events(spk: str, val) -> list:
     if spk == "PAUSE":
         return [("PAUSE", float(val))]
     txt = str(val).strip()
-    if spk in ("M", "D", "F") and KANA_RE.search(txt):
-        kana_spk = spk if spk in multilingual_speakers else ("JF" if spk == "F" else "JM")
-        parts = KANA_RE.split(txt)
+    if spk in ("M", "D", "F") and JA_SPAN_RE.search(txt):
+        ja_spk = f"{spk}_JA"
+        parts = JA_SPAN_RE.split(txt)
         out = []
         pending_pause = 0.0
         for idx, pt in enumerate(parts):
             if not pt:
                 continue
             if idx % 2 == 1:
-                ks = pt.strip()
+                ks = re.sub(r"\s+", "", pt.strip())
                 if not ks:
                     continue
                 if out:
-                    out.append(("PAUSE", round(pending_pause or 0.04, 2)))
-                out.append((kana_spk, ks if ks.endswith("。") else ks + "。"))
-                pending_pause = 0.04
+                    out.append(("PAUSE", round(max(pending_pause, 0.18), 2)))
+                ended_punct = ks[-1] in "。！？"
+                ja_utterance = ks if ended_punct else (ks + "。")
+                out.append((ja_spk, ja_utterance))
+                # Generous echo breath after full Japanese sentences so bike riders can absorb the sound effortlessly
+                if ended_punct and len(ks) >= 7:
+                    pending_pause = 0.62
+                elif ended_punct:
+                    pending_pause = 0.36
+                else:
+                    pending_pause = 0.20
             else:
                 lead_m = re.match(r"^[\s』」）]*([。！？；，、：]+)[\s『「（]*", pt)
                 if lead_m:
                     pchars = lead_m.group(1)
                     if any(c in pchars for c in "。！？；"):
-                        pending_pause = max(pending_pause, 0.24)
+                        pending_pause = max(pending_pause, 0.42)
                     else:
-                        pending_pause = max(pending_pause, 0.13)
+                        pending_pause = max(pending_pause, 0.24)
                     pt = pt[lead_m.end():]
                 pt_s = pt.strip()
                 if not pt_s or not re.search(r"[\w\u3040-\u9fff]", pt_s):
                     continue
                 if out:
-                    out.append(("PAUSE", round(pending_pause or 0.04, 2)))
+                    out.append(("PAUSE", round(max(pending_pause, 0.18), 2)))
                 out.append((spk, pt_s))
                 if pt_s[-1] in "。！？；":
-                    pending_pause = 0.22
+                    pending_pause = 0.28
                 elif pt_s[-1] in "，、：":
-                    pending_pause = 0.12
+                    pending_pause = 0.22
                 else:
-                    pending_pause = 0.04
+                    pending_pause = 0.18
         return out if out else [(spk, txt)]
     return [(spk, txt)]
 
@@ -212,10 +215,17 @@ def expand_turn_events(spk: str, val, multilingual_speakers: set) -> list:
 def synth_gemini_turn_sync(spk: str, text: str, out_mp3: str) -> bool:
     if not (GEMINI_API_KEY and genai is not None and genai_types is not None):
         return False
-    voice_map_g = {"F": "Aoede", "JF": "Aoede", "JFS": "Aoede", "M": "Puck", "D": "Charon", "JM": "Puck"}
+    voice_map_g = {
+        "F": "Aoede",
+        "F_JA": "Aoede",
+        "M": "Puck",
+        "M_JA": "Puck",
+        "D": "Charon",
+        "D_JA": "Charon",
+    }
     voice_name = voice_map_g.get(spk, "Puck")
     prompt = (
-        f"Speak naturally like witty, cultured Chinese friends chatting around a table on Qiang Qiang San Ren Xing: {text}"
+        f"Speak at a relaxed, unhurried pace like witty Chinese friends chatting leisurely around a tea table: {text}"
         if spk in ("M", "D", "F")
         else text
     )
@@ -257,7 +267,7 @@ def synth_gemini_turn_sync(spk: str, text: str, out_mp3: str) -> bool:
 
 async def synth_turn(spk: str, voice: str, rate: str, text: str, out_path: str, sem: asyncio.Semaphore) -> bool:
     async with sem:
-        if GEMINI_API_KEY and genai is not None and spk in ("M", "D", "F"):
+        if GEMINI_API_KEY and genai is not None:
             ok = await asyncio.to_thread(synth_gemini_turn_sync, spk, text, out_path)
             if ok:
                 return True
@@ -345,7 +355,7 @@ async def main():
         print("Skipping live radio MP3 synthesis (edge_tts or ffmpeg unavailable in local sandbox).")
         return
 
-    voice_map, multilingual_speakers = await detect_voice_map()
+    voice_map = await detect_voice_map()
     engine_tag = (
         f"gemini:{GEMINI_TTS_MODEL}"
         if (GEMINI_API_KEY and genai is not None)
@@ -363,143 +373,62 @@ async def main():
     scores = load_mastery_priority(state, recent_wrong)
     rng = random.Random(today_str)
 
-    def daily_rank(item):
-        pid = item["point_id"]
+    def story_rank(st: dict) -> float:
+        pids = st.get("point_ids") or []
+        pt_vals = sorted((scores.get(pid, 2.2) for pid in pids), reverse=True)
+        top_avg = sum(pt_vals[:3]) / max(1, len(pt_vals[:3])) if pt_vals else 2.2
         jitter = rng.uniform(-0.18, 0.18)
-        return -(scores.get(pid, 2.0) + jitter)
+        return -(top_avg + jitter)
 
-    ch1_topics = sorted(DEEP_BANTER_TOPICS, key=daily_rank)[:19]
-    ch2_scenes = sorted(LISTENING_THEATRE, key=daily_rank)[:6]
-    ch3_vocabs = sorted(VOCAB_RECALL_ITEMS, key=daily_rank)[:14]
+    ranked_ids = {st["id"] for st in sorted(SALON_STORIES, key=story_rank)[:6]}
+    selected_stories = [st for st in SALON_STORIES if st["id"] in ranked_ids]
 
-    # ZERO INTRO PREAMBLE, ZERO DATE, ZERO COUNTDOWN — JUMP STRAIGHT INTO SALON BANTER AT 00:00!
+    closing_turns = [
+        ("D", "哎，不知不觉咱们这壶茶都喝见底了。今天聊的这些便利店、饭局、电车里的弯弯绕，其实全藏在日本人的日常口头禅里。"),
+        ("F", "对，骑车或者走路的时候听个乐呵，耳根子混熟了，下次再听见这些尾巴，画面自己就跳出来了。"),
+        ("M", "行，那咱们今天就先唠到这儿，路上慢点儿骑，咱们下回接着聊！"),
+    ]
+
+    # ZERO INTRO PREAMBLE, ZERO DATE, ZERO COUNTDOWN — COLD OPEN INTO FUNNY ANECDOTE AT 00:00.0!
     raw_blocks = []
-
-    for tp in ch1_topics:
+    for ch_idx, st in enumerate(selected_stories):
         evs = []
-        turns = tp["turns"]
+        turns = list(st["turns"])
+        if ch_idx == len(selected_stories) - 1:
+            turns.append(("PAUSE", 0.90))
+            turns.extend(closing_turns)
+
         for idx, (spk, val) in enumerate(turns):
             if spk == "PAUSE":
                 evs.append(("PAUSE", float(val)))
             else:
                 evs.append((spk, str(val)))
                 if idx + 1 < len(turns) and turns[idx + 1][0] != "PAUSE":
-                    next_spk = turns[idx + 1][0]
-                    gap = 0.24 if next_spk in ("JF", "JM", "JFS") or spk in ("JF", "JM", "JFS") else 0.18
-                    evs.append(("PAUSE", gap))
-        evs.append(("PAUSE", 0.55))
+                    evs.append(("PAUSE", 0.42))
+
+        # Calm tea-sipping breather between round-table stories
+        evs.append(("PAUSE", 1.60 if ch_idx + 1 < len(selected_stories) else 0.50))
+        pids = list(st.get("point_ids") or [])
         raw_blocks.append({
-            "chapter": 0,
-            "point_id": tp["point_id"],
-            "title": tp["title"],
-            "ja_focus": tp["ja_main"],
+            "chapter": ch_idx,
+            "short_tab": st["short_tab"],
+            "point_id": pids[0] if pids else "",
+            "point_ids": pids,
+            "title": st["title"],
+            "ja_focus": st["ja_focus"],
             "events": evs,
         })
-
-    for idx_s, sc in enumerate(ch2_scenes):
-        evs = []
-        if idx_s == 0:
-            evs.extend([
-                ("M", "聊了这么多语法背后的日本人心思，咱们直接切进东京街头的真实现场，竖起耳朵听几段原速对话。"),
-                ("PAUSE", 0.18),
-                ("D", "日本人口语里最爱吃音、留半截话，光看字面特容易上当。"),
-                ("PAUSE", 0.24),
-            ])
-        evs.extend([("M", sc["intro_m"]), ("PAUSE", 0.28)])
-        for d_spk, d_line in sc["dialogue"]:
-            evs.append((d_spk, d_line))
-            evs.append(("PAUSE", 0.24))
-        evs.extend([
-            ("PAUSE", 1.2),
-            ("M", sc["unpack_m"]),
-            ("PAUSE", 0.18),
-            ("D", sc["unpack_d"]),
-            ("PAUSE", 0.18),
-            ("F", sc["unpack_f"]),
-            ("PAUSE", 0.28),
-        ])
-        for d_spk, d_line in sc["dialogue"]:
-            evs.append((d_spk, d_line))
-            evs.append(("PAUSE", 0.24))
-        evs.append(("PAUSE", 0.55))
-        raw_blocks.append({
-            "chapter": 1,
-            "point_id": sc["point_id"],
-            "title": sc["title"],
-            "ja_focus": sc["dialogue"][0][1],
-            "events": evs,
-        })
-
-    for idx_v, vc in enumerate(ch3_vocabs):
-        evs = []
-        if idx_v == 0:
-            evs.extend([
-                ("D", "日语里还有一类特别有灵气的词，全是假名拟态词，再加上几个专坑中国人的汉字读音。咱们挨个把画面勾出来。"),
-                ("PAUSE", 0.30),
-            ])
-        evs.extend([
-            ("JF", vc["word_ja"]),
-            ("PAUSE", 0.32),
-            ("M", vc["hook_m"]),
-            ("PAUSE", 0.18),
-            ("D", vc["hook_d"]),
-            ("PAUSE", 0.18),
-            ("F", vc["hook_f"]),
-            ("PAUSE", 0.24),
-            ("JM", vc["sent_ja"]),
-            ("PAUSE", 0.55),
-        ])
-        raw_blocks.append({
-            "chapter": 2,
-            "point_id": vc["point_id"],
-            "title": vc["title"],
-            "ja_focus": vc["sent_ja"],
-            "events": evs,
-        })
-
-    cooldown_sentences = []
-    for tp in ch1_topics[:12]:
-        cooldown_sentences.append((tp["point_id"], tp["title"], tp["ja_main"]))
-        if len(cooldown_sentences) < 20 and tp.get("ja_alt"):
-            cooldown_sentences.append((tp["point_id"], tp["title"], tp["ja_alt"]))
-    cooldown_sentences = cooldown_sentences[:18]
-
-    ch4_evs = [
-        ("M", "最后咱们把中文全撤掉，把刚才聊透的这些地道日文原句连起来过一遍耳朵。"),
-        ("PAUSE", 0.18),
-        ("F", "不用刻意去翻中文，听听看那个画面是不是已经自己跳出来了。"),
-        ("PAUSE", 0.50),
-    ]
-    for i, (_, _, ja_s) in enumerate(cooldown_sentences):
-        spk = "JF" if i % 2 == 0 else "JM"
-        ch4_evs.append((spk, ja_s))
-        ch4_evs.append(("PAUSE", 1.25))
-
-    ch4_evs.extend([
-        ("D", "今天这壶茶就聊到这儿，刚才顺过的考点都已经记进进度里了。"),
-        ("PAUSE", 0.18),
-        ("M", "得空去把那五十道题刷绿，做完题加上听完这一桌闲聊，一百二十分稳稳揣兜里。咱们下回接着聊。"),
-        ("PAUSE", 0.35),
-    ])
-
-    raw_blocks.append({
-        "chapter": 3,
-        "point_id": None,
-        "title": "纯日语原速浸润",
-        "ja_focus": cooldown_sentences[0][2] if cooldown_sentences else "今日も良い一日を。",
-        "events": ch4_evs,
-    })
 
     blocks = []
     for b in raw_blocks:
         expanded_evs = []
         for spk, val in b["events"]:
-            expanded_evs.extend(expand_turn_events(spk, val, multilingual_speakers))
+            expanded_evs.extend(expand_turn_events(spk, val))
         nb = dict(b)
         nb["events"] = expanded_evs
         blocks.append(nb)
 
-    sig_payload = f"v12_salon_3host:{engine_tag}:" + json.dumps(voice_map, sort_keys=True) + json.dumps(blocks, ensure_ascii=False)
+    sig_payload = f"v14_qq3_samevoice:{engine_tag}:" + json.dumps(voice_map, sort_keys=True) + json.dumps(blocks, ensure_ascii=False)
     script_sig = hashlib.sha256(sig_payload.encode("utf-8")).hexdigest()[:14]
     if os.path.exists(RADIO_MP3_PATH) and os.path.exists(RADIO_META_PATH):
         try:
@@ -510,7 +439,7 @@ async def main():
         except Exception:
             pass
 
-    tmpdir = tempfile.mkdtemp(prefix="n3_radio_v12_")
+    tmpdir = tempfile.mkdtemp(prefix="n3_radio_v14_")
     try:
         pause_durations = sorted({round(float(val), 2) for b in blocks for k, val in b["events"] if k == "PAUSE"})
         silence_files = {}
@@ -535,7 +464,7 @@ async def main():
         ok_results = await asyncio.gather(
             *(synth_turn(k, voice_map[k][0], voice_map[k][1], txt, raw_p, sem) for (k, txt), (raw_p, _) in unique_turns.items())
         )
-        print(f"Synthesized {sum(1 for x in ok_results if x)} / {len(unique_turns)} unique 3-host salon turns.")
+        print(f"Synthesized {sum(1 for x in ok_results if x)} / {len(unique_turns)} unique same-voice salon clips.")
 
         turn_durs = {}
         trimmed_paths = {}
@@ -570,6 +499,7 @@ async def main():
             segments_meta.append({
                 "chapter": ch,
                 "point_id": b["point_id"] or "",
+                "point_ids": b["point_ids"],
                 "title": b["title"],
                 "ja_focus": b["ja_focus"],
                 "start": round(seg_start, 1),
@@ -594,10 +524,8 @@ async def main():
         final_dur = round(probe_duration(RADIO_MP3_PATH), 1)
         mins = max(1, round(final_dur / 60.0))
         chapters_meta = [
-            {"idx": 0, "title": "语法", "start": chapter_starts.get(0, 0.0)},
-            {"idx": 1, "title": "听力", "start": chapter_starts.get(1, 0.0)},
-            {"idx": 2, "title": "词汇", "start": chapter_starts.get(2, 0.0)},
-            {"idx": 3, "title": "纯日", "start": chapter_starts.get(3, 0.0)},
+            {"idx": b["chapter"], "title": b["short_tab"], "start": chapter_starts.get(b["chapter"], 0.0)}
+            for b in blocks
         ]
         meta_obj = {
             "date": today_str,
@@ -613,7 +541,7 @@ async def main():
         }
         with open(RADIO_META_PATH, "w", encoding="utf-8") as f:
             json.dump(meta_obj, f, ensure_ascii=False, indent=2)
-        print(f"Built 3-host salon radio episode: {final_dur:.1f}s ({mins} mins), size={os.path.getsize(RADIO_MP3_PATH)} bytes.")
+        print(f"Built Qiang-Qiang salon radio episode: {final_dur:.1f}s ({mins} mins), size={os.path.getsize(RADIO_MP3_PATH)} bytes.")
     finally:
         shutil.rmtree(tmpdir, ignore_errors=True)
 

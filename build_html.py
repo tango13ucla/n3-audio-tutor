@@ -53,10 +53,12 @@ radio_meta = {
     "duration_label": "35 分钟",
     "hosts": "老文 · 老梁 · 小夏",
     "chapters": [
-        {"idx": 0, "title": "语法", "start": 0},
-        {"idx": 1, "title": "听力", "start": 1200},
-        {"idx": 2, "title": "词汇", "start": 1580},
-        {"idx": 3, "title": "纯日", "start": 1880},
+        {"idx": 0, "title": "便利店", "start": 0},
+        {"idx": 1, "title": "饭局", "start": 420},
+        {"idx": 2, "title": "早高峰", "start": 780},
+        {"idx": 3, "title": "夸与损", "start": 1140},
+        {"idx": 4, "title": "末班车", "start": 1460},
+        {"idx": 5, "title": "去大阪", "start": 1820},
     ],
     "segments": [],
 }
@@ -1288,15 +1290,22 @@ html = r"""<!DOCTYPE html>
   .chapter-strip {
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    gap: 6px;
     padding-top: 14px;
     border-top: 1px solid var(--hairline);
+    overflow-x: auto;
+    scrollbar-width: none;
   }
+  .chapter-strip::-webkit-scrollbar { display: none; }
   .chap-link {
-    font-size: 14.5px;
+    font-size: 14px;
     font-weight: 500;
     color: var(--ink-3);
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
     padding: 4px 2px;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
   .chap-link.active {
     color: var(--sumi);
@@ -1543,7 +1552,7 @@ html = r"""<!DOCTYPE html>
       </div>
 
       <div class="radio-center">
-        <div class="radio-chap" id="radio-chap-lbl">语法</div>
+        <div class="radio-chap" id="radio-chap-lbl">便利店</div>
         <h2 class="radio-topic" id="radio-live-title">三人圆桌闲聊</h2>
         <p class="radio-ja" id="radio-live-ja"></p>
         <div class="inline-lex empty" id="radio-inline-lex"></div>
@@ -2712,11 +2721,20 @@ function updateRadioLiveDisplay(t) {
       setupMediaSession(curSeg.title);
     }
 
-    if (curSeg.point_id && A.pts[curSeg.point_id] && t >= curSeg.end - 6) {
-      const ps = A.pts[curSeg.point_id];
-      if (!ps.audioPrimed) {
-        ps.audioPrimed = true;
-        if (ps.status === "unseen") ps.status = "learning";
+    const segPids = Array.isArray(curSeg.point_ids) && curSeg.point_ids.length
+      ? curSeg.point_ids
+      : (curSeg.point_id ? [curSeg.point_id] : []);
+    if (segPids.length && t >= curSeg.end - 12) {
+      let changed = false;
+      for (const pid of segPids) {
+        const ps = A.pts[pid];
+        if (ps && !ps.audioPrimed) {
+          ps.audioPrimed = true;
+          if (ps.status === "unseen") ps.status = "learning";
+          changed = true;
+        }
+      }
+      if (changed) {
         saveAdaptiveState();
         renderGreenBoard();
       }
