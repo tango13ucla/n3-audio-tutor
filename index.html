@@ -1194,12 +1194,18 @@ function createFreshAdaptiveState() {
       variantIdx: 0,
       useVariant: false,
       dueStep: 0,
-      wrongCount: 0
+      wrongCount: 0,
+      lt: 0
     };
   });
   return {
     step: 0,
     resetAt: 0,
+    ct: 0,
+    cur: "",
+    st: 0,
+    es: 0,
+    rs: 0,
     lastPointId: null,
     hotFamily: null,
     radioMaxSec: 0,
@@ -1265,6 +1271,13 @@ function loadAdaptiveState() {
         base.pts[pid].variantIdx = Math.max(base.pts[pid].variantIdx, Math.floor(arr[1] || 0));
       }
     });
+    const sch = sd.sched || {};
+    Object.keys(sch).forEach(rawId => {
+      const pid = CARD_TO_POINT_ID[rawId] || rawId;
+      if (base.pts[pid]) applySchedTuple(base.pts[pid], sch[rawId], base.resetAt);
+    });
+    if (Array.isArray(sd.cursor)) applyCursorTuple(base, sd.cursor);
+    if (Array.isArray(sd.speeds)) applySpeedTuple(base, sd.speeds);
     const sov = cs.seeded_overrides || {};
     Object.keys(sov).forEach(mk => {
       const v = sov[mk];
@@ -1297,8 +1310,13 @@ function loadAdaptiveState() {
         if (!saved) return;
         if (typeof saved.step === "number" && saved.step > base.step) base.step = saved.step;
         if (typeof saved.resetAt === "number" && saved.resetAt > base.resetAt) base.resetAt = Math.floor(saved.resetAt);
-        if (saved.lastPointId) base.lastPointId = saved.lastPointId;
-        if (saved.hotFamily !== undefined) base.hotFamily = saved.hotFamily;
+        if (typeof saved.ct === "number") {
+          if (saved.ct > (base.ct || 0)) applyCursorTuple(base, [saved.cur || "", saved.step || 0, saved.lastPointId || "", saved.hotFamily || "", saved.ct]);
+        } else {
+          if (saved.lastPointId) base.lastPointId = saved.lastPointId;
+          if (saved.hotFamily !== undefined) base.hotFamily = saved.hotFamily;
+        }
+        if (typeof saved.st === "number" && saved.st > (base.st || 0)) applySpeedTuple(base, [saved.es, saved.rs, saved.st]);
         if (typeof saved.radioMaxSec === "number" && saved.radioMaxSec > base.radioMaxSec) {
           base.radioMaxSec = Math.floor(saved.radioMaxSec);
         }
@@ -1335,11 +1353,17 @@ function loadAdaptiveState() {
             if (typeof sp.retestAt === "number" && sp.retestAt > cur.retestAt) {
               cur.retestAt = Math.floor(sp.retestAt);
             }
-            cur.audioPrimed = cur.audioPrimed || !!sp.audioPrimed;
-            cur.variantIdx = Math.max(cur.variantIdx || 0, sp.variantIdx || 0);
-            cur.useVariant = cur.useVariant || !!sp.useVariant;
-            cur.dueStep = Math.max(cur.dueStep || 0, sp.dueStep || 0);
-            cur.wrongCount = Math.max(cur.wrongCount || 0, sp.wrongCount || 0);
+            if (typeof sp.lt === "number" && sp.lt > 0) {
+              if (sp.lt > (cur.lt || 0)) {
+                applySchedTuple(cur, [sp.dueStep || 0, (sp.audioPrimed ? 1 : 0) | (sp.useVariant ? 2 : 0), sp.wrongCount || 0, sp.variantIdx || 0, sp.lt], 0);
+              }
+            } else if (!(cur.lt > 0)) {
+              cur.audioPrimed = cur.audioPrimed || !!sp.audioPrimed;
+              cur.variantIdx = Math.max(cur.variantIdx || 0, sp.variantIdx || 0);
+              cur.useVariant = cur.useVariant || !!sp.useVariant;
+              cur.dueStep = Math.max(cur.dueStep || 0, sp.dueStep || 0);
+              cur.wrongCount = Math.max(cur.wrongCount || 0, sp.wrongCount || 0);
+            }
           });
         }
         if (Array.isArray(saved.doneIds)) {
@@ -1366,9 +1390,106 @@ function loadAdaptiveState() {
 }
 
 let A = loadAdaptiveState();
+(function initSpeedsFromState() {
+  if ((A.st || 0) > 0) {
+    if (SPEEDS.includes(A.es)) expSpeed = A.es;
+    if (RADIO_SPEEDS.includes(A.rs)) radioSpeed = A.rs;
+  } else if (expSpeed !== 1.0 || radioSpeed !== 1.0) {
+    // legacy local speed preference: publish it with the lowest stamp so any real change beats it
+    A.es = expSpeed;
+    A.rs = radioSpeed;
+    A.st = 1;
+  }
+})();
+
+// ---- change stamping: every local change gets a fresh stamp, remote merges never re-stamp ----
+var syncStampReady = false;
+var syncApplyingRemote = false;
+var syncLastPtSigs = {};
+var syncLastCursorSig = "";
+var syncLastIssuedMs = 0;
+function syncNowMs() {
+  syncLastIssuedMs = Math.max(Date.now(), syncLastIssuedMs + 1);
+  return syncLastIssuedMs;
+}
+function ptSig(ps) {
+  return `${ps.dueStep || 0}|${ps.useVariant ? 1 : 0}|${ps.audioPrimed ? 1 : 0}|${ps.wrongCount || 0}|${ps.variantIdx || 0}`;
+}
+function cursorSig() {
+  return `${curPointId || ""}|${A.step || 0}|${A.lastPointId || ""}|${A.hotFamily || ""}`;
+}
+function snapshotSyncBaseline() {
+  syncLastPtSigs = {};
+  Object.keys(A.pts).forEach(id => { syncLastPtSigs[id] = ptSig(A.pts[id]); });
+  syncLastCursorSig = cursorSig();
+  A.cur = curPointId || "";
+}
 
 function saveAdaptiveState() {
+  if (syncStampReady) {
+    if (!syncApplyingRemote) {
+      let stamped = false;
+      const now = syncNowMs();
+      Object.keys(A.pts).forEach(id => {
+        if (syncLastPtSigs[id] !== ptSig(A.pts[id])) {
+          A.pts[id].lt = now;
+          stamped = true;
+        }
+      });
+      if (cursorSig() !== syncLastCursorSig) {
+        A.ct = now;
+        stamped = true;
+      }
+      if (stamped && typeof scheduleCloudPush === "function") scheduleCloudPush(350);
+    }
+    snapshotSyncBaseline();
+  }
   try { localStorage.setItem(ADAPTIVE_KEY, JSON.stringify(A)); } catch (e) {}
+}
+
+function schedTupleOf(ps) {
+  return [ps.dueStep || 0, (ps.audioPrimed ? 1 : 0) | (ps.useVariant ? 2 : 0), ps.wrongCount || 0, ps.variantIdx || 0, ps.lt || 0];
+}
+// Last-writer-wins per point; equal stamps resolve deterministically so every copy converges
+function applySchedTuple(ps, v, resetAtSec) {
+  if (!ps || !Array.isArray(v) || v.length < 5) return false;
+  const lt = Math.floor(v[4] || 0);
+  if (lt <= 0 || lt <= Math.floor(resetAtSec || 0) * 1000) return false;
+  const mine = schedTupleOf(ps);
+  const cur = Math.floor(ps.lt || 0);
+  if (lt < cur) return false;
+  if (lt === cur && String(v.slice(0, 4)) <= String(mine.slice(0, 4))) return false;
+  ps.dueStep = Math.floor(v[0] || 0);
+  ps.audioPrimed = !!((v[1] || 0) & 1);
+  ps.useVariant = !!((v[1] || 0) & 2);
+  ps.wrongCount = Math.floor(v[2] || 0);
+  ps.variantIdx = Math.floor(v[3] || 0);
+  ps.lt = lt;
+  return true;
+}
+function applyCursorTuple(st, c) {
+  if (!Array.isArray(c) || c.length < 5) return false;
+  const ct = Math.floor(c[4] || 0);
+  if (ct <= 0 || ct <= Math.floor(st.resetAt || 0) * 1000) return false;
+  const mine = [st.cur || "", st.step || 0, st.lastPointId || "", st.hotFamily || ""];
+  if (ct < (st.ct || 0)) return false;
+  if (ct === (st.ct || 0) && String(c.slice(0, 4)) <= String(mine)) return false;
+  st.cur = String(c[0] || "");
+  st.step = Math.floor(c[1] || 0);
+  st.lastPointId = c[2] ? String(c[2]) : null;
+  st.hotFamily = c[3] ? String(c[3]) : null;
+  st.ct = ct;
+  return true;
+}
+function applySpeedTuple(st, v) {
+  if (!Array.isArray(v) || v.length < 3) return false;
+  const t = Math.floor(v[2] || 0);
+  if (t <= 0 || t < (st.st || 0)) return false;
+  if (t === (st.st || 0) && `${v[0]}|${v[1]}` <= `${st.es}|${st.rs}`) return false;
+  st.es = Number(v[0]) || 1.0;
+  st.rs = Number(v[1]) || 1.0;
+  st.st = t;
+  return true;
 }
 
 function setMasteryTier(key, tier, tsSec) {
@@ -1387,6 +1508,9 @@ function applyMasteryOverrides() {
       const gts = Math.max(ps.greenAt || 2, 2);
       setMasteryTier(p.point_key, "done", gts);
       setMasteryTier(p.point, "done", gts);
+    } else if (ps && (ps.retestAt || 0) > (A.resetAt || 0) && (ps.retestAt || 0) > (ps.greenAt || 0)) {
+      setMasteryTier(p.point_key, "todo", ps.retestAt);
+      setMasteryTier(p.point, "todo", ps.retestAt);
     }
   });
   const ov = A.masteryOverrides || {};
@@ -1458,53 +1582,90 @@ function sortedMap(obj) {
   return out;
 }
 
-function buildCompactPacket() {
-  const g = {};
-  const t = {};
-  const w = {};
+const PLAN_TAG = "-" + String(DATA.plan_date || "").replace(/-/g, "") + "-";
+const CLOUD_OUTBOX_KEY = "n3_cloud_outbox_v13";
+const CLOUD_BYTE_LIMIT = 3900;
+const cloudEnc = (typeof TextEncoder !== "undefined") ? new TextEncoder() : null;
+function byteLen(str) { return cloudEnc ? cloudEnc.encode(str).length : str.length * 3; }
+function b36(n) { n = Math.floor(n || 0); return n > 0 ? n.toString(36) : ""; }
+function ub36(str) { return str ? (parseInt(str, 36) || 0) : 0; }
+function encPid(id) { return String(id).replace(PLAN_TAG, "~"); }
+function decPid(str) { return String(str).replace("~", PLAN_TAG); }
+
+function loadOutbox() {
+  try {
+    const a = JSON.parse(localStorage.getItem(CLOUD_OUTBOX_KEY) || "[]");
+    return Array.isArray(a) ? a : [];
+  } catch (e) {
+    return [];
+  }
+}
+function saveOutbox(arr) {
+  try { localStorage.setItem(CLOUD_OUTBOX_KEY, JSON.stringify(arr.slice(-400))); } catch (e) {}
+}
+function recKey(item) { return `${String(item[4] || "").slice(0, 19)}|${item[0]}|${item[2]}`; }
+
+// Every point in one compact string: id:greenAt.retestAt.dueStep.flags.wrong.variant.stamp (base36)
+function encodePointStates() {
+  const parts = [];
   DATA.points.forEach(p => {
     const ps = A.pts[p.id];
     if (!ps) return;
-    if ((ps.greenAt || 0) > 0) g[p.id] = Math.floor(ps.greenAt);
-    if ((ps.retestAt || 0) > 0) t[p.id] = Math.floor(ps.retestAt);
-    if ((ps.wrongCount || 0) > 0 || (ps.variantIdx || 0) > 0) {
-      w[p.id] = [Math.floor(ps.wrongCount || 0), Math.floor(ps.variantIdx || 0)];
-    }
+    const t = schedTupleOf(ps);
+    const g = Math.floor(ps.greenAt || 0), r = Math.floor(ps.retestAt || 0);
+    if (!g && !r && !t[0] && !t[1] && !t[2] && !t[3] && !t[4]) return;
+    parts.push(`${encPid(p.id)}:${b36(g)}.${b36(r)}.${b36(t[0])}.${t[1] || ""}.${b36(t[2])}.${b36(t[3])}.${b36(t[4])}`);
   });
+  return parts.join(";");
+}
+function decodePointStates(z) {
+  const out = [];
+  String(z || "").split(";").forEach(ent => {
+    const i = ent.indexOf(":");
+    if (i <= 0) return;
+    const f = ent.slice(i + 1).split(".");
+    out.push({ id: decPid(ent.slice(0, i)), g: ub36(f[0]), r: ub36(f[1]), s: [ub36(f[2]), parseInt(f[3] || "0", 10) || 0, ub36(f[4]), ub36(f[5]), ub36(f[6])] });
+  });
+  return out;
+}
 
-  const ovEntries = Object.keys(A.masteryOverrides || {}).map(k => [
-    k,
-    [String(A.masteryOverrides[k]), Math.floor((A.masteryOverrideTs && A.masteryOverrideTs[k]) || 1)]
-  ]).sort((a, b) => b[1][1] - a[1][1]).slice(0, 40);
-  const o = {};
-  ovEntries.forEach(kv => { o[kv[0]] = kv[1]; });
-
-  const compactRecs = (A.recentRecords || []).slice(-15).map(r => [
-    String(r.id || ""),
-    String(r.point || ""),
-    String(r.choice || ""),
-    String(r.correct) === "true" || r.correct === 1 || r.correct === true ? 1 : 0,
-    String(r.ts || "")
-  ]);
-
+function buildCompactPacket() {
   const pkt = {
     a: "n3z",
+    v: 13,
     u: nowUnixSec(),
     d: DATA.plan_date,
     r: Math.floor(A.resetAt || 0),
     m: Math.floor(A.radioMaxSec || 0),
     rp: Array.isArray(A.radioPos) ? [Math.floor(A.radioPos[0] || 0), Math.floor(A.radioPos[1] || 0)] : [0, 0],
-    g: sortedMap(g),
-    t: sortedMap(t),
-    w: sortedMap(w),
-    o: sortedMap(o),
-    l: compactRecs
+    z: encodePointStates(),
+    c: [A.cur || curPointId || "", Math.floor(A.step || 0), A.lastPointId || "", A.hotFamily || "", Math.floor(A.ct || 0)],
+    sp: [A.es || expSpeed, A.rs || radioSpeed, Math.floor(A.st || 0)],
+    o: {},
+    l: []
   };
-
-  if (JSON.stringify(pkt).length > 3400) {
-    pkt.o = {};
-    pkt.l = compactRecs.slice(-6);
+  let size = byteLen(JSON.stringify(pkt));
+  // answers not yet confirmed by the relay go first (oldest first), never dropped
+  const sentKeys = [];
+  for (const item of loadOutbox()) {
+    const add = byteLen(JSON.stringify(item)) + 1;
+    if (size + add > CLOUD_BYTE_LIMIT - 400) break;
+    pkt.l.push(item);
+    sentKeys.push(recKey(item));
+    size += add;
   }
+  const ovEntries = Object.keys(A.masteryOverrides || {}).map(k => [
+    k,
+    [String(A.masteryOverrides[k]), Math.floor((A.masteryOverrideTs && A.masteryOverrideTs[k]) || 1)]
+  ]).sort((x, y) => y[1][1] - x[1][1]);
+  for (const kv of ovEntries) {
+    const add = byteLen(JSON.stringify(kv[0]) + ":" + JSON.stringify(kv[1])) + 1;
+    if (size + add > CLOUD_BYTE_LIMIT) break;
+    pkt.o[kv[0]] = kv[1];
+    size += add;
+  }
+  pkt.o = sortedMap(pkt.o);
+  Object.defineProperty(pkt, "_sentKeys", { value: sentKeys, enumerable: false });
   return pkt;
 }
 
@@ -1514,9 +1675,13 @@ function packetFingerprint(pkt) {
     d: pkt.d || "",
     r: Math.floor(pkt.r || 0),
     m: Math.floor((pkt.m || 0) / 30),
-    g: sortedMap(pkt.g || {}),
-    t: sortedMap(pkt.t || {}),
-    w: sortedMap(pkt.w || {})
+    rp: pkt.rp || [0, 0],
+    z: String(pkt.z || "").split(";").filter(Boolean).sort().join(";"),
+    c: pkt.c || [],
+    sp: pkt.sp || [],
+    g: pkt.z ? {} : sortedMap(pkt.g || {}),
+    t: pkt.z ? {} : sortedMap(pkt.t || {}),
+    w: pkt.z ? {} : sortedMap(pkt.w || {})
   });
 }
 
@@ -1546,111 +1711,143 @@ function mergeIncomingRecords(compactList) {
 function applyIncomingPacket(pkt) {
   if (!pkt || pkt.a !== "n3z") return false;
   let changed = false;
-
-  if (pkt.o && typeof pkt.o === "object") {
-    Object.keys(pkt.o).forEach(mk => {
-      const v = pkt.o[mk];
-      if (Array.isArray(v) && v.length === 2) {
-        const tier = String(v[0]);
-        const ts = Math.floor(v[1] || 1);
-        if (ts > (A.masteryOverrideTs[mk] || 0) || (ts === (A.masteryOverrideTs[mk] || 0) && A.masteryOverrides[mk] !== tier)) {
-          A.masteryOverrides[mk] = tier;
-          A.masteryOverrideTs[mk] = ts;
-          changed = true;
+  syncApplyingRemote = true;
+  try {
+    if (pkt.o && typeof pkt.o === "object") {
+      Object.keys(pkt.o).forEach(mk => {
+        const v = pkt.o[mk];
+        if (Array.isArray(v) && v.length === 2) {
+          const tier = String(v[0]);
+          const ts = Math.floor(v[1] || 1);
+          const curTs = A.masteryOverrideTs[mk] || 0;
+          if (ts > curTs || (ts === curTs && String(A.masteryOverrides[mk] || "") < tier)) {
+            A.masteryOverrides[mk] = tier;
+            A.masteryOverrideTs[mk] = ts;
+            changed = true;
+          }
         }
-      }
-    });
-  }
-
-  if (pkt.d !== DATA.plan_date) {
-    if (changed) {
-      applyMasteryOverrides();
-      saveAdaptiveState();
+      });
     }
-    return changed;
-  }
 
-  const rIn = Math.floor(pkt.r || 0);
-  if (rIn > (A.resetAt || 0)) {
-    A.resetAt = rIn;
-    changed = true;
-  }
+    if (pkt.d !== DATA.plan_date) {
+      if (changed) {
+        applyMasteryOverrides();
+        saveAdaptiveState();
+      }
+      return changed;
+    }
 
-  const mIn = Math.floor(pkt.m || 0);
-  if (mIn > (A.radioMaxSec || 0)) {
-    A.radioMaxSec = mIn;
-    changed = true;
-  }
+    const rIn = Math.floor(pkt.r || 0);
+    if (rIn > (A.resetAt || 0)) {
+      A.resetAt = rIn;
+      changed = true;
+    }
 
-  if (Array.isArray(pkt.rp) && pkt.rp.length === 2) {
-    const rpSec = Math.floor(pkt.rp[0] || 0);
-    const rpTs = Math.floor(pkt.rp[1] || 0);
-    if (rpTs > ((A.radioPos && A.radioPos[1]) || 0)) {
-      A.radioPos = [rpSec, rpTs];
-      if (radioPlayer.paused && rpSec > 3) {
+    const mIn = Math.floor(pkt.m || 0);
+    if (mIn > (A.radioMaxSec || 0)) {
+      A.radioMaxSec = mIn;
+      changed = true;
+    }
+
+    if (Array.isArray(pkt.rp) && pkt.rp.length === 2) {
+      const rpSec = Math.floor(pkt.rp[0] || 0);
+      const rpTs = Math.floor(pkt.rp[1] || 0);
+      const myTs = (A.radioPos && A.radioPos[1]) || 0;
+      if (rpTs > myTs || (rpTs === myTs && rpSec > ((A.radioPos && A.radioPos[0]) || 0))) {
+        A.radioPos = [rpSec, rpTs];
         try { localStorage.setItem(RADIO_POS_KEY, String(rpSec)); } catch (e) {}
-        if (radioInitialized && Math.abs((radioPlayer.currentTime || 0) - rpSec) > 5) {
+        if (radioInitialized && radioPlayer.paused && Math.abs((radioPlayer.currentTime || 0) - rpSec) > 1) {
+          lastSavedSec = rpSec;
           radioPlayer.currentTime = rpSec;
           updateRadioLiveDisplay(rpSec);
         }
-      }
-      changed = true;
-    }
-  }
-
-  const gIn = pkt.g || {};
-  Object.keys(gIn).forEach(rawId => {
-    const pid = CARD_TO_POINT_ID[rawId] || rawId;
-    const ts = Math.floor(gIn[rawId] || 0);
-    if (A.pts[pid] && ts > (A.pts[pid].greenAt || 0)) {
-      A.pts[pid].greenAt = ts;
-      changed = true;
-    }
-  });
-
-  const tIn = pkt.t || {};
-  Object.keys(tIn).forEach(rawId => {
-    const pid = CARD_TO_POINT_ID[rawId] || rawId;
-    const ts = Math.floor(tIn[rawId] || 0);
-    if (A.pts[pid] && ts > (A.pts[pid].retestAt || 0)) {
-      A.pts[pid].retestAt = ts;
-      changed = true;
-    }
-  });
-
-  const wIn = pkt.w || {};
-  Object.keys(wIn).forEach(rawId => {
-    const pid = CARD_TO_POINT_ID[rawId] || rawId;
-    const arr = wIn[rawId];
-    if (A.pts[pid] && Array.isArray(arr)) {
-      const wc = Math.floor(arr[0] || 0);
-      const vi = Math.floor(arr[1] || 0);
-      if (wc > (A.pts[pid].wrongCount || 0)) {
-        A.pts[pid].wrongCount = wc;
-        changed = true;
-      }
-      if (vi > (A.pts[pid].variantIdx || 0)) {
-        A.pts[pid].variantIdx = vi;
         changed = true;
       }
     }
-  });
 
-  mergeIncomingRecords(pkt.l);
-
-  if (changed) {
-    recomputeStatusesFromCRDT(A);
-    applyMasteryOverrides();
-    saveAdaptiveState();
-    if (curPointId && A.pts[curPointId] && A.pts[curPointId].status === "green" && viewStage === "quiz" && !activeKind) {
-      setupCurrentTurn();
-      stageEnteredAt = performance.now();
+    let ptsChanged = false;
+    if (typeof pkt.z === "string") {
+      decodePointStates(pkt.z).forEach(e => {
+        const pid = CARD_TO_POINT_ID[e.id] || e.id;
+        const ps = A.pts[pid];
+        if (!ps) return;
+        if (e.g > (ps.greenAt || 0)) { ps.greenAt = e.g; ptsChanged = true; }
+        if (e.r > (ps.retestAt || 0)) { ps.retestAt = e.r; ptsChanged = true; }
+        if (applySchedTuple(ps, e.s, A.resetAt)) ptsChanged = true;
+      });
+    } else {
+      // older page versions (before v13)
+      const gIn = pkt.g || {};
+      Object.keys(gIn).forEach(rawId => {
+        const pid = CARD_TO_POINT_ID[rawId] || rawId;
+        const ts = Math.floor(gIn[rawId] || 0);
+        if (A.pts[pid] && ts > (A.pts[pid].greenAt || 0)) { A.pts[pid].greenAt = ts; ptsChanged = true; }
+      });
+      const tIn = pkt.t || {};
+      Object.keys(tIn).forEach(rawId => {
+        const pid = CARD_TO_POINT_ID[rawId] || rawId;
+        const ts = Math.floor(tIn[rawId] || 0);
+        if (A.pts[pid] && ts > (A.pts[pid].retestAt || 0)) { A.pts[pid].retestAt = ts; ptsChanged = true; }
+      });
     }
-    renderGreenBoard();
-    if (activeMode === "tutor") renderTutor();
-    else if (activeMode === "dash") renderDashboard();
+    if (ptsChanged) changed = true;
+
+    let curChanged = false;
+    if (Array.isArray(pkt.c) && applyCursorTuple(A, pkt.c)) {
+      curChanged = true;
+      changed = true;
+    }
+
+    if (Array.isArray(pkt.sp) && applySpeedTuple(A, pkt.sp)) {
+      if (SPEEDS.includes(A.es)) expSpeed = A.es;
+      if (RADIO_SPEEDS.includes(A.rs)) radioSpeed = A.rs;
+      try {
+        localStorage.setItem("n3_exp_speed", String(expSpeed));
+        localStorage.setItem("n3_radio_speed", String(radioSpeed));
+      } catch (e) {}
+      radioPlayer.defaultPlaybackRate = radioSpeed;
+      radioPlayer.playbackRate = radioSpeed;
+      if (activeKind === "exp" || activeKind === "teach") applyPlaybackRate(activeKind);
+      const sb = document.getElementById("ans-spd-btn");
+      if (sb) sb.textContent = `${expSpeed}x`;
+      const rb = document.getElementById("radio-spd-btn");
+      if (rb) rb.textContent = `${radioSpeed}x`;
+      changed = true;
+    }
+
+    mergeIncomingRecords(pkt.l);
+
+    if (changed) {
+      recomputeStatusesFromCRDT(A);
+      applyMasteryOverrides();
+      let shownChanged = false;
+      if (viewStage === "quiz" || viewStage === "done") {
+        const prevId = curPointId;
+        const prevQ = activeQuizObj ? activeQuizObj.id : "";
+        const prevC = currentChoices.join("|");
+        const prevStage = viewStage;
+        const want = (A.cur && A.pts[A.cur] && A.pts[A.cur].status !== "green") ? A.cur : "";
+        const curOk = curPointId && A.pts[curPointId] && A.pts[curPointId].status !== "green";
+        if (curChanged && want) setupCurrentTurn(want);
+        else if (!curOk) setupCurrentTurn();
+        else setupCurrentTurn(curPointId);
+        shownChanged = curPointId !== prevId || viewStage !== prevStage ||
+          (activeQuizObj ? activeQuizObj.id : "") !== prevQ || currentChoices.join("|") !== prevC;
+        if (shownChanged) {
+          stageEnteredAt = performance.now();
+          if (activeKind === "q" || activeKind === "done") stopQuizAudio();
+        }
+      }
+      saveAdaptiveState();
+      renderGreenBoard();
+      if (activeMode === "tutor") {
+        if (shownChanged || viewStage !== "result") renderTutor();
+      } else if (activeMode === "dash") renderDashboard();
+    }
+    return changed;
+  } finally {
+    syncApplyingRemote = false;
   }
-  return changed;
 }
 
 function updateSyncModalBadge() {
@@ -1675,7 +1872,8 @@ function pushCloudSync(useKeepalive) {
   if (!NTFY_TOPIC) return Promise.resolve(false);
   const pkt = buildCompactPacket();
   const fp = packetFingerprint(pkt);
-  if (!useKeepalive && fp === lastSyncedFp) return Promise.resolve(false);
+  const hasOutbox = pkt._sentKeys.length > 0;
+  if (!useKeepalive && !hasOutbox && fp === lastSyncedFp) return Promise.resolve(false);
 
   if (cloudInFlight && !useKeepalive) {
     cloudPendingPush = true;
@@ -1694,6 +1892,14 @@ function pushCloudSync(useKeepalive) {
       cloudLastSyncTs = Date.now();
       if (cloudSyncState !== "live") cloudSyncState = "synced";
       updateSyncModalBadge();
+      if (hasOutbox) {
+        const done = new Set(pkt._sentKeys);
+        const rest = loadOutbox().filter(it => !done.has(recKey(it)));
+        saveOutbox(rest);
+        if (rest.length) cloudPendingPush = true;
+      }
+    } else if (hasOutbox) {
+      setTimeout(() => scheduleCloudPush(0), 20000);
     }
     if (cloudPendingPush) {
       cloudPendingPush = false;
@@ -1704,6 +1910,8 @@ function pushCloudSync(useKeepalive) {
     cloudInFlight = false;
     if (cloudSyncState !== "live") cloudSyncState = "offline";
     updateSyncModalBadge();
+    // not delivered: keep everything queued and try again shortly
+    setTimeout(() => scheduleCloudPush(0), 15000);
     return false;
   });
 }
@@ -1744,7 +1952,7 @@ function pullCloudSync(pushIfLocalAhead) {
     updateSyncModalBadge();
 
     const myFp = packetFingerprint(buildCompactPacket());
-    if (latestRemoteFp && myFp === latestRemoteFp) {
+    if (latestRemoteFp && myFp === latestRemoteFp && !loadOutbox().length) {
       lastSyncedFp = myFp;
       return true;
     }
@@ -1912,6 +2120,7 @@ function setupCurrentTurn(forcedId) {
   if (!curPointId) {
     viewStage = "done";
     activeQuizObj = null;
+    if (syncStampReady) saveAdaptiveState();
     return;
   }
   const p = getPointById(curPointId);
@@ -1919,8 +2128,11 @@ function setupCurrentTurn(forcedId) {
   viewStage = "quiz";
   activeQuizObj = getQuizForPoint(p, ps);
   currentChoices = prepareChoices(activeQuizObj, ps.wrongCount);
+  if (syncStampReady) saveAdaptiveState();
 }
-setupCurrentTurn();
+setupCurrentTurn((A.cur && A.pts[A.cur] && A.pts[A.cur].status !== "green") ? A.cur : undefined);
+snapshotSyncBaseline();
+syncStampReady = true;
 
 // ================= AUDIO PLAYERS & COMPLETE LEXICON =================
 const player = new Audio();
@@ -2062,9 +2274,18 @@ function applyPlaybackRate(kind) {
   if ("preservesPitch" in player) player.preservesPitch = true;
 }
 
+function stampSpeeds() {
+  A.es = expSpeed;
+  A.rs = radioSpeed;
+  A.st = syncNowMs();
+  saveAdaptiveState();
+  scheduleCloudPush(300);
+}
+
 function cycleExpSpeed() {
   expSpeed = SPEEDS[(SPEEDS.indexOf(expSpeed) + 1) % SPEEDS.length];
   try { localStorage.setItem("n3_exp_speed", String(expSpeed)); } catch (e) {}
+  stampSpeeds();
   if (activeKind === "exp" || activeKind === "teach") applyPlaybackRate(activeKind);
   const spdBtn = document.getElementById("ans-spd-btn");
   if (spdBtn) spdBtn.textContent = `${expSpeed}x`;
@@ -2145,8 +2366,9 @@ function ensureRadioReady() {
     radioInitialized = true;
     radioPlayer.src = DATA.radio.audio_url;
     const localPos = parseFloat(localStorage.getItem(RADIO_POS_KEY) || "0");
-    const cloudPos = (Array.isArray(A.radioPos) && A.radioPos.length === 2) ? (A.radioPos[0] || 0) : 0;
-    const savedPos = Math.max(localPos, cloudPos);
+    const hasCloud = Array.isArray(A.radioPos) && A.radioPos.length === 2 && (A.radioPos[1] || 0) > 0;
+    const savedPos = hasCloud ? (A.radioPos[0] || 0) : localPos;
+    lastSavedSec = savedPos;
     if (savedPos > 3 && savedPos < (DATA.radio.duration_sec || 2400) - 10) {
       radioPlayer.currentTime = savedPos;
     }
@@ -2194,11 +2416,19 @@ function toggleRadioPlay(forcePlay) {
   syncRadioUI();
 }
 
+function markRadioPosByUser(t) {
+  A.radioPos = [Math.floor(t || 0), nowUnixSec()];
+  try { localStorage.setItem(RADIO_POS_KEY, String(Math.floor(t || 0))); } catch (e) {}
+  saveAdaptiveState();
+  scheduleCloudPush(800);
+}
+
 function seekRadioBy(delta) {
   ensureRadioReady();
   const dur = radioPlayer.duration || DATA.radio.duration_sec || 2100;
   radioPlayer.currentTime = Math.max(0, Math.min(dur - 1, (radioPlayer.currentTime || 0) + delta));
   updateRadioLiveDisplay(radioPlayer.currentTime);
+  markRadioPosByUser(radioPlayer.currentTime);
 }
 
 function jumpRadioChapter(startSec) {
@@ -2212,6 +2442,7 @@ function onRadioScrub(val) {
   ensureRadioReady();
   radioPlayer.currentTime = parseFloat(val) || 0;
   updateRadioLiveDisplay(radioPlayer.currentTime);
+  markRadioPosByUser(radioPlayer.currentTime);
 }
 
 function cycleRadioSpeed() {
@@ -2220,6 +2451,7 @@ function cycleRadioSpeed() {
   radioPlayer.defaultPlaybackRate = radioSpeed;
   radioPlayer.playbackRate = radioSpeed;
   document.getElementById("radio-spd-btn").textContent = `${radioSpeed}x`;
+  stampSpeeds();
 }
 
 function renderRadioChapters(activeChapIdx) {
@@ -2242,7 +2474,7 @@ function updateRadioLiveDisplay(t) {
     const prevMin = Math.floor((A.radioMaxSec || 0) / 60);
     A.radioMaxSec = Math.floor(t);
     if (Math.floor(A.radioMaxSec / 60) !== prevMin) {
-      A.radioPos = [Math.floor(t), nowUnixSec()];
+      if (!radioPlayer.paused) A.radioPos = [Math.floor(t), nowUnixSec()];
       saveAdaptiveState();
       renderGreenBoard();
       if (Date.now() - lastRadioCloudPushMs > 55000) {
@@ -2336,11 +2568,15 @@ radioPlayer.addEventListener("loadedmetadata", () => {
 radioPlayer.addEventListener("timeupdate", () => {
   const t = radioPlayer.currentTime || 0;
   updateRadioLiveDisplay(t);
-  if (Math.abs(t - lastSavedSec) >= 3) {
+  if (!radioPlayer.paused && Math.abs(t - lastSavedSec) >= 3) {
     lastSavedSec = t;
     A.radioPos = [Math.floor(t), nowUnixSec()];
     try { localStorage.setItem(RADIO_POS_KEY, String(Math.floor(t))); } catch (e) {}
     saveAdaptiveState();
+    if (Date.now() - lastRadioCloudPushMs > 90000) {
+      lastRadioCloudPushMs = Date.now();
+      scheduleCloudPush(400);
+    }
   }
 });
 
@@ -2363,6 +2599,9 @@ function syncBackendRecord(p, qid, choice, isCorrect, askAgain, newTier, stampSe
   };
   if (!Array.isArray(A.recentRecords)) A.recentRecords = [];
   A.recentRecords.push(rec);
+  const ob = loadOutbox();
+  ob.push([rec.id, rec.point, rec.choice, isCorrect ? 1 : 0, rec.ts]);
+  saveOutbox(ob);
   if (A.recentRecords.length > 25) A.recentRecords = A.recentRecords.slice(-25);
   saveAdaptiveState();
 
@@ -2521,12 +2760,16 @@ function resetTodayMission() {
   const keepOverrideTs = A.masteryOverrideTs || {};
   const keepRadio = A.radioMaxSec || 0;
   const keepRadioPos = A.radioPos || [0, 0];
+  const keepSt = A.st || 0;
   A = createFreshAdaptiveState();
   A.resetAt = stamp;
   A.masteryOverrides = keepOverrides;
   A.masteryOverrideTs = keepOverrideTs;
   A.radioMaxSec = keepRadio;
   A.radioPos = keepRadioPos;
+  A.es = expSpeed;
+  A.rs = radioSpeed;
+  A.st = keepSt;
   recomputeStatusesFromCRDT(A);
   saveAdaptiveState();
   scheduleCloudPush(60);

@@ -72,6 +72,82 @@ def get_latest_plan_date() -> str:
     return "2026-11-14"
 
 
+BYTE_LIMIT = 3900
+
+
+def b36(n) -> str:
+    n = int(n or 0)
+    if n <= 0:
+        return ""
+    digits = "0123456789abcdefghijklmnopqrstuvwxyz"
+    out = ""
+    while n:
+        n, r = divmod(n, 36)
+        out = digits[r] + out
+    return out
+
+
+def ub36(txt: str) -> int:
+    try:
+        return int(txt, 36) if txt else 0
+    except Exception:
+        return 0
+
+
+def js_join(vals) -> str:
+    """String(array) in JavaScript: comma-joined, null/None -> empty."""
+    return ",".join("" if v is None else str(v) for v in vals)
+
+
+def js_num(x) -> str:
+    try:
+        return "%g" % float(x)
+    except Exception:
+        return str(x)
+
+
+def sched_wins(new, cur) -> bool:
+    """Same last-writer-wins rule as applySchedTuple in the page."""
+    if not isinstance(new, list) or len(new) < 5:
+        return False
+    if not isinstance(cur, list) or len(cur) < 5:
+        return int(new[4] or 0) > 0
+    nl, cl = int(new[4] or 0), int(cur[4] or 0)
+    if nl != cl:
+        return nl > cl
+    return js_join(new[:4]) > js_join(cur[:4])
+
+
+def cursor_wins(new, cur) -> bool:
+    if not isinstance(new, list) or len(new) < 5:
+        return False
+    if not isinstance(cur, list) or len(cur) < 5:
+        return int(new[4] or 0) > 0
+    nt, ctm = int(new[4] or 0), int(cur[4] or 0)
+    if nt != ctm:
+        return nt > ctm
+    return js_join(new[:4]) > js_join(cur[:4])
+
+
+def speeds_win(new, cur) -> bool:
+    if not isinstance(new, list) or len(new) < 3:
+        return False
+    if not isinstance(cur, list) or len(cur) < 3:
+        return int(new[2] or 0) > 0
+    nt, ctm = int(new[2] or 0), int(cur[2] or 0)
+    if nt != ctm:
+        return nt > ctm
+    return f"{js_num(new[0])}|{js_num(new[1])}" > f"{js_num(cur[0])}|{js_num(cur[1])}"
+
+
+def enc_pid(pid: str, tag: str) -> str:
+    return str(pid).replace(f"-{tag}-", "~", 1)
+
+
+def dec_pid(txt: str, tag: str) -> str:
+    return str(txt).replace("~", f"-{tag}-", 1)
+
+
 def empty_crdt_state(plan_date: str) -> dict:
     return {
         "v": 12,
@@ -102,8 +178,25 @@ def merge_day_bucket(dst: dict, src: dict) -> dict:
         "learning": dict(dst.get("learning") or {}),
     }
     sp = src.get("radioPos") or [0, 0]
-    if len(sp) == 2 and int(sp[1] or 0) > int(out["radioPos"][1] or 0):
-        out["radioPos"] = [int(sp[0] or 0), int(sp[1] or 0)]
+    if len(sp) == 2:
+        s_ts, d_ts = int(sp[1] or 0), int(out["radioPos"][1] or 0)
+        if s_ts > d_ts or (s_ts == d_ts and int(sp[0] or 0) > int(out["radioPos"][0] or 0)):
+            out["radioPos"] = [int(sp[0] or 0), int(sp[1] or 0)]
+
+    out["sched"] = dict(dst.get("sched") or {})
+    for pid, tup in (src.get("sched") or {}).items():
+        if sched_wins(tup, out["sched"].get(pid)):
+            out["sched"][pid] = [int(x or 0) for x in tup[:5]]
+    if cursor_wins(src.get("cursor"), dst.get("cursor")):
+        c = src.get("cursor")
+        out["cursor"] = [str(c[0] or ""), int(c[1] or 0), str(c[2] or ""), str(c[3] or ""), int(c[4] or 0)]
+    elif dst.get("cursor"):
+        out["cursor"] = dst.get("cursor")
+    if speeds_win(src.get("speeds"), dst.get("speeds")):
+        v = src.get("speeds")
+        out["speeds"] = [float(v[0] or 1), float(v[1] or 1), int(v[2] or 0)]
+    elif dst.get("speeds"):
+        out["speeds"] = dst.get("speeds")
 
     for pid, ts in (src.get("greenAt") or {}).items():
         ts_i = int(ts or 0)
@@ -179,6 +272,29 @@ def unpack_compact_ntfy(pkt: dict) -> dict | None:
         "retestAt": pkt.get("t") if isinstance(pkt.get("t"), dict) else {},
         "learning": pkt.get("w") if isinstance(pkt.get("w"), dict) else {},
     }
+    if isinstance(pkt.get("z"), str):
+        tag = str(d).replace("-", "")
+        g, t, w, sch = {}, {}, {}, {}
+        for ent in pkt["z"].split(";"):
+            if ":" not in ent:
+                continue
+            raw_id, rest = ent.split(":", 1)
+            pid = dec_pid(raw_id, tag)
+            f = (rest.split(".") + [""] * 7)[:7]
+            if ub36(f[0]):
+                g[pid] = ub36(f[0])
+            if ub36(f[1]):
+                t[pid] = ub36(f[1])
+            tup = [ub36(f[2]), int(f[3] or 0) if f[3].isdigit() else 0, ub36(f[4]), ub36(f[5]), ub36(f[6])]
+            if tup[4] > 0:
+                sch[pid] = tup
+            if tup[2] or tup[3]:
+                w[pid] = [tup[2], tup[3]]
+        day["greenAt"], day["retestAt"], day["learning"], day["sched"] = g, t, w, sch
+    if isinstance(pkt.get("c"), list) and len(pkt["c"]) >= 5:
+        day["cursor"] = pkt["c"]
+    if isinstance(pkt.get("sp"), list) and len(pkt["sp"]) >= 3:
+        day["speeds"] = pkt["sp"]
     recs = []
     for item in pkt.get("l") or []:
         if isinstance(item, list) and len(item) >= 4:
@@ -202,39 +318,65 @@ def unpack_compact_ntfy(pkt: dict) -> dict | None:
 
 def pack_compact_ntfy(state: dict, plan_date: str) -> dict:
     day = (state.get("dates") or {}).get(plan_date) or {}
-    compact_recs = []
-    for r in (state.get("records") or [])[-15:]:
-        ok = 1 if str(r.get("correct", "")).lower() == "true" else 0
-        compact_recs.append([
-            r.get("id", ""),
-            r.get("point", ""),
-            r.get("choice", ""),
-            ok,
-            r.get("ts", ""),
-        ])
-    # Keep most recent 40 mastery overrides in live packet so < 3.6KB inline limit is guaranteed
-    ov_items = sorted(
-        (state.get("masteryOverrides") or {}).items(),
-        key=lambda kv: int(kv[1][1]) if isinstance(kv[1], list) and len(kv[1]) == 2 else 0,
-        reverse=True,
-    )[:40]
+    tag = plan_date.replace("-", "")
+    g = day.get("greenAt") or {}
+    t = day.get("retestAt") or {}
+    sch = day.get("sched") or {}
+    lrn = day.get("learning") or {}
+    parts = []
+    for pid in sorted(set(g) | set(t) | set(sch) | set(lrn)):
+        tup = sch.get(pid)
+        if not (isinstance(tup, list) and len(tup) >= 5):
+            lw = lrn.get(pid) or [0, 0]
+            tup = [0, 0, int(lw[0] or 0), int(lw[1] or 0), 0]
+        gv, tv = int(g.get(pid) or 0), int(t.get(pid) or 0)
+        if not gv and not tv and not any(int(x or 0) for x in tup[:5]):
+            continue
+        flags = int(tup[1] or 0)
+        parts.append(
+            f"{enc_pid(pid, tag)}:{b36(gv)}.{b36(tv)}.{b36(tup[0])}.{flags if flags else ''}."
+            f"{b36(tup[2])}.{b36(tup[3])}.{b36(tup[4])}"
+        )
     pkt = {
         "a": "n3z",
+        "v": 13,
         "u": int(state.get("updatedAt") or int(time.time())),
         "d": plan_date,
         "r": int(day.get("resetAt") or 0),
         "m": int(day.get("radioMaxSec") or 0),
         "rp": day.get("radioPos") or [0, 0],
-        "g": day.get("greenAt") or {},
-        "t": day.get("retestAt") or {},
-        "w": day.get("learning") or {},
-        "o": dict(ov_items),
-        "l": compact_recs,
+        "z": ";".join(parts),
+        "o": {},
+        "l": [],
     }
-    raw = json.dumps(pkt, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
-    if len(raw) > 3600:
-        pkt["o"] = {}
-        pkt["l"] = compact_recs[-6:]
+    if isinstance(day.get("cursor"), list):
+        pkt["c"] = day["cursor"]
+    if isinstance(day.get("speeds"), list):
+        pkt["sp"] = day["speeds"]
+
+    def size(obj) -> int:
+        return len(json.dumps(obj, ensure_ascii=False, separators=(",", ":")).encode("utf-8"))
+
+    cur = size(pkt)
+    for r in reversed((state.get("records") or [])[-15:]):
+        ok = 1 if str(r.get("correct", "")).lower() == "true" else 0
+        item = [r.get("id", ""), r.get("point", ""), r.get("choice", ""), ok, r.get("ts", "")]
+        add = size(item) + 1
+        if cur + add > BYTE_LIMIT - 400:
+            break
+        pkt["l"].insert(0, item)
+        cur += add
+    ov_items = sorted(
+        (state.get("masteryOverrides") or {}).items(),
+        key=lambda kv: int(kv[1][1]) if isinstance(kv[1], list) and len(kv[1]) == 2 else 0,
+        reverse=True,
+    )
+    for k, v in ov_items:
+        add = size({k: v}) - 1
+        if cur + add > BYTE_LIMIT:
+            break
+        pkt["o"][k] = v
+        cur += add
     return pkt
 
 
