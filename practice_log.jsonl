@@ -33,3 +33,5 @@
 {"id": "GROK-476", "point": "N3L-086", "correct": true, "ask_again": false, "source": "grok", "ts": "grok:476:2026-11-14 10:14"}
 {"id": "GROK-479", "point": "N3L-244", "correct": true, "ask_again": false, "source": "grok", "ts": "grok:479:2026-11-14 10:16"}
 {"id": "GROK-480", "point": "N3L-025", "correct": true, "ask_again": true, "source": "grok", "ts": "grok:480:2026-11-14 10:17"}
+{"id": "G-20261114-12", "point": "〜ことになる", "choice": "行くことになった", "correct": "true", "ask_again": "false", "ts": "2026-11-14T20:46:52.000Z"}
+{"id": "G-20261114-10", "point": "〜はずだ", "choice": "不确定", "correct": "false", "ask_again": "false", "ts": "2026-11-14T20:47:30.000Z"}
