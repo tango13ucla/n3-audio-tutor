@@ -225,6 +225,17 @@ def merge_day_bucket(dst: dict, src: dict) -> dict:
             tw.append(ws)
     if tw:
         out["tappedWords"] = tw[-80:]
+
+    fp_a = dst.get("flashProg") if isinstance(dst.get("flashProg"), list) else [0, 0, 0, 0]
+    fp_b = src.get("flashProg") if isinstance(src.get("flashProg"), list) else [0, 0, 0, 0]
+    fp_a = [int(x or 0) for x in (fp_a + [0, 0, 0, 0])[:4]]
+    fp_b = [int(x or 0) for x in (fp_b + [0, 0, 0, 0])[:4]]
+    fp_seen = max(fp_a[0], fp_b[0])
+    fp_done = max(fp_a[2], fp_b[2])
+    fp_upd = max(fp_a[3], fp_b[3])
+    fp_tgt = fp_b[1] if fp_b[3] >= fp_a[3] and fp_b[1] > 0 else (fp_a[1] or fp_b[1])
+    if fp_seen > 0 or fp_done > 0:
+        out["flashProg"] = [fp_seen, max(fp_seen, fp_tgt), fp_done, fp_upd]
     return out
 
 
@@ -306,6 +317,14 @@ def unpack_compact_ntfy(pkt: dict) -> dict | None:
         day["speeds"] = pkt["sp"]
     if isinstance(pkt.get("tw"), list):
         day["tappedWords"] = [str(x) for x in pkt["tw"] if x][:80]
+    if isinstance(pkt.get("fp"), list) and len(pkt["fp"]) >= 3:
+        fp = pkt["fp"]
+        day["flashProg"] = [
+            int(fp[0] or 0),
+            int(fp[1] or 0),
+            int(fp[2] or 0),
+            int(fp[3] if len(fp) >= 4 and fp[3] else (pkt.get("u") or 0)),
+        ]
     recs = []
     for item in pkt.get("l") or []:
         if isinstance(item, list) and len(item) >= 4:
@@ -366,6 +385,10 @@ def pack_compact_ntfy(state: dict, plan_date: str) -> dict:
         pkt["sp"] = day["speeds"]
     if day.get("tappedWords"):
         pkt["tw"] = list(day["tappedWords"])[-40:]
+    if isinstance(day.get("flashProg"), list):
+        fp = [int(x or 0) for x in (day["flashProg"] + [0, 0, 0, 0])[:4]]
+        if fp[0] > 0 or fp[2] > 0:
+            pkt["fp"] = fp
 
     def size(obj) -> int:
         return len(json.dumps(obj, ensure_ascii=False, separators=(",", ":")).encode("utf-8"))
@@ -533,6 +556,7 @@ def main():
         if int(gts or 0) > reset_at and int(gts or 0) >= int((day_summary.get("retestAt") or {}).get(pid) or 0)
     ]
     print(f"[sync] Ready for {plan_date}: effective_green={len(effective_greens)}, records_new={len(new_recs)}")
+    return len(new_recs)
 
 
 if __name__ == "__main__":

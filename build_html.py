@@ -535,6 +535,8 @@ if os.path.exists(cloud_snap_path):
 seeded_day = (cloud_snap.get("dates") or {}).get(plan_date_str) or {}
 seeded_overrides = cloud_snap.get("masteryOverrides") or {}
 
+vocab_base_done = sum(1 for it in vocab_items if it["tier"] == "done")
+
 payload = json.dumps({
     "plan_date": plan_date_str,
     "exam_date": "2026-12-06",
@@ -544,6 +546,7 @@ payload = json.dumps({
     "points": ordered_points,
     "words": rich_words,
     "mastery": mastery_data,
+    "vocab_base_done": vocab_base_done,
     "cloud_sync": {
         "ntfy_topic": cloud_cfg.get("ntfy_topic", ""),
         "seeded_day": seeded_day,
@@ -699,23 +702,34 @@ html = r"""<!DOCTYPE html>
     color: var(--moss);
   }
 
-  /* ================= 2. DUAL DAILY LOCK HORIZON (做题 + 随身听 -> 稳过 120) ================= */
+  /* ================= 2. THREE ZEN ENSO DAILY RITUALS (円相 · 无字打卡) ================= */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
   .zen-horizon {
     flex-shrink: 0;
-    padding: 13px 0 4px;
+    padding: 10px 0 9px;
+    border-bottom: 1px solid var(--hairline);
     cursor: pointer;
   }
   .horizon-meta {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 8px;
+    align-items: center;
     font-size: 13.5px;
     font-weight: 500;
     color: var(--ink-3);
     letter-spacing: 0.02em;
     font-variant-numeric: tabular-nums;
-    gap: 8px;
+    gap: 12px;
   }
   .horizon-meta b {
     font-weight: 600;
@@ -724,21 +738,44 @@ html = r"""<!DOCTYPE html>
   .horizon-meta b.moss {
     color: var(--moss);
   }
-  .horizon-track {
-    width: 100%;
-    height: 3px;
-    background: var(--track);
-    border-radius: 2px;
-    position: relative;
-    overflow: hidden;
+  .enso-trio {
+    display: flex;
+    align-items: center;
+    gap: 11px;
   }
-  .horizon-fill {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    background: var(--moss);
-    transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  .enso-btn {
+    width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    padding: 0;
+    transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease;
+  }
+  .enso-btn:active {
+    transform: scale(0.91);
+  }
+  .enso-svg {
+    width: 26px;
+    height: 26px;
+    display: block;
+    overflow: visible;
+  }
+  .enso-btn.is-done .enso-svg {
+    animation: ensoSettle 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @keyframes ensoSettle {
+    0% { transform: scale(0.88); opacity: 0.72; }
+    65% { transform: scale(1.04); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .horizon-score {
+    white-space: nowrap;
+    line-height: 1;
+  }
+  .horizon-track {
+    display: none;
   }
 
   /* ================= 3. OPEN WASHI STAGE (余白 MA) ================= */
@@ -1753,6 +1790,7 @@ html = r"""<!DOCTYPE html>
     margin-bottom: 18px;
   }
   .flash-tag.marked { color: var(--bengara); font-weight: 600; }
+  .flash-tag.mastered { color: var(--moss); font-weight: 600; }
   .flash-word {
     font-family: var(--serif-jp);
     font-size: 40px;
@@ -1820,7 +1858,7 @@ html = r"""<!DOCTYPE html>
   }
   .flash-mark-btn {
     height: 52px;
-    padding: 0 20px;
+    padding: 0 18px;
     border-radius: 8px;
     border: 1px solid rgba(158, 62, 54, 0.34);
     color: var(--bengara);
@@ -1832,15 +1870,29 @@ html = r"""<!DOCTYPE html>
     background: rgba(158, 62, 54, 0.09);
     border-color: var(--bengara);
   }
+  .flash-ok-btn {
+    height: 52px;
+    padding: 0 18px;
+    border-radius: 8px;
+    border: 1px solid rgba(43, 95, 73, 0.34);
+    color: var(--moss);
+    font-size: 15.5px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+  .flash-ok-btn.done-ok {
+    background: rgba(43, 95, 73, 0.10);
+    border-color: var(--moss);
+  }
   .flash-play-btn {
     flex: 1;
     height: 52px;
     border-radius: 8px;
     background: var(--sumi);
     color: var(--sheet);
-    font-size: 16px;
+    font-size: 15.5px;
     font-weight: 500;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
   }
   .flash-play-btn.paused {
     background: var(--sheet);
@@ -1862,11 +1914,12 @@ html = r"""<!DOCTYPE html>
     </nav>
   </header>
 
-  <!-- 2. DUAL DAILY LOCK HORIZON -->
+  <!-- 2. THREE ZEN ENSO DAILY RITUALS (円相 · 无字打卡) -->
   <div class="zen-horizon" id="green-board" onclick="openSessionModal()">
     <div class="horizon-meta">
-      <span id="gm-left-txt">做题 <b>0/50</b> · 听 <b>0/35分</b></span>
-      <span id="gm-right-txt">预计 <b>108分</b> · 冲120+</span>
+      <div class="enso-trio" id="enso-trio"></div>
+      <span class="sr-only" id="gm-left-txt"></span>
+      <span class="horizon-score" id="gm-right-txt">预计 <b>108分</b> · 冲120+</span>
     </div>
     <div class="horizon-track">
       <div class="horizon-fill" id="gm-fill" style="width:0%"></div>
@@ -2026,12 +2079,31 @@ function createFreshAdaptiveState() {
     hotFamily: null,
     radioMaxSec: 0,
     radioPos: [0, 0],
+    flashProg: [0, 0, 0, 0],
     pts: pts,
     tappedWords: [],
     masteryOverrides: {},
     masteryOverrideTs: {},
     recentRecords: []
   };
+}
+
+function mergeFlashProgTuple(st, fp) {
+  if (!Array.isArray(fp) || fp.length < 3) return false;
+  const cur = Array.isArray(st.flashProg) ? st.flashProg : [0, 0, 0, 0];
+  const sSeen = Math.max(0, Math.floor(fp[0] || 0));
+  const sTgt = Math.max(0, Math.floor(fp[1] || 0));
+  const sDone = Math.max(0, Math.floor(fp[2] || 0));
+  const sUpd = Math.max(0, Math.floor(fp[3] || 0));
+  const nSeen = Math.max(Math.floor(cur[0] || 0), sSeen);
+  const nDone = Math.max(Math.floor(cur[2] || 0), sDone);
+  const nUpd = Math.max(Math.floor(cur[3] || 0), sUpd);
+  let nTgt = (sUpd >= Math.floor(cur[3] || 0) && sTgt > 0) ? sTgt : (Math.floor(cur[1] || 0) || sTgt);
+  nTgt = Math.max(nSeen, nTgt);
+  const next = [nSeen, nTgt, nDone, nUpd];
+  if (String(next) === String(cur)) return false;
+  st.flashProg = next;
+  return true;
 }
 
 function recomputeStatusesFromCRDT(st) {
@@ -2095,6 +2167,7 @@ function loadAdaptiveState() {
     });
     if (Array.isArray(sd.cursor)) applyCursorTuple(base, sd.cursor);
     if (Array.isArray(sd.speeds)) applySpeedTuple(base, sd.speeds);
+    if (Array.isArray(sd.flashProg)) mergeFlashProgTuple(base, sd.flashProg);
     if (Array.isArray(sd.tappedWords)) {
       sd.tappedWords.forEach(w => {
         const ws = String(w || "").trim();
@@ -2140,6 +2213,7 @@ function loadAdaptiveState() {
           if (saved.hotFamily !== undefined) base.hotFamily = saved.hotFamily;
         }
         if (typeof saved.st === "number" && saved.st > (base.st || 0)) applySpeedTuple(base, [saved.es, saved.rs, saved.st]);
+        if (Array.isArray(saved.flashProg)) mergeFlashProgTuple(base, saved.flashProg);
         if (Array.isArray(saved.tappedWords)) {
           saved.tappedWords.forEach(w => {
             const ws = String(w || "").trim();
@@ -2330,6 +2404,41 @@ function setMasteryTier(key, tier, tsSec) {
   }
 }
 
+const SKIP_ENROLL_WORDS = new Set([
+  "では", "には", "から", "まで", "ので", "のだ", "だよ", "は", "が", "を", "に", "で", "と", "も", "の", "へ", "よ", "ね", "か",
+  "この", "その", "あの", "ここ", "そこ", "あそこ", "これ", "それ", "あれ", "どれ", "どちら",
+  "私", "僕", "彼", "彼女", "人", "今日", "明日", "昨日", "今", "もう", "また", "もっと", "だけ", "だから"
+]);
+const KNOWN_MASTERY_KEYS = new Set();
+Object.keys(DATA.mastery || {}).forEach(mod => {
+  (DATA.mastery[mod].items || []).forEach(it => {
+    if (it.key) KNOWN_MASTERY_KEYS.add(it.key);
+    if (it.name) KNOWN_MASTERY_KEYS.add(it.name);
+  });
+});
+
+function enrollDynamicVocabItem(w, defaultTier) {
+  if (!w || KNOWN_MASTERY_KEYS.has(w) || SKIP_ENROLL_WORDS.has(w)) return;
+  const info = DATA.words && DATA.words[w];
+  if (!info || !info.zh) return;
+  KNOWN_MASTERY_KEYS.add(w);
+  if (DATA.mastery && DATA.mastery.vocab && Array.isArray(DATA.mastery.vocab.items)) {
+    const tipParts = [];
+    if (info.head && info.head !== w) tipParts.push(`原形 ${info.head}`);
+    if (info.tip) tipParts.push(info.tip);
+    DATA.mastery.vocab.items.unshift({
+      key: w,
+      name: w,
+      sub: info.zh,
+      family: "今日查词",
+      tier: defaultTier || "todo",
+      point_id: "",
+      audio: info.audio || "",
+      note: tipParts.join(" · ")
+    });
+  }
+}
+
 function applyMasteryOverrides() {
   DATA.points.forEach(p => {
     const ps = A.pts[p.id];
@@ -2343,11 +2452,17 @@ function applyMasteryOverrides() {
     }
   });
   const ov = A.masteryOverrides || {};
+  (A.tappedWords || []).forEach(w => enrollDynamicVocabItem(w, ov[w] || "todo"));
+  Object.keys(ov).forEach(k => enrollDynamicVocabItem(k, ov[k]));
   Object.keys(DATA.mastery).forEach(mod => {
+    const c = { todo: 0, wip: 0, done: 0, total: 0 };
     DATA.mastery[mod].items.forEach(it => {
       const tier = ov[it.key] || ov[it.name];
       if (tier) it.tier = tier;
+      c[it.tier] = (c[it.tier] || 0) + 1;
+      c.total += 1;
     });
+    DATA.mastery[mod].counts = c;
   });
 }
 
@@ -2483,6 +2598,15 @@ function buildCompactPacket() {
     sentKeys.push(recKey(item));
     size += add;
   }
+  if (Array.isArray(A.flashProg) && (A.flashProg[0] > 0 || A.flashProg[2] > 0)) {
+    pkt.fp = [
+      Math.floor(A.flashProg[0] || 0),
+      Math.floor(A.flashProg[1] || 0),
+      Math.floor(A.flashProg[2] || 0),
+      Math.floor(A.flashProg[3] || 0)
+    ];
+    size += byteLen(JSON.stringify(pkt.fp)) + 7;
+  }
   if (Array.isArray(A.tappedWords) && A.tappedWords.length) {
     const twSlice = A.tappedWords.slice(-30);
     const twAdd = byteLen(JSON.stringify(twSlice)) + 7;
@@ -2513,6 +2637,7 @@ function packetFingerprint(pkt) {
     r: Math.floor(pkt.r || 0),
     m: Math.floor((pkt.m || 0) / 30),
     rp: pkt.rp || [0, 0],
+    fp: Array.isArray(pkt.fp) ? [Math.floor(pkt.fp[0] || 0), Math.floor(pkt.fp[1] || 0), Math.floor(pkt.fp[2] || 0)] : [],
     z: String(pkt.z || "").split(";").filter(Boolean).sort().join(";"),
     c: pkt.c || [],
     sp: pkt.sp || [],
@@ -2585,6 +2710,10 @@ function applyIncomingPacket(pkt) {
     const mIn = Math.floor(pkt.m || 0);
     if (mIn > (A.radioMaxSec || 0)) {
       A.radioMaxSec = mIn;
+      changed = true;
+    }
+
+    if (Array.isArray(pkt.fp) && mergeFlashProgTuple(A, pkt.fp)) {
       changed = true;
     }
 
@@ -2870,28 +2999,49 @@ function computeDaily120Metrics() {
   const totalCards = Math.max(1, DATA.points.length);
   const greenCnt = DATA.points.filter(p => A.pts[p.id] && A.pts[p.id].status === "green").length;
   const quizRatio = Math.min(1.0, greenCnt / totalCards);
+  const quizDone = greenCnt >= totalCards;
 
   const radioDur = Math.max(600, DATA.radio.duration_sec || 2100);
   const targetMins = Math.max(1, Math.round(radioDur / 60));
   const listenedSec = Math.min(radioDur, Math.max(0, A.radioMaxSec || 0));
   const listenedMins = Math.min(targetMins, Math.floor(listenedSec / 60));
   const radioRatio = Math.min(1.0, listenedSec / (radioDur * 0.92));
+  const radioDone = radioRatio >= 0.98;
 
-  // Combined daily completion: 60% from 50 daily questions + 40% from daily podcast
-  const dailyLockPct = Math.min(100, Math.round((quizRatio * 0.60 + radioRatio * 0.40) * 100));
+  const vItems = (DATA.mastery && DATA.mastery.vocab && DATA.mastery.vocab.items) ? DATA.mastery.vocab.items : [];
+  const liveFlashLeft = vItems.filter(it => it.tier !== "done").length;
+  const fp = Array.isArray(A.flashProg) ? A.flashProg : [0, 0, 0, 0];
+  const flashSeen = Math.max(0, Math.floor(fp[0] || 0));
+  const flashDone = (Math.floor(fp[2] || 0) > 0) || (liveFlashLeft === 0 && vItems.length > 0);
+  const flashTarget = flashDone
+    ? Math.max(flashSeen, Math.floor(fp[1] || 0) || liveFlashLeft)
+    : Math.max(flashSeen, Math.floor(fp[1] || 0) || liveFlashLeft || 1);
+  const flashRatio = flashDone ? 1.0 : (flashSeen > 0 ? Math.min(0.96, flashSeen / Math.max(1, flashTarget)) : 0);
 
-  // Realistic projected JLPT N3 total score (/180):
-  // Reading foundation + 27 mastered grammar points starts at 108 pts.
-  // Finishing today's 50 questions locks +14 pts; finishing today's podcast locks +10 pts -> 132 pts (comfortably >120!).
-  const projScore = Math.round(108 + quizRatio * 14 + radioRatio * 10);
+  const vDone = vItems.filter(it => it.tier === "done").length;
+  const vWip = vItems.filter(it => it.tier === "wip").length;
+  const vocabBonus = Math.min(8, Math.max(0, (vDone - 11) * 0.25 + Math.max(0, vWip - 33) * 0.06));
+
+  // Combined 3-ritual daily completion: 50% quiz + 32% podcast + 18% bedtime vocab
+  const dailyLockPct = Math.min(100, Math.round((quizRatio * 0.50 + radioRatio * 0.32 + flashRatio * 0.18) * 100));
+
+  // Projected JLPT N3 score (/180): 108 base + 12 quiz + 8 podcast + 4 bedtime flashcards + permanent vocab mastery lift
+  const projScore = Math.min(165, Math.round(108 + quizRatio * 12 + (radioDone ? 8 : radioRatio * 8) + flashRatio * 4 + vocabBonus));
 
   return {
     totalCards,
     greenCnt,
-    quizDone: greenCnt >= totalCards,
+    quizRatio,
+    quizDone,
     targetMins,
     listenedMins,
-    radioDone: radioRatio >= 0.98,
+    radioRatio: radioDone ? 1.0 : radioRatio,
+    radioDone,
+    flashSeen: flashDone ? Math.max(flashSeen, flashTarget) : flashSeen,
+    flashTarget,
+    flashRatio,
+    flashDone,
+    allThreeDone: quizDone && radioDone && flashDone,
     dailyLockPct,
     projScore
   };
@@ -3627,6 +3777,7 @@ function resetTodayMission() {
   const keepTapped = A.tappedWords || [];
   const keepRadio = A.radioMaxSec || 0;
   const keepRadioPos = A.radioPos || [0, 0];
+  const keepFlashProg = A.flashProg || [0, 0, 0, 0];
   const keepSt = A.st || 0;
   A = createFreshAdaptiveState();
   A.resetAt = stamp;
@@ -3635,6 +3786,7 @@ function resetTodayMission() {
   A.tappedWords = keepTapped;
   A.radioMaxSec = keepRadio;
   A.radioPos = keepRadioPos;
+  A.flashProg = keepFlashProg;
   A.es = expSpeed;
   A.rs = radioSpeed;
   A.st = keepSt;
@@ -3647,12 +3799,74 @@ function resetTodayMission() {
   renderTutor();
 }
 
+const ENSO_CURVE = "M 8.2 5.7 C 12.6 2.5, 19.3 3.2, 22.6 7.8 C 25.8 12.3, 24.8 19.1, 20.1 22.4 C 15.4 25.7, 8.6 24.6, 5.4 19.9 C 3.4 16.9, 3.4 12.8, 5.1 9.6";
+const ENSO_ROTS = [-8, 34, -46];
+let prevEnsoDoneKey = "";
+
+function renderEnsoRingSVG(idx, ratio, isDone) {
+  const rot = ENSO_ROTS[idx] || 0;
+  if (isDone) {
+    return `<svg class="enso-svg" viewBox="0 0 28 28" aria-hidden="true">
+      <g transform="rotate(${rot} 14 14)">
+        <circle cx="14.1" cy="14.1" r="9.3" fill="rgba(43, 95, 73, 0.11)"/>
+        <path d="${ENSO_CURVE}" pathLength="100" fill="none" stroke="var(--moss)" stroke-width="1.45" stroke-linecap="round" stroke-dasharray="99 105"/>
+        <path d="${ENSO_CURVE}" pathLength="100" fill="none" stroke="var(--moss)" stroke-width="2.65" stroke-linecap="round" stroke-dasharray="66 105"/>
+        <path d="${ENSO_CURVE}" pathLength="100" fill="none" stroke="var(--moss)" stroke-width="3.3" stroke-linecap="round" stroke-dasharray="22 105"/>
+      </g>
+    </svg>`;
+  }
+  if (ratio > 0.005) {
+    const drawLen = Math.max(8, Math.min(96, Math.round(ratio * 96)));
+    return `<svg class="enso-svg" viewBox="0 0 28 28" aria-hidden="true">
+      <g transform="rotate(${rot} 14 14)">
+        <path d="${ENSO_CURVE}" pathLength="100" fill="none" stroke="rgba(28, 27, 24, 0.14)" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="9.5 6.5"/>
+        <circle cx="8.2" cy="5.7" r="1.32" fill="var(--sumi)"/>
+        <path d="${ENSO_CURVE}" pathLength="100" fill="none" stroke="var(--sumi)" stroke-width="2.35" stroke-linecap="round" stroke-dasharray="${drawLen} 105"/>
+      </g>
+    </svg>`;
+  }
+  return `<svg class="enso-svg" viewBox="0 0 28 28" aria-hidden="true">
+    <g transform="rotate(${rot} 14 14)">
+      <path d="${ENSO_CURVE}" pathLength="100" fill="none" stroke="rgba(28, 27, 24, 0.20)" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="9.5 6.5"/>
+    </g>
+  </svg>`;
+}
+
+function onEnsoTap(idx, ev) {
+  if (ev) ev.stopPropagation();
+  if (idx === 0) {
+    if (activeMode !== "tutor") switchMode("tutor");
+    else openSessionModal();
+  } else if (idx === 1) {
+    if (activeMode !== "radio") switchMode("radio", false);
+    else openSessionModal();
+  } else {
+    openNightFlash();
+  }
+}
+
 function renderGreenBoard() {
   const m = computeDaily120Metrics();
 
-  const quizPart = m.quizDone ? `做题 <b class="moss">✓</b>` : `做题 <b>${m.greenCnt}/${m.totalCards}</b>`;
-  const radioPart = m.radioDone ? `随身听 <b class="moss">✓</b>` : `听 <b>${m.listenedMins}/${m.targetMins}分</b>`;
-  document.getElementById("gm-left-txt").innerHTML = `${quizPart} · ${radioPart}`;
+  const trioEl = document.getElementById("enso-trio");
+  if (trioEl) {
+    const doneKey = `${m.quizDone ? 1 : 0}${m.radioDone ? 1 : 0}${m.flashDone ? 1 : 0}`;
+    const rings = [
+      { ratio: m.quizRatio, done: m.quizDone, label: `做题 ${m.greenCnt}/${m.totalCards}` },
+      { ratio: m.radioRatio, done: m.radioDone, label: `随身听 ${m.listenedMins}/${m.targetMins}分` },
+      { ratio: m.flashRatio, done: m.flashDone, label: `睡前生词 ${m.flashDone ? "已完成" : m.flashSeen + "/" + m.flashTarget}` }
+    ];
+    trioEl.innerHTML = rings.map((r, idx) => {
+      const newlyDone = r.done && prevEnsoDoneKey && prevEnsoDoneKey[idx] === "0";
+      return `<button class="enso-btn${r.done ? " done" : ""}${newlyDone ? " is-done" : ""}" id="enso-${idx + 1}" onclick="onEnsoTap(${idx}, event)" aria-label="${escapeHtml(r.label)}" title="${escapeHtml(r.label)}">${renderEnsoRingSVG(idx, r.ratio, r.done)}</button>`;
+    }).join("");
+    prevEnsoDoneKey = doneKey;
+  }
+
+  const quizPart = m.quizDone ? `做题 ✓` : `做题 ${m.greenCnt}/${m.totalCards}`;
+  const radioPart = m.radioDone ? `随身听 ✓` : `听 ${m.listenedMins}/${m.targetMins}分`;
+  const flashPart = m.flashDone ? `生词 ✓` : `词 ${m.flashSeen}/${m.flashTarget}`;
+  document.getElementById("gm-left-txt").textContent = `${quizPart} · ${radioPart} · ${flashPart}`;
 
   if (m.projScore >= 120) {
     document.getElementById("gm-right-txt").innerHTML = `预计 <b class="moss">${m.projScore}分 · 稳过120</b>`;
@@ -3685,20 +3899,23 @@ function renderTutor() {
 
   if (viewStage === "done" || !curPointId) {
     const m = computeDaily120Metrics();
+    const nextBtn = !m.radioDone
+      ? `<button class="sumi-btn" onclick="switchMode('radio', true)">去听随身听</button>`
+      : (!m.flashDone
+          ? `<button class="sumi-btn" onclick="openNightFlash()">睡前过生词</button>`
+          : `<button class="sumi-btn" onclick="switchMode('dash')">查看总表</button>`);
     box.innerHTML = `
-      <div class="meta-bar"><span class="overline ok">${m.radioDone ? "双项圆满 · 稳过 120 分" : "五十道题已全部刷绿"}</span></div>
+      <div class="meta-bar"><span class="overline ok">${m.allThreeDone ? "今日三修圆满 · 稳过 120 分" : "五十道题已全部刷绿"}</span></div>
       <div class="focal-space">
-        <h2 class="point-heading">${m.radioDone ? "做题与随身听皆已完成" : "五十道题已全部过关"}</h2>
-        <p class="logic-line">${m.radioDone
-          ? `预计总分已稳稳锁在 ${m.projScore} 分。保持这一套做题加三人闲聊的节奏，考场上一定稳站 120 分以上。`
-          : `做题部分已拿满，当前预计 ${m.projScore} 分。再去把随身听顺完，就能直接锁死 132 分。`}</p>
+        <h2 class="point-heading">${m.allThreeDone ? "今日三样皆已圆满" : "五十道题已全部过关"}</h2>
+        <p class="logic-line">${m.allThreeDone
+          ? `做题、三人随身听与生词皆已收笔，预计总分稳锁在 ${m.projScore} 分。安心休息，考场稳站 120 分以上。`
+          : `做题部分已拿满，当前预计 ${m.projScore} 分。${!m.radioDone ? "顺手听完今日随身听，" : ""}睡前再过一遍生词，就能把三枚圆印全部收满。`}</p>
       </div>
       <div class="action-dock">
         <div class="dock-row">
           <button class="ghost-btn" onclick="resetTodayMission()">再来一轮</button>
-          ${m.radioDone
-            ? `<button class="sumi-btn" onclick="switchMode('dash')">查看总表</button>`
-            : `<button class="sumi-btn" onclick="switchMode('radio', true)">去听随身听 · 锁死120+</button>`}
+          ${nextBtn}
         </div>
       </div>
     `;
@@ -3933,6 +4150,8 @@ function recordTappedWord(surface) {
   if (!A.tappedWords.includes(surface)) {
     A.tappedWords.push(surface);
     if (A.tappedWords.length > 80) A.tappedWords = A.tappedWords.slice(-80);
+    applyMasteryOverrides();
+    renderGreenBoard();
     saveAdaptiveState();
     scheduleCloudPush(450);
   }
@@ -4071,6 +4290,7 @@ document.addEventListener("keydown", e => {
     else if (e.key === "ArrowRight" || e.key === "Enter") { e.preventDefault(); flashStepNext(true); }
     else if (e.key === "ArrowLeft") { e.preventDefault(); flashStepPrev(); }
     else if (e.key.toLowerCase() === "r" || e.key === "1") { e.preventDefault(); markFlashUnfamiliar(); }
+    else if (e.key.toLowerCase() === "m" || e.key === "2") { e.preventDefault(); markFlashMastered(); }
     return;
   }
   if (document.getElementById("app-modal").classList.contains("open")) {
@@ -4123,7 +4343,6 @@ function switchMode(m, autoPlayRadio) {
   document.getElementById("tab-radio").classList.toggle("active", m === "radio");
   document.getElementById("tab-dash").classList.toggle("active", m === "dash");
 
-  document.getElementById("green-board").style.display = (m === "dash") ? "none" : "block";
   document.getElementById("tutor-view").classList.toggle("hidden", m !== "tutor");
   document.getElementById("radio-view").classList.toggle("hidden", m !== "radio");
   document.getElementById("dash-view").classList.toggle("hidden", m !== "dash");
@@ -4174,10 +4393,13 @@ let flashDeck = [];
 let flashIdx = 0;
 let flashRevealed = false;
 let flashPlaying = true;
+let flashIsSubPass = false;
 let flashMarkedSet = new Set();
+let flashMasteredSet = new Set();
 let flashTimerA = null;
 let flashTimerB = null;
 let flashRunToken = 0;
+let lastFlashCloudPushMs = 0;
 
 function buildNightFlashDeck(onlyList) {
   if (Array.isArray(onlyList) && onlyList.length) return onlyList.slice();
@@ -4191,6 +4413,9 @@ function buildNightFlashDeck(onlyList) {
 
   function pushCard(surface, vItem, srcLabel) {
     if (!surface || seen.has(surface)) return;
+    if (vItem && vItem.tier === "done") return;
+    const ovTier = A.masteryOverrides && (A.masteryOverrides[surface] || (vItem && A.masteryOverrides[vItem.key]));
+    if (ovTier === "done") return;
     const w = DATA.words[surface] || {};
     const head = w.head || surface;
     if (srcLabel === "今日查过" && seenHead.has(head)) return;
@@ -4206,6 +4431,7 @@ function buildNightFlashDeck(onlyList) {
       word: surface,
       key: (vItem && vItem.key) || surface,
       pointId: (vItem && vItem.point_id) || "",
+      initTier: (vItem && vItem.tier) || "todo",
       kana: w.kana || "",
       pitch: w.pitch || "",
       zh: zh,
@@ -4223,6 +4449,42 @@ function buildNightFlashDeck(onlyList) {
   // 3) Consolidating vocab
   vItems.forEach(it => { if (it.tier === "wip") pushCard(it.name, it, "巩固"); });
   return deck;
+}
+
+function pushFlashRecord(card, choiceLabel, isOk, stampSec) {
+  const tsSec = stampSec || nowUnixSec();
+  const ptKey = card.key || card.word;
+  const rec = {
+    id: `FLASH-${ptKey}`,
+    point: ptKey,
+    choice: choiceLabel,
+    correct: isOk ? "true" : "false",
+    ask_again: "false",
+    ts: new Date(tsSec * 1000).toISOString()
+  };
+  if (!Array.isArray(A.recentRecords)) A.recentRecords = [];
+  A.recentRecords.push(rec);
+  if (A.recentRecords.length > 25) A.recentRecords = A.recentRecords.slice(-25);
+  const ob = loadOutbox();
+  ob.push([rec.id, rec.point, rec.choice, isOk ? 1 : 0, rec.ts]);
+  saveOutbox(ob);
+}
+
+function recordFlashProgress(seenCnt, totalCnt, markDoneNow) {
+  const stamp = nowUnixSec();
+  const cur = Array.isArray(A.flashProg) ? A.flashProg : [0, 0, 0, 0];
+  const nextSeen = Math.max(Math.floor(cur[0] || 0), Math.max(0, Math.floor(seenCnt || 0)));
+  const nextTgt = Math.max(nextSeen, Math.floor(totalCnt || 0) || Math.floor(cur[1] || 0));
+  const nextDone = markDoneNow ? Math.max(Math.floor(cur[2] || 0), stamp) : Math.floor(cur[2] || 0);
+  const changed = mergeFlashProgTuple(A, [nextSeen, nextTgt, nextDone, stamp]);
+  if (changed) {
+    saveAdaptiveState();
+    renderGreenBoard();
+    if (markDoneNow || Date.now() - lastFlashCloudPushMs > 12000) {
+      lastFlashCloudPushMs = Date.now();
+      scheduleCloudPush(markDoneNow ? 80 : 400);
+    }
+  }
 }
 
 function clearFlashTimers() {
@@ -4296,11 +4558,13 @@ function openNightFlash(customList) {
     radioPlayer.pause();
     syncRadioUI();
   }
+  flashIsSubPass = Array.isArray(customList) && customList.length > 0;
   flashDeck = buildNightFlashDeck(customList);
   flashIdx = 0;
   flashRevealed = false;
   flashPlaying = true;
   flashMarkedSet = new Set();
+  flashMasteredSet = new Set();
   flashOpen = true;
   document.getElementById("flash-modal").classList.add("open");
   runFlashCardAt(0);
@@ -4314,6 +4578,9 @@ function closeNightFlash() {
   wordPlayer.onended = null;
   wordPlayer.onerror = null;
   document.getElementById("flash-modal").classList.remove("open");
+  saveAdaptiveState();
+  renderGreenBoard();
+  scheduleCloudPush(120);
   if (activeMode === "dash") renderDashboard();
 }
 
@@ -4330,6 +4597,9 @@ function runFlashCardAt(idx) {
   }
   flashIdx = Math.max(0, idx);
   flashRevealed = false;
+  if (!flashIsSubPass) {
+    recordFlashProgress(flashIdx + 1, flashDeck.length, false);
+  }
   renderFlashStage();
 
   const card = flashDeck[flashIdx];
@@ -4358,9 +4628,17 @@ function renderFlashStage() {
   const total = flashDeck.length;
   const pct = (((flashIdx + 1) / Math.max(1, total)) * 100).toFixed(1);
   const marked = flashMarkedSet.has(card.word);
+  const mastered = flashMasteredSet.has(card.word);
   const kanaPart = (card.kana && card.kana !== card.word)
     ? `${card.kana}${card.pitch ? " " + card.pitch : ""}`
     : (card.pitch ? card.pitch : "");
+  const tagCls = marked ? "marked" : (mastered ? "mastered" : "");
+  const tagTxt = marked ? "已记入待练" : (mastered ? "已移入已会" : "先听发音 · 想一下意思");
+  let cleanTip = String(card.tip || "").trim();
+  if (cleanTip && card.zh && cleanTip.startsWith(card.zh)) {
+    cleanTip = cleanTip.slice(card.zh.length).replace(/^[·\s]+/, "").trim();
+  }
+  if (cleanTip === card.zh) cleanTip = "";
 
   shell.innerHTML = `
     <div class="flash-top">
@@ -4373,12 +4651,12 @@ function renderFlashStage() {
     <div class="flash-track"><div class="flash-fill" style="width:${pct}%"></div></div>
 
     <div class="flash-stage" onclick="onFlashCardTap()">
-      <div class="flash-tag ${marked ? 'marked' : ''}" id="flash-tag-line">${marked ? "已记入待练" : "先听发音 · 想一下意思"}</div>
+      <div class="flash-tag ${tagCls}" id="flash-tag-line">${tagTxt}</div>
       <div class="flash-word">${escapeHtml(card.word)}</div>
       <div class="flash-back ${flashRevealed ? 'shown' : ''}" id="flash-back-box">
         ${kanaPart ? `<div class="flash-kana">${escapeHtml(kanaPart)}</div>` : ""}
         <div class="flash-zh">${escapeHtml(card.zh)}</div>
-        ${card.tip ? `<div class="flash-tip">${escapeHtml(card.tip)}</div>` : ""}
+        ${cleanTip ? `<div class="flash-tip">${escapeHtml(cleanTip)}</div>` : ""}
       </div>
       <div class="flash-hint" id="flash-tap-hint">${flashRevealed ? "点卡片重听" : "点一下直接看中文"}</div>
     </div>
@@ -4386,7 +4664,8 @@ function renderFlashStage() {
     <div class="flash-dock">
       <div class="dock-row">
         <button class="flash-mark-btn ${marked ? 'done-mark' : ''}" id="flash-mark-btn" onclick="markFlashUnfamiliar()">${marked ? "已标不熟" : "不熟"}</button>
-        <button class="flash-play-btn ${flashPlaying ? '' : 'paused'}" id="flash-play-btn" onclick="toggleFlashPlay()">${flashPlaying ? "暂停自动播" : "继续自动播"}</button>
+        <button class="flash-play-btn ${flashPlaying ? '' : 'paused'}" id="flash-play-btn" onclick="toggleFlashPlay()">${flashPlaying ? "暂停自动" : "继续自动"}</button>
+        <button class="flash-ok-btn ${mastered ? 'done-ok' : ''}" id="flash-ok-btn" onclick="markFlashMastered()">${mastered ? "已标已熟" : "已熟"}</button>
       </div>
       <div class="flash-SubRow">
         <button class="flash-nav-btn" onclick="flashStepPrev()" ${flashIdx === 0 ? "style='opacity:0.32;pointer-events:none'" : ""}>上一个</button>
@@ -4396,23 +4675,50 @@ function renderFlashStage() {
   `;
 }
 
+function completeFlashSession() {
+  const stamp = nowUnixSec();
+  let promoted = 0;
+  flashDeck.forEach(card => {
+    if (flashMarkedSet.has(card.word) || flashMasteredSet.has(card.word)) return;
+    const curOv = A.masteryOverrides && (A.masteryOverrides[card.key] || A.masteryOverrides[card.word]);
+    const effTier = curOv || card.initTier || "todo";
+    if (effTier === "todo") {
+      setMasteryTier(card.key, "wip", stamp);
+      setMasteryTier(card.word, "wip", stamp);
+      if (promoted < 12) pushFlashRecord(card, "闪卡:顺过", true, stamp);
+      promoted += 1;
+    }
+  });
+  applyMasteryOverrides();
+  recordFlashProgress(flashDeck.length, flashDeck.length, true);
+  saveAdaptiveState();
+  renderGreenBoard();
+  scheduleCloudPush(80);
+}
+
 function renderFlashFinished() {
+  completeFlashSession();
   const shell = document.getElementById("flash-shell");
   const markedCards = flashDeck.filter(c => flashMarkedSet.has(c.word));
+  const masteredCnt = flashDeck.filter(c => flashMasteredSet.has(c.word)).length;
+  let noteLine = "这一轮都很顺，今日生词圆印已收笔，安心休息吧。";
+  if (markedCards.length) {
+    noteLine = `标了 ${markedCards.length} 个不熟词（已归入待练）${masteredCnt ? `，移出 ${masteredCnt} 个已熟词` : ""}。要不要把这 ${markedCards.length} 个再顺一遍？`;
+  } else if (masteredCnt) {
+    noteLine = `已把 ${masteredCnt} 个熟词移入已会，今日生词圆印已收笔，安心休息吧。`;
+  }
   shell.innerHTML = `
     <div class="flash-top">
-      <span class="flash-prog">已完成 ${flashDeck.length} 个词</span>
+      <span class="flash-prog">${flashDeck.length ? `已完成 ${flashDeck.length} 个词` : "生词已全部移入已会"}</span>
       <div class="flash-top-acts">
         <button class="text-btn" onclick="closeNightFlash()">收起</button>
       </div>
     </div>
     <div class="flash-track"><div class="flash-fill" style="width:100%"></div></div>
     <div class="flash-stage" style="cursor:default">
-      <div class="flash-word" style="font-size:28px">今晚过完啦</div>
+      <div class="flash-word" style="font-size:28px">${flashDeck.length ? "今晚过完啦" : "全部已熟"}</div>
       <div class="flash-back shown" style="min-height:0;margin-top:16px">
-        <div class="flash-tip" style="font-size:16px;color:var(--ink-2)">${markedCards.length
-          ? `标了 ${markedCards.length} 个不熟的词，已经放进待练。要不要只把这 ${markedCards.length} 个再顺一遍？`
-          : "这一轮都很顺，安心休息吧。"}</div>
+        <div class="flash-tip" style="font-size:16px;color:var(--ink-2)">${escapeHtml(noteLine)}</div>
       </div>
     </div>
     <div class="flash-dock">
@@ -4420,8 +4726,10 @@ function renderFlashFinished() {
         ${markedCards.length
           ? `<button class="ghost-btn" onclick="closeNightFlash()">休息了</button>
              <button class="sumi-btn" onclick="replayMarkedFlash()">只过这 ${markedCards.length} 个不熟词</button>`
-          : `<button class="ghost-btn" onclick="openNightFlash()">再来一遍</button>
-             <button class="sumi-btn" onclick="closeNightFlash()">安心休息</button>`}
+          : (flashDeck.length
+              ? `<button class="ghost-btn" onclick="openNightFlash()">再来一遍</button>
+                 <button class="sumi-btn" onclick="closeNightFlash()">安心休息</button>`
+              : `<button class="sumi-btn" onclick="closeNightFlash()">返回</button>`)}
       </div>
     </div>
   `;
@@ -4469,14 +4777,16 @@ function toggleFlashPlay() {
   flashPlaying = !flashPlaying;
   const btn = document.getElementById("flash-play-btn");
   if (btn) {
-    btn.textContent = flashPlaying ? "暂停自动播" : "继续自动播";
+    btn.textContent = flashPlaying ? "暂停自动" : "继续自动";
     btn.classList.toggle("paused", !flashPlaying);
   }
   if (!flashPlaying) {
     clearFlashTimers();
     flashRevealed = true;
     const backEl = document.getElementById("flash-back-box");
+    const hintEl = document.getElementById("flash-tap-hint");
     if (backEl) backEl.classList.add("shown");
+    if (hintEl) hintEl.textContent = "点卡片重听";
   } else {
     if (flashRevealed) {
       clearFlashTimers();
@@ -4501,6 +4811,7 @@ function markFlashUnfamiliar() {
   const card = flashDeck[flashIdx];
   if (!card) return;
   flashMarkedSet.add(card.word);
+  flashMasteredSet.delete(card.word);
   const stamp = nowUnixSec();
   setMasteryTier(card.key, "todo", stamp);
   setMasteryTier(card.word, "todo", stamp);
@@ -4511,10 +4822,11 @@ function markFlashUnfamiliar() {
     ps.dueStep = A.step + 2;
     recomputeStatusesFromCRDT(A);
   }
+  pushFlashRecord(card, "闪卡:不熟", false, stamp);
   applyMasteryOverrides();
   saveAdaptiveState();
   renderGreenBoard();
-  scheduleCloudPush(120);
+  scheduleCloudPush(100);
 
   // Reveal meaning immediately and give extra reading time + replay pronunciation once
   clearFlashTimers();
@@ -4522,9 +4834,11 @@ function markFlashUnfamiliar() {
   const backEl = document.getElementById("flash-back-box");
   const tagEl = document.getElementById("flash-tag-line");
   const markBtn = document.getElementById("flash-mark-btn");
+  const okBtn = document.getElementById("flash-ok-btn");
   if (backEl) backEl.classList.add("shown");
-  if (tagEl) { tagEl.textContent = "已记入待练"; tagEl.classList.add("marked"); }
+  if (tagEl) { tagEl.textContent = "已记入待练"; tagEl.className = "flash-tag marked"; }
   if (markBtn) { markBtn.textContent = "已标不熟"; markBtn.classList.add("done-mark"); }
+  if (okBtn) { okBtn.textContent = "已熟"; okBtn.classList.remove("done-ok"); }
   speakFlashCard(card, () => {
     if (flashOpen && flashPlaying) {
       flashTimerB = setTimeout(() => {
@@ -4532,6 +4846,42 @@ function markFlashUnfamiliar() {
       }, 2200);
     }
   });
+}
+
+function markFlashMastered() {
+  const card = flashDeck[flashIdx];
+  if (!card) return;
+  flashMasteredSet.add(card.word);
+  flashMarkedSet.delete(card.word);
+  const stamp = nowUnixSec();
+  setMasteryTier(card.key, "done", stamp);
+  setMasteryTier(card.word, "done", stamp);
+  if (card.pointId && A.pts[card.pointId]) {
+    const ps = A.pts[card.pointId];
+    ps.greenAt = Math.max(ps.greenAt || 0, stamp, (ps.retestAt || 0) + 1);
+    recomputeStatusesFromCRDT(A);
+  }
+  pushFlashRecord(card, "闪卡:已熟", true, stamp);
+  applyMasteryOverrides();
+  saveAdaptiveState();
+  renderGreenBoard();
+  scheduleCloudPush(80);
+
+  clearFlashTimers();
+  stopFlashSpeech();
+  flashRunToken++;
+  const myToken = flashRunToken;
+  const tagEl = document.getElementById("flash-tag-line");
+  const okBtn = document.getElementById("flash-ok-btn");
+  const markBtn = document.getElementById("flash-mark-btn");
+  if (tagEl) { tagEl.textContent = "已移入已会"; tagEl.className = "flash-tag mastered"; }
+  if (okBtn) { okBtn.textContent = "已标已熟"; okBtn.classList.add("done-ok"); }
+  if (markBtn) { markBtn.textContent = "不熟"; markBtn.classList.remove("done-mark"); }
+  flashTimerB = setTimeout(() => {
+    if (flashOpen && flashRunToken === myToken) {
+      runFlashCardAt(flashIdx + 1);
+    }
+  }, 340);
 }
 
 // Swipe left/right inside flashcard modal (isolated here, never touches tabs)
@@ -4580,19 +4930,27 @@ function renderDashboard() {
     `;
   }).join("");
 
+  const dm = computeDaily120Metrics();
   const deckPreview = buildNightFlashDeck();
   const tappedCnt = deckPreview.filter(c => c.source === "今日查过").length;
   const entryEl = document.getElementById("night-flash-entry");
   if (entryEl) {
-    entryEl.innerHTML = deckPreview.length ? `
-      <div class="night-bar">
-        <div class="night-bar-txt">
-          <div class="night-bar-title">睡前过生词</div>
-          <div class="night-bar-sub">${deckPreview.length} 个词${tappedCnt ? ` · 含今日查过 ${tappedCnt} 个` : " · 自动发音翻面"}</div>
+    if (deckPreview.length) {
+      const subTxt = dm.flashDone
+        ? `今日已完成 · 余 ${deckPreview.length} 词`
+        : `共 ${deckPreview.length} 词${tappedCnt ? ` · 含查词 ${tappedCnt}` : " · 自动发音翻面"}`;
+      entryEl.innerHTML = `
+        <div class="night-bar">
+          <div class="night-bar-txt">
+            <div class="night-bar-title">睡前过生词</div>
+            <div class="night-bar-sub">${subTxt}</div>
+          </div>
+          <button class="night-go-btn" onclick="openNightFlash()">${dm.flashDone ? "再过" : "开始"}</button>
         </div>
-        <button class="night-go-btn" onclick="openNightFlash()">开始</button>
-      </div>
-    ` : "";
+      `;
+    } else {
+      entryEl.innerHTML = "";
+    }
   }
 
   const curCounts = DATA.mastery[dashMod].counts;
@@ -4675,6 +5033,8 @@ function manualCloudSync(btnEl) {
     if (cntEl) cntEl.textContent = `${m.greenCnt} / ${m.totalCards} 题`;
     const minEl = document.getElementById("modal-radio-min");
     if (minEl) minEl.textContent = `${m.listenedMins} / ${m.targetMins} 分钟`;
+    const flEl = document.getElementById("modal-flash-cnt");
+    if (flEl) flEl.textContent = m.flashDone ? "今日已完成" : `${m.flashSeen} / ${m.flashTarget} 词`;
     const scEl = document.getElementById("modal-proj-score");
     if (scEl) scEl.textContent = `${m.projScore} / 180 分`;
   });
@@ -4683,14 +5043,14 @@ function manualCloudSync(btnEl) {
 function openSessionModal() {
   const m = computeDaily120Metrics();
   document.getElementById("modal-content").innerHTML = `
-    <h3 class="modal-h">120+ 锁定进度</h3>
+    <h3 class="modal-h">今日三修 · 120+ 进度</h3>
     <p class="modal-body">
-      做题进度　　<strong id="modal-green-cnt">${m.greenCnt} / ${m.totalCards} 题</strong><br/>
-      随身听　　　<strong id="modal-radio-min">${m.listenedMins} / ${m.targetMins} 分钟</strong><br/>
-      当前预计分　<strong id="modal-proj-score">${m.projScore} / 180 分</strong><br/>
-      双项完成后　<strong>132 分（稳过 120 分线）</strong>
+      ① 做题　　　<strong id="modal-green-cnt">${m.greenCnt} / ${m.totalCards} 题</strong><br/>
+      ② 随身听　　<strong id="modal-radio-min">${m.listenedMins} / ${m.targetMins} 分钟</strong><br/>
+      ③ 睡前生词　<strong id="modal-flash-cnt">${m.flashDone ? "今日已完成" : `${m.flashSeen} / ${m.flashTarget} 词`}</strong><br/>
+      当前预计分　<strong id="modal-proj-score">${m.projScore} / 180 分</strong>
     </p>
-    <p class="modal-promise">做完 50 道题、听完一期三人圆桌随身听，考场上一定稳站 120 分以上。</p>
+    <p class="modal-promise">三枚圆印分别对应做题、随身听与睡前生词，全部汇总进你的整体水平。</p>
     <div class="sync-box">
       <p class="sync-note" id="cloud-sync-status-line">正在对齐云端进度…</p>
       <button class="sync-btn" onclick="manualCloudSync(this)">立即对齐多端进度</button>
