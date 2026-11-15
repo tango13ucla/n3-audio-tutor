@@ -388,17 +388,21 @@ def expand_turn_events(spk: str, val) -> list:
             ks = re.sub(r"\s+", "", pt.strip())
             if not ks:
                 continue
-            if out:
-                out.append(("PAUSE", round(max(pending_pause, 0.20), 2)))
             ended_punct = ks[-1] in "。！？"
+            is_short_inline = (not ended_punct) and len(ks) <= 10
+            if out:
+                min_pre = 0.11 if is_short_inline else 0.20
+                out.append(("PAUSE", round(max(pending_pause, min_pre), 2)))
             ja_utterance = ks if ended_punct else (ks + "。")
             out.append((ja_spk, ja_utterance))
             if ended_punct and len(ks) >= 7:
-                pending_pause = 0.52
+                pending_pause = 0.48
             elif ended_punct:
-                pending_pause = 0.32
+                pending_pause = 0.28
+            elif is_short_inline:
+                pending_pause = 0.12
             else:
-                pending_pause = 0.22
+                pending_pause = 0.18
         else:
             lead_m = re.match(r"^[\s』」）]*([。！？；，、：…]+)[\s『「（]*", pt)
             if lead_m:
@@ -406,9 +410,9 @@ def expand_turn_events(spk: str, val) -> list:
                 if "…" in pchars:
                     pending_pause = max(pending_pause, 0.36)
                 elif any(c in pchars for c in "。！？；"):
-                    pending_pause = max(pending_pause, 0.32)
+                    pending_pause = max(pending_pause, 0.30)
                 else:
-                    pending_pause = max(pending_pause, 0.18)
+                    pending_pause = max(pending_pause, 0.15)
                 pt = pt[lead_m.end() :]
             pt_s = pt.strip()
             if not pt_s or not re.search(r"[\w\u3040-\u9fff]", pt_s):
@@ -417,7 +421,7 @@ def expand_turn_events(spk: str, val) -> list:
             if not zh_evs:
                 continue
             if out:
-                out.append(("PAUSE", round(max(pending_pause, 0.16), 2)))
+                out.append(("PAUSE", round(max(pending_pause, 0.13), 2)))
             out.extend(zh_evs)
             last_txt = str(zh_evs[-1][1])
             if pt_s.endswith("…"):
@@ -425,9 +429,9 @@ def expand_turn_events(spk: str, val) -> list:
             elif last_txt[-1] in "。！？；":
                 pending_pause = 0.24
             elif last_txt[-1] in "，、：":
-                pending_pause = 0.18
-            else:
                 pending_pause = 0.16
+            else:
+                pending_pause = 0.11
     return out if out else [(f"{spk}_MID", txt)]
 
 
@@ -673,7 +677,7 @@ async def main():
         nb["events"] = expanded_evs
         blocks.append(nb)
 
-    sig_payload = f"v23_qq3_prosody:{engine_tag}:" + json.dumps(voice_map, sort_keys=True) + json.dumps(blocks, ensure_ascii=False)
+    sig_payload = f"v24_qq3_bespoke:{engine_tag}:" + json.dumps(voice_map, sort_keys=True) + json.dumps(blocks, ensure_ascii=False)
     script_sig = hashlib.sha256(sig_payload.encode("utf-8")).hexdigest()[:14]
     if os.path.exists(RADIO_MP3_PATH) and os.path.exists(RADIO_META_PATH):
         try:
@@ -684,7 +688,7 @@ async def main():
         except Exception:
             pass
 
-    tmpdir = tempfile.mkdtemp(prefix="n3_radio_v23_")
+    tmpdir = tempfile.mkdtemp(prefix="n3_radio_v24_")
     try:
         pause_durations = sorted({round(float(val), 2) for b in blocks for k, val in b["events"] if k == "PAUSE"})
         silence_files = {}
