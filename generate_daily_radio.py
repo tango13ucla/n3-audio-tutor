@@ -17,6 +17,7 @@ Key Design:
    - Pulls live mastery + recent misses & "不确定" clicks from `practice_log.jsonl`, while rotating
      against `audio/radio_history.json` so consecutive mornings serve fresh stories from the 12-story bank.
 """
+from __future__ import annotations
 import asyncio
 import concurrent.futures
 import datetime

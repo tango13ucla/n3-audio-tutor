@@ -12,6 +12,7 @@ Honest Mastery Rule (Zero Fake Green):
 - Stage 3/3 ("done" -> green, streak=3): Passed cleanly across 3 distinct study dates (or explicitly sealed as 太熟).
 Same-day repeat passes NEVER advance more than +1 step per study date!
 """
+from __future__ import annotations
 import datetime
 import json
 import os

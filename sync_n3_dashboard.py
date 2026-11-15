@@ -4,6 +4,7 @@
 N3 Live Dashboard Data Compiler & Static App Generator
 Reads latest Google Drive N3 snapshots/ledgers and compiles 100% point-level live mastery state.
 """
+from __future__ import annotations
 import json, os, re, datetime
 from collections import Counter
 

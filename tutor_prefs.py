@@ -12,6 +12,7 @@ the calendar is never consulted, exam prep first). It only contains learning kno
   - ui:           {"orientation": "portrait" | "any"}
 Missing / malformed file => safe defaults (behaviour identical to before).
 """
+from __future__ import annotations
 import datetime
 import json
 import os

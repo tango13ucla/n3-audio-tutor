@@ -10,6 +10,7 @@ Aesthetic Philosophy: 禅 (Zen) · 余白 (Ma) · 新潮文庫級組版 (Optimal
 - 《锵锵三人行》 3-host cultural salon podcast starting directly at 00:00 with zero date or countdown clutter.
 - Local storage historical union-merge + 1-tap cross-device sync link (#sync=...).
 """
+from __future__ import annotations
 import glob
 import hashlib
 import json

@@ -11,6 +11,7 @@ Synthesizes & stitches Studio Human-Teacher Neural TTS MP3 files (generate_neura
   sentence to Kana via `pykakasi` + N3 reading overrides so ONE human voice reads both the Japanese
   sentence and the Chinese+Japanese explanation with zero "tape-recorder" voice jumps!
 """
+from __future__ import annotations
 import asyncio
 import concurrent.futures
 import hashlib

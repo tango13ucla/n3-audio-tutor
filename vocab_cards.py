@@ -12,6 +12,7 @@ Cognitive Science Design:
    - Front: Native Japanese word+chunk audio + visual micro-chunk -> forces mental meaning recall.
    - Reveal: Crisp Mandarin meaning + twin contrast note.
 """
+from __future__ import annotations
 import re
 
 HAS_KANJI_RE = re.compile(r"[\u4e00-\u9fff]")

@@ -8,6 +8,7 @@ Cloud Multi-Platform Progress Sync Engine (Zero-PII CRDT over ntfy + Git Snapsho
   merges via LWW-Element-Set CRDT with practice_log.jsonl & cloud_state_snapshot.json,
   appends newly answered records to practice_log.jsonl, and publishes unified state if changed.
 """
+from __future__ import annotations
 import glob
 import hashlib
 import json
