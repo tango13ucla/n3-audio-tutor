@@ -55,3 +55,11 @@
 {"id": "VAR-G10", "point": "〜はずだ", "choice": "はずがない", "correct": "true", "ask_again": "false", "ts": "2026-11-15T04:32:09.000Z"}
 {"id": "VAR-G06", "point": "〜にしては", "choice": "にとって", "correct": "false", "ask_again": "false", "ts": "2026-11-15T04:33:28.000Z"}
 {"id": "VAR-L01", "point": "N3L-015", "choice": "不确定", "correct": "false", "ask_again": "false", "ts": "2026-11-15T04:35:06.000Z"}
+{"id": "VAR-L01", "point": "N3L-015", "choice": "昨日もう払ったよ。", "correct": "false", "ask_again": "false", "ts": "2026-11-15T04:45:40.000Z"}
+{"id": "VAR-L01", "point": "N3L-015", "choice": "昨日もう払ったよ。", "correct": "false", "ask_again": "false", "ts": "2026-11-15T04:47:10.000Z"}
+{"id": "V-20261114-03", "point": "内緒", "choice": "ないしょ", "correct": "true", "ask_again": "false", "ts": "2026-11-15T04:47:54.000Z"}
+{"id": "VAR-L04", "point": "N3L-007", "choice": "不确定", "correct": "false", "ask_again": "false", "ts": "2026-11-15T04:48:11.000Z"}
+{"id": "N3-G17", "point": "〜どころか", "choice": "どころか", "correct": "true", "ask_again": "false", "ts": "2026-11-15T04:48:41.000Z"}
+{"id": "VAR-G05", "point": "〜にしたがって", "choice": "にしたがって", "correct": "false", "ask_again": "false", "ts": "2026-11-15T04:49:04.000Z"}
+{"id": "V-20261114-07", "point": "つい", "choice": "つい", "correct": "true", "ask_again": "false", "ts": "2026-11-15T04:50:21.000Z"}
+{"id": "VAR-V11", "point": "こっそり", "choice": "不确定", "correct": "false", "ask_again": "false", "ts": "2026-11-15T04:50:34.000Z"}
