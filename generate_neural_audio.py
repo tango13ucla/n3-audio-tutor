@@ -594,10 +594,25 @@ async def main():
     await asyncio.gather(*(process_word(surf, info) for surf, info in merged_words.items()))
 
     # Studio Bilingual Dual-Mode Vocab Cards (Japanese word+chunk + warm Mandarin meaning)
+    from vocab_cards import build_dynamic_vocab_card
+    vc_all_cards = dict(VOCAB_CARDS)
+    for vw, vinfo in merged_words.items():
+        if vw not in vc_all_cards and os.path.exists(live_path):
+            pass
+    if os.path.exists(live_path):
+        try:
+            with open(live_path, encoding="utf-8") as lf:
+                for vp in json.load(lf).get("vocab_tracked", []):
+                    vw = vp.get("word", "")
+                    if vw and vw not in vc_all_cards:
+                        vc_all_cards[vw] = build_dynamic_vocab_card(vw, merged_words.get(vw, {}))
+        except Exception:
+            pass
+
     vc_jobs = {}
     vc_specs = {}
     vc_tag = "edge:Brian_v19"
-    for vw, vc in VOCAB_CARDS.items():
+    for vw, vc in vc_all_cards.items():
         vc_id = hashlib.sha256(vw.encode("utf-8")).hexdigest()[:10]
         mode = vc.get("mode", "kana_meaning")
         ja_s = str(vc.get("ja_speak") or vw).strip()

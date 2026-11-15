@@ -165,9 +165,9 @@ def load_mastery_priority(state: dict, recent_wrong_keys: set, hot_wrong_keys: s
     return scores
 
 
-def load_previous_day_stories(today_str: str) -> tuple[set, set]:
+def load_previous_day_stories(today_str: str) -> tuple[set, set, set]:
     if not os.path.exists(RADIO_HISTORY_PATH):
-        return set(), set()
+        return set(), set(), set()
     try:
         with open(RADIO_HISTORY_PATH, encoding="utf-8") as f:
             hist = json.load(f)
@@ -175,9 +175,10 @@ def load_previous_day_stories(today_str: str) -> tuple[set, set]:
         prior_dates = sorted(d for d in by_date.keys() if d < today_str)
         prev_1 = set(by_date.get(prior_dates[-1]) or []) if len(prior_dates) >= 1 else set()
         prev_2 = set(by_date.get(prior_dates[-2]) or []) if len(prior_dates) >= 2 else set()
-        return prev_1, prev_2
+        prev_3 = set(by_date.get(prior_dates[-3]) or []) if len(prior_dates) >= 3 else set()
+        return prev_1, prev_2, prev_3
     except Exception:
-        return set(), set()
+        return set(), set(), set()
 
 
 def save_today_stories(today_str: str, story_ids: list) -> None:
@@ -631,7 +632,7 @@ async def main():
 
     recent_wrong, hot_wrong = load_recent_mistakes()
     scores = load_mastery_priority(state, recent_wrong, hot_wrong)
-    yesterday_stories, two_days_ago_stories = load_previous_day_stories(today_str)
+    prev_1, prev_2, prev_3 = load_previous_day_stories(today_str)
     rng = random.Random(today_str)
 
     _rp = tutor_prefs.radio_prefs()
@@ -639,16 +640,17 @@ async def main():
 
     def story_rank(st: dict) -> float:
         pids = st.get("point_ids") or []
+        pkeys = [resolve_point_key(pid) for pid in pids]
         pt_vals = sorted((scores.get(pid, 2.2) for pid in pids), reverse=True)
         top_avg = sum(pt_vals[:3]) / max(1, len(pt_vals[:3])) if pt_vals else 2.2
         repeat_penalty = (
-            3.5 if st["id"] in yesterday_stories
-            else (1.2 if st["id"] in two_days_ago_stories else 0.0)
+            4.5 if st["id"] in prev_1
+            else (2.5 if st["id"] in prev_2 else (1.2 if st["id"] in prev_3 else 0.0))
         )
         memory_bonus = 0.0
         if st["id"] in _rp["avoid_story_ids"]:
             memory_bonus -= 9.0
-        if _focus and any(pid in _focus for pid in pids):
+        if _focus and any((pid in _focus or pk in _focus) for pid, pk in zip(pids, pkeys)):
             memory_bonus += 0.8
         blob = f'{st.get("title", "")} {" ".join(st.get("tags", []) or [])}'
         if any(tag and tag in blob for tag in _rp["prefer_tags"]):

@@ -1037,3 +1037,8 @@ CARDS_75 = {
         ],
     },
 }
+
+from weak_explanations_bank import NEW_CARDS_AUDIO
+
+CARDS_75.update(NEW_CARDS_AUDIO)
+

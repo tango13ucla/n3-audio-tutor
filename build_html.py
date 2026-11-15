@@ -507,7 +507,65 @@ for ext in EXTRA_PRIMARY_CARDS:
         "variants": variants_by_base.get(qid, []),
     })
 
-raw_points.sort(key=lambda x: (-x["roi_score"], -x["exam_weight"], x["id"]))
+plan_date_str = (
+    live_state.get("study_date")
+    or radio_meta.get("date")
+    or live_state.get("updated_at", plan.get("plan_date", "2026-11-15"))[:10]
+)
+MIN_REAL_TS = 1_700_000_000
+cloud_cfg_path = os.path.join(BASE_DIR, "cloud_sync_config.json")
+cloud_snap_path = os.path.join(BASE_DIR, "cloud_state_snapshot.json")
+cloud_cfg = {}
+if os.path.exists(cloud_cfg_path):
+    try:
+        with open(cloud_cfg_path, encoding="utf-8") as f:
+            cloud_cfg = json.load(f)
+    except Exception:
+        pass
+cloud_snap = {}
+if os.path.exists(cloud_snap_path):
+    try:
+        with open(cloud_snap_path, encoding="utf-8") as f:
+            cloud_snap = json.load(f)
+    except Exception:
+        pass
+
+raw_seeded_day = dict((cloud_snap.get("dates") or {}).get(plan_date_str) or {})
+clean_green_at = {
+    k: int(v)
+    for k, v in (raw_seeded_day.get("greenAt") or {}).items()
+    if int(v or 0) >= MIN_REAL_TS
+}
+clean_retest_at = {
+    k: int(v)
+    for k, v in (raw_seeded_day.get("retestAt") or {}).items()
+    if int(v or 0) >= MIN_REAL_TS
+}
+raw_seeded_day["greenAt"] = clean_green_at
+raw_seeded_day["retestAt"] = clean_retest_at
+seeded_day = raw_seeded_day
+
+card_to_base = {p["id"]: p["id"] for p in raw_points}
+for p in raw_points:
+    for vc in p.get("variants") or []:
+        if vc.get("id"):
+            card_to_base[vc["id"]] = p["id"]
+
+touched_today_ids = set()
+for cid in list(clean_green_at.keys()) + list(clean_retest_at.keys()) + list((seeded_day.get("sched") or {}).keys()):
+    touched_today_ids.add(card_to_base.get(cid, cid))
+
+
+def deck_sort_key(p: dict):
+    qid = p["id"]
+    if qid in touched_today_ids:
+        return (0, -p["roi_score"], -p["exam_weight"], qid)
+    st = resolve_point_status(p["point_key"])
+    is_graduated = 1 if st == "green" else 0
+    return (1 + is_graduated, -p["roi_score"], -p["exam_weight"], qid)
+
+
+raw_points.sort(key=deck_sort_key)
 raw_points = raw_points[:DECK_CAP]
 
 buckets = {"语法": [], "活用": [], "词汇": [], "听力": []}
@@ -680,35 +738,17 @@ mastery_data = {
     "vocab": {"label": "核心词汇", "detail": "含常考假名副词", "exam_pts": 24, "counts": count_tiers(vocab_items), "items": vocab_items},
 }
 
-plan_date_str = (
-    live_state.get("study_date")
-    or radio_meta.get("date")
-    or live_state.get("updated_at", plan.get("plan_date", "2026-11-15"))[:10]
-)
-cloud_cfg_path = os.path.join(BASE_DIR, "cloud_sync_config.json")
-cloud_snap_path = os.path.join(BASE_DIR, "cloud_state_snapshot.json")
-cloud_cfg = {}
-if os.path.exists(cloud_cfg_path):
-    try:
-        with open(cloud_cfg_path, encoding="utf-8") as f:
-            cloud_cfg = json.load(f)
-    except Exception:
-        pass
-
-cloud_snap = {}
-if os.path.exists(cloud_snap_path):
-    try:
-        with open(cloud_snap_path, encoding="utf-8") as f:
-            cloud_snap = json.load(f)
-    except Exception:
-        pass
-
-seeded_day = (cloud_snap.get("dates") or {}).get(plan_date_str) or {}
+baked_epoch = int(live_state.get("_baked_epoch") or 0)
 seeded_overrides = {
     mk: mv
     for mk, mv in (cloud_snap.get("masteryOverrides") or {}).items()
-    if isinstance(mv, list) and len(mv) == 2 and int(mv[1] or 0) >= TRUE_GREEN_EPOCH
+    if isinstance(mv, list) and len(mv) == 2 and int(mv[1] or 0) >= max(TRUE_GREEN_EPOCH, baked_epoch - 7200)
 }
+recent_weak_words = [
+    it["name"]
+    for it in vocab_items
+    if it["tier"] != "done" and (it["name"] in recent_weak_keys or it["name"] in MEMORY_FOCUS)
+]
 
 vocab_base_done = sum(1 for it in vocab_items if it["tier"] == "done")
 
@@ -724,6 +764,8 @@ payload = json.dumps({
     "mastery": mastery_data,
     "vocab_base_done": vocab_base_done,
     "true_green_epoch": TRUE_GREEN_EPOCH,
+    "baked_epoch": baked_epoch,
+    "recent_weak_words": recent_weak_words,
     "cloud_sync": {
         "ntfy_topic": cloud_cfg.get("ntfy_topic", ""),
         "seeded_day": seeded_day,
@@ -2473,16 +2515,19 @@ function mergeFlashProgTuple(st, fp) {
 
 function recomputeStatusesFromCRDT(st) {
   const rAt = Math.floor(st.resetAt || 0);
+  const minTs = Math.max(MIN_REAL_TS, rAt + 1);
   DATA.points.forEach(p => {
     const ps = st.pts[p.id];
     if (!ps) return;
     ps.greenAt = Math.floor(ps.greenAt || 0);
     ps.retestAt = Math.floor(ps.retestAt || 0);
+    if (ps.greenAt < MIN_REAL_TS) ps.greenAt = 0;
+    if (ps.retestAt < MIN_REAL_TS) ps.retestAt = 0;
     ps.wrongCount = Math.floor(ps.wrongCount || 0);
     ps.variantIdx = Math.floor(ps.variantIdx || 0);
-    if (ps.greenAt > rAt && ps.greenAt >= ps.retestAt) {
+    if (ps.greenAt >= minTs && ps.greenAt >= ps.retestAt) {
       ps.status = "green";
-    } else if (ps.retestAt > rAt || ps.wrongCount > 0 || ps.audioPrimed) {
+    } else if (ps.retestAt >= minTs || ps.wrongCount > 0 || ps.audioPrimed) {
       ps.status = "learning";
       if (ps.wrongCount > 0 && p.variants && p.variants.length > 0) {
         ps.useVariant = true;
@@ -2509,12 +2554,14 @@ function loadAdaptiveState() {
     const gMap = sd.greenAt || {};
     Object.keys(gMap).forEach(rawId => {
       const pid = CARD_TO_POINT_ID[rawId] || rawId;
-      if (base.pts[pid]) base.pts[pid].greenAt = Math.max(base.pts[pid].greenAt, Math.floor(gMap[rawId] || 0));
+      const gts = Math.floor(gMap[rawId] || 0);
+      if (base.pts[pid] && gts >= MIN_REAL_TS) base.pts[pid].greenAt = Math.max(base.pts[pid].greenAt, gts);
     });
     const tMap = sd.retestAt || {};
     Object.keys(tMap).forEach(rawId => {
       const pid = CARD_TO_POINT_ID[rawId] || rawId;
-      if (base.pts[pid]) base.pts[pid].retestAt = Math.max(base.pts[pid].retestAt, Math.floor(tMap[rawId] || 0));
+      const tts = Math.floor(tMap[rawId] || 0);
+      if (base.pts[pid] && tts >= MIN_REAL_TS) base.pts[pid].retestAt = Math.max(base.pts[pid].retestAt, tts);
     });
     const wMap = sd.learning || {};
     Object.keys(wMap).forEach(rawId => {
@@ -2618,12 +2665,10 @@ function loadAdaptiveState() {
             const sp = saved.pts[rawId];
             const cur = base.pts[pid];
             if (!sp || !cur) return;
-            if (typeof sp.greenAt === "number" && sp.greenAt > cur.greenAt) {
+            if (typeof sp.greenAt === "number" && sp.greenAt >= MIN_REAL_TS && sp.greenAt > cur.greenAt) {
               cur.greenAt = Math.floor(sp.greenAt);
-            } else if (sp.status === "green") {
-              cur.greenAt = Math.max(cur.greenAt, 2);
             }
-            if (typeof sp.retestAt === "number" && sp.retestAt > cur.retestAt) {
+            if (typeof sp.retestAt === "number" && sp.retestAt >= MIN_REAL_TS && sp.retestAt > cur.retestAt) {
               cur.retestAt = Math.floor(sp.retestAt);
             }
             if (typeof sp.lt === "number" && sp.lt > 0) {
@@ -2637,12 +2682,6 @@ function loadAdaptiveState() {
               cur.dueStep = Math.max(cur.dueStep || 0, sp.dueStep || 0);
               cur.wrongCount = Math.max(cur.wrongCount || 0, sp.wrongCount || 0);
             }
-          });
-        }
-        if (Array.isArray(saved.doneIds)) {
-          saved.doneIds.forEach(rawId => {
-            const pid = CARD_TO_POINT_ID[rawId] || rawId;
-            if (base.pts[pid]) base.pts[pid].greenAt = Math.max(base.pts[pid].greenAt, 2);
           });
         }
       } catch (innerErr) {}
@@ -2967,7 +3006,7 @@ function sortedMap(obj) {
 
 const PLAN_TAG = "-" + String(DATA.plan_date || "").replace(/-/g, "") + "-";
 const CLOUD_OUTBOX_KEY = "n3_cloud_outbox_v13";
-const CLOUD_BYTE_LIMIT = 3900;
+const CLOUD_BYTE_LIMIT = 3750;
 const cloudEnc = (typeof TextEncoder !== "undefined") ? new TextEncoder() : null;
 function byteLen(str) { return cloudEnc ? cloudEnc.encode(str).length : str.length * 3; }
 function b36(n) { n = Math.floor(n || 0); return n > 0 ? n.toString(36) : ""; }
@@ -2995,7 +3034,9 @@ function encodePointStates() {
     const ps = A.pts[p.id];
     if (!ps) return;
     const t = schedTupleOf(ps);
-    const g = Math.floor(ps.greenAt || 0), r = Math.floor(ps.retestAt || 0);
+    const rawG = Math.floor(ps.greenAt || 0), rawR = Math.floor(ps.retestAt || 0);
+    const g = rawG >= MIN_REAL_TS ? rawG : 0;
+    const r = rawR >= MIN_REAL_TS ? rawR : 0;
     if (!g && !r && !t[0] && !t[1] && !t[2] && !t[3] && !t[4]) return;
     parts.push(`${encPid(p.id)}:${b36(g)}.${b36(r)}.${b36(t[0])}.${t[1] || ""}.${b36(t[2])}.${b36(t[3])}.${b36(t[4])}`);
   });
@@ -3054,10 +3095,16 @@ function buildCompactPacket() {
       size += twAdd;
     }
   }
+  const deltaFloor = Math.max(TRUE_GREEN_EPOCH, BAKED_EPOCH > 0 ? BAKED_EPOCH - 7200 : 0);
   const ovEntries = Object.keys(A.masteryOverrides || {})
     .map(k => [k, [String(A.masteryOverrides[k]), Math.floor((A.masteryOverrideTs && A.masteryOverrideTs[k]) || 0)]])
     .filter(kv => kv[1][1] >= TRUE_GREEN_EPOCH)
-    .sort((x, y) => y[1][1] - x[1][1]);
+    .sort((x, y) => {
+      const xd = x[1][1] >= deltaFloor ? 1 : 0;
+      const yd = y[1][1] >= deltaFloor ? 1 : 0;
+      if (xd !== yd) return yd - xd;
+      return y[1][1] - x[1][1];
+    });
   for (const kv of ovEntries) {
     const add = byteLen(JSON.stringify(kv[0]) + ":" + JSON.stringify(kv[1])) + 1;
     if (size + add > CLOUD_BYTE_LIMIT) break;
@@ -3180,8 +3227,8 @@ function applyIncomingPacket(pkt) {
         const pid = CARD_TO_POINT_ID[e.id] || e.id;
         const ps = A.pts[pid];
         if (!ps) return;
-        if (e.g > (ps.greenAt || 0)) { ps.greenAt = e.g; ptsChanged = true; }
-        if (e.r > (ps.retestAt || 0)) { ps.retestAt = e.r; ptsChanged = true; }
+        if (e.g >= MIN_REAL_TS && e.g > (ps.greenAt || 0)) { ps.greenAt = e.g; ptsChanged = true; }
+        if (e.r >= MIN_REAL_TS && e.r > (ps.retestAt || 0)) { ps.retestAt = e.r; ptsChanged = true; }
         if (applySchedTuple(ps, e.s, A.resetAt)) ptsChanged = true;
       });
     } else {
@@ -3189,13 +3236,13 @@ function applyIncomingPacket(pkt) {
       Object.keys(gIn).forEach(rawId => {
         const pid = CARD_TO_POINT_ID[rawId] || rawId;
         const ts = Math.floor(gIn[rawId] || 0);
-        if (A.pts[pid] && ts > (A.pts[pid].greenAt || 0)) { A.pts[pid].greenAt = ts; ptsChanged = true; }
+        if (A.pts[pid] && ts >= MIN_REAL_TS && ts > (A.pts[pid].greenAt || 0)) { A.pts[pid].greenAt = ts; ptsChanged = true; }
       });
       const tIn = pkt.t || {};
       Object.keys(tIn).forEach(rawId => {
         const pid = CARD_TO_POINT_ID[rawId] || rawId;
         const ts = Math.floor(tIn[rawId] || 0);
-        if (A.pts[pid] && ts > (A.pts[pid].retestAt || 0)) { A.pts[pid].retestAt = ts; ptsChanged = true; }
+        if (A.pts[pid] && ts >= MIN_REAL_TS && ts > (A.pts[pid].retestAt || 0)) { A.pts[pid].retestAt = ts; ptsChanged = true; }
       });
     }
     if (ptsChanged) changed = true;
@@ -5127,19 +5174,28 @@ function curateVocabBatch(limitCnt) {
   const tapped = Array.isArray(A.tappedWords) ? A.tappedWords.slice().reverse() : [];
   tapped.forEach(sw => tryAdd(sw));
 
-  // 2) 0/3 待攻克 words
+  // 2) Recently missed words (from tutor or Grok practice)
+  const recentWeak = Array.isArray(DATA.recent_weak_words) ? DATA.recent_weak_words : [];
+  recentWeak.forEach(sw => tryAdd(sw));
+
+  // 3) Remaining 0/3 待攻克 words
   vItems.forEach(it => {
     const eff = getEffectiveMastery(it.key, it.name);
     if (eff.tier === "todo") tryAdd(it.name);
   });
 
-  // 3) 1/3 & 2/3 巩固中 words due for cross-day progression (lastDate !== TODAY_TAG)
+  // 4) 1/3 & 2/3 巩固中 words due for cross-day progression (lastDate !== TODAY_TAG), rotated by date
+  const dueWip = [];
   vItems.forEach(it => {
     const eff = getEffectiveMastery(it.key, it.name);
-    if (eff.tier === "wip" && eff.lastDate !== TODAY_TAG) tryAdd(it.name);
+    if (eff.tier === "wip" && eff.lastDate !== TODAY_TAG) dueWip.push(it.name);
   });
+  const rot = (parseInt(TODAY_TAG.slice(-2), 10) || 0) * 5;
+  for (let i = 0; i < dueWip.length; i++) {
+    tryAdd(dueWip[(i + rot) % dueWip.length]);
+  }
 
-  // 4) Any remaining wip words if needed to fill the batch
+  // 5) Any remaining wip words if needed to fill the batch
   vItems.forEach(it => {
     const eff = getEffectiveMastery(it.key, it.name);
     if (eff.tier === "wip") tryAdd(it.name);
@@ -5160,6 +5216,21 @@ function ensureVocabSession(forceNewBatch) {
       const diff = A.vocabSess.queue.length - filtered.length;
       A.vocabSess.queue = filtered;
       A.vocabSess.cleared = Math.min(A.vocabSess.total || 0, (A.vocabSess.cleared || 0) + diff);
+    }
+    const clearedSet = new Set(Array.isArray(A.vocabSess.clearedWords) ? A.vocabSess.clearedWords : []);
+    const tappedSet = new Set(Array.isArray(A.tappedWords) ? A.tappedWords : []);
+    const urgent = (Array.isArray(DATA.recent_weak_words) ? DATA.recent_weak_words : []).filter(sw => {
+      if (!sw || clearedSet.has(sw) || A.vocabSess.queue.includes(sw)) return false;
+      const it = byKey[sw] || null;
+      return getEffectiveMastery((it && it.key) || sw, sw).tier === "todo";
+    });
+    if (urgent.length > 0 && A.vocabSess.queue.length > 1) {
+      const headCard = A.vocabSess.queue[0];
+      const rest = A.vocabSess.queue.slice(1);
+      const keepCap = Math.max(0, VOCAB_BATCH_SIZE - (A.vocabSess.cleared || 0) - 1);
+      const mergedRest = urgent.concat(rest.filter(w => tappedSet.has(w) || !urgent.includes(w))).slice(0, Math.max(rest.length, keepCap));
+      A.vocabSess.queue = [headCard].concat(mergedRest);
+      A.vocabSess.total = (A.vocabSess.cleared || 0) + A.vocabSess.queue.length;
     }
     if (A.vocabSess.queue.length === 0 && (A.vocabSess.total || 0) > 0) {
       A.vocabSess.done = true;

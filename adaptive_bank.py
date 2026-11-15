@@ -942,3 +942,16 @@ EXTRA_WORDS = {
     "レストラン": {"kana": "レストラン", "pitch": "①", "head": "レストラン", "pos": "名詞", "zh": "餐厅、西餐馆", "tip": "レストランを予約する"},
 }
 
+from weak_expansion_bank import (
+    NEW_EXTRA_WORDS,
+    NEW_POINT_META,
+    NEW_PRIMARY_CARDS,
+    NEW_VARIANT_CARDS,
+)
+
+POINT_META.update(NEW_POINT_META)
+EXTRA_PRIMARY_CARDS.extend(NEW_PRIMARY_CARDS)
+VARIANT_CARDS.extend(NEW_VARIANT_CARDS)
+EXTRA_WORDS.update(NEW_EXTRA_WORDS)
+
+

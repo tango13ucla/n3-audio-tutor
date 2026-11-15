@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Cloud Multi-Platform Progress Sync Engine (Zero-PII CRDT over ntfy + Git Snapshot)
+Cloud Multi-Platform Progress Sync Engine (Zero-PII CRDT over ntfy + Git Snapshot, v15)
 - Real-time bidirectional sync across Phone Chrome, Phone PWA, Desktop Chrome, Desktop PWA,
-  GitHub Actions, and Antigravity Cloud Brain.
-- Pulls all snapshots from https://ntfy.sh/<ntfy_topic>/json?poll=1&since=all (CORS=*),
+  GitHub Actions, Grok Cloud Bridge (`grok_ntfy_topic`), and Antigravity Cloud Brain.
+- Pulls snapshots from https://ntfy.sh/<ntfy_topic>/json?poll=1&since=all (CORS=*),
   merges via LWW-Element-Set CRDT with practice_log.jsonl & cloud_state_snapshot.json,
-  appends newly answered records to practice_log.jsonl, and publishes unified state if changed.
+  pulls zero-PII Grok practice batches from https://ntfy.sh/<grok_ntfy_topic>/json?poll=1&since=all,
+  appends newly answered records to practice_log.jsonl, and publishes unified state (<3750B).
 """
 from __future__ import annotations
+import datetime
 import glob
 import hashlib
 import json
@@ -16,14 +18,28 @@ import os
 import secrets
 import time
 import urllib.request
+from zoneinfo import ZoneInfo
+
+from grok_point_resolver import (
+    assert_zero_pii_text,
+    build_lookup_sets,
+    resolve_grok_points,
+    to_pt_iso,
+)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CONFIG_PATH = os.path.join(BASE_DIR, "cloud_sync_config.json")
 SNAPSHOT_PATH = os.path.join(BASE_DIR, "cloud_state_snapshot.json")
+STATE_PATH = os.path.join(BASE_DIR, "n3_live_state.json")
 LOG_PATH = os.path.join(BASE_DIR, "practice_log.jsonl")
 
 ORIGIN = "https://tango13ucla.github.io"
-UA = "N3ZenSync/12.0"
+UA = "N3ZenSync/15.0"
+PT_TZ = ZoneInfo("America/Los_Angeles")
+
+TRUE_GREEN_EPOCH = 1794761500
+MIN_REAL_TS = 1_700_000_000
+BYTE_LIMIT = 3750
 
 
 def load_json(path: str, default):
@@ -52,32 +68,40 @@ def http_req(url: str, method: str = "GET", body: bytes | None = None, headers: 
         return resp.status, resp_hdrs, raw
 
 
-TRUE_GREEN_EPOCH = 1794761500
-
-
-def _iso_to_study_date(ts_iso: str) -> str:
+def _parse_iso_dt(ts_iso: str) -> datetime.datetime | None:
     if not ts_iso:
-        return ""
+        return None
     try:
-        import datetime
-        from zoneinfo import ZoneInfo
         s = str(ts_iso).strip().replace("Z", "+00:00")
         dt = datetime.datetime.fromisoformat(s)
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=datetime.timezone.utc)
-        dt_pt = dt.astimezone(ZoneInfo("America/Los_Angeles")) - datetime.timedelta(hours=5)
-        return dt_pt.strftime("%Y-%m-%d")
+        return dt
     except Exception:
+        return None
+
+
+def _iso_to_study_date(ts_iso: str) -> str:
+    dt = _parse_iso_dt(ts_iso)
+    if dt is None:
         return ""
+    dt_pt = dt.astimezone(PT_TZ) - datetime.timedelta(hours=5)
+    return dt_pt.strftime("%Y-%m-%d")
+
+
+def _iso_to_unix_sec(ts_iso: str) -> int:
+    dt = _parse_iso_dt(ts_iso)
+    if dt is None:
+        return 0
+    return int(dt.timestamp())
 
 
 def get_latest_plan_date() -> str:
     rm_path = os.path.join(BASE_DIR, "audio", "daily_radio_meta.json")
-    st_path = os.path.join(BASE_DIR, "n3_live_state.json")
     candidates = []
-    if os.path.exists(st_path):
+    if os.path.exists(STATE_PATH):
         try:
-            with open(st_path, encoding="utf-8") as f:
+            with open(STATE_PATH, encoding="utf-8") as f:
                 sd_obj = json.load(f)
                 sd = str(sd_obj.get("study_date") or "").strip()
                 if len(sd) == 10 and sd[4] == "-" and sd[7] == "-":
@@ -108,7 +132,9 @@ def get_latest_plan_date() -> str:
     return "2026-11-15"
 
 
-BYTE_LIMIT = 3900
+def get_baked_epoch() -> int:
+    st_obj = load_json(STATE_PATH, {})
+    return int(st_obj.get("_baked_epoch") or 0)
 
 
 def b36(n) -> str:
@@ -143,7 +169,6 @@ def js_num(x) -> str:
 
 
 def sched_wins(new, cur) -> bool:
-    """Same last-writer-wins rule as applySchedTuple in the page."""
     if not isinstance(new, list) or len(new) < 5:
         return False
     if not isinstance(cur, list) or len(cur) < 5:
@@ -186,7 +211,7 @@ def dec_pid(txt: str, tag: str) -> str:
 
 def empty_crdt_state(plan_date: str) -> dict:
     return {
-        "v": 12,
+        "v": 15,
         "app": "n3-zen",
         "updatedAt": 0,
         "dates": {
@@ -209,8 +234,16 @@ def merge_day_bucket(dst: dict, src: dict) -> dict:
         "resetAt": max(int(dst.get("resetAt") or 0), int(src.get("resetAt") or 0)),
         "radioMaxSec": max(int(dst.get("radioMaxSec") or 0), int(src.get("radioMaxSec") or 0)),
         "radioPos": list(dst.get("radioPos") or [0, 0]),
-        "greenAt": dict(dst.get("greenAt") or {}),
-        "retestAt": dict(dst.get("retestAt") or {}),
+        "greenAt": {
+            k: int(v)
+            for k, v in (dst.get("greenAt") or {}).items()
+            if int(v or 0) >= MIN_REAL_TS
+        },
+        "retestAt": {
+            k: int(v)
+            for k, v in (dst.get("retestAt") or {}).items()
+            if int(v or 0) >= MIN_REAL_TS
+        },
         "learning": dict(dst.get("learning") or {}),
     }
     sp = src.get("radioPos") or [0, 0]
@@ -236,12 +269,12 @@ def merge_day_bucket(dst: dict, src: dict) -> dict:
 
     for pid, ts in (src.get("greenAt") or {}).items():
         ts_i = int(ts or 0)
-        if ts_i > int(out["greenAt"].get(pid) or 0):
+        if ts_i >= MIN_REAL_TS and ts_i > int(out["greenAt"].get(pid) or 0):
             out["greenAt"][pid] = ts_i
 
     for pid, ts in (src.get("retestAt") or {}).items():
         ts_i = int(ts or 0)
-        if ts_i > int(out["retestAt"].get(pid) or 0):
+        if ts_i >= MIN_REAL_TS and ts_i > int(out["retestAt"].get(pid) or 0):
             out["retestAt"][pid] = ts_i
 
     for pid, linfo in (src.get("learning") or {}).items():
@@ -252,6 +285,13 @@ def merge_day_bucket(dst: dict, src: dict) -> dict:
             max(int(cur[0] or 0), int(linfo[0] or 0)),
             max(int(cur[1] or 0), int(linfo[1] or 0)),
         ]
+    # Clean orphaned [1, 0] synthetic learning stubs that have neither real retestAt nor real sched stamp
+    for pid in list(out["learning"].keys()):
+        sch_tup = out["sched"].get(pid)
+        has_real_sched = isinstance(sch_tup, list) and len(sch_tup) >= 5 and int(sch_tup[4] or 0) > 0
+        if pid not in out["retestAt"] and not has_real_sched:
+            out["learning"].pop(pid, None)
+
     tw = []
     seen_tw = set()
     for w in list(dst.get("tappedWords") or []) + list(src.get("tappedWords") or []):
@@ -284,7 +324,7 @@ def merge_crdt(a: dict, b: dict) -> dict:
         if isinstance(mv, list) and len(mv) == 2 and int(mv[1] or 0) >= TRUE_GREEN_EPOCH
     }
     out = {
-        "v": 14,
+        "v": 15,
         "app": "n3-zen",
         "updatedAt": max(int(a.get("updatedAt") or 0), int(b.get("updatedAt") or 0)),
         "dates": {},
@@ -326,12 +366,14 @@ def unpack_compact_ntfy(pkt: dict) -> dict | None:
     d = pkt.get("d")
     if not d:
         return None
+    raw_g = pkt.get("g") if isinstance(pkt.get("g"), dict) else {}
+    raw_t = pkt.get("t") if isinstance(pkt.get("t"), dict) else {}
     day = {
         "resetAt": int(pkt.get("r") or 0),
         "radioMaxSec": int(pkt.get("m") or 0),
         "radioPos": pkt.get("rp") if isinstance(pkt.get("rp"), list) else [0, 0],
-        "greenAt": pkt.get("g") if isinstance(pkt.get("g"), dict) else {},
-        "retestAt": pkt.get("t") if isinstance(pkt.get("t"), dict) else {},
+        "greenAt": {k: int(v) for k, v in raw_g.items() if int(v or 0) >= MIN_REAL_TS},
+        "retestAt": {k: int(v) for k, v in raw_t.items() if int(v or 0) >= MIN_REAL_TS},
         "learning": pkt.get("w") if isinstance(pkt.get("w"), dict) else {},
     }
     if isinstance(pkt.get("z"), str):
@@ -343,14 +385,16 @@ def unpack_compact_ntfy(pkt: dict) -> dict | None:
             raw_id, rest = ent.split(":", 1)
             pid = dec_pid(raw_id, tag)
             f = (rest.split(".") + [""] * 7)[:7]
-            if ub36(f[0]):
-                g[pid] = ub36(f[0])
-            if ub36(f[1]):
-                t[pid] = ub36(f[1])
+            gv = ub36(f[0])
+            tv = ub36(f[1])
+            if gv >= MIN_REAL_TS:
+                g[pid] = gv
+            if tv >= MIN_REAL_TS:
+                t[pid] = tv
             tup = [ub36(f[2]), int(f[3] or 0) if f[3].isdigit() else 0, ub36(f[4]), ub36(f[5]), ub36(f[6])]
             if tup[4] > 0:
                 sch[pid] = tup
-            if tup[2] or tup[3]:
+            if (tup[2] or tup[3]) and (tv >= MIN_REAL_TS or tup[4] > 0):
                 w[pid] = [tup[2], tup[3]]
         day["greenAt"], day["retestAt"], day["learning"], day["sched"] = g, t, w, sch
     if isinstance(pkt.get("c"), list) and len(pkt["c"]) >= 5:
@@ -380,7 +424,7 @@ def unpack_compact_ntfy(pkt: dict) -> dict | None:
                 "ts": item[4] if len(item) >= 5 else "",
             })
     return {
-        "v": 14,
+        "v": 15,
         "app": "n3-zen",
         "updatedAt": int(pkt.get("u") or 0),
         "dates": {d: day},
@@ -389,11 +433,11 @@ def unpack_compact_ntfy(pkt: dict) -> dict | None:
     }
 
 
-def pack_compact_ntfy(state: dict, plan_date: str) -> dict:
+def pack_compact_ntfy(state: dict, plan_date: str, baked_epoch: int = 0) -> dict:
     day = (state.get("dates") or {}).get(plan_date) or {}
     tag = plan_date.replace("-", "")
-    g = day.get("greenAt") or {}
-    t = day.get("retestAt") or {}
+    g = {k: int(v) for k, v in (day.get("greenAt") or {}).items() if int(v or 0) >= MIN_REAL_TS}
+    t = {k: int(v) for k, v in (day.get("retestAt") or {}).items() if int(v or 0) >= MIN_REAL_TS}
     sch = day.get("sched") or {}
     lrn = day.get("learning") or {}
     parts = []
@@ -403,7 +447,7 @@ def pack_compact_ntfy(state: dict, plan_date: str) -> dict:
             lw = lrn.get(pid) or [0, 0]
             tup = [0, 0, int(lw[0] or 0), int(lw[1] or 0), 0]
         gv, tv = int(g.get(pid) or 0), int(t.get(pid) or 0)
-        if not gv and not tv and not any(int(x or 0) for x in tup[:5]):
+        if not gv and not tv and not int(tup[4] or 0):
             continue
         flags = int(tup[1] or 0)
         parts.append(
@@ -412,7 +456,7 @@ def pack_compact_ntfy(state: dict, plan_date: str) -> dict:
         )
     pkt = {
         "a": "n3z",
-        "v": 14,
+        "v": 15,
         "u": int(state.get("updatedAt") or int(time.time())),
         "d": plan_date,
         "r": int(day.get("resetAt") or 0),
@@ -426,8 +470,6 @@ def pack_compact_ntfy(state: dict, plan_date: str) -> dict:
         pkt["c"] = day["cursor"]
     if isinstance(day.get("speeds"), list):
         pkt["sp"] = day["speeds"]
-    if day.get("tappedWords"):
-        pkt["tw"] = list(day["tappedWords"])[-40:]
     if isinstance(day.get("flashProg"), list):
         fp = [int(x or 0) for x in (day["flashProg"] + [0, 0, 0, 0])[:4]]
         if fp[0] > 0 or fp[2] > 0:
@@ -437,20 +479,32 @@ def pack_compact_ntfy(state: dict, plan_date: str) -> dict:
         return len(json.dumps(obj, ensure_ascii=False, separators=(",", ":")).encode("utf-8"))
 
     cur = size(pkt)
-    for r in reversed((state.get("records") or [])[-15:]):
+    if day.get("tappedWords"):
+        tw_slice = list(day["tappedWords"])[-25:]
+        tw_add = size(tw_slice) + 7
+        if cur + tw_add <= BYTE_LIMIT - 600:
+            pkt["tw"] = tw_slice
+            cur += tw_add
+
+    for r in reversed((state.get("records") or [])[-12:]):
         ok = 1 if str(r.get("correct", "")).lower() == "true" else 0
         item = [r.get("id", ""), r.get("point", ""), r.get("choice", ""), ok, r.get("ts", "")]
         add = size(item) + 1
-        if cur + add > BYTE_LIMIT - 400:
+        if cur + add > BYTE_LIMIT - 500:
             break
         pkt["l"].insert(0, item)
         cur += add
-    ov_items = sorted(
-        (state.get("masteryOverrides") or {}).items(),
-        key=lambda kv: int(kv[1][1]) if isinstance(kv[1], list) and len(kv[1]) == 2 else 0,
-        reverse=True,
-    )
-    for k, v in ov_items:
+
+    # Prioritize delta overrides newer than baked_epoch - 7200 first so unbaked overrides never get cut off
+    delta_cutoff = max(TRUE_GREEN_EPOCH, int(baked_epoch or 0) - 7200)
+    raw_ov = [
+        (k, v)
+        for k, v in (state.get("masteryOverrides") or {}).items()
+        if isinstance(v, list) and len(v) == 2 and int(v[1] or 0) >= TRUE_GREEN_EPOCH
+    ]
+    delta_ov = sorted([kv for kv in raw_ov if int(kv[1][1]) >= delta_cutoff], key=lambda kv: int(kv[1][1]), reverse=True)
+    older_ov = sorted([kv for kv in raw_ov if int(kv[1][1]) < delta_cutoff], key=lambda kv: int(kv[1][1]), reverse=True)
+    for k, v in delta_ov + older_ov:
         add = size({k: v}) - 1
         if cur + add > BYTE_LIMIT:
             break
@@ -482,8 +536,11 @@ def seed_from_practice_log(state: dict, plan_date: str) -> tuple[dict, list[dict
         plan_date,
         {"resetAt": 0, "radioMaxSec": 0, "radioPos": [0, 0], "greenAt": {}, "retestAt": {}, "learning": {}},
     )
+    # Purge any legacy synthetic < MIN_REAL_TS seeds already sitting in day
+    day["greenAt"] = {k: int(v) for k, v in (day.get("greenAt") or {}).items() if int(v or 0) >= MIN_REAL_TS}
+    day["retestAt"] = {k: int(v) for k, v in (day.get("retestAt") or {}).items() if int(v or 0) >= MIN_REAL_TS}
+
     tag = plan_date.replace("-", "")
-    idx = 0
     with open(LOG_PATH, encoding="utf-8") as f:
         for raw_line in f:
             line = raw_line.strip()
@@ -494,43 +551,160 @@ def seed_from_practice_log(state: dict, plan_date: str) -> tuple[dict, list[dict
             except Exception:
                 continue
             existing_lines.append(rec)
-            idx += 1
-            raw_qid = str(rec.get("id", ""))
-            if not raw_qid or raw_qid.endswith("-twin") or raw_qid.startswith("FLASH-") or raw_qid.startswith("VC-"):
+            if str(rec.get("source") or "") == "grok":
                 continue
-            rec_sdate = _iso_to_study_date(str(rec.get("ts") or ""))
-            if rec_sdate and rec_sdate != plan_date:
+            raw_qid = str(rec.get("id", ""))
+            if (
+                not raw_qid
+                or raw_qid.startswith("GROK-")
+                or raw_qid.endswith("-twin")
+                or raw_qid.startswith("FLASH-")
+                or raw_qid.startswith("VC-")
+            ):
+                continue
+            ts_str = str(rec.get("ts") or "")
+            rec_sdate = _iso_to_study_date(ts_str)
+            ts_sec = _iso_to_unix_sec(ts_str)
+            if rec_sdate != plan_date or ts_sec < MIN_REAL_TS:
                 continue
             pid = variant_parent.get(raw_qid, raw_qid)
-            if (tag in pid or pid.startswith("N3-") or "-20261114-" in pid) and rec_sdate == plan_date:
+            if tag in pid or pid.startswith("N3-") or "-20261114-" in pid:
                 ok = str(rec.get("correct", "")).lower() == "true"
                 again = str(rec.get("ask_again", "")).lower() == "true"
-                ts_seed = 10 + idx
                 if ok and not again:
-                    if ts_seed > int(day["greenAt"].get(pid) or 0):
-                        day["greenAt"][pid] = ts_seed
+                    if ts_sec > int(day["greenAt"].get(pid) or 0):
+                        day["greenAt"][pid] = ts_sec
                 else:
-                    if ts_seed > int(day["retestAt"].get(pid) or 0):
-                        day["retestAt"][pid] = ts_seed
+                    if ts_sec > int(day["retestAt"].get(pid) or 0):
+                        day["retestAt"][pid] = ts_sec
                     cur_l = day["learning"].get(pid) or [0, 0]
                     day["learning"][pid] = [max(int(cur_l[0]), 1), int(cur_l[1])]
     return state, existing_lines
 
 
+def pull_grok_ntfy_bus(cfg: dict, existing_log: list[dict]) -> list[dict]:
+    """
+    Cloud-Native Zero-PII Grok -> Tutor Bridge:
+    Polls https://ntfy.sh/<grok_ntfy_topic>/json?poll=1&since=all so GitHub Actions
+    automatically ingests Grok daily/realtime practice records without needing Mac mini!
+    Accepted payload formats:
+      1) Compact batch: {"a": "n3g", "r": [[srow, ts_pt, subj, qid, pt_raw, res_or_ok, again_raw], ...]}
+      2) Direct record(s): {"a": "n3g", "records": [{"id": "GROK-...", "point": "...", ...}]}
+    """
+    topic = str(cfg.get("grok_ntfy_topic") or "").strip()
+    if not topic:
+        return []
+    live_state = load_json(STATE_PATH, {})
+    lookups = build_lookup_sets(live_state)
+    existing_ids = {str(r.get("id") or "").strip() for r in existing_log if r.get("id")}
+    added: list[dict] = []
+    minute_counter: dict[str, int] = {}
+
+    url = f"https://ntfy.sh/{topic}/json?poll=1&since=all"
+    try:
+        st, _, raw = http_req(url, method="GET")
+        if st != 200:
+            return []
+        for line in raw.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                ev = json.loads(line)
+                if ev.get("event") != "message" or not ev.get("message"):
+                    continue
+                msg_txt = str(ev["message"])
+                assert_zero_pii_text(msg_txt, "grok_ntfy_topic")
+                pkt = json.loads(msg_txt)
+                if not isinstance(pkt, dict) or pkt.get("a") != "n3g":
+                    continue
+
+                for row in pkt.get("r") or []:
+                    if not isinstance(row, list) or len(row) < 6:
+                        continue
+                    srow = int(row[0] or 0)
+                    ts_pt = str(row[1] or "").strip()
+                    subj = str(row[2] or "").strip()
+                    qid = str(row[3] or "").strip()
+                    pt_raw = str(row[4] or "").strip()
+                    res_val = row[5]
+                    again_val = row[6] if len(row) >= 7 else 0
+
+                    if isinstance(res_val, str) and ("未作答" in res_val or "不判分" in res_val or "作废" in res_val or not res_val.strip()):
+                        continue
+                    ok = (res_val == 1 or res_val is True or (isinstance(res_val, str) and res_val.strip().startswith("对")))
+                    ask_again = (
+                        again_val == 1
+                        or again_val is True
+                        or (isinstance(again_val, str) and "还是要考" in again_val)
+                    )
+                    seal_done = (again_val == 2 or (isinstance(again_val, str) and "不用再考" in again_val))
+
+                    pts = resolve_grok_points(subj, qid, pt_raw, lookups)
+                    if not pts:
+                        continue
+                    base_gid = f"GROK-{srow - 1}" if srow > 1 else f"GROK-NTFY-{hashlib.sha1(f'{ts_pt}|{qid}|{pt_raw}'.encode('utf-8')).hexdigest()[:8]}"
+                    for idx_p, pt in enumerate(pts):
+                        gid = base_gid if idx_p == 0 else f"{base_gid}-{idx_p + 1}"
+                        if gid in existing_ids:
+                            continue
+                        seq = minute_counter.get(ts_pt, 0) + 1
+                        minute_counter[ts_pt] = seq
+                        rec = {
+                            "id": gid,
+                            "point": pt,
+                            "correct": bool(ok),
+                            "ask_again": bool(ask_again),
+                            "source": "grok",
+                            "ts": to_pt_iso(ts_pt, seq),
+                        }
+                        if seal_done and ok and not ask_again:
+                            rec["choice"] = "Grok:不用再考"
+                        existing_ids.add(gid)
+                        added.append(rec)
+
+                for rec in pkt.get("records") or []:
+                    if not isinstance(rec, dict):
+                        continue
+                    gid = str(rec.get("id") or "").strip()
+                    pt = str(rec.get("point") or "").strip()
+                    if not gid.startswith("GROK-") or not pt or gid in existing_ids:
+                        continue
+                    clean_rec = {
+                        "id": gid,
+                        "point": pt,
+                        "correct": str(rec.get("correct", "")).lower() == "true" or rec.get("correct") is True,
+                        "ask_again": str(rec.get("ask_again", "")).lower() == "true" or rec.get("ask_again") is True,
+                        "source": "grok",
+                        "ts": to_pt_iso(str(rec.get("ts") or ""), 1),
+                    }
+                    if rec.get("choice") == "Grok:不用再考":
+                        clean_rec["choice"] = "Grok:不用再考"
+                    existing_ids.add(gid)
+                    added.append(clean_rec)
+            except Exception:
+                continue
+        if added:
+            print(f"[sync] Pulled {len(added)} new Grok records from cloud grok_ntfy_topic")
+    except Exception as e:
+        print(f"[sync] grok_ntfy_topic pull skipped: {e}")
+    return added
+
+
 def main():
     plan_date = get_latest_plan_date()
+    baked_epoch = get_baked_epoch()
     cfg = load_json(CONFIG_PATH, {})
     if not cfg.get("ntfy_topic"):
         cfg["ntfy_topic"] = "n3zen_" + secrets.token_hex(14)
+    if not cfg.get("grok_ntfy_topic"):
+        cfg["grok_ntfy_topic"] = "n3grok_" + secrets.token_hex(14)
 
-    state = load_json(SNAPSHOT_PATH, empty_crdt_state(plan_date))
-    if state.get("app") != "n3-zen":
-        state = empty_crdt_state(plan_date)
-    state["masteryOverrides"] = {
-        mk: mv
-        for mk, mv in (state.get("masteryOverrides") or {}).items()
-        if isinstance(mv, list) and len(mv) == 2 and int(mv[1] or 0) >= TRUE_GREEN_EPOCH
-    }
+    raw_snap = load_json(SNAPSHOT_PATH, empty_crdt_state(plan_date))
+    if raw_snap.get("app") != "n3-zen":
+        raw_snap = empty_crdt_state(plan_date)
+    # Normalize through merge_crdt so any legacy < MIN_REAL_TS entries in raw_snap are cleaned
+    state = merge_crdt(empty_crdt_state(plan_date), raw_snap)
 
     state, existing_log = seed_from_practice_log(state, plan_date)
 
@@ -559,7 +733,7 @@ def main():
     except Exception as e:
         print(f"[sync] ntfy pull skipped: {e}")
 
-    # Append any newly synced answer records from Phone/Desktop into practice_log.jsonl
+    # Append any newly synced answer records from Phone/Desktop + Grok Cloud Bus into practice_log.jsonl
     existing_keys = {
         (str(r.get("ts", ""))[:19], str(r.get("id", "")), str(r.get("choice", "")))
         for r in existing_log
@@ -570,6 +744,10 @@ def main():
         if r.get("id") and r.get("ts") and k not in existing_keys:
             existing_keys.add(k)
             new_recs.append(r)
+
+    grok_cloud_recs = pull_grok_ntfy_bus(cfg, existing_log + new_recs)
+    new_recs.extend(grok_cloud_recs)
+
     if new_recs:
         with open(LOG_PATH, "a", encoding="utf-8") as f:
             for r in new_recs:
@@ -579,7 +757,7 @@ def main():
     if not state.get("updatedAt"):
         state["updatedAt"] = int(time.time())
 
-    compact_pkt = pack_compact_ntfy(state, plan_date)
+    compact_pkt = pack_compact_ntfy(state, plan_date, baked_epoch=baked_epoch)
     cur_fp = canonical_fingerprint(compact_pkt)
     if cur_fp != last_remote_fp:
         try:

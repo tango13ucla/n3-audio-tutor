@@ -6,17 +6,22 @@ on:
     paths:
       - 'tutor_prefs.json'
   schedule:
-    # Early-morning full episode + daily deck synthesis at 05:35 AM PT (13:35 UTC) + 07:00 AM PT backup (15:00 UTC)
-    - cron: '35 13 * * *'
+    # Early-morning full episode + daily deck synthesis at 05:23 AM, 06:18 AM, and 07:00 AM PT
+    - cron: '23 13 * * *'
+    - cron: '18 14 * * *'
     - cron: '0 15 * * *'
-    # Archive multi-platform cloud answers & self-heal daily build every 4 hours
-    - cron: '0 */4 * * *'
+    # Ingest cloud answers + Grok ntfy batches & refresh Grok daily brief every 4 hours (off-peak minute :17)
+    - cron: '17 */4 * * *'
   workflow_dispatch:
     inputs:
       mode:
         description: 'Refresh mode (full or quiz_only)'
         required: false
         default: 'full'
+
+concurrency:
+  group: daily-n3-brain
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -40,35 +45,59 @@ jobs:
           CRON_SCHEDULE: ${{ github.event.schedule }}
           INPUT_MODE: ${{ inputs.mode }}
         run: |
-          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$INPUT_MODE" = "quiz_only" ]; then
-            echo "[dispatch] Running fast quiz_only studio audio synthesis (preserving daily_radio.mp3)"
-            sudo apt-get update -qq
-            sudo apt-get install -y -qq --no-install-recommends ffmpeg
-            pip install --quiet -U edge-tts certifi pykakasi
-            python run_brain_algorithm.py --quiz-only
-          elif python - <<'PY'
-          import datetime, json, os, sys
+          ACTION_MODE=$(python - <<'PY'
+          import datetime, json, os
           from zoneinfo import ZoneInfo
           now_pt = datetime.datetime.now(ZoneInfo("America/Los_Angeles"))
           study_pt = (now_pt - datetime.timedelta(hours=5)).strftime("%Y-%m-%d")
           ev = os.environ.get("EVENT_NAME", "")
+          inp = os.environ.get("INPUT_MODE", "full")
+          if ev == "workflow_dispatch" and inp == "quiz_only":
+              print("quiz_only")
+              raise SystemExit(0)
           meta_date = ""
           if os.path.exists("audio/daily_radio_meta.json"):
               try:
                   meta_date = json.load(open("audio/daily_radio_meta.json", encoding="utf-8")).get("date", "")
               except Exception:
                   meta_date = ""
-          need_full = (ev == "workflow_dispatch") or (meta_date != study_pt)
-          print(f"[schedule-check] now_pt={now_pt.strftime('%Y-%m-%d %H:%M PT')}, study_pt={study_pt}, meta_date={meta_date}, event={ev} -> need_full={need_full}")
-          sys.exit(0 if need_full else 1)
+          if ev == "workflow_dispatch" or meta_date != study_pt:
+              print("full")
+              raise SystemExit(0)
+          print("sync_check")
           PY
-          then
+          )
+          echo "[mode] ACTION_MODE=$ACTION_MODE"
+          if [ "$ACTION_MODE" = "quiz_only" ]; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq --no-install-recommends ffmpeg
+            pip install --quiet -U edge-tts certifi pykakasi
+            python run_brain_algorithm.py --quiz-only
+          elif [ "$ACTION_MODE" = "full" ]; then
             sudo apt-get update -qq
             sudo apt-get install -y -qq --no-install-recommends ffmpeg
             pip install --quiet -U edge-tts certifi google-genai pykakasi
             python run_brain_algorithm.py
           else
             python run_brain_algorithm.py --sync-only
+            if python - <<'PY'
+          import json, os, sys
+          st = json.load(open("n3_live_state.json", encoding="utf-8"))
+          mf = json.load(open("audio/audio_manifest.json", encoding="utf-8")) if os.path.exists("audio/audio_manifest.json") else {}
+          vc_mf = mf.get("vocab_cards") or {}
+          missing = [p["word"] for p in st.get("vocab_tracked", []) if p.get("word") and p["word"] not in vc_mf]
+          if missing:
+              print(f"[auto-audio] {len(missing)} newly enrolled vocab words need studio MP3s: {missing[:8]}")
+              sys.exit(0)
+          sys.exit(1)
+          PY
+            then
+              sudo apt-get update -qq
+              sudo apt-get install -y -qq --no-install-recommends ffmpeg
+              pip install --quiet -U edge-tts certifi pykakasi
+              python generate_neural_audio.py
+              python build_html.py
+            fi
           fi
 
       - name: Commit & Push Updated State
@@ -77,18 +106,18 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           STAGE_DIR=$(mktemp -d)
           cp -a audio "$STAGE_DIR/"
-          for f in n3_live_state.json practice_log.jsonl cloud_sync_config.json cloud_state_snapshot.json; do
+          for f in n3_live_state.json practice_log.jsonl cloud_sync_config.json cloud_state_snapshot.json grok_daily_brief.md grok_daily_brief.json brain_plan_*.json; do
             [ -f "$f" ] && cp -a "$f" "$STAGE_DIR/" || true
           done
           for attempt in 1 2 3; do
             git fetch origin main
             git reset --hard origin/main
             cp -a "$STAGE_DIR/audio/." audio/
-            for f in n3_live_state.json practice_log.jsonl cloud_sync_config.json cloud_state_snapshot.json; do
-              [ -f "$STAGE_DIR/$f" ] && cp -a "$STAGE_DIR/$f" "$f" || true
+            for sf in "$STAGE_DIR"/*.json "$STAGE_DIR"/*.jsonl "$STAGE_DIR"/*.md; do
+              [ -f "$sf" ] && cp -a "$sf" ./ || true
             done
             python build_html.py
-            git add n3_live_state.json practice_log.jsonl cloud_sync_config.json cloud_state_snapshot.json index.html sw.js audio/
+            git add n3_live_state.json practice_log.jsonl cloud_sync_config.json cloud_state_snapshot.json grok_daily_brief.md grok_daily_brief.json brain_plan_*.json index.html sw.js audio/
             if git diff --cached --quiet; then
               echo "No changes to commit."
               break
