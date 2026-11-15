@@ -1,13 +1,13 @@
 {
   "name": "JLPT N3 语音私教",
-  "short_name": "N3 私教",
-  "description": "JLPT N3 真人语音私教 · 点选即练 · 随身听",
+  "short_name": "N3",
+  "description": "JLPT N3 · 做题 · 随身听 · 单手记词",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#F3EFE8",
-  "theme_color": "#F3EFE8",
+  "orientation": "portrait-primary",
+  "background_color": "#F5F2EB",
+  "theme_color": "#F5F2EB",
   "icons": [
     {
       "src": "./icon-192.png",
@@ -36,30 +36,25 @@
   ],
   "shortcuts": [
     {
-      "name": "随身听自动连播",
+      "name": "随身听",
       "short_name": "随身听",
-      "description": "走路免手点自动听题与讲解",
-      "url": "./index.html?mode=walk",
-      "icons": [
-        {
-          "src": "./icon-192.png",
-          "sizes": "192x192",
-          "type": "image/png"
-        }
-      ]
+      "description": "文涛 · 文道 · 子东 日本文化随身听",
+      "url": "./index.html?mode=radio",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "单手记词",
+      "short_name": "记词",
+      "description": "左滑没记住 · 右滑记住 · 中日双语",
+      "url": "./index.html?mode=vocab",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "考点总表",
       "short_name": "总表",
-      "description": "查看四科进度与假名副词成对速记",
+      "description": "查看四科跨日真绿进度",
       "url": "./index.html?mode=dash",
-      "icons": [
-        {
-          "src": "./icon-192.png",
-          "sizes": "192x192",
-          "type": "image/png"
-        }
-      ]
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
 }

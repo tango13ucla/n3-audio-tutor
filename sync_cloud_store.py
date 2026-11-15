@@ -51,25 +51,60 @@ def http_req(url: str, method: str = "GET", body: bytes | None = None, headers: 
         return resp.status, resp_hdrs, raw
 
 
+TRUE_GREEN_EPOCH = 1794761500
+
+
+def _iso_to_study_date(ts_iso: str) -> str:
+    if not ts_iso:
+        return ""
+    try:
+        import datetime
+        from zoneinfo import ZoneInfo
+        s = str(ts_iso).strip().replace("Z", "+00:00")
+        dt = datetime.datetime.fromisoformat(s)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=datetime.timezone.utc)
+        dt_pt = dt.astimezone(ZoneInfo("America/Los_Angeles")) - datetime.timedelta(hours=5)
+        return dt_pt.strftime("%Y-%m-%d")
+    except Exception:
+        return ""
+
+
 def get_latest_plan_date() -> str:
+    rm_path = os.path.join(BASE_DIR, "audio", "daily_radio_meta.json")
     st_path = os.path.join(BASE_DIR, "n3_live_state.json")
+    candidates = []
     if os.path.exists(st_path):
         try:
             with open(st_path, encoding="utf-8") as f:
-                ua = json.load(f).get("updated_at", "")
+                sd_obj = json.load(f)
+                sd = str(sd_obj.get("study_date") or "").strip()
+                if len(sd) == 10 and sd[4] == "-" and sd[7] == "-":
+                    candidates.append(sd)
+                ua = str(sd_obj.get("updated_at") or "").strip()
                 if len(ua) >= 10 and ua[4] == "-" and ua[7] == "-":
-                    return ua[:10]
+                    candidates.append(ua[:10])
         except Exception:
             pass
+    if os.path.exists(rm_path):
+        try:
+            with open(rm_path, encoding="utf-8") as f:
+                rd = str(json.load(f).get("date") or "").strip()
+                if len(rd) == 10 and rd[4] == "-" and rd[7] == "-":
+                    candidates.append(rd)
+        except Exception:
+            pass
+    if candidates:
+        return sorted(candidates)[-1]
     plans = sorted(glob.glob(os.path.join(BASE_DIR, "brain_plan_*.json")))
     if plans:
         try:
             with open(plans[-1], encoding="utf-8") as f:
                 pdata = json.load(f)
-                return pdata.get("plan_date") or pdata.get("date") or "2026-11-14"
+                return pdata.get("plan_date") or pdata.get("date") or "2026-11-15"
         except Exception:
             pass
-    return "2026-11-14"
+    return "2026-11-15"
 
 
 BYTE_LIMIT = 3900
@@ -242,12 +277,17 @@ def merge_day_bucket(dst: dict, src: dict) -> dict:
 def merge_crdt(a: dict, b: dict) -> dict:
     if not isinstance(b, dict) or b.get("app") != "n3-zen":
         return a
+    clean_a_ov = {
+        mk: mv
+        for mk, mv in (a.get("masteryOverrides") or {}).items()
+        if isinstance(mv, list) and len(mv) == 2 and int(mv[1] or 0) >= TRUE_GREEN_EPOCH
+    }
     out = {
-        "v": 12,
+        "v": 14,
         "app": "n3-zen",
         "updatedAt": max(int(a.get("updatedAt") or 0), int(b.get("updatedAt") or 0)),
         "dates": {},
-        "masteryOverrides": dict(a.get("masteryOverrides") or {}),
+        "masteryOverrides": clean_a_ov,
         "records": [],
     }
     all_dates = set((a.get("dates") or {}).keys()) | set((b.get("dates") or {}).keys())
@@ -257,12 +297,13 @@ def merge_crdt(a: dict, b: dict) -> dict:
         out["dates"][d] = merge_day_bucket(da, db)
 
     for mk, mv in (b.get("masteryOverrides") or {}).items():
-        cur = out["masteryOverrides"].get(mk)
         if isinstance(mv, list) and len(mv) == 2:
-            if not isinstance(cur, list) or int(mv[1] or 0) >= int(cur[1] or 0):
-                out["masteryOverrides"][mk] = [str(mv[0]), int(mv[1] or 0)]
-        elif isinstance(mv, str) and not cur:
-            out["masteryOverrides"][mk] = [mv, 1]
+            ts_i = int(mv[1] or 0)
+            if ts_i < TRUE_GREEN_EPOCH:
+                continue
+            cur = out["masteryOverrides"].get(mk)
+            if not isinstance(cur, list) or ts_i >= int(cur[1] or 0):
+                out["masteryOverrides"][mk] = [str(mv[0]), ts_i]
 
     seen = set()
     merged_recs = []
@@ -317,7 +358,8 @@ def unpack_compact_ntfy(pkt: dict) -> dict | None:
         day["speeds"] = pkt["sp"]
     if isinstance(pkt.get("tw"), list):
         day["tappedWords"] = [str(x) for x in pkt["tw"] if x][:80]
-    if isinstance(pkt.get("fp"), list) and len(pkt["fp"]) >= 3:
+    pkt_ver = int(pkt.get("v") or 0)
+    if pkt_ver >= 14 and isinstance(pkt.get("fp"), list) and len(pkt["fp"]) >= 3:
         fp = pkt["fp"]
         day["flashProg"] = [
             int(fp[0] or 0),
@@ -337,11 +379,11 @@ def unpack_compact_ntfy(pkt: dict) -> dict | None:
                 "ts": item[4] if len(item) >= 5 else "",
             })
     return {
-        "v": 12,
+        "v": 14,
         "app": "n3-zen",
         "updatedAt": int(pkt.get("u") or 0),
         "dates": {d: day},
-        "masteryOverrides": pkt.get("o") if isinstance(pkt.get("o"), dict) else {},
+        "masteryOverrides": (pkt.get("o") if (pkt_ver >= 14 and isinstance(pkt.get("o"), dict)) else {}),
         "records": recs,
     }
 
@@ -369,7 +411,7 @@ def pack_compact_ntfy(state: dict, plan_date: str) -> dict:
         )
     pkt = {
         "a": "n3z",
-        "v": 13,
+        "v": 14,
         "u": int(state.get("updatedAt") or int(time.time())),
         "d": plan_date,
         "r": int(day.get("resetAt") or 0),
@@ -453,10 +495,13 @@ def seed_from_practice_log(state: dict, plan_date: str) -> tuple[dict, list[dict
             existing_lines.append(rec)
             idx += 1
             raw_qid = str(rec.get("id", ""))
-            if not raw_qid or raw_qid.endswith("-twin"):
+            if not raw_qid or raw_qid.endswith("-twin") or raw_qid.startswith("FLASH-") or raw_qid.startswith("VC-"):
+                continue
+            rec_sdate = _iso_to_study_date(str(rec.get("ts") or ""))
+            if rec_sdate and rec_sdate != plan_date:
                 continue
             pid = variant_parent.get(raw_qid, raw_qid)
-            if tag in pid or pid.startswith("N3-"):
+            if (tag in pid or pid.startswith("N3-") or "-20261114-" in pid) and rec_sdate == plan_date:
                 ok = str(rec.get("correct", "")).lower() == "true"
                 again = str(rec.get("ask_again", "")).lower() == "true"
                 ts_seed = 10 + idx
@@ -480,6 +525,11 @@ def main():
     state = load_json(SNAPSHOT_PATH, empty_crdt_state(plan_date))
     if state.get("app") != "n3-zen":
         state = empty_crdt_state(plan_date)
+    state["masteryOverrides"] = {
+        mk: mv
+        for mk, mv in (state.get("masteryOverrides") or {}).items()
+        if isinstance(mv, list) and len(mv) == 2 and int(mv[1] or 0) >= TRUE_GREEN_EPOCH
+    }
 
     state, existing_log = seed_from_practice_log(state, plan_date)
 

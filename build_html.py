@@ -27,6 +27,7 @@ from clear_explanations import CARDS_75
 from radio_dialogue_bank import MODALITY_MAP
 from sentence_lexicon import SENTENCE_LEXICON
 from tutor_data import KANA_ADVERBS_36, TUTOR_ITEMS, WORD_DICT
+from vocab_cards import VOCAB_CARDS, build_dynamic_vocab_card
 import tutor_prefs
 
 MEMORY_PREFS = tutor_prefs.load_prefs()
@@ -39,6 +40,7 @@ HTML_PATH = os.path.join(BASE_DIR, "index.html")
 STATE_PATH = os.path.join(BASE_DIR, "n3_live_state.json")
 AUDIO_MANIFEST_PATH = os.path.join(BASE_DIR, "audio", "audio_manifest.json")
 RADIO_META_PATH = os.path.join(BASE_DIR, "audio", "daily_radio_meta.json")
+TRUE_GREEN_EPOCH = 1794761500
 
 plans = sorted(glob.glob(os.path.join(BASE_DIR, "brain_plan_*.json")))
 with open(plans[-1], encoding="utf-8") as f:
@@ -511,24 +513,31 @@ for p in ordered_points:
     point_id_by_key[p["point"]] = p["id"]
 
 
-def norm_tier(status: str) -> str:
+def norm_tier_meta(p_obj: dict) -> tuple[str, str, int]:
+    status = p_obj.get("status", "yellow")
     if status in ("red", "orange"):
-        return "todo"
+        return "todo", "todo", 0
     if status == "green":
-        return "done"
-    return "wip"
+        return "done", "done", 3
+    if status == "gray":
+        return "wip", "wip0", 0
+    s = 2 if int(p_obj.get("streak") or 1) >= 2 else 1
+    ok_d = str(p_obj.get("last_ok_date") or "20261114").replace("-", "")[:8] or "20261114"
+    return "wip", f"wip{s}:{ok_d}", s
 
 
 grammar_items = []
 for p in live_state.get("grammar_points", []):
     nm = p.get("name", "")
-    st = p.get("status", "yellow")
+    tier, mstate, streak = norm_tier_meta(p)
     grammar_items.append({
         "key": nm,
         "name": nm,
         "sub": p.get("meaning", ""),
         "family": re.sub(r"^\d+\.\s*", "", p.get("family", "")),
-        "tier": norm_tier(st),
+        "tier": tier,
+        "mstate": mstate,
+        "streak": streak,
         "point_id": point_id_by_key.get(nm, ""),
         "note": clean_zen_text(p.get("exam_alert") or p.get("note", "")),
     })
@@ -538,13 +547,15 @@ for p in live_state.get("henkei_points", []):
     if p.get("tier") == "basic_n5n4" and p.get("status") == "gray":
         continue
     pid = p.get("id", "")
-    st = p.get("status", "gray")
+    tier, mstate, streak = norm_tier_meta(p)
     henkei_items.append({
         "key": pid,
         "name": p.get("name", ""),
         "sub": p.get("example", ""),
         "family": re.sub(r"^\d+(?:\.\d+)?\s*", "", p.get("subcategory") or p.get("category", "")),
-        "tier": norm_tier(st),
+        "tier": tier,
+        "mstate": mstate,
+        "streak": streak,
         "point_id": point_id_by_key.get(pid, ""),
         "note": clean_zen_text(p.get("note", "")),
     })
@@ -554,13 +565,15 @@ for p in live_state.get("listening_points", []):
     if not p.get("is_core165") and p.get("status") == "gray":
         continue
     pid = p.get("id", "")
-    st = p.get("status", "gray")
+    tier, mstate, streak = norm_tier_meta(p)
     listening_items.append({
         "key": pid,
         "name": p.get("name", ""),
         "sub": p.get("meaning", "") or p.get("full", ""),
         "family": p.get("category", ""),
-        "tier": norm_tier(st),
+        "tier": tier,
+        "mstate": mstate,
+        "streak": streak,
         "point_id": point_id_by_key.get(pid, ""),
         "note": clean_zen_text(p.get("trap", "") or p.get("note", "")),
     })
@@ -568,40 +581,71 @@ for p in live_state.get("listening_points", []):
 DROP_CASUAL_WORDS = {"ぱさぱさ", "ずしっと", "万年筆"}
 vocab_items = []
 seen_vocab_words = set()
+vc_audio_manifest = audio_manifest.get("vocab_cards", {})
 
 for p in live_state.get("vocab_tracked", []):
     w = p.get("word", "")
     if w in DROP_CASUAL_WORDS:
         continue
     seen_vocab_words.add(w)
-    st = p.get("status", "red")
+    tier, mstate, streak = norm_tier_meta(p)
     w_info = rich_words.get(w, {})
-    meaning_short = w_info.get("zh") or re.sub(r"^\d+\.\s*", "", p.get("category", ""))
+    vc_spec = VOCAB_CARDS.get(w, {})
+    meaning_short = w_info.get("zh") or (vc_spec.get("zh", "").split(" · ")[0]) or re.sub(r"^\d+\.\s*", "", p.get("category", ""))
     vocab_items.append({
         "key": w,
         "name": w,
         "sub": meaning_short,
         "family": re.sub(r"^\d+\.\s*", "", p.get("category", "")),
-        "tier": norm_tier(st),
+        "tier": tier,
+        "mstate": mstate,
+        "streak": streak,
         "point_id": point_id_by_key.get(w, ""),
         "audio": resolve_word_audio(w),
-        "note": clean_zen_text(w_info.get("tip") or p.get("classroom_note") or ""),
+        "note": clean_zen_text(vc_spec.get("twin") or w_info.get("tip") or p.get("classroom_note") or ""),
     })
 
 for kw, pitch, desc in CORE_N3_KANA_VOCAB:
     if kw in seen_vocab_words:
         continue
     seen_vocab_words.add(kw)
+    vc_spec = VOCAB_CARDS.get(kw, {})
     vocab_items.append({
         "key": kw,
         "name": kw,
         "sub": desc.split("（")[0],
         "family": "高频假名副词",
         "tier": "wip",
+        "mstate": "wip0",
+        "streak": 0,
         "point_id": point_id_by_key.get(kw, ""),
         "audio": resolve_word_audio(kw),
-        "note": f"声调 {pitch} · {desc}",
+        "note": clean_zen_text(vc_spec.get("twin") or f"声调 {pitch} · {desc}"),
     })
+
+vocab_cards_payload = {}
+all_vc_keys = list(seen_vocab_words) + [k for k in VOCAB_CARDS if k not in seen_vocab_words]
+for vw in all_vc_keys:
+    spec = build_dynamic_vocab_card(vw, rich_words.get(vw, {}))
+    vc_aud = vc_audio_manifest.get(vw) or {}
+    w_aud = resolve_word_audio(vw)
+    front_aud = vc_aud.get("front") or (w_aud if spec["mode"] == "kana_meaning" else "")
+    rev_aud = vc_aud.get("rev") or ""
+    full_aud = vc_aud.get("full") or rev_aud or w_aud
+    vocab_cards_payload[vw] = {
+        "mode": spec["mode"],
+        "chunk_ja": spec["chunk_ja"],
+        "target": spec["target"],
+        "kana": spec["kana"],
+        "pitch": spec["pitch"],
+        "zh": spec["zh"],
+        "twin": spec["twin"],
+        "zh_speak": spec.get("zh_speak", ""),
+        "front_audio": front_aud,
+        "rev_audio": rev_aud,
+        "full_audio": full_aud,
+        "word_audio": w_aud,
+    }
 
 
 def count_tiers(items):
@@ -622,7 +666,7 @@ mastery_data = {
 plan_date_str = (
     live_state.get("study_date")
     or radio_meta.get("date")
-    or live_state.get("updated_at", plan.get("plan_date", "2026-11-14"))[:10]
+    or live_state.get("updated_at", plan.get("plan_date", "2026-11-15"))[:10]
 )
 cloud_cfg_path = os.path.join(BASE_DIR, "cloud_sync_config.json")
 cloud_snap_path = os.path.join(BASE_DIR, "cloud_state_snapshot.json")
@@ -643,20 +687,26 @@ if os.path.exists(cloud_snap_path):
         pass
 
 seeded_day = (cloud_snap.get("dates") or {}).get(plan_date_str) or {}
-seeded_overrides = cloud_snap.get("masteryOverrides") or {}
+seeded_overrides = {
+    mk: mv
+    for mk, mv in (cloud_snap.get("masteryOverrides") or {}).items()
+    if isinstance(mv, list) and len(mv) == 2 and int(mv[1] or 0) >= TRUE_GREEN_EPOCH
+}
 
 vocab_base_done = sum(1 for it in vocab_items if it["tier"] == "done")
 
 payload = json.dumps({
     "plan_date": plan_date_str,
     "exam_date": "2026-12-06",
-    "days_to_exam": live_state.get("days_left", plan.get("days_to_exam", 22)),
+    "days_to_exam": live_state.get("days_left", plan.get("days_to_exam", 21)),
     "done_audio": "./audio/done.mp3",
     "radio": radio_meta,
     "points": ordered_points,
     "words": rich_words,
+    "vocab_cards": vocab_cards_payload,
     "mastery": mastery_data,
     "vocab_base_done": vocab_base_done,
+    "true_green_epoch": TRUE_GREEN_EPOCH,
     "cloud_sync": {
         "ntfy_topic": cloud_cfg.get("ntfy_topic", ""),
         "seeded_day": seeded_day,
@@ -669,7 +719,9 @@ html = r"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-<meta name="description" content="JLPT N3 · 每日做题与双人随身听" />
+<meta name="screen-orientation" content="portrait" />
+<meta name="x5-orientation" content="portrait" />
+<meta name="description" content="JLPT N3 · 做题 · 随身听 · 单手记词" />
 <meta name="theme-color" content="#F5F2EB" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -883,6 +935,18 @@ html = r"""<!DOCTYPE html>
   .horizon-score {
     white-space: nowrap;
     line-height: 1;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--ink-3);
+    padding: 4px 0;
+  }
+  .horizon-score .ledger-tag {
+    color: var(--ink-2);
+    transition: color 0.18s ease;
+  }
+  .horizon-score.active-ledger .ledger-tag {
+    color: var(--sumi);
+    font-weight: 600;
   }
   .horizon-track {
     display: none;
@@ -1818,6 +1882,14 @@ html = r"""<!DOCTYPE html>
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  .li-streak {
+    font-size: 12.5px;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-3);
+    letter-spacing: 0.02em;
+  }
+  .li-streak.s-wip { color: var(--ochre); font-weight: 500; }
+  .li-streak.s-done { color: var(--moss); font-weight: 500; }
   .li-act {
     font-size: 14px;
     color: var(--moss);
@@ -1883,7 +1955,7 @@ html = r"""<!DOCTYPE html>
     color: var(--moss);
   }
 
-  /* ================= 7. BEDTIME VOCAB FLASHCARD SANCTUARY ================= */
+  /* ================= 7. ONE-HANDED SWIPE VOCAB SANCTUARY ("记词") ================= */
   .night-bar {
     display: flex;
     justify-content: space-between;
@@ -1920,180 +1992,210 @@ html = r"""<!DOCTYPE html>
     letter-spacing: 0.06em;
   }
 
-  .flash-mask {
-    position: fixed;
-    inset: 0;
-    background: var(--washi);
-    display: none;
-    flex-direction: column;
+  .vc-meta-right {
+    display: inline-flex;
     align-items: center;
-    padding: calc(16px + env(safe-area-inset-top)) 28px calc(20px + env(safe-area-inset-bottom));
-    z-index: 120;
-  }
-  .flash-mask.open { display: flex; }
-  .flash-shell {
-    width: 100%;
-    max-width: 496px;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-  }
-  .flash-top {
-    flex-shrink: 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--hairline);
-  }
-  .flash-prog {
-    font-size: 14px;
+    gap: 7px;
+    font-size: 13px;
     color: var(--ink-3);
     font-variant-numeric: tabular-nums;
-    letter-spacing: 0.04em;
   }
-  .flash-top-acts {
-    display: flex;
-    align-items: baseline;
-    gap: 18px;
+  .vc-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
   }
-  .flash-track {
-    height: 2px;
-    background: var(--track);
-    flex-shrink: 0;
+  .vc-dot {
+    width: 6.5px;
+    height: 6.5px;
+    border-radius: 50%;
+    border: 1.3px solid rgba(28, 27, 24, 0.28);
+    background: transparent;
   }
-  .flash-fill {
-    height: 100%;
+  .vc-dot.on {
+    border-color: var(--moss);
     background: var(--moss);
-    transition: width 0.25s ease;
   }
-  .flash-stage {
+
+  .vc-deck-area {
     flex: 1;
     min-height: 0;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    padding: 12px 0 14px;
+    position: relative;
+  }
+  .vc-card {
+    position: relative;
+    width: 100%;
+    flex: 1;
+    max-height: 448px;
+    min-height: 264px;
+    background: var(--sheet);
+    border: 1px solid var(--hairline-strong);
+    border-radius: 12px;
+    padding: 28px 22px 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     align-items: center;
     text-align: center;
-    padding: 20px 6px;
-    cursor: pointer;
+    touch-action: none;
+    cursor: grab;
+    will-change: transform, opacity;
   }
-  .flash-tag {
+  .vc-card.dragging {
+    transition: none !important;
+    cursor: grabbing;
+  }
+  .vc-card.settling {
+    transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s ease;
+  }
+  .vc-card.fly-right {
+    transform: translate3d(122%, 10px, 0) rotate(9deg) !important;
+    opacity: 0 !important;
+    transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s ease !important;
+  }
+  .vc-card.fly-left {
+    transform: translate3d(-122%, 10px, 0) rotate(-9deg) !important;
+    opacity: 0 !important;
+    transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s ease !important;
+  }
+  .vc-card.fly-up {
+    transform: translate3d(0, -118%, 0) scale(0.96) !important;
+    opacity: 0 !important;
+    transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s ease !important;
+  }
+
+  .vc-stamp {
+    position: absolute;
+    top: 16px;
+    padding: 3px 10px;
+    border-radius: 5px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .vc-stamp.right {
+    left: 18px;
+    color: var(--moss);
+    border: 1.5px solid var(--moss);
+    background: rgba(43, 95, 73, 0.06);
+  }
+  .vc-stamp.left {
+    right: 18px;
+    color: var(--bengara);
+    border: 1.5px solid var(--bengara);
+    background: rgba(158, 62, 54, 0.06);
+  }
+  .vc-stamp.up {
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--moss);
+    border: 1.5px solid var(--moss);
+    background: rgba(43, 95, 73, 0.06);
+  }
+
+  .vc-cue {
     font-size: 12.5px;
     color: var(--ink-3);
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
     margin-bottom: 18px;
+    min-height: 18px;
   }
-  .flash-tag.marked { color: var(--bengara); font-weight: 600; }
-  .flash-tag.mastered { color: var(--moss); font-weight: 600; }
-  .flash-word {
+  .vc-cue.ng {
+    color: var(--bengara);
+    font-weight: 600;
+  }
+  .vc-chunk {
     font-family: var(--serif-jp);
-    font-size: 40px;
+    font-size: 30px;
     font-weight: 500;
     color: var(--sumi);
-    line-height: 1.3;
-    letter-spacing: 0.03em;
-    word-break: keep-all;
+    line-height: 1.46;
+    letter-spacing: 0.02em;
   }
-  .flash-back {
+  .vc-hl {
+    font-weight: 600;
+    border-bottom: 2px solid rgba(43, 95, 73, 0.48);
+    padding-bottom: 2px;
+  }
+  .vc-reveal {
     margin-top: 22px;
-    min-height: 112px;
+    min-height: 118px;
+    width: 100%;
     max-width: 390px;
     opacity: 0;
     transform: translateY(4px);
     transition: opacity 0.22s ease, transform 0.22s ease;
     pointer-events: none;
   }
-  .flash-back.shown {
+  .vc-reveal.shown {
     opacity: 1;
     transform: translateY(0);
     pointer-events: auto;
   }
-  .flash-kana {
+  .vc-kana {
     font-size: 18px;
-    color: var(--ink-2);
+    font-weight: 500;
+    color: var(--moss);
     letter-spacing: 0.04em;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
-  .flash-zh {
-    font-size: 21px;
+  .vc-zh {
+    font-size: 20.5px;
     font-weight: 600;
     color: var(--sumi);
-    line-height: 1.45;
+    line-height: 1.42;
   }
-  .flash-tip {
+  .vc-twin {
     margin-top: 10px;
-    font-size: 14.5px;
-    color: var(--ink-3);
-    line-height: 1.6;
-  }
-  .flash-hint {
-    margin-top: 16px;
-    font-size: 13px;
-    color: var(--ink-3);
-  }
-  .flash-dock {
-    flex-shrink: 0;
-    padding-top: 14px;
+    padding-top: 9px;
     border-top: 1px solid var(--hairline);
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  .flash-SubRow {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 4px;
-  }
-  .flash-nav-btn {
     font-size: 14px;
-    color: var(--ink-3);
-    padding: 6px 4px;
+    color: var(--ink-2);
+    line-height: 1.56;
   }
-  .flash-mark-btn {
-    height: 52px;
-    padding: 0 18px;
+
+  .vc-dock {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-top: 4px;
+  }
+  .vc-btn {
+    height: 48px;
     border-radius: 8px;
+    font-size: 14.5px;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .vc-btn.ng {
+    flex: 1.15;
     border: 1px solid rgba(158, 62, 54, 0.34);
     color: var(--bengara);
-    font-size: 15.5px;
     font-weight: 600;
-    letter-spacing: 0.04em;
+    background: var(--sheet);
   }
-  .flash-mark-btn.done-mark {
-    background: rgba(158, 62, 54, 0.09);
-    border-color: var(--bengara);
+  .vc-btn.mid {
+    flex: 0.78;
+    border: 1px solid var(--hairline-strong);
+    color: var(--ink-2);
+    background: transparent;
+    font-size: 13.5px;
   }
-  .flash-ok-btn {
-    height: 52px;
-    padding: 0 18px;
-    border-radius: 8px;
-    border: 1px solid rgba(43, 95, 73, 0.34);
-    color: var(--moss);
-    font-size: 15.5px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-  }
-  .flash-ok-btn.done-ok {
-    background: rgba(43, 95, 73, 0.10);
-    border-color: var(--moss);
-  }
-  .flash-play-btn {
-    flex: 1;
-    height: 52px;
-    border-radius: 8px;
+  .vc-btn.ok {
+    flex: 1.15;
     background: var(--sumi);
     color: var(--sheet);
-    font-size: 15.5px;
-    font-weight: 500;
-    letter-spacing: 0.06em;
-  }
-  .flash-play-btn.paused {
-    background: var(--sheet);
-    color: var(--sumi);
-    border: 1px solid var(--hairline-strong);
+    font-weight: 600;
   }
 </style>
 </head>
@@ -2106,7 +2208,7 @@ html = r"""<!DOCTYPE html>
     <nav class="zen-nav">
       <button class="nav-link active" id="tab-tutor" onclick="switchMode('tutor')">做题</button>
       <button class="nav-link" id="tab-radio" onclick="switchMode('radio', true)">随身听</button>
-      <button class="nav-link" id="tab-dash" onclick="switchMode('dash')">总表</button>
+      <button class="nav-link" id="tab-vocab" onclick="switchMode('vocab')">记词</button>
     </nav>
   </header>
 
@@ -2115,7 +2217,7 @@ html = r"""<!DOCTYPE html>
     <div class="horizon-meta">
       <div class="enso-trio" id="enso-trio"></div>
       <span class="sr-only" id="gm-left-txt"></span>
-      <span class="horizon-score" id="gm-right-txt">预计 <b>108分</b> · 冲120+</span>
+      <button type="button" class="horizon-score" id="gm-right-txt" onclick="toggleDashLedger(event)">预计 <b>108分</b> · <span class="ledger-tag">总表</span></button>
     </div>
     <div class="horizon-track">
       <div class="horizon-fill" id="gm-fill" style="width:0%"></div>
@@ -2171,7 +2273,12 @@ html = r"""<!DOCTYPE html>
     </div>
   </section>
 
-  <!-- 3C. ZEN LEDGER ("总表") -->
+  <!-- 3C. ONE-HANDED SWIPE VOCAB SANCTUARY ("记词") -->
+  <section class="zen-panel hidden" id="vocab-view">
+    <div class="stage-wrap" id="vocab-stage-box"></div>
+  </section>
+
+  <!-- 3D. ZEN LEDGER ("总表") -->
   <section class="zen-panel hidden" id="dash-view">
     <div class="ledger-scroll">
       <div id="night-flash-entry"></div>
@@ -2193,16 +2300,26 @@ html = r"""<!DOCTYPE html>
   <div class="modal-card" id="modal-content"></div>
 </div>
 
-<div class="flash-mask" id="flash-modal">
-  <div class="flash-shell" id="flash-shell"></div>
-</div>
-
 <script>
 const DATA = __PAYLOAD__;
 const SPEEDS = [1.0, 1.15, 1.3, 1.5];
 const RADIO_SPEEDS = [1.0, 1.15, 1.3];
-const ADAPTIVE_KEY = "n3_adaptive_v12_" + DATA.plan_date;
+const ADAPTIVE_KEY = "n3_adaptive_v13_" + DATA.plan_date;
 const RADIO_POS_KEY = "n3_radio_pos_" + (DATA.radio.date || DATA.plan_date);
+const TODAY_TAG = String(DATA.plan_date || "").replace(/-/g, "");
+const TRUE_GREEN_EPOCH = Number(DATA.true_green_epoch || 1794761500);
+const VOCAB_BATCH_SIZE = 18;
+
+function tryLockPortrait() {
+  try {
+    if (screen && screen.orientation && typeof screen.orientation.lock === "function") {
+      screen.orientation.lock("portrait").catch(() => {});
+    }
+  } catch (e) {}
+}
+tryLockPortrait();
+document.addEventListener("pointerdown", tryLockPortrait, { once: true, passive: true });
+document.addEventListener("touchstart", tryLockPortrait, { once: true, passive: true });
 
 let expSpeed = parseFloat(localStorage.getItem("n3_exp_speed") || "1.0");
 if (!SPEEDS.includes(expSpeed)) expSpeed = 1.0;
@@ -2211,6 +2328,7 @@ if (!RADIO_SPEEDS.includes(radioSpeed)) radioSpeed = 1.0;
 
 let activeKind = null;
 let activeMode = "tutor";
+let prevNonDashMode = "tutor";
 
 if ("serviceWorker" in navigator) {
   let swRefreshing = false;
@@ -2276,6 +2394,7 @@ function createFreshAdaptiveState() {
     radioMaxSec: 0,
     radioPos: [0, 0],
     flashProg: [0, 0, 0, 0],
+    vocabSess: null,
     pts: pts,
     tappedWords: [],
     masteryOverrides: {},
@@ -2324,7 +2443,7 @@ function recomputeStatusesFromCRDT(st) {
   });
 }
 
-// Seed from repo cloud_state_snapshot + union-merge ALL historical localStorage keys (v5..v12)
+// Seed from repo cloud_state_snapshot + union-merge ALL historical localStorage keys (v5..v13)
 function loadAdaptiveState() {
   const base = createFreshAdaptiveState();
 
@@ -2374,16 +2493,16 @@ function loadAdaptiveState() {
     Object.keys(sov).forEach(mk => {
       const v = sov[mk];
       if (Array.isArray(v) && v.length === 2) {
-        base.masteryOverrides[mk] = String(v[0]);
-        base.masteryOverrideTs[mk] = Math.floor(v[1] || 1);
-      } else if (typeof v === "string") {
-        base.masteryOverrides[mk] = v;
-        base.masteryOverrideTs[mk] = 1;
+        const mts = Math.floor(v[1] || 0);
+        if (mts >= TRUE_GREEN_EPOCH) {
+          base.masteryOverrides[mk] = String(v[0]);
+          base.masteryOverrideTs[mk] = mts;
+        }
       }
     });
   } catch (e) {}
 
-  // 2. Union-merge all local browser keys (n3_session_v5..v6, n3_adaptive_v7..v12)
+  // 2. Union-merge all local browser keys (n3_session_v5..v6, n3_adaptive_v7..v13)
   try {
     const suffix = "_" + DATA.plan_date;
     const candidateKeys = [];
@@ -2410,6 +2529,11 @@ function loadAdaptiveState() {
         }
         if (typeof saved.st === "number" && saved.st > (base.st || 0)) applySpeedTuple(base, [saved.es, saved.rs, saved.st]);
         if (Array.isArray(saved.flashProg)) mergeFlashProgTuple(base, saved.flashProg);
+        if (saved.vocabSess && saved.vocabSess.date === DATA.plan_date && Array.isArray(saved.vocabSess.queue)) {
+          if (!base.vocabSess || (saved.vocabSess.updatedAt || 0) >= (base.vocabSess.updatedAt || 0)) {
+            base.vocabSess = saved.vocabSess;
+          }
+        }
         if (Array.isArray(saved.tappedWords)) {
           saved.tappedWords.forEach(w => {
             const ws = String(w || "").trim();
@@ -2426,9 +2550,9 @@ function loadAdaptiveState() {
           const tsObj = saved.masteryOverrideTs || {};
           Object.keys(saved.masteryOverrides).forEach(mk => {
             const val = saved.masteryOverrides[mk];
-            const mts = Math.floor(tsObj[mk] || (val === "done" ? 2 : 1));
-            if (mts >= (base.masteryOverrideTs[mk] || 0)) {
-              base.masteryOverrides[mk] = val;
+            const mts = Math.floor(tsObj[mk] || 0);
+            if (mts >= TRUE_GREEN_EPOCH && mts >= (base.masteryOverrideTs[mk] || 0)) {
+              base.masteryOverrides[mk] = String(val);
               base.masteryOverrideTs[mk] = mts;
             }
           });
@@ -2591,13 +2715,79 @@ function applySpeedTuple(st, v) {
   return true;
 }
 
-function setMasteryTier(key, tier, tsSec) {
+// ================= TWO-LAYER HONEST MASTERY ENGINE (3 DISTINCT DAYS = TRUE GREEN) =================
+const BASE_MSTATE_MAP = {};
+Object.keys(DATA.mastery || {}).forEach(mod => {
+  (DATA.mastery[mod].items || []).forEach(it => {
+    const initMs = it.mstate || (it.tier === "done" ? "done" : (it.tier === "wip" ? "wip1" : "todo"));
+    if (it.key) BASE_MSTATE_MAP[it.key] = initMs;
+    if (it.name && !BASE_MSTATE_MAP[it.name]) BASE_MSTATE_MAP[it.name] = initMs;
+  });
+});
+
+function parseMasteryState(raw) {
+  const s = String(raw || "todo").trim();
+  if (s === "done") return { mstate: "done", tier: "done", streak: 3, lastDate: "" };
+  if (s === "wip0") return { mstate: "wip0", tier: "wip", streak: 0, lastDate: "" };
+  const parts = s.split(":");
+  const head = parts[0];
+  const dt = parts[1] || "";
+  if (head === "wip2") return { mstate: dt ? `wip2:${dt}` : "wip2", tier: "wip", streak: 2, lastDate: dt };
+  if (head === "wip1" || head === "wip") return { mstate: dt ? `wip1:${dt}` : "wip1", tier: "wip", streak: 1, lastDate: dt };
+  return { mstate: dt ? `todo:${dt}` : "todo", tier: "todo", streak: 0, lastDate: dt };
+}
+
+function getEffectiveMastery(key, altKey) {
+  const ov = A.masteryOverrides || {};
+  const ts = A.masteryOverrideTs || {};
+  const k1 = key || "";
+  const k2 = altKey || "";
+  let raw = "";
+  if (k1 && ov[k1] && k2 && ov[k2]) {
+    raw = (ts[k1] || 0) >= (ts[k2] || 0) ? ov[k1] : ov[k2];
+  } else if (k1 && ov[k1]) {
+    raw = ov[k1];
+  } else if (k2 && ov[k2]) {
+    raw = ov[k2];
+  } else {
+    raw = BASE_MSTATE_MAP[k1] || BASE_MSTATE_MAP[k2] || "todo";
+  }
+  return parseMasteryState(raw);
+}
+
+function computeNextMasteryState(curObj, action, dayTag) {
+  const d = dayTag || TODAY_TAG;
+  if (action === "seal") return "done";
+  if (action === "fail") return `todo:${d}`;
+  if (curObj.tier === "done") return "done";
+  if (action === "recover" || curObj.mstate === `todo:${d}`) {
+    return `wip1:${d}`;
+  }
+  if (curObj.lastDate === d && curObj.streak >= 1) {
+    return curObj.mstate;
+  }
+  const nextStreak = Math.min(3, (curObj.streak || 0) + 1);
+  if (nextStreak >= 3) return "done";
+  if (nextStreak === 2) return `wip2:${d}`;
+  return `wip1:${d}`;
+}
+
+function setMasteryTier(key, mstateStr, tsSec) {
   if (!key) return;
-  const ts = Math.floor(tsSec || nowUnixSec());
+  const ts = Math.max(TRUE_GREEN_EPOCH, Math.floor(tsSec || nowUnixSec()));
   if (ts >= (A.masteryOverrideTs[key] || 0)) {
-    A.masteryOverrides[key] = tier;
+    A.masteryOverrides[key] = String(mstateStr);
     A.masteryOverrideTs[key] = ts;
   }
+}
+
+function applyMasteryAction(key, altKey, action, tsSec) {
+  const curObj = getEffectiveMastery(key, altKey);
+  const nextMs = computeNextMasteryState(curObj, action, TODAY_TAG);
+  const stamp = Math.max(TRUE_GREEN_EPOCH, Math.floor(tsSec || nowUnixSec()));
+  if (key) setMasteryTier(key, nextMs, stamp);
+  if (altKey && altKey !== key) setMasteryTier(altKey, nextMs, stamp);
+  return nextMs;
 }
 
 const SKIP_ENROLL_WORDS = new Set([
@@ -2613,11 +2803,14 @@ Object.keys(DATA.mastery || {}).forEach(mod => {
   });
 });
 
-function enrollDynamicVocabItem(w, defaultTier) {
+function enrollDynamicVocabItem(w, defaultState) {
   if (!w || KNOWN_MASTERY_KEYS.has(w) || SKIP_ENROLL_WORDS.has(w)) return;
   const info = DATA.words && DATA.words[w];
   if (!info || !info.zh) return;
   KNOWN_MASTERY_KEYS.add(w);
+  const initRaw = defaultState || "todo";
+  if (!BASE_MSTATE_MAP[w]) BASE_MSTATE_MAP[w] = "todo";
+  const parsed = parseMasteryState(initRaw);
   if (DATA.mastery && DATA.mastery.vocab && Array.isArray(DATA.mastery.vocab.items)) {
     const tipParts = [];
     if (info.head && info.head !== w) tipParts.push(`原形 ${info.head}`);
@@ -2627,7 +2820,9 @@ function enrollDynamicVocabItem(w, defaultTier) {
       name: w,
       sub: info.zh,
       family: "今日查词",
-      tier: defaultTier || "todo",
+      tier: parsed.tier,
+      mstate: parsed.mstate,
+      streak: parsed.streak,
       point_id: "",
       audio: info.audio || "",
       note: tipParts.join(" · ")
@@ -2638,13 +2833,9 @@ function enrollDynamicVocabItem(w, defaultTier) {
 function applyMasteryOverrides() {
   DATA.points.forEach(p => {
     const ps = A.pts[p.id];
-    if (ps && ps.status === "green") {
-      const gts = Math.max(ps.greenAt || 2, 2);
-      setMasteryTier(p.point_key, "done", gts);
-      setMasteryTier(p.point, "done", gts);
-    } else if (ps && (ps.retestAt || 0) > (A.resetAt || 0) && (ps.retestAt || 0) > (ps.greenAt || 0)) {
-      setMasteryTier(p.point_key, "todo", ps.retestAt);
-      setMasteryTier(p.point, "todo", ps.retestAt);
+    if (ps && (ps.retestAt || 0) >= TRUE_GREEN_EPOCH && (ps.retestAt || 0) > (A.resetAt || 0) && (ps.retestAt || 0) > (ps.greenAt || 0)) {
+      setMasteryTier(p.point_key, `todo:${TODAY_TAG}`, ps.retestAt);
+      setMasteryTier(p.point, `todo:${TODAY_TAG}`, ps.retestAt);
     }
   });
   const ov = A.masteryOverrides || {};
@@ -2653,8 +2844,10 @@ function applyMasteryOverrides() {
   Object.keys(DATA.mastery).forEach(mod => {
     const c = { todo: 0, wip: 0, done: 0, total: 0 };
     DATA.mastery[mod].items.forEach(it => {
-      const tier = ov[it.key] || ov[it.name];
-      if (tier) it.tier = tier;
+      const eff = getEffectiveMastery(it.key, it.name);
+      it.mstate = eff.mstate;
+      it.tier = eff.tier;
+      it.streak = eff.streak;
       c[it.tier] = (c[it.tier] || 0) + 1;
       c.total += 1;
     });
@@ -2772,7 +2965,7 @@ function decodePointStates(z) {
 function buildCompactPacket() {
   const pkt = {
     a: "n3z",
-    v: 13,
+    v: 14,
     u: nowUnixSec(),
     d: DATA.plan_date,
     r: Math.floor(A.resetAt || 0),
@@ -2811,10 +3004,10 @@ function buildCompactPacket() {
       size += twAdd;
     }
   }
-  const ovEntries = Object.keys(A.masteryOverrides || {}).map(k => [
-    k,
-    [String(A.masteryOverrides[k]), Math.floor((A.masteryOverrideTs && A.masteryOverrideTs[k]) || 1)]
-  ]).sort((x, y) => y[1][1] - x[1][1]);
+  const ovEntries = Object.keys(A.masteryOverrides || {})
+    .map(k => [k, [String(A.masteryOverrides[k]), Math.floor((A.masteryOverrideTs && A.masteryOverrideTs[k]) || 0)]])
+    .filter(kv => kv[1][1] >= TRUE_GREEN_EPOCH)
+    .sort((x, y) => y[1][1] - x[1][1]);
   for (const kv of ovEntries) {
     const add = byteLen(JSON.stringify(kv[0]) + ":" + JSON.stringify(kv[1])) + 1;
     if (size + add > CLOUD_BYTE_LIMIT) break;
@@ -2872,13 +3065,15 @@ function applyIncomingPacket(pkt) {
   if (!pkt || pkt.a !== "n3z") return false;
   let changed = false;
   syncApplyingRemote = true;
+  const pktVer = Math.floor(pkt.v || 0);
   try {
-    if (pkt.o && typeof pkt.o === "object") {
+    if (pktVer >= 14 && pkt.o && typeof pkt.o === "object") {
       Object.keys(pkt.o).forEach(mk => {
         const v = pkt.o[mk];
         if (Array.isArray(v) && v.length === 2) {
           const tier = String(v[0]);
-          const ts = Math.floor(v[1] || 1);
+          const ts = Math.floor(v[1] || 0);
+          if (ts < TRUE_GREEN_EPOCH) return;
           const curTs = A.masteryOverrideTs[mk] || 0;
           if (ts > curTs || (ts === curTs && String(A.masteryOverrides[mk] || "") < tier)) {
             A.masteryOverrides[mk] = tier;
@@ -2909,7 +3104,7 @@ function applyIncomingPacket(pkt) {
       changed = true;
     }
 
-    if (Array.isArray(pkt.fp) && mergeFlashProgTuple(A, pkt.fp)) {
+    if (pktVer >= 14 && Array.isArray(pkt.fp) && mergeFlashProgTuple(A, pkt.fp)) {
       changed = true;
     }
 
@@ -2940,7 +3135,6 @@ function applyIncomingPacket(pkt) {
         if (applySchedTuple(ps, e.s, A.resetAt)) ptsChanged = true;
       });
     } else {
-      // older page versions (before v13)
       const gIn = pkt.g || {};
       Object.keys(gIn).forEach(rawId => {
         const pid = CARD_TO_POINT_ID[rawId] || rawId;
@@ -3018,7 +3212,11 @@ function applyIncomingPacket(pkt) {
       renderGreenBoard();
       if (activeMode === "tutor") {
         if (shownChanged || viewStage !== "result") renderTutor();
-      } else if (activeMode === "dash") renderDashboard();
+      } else if (activeMode === "dash") {
+        renderDashboard();
+      } else if (activeMode === "vocab" && typeof onRemoteVocabSync === "function") {
+        onRemoteVocabSync();
+      }
     }
     return changed;
   } finally {
@@ -3034,11 +3232,11 @@ function updateSyncModalBadge() {
     return;
   }
   if (cloudSyncState === "live") {
-    el.textContent = "多端实时自动同步：已连接（手机与电脑做题秒级合并）";
+    el.textContent = "多端实时自动同步：已连接（手机与电脑秒级对齐）";
   } else if (cloudSyncState === "synced") {
     el.textContent = "多端自动同步：已对齐最新进度";
   } else if (cloudSyncState === "offline") {
-    el.textContent = "当前离线：做题已存本机，联网后自动同步";
+    el.textContent = "当前离线：进度已存本机，联网后自动同步";
   } else {
     el.textContent = "多端自动同步：正在对齐云端进度…";
   }
@@ -3086,7 +3284,6 @@ function pushCloudSync(useKeepalive) {
     cloudInFlight = false;
     if (cloudSyncState !== "live") cloudSyncState = "offline";
     updateSyncModalBadge();
-    // not delivered: keep everything queued and try again shortly
     setTimeout(() => scheduleCloudPush(0), 15000);
     return false;
   });
@@ -3133,7 +3330,6 @@ function pullCloudSync(pushIfLocalAhead) {
       return true;
     }
     if (pushIfLocalAhead && myFp !== latestRemoteFp) {
-      // Automatically upload any local-only historical progress (e.g. from Phone or Desktop) so every device converges!
       return pushCloudSync(false);
     }
     return true;
@@ -3206,22 +3402,26 @@ function computeDaily120Metrics() {
 
   const vItems = (DATA.mastery && DATA.mastery.vocab && DATA.mastery.vocab.items) ? DATA.mastery.vocab.items : [];
   const liveFlashLeft = vItems.filter(it => it.tier !== "done").length;
+  const defaultTarget = Math.min(VOCAB_BATCH_SIZE, Math.max(1, liveFlashLeft || VOCAB_BATCH_SIZE));
   const fp = Array.isArray(A.flashProg) ? A.flashProg : [0, 0, 0, 0];
-  const flashSeen = Math.max(0, Math.floor(fp[0] || 0));
-  const flashDone = (Math.floor(fp[2] || 0) > 0) || (liveFlashLeft === 0 && vItems.length > 0);
+  const sessCleared = (A.vocabSess && A.vocabSess.date === DATA.plan_date) ? Math.floor(A.vocabSess.cleared || 0) : 0;
+  const sessTotal = (A.vocabSess && A.vocabSess.date === DATA.plan_date) ? Math.floor(A.vocabSess.total || 0) : 0;
+  const flashSeen = Math.max(0, Math.floor(fp[0] || 0), sessCleared);
+  const flashDone = (Math.floor(fp[2] || 0) > 0) || !!(A.vocabSess && A.vocabSess.done) || (liveFlashLeft === 0 && vItems.length > 0);
   const flashTarget = flashDone
-    ? Math.max(flashSeen, Math.floor(fp[1] || 0) || liveFlashLeft)
-    : Math.max(flashSeen, Math.floor(fp[1] || 0) || liveFlashLeft || 1);
+    ? Math.max(flashSeen, sessTotal || Math.floor(fp[1] || 0) || defaultTarget)
+    : Math.max(flashSeen, sessTotal || Math.floor(fp[1] || 0) || defaultTarget);
   const flashRatio = flashDone ? 1.0 : (flashSeen > 0 ? Math.min(0.96, flashSeen / Math.max(1, flashTarget)) : 0);
 
   const vDone = vItems.filter(it => it.tier === "done").length;
   const vWip = vItems.filter(it => it.tier === "wip").length;
-  const vocabBonus = Math.min(8, Math.max(0, (vDone - 11) * 0.25 + Math.max(0, vWip - 33) * 0.06));
+  const baseDone = Number(DATA.vocab_base_done || 10);
+  const vocabBonus = Math.min(8, Math.max(0, (vDone - baseDone) * 0.28 + Math.max(0, vWip - 35) * 0.06));
 
-  // Combined 3-ritual daily completion: 50% quiz + 32% podcast + 18% bedtime vocab
+  // Combined 3-ritual daily completion: 50% quiz + 32% podcast + 18% vocab swipe
   const dailyLockPct = Math.min(100, Math.round((quizRatio * 0.50 + radioRatio * 0.32 + flashRatio * 0.18) * 100));
 
-  // Projected JLPT N3 score (/180): 108 base + 12 quiz + 8 podcast + 4 bedtime flashcards + permanent vocab mastery lift
+  // Projected JLPT N3 score (/180): 108 base + 12 quiz + 8 podcast + 4 nightly vocab + cross-day vocab mastery lift
   const projScore = Math.min(165, Math.round(108 + quizRatio * 12 + (radioDone ? 8 : radioRatio * 8) + flashRatio * 4 + vocabBonus));
 
   return {
@@ -3852,7 +4052,7 @@ radioPlayer.addEventListener("timeupdate", () => {
 let stageEnteredAt = performance.now();
 
 function syncBackendRecord(p, qid, choice, isCorrect, askAgain, newTier, stampSec) {
-  const tsSec = stampSec || nowUnixSec();
+  const tsSec = Math.max(TRUE_GREEN_EPOCH, Math.floor(stampSec || nowUnixSec()));
   setMasteryTier(p.point_key, newTier, tsSec);
   setMasteryTier(p.point, newTier, tsSec);
   applyMasteryOverrides();
@@ -3873,7 +4073,6 @@ function syncBackendRecord(p, qid, choice, isCorrect, askAgain, newTier, stampSe
   if (A.recentRecords.length > 25) A.recentRecords = A.recentRecords.slice(-25);
   saveAdaptiveState();
 
-  // Real-time cloud CRDT publish across Phone & Desktop
   scheduleCloudPush(60);
 
   if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
@@ -3907,7 +4106,6 @@ function completeTeachCard() {
 }
 
 // Calm zero-guess escape hatch: never force a blind 50/50 guess (which risks lucky false-greens).
-// Reveals THIS sentence's full 3-step explanation + voice immediately, and schedules a variant re-test 4 steps later.
 function revealWithoutGuess() {
   if (viewStage !== "quiz" || !activeQuizObj) return;
   clearActiveWordToken();
@@ -3931,7 +4129,8 @@ function revealWithoutGuess() {
   A.step += 1;
   A.lastPointId = p.id;
   recomputeStatusesFromCRDT(A);
-  syncBackendRecord(p, activeQuizObj.id, "不确定", false, false, "todo", stamp);
+  const nextMs = applyMasteryAction(p.point_key, p.point, "fail", stamp);
+  syncBackendRecord(p, activeQuizObj.id, "不确定", false, false, nextMs, stamp);
 
   renderTutor();
   playMainClip(activeQuizObj.exp_audio, "exp", false);
@@ -3949,6 +4148,7 @@ function submitAnswer(val) {
   const p = getPointById(curPointId);
   const ps = A.pts[p.id];
   const isCorrect = (val === activeQuizObj.answer);
+  const hadWrongToday = (ps.wrongCount || 0) > 0 || ((ps.retestAt || 0) > (A.resetAt || 0));
 
   if (isCorrect) {
     ps.greenAt = Math.max(stamp, (ps.retestAt || 0), (A.resetAt || 0) + 1);
@@ -3957,7 +4157,8 @@ function submitAnswer(val) {
     A.step += 1;
     A.lastPointId = p.id;
     recomputeStatusesFromCRDT(A);
-    syncBackendRecord(p, activeQuizObj.id, val, true, false, "done", ps.greenAt);
+    const nextMs = applyMasteryAction(p.point_key, p.point, hadWrongToday ? "recover" : "pass", ps.greenAt);
+    syncBackendRecord(p, activeQuizObj.id, val, true, false, nextMs, ps.greenAt);
   } else {
     ps.retestAt = Math.max(stamp, (ps.greenAt || 0) + 1);
     ps.status = "learning";
@@ -3971,7 +4172,8 @@ function submitAnswer(val) {
     A.step += 1;
     A.lastPointId = p.id;
     recomputeStatusesFromCRDT(A);
-    syncBackendRecord(p, activeQuizObj.id, val, false, false, "todo", ps.retestAt);
+    const nextMs = applyMasteryAction(p.point_key, p.point, "fail", ps.retestAt);
+    syncBackendRecord(p, activeQuizObj.id, val, false, false, nextMs, ps.retestAt);
   }
 
   renderTutor();
@@ -3990,7 +4192,10 @@ function advanceNext(forceRetestCurrent) {
     if (p && p.variants && p.variants.length > 0) ps.useVariant = true;
     ps.dueStep = A.step + 4;
     recomputeStatusesFromCRDT(A);
-    if (p) syncBackendRecord(p, p.id, pickedVal, false, true, "todo", ps.retestAt);
+    if (p) {
+      const nextMs = applyMasteryAction(p.point_key, p.point, "fail", ps.retestAt);
+      syncBackendRecord(p, p.id, pickedVal, false, true, nextMs, ps.retestAt);
+    }
   }
   setupCurrentTurn();
   stageEnteredAt = performance.now();
@@ -4030,6 +4235,7 @@ function resetTodayMission() {
   const keepRadio = A.radioMaxSec || 0;
   const keepRadioPos = A.radioPos || [0, 0];
   const keepFlashProg = A.flashProg || [0, 0, 0, 0];
+  const keepVocabSess = A.vocabSess || null;
   const keepSt = A.st || 0;
   A = createFreshAdaptiveState();
   A.resetAt = stamp;
@@ -4039,6 +4245,7 @@ function resetTodayMission() {
   A.radioMaxSec = keepRadio;
   A.radioPos = keepRadioPos;
   A.flashProg = keepFlashProg;
+  A.vocabSess = keepVocabSess;
   A.es = expSpeed;
   A.rs = radioSpeed;
   A.st = keepSt;
@@ -4081,7 +4288,17 @@ function onEnsoTap(idx, ev) {
     if (activeMode !== "radio") switchMode("radio", false);
     else openSessionModal();
   } else {
-    openNightFlash();
+    if (activeMode !== "vocab") switchMode("vocab");
+    else openSessionModal();
+  }
+}
+
+function toggleDashLedger(ev) {
+  if (ev) ev.stopPropagation();
+  if (activeMode === "dash") {
+    switchMode(prevNonDashMode || "tutor");
+  } else {
+    switchMode("dash");
   }
 }
 
@@ -4094,7 +4311,7 @@ function renderGreenBoard() {
     const rings = [
       { ratio: m.quizRatio, done: m.quizDone, label: `做题 ${m.greenCnt}/${m.totalCards}` },
       { ratio: m.radioRatio, done: m.radioDone, label: `随身听 ${m.listenedMins}/${m.targetMins}分` },
-      { ratio: m.flashRatio, done: m.flashDone, label: `睡前生词 ${m.flashDone ? "已完成" : m.flashSeen + "/" + m.flashTarget}` }
+      { ratio: m.flashRatio, done: m.flashDone, label: `记词 ${m.flashDone ? "已完成" : m.flashSeen + "/" + m.flashTarget}` }
     ];
     trioEl.innerHTML = rings.map((r, idx) => {
       const newlyDone = r.done && prevEnsoDoneKey && prevEnsoDoneKey[idx] === "0";
@@ -4105,13 +4322,18 @@ function renderGreenBoard() {
 
   const quizPart = m.quizDone ? `做题 ✓` : `做题 ${m.greenCnt}/${m.totalCards}`;
   const radioPart = m.radioDone ? `随身听 ✓` : `听 ${m.listenedMins}/${m.targetMins}分`;
-  const flashPart = m.flashDone ? `生词 ✓` : `词 ${m.flashSeen}/${m.flashTarget}`;
+  const flashPart = m.flashDone ? `记词 ✓` : `记词 ${m.flashSeen}/${m.flashTarget}`;
   document.getElementById("gm-left-txt").textContent = `${quizPart} · ${radioPart} · ${flashPart}`;
 
-  if (m.projScore >= 120) {
-    document.getElementById("gm-right-txt").innerHTML = `预计 <b class="moss">${m.projScore}分 · 稳过120</b>`;
-  } else {
-    document.getElementById("gm-right-txt").innerHTML = `预计 <b>${m.projScore}分</b> · 冲120+`;
+  const rightEl = document.getElementById("gm-right-txt");
+  if (rightEl) {
+    const ledgerTxt = activeMode === "dash" ? "收起总表" : "总表";
+    rightEl.classList.toggle("active-ledger", activeMode === "dash");
+    if (m.projScore >= 120) {
+      rightEl.innerHTML = `预计 <b class="moss">${m.projScore}分</b> · <span class="ledger-tag">${ledgerTxt}</span>`;
+    } else {
+      rightEl.innerHTML = `预计 <b>${m.projScore}分</b> · <span class="ledger-tag">${ledgerTxt}</span>`;
+    }
   }
   document.getElementById("gm-fill").style.width = `${m.dailyLockPct}%`;
 }
@@ -4142,15 +4364,15 @@ function renderTutor() {
     const nextBtn = !m.radioDone
       ? `<button class="sumi-btn" onclick="switchMode('radio', true)">去听随身听</button>`
       : (!m.flashDone
-          ? `<button class="sumi-btn" onclick="openNightFlash()">睡前过生词</button>`
+          ? `<button class="sumi-btn" onclick="switchMode('vocab')">去单手记词</button>`
           : `<button class="sumi-btn" onclick="switchMode('dash')">查看总表</button>`);
     box.innerHTML = `
-      <div class="meta-bar"><span class="overline ok">${m.allThreeDone ? "今日三修圆满 · 稳过 120 分" : "五十道题已全部刷绿"}</span></div>
+      <div class="meta-bar"><span class="overline ok">${m.allThreeDone ? "今日三修圆满 · 稳过 120 分" : "今日五十道题已全部过关"}</span></div>
       <div class="focal-space">
         <h2 class="point-heading">${m.allThreeDone ? "今日三样皆已圆满" : "五十道题已全部过关"}</h2>
         <p class="logic-line">${m.allThreeDone
-          ? `做题、三人随身听与生词皆已收笔，预计总分稳锁在 ${m.projScore} 分。安心休息，考场稳站 120 分以上。`
-          : `做题部分已拿满，当前预计 ${m.projScore} 分。${!m.radioDone ? "顺手听完今日随身听，" : ""}睡前再过一遍生词，就能把三枚圆印全部收满。`}</p>
+          ? `做题、三人随身听与单手记词皆已收笔，预计总分稳锁在 ${m.projScore} 分。安心休息，考场稳站 120 分以上。`
+          : `做题部分已拿满，当前预计 ${m.projScore} 分。${!m.radioDone ? "顺手听完今日随身听，" : ""}再去记词滑完今晚生词，就能把三枚圆印全部收满。`}</p>
       </div>
       <div class="action-dock">
         <div class="dock-row">
@@ -4260,25 +4482,27 @@ function renderTutor() {
     return;
   }
 
-  // -------- RESULT (Structured Scannable Zen Layout: ① 原句与翻译 -> ② 要点 -> ③ 逐项拆解) --------
+  // -------- RESULT --------
   const q = activeQuizObj || p.primary;
   const isUnsure = pickedVal === "__UNSURE__";
   const isCorrect = !isUnsure && pickedVal === q.answer;
   const ansIdx = currentChoices.indexOf(q.answer) + 1;
   const pickedIdx = currentChoices.indexOf(pickedVal) + 1;
+  const effM = getEffectiveMastery(p.point_key, p.point);
+  const streakTxt = effM.streak >= 3 ? "满 3/3 已掌握" : `记忆 ${effM.streak}/3`;
 
   let overCls = "overline ng";
   let overTxt = "";
   if (isCorrect) {
     overCls = "overline ok";
-    overTxt = q.is_listening && ansIdx > 0 ? `已变绿 · 正确答案 ${ansIdx}` : "已变绿";
+    overTxt = q.is_listening && ansIdx > 0 ? `本题过关 · 正解 ${ansIdx} · ${streakTxt}` : `本题过关 · ${streakTxt}`;
   } else if (isUnsure) {
     overCls = "overline warm";
-    overTxt = q.is_listening && ansIdx > 0 ? `直接看讲解 · 正确答案 ${ansIdx} · 稍后复考` : "直接看讲解 · 稍后复考";
+    overTxt = q.is_listening && ansIdx > 0 ? `直接看讲解 · 正解 ${ansIdx} · 稍后复考` : "直接看讲解 · 稍后复考";
   } else {
     overCls = "overline ng";
     overTxt = q.is_listening && ansIdx > 0
-      ? `误选 ${pickedIdx || ""} · 正确答案 ${ansIdx} · 稍后复考`
+      ? `误选 ${pickedIdx || ""} · 正解 ${ansIdx} · 稍后复考`
       : `误选「${pickedVal}」 · 稍后复考`;
   }
 
@@ -4406,9 +4630,23 @@ function recordTappedWord(surface) {
   const info = DATA.words[surface];
   if (!info || !info.zh) return;
   if (!Array.isArray(A.tappedWords)) A.tappedWords = [];
+  let changed = false;
   if (!A.tappedWords.includes(surface)) {
     A.tappedWords.push(surface);
     if (A.tappedWords.length > 80) A.tappedWords = A.tappedWords.slice(-80);
+    changed = true;
+  }
+  if (A.vocabSess && A.vocabSess.date === DATA.plan_date && Array.isArray(A.vocabSess.queue) && !A.vocabSess.done) {
+    const clearedArr = Array.isArray(A.vocabSess.clearedWords) ? A.vocabSess.clearedWords : [];
+    if (!A.vocabSess.queue.includes(surface) && !clearedArr.includes(surface)) {
+      const insPos = Math.min(1, A.vocabSess.queue.length);
+      A.vocabSess.queue.splice(insPos, 0, surface);
+      A.vocabSess.total = Math.max(A.vocabSess.queue.length + (A.vocabSess.cleared || 0), (A.vocabSess.total || 0) + 1);
+      A.vocabSess.updatedAt = nowUnixSec();
+      changed = true;
+    }
+  }
+  if (changed) {
     applyMasteryOverrides();
     renderGreenBoard();
     saveAdaptiveState();
@@ -4460,7 +4698,7 @@ function showInlineWordMeaning(surface, tokEl) {
 }
 
 document.addEventListener("click", e => {
-  if (flashOpen) return;
+  if (activeMode === "vocab") return;
   const speakBtn = e.target.closest && e.target.closest(".ilex-speak");
   if (speakBtn) {
     e.preventDefault();
@@ -4490,7 +4728,6 @@ document.addEventListener("click", e => {
 let lastWheelAdvanceAt = 0;
 
 window.addEventListener("wheel", e => {
-  if (flashOpen) return;
   if (activeMode !== "tutor") return;
   if (viewStage !== "result" && viewStage !== "teach") return;
   if (document.getElementById("app-modal").classList.contains("open")) return;
@@ -4521,7 +4758,6 @@ document.getElementById("tutor-view").addEventListener("touchstart", e => {
 }, { passive: true });
 
 document.getElementById("tutor-view").addEventListener("touchend", e => {
-  if (flashOpen) return;
   if (activeMode !== "tutor") return;
   if (viewStage !== "result" && viewStage !== "teach") return;
   if (document.getElementById("app-modal").classList.contains("open")) return;
@@ -4543,17 +4779,16 @@ document.addEventListener("keydown", e => {
     if (e.key === "Escape") e.target.blur();
     return;
   }
-  if (flashOpen) {
-    if (e.key === "Escape") { e.preventDefault(); closeNightFlash(); }
-    else if (e.key === " ") { e.preventDefault(); toggleFlashPlay(); }
-    else if (e.key === "ArrowRight" || e.key === "Enter") { e.preventDefault(); flashStepNext(true); }
-    else if (e.key === "ArrowLeft") { e.preventDefault(); flashStepPrev(); }
-    else if (e.key.toLowerCase() === "r" || e.key === "1") { e.preventDefault(); markFlashUnfamiliar(); }
-    else if (e.key.toLowerCase() === "m" || e.key === "2") { e.preventDefault(); markFlashMastered(); }
-    return;
-  }
   if (document.getElementById("app-modal").classList.contains("open")) {
     if (e.key === "Escape") closeModal();
+    return;
+  }
+
+  if (activeMode === "vocab") {
+    if (e.key === " ") { e.preventDefault(); onVocabCardTapOrReplay(); }
+    else if (e.key === "ArrowRight" || e.key === "2" || e.key === "Enter") { e.preventDefault(); triggerVocabAction("right"); }
+    else if (e.key === "ArrowLeft" || e.key === "1") { e.preventDefault(); triggerVocabAction("left"); }
+    else if (e.key === "ArrowUp" || e.key === "3") { e.preventDefault(); triggerVocabAction("up"); }
     return;
   }
 
@@ -4587,23 +4822,26 @@ document.addEventListener("keydown", e => {
   }
 });
 
-// ================= ZEN LEDGER ("总表") =================
+// ================= MODE ROUTING & ZEN LEDGER ("总表") =================
 let dashMod = "grammar";
 let dashTier = "todo";
 let expandedPt = null;
 
 function switchMode(m, autoPlayRadio) {
+  if (m !== "dash") prevNonDashMode = m;
   activeMode = m;
   clearActiveWordToken();
   if (m !== "tutor") stopQuizAudio();
+  if (m !== "vocab") stopVocabAudioAndTimers();
 
   document.getElementById("app-shell").classList.toggle("wide-mode", m === "dash");
   document.getElementById("tab-tutor").classList.toggle("active", m === "tutor");
   document.getElementById("tab-radio").classList.toggle("active", m === "radio");
-  document.getElementById("tab-dash").classList.toggle("active", m === "dash");
+  document.getElementById("tab-vocab").classList.toggle("active", m === "vocab");
 
   document.getElementById("tutor-view").classList.toggle("hidden", m !== "tutor");
   document.getElementById("radio-view").classList.toggle("hidden", m !== "radio");
+  document.getElementById("vocab-view").classList.toggle("hidden", m !== "vocab");
   document.getElementById("dash-view").classList.toggle("hidden", m !== "dash");
 
   renderGreenBoard();
@@ -4615,6 +4853,12 @@ function switchMode(m, autoPlayRadio) {
     } else {
       syncRadioUI();
     }
+  } else if (m === "vocab") {
+    if (!radioPlayer.paused) {
+      radioPlayer.pause();
+      syncRadioUI();
+    }
+    enterVocabMode();
   } else if (m === "dash") {
     renderDashboard();
   } else {
@@ -4646,75 +4890,183 @@ function selectDashTier(t) {
   renderDashboard();
 }
 
-// ================= BEDTIME VOCAB FLASHCARD CONTROLLER =================
-let flashOpen = false;
-let flashDeck = [];
-let flashIdx = 0;
-let flashRevealed = false;
-let flashPlaying = true;
-let flashIsSubPass = false;
-let flashMarkedSet = new Set();
-let flashMasteredSet = new Set();
-let flashTimerA = null;
-let flashTimerB = null;
-let flashRunToken = 0;
+// ================= ONE-HANDED SWIPE VOCAB SANCTUARY ("记词") =================
+let vcRevealed = false;
+let vcPendingLeft = false;
+let vcAnimating = false;
+let vcTimer = null;
+let vcToken = 0;
 let lastFlashCloudPushMs = 0;
 
-function buildNightFlashDeck(onlyList) {
-  if (Array.isArray(onlyList) && onlyList.length) return onlyList.slice();
-  applyMasteryOverrides();
-  const deck = [];
-  const seen = new Set();
-  const seenHead = new Set();
-  const vItems = (DATA.mastery.vocab && DATA.mastery.vocab.items) ? DATA.mastery.vocab.items : [];
-  const byKey = {};
-  vItems.forEach(it => { byKey[it.key] = it; byKey[it.name] = it; });
+function getVocabMasteryLookup() {
+  const map = {};
+  const vItems = (DATA.mastery && DATA.mastery.vocab && DATA.mastery.vocab.items) ? DATA.mastery.vocab.items : [];
+  vItems.forEach(it => {
+    if (it.key) map[it.key] = it;
+    if (it.name) map[it.name] = it;
+  });
+  return map;
+}
 
-  function pushCard(surface, vItem, srcLabel) {
-    if (!surface || seen.has(surface)) return;
-    if (vItem && vItem.tier === "done") return;
-    const ovTier = A.masteryOverrides && (A.masteryOverrides[surface] || (vItem && A.masteryOverrides[vItem.key]));
-    if (ovTier === "done") return;
-    const w = DATA.words[surface] || {};
-    const head = w.head || surface;
-    if (srcLabel === "今日查过" && seenHead.has(head)) return;
-    const zh = w.zh || (vItem && vItem.sub) || "";
-    if (!zh) return;
-    seen.add(surface);
-    seenHead.add(head);
-    const tipParts = [];
-    if (w.head && w.head !== surface) tipParts.push(`原形 ${w.head}`);
-    if (w.tip) tipParts.push(w.tip);
-    else if (vItem && vItem.note) tipParts.push(vItem.note);
-    deck.push({
+function cleanSpeakZh(zhStr) {
+  let s = String(zhStr || "").replace(/[（(][^）)]*[）)]/g, "").trim();
+  s = s.split(/[；;\/]/)[0].trim();
+  return s || String(zhStr || "").trim();
+}
+
+function getVocabCardSpec(surface) {
+  const byKey = getVocabMasteryLookup();
+  const vItem = byKey[surface] || null;
+  const w = (DATA.words && DATA.words[surface]) ? DATA.words[surface] : {};
+  const pre = (DATA.vocab_cards && DATA.vocab_cards[surface]) ? DATA.vocab_cards[surface] : null;
+  const isTapped = Array.isArray(A.tappedWords) && A.tappedWords.includes(surface);
+
+  if (pre) {
+    return {
       word: surface,
       key: (vItem && vItem.key) || surface,
       pointId: (vItem && vItem.point_id) || "",
-      initTier: (vItem && vItem.tier) || "todo",
-      kana: w.kana || "",
-      pitch: w.pitch || "",
-      zh: zh,
-      tip: tipParts.join(" · "),
-      audio: (vItem && vItem.audio) || w.audio || "",
-      source: srcLabel
-    });
+      mode: pre.mode || "kanji_read",
+      chunk_ja: pre.chunk_ja || surface,
+      target: pre.target || surface,
+      kana: pre.kana || w.kana || surface,
+      pitch: pre.pitch || w.pitch || "",
+      zh: pre.zh || w.zh || (vItem && vItem.sub) || "",
+      twin: pre.twin || "",
+      zh_speak: pre.zh_speak || cleanSpeakZh(pre.zh || w.zh || ""),
+      front_audio: pre.front_audio || "",
+      rev_audio: pre.rev_audio || "",
+      full_audio: pre.full_audio || "",
+      word_audio: pre.word_audio || (vItem && vItem.audio) || w.audio || "",
+      source: isTapped ? "今日查词" : ""
+    };
   }
 
-  // 1) Tapped words today (newest first)
-  const tapped = Array.isArray(A.tappedWords) ? A.tappedWords.slice().reverse() : [];
-  tapped.forEach(sw => pushCard(sw, byKey[sw] || null, "今日查过"));
-  // 2) Todo vocab
-  vItems.forEach(it => { if (it.tier === "todo") pushCard(it.name, it, "待练"); });
-  // 3) Consolidating vocab
-  vItems.forEach(it => { if (it.tier === "wip") pushCard(it.name, it, "巩固"); });
-  return deck;
+  const hasKanji = /[\u4e00-\u9faf\u3400-\u4dbf]/.test(surface);
+  const zh = w.zh || (vItem && vItem.sub) || "";
+  const tipParts = [];
+  if (w.head && w.head !== surface) tipParts.push(`原形 ${w.head}`);
+  let rawTip = w.tip || (vItem && vItem.note) || "";
+  if (rawTip && zh && rawTip.startsWith(zh)) {
+    rawTip = rawTip.slice(zh.length).replace(/^[·\s]+/, "").trim();
+  }
+  if (rawTip && rawTip !== zh) tipParts.push(rawTip);
+
+  return {
+    word: surface,
+    key: (vItem && vItem.key) || surface,
+    pointId: (vItem && vItem.point_id) || "",
+    mode: hasKanji ? "kanji_read" : "kana_meaning",
+    chunk_ja: surface,
+    target: surface,
+    kana: w.kana || surface,
+    pitch: w.pitch || "",
+    zh: zh,
+    twin: tipParts.join(" · "),
+    zh_speak: cleanSpeakZh(zh),
+    front_audio: "",
+    rev_audio: "",
+    full_audio: "",
+    word_audio: (vItem && vItem.audio) || w.audio || "",
+    source: isTapped ? "今日查词" : ""
+  };
 }
 
-function pushFlashRecord(card, choiceLabel, isOk, stampSec) {
-  const tsSec = stampSec || nowUnixSec();
+function countRemainingVocabPool() {
+  applyMasteryOverrides();
+  const vItems = (DATA.mastery && DATA.mastery.vocab && DATA.mastery.vocab.items) ? DATA.mastery.vocab.items : [];
+  return vItems.filter(it => it.tier !== "done").length;
+}
+
+function curateVocabBatch(limitCnt) {
+  applyMasteryOverrides();
+  const maxN = Math.max(1, limitCnt || VOCAB_BATCH_SIZE);
+  const vItems = (DATA.mastery && DATA.mastery.vocab && DATA.mastery.vocab.items) ? DATA.mastery.vocab.items : [];
+  const byKey = getVocabMasteryLookup();
+  const seen = new Set();
+  const seenHead = new Set();
+  const out = [];
+
+  function tryAdd(surface) {
+    if (!surface || out.length >= maxN || seen.has(surface)) return;
+    if (PARTICLE_FALLBACK[surface] || TRIVIAL_TAP_WORDS.has(surface)) return;
+    const it = byKey[surface] || null;
+    const eff = getEffectiveMastery((it && it.key) || surface, surface);
+    if (eff.tier === "done") return;
+    const w = DATA.words[surface] || {};
+    const head = w.head || surface;
+    if (seenHead.has(head)) return;
+    const zh = (DATA.vocab_cards && DATA.vocab_cards[surface] && DATA.vocab_cards[surface].zh) || w.zh || (it && it.sub) || "";
+    if (!zh) return;
+    seen.add(surface);
+    seenHead.add(head);
+    out.push(surface);
+  }
+
+  // 1) Words tapped today during quiz / podcast (newest first)
+  const tapped = Array.isArray(A.tappedWords) ? A.tappedWords.slice().reverse() : [];
+  tapped.forEach(sw => tryAdd(sw));
+
+  // 2) 0/3 待攻克 words
+  vItems.forEach(it => {
+    const eff = getEffectiveMastery(it.key, it.name);
+    if (eff.tier === "todo") tryAdd(it.name);
+  });
+
+  // 3) 1/3 & 2/3 巩固中 words due for cross-day progression (lastDate !== TODAY_TAG)
+  vItems.forEach(it => {
+    const eff = getEffectiveMastery(it.key, it.name);
+    if (eff.tier === "wip" && eff.lastDate !== TODAY_TAG) tryAdd(it.name);
+  });
+
+  // 4) Any remaining wip words if needed to fill the batch
+  vItems.forEach(it => {
+    const eff = getEffectiveMastery(it.key, it.name);
+    if (eff.tier === "wip") tryAdd(it.name);
+  });
+
+  return out;
+}
+
+function ensureVocabSession(forceNewBatch) {
+  applyMasteryOverrides();
+  if (!forceNewBatch && A.vocabSess && A.vocabSess.date === DATA.plan_date && Array.isArray(A.vocabSess.queue)) {
+    const byKey = getVocabMasteryLookup();
+    const filtered = A.vocabSess.queue.filter(sw => {
+      const it = byKey[sw] || null;
+      return getEffectiveMastery((it && it.key) || sw, sw).tier !== "done";
+    });
+    if (filtered.length !== A.vocabSess.queue.length) {
+      const diff = A.vocabSess.queue.length - filtered.length;
+      A.vocabSess.queue = filtered;
+      A.vocabSess.cleared = Math.min(A.vocabSess.total || 0, (A.vocabSess.cleared || 0) + diff);
+    }
+    if (A.vocabSess.queue.length === 0 && (A.vocabSess.total || 0) > 0) {
+      A.vocabSess.done = true;
+    }
+    return A.vocabSess;
+  }
+
+  const queue = curateVocabBatch(VOCAB_BATCH_SIZE);
+  A.vocabSess = {
+    date: DATA.plan_date,
+    queue: queue,
+    total: queue.length,
+    cleared: 0,
+    clearedWords: [],
+    failedWords: [],
+    done: queue.length === 0,
+    updatedAt: nowUnixSec()
+  };
+  saveAdaptiveState();
+  return A.vocabSess;
+}
+
+function pushVocabRecord(card, choiceLabel, isOk, stampSec) {
+  const tsSec = Math.max(TRUE_GREEN_EPOCH, Math.floor(stampSec || nowUnixSec()));
   const ptKey = card.key || card.word;
   const rec = {
-    id: `FLASH-${ptKey}`,
+    id: `VC-${ptKey}`,
     point: ptKey,
     choice: choiceLabel,
     correct: isOk ? "true" : "false",
@@ -4739,434 +5091,649 @@ function recordFlashProgress(seenCnt, totalCnt, markDoneNow) {
   if (changed) {
     saveAdaptiveState();
     renderGreenBoard();
-    if (markDoneNow || Date.now() - lastFlashCloudPushMs > 12000) {
+    if (markDoneNow || Date.now() - lastFlashCloudPushMs > 10000) {
       lastFlashCloudPushMs = Date.now();
-      scheduleCloudPush(markDoneNow ? 80 : 400);
+      scheduleCloudPush(markDoneNow ? 80 : 350);
     }
   }
 }
 
-function clearFlashTimers() {
-  if (flashTimerA) { clearTimeout(flashTimerA); flashTimerA = null; }
-  if (flashTimerB) { clearTimeout(flashTimerB); flashTimerB = null; }
+function stopVocabAudioAndTimers() {
+  vcToken += 1;
+  if (vcTimer) {
+    clearTimeout(vcTimer);
+    vcTimer = null;
+  }
+  try {
+    wordPlayer.onended = null;
+    wordPlayer.onerror = null;
+    wordPlayer.pause();
+  } catch (e) {}
+  try {
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+  } catch (e) {}
 }
 
-function stopFlashSpeech() {
-  try { wordPlayer.pause(); } catch (e) {}
-  try { if ("speechSynthesis" in window) window.speechSynthesis.cancel(); } catch (e) {}
-}
-
-function speakFlashCard(card, onDone) {
-  const token = ++flashRunToken;
-  let finished = false;
+function speakUtteranceLang(text, langCode, rateVal, cb) {
+  const clean = String(text || "").trim();
+  if (!clean || !("speechSynthesis" in window)) {
+    if (cb) setTimeout(cb, 320);
+    return;
+  }
+  let done = false;
   const finish = () => {
-    if (finished || token !== flashRunToken) return;
-    finished = true;
+    if (done) return;
+    done = true;
+    clearTimeout(safety);
+    if (cb) cb();
+  };
+  const safety = setTimeout(finish, 3200);
+  try {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(clean);
+    u.lang = langCode;
+    u.rate = rateVal || 1.0;
+    u.onend = finish;
+    u.onerror = finish;
+    window.speechSynthesis.speak(u);
+  } catch (e) {
+    finish();
+  }
+}
+
+function playUrlOnWordPlayer(url, myToken, onDone, onFail) {
+  if (!url) {
+    if (onFail) onFail();
+    else if (onDone) onDone();
+    return;
+  }
+  let settled = false;
+  const safety = setTimeout(() => {
+    if (settled || vcToken !== myToken) return;
+    settled = true;
+    wordPlayer.onended = null;
+    wordPlayer.onerror = null;
+    if (onDone) onDone();
+  }, 4600);
+
+  const handleOk = () => {
+    if (settled || vcToken !== myToken) return;
+    settled = true;
+    clearTimeout(safety);
+    wordPlayer.onended = null;
+    wordPlayer.onerror = null;
     if (onDone) onDone();
   };
-  // Safety ceiling so a missing/stalled voice never freezes bedtime playback
-  const safety = setTimeout(finish, 2400);
-  const doneWrap = () => { clearTimeout(safety); finish(); };
+  const handleErr = () => {
+    if (settled || vcToken !== myToken) return;
+    settled = true;
+    clearTimeout(safety);
+    wordPlayer.onended = null;
+    wordPlayer.onerror = null;
+    if (onFail) onFail();
+    else if (onDone) onDone();
+  };
 
-  if (card.audio) {
+  warmAudio(url).then(resolvedUrl => {
+    if (vcToken !== myToken) {
+      clearTimeout(safety);
+      return;
+    }
     try {
-      wordPlayer.onended = doneWrap;
-      wordPlayer.onerror = () => {
-        wordPlayer.onended = null;
-        wordPlayer.onerror = null;
-        speakUtteranceWithCallback(card.kana || card.word, doneWrap);
-      };
-      wordPlayer.src = card.audio;
+      wordPlayer.onended = handleOk;
+      wordPlayer.onerror = handleErr;
+      wordPlayer.src = resolvedUrl || url;
       wordPlayer.currentTime = 0;
       wordPlayer.playbackRate = 1.0;
       const pr = wordPlayer.play();
-      if (pr && pr.catch) {
-        pr.catch(() => {
-          wordPlayer.onended = null;
-          wordPlayer.onerror = null;
-          speakUtteranceWithCallback(card.kana || card.word, doneWrap);
-        });
+      if (pr && typeof pr.catch === "function") {
+        pr.catch(handleErr);
+      }
+    } catch (e) {
+      handleErr();
+    }
+  });
+}
+
+function playBilingualFallback(card, includeJa, myToken, onDone) {
+  const speakZhStep = () => {
+    if (vcToken !== myToken) return;
+    speakUtteranceLang(card.zh_speak || card.zh, "zh-CN", 1.04, () => {
+      if (vcToken === myToken && onDone) onDone();
+    });
+  };
+  if (!includeJa) {
+    speakZhStep();
+    return;
+  }
+  if (card.word_audio) {
+    playUrlOnWordPlayer(
+      card.word_audio,
+      myToken,
+      () => {
+        if (vcToken !== myToken) return;
+        vcTimer = setTimeout(speakZhStep, 140);
+      },
+      () => {
+        speakUtteranceLang(card.chunk_ja || card.kana || card.word, "ja-JP", 0.98, speakZhStep);
+      }
+    );
+  } else {
+    speakUtteranceLang(card.chunk_ja || card.kana || card.word, "ja-JP", 0.98, speakZhStep);
+  }
+}
+
+function warmUpcomingVocabCards() {
+  const sess = A.vocabSess;
+  if (!sess || !Array.isArray(sess.queue)) return;
+  sess.queue.slice(0, 3).forEach(sw => {
+    const c = getVocabCardSpec(sw);
+    if (c.front_audio) warmAudio(c.front_audio);
+    if (c.rev_audio) warmAudio(c.rev_audio);
+    if (c.full_audio) warmAudio(c.full_audio);
+    if (c.word_audio) warmAudio(c.word_audio);
+  });
+}
+
+function renderStreakDotsHTML(streak) {
+  const s = Math.max(0, Math.min(3, Number(streak || 0)));
+  return `<span class="vc-dots" aria-hidden="true">${[0, 1, 2].map(i => `<span class="vc-dot${i < s ? " on" : ""}"></span>`).join("")}</span><span>${s}/3</span>`;
+}
+
+function renderChunkHighlightHTML(chunkJa, target) {
+  const src = String(chunkJa || "");
+  const tgt = String(target || "");
+  if (!tgt || src === tgt) return escapeHtml(src);
+  const idx = src.indexOf(tgt);
+  if (idx < 0) return escapeHtml(src);
+  return (
+    escapeHtml(src.slice(0, idx)) +
+    `<span class="vc-hl">${escapeHtml(src.slice(idx, idx + tgt.length))}</span>` +
+    escapeHtml(src.slice(idx + tgt.length))
+  );
+}
+
+function enterVocabMode() {
+  ensureVocabSession(false);
+  vcRevealed = false;
+  vcPendingLeft = false;
+  vcAnimating = false;
+  dealCurrentVocabCard(true);
+}
+
+function startNextVocabBatch() {
+  stopVocabAudioAndTimers();
+  ensureVocabSession(true);
+  vcRevealed = false;
+  vcPendingLeft = false;
+  vcAnimating = false;
+  dealCurrentVocabCard(true);
+}
+
+function onRemoteVocabSync() {
+  if (activeMode !== "vocab" || vcAnimating || vcPendingLeft) return;
+  const sess = ensureVocabSession(false);
+  if (!sess.queue.length) renderVocabStage();
+}
+
+function dealCurrentVocabCard(autoStartAudio) {
+  stopVocabAudioAndTimers();
+  vcRevealed = false;
+  vcPendingLeft = false;
+  vcAnimating = false;
+  const sess = ensureVocabSession(false);
+  warmUpcomingVocabCards();
+  renderVocabStage();
+
+  if (!sess.queue.length) {
+    sess.done = true;
+    saveAdaptiveState();
+    if (sess.total > 0) {
+      recordFlashProgress(sess.total, sess.total, true);
+    }
+    renderGreenBoard();
+    return;
+  }
+
+  if (!autoStartAudio) return;
+  const card = getVocabCardSpec(sess.queue[0]);
+  const myToken = ++vcToken;
+
+  if (card.mode === "kanji_read") {
+    // Silent Kanji micro-chunk front so audio never spoils the reading before retrieval!
+    vcTimer = setTimeout(() => {
+      if (activeMode !== "vocab" || vcToken !== myToken || vcRevealed) return;
+      revealVocabCard(true);
+    }, 1050);
+  } else {
+    // Kana / spoken word: play Japanese first, pause 0.9s for Chinese meaning recall, then reveal Mandarin
+    const frontUrl = card.front_audio || card.word_audio;
+    const afterFront = () => {
+      if (activeMode !== "vocab" || vcToken !== myToken || vcRevealed) return;
+      vcTimer = setTimeout(() => {
+        if (activeMode !== "vocab" || vcToken !== myToken || vcRevealed) return;
+        revealVocabCard(true);
+      }, 900);
+    };
+    if (frontUrl) {
+      playUrlOnWordPlayer(
+        frontUrl,
+        myToken,
+        afterFront,
+        () => speakUtteranceLang(card.chunk_ja || card.kana || card.word, "ja-JP", 0.98, afterFront)
+      );
+    } else {
+      speakUtteranceLang(card.chunk_ja || card.kana || card.word, "ja-JP", 0.98, afterFront);
+    }
+  }
+}
+
+function revealVocabCard(playAudioNow, forceFullBilingual) {
+  const sess = A.vocabSess;
+  if (!sess || !sess.queue.length) return;
+  const card = getVocabCardSpec(sess.queue[0]);
+  stopVocabAudioAndTimers();
+  vcRevealed = true;
+
+  const revEl = document.getElementById("vc-reveal-box");
+  if (revEl) revEl.classList.add("shown");
+  const cueEl = document.getElementById("vc-cue-line");
+  if (cueEl) {
+    if (vcPendingLeft) {
+      cueEl.textContent = "已记入没记住 · 听完滑一下继续";
+      cueEl.className = "vc-cue ng";
+    } else {
+      cueEl.textContent = "右滑记住 · 左滑没记住 · 上滑太熟";
+      cueEl.className = "vc-cue";
+    }
+  }
+
+  if (!playAudioNow) return;
+  const myToken = ++vcToken;
+  const needFull = !!forceFullBilingual || card.mode === "kanji_read";
+  const targetUrl = needFull ? (card.full_audio || card.rev_audio) : card.rev_audio;
+
+  if (targetUrl) {
+    playUrlOnWordPlayer(
+      targetUrl,
+      myToken,
+      null,
+      () => playBilingualFallback(card, needFull, myToken, null)
+    );
+  } else {
+    playBilingualFallback(card, needFull, myToken, null);
+  }
+}
+
+function replayVocabAudio(ev) {
+  if (ev) ev.stopPropagation();
+  const sess = A.vocabSess;
+  if (!sess || !sess.queue.length) return;
+  if (!vcRevealed) {
+    revealVocabCard(true, true);
+    return;
+  }
+  const card = getVocabCardSpec(sess.queue[0]);
+  stopVocabAudioAndTimers();
+  const myToken = ++vcToken;
+  const fullUrl = card.full_audio || (card.mode === "kanji_read" ? card.rev_audio : "");
+  if (fullUrl) {
+    playUrlOnWordPlayer(
+      fullUrl,
+      myToken,
+      null,
+      () => playBilingualFallback(card, true, myToken, null)
+    );
+  } else {
+    playBilingualFallback(card, true, myToken, null);
+  }
+}
+
+function onVocabCardTapOrReplay() {
+  if (vcAnimating) return;
+  const sess = A.vocabSess;
+  if (!sess || !sess.queue.length) return;
+  if (!vcRevealed) {
+    revealVocabCard(true, cardNeedsFullOnTap(sess.queue[0]));
+  } else {
+    replayVocabAudio();
+  }
+}
+
+function cardNeedsFullOnTap(surface) {
+  const c = getVocabCardSpec(surface);
+  return c.mode === "kanji_read";
+}
+
+function resetVocabCardTransform() {
+  const cardEl = document.getElementById("vc-card");
+  if (!cardEl) return;
+  cardEl.classList.remove("dragging");
+  cardEl.classList.add("settling");
+  cardEl.style.transform = "";
+  ["vc-st-right", "vc-st-left", "vc-st-up"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.opacity = "0";
+  });
+}
+
+function animateOutAndNext(flyCls, afterOut) {
+  const cardEl = document.getElementById("vc-card");
+  vcAnimating = true;
+  stopVocabAudioAndTimers();
+  if (!cardEl) {
+    vcAnimating = false;
+    afterOut();
+    return;
+  }
+  cardEl.classList.remove("dragging", "settling");
+  cardEl.classList.add(flyCls);
+  setTimeout(() => {
+    vcAnimating = false;
+    afterOut();
+  }, 220);
+}
+
+function requeueCurrentFailedCard(sess) {
+  if (!sess || !sess.queue.length) return;
+  const w = sess.queue.shift();
+  const insertAt = Math.min(sess.queue.length, 4);
+  sess.queue.splice(insertAt, 0, w);
+  sess.updatedAt = nowUnixSec();
+}
+
+function acknowledgePendingLeft(flyDir) {
+  if (!vcPendingLeft || vcAnimating) return;
+  const sess = A.vocabSess;
+  if (!sess || !sess.queue.length) return;
+  const cls = flyDir === "right" ? "fly-right" : "fly-left";
+  animateOutAndNext(cls, () => {
+    requeueCurrentFailedCard(sess);
+    saveAdaptiveState();
+    dealCurrentVocabCard(true);
+  });
+}
+
+function triggerVocabAction(dir) {
+  if (vcAnimating) return;
+  const sess = A.vocabSess;
+  if (!sess || !sess.queue.length) return;
+
+  if (vcPendingLeft) {
+    acknowledgePendingLeft(dir === "right" ? "right" : "left");
+    return;
+  }
+
+  const word = sess.queue[0];
+  const card = getVocabCardSpec(word);
+  const stamp = nowUnixSec();
+
+  if (dir === "left") {
+    if (!Array.isArray(sess.failedWords)) sess.failedWords = [];
+    if (!sess.failedWords.includes(word)) sess.failedWords.push(word);
+
+    applyMasteryAction(card.key, card.word, "fail", stamp);
+    if (card.pointId && A.pts[card.pointId]) {
+      const ps = A.pts[card.pointId];
+      ps.retestAt = Math.max(stamp, (ps.greenAt || 0) + 1);
+      ps.status = "learning";
+      ps.dueStep = A.step + 2;
+      recomputeStatusesFromCRDT(A);
+    }
+    pushVocabRecord(card, "记词:没记住", false, stamp);
+    applyMasteryOverrides();
+    saveAdaptiveState();
+    renderGreenBoard();
+    scheduleCloudPush(100);
+
+    // If user swiped Left before seeing the answer, reveal + play Japanese & Mandarin first so they learn it!
+    if (!vcRevealed) {
+      resetVocabCardTransform();
+      vcPendingLeft = true;
+      const dotsWrap = document.getElementById("vc-meta-dots");
+      if (dotsWrap) dotsWrap.innerHTML = renderStreakDotsHTML(0);
+      const dockEl = document.getElementById("vc-dock-row");
+      if (dockEl) {
+        dockEl.innerHTML = `
+          <button class="vc-btn mid" onclick="replayVocabAudio(event)">重听双语</button>
+          <button class="vc-btn ok" onclick="acknowledgePendingLeft('left')">听清了 · 稍后再考 →</button>
+        `;
+      }
+      revealVocabCard(true, true);
+      return;
+    }
+
+    animateOutAndNext("fly-left", () => {
+      requeueCurrentFailedCard(sess);
+      saveAdaptiveState();
+      dealCurrentVocabCard(true);
+    });
+    return;
+  }
+
+  if (dir === "up") {
+    applyMasteryAction(card.key, card.word, "seal", stamp);
+    if (card.pointId && A.pts[card.pointId]) {
+      const ps = A.pts[card.pointId];
+      ps.greenAt = Math.max(ps.greenAt || 0, stamp, (ps.retestAt || 0) + 1);
+      recomputeStatusesFromCRDT(A);
+    }
+    pushVocabRecord(card, "记词:太熟", true, stamp);
+    applyMasteryOverrides();
+    animateOutAndNext("fly-up", () => {
+      sess.queue.shift();
+      if (!Array.isArray(sess.clearedWords)) sess.clearedWords = [];
+      if (!sess.clearedWords.includes(word)) sess.clearedWords.push(word);
+      sess.cleared = Math.min(sess.total, (sess.cleared || 0) + 1);
+      sess.done = sess.queue.length === 0;
+      sess.updatedAt = stamp;
+      saveAdaptiveState();
+      recordFlashProgress(sess.cleared, sess.total, sess.done);
+      renderGreenBoard();
+      scheduleCloudPush(80);
+      dealCurrentVocabCard(true);
+    });
+    return;
+  }
+
+  // dir === "right" ("记住")
+  const hadFailToday = Array.isArray(sess.failedWords) && sess.failedWords.includes(word);
+  applyMasteryAction(card.key, card.word, hadFailToday ? "recover" : "pass", stamp);
+  pushVocabRecord(card, "记词:记住", true, stamp);
+  applyMasteryOverrides();
+
+  animateOutAndNext("fly-right", () => {
+    sess.queue.shift();
+    if (!Array.isArray(sess.clearedWords)) sess.clearedWords = [];
+    if (!sess.clearedWords.includes(word)) sess.clearedWords.push(word);
+    sess.cleared = Math.min(sess.total, (sess.cleared || 0) + 1);
+    sess.done = sess.queue.length === 0;
+    sess.updatedAt = stamp;
+    saveAdaptiveState();
+    recordFlashProgress(sess.cleared, sess.total, sess.done);
+    renderGreenBoard();
+    scheduleCloudPush(90);
+    dealCurrentVocabCard(true);
+  });
+}
+
+function bindVocabCardGestures(cardEl) {
+  if (!cardEl) return;
+  let dragging = false;
+  let activePid = null;
+  let sx = 0, sy = 0, st = 0;
+
+  cardEl.addEventListener("pointerdown", e => {
+    if (vcAnimating) return;
+    if (typeof e.button === "number" && e.button !== 0) return;
+    dragging = true;
+    activePid = e.pointerId;
+    sx = e.clientX;
+    sy = e.clientY;
+    st = performance.now();
+    cardEl.classList.remove("settling");
+    cardEl.classList.add("dragging");
+    try { cardEl.setPointerCapture(e.pointerId); } catch (err) {}
+  });
+
+  cardEl.addEventListener("pointermove", e => {
+    if (!dragging || e.pointerId !== activePid) return;
+    const dx = e.clientX - sx;
+    const dy = e.clientY - sy;
+    cardEl.style.transform = `translate3d(${dx.toFixed(1)}px, ${(dy * 0.42).toFixed(1)}px, 0) rotate(${(dx * 0.038).toFixed(2)}deg)`;
+
+    const stR = document.getElementById("vc-st-right");
+    const stL = document.getElementById("vc-st-left");
+    const stU = document.getElementById("vc-st-up");
+    if (!vcPendingLeft && dy < -26 && Math.abs(dy) > Math.abs(dx) * 1.25) {
+      if (stU) stU.style.opacity = String(Math.min(1, (-dy - 22) / 48));
+      if (stR) stR.style.opacity = "0";
+      if (stL) stL.style.opacity = "0";
+    } else if (dx > 16) {
+      if (stR) stR.style.opacity = String(Math.min(1, (dx - 14) / 50));
+      if (stL) stL.style.opacity = "0";
+      if (stU) stU.style.opacity = "0";
+    } else if (dx < -16) {
+      if (stL) stL.style.opacity = String(Math.min(1, (-dx - 14) / 50));
+      if (stR) stR.style.opacity = "0";
+      if (stU) stU.style.opacity = "0";
+    } else {
+      if (stR) stR.style.opacity = "0";
+      if (stL) stL.style.opacity = "0";
+      if (stU) stU.style.opacity = "0";
+    }
+  });
+
+  function finishGesture(e, isCancel) {
+    if (!dragging || e.pointerId !== activePid) return;
+    dragging = false;
+    activePid = null;
+    try { cardEl.releasePointerCapture(e.pointerId); } catch (err) {}
+    if (isCancel) {
+      resetVocabCardTransform();
+      return;
+    }
+    const dx = e.clientX - sx;
+    const dy = e.clientY - sy;
+    const dt = Math.max(1, performance.now() - st);
+    const vx = dx / dt;
+    const vy = dy / dt;
+
+    if (Math.hypot(dx, dy) < 10 && dt < 460) {
+      resetVocabCardTransform();
+      onVocabCardTapOrReplay();
+      return;
+    }
+
+    if (vcPendingLeft) {
+      if (Math.abs(dx) >= 48 || (Math.abs(dx) >= 28 && Math.abs(vx) > 0.4)) {
+        acknowledgePendingLeft(dx >= 0 ? "right" : "left");
+      } else {
+        resetVocabCardTransform();
       }
       return;
-    } catch (e) {}
+    }
+
+    if ((dy <= -68 || (dy <= -40 && vy < -0.5)) && Math.abs(dy) > Math.abs(dx) * 1.25) {
+      triggerVocabAction("up");
+      return;
+    }
+    if (dx >= 62 || (dx >= 34 && vx > 0.45 && Math.abs(dx) > Math.abs(dy))) {
+      triggerVocabAction("right");
+      return;
+    }
+    if (dx <= -62 || (dx <= -34 && vx < -0.45 && Math.abs(dx) > Math.abs(dy))) {
+      triggerVocabAction("left");
+      return;
+    }
+    resetVocabCardTransform();
   }
-  speakUtteranceWithCallback(card.kana || card.word, doneWrap);
+
+  cardEl.addEventListener("pointerup", e => finishGesture(e, false));
+  cardEl.addEventListener("pointercancel", e => finishGesture(e, true));
 }
 
-function speakUtteranceWithCallback(text, cb) {
-  if (!("speechSynthesis" in window)) {
-    setTimeout(cb, 650);
+function renderVocabStage() {
+  const box = document.getElementById("vocab-stage-box");
+  if (!box) return;
+  const sess = ensureVocabSession(false);
+
+  if (!sess.queue.length) {
+    const remPool = countRemainingVocabPool();
+    const m = computeDaily120Metrics();
+    box.innerHTML = `
+      <div class="meta-bar">
+        <span class="overline ok">${sess.total > 0 ? `本组 ${sess.total} 词已清零 · 圆印已收笔` : "核心生词已全部满 3/3"}</span>
+      </div>
+      <div class="focal-space">
+        <h2 class="point-heading">${sess.total > 0 ? "今晚这组词全部过关" : "核心生词已全部掌握"}</h2>
+        <p class="logic-line">${remPool > 0
+          ? `今日记词圆印已点亮，当前预计 ${m.projScore} 分。总表里还有 ${remPool} 个词未满跨 3 天的 3/3，明天接着巩固就会真正变绿。`
+          : `所有核心生词都已跨 3 天答对满 3/3，稳稳锁进长期记忆。`}</p>
+      </div>
+      <div class="action-dock">
+        <div class="dock-row">
+          <button class="ghost-btn" onclick="switchMode('dash')">查看总表</button>
+          ${remPool > 0
+            ? `<button class="sumi-btn" onclick="startNextVocabBatch()">再练一组</button>`
+            : `<button class="sumi-btn" onclick="switchMode('tutor')">回做题</button>`}
+        </div>
+      </div>
+    `;
     return;
   }
-  try {
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = "ja-JP";
-    u.rate = 1.0;
-    u.onend = cb;
-    u.onerror = cb;
-    window.speechSynthesis.speak(u);
-  } catch (e) {
-    setTimeout(cb, 650);
-  }
-}
 
-function openNightFlash(customList) {
-  stopQuizAudio();
-  if (!radioPlayer.paused) {
-    radioPlayer.pause();
-    syncRadioUI();
-  }
-  flashIsSubPass = Array.isArray(customList) && customList.length > 0;
-  flashDeck = buildNightFlashDeck(customList);
-  flashIdx = 0;
-  flashRevealed = false;
-  flashPlaying = true;
-  flashMarkedSet = new Set();
-  flashMasteredSet = new Set();
-  flashOpen = true;
-  document.getElementById("flash-modal").classList.add("open");
-  runFlashCardAt(0);
-}
-
-function closeNightFlash() {
-  flashOpen = false;
-  flashRunToken++;
-  clearFlashTimers();
-  stopFlashSpeech();
-  wordPlayer.onended = null;
-  wordPlayer.onerror = null;
-  document.getElementById("flash-modal").classList.remove("open");
-  saveAdaptiveState();
-  renderGreenBoard();
-  scheduleCloudPush(120);
-  if (activeMode === "dash") renderDashboard();
-}
-
-function runFlashCardAt(idx) {
-  clearFlashTimers();
-  stopFlashSpeech();
-  if (!flashDeck.length) {
-    renderFlashFinished();
-    return;
-  }
-  if (idx >= flashDeck.length) {
-    renderFlashFinished();
-    return;
-  }
-  flashIdx = Math.max(0, idx);
-  flashRevealed = false;
-  if (!flashIsSubPass) {
-    recordFlashProgress(flashIdx + 1, flashDeck.length, false);
-  }
-  renderFlashStage();
-
-  const card = flashDeck[flashIdx];
-  const myToken = flashRunToken + 1;
-  speakFlashCard(card, () => {
-    if (!flashOpen || flashRunToken !== myToken) return;
-    if (!flashPlaying) return;
-    flashTimerA = setTimeout(() => {
-      if (!flashOpen || !flashPlaying || flashRunToken !== myToken) return;
-      flashRevealed = true;
-      const backEl = document.getElementById("flash-back-box");
-      const hintEl = document.getElementById("flash-tap-hint");
-      if (backEl) backEl.classList.add("shown");
-      if (hintEl) hintEl.textContent = "点卡片重听";
-      flashTimerB = setTimeout(() => {
-        if (!flashOpen || !flashPlaying || flashRunToken !== myToken) return;
-        runFlashCardAt(flashIdx + 1);
-      }, 2150);
-    }, 1050);
-  });
-}
-
-function renderFlashStage() {
-  const shell = document.getElementById("flash-shell");
-  const card = flashDeck[flashIdx];
-  const total = flashDeck.length;
-  const pct = (((flashIdx + 1) / Math.max(1, total)) * 100).toFixed(1);
-  const marked = flashMarkedSet.has(card.word);
-  const mastered = flashMasteredSet.has(card.word);
-  const kanaPart = (card.kana && card.kana !== card.word)
+  const word = sess.queue[0];
+  const card = getVocabCardSpec(word);
+  const eff = getEffectiveMastery(card.key, card.word);
+  const isRequeued = Array.isArray(sess.failedWords) && sess.failedWords.includes(word);
+  const posNum = Math.min(Math.max(1, sess.total), (sess.cleared || 0) + 1);
+  const leftLabel = isRequeued
+    ? `回炉巩固 · 余 ${sess.queue.length} 词`
+    : `今晚 ${posNum} / ${sess.total} 词${card.source ? " · " + card.source : ""}`;
+  const kanaLine = (card.kana && card.kana !== card.chunk_ja)
     ? `${card.kana}${card.pitch ? " " + card.pitch : ""}`
     : (card.pitch ? card.pitch : "");
-  const tagCls = marked ? "marked" : (mastered ? "mastered" : "");
-  const tagTxt = marked ? "已记入待练" : (mastered ? "已移入已会" : "先听发音 · 想一下意思");
-  let cleanTip = String(card.tip || "").trim();
-  if (cleanTip && card.zh && cleanTip.startsWith(card.zh)) {
-    cleanTip = cleanTip.slice(card.zh.length).replace(/^[·\s]+/, "").trim();
-  }
-  if (cleanTip === card.zh) cleanTip = "";
+  const initCue = card.mode === "kanji_read" ? "默念读音与意思" : "听日文 · 想中文意思";
 
-  shell.innerHTML = `
-    <div class="flash-top">
-      <span class="flash-prog">${flashIdx + 1} / ${total} · ${escapeHtml(card.source)}</span>
-      <div class="flash-top-acts">
-        <button class="text-btn" onclick="replayFlashAudio()">重听</button>
-        <button class="text-btn" onclick="closeNightFlash()">收起</button>
+  box.innerHTML = `
+    <div class="meta-bar">
+      <span class="overline${isRequeued ? " warm" : ""}">${escapeHtml(leftLabel)}</span>
+      <div class="vc-meta-right">
+        <span id="vc-meta-dots" style="display:inline-flex;align-items:center;gap:6px;">${renderStreakDotsHTML(eff.streak)}</span>
+        <button class="text-btn" onclick="replayVocabAudio(event)">重听</button>
       </div>
     </div>
-    <div class="flash-track"><div class="flash-fill" style="width:${pct}%"></div></div>
 
-    <div class="flash-stage" onclick="onFlashCardTap()">
-      <div class="flash-tag ${tagCls}" id="flash-tag-line">${tagTxt}</div>
-      <div class="flash-word">${escapeHtml(card.word)}</div>
-      <div class="flash-back ${flashRevealed ? 'shown' : ''}" id="flash-back-box">
-        ${kanaPart ? `<div class="flash-kana">${escapeHtml(kanaPart)}</div>` : ""}
-        <div class="flash-zh">${escapeHtml(card.zh)}</div>
-        ${cleanTip ? `<div class="flash-tip">${escapeHtml(cleanTip)}</div>` : ""}
+    <div class="vc-deck-area">
+      <div class="vc-card" id="vc-card">
+        <div class="vc-stamp right" id="vc-st-right">记住</div>
+        <div class="vc-stamp left" id="vc-st-left">没记住</div>
+        <div class="vc-stamp up" id="vc-st-up">太熟封存</div>
+
+        <div class="vc-cue" id="vc-cue-line">${initCue}</div>
+        <div class="vc-chunk">${renderChunkHighlightHTML(card.chunk_ja, card.target)}</div>
+
+        <div class="vc-reveal${vcRevealed ? " shown" : ""}" id="vc-reveal-box">
+          ${kanaLine ? `<div class="vc-kana">${escapeHtml(kanaLine)}</div>` : ""}
+          <div class="vc-zh">${escapeHtml(card.zh)}</div>
+          ${card.twin ? `<div class="vc-twin">${escapeHtml(card.twin)}</div>` : ""}
+        </div>
       </div>
-      <div class="flash-hint" id="flash-tap-hint">${flashRevealed ? "点卡片重听" : "点一下直接看中文"}</div>
     </div>
 
-    <div class="flash-dock">
-      <div class="dock-row">
-        <button class="flash-mark-btn ${marked ? 'done-mark' : ''}" id="flash-mark-btn" onclick="markFlashUnfamiliar()">${marked ? "已标不熟" : "不熟"}</button>
-        <button class="flash-play-btn ${flashPlaying ? '' : 'paused'}" id="flash-play-btn" onclick="toggleFlashPlay()">${flashPlaying ? "暂停自动" : "继续自动"}</button>
-        <button class="flash-ok-btn ${mastered ? 'done-ok' : ''}" id="flash-ok-btn" onclick="markFlashMastered()">${mastered ? "已标已熟" : "已熟"}</button>
-      </div>
-      <div class="flash-SubRow">
-        <button class="flash-nav-btn" onclick="flashStepPrev()" ${flashIdx === 0 ? "style='opacity:0.32;pointer-events:none'" : ""}>上一个</button>
-        <button class="flash-nav-btn" onclick="flashStepNext(true)">下一个</button>
-      </div>
+    <div class="vc-dock" id="vc-dock-row">
+      <button class="vc-btn ng" onclick="triggerVocabAction('left')">← 没记住</button>
+      <button class="vc-btn mid" onclick="triggerVocabAction('up')">↑ 太熟</button>
+      <button class="vc-btn ok" onclick="triggerVocabAction('right')">记住 →</button>
     </div>
   `;
+
+  bindVocabCardGestures(document.getElementById("vc-card"));
 }
-
-function completeFlashSession() {
-  const stamp = nowUnixSec();
-  let promoted = 0;
-  flashDeck.forEach(card => {
-    if (flashMarkedSet.has(card.word) || flashMasteredSet.has(card.word)) return;
-    const curOv = A.masteryOverrides && (A.masteryOverrides[card.key] || A.masteryOverrides[card.word]);
-    const effTier = curOv || card.initTier || "todo";
-    if (effTier === "todo") {
-      setMasteryTier(card.key, "wip", stamp);
-      setMasteryTier(card.word, "wip", stamp);
-      if (promoted < 12) pushFlashRecord(card, "闪卡:顺过", true, stamp);
-      promoted += 1;
-    }
-  });
-  applyMasteryOverrides();
-  recordFlashProgress(flashDeck.length, flashDeck.length, true);
-  saveAdaptiveState();
-  renderGreenBoard();
-  scheduleCloudPush(80);
-}
-
-function renderFlashFinished() {
-  completeFlashSession();
-  const shell = document.getElementById("flash-shell");
-  const markedCards = flashDeck.filter(c => flashMarkedSet.has(c.word));
-  const masteredCnt = flashDeck.filter(c => flashMasteredSet.has(c.word)).length;
-  let noteLine = "这一轮都很顺，今日生词圆印已收笔，安心休息吧。";
-  if (markedCards.length) {
-    noteLine = `标了 ${markedCards.length} 个不熟词（已归入待练）${masteredCnt ? `，移出 ${masteredCnt} 个已熟词` : ""}。要不要把这 ${markedCards.length} 个再顺一遍？`;
-  } else if (masteredCnt) {
-    noteLine = `已把 ${masteredCnt} 个熟词移入已会，今日生词圆印已收笔，安心休息吧。`;
-  }
-  shell.innerHTML = `
-    <div class="flash-top">
-      <span class="flash-prog">${flashDeck.length ? `已完成 ${flashDeck.length} 个词` : "生词已全部移入已会"}</span>
-      <div class="flash-top-acts">
-        <button class="text-btn" onclick="closeNightFlash()">收起</button>
-      </div>
-    </div>
-    <div class="flash-track"><div class="flash-fill" style="width:100%"></div></div>
-    <div class="flash-stage" style="cursor:default">
-      <div class="flash-word" style="font-size:28px">${flashDeck.length ? "今晚过完啦" : "全部已熟"}</div>
-      <div class="flash-back shown" style="min-height:0;margin-top:16px">
-        <div class="flash-tip" style="font-size:16px;color:var(--ink-2)">${escapeHtml(noteLine)}</div>
-      </div>
-    </div>
-    <div class="flash-dock">
-      <div class="dock-row">
-        ${markedCards.length
-          ? `<button class="ghost-btn" onclick="closeNightFlash()">休息了</button>
-             <button class="sumi-btn" onclick="replayMarkedFlash()">只过这 ${markedCards.length} 个不熟词</button>`
-          : (flashDeck.length
-              ? `<button class="ghost-btn" onclick="openNightFlash()">再来一遍</button>
-                 <button class="sumi-btn" onclick="closeNightFlash()">安心休息</button>`
-              : `<button class="sumi-btn" onclick="closeNightFlash()">返回</button>`)}
-      </div>
-    </div>
-  `;
-}
-
-function replayMarkedFlash() {
-  const sub = flashDeck.filter(c => flashMarkedSet.has(c.word));
-  if (sub.length) openNightFlash(sub);
-}
-
-function replayFlashAudio() {
-  const card = flashDeck[flashIdx];
-  if (!card) return;
-  clearFlashTimers();
-  speakFlashCard(card, () => {
-    if (flashOpen && flashPlaying) {
-      flashTimerB = setTimeout(() => {
-        if (flashOpen && flashPlaying) runFlashCardAt(flashIdx + 1);
-      }, flashRevealed ? 1900 : 2500);
-    }
-  });
-}
-
-function onFlashCardTap() {
-  const card = flashDeck[flashIdx];
-  if (!card) return;
-  if (!flashRevealed) {
-    clearFlashTimers();
-    flashRevealed = true;
-    const backEl = document.getElementById("flash-back-box");
-    const hintEl = document.getElementById("flash-tap-hint");
-    if (backEl) backEl.classList.add("shown");
-    if (hintEl) hintEl.textContent = "点卡片重听";
-    if (flashPlaying) {
-      flashTimerB = setTimeout(() => {
-        if (flashOpen && flashPlaying) runFlashCardAt(flashIdx + 1);
-      }, 2200);
-    }
-  } else {
-    replayFlashAudio();
-  }
-}
-
-function toggleFlashPlay() {
-  flashPlaying = !flashPlaying;
-  const btn = document.getElementById("flash-play-btn");
-  if (btn) {
-    btn.textContent = flashPlaying ? "暂停自动" : "继续自动";
-    btn.classList.toggle("paused", !flashPlaying);
-  }
-  if (!flashPlaying) {
-    clearFlashTimers();
-    flashRevealed = true;
-    const backEl = document.getElementById("flash-back-box");
-    const hintEl = document.getElementById("flash-tap-hint");
-    if (backEl) backEl.classList.add("shown");
-    if (hintEl) hintEl.textContent = "点卡片重听";
-  } else {
-    if (flashRevealed) {
-      clearFlashTimers();
-      flashTimerB = setTimeout(() => {
-        if (flashOpen && flashPlaying) runFlashCardAt(flashIdx + 1);
-      }, 1500);
-    } else {
-      runFlashCardAt(flashIdx);
-    }
-  }
-}
-
-function flashStepNext() {
-  runFlashCardAt(flashIdx + 1);
-}
-
-function flashStepPrev() {
-  if (flashIdx > 0) runFlashCardAt(flashIdx - 1);
-}
-
-function markFlashUnfamiliar() {
-  const card = flashDeck[flashIdx];
-  if (!card) return;
-  flashMarkedSet.add(card.word);
-  flashMasteredSet.delete(card.word);
-  const stamp = nowUnixSec();
-  setMasteryTier(card.key, "todo", stamp);
-  setMasteryTier(card.word, "todo", stamp);
-  if (card.pointId && A.pts[card.pointId]) {
-    const ps = A.pts[card.pointId];
-    ps.retestAt = Math.max(stamp, (ps.greenAt || 0) + 1);
-    ps.status = "learning";
-    ps.dueStep = A.step + 2;
-    recomputeStatusesFromCRDT(A);
-  }
-  pushFlashRecord(card, "闪卡:不熟", false, stamp);
-  applyMasteryOverrides();
-  saveAdaptiveState();
-  renderGreenBoard();
-  scheduleCloudPush(100);
-
-  // Reveal meaning immediately and give extra reading time + replay pronunciation once
-  clearFlashTimers();
-  flashRevealed = true;
-  const backEl = document.getElementById("flash-back-box");
-  const tagEl = document.getElementById("flash-tag-line");
-  const markBtn = document.getElementById("flash-mark-btn");
-  const okBtn = document.getElementById("flash-ok-btn");
-  if (backEl) backEl.classList.add("shown");
-  if (tagEl) { tagEl.textContent = "已记入待练"; tagEl.className = "flash-tag marked"; }
-  if (markBtn) { markBtn.textContent = "已标不熟"; markBtn.classList.add("done-mark"); }
-  if (okBtn) { okBtn.textContent = "已熟"; okBtn.classList.remove("done-ok"); }
-  speakFlashCard(card, () => {
-    if (flashOpen && flashPlaying) {
-      flashTimerB = setTimeout(() => {
-        if (flashOpen && flashPlaying) runFlashCardAt(flashIdx + 1);
-      }, 2200);
-    }
-  });
-}
-
-function markFlashMastered() {
-  const card = flashDeck[flashIdx];
-  if (!card) return;
-  flashMasteredSet.add(card.word);
-  flashMarkedSet.delete(card.word);
-  const stamp = nowUnixSec();
-  setMasteryTier(card.key, "done", stamp);
-  setMasteryTier(card.word, "done", stamp);
-  if (card.pointId && A.pts[card.pointId]) {
-    const ps = A.pts[card.pointId];
-    ps.greenAt = Math.max(ps.greenAt || 0, stamp, (ps.retestAt || 0) + 1);
-    recomputeStatusesFromCRDT(A);
-  }
-  pushFlashRecord(card, "闪卡:已熟", true, stamp);
-  applyMasteryOverrides();
-  saveAdaptiveState();
-  renderGreenBoard();
-  scheduleCloudPush(80);
-
-  clearFlashTimers();
-  stopFlashSpeech();
-  flashRunToken++;
-  const myToken = flashRunToken;
-  const tagEl = document.getElementById("flash-tag-line");
-  const okBtn = document.getElementById("flash-ok-btn");
-  const markBtn = document.getElementById("flash-mark-btn");
-  if (tagEl) { tagEl.textContent = "已移入已会"; tagEl.className = "flash-tag mastered"; }
-  if (okBtn) { okBtn.textContent = "已标已熟"; okBtn.classList.add("done-ok"); }
-  if (markBtn) { markBtn.textContent = "不熟"; markBtn.classList.remove("done-mark"); }
-  flashTimerB = setTimeout(() => {
-    if (flashOpen && flashRunToken === myToken) {
-      runFlashCardAt(flashIdx + 1);
-    }
-  }, 340);
-}
-
-// Swipe left/right inside flashcard modal (isolated here, never touches tabs)
-(function bindFlashSwipe() {
-  let fx = 0, fy = 0, ft = 0;
-  const fm = document.getElementById("flash-modal");
-  fm.addEventListener("touchstart", e => {
-    if (!e.touches || e.touches.length !== 1) return;
-    fx = e.touches[0].clientX;
-    fy = e.touches[0].clientY;
-    ft = performance.now();
-  }, { passive: true });
-  fm.addEventListener("touchend", e => {
-    if (!flashOpen || !flashDeck.length || flashIdx >= flashDeck.length) return;
-    if (!e.changedTouches || e.changedTouches.length !== 1) return;
-    const dx = e.changedTouches[0].clientX - fx;
-    const dy = e.changedTouches[0].clientY - fy;
-    const dt = performance.now() - ft;
-    if (Math.abs(dx) >= 52 && Math.abs(dx) > Math.abs(dy) * 1.6 && dt < 650) {
-      if (dx < 0) flashStepNext();
-      else flashStepPrev();
-    }
-  }, { passive: true });
-})();
 
 function renderDashboard() {
+  applyMasteryOverrides();
   const order = ["grammar", "henkei", "listening", "vocab"];
   document.getElementById("dash-summary").innerHTML = order.map(k => {
     const m = DATA.mastery[k];
@@ -5178,7 +5745,7 @@ function renderDashboard() {
       <div class="pillar-row ${dashMod === k ? 'active' : ''}" onclick="selectDashMod('${k}')">
         <div class="pillar-head">
           <span class="pillar-name">${m.label}</span>
-          <span class="pillar-stat">已会 ${c.done} / ${c.total}</span>
+          <span class="pillar-stat">已掌握 ${c.done} / ${c.total}</span>
         </div>
         <div class="pillar-line">
           <div class="seg-moss" style="width:${pDone}%"></div>
@@ -5190,21 +5757,20 @@ function renderDashboard() {
   }).join("");
 
   const dm = computeDaily120Metrics();
-  const deckPreview = buildNightFlashDeck();
-  const tappedCnt = deckPreview.filter(c => c.source === "今日查过").length;
+  const remVocab = countRemainingVocabPool();
   const entryEl = document.getElementById("night-flash-entry");
   if (entryEl) {
-    if (deckPreview.length) {
+    if (remVocab > 0) {
       const subTxt = dm.flashDone
-        ? `今日已完成 · 余 ${deckPreview.length} 词`
-        : `共 ${deckPreview.length} 词${tappedCnt ? ` · 含查词 ${tappedCnt}` : " · 自动发音翻面"}`;
+        ? `今日一组已完成 · 余 ${remVocab} 词未满 3/3`
+        : `单手右滑记住 · 左滑回炉 · 跨 3 天满 3/3 变绿`;
       entryEl.innerHTML = `
         <div class="night-bar">
           <div class="night-bar-txt">
-            <div class="night-bar-title">睡前过生词</div>
+            <div class="night-bar-title">单手记词</div>
             <div class="night-bar-sub">${subTxt}</div>
           </div>
-          <button class="night-go-btn" onclick="openNightFlash()">${dm.flashDone ? "再过" : "开始"}</button>
+          <button class="night-go-btn" onclick="switchMode('vocab')">去记词</button>
         </div>
       `;
     } else {
@@ -5214,9 +5780,9 @@ function renderDashboard() {
 
   const curCounts = DATA.mastery[dashMod].counts;
   document.getElementById("tier-tabs").innerHTML = `
-    <button class="tier-link ${dashTier === 'todo' ? 'active' : ''}" onclick="selectDashTier('todo')">待练 ${curCounts.todo}</button>
-    <button class="tier-link ${dashTier === 'wip' ? 'active' : ''}" onclick="selectDashTier('wip')">巩固 ${curCounts.wip}</button>
-    <button class="tier-link ${dashTier === 'done' ? 'active' : ''}" onclick="selectDashTier('done')">已会 ${curCounts.done}</button>
+    <button class="tier-link ${dashTier === 'todo' ? 'active' : ''}" onclick="selectDashTier('todo')">待攻克 ${curCounts.todo}</button>
+    <button class="tier-link ${dashTier === 'wip' ? 'active' : ''}" onclick="selectDashTier('wip')">巩固中 ${curCounts.wip}</button>
+    <button class="tier-link ${dashTier === 'done' ? 'active' : ''}" onclick="selectDashTier('done')">已掌握 ${curCounts.done}</button>
   `;
 
   renderMasteryList();
@@ -5252,6 +5818,8 @@ function renderMasteryList() {
 
   listEl.innerHTML = items.map((it, i) => {
     const canSpeak = !!(it.audio || dashMod === "vocab" || DATA.words[it.name]);
+    const stNum = Math.max(0, Math.min(3, Number(it.streak || (it.tier === "done" ? 3 : (it.tier === "wip" ? 1 : 0)))));
+    const stCls = it.tier === "done" ? "s-done" : (it.tier === "wip" ? "s-wip" : "");
     return `
     <div class="ledger-item" onclick="togglePtNote(${i})">
       <div class="li-row">
@@ -5261,6 +5829,7 @@ function renderMasteryList() {
         </div>
         <div class="li-right">
           <span class="li-sub">${escapeHtml(it.sub)}</span>
+          <span class="li-streak ${stCls}">${stNum}/3</span>
           ${canSpeak ? `<button class="li-act" onclick='event.stopPropagation();speakLedgerItem(${JSON.stringify(it.name)}, ${JSON.stringify(it.audio || "")})'>听音</button>` : ""}
           ${it.point_id ? `<button class="li-act" onclick="event.stopPropagation();jumpToPointById('${it.point_id}')">练习</button>` : ""}
         </div>
@@ -5306,16 +5875,17 @@ function openSessionModal() {
     <p class="modal-body">
       ① 做题　　　<strong id="modal-green-cnt">${m.greenCnt} / ${m.totalCards} 题</strong><br/>
       ② 随身听　　<strong id="modal-radio-min">${m.listenedMins} / ${m.targetMins} 分钟</strong><br/>
-      ③ 睡前生词　<strong id="modal-flash-cnt">${m.flashDone ? "今日已完成" : `${m.flashSeen} / ${m.flashTarget} 词`}</strong><br/>
+      ③ 单手记词　<strong id="modal-flash-cnt">${m.flashDone ? "今日已完成" : `${m.flashSeen} / ${m.flashTarget} 词`}</strong><br/>
       当前预计分　<strong id="modal-proj-score">${m.projScore} / 180 分</strong>
     </p>
-    <p class="modal-promise">三枚圆印分别对应做题、随身听与睡前生词，全部汇总进你的整体水平。</p>
+    <p class="modal-promise">圆印代表今日三件事打卡；总表里每个词与考点需跨 3 天答对满 3/3 才算真正掌握。</p>
     <div class="sync-box">
       <p class="sync-note" id="cloud-sync-status-line">正在对齐云端进度…</p>
       <button class="sync-btn" onclick="manualCloudSync(this)">立即对齐多端进度</button>
     </div>
     <div class="dock-row">
       <button class="ghost-btn" onclick="resetTodayMission()">重做题</button>
+      <button class="ghost-btn" onclick="closeModal();switchMode('dash')">总表</button>
       <button class="sumi-btn" onclick="closeModal()">继续</button>
     </div>
   `;
@@ -5333,6 +5903,7 @@ window.addEventListener("hashchange", () => {
     }
     renderGreenBoard();
     if (activeMode === "tutor") renderTutor();
+    else if (activeMode === "vocab") renderVocabStage();
     else if (activeMode === "dash") renderDashboard();
   }
 });
@@ -5369,6 +5940,7 @@ function checkNewDailyEdition() {
 
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") {
+    tryLockPortrait();
     checkNewDailyEdition();
     pullCloudSync(true);
     connectCloudSSE();
@@ -5424,6 +5996,7 @@ function initApp() {
   const params = new URLSearchParams(location.search);
   const m = params.get("mode");
   if (m === "dash") switchMode("dash");
+  else if (m === "vocab" || m === "flash") switchMode("vocab");
   else if (m === "radio" || m === "walk") switchMode("radio", false);
   else renderTutor();
 
@@ -5440,27 +6013,6 @@ initApp();
 """
 
 final_html = html.replace("__PAYLOAD__", payload)
-
-# ---- Memory-driven prefs: screen orientation (portrait lock for the installed phone app) ----
-_orient = tutor_prefs.orientation(MEMORY_PREFS)
-_manifest_path = os.path.join(BASE_DIR, "manifest.json")
-if os.path.exists(_manifest_path):
-    with open(_manifest_path, encoding="utf-8") as mf:
-        _mf = json.load(mf)
-    if _mf.get("orientation") != _orient:
-        _mf["orientation"] = _orient
-        with open(_manifest_path, "w", encoding="utf-8") as mf:
-            json.dump(_mf, mf, ensure_ascii=False, indent=2)
-            mf.write("\n")
-if _orient == "portrait":
-    _lock_js = (
-        "<script>(function(){function l(){try{if(screen.orientation&&screen.orientation.lock)"
-        "{screen.orientation.lock('portrait').catch(function(){});}}catch(e){}}"
-        "l();document.addEventListener('visibilitychange',l);"
-        "document.addEventListener('click',l,{once:true});})();</script>\n</body>"
-    )
-    final_html = final_html.replace("</body>", _lock_js, 1) if final_html.count("</body>") == 1 else final_html
-
 with open(HTML_PATH, "w", encoding="utf-8") as f:
     f.write(final_html)
 

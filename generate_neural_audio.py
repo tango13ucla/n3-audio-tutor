@@ -47,6 +47,7 @@ from adaptive_bank import CORE_N3_KANA_VOCAB, EXTRA_WORDS
 from clear_explanations import CARDS_75
 from sentence_lexicon import SENTENCE_LEXICON
 from tutor_data import KANA_ADVERBS_36, WORD_DICT
+from vocab_cards import VOCAB_CARDS
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 AUDIO_DIR = os.path.join(BASE_DIR, "audio")
@@ -171,6 +172,7 @@ async def detect_voice_map() -> dict:
         "JF": ("ja-JP-NanamiNeural", "+0%"),
         "JM": ("ja-JP-KeitaNeural", "+0%"),
         "T": (t_voice, "+5%"),
+        "T_VC": (t_voice, "+5%"),
         "T_JA": (t_voice, "+0%"),
         "EXP_F_JA": (f_ja_voice, "+0%"),
     }
@@ -291,12 +293,12 @@ async def synth_raw_clip(spk: str, voice: str, rate: str, text: str, out_path: s
         if edge_tts is None:
             return False
         speak_txt = text
-        if spk in ("T", "T_JA", "EXP_F_JA") and len(speak_txt) <= 2 and speak_txt[-1] not in "。！？，、：":
+        if spk in ("T", "T_VC", "T_JA", "EXP_F_JA") and len(speak_txt) <= 2 and speak_txt[-1] not in "。！？，、：":
             speak_txt = speak_txt + "。"
         for attempt in range(MAX_TRIES):
             use_voice = (
                 "ko-KR-HyunsuMultilingualNeural"
-                if (spk in ("T", "T_JA") and attempt == MAX_TRIES - 1 and MAX_TRIES > 1 and attempt >= 2)
+                if (spk in ("T", "T_VC", "T_JA") and attempt == MAX_TRIES - 1 and MAX_TRIES > 1 and attempt >= 2)
                 else voice
             )
             use_txt = (speak_txt + "。") if (attempt >= 1 and speak_txt[-1] not in "。！？") else speak_txt
@@ -414,7 +416,13 @@ async def main():
             old_manifest = {}
 
     old_words = old_manifest.get("words", {})
-    new_manifest = {"words": dict(old_words)}
+    old_vc_map = old_manifest.get("vocab_cards", {})
+    old_vc_hashes = old_manifest.get("vocab_card_hashes", {})
+    new_manifest = {
+        "words": dict(old_words),
+        "vocab_cards": dict(old_vc_map),
+        "vocab_card_hashes": dict(old_vc_hashes),
+    }
     can_synth = (edge_tts is not None) and (shutil.which("ffmpeg") is not None)
 
     voice_map = await detect_voice_map()
@@ -584,6 +592,114 @@ async def main():
 
     await asyncio.gather(*(process_word(surf, info) for surf, info in merged_words.items()))
 
+    # Studio Bilingual Dual-Mode Vocab Cards (Japanese word+chunk + warm Mandarin meaning)
+    vc_jobs = {}
+    vc_specs = {}
+    vc_tag = "edge:Brian_v19"
+    for vw, vc in VOCAB_CARDS.items():
+        vc_id = hashlib.sha256(vw.encode("utf-8")).hexdigest()[:10]
+        mode = vc.get("mode", "kana_meaning")
+        ja_s = str(vc.get("ja_speak") or vw).strip()
+        zh_s = str(vc.get("zh_speak") or vc.get("zh") or "").strip()
+        if mode == "kanji_read":
+            rev_turns = [("JF", ja_s), ("PAUSE", 0.22), ("T_VC", zh_s)] if zh_s else [("JF", ja_s)]
+            rev_file = f"vc_{vc_id}_rev.mp3"
+            rev_hash = hashlib.sha256((f"v19vc:{vc_tag}:" + json.dumps(rev_turns, ensure_ascii=False)).encode("utf-8")).hexdigest()[:10]
+            vc_specs[vw] = {"mode": mode, "front": None, "rev": (rev_file, rev_hash, rev_turns), "full": (rev_file, rev_hash, rev_turns)}
+            rev_abs = os.path.join(WORDS_AUDIO_DIR, rev_file)
+            if old_vc_hashes.get(rev_file) != rev_hash or not os.path.exists(rev_abs):
+                vc_jobs[rev_file] = (rev_hash, rev_turns)
+        else:
+            front_turns = [("JF", ja_s)]
+            rev_turns = [("T_VC", zh_s)] if zh_s else [("JF", ja_s)]
+            full_turns = [("JF", ja_s), ("PAUSE", 0.22), ("T_VC", zh_s)] if zh_s else [("JF", ja_s)]
+            front_file = f"vc_{vc_id}_front.mp3"
+            rev_file = f"vc_{vc_id}_rev.mp3"
+            full_file = f"vc_{vc_id}_full.mp3"
+            front_hash = hashlib.sha256(("v19vcf:" + json.dumps(front_turns, ensure_ascii=False)).encode("utf-8")).hexdigest()[:10]
+            rev_hash = hashlib.sha256((f"v19vcr:{vc_tag}:" + json.dumps(rev_turns, ensure_ascii=False)).encode("utf-8")).hexdigest()[:10]
+            full_hash = hashlib.sha256((f"v19vcx:{vc_tag}:" + json.dumps(full_turns, ensure_ascii=False)).encode("utf-8")).hexdigest()[:10]
+            vc_specs[vw] = {
+                "mode": mode,
+                "front": (front_file, front_hash, front_turns),
+                "rev": (rev_file, rev_hash, rev_turns),
+                "full": (full_file, full_hash, full_turns),
+            }
+            for fn, fh, ft in (vc_specs[vw]["front"], vc_specs[vw]["rev"], vc_specs[vw]["full"]):
+                f_abs = os.path.join(WORDS_AUDIO_DIR, fn)
+                if old_vc_hashes.get(fn) != fh or not os.path.exists(f_abs):
+                    vc_jobs[fn] = (fh, ft)
+
+    vc_built_ok = set()
+    if can_synth and vc_jobs:
+        vc_tmp = tempfile.mkdtemp(prefix="n3_vc_v19_")
+        try:
+            vc_clips = {}
+            vc_pauses = set()
+            for _, (_, turns) in vc_jobs.items():
+                for spk, val in turns:
+                    if spk == "PAUSE":
+                        vc_pauses.add(round(float(val), 2))
+                    else:
+                        key = (spk, str(val))
+                        if key not in vc_clips:
+                            ch = hashlib.sha256(f"{spk}:{val}".encode("utf-8")).hexdigest()[:12]
+                            vc_clips[key] = (os.path.join(vc_tmp, f"raw_{ch}.mp3"), os.path.join(vc_tmp, f"trim_{ch}.mp3"))
+
+            vc_sil = {}
+            for sec in sorted(vc_pauses):
+                sf = os.path.join(vc_tmp, f"sil_{int(round(sec * 100)):03d}.mp3")
+                make_silence_mp3(sec, sf)
+                vc_sil[sec] = sf
+
+            await asyncio.gather(
+                *(
+                    synth_raw_clip(spk, voice_map[spk][0], voice_map[spk][1], txt, raw_p, sem)
+                    for (spk, txt), (raw_p, _) in vc_clips.items()
+                )
+            )
+
+            vc_lookup = {}
+
+            def _trim_vc(item):
+                key, (raw_p, trim_p) = item
+                if os.path.exists(raw_p) and os.path.getsize(raw_p) > 0:
+                    trim_clip_silence(raw_p, trim_p)
+                    return key, trim_p
+                return key, None
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
+                for key, trim_p in pool.map(_trim_vc, vc_clips.items()):
+                    if trim_p:
+                        vc_lookup[key] = trim_p
+
+            for fn, (fh, turns) in vc_jobs.items():
+                out_abs = os.path.join(WORDS_AUDIO_DIR, fn)
+                if stitch_turns(turns, vc_lookup, vc_sil, out_abs, vc_tmp, fn.replace(".mp3", "")):
+                    vc_built_ok.add(fn)
+                    new_manifest["vocab_card_hashes"][fn] = fh
+            print(f"Synthesized {len(vc_built_ok)}/{len(vc_jobs)} bilingual vocab card MP3s.")
+        finally:
+            shutil.rmtree(vc_tmp, ignore_errors=True)
+
+    for vw, spec in vc_specs.items():
+        entry = {}
+        for slot in ("front", "rev", "full"):
+            item = spec.get(slot)
+            if not item:
+                entry[slot] = ""
+                continue
+            fn, fh, _ = item
+            f_abs = os.path.join(WORDS_AUDIO_DIR, fn)
+            if os.path.exists(f_abs):
+                if fn not in vc_jobs or fn in vc_built_ok:
+                    new_manifest["vocab_card_hashes"][fn] = fh
+                ver = new_manifest["vocab_card_hashes"].get(fn, fh)[:8]
+                entry[slot] = f"./audio/words/{fn}?v={ver}"
+            else:
+                entry[slot] = ""
+        new_manifest["vocab_cards"][vw] = entry
+
     done_txt = "今天这五十个考点全部过关了。再去听一段三人闲聊，一百二十分就稳稳拿住了，好好歇会儿吧。"
     done_hash = hashlib.sha256((f"v18:{det_tag}:" + done_txt).encode("utf-8")).hexdigest()[:12]
     done_abs = os.path.join(AUDIO_DIR, "done.mp3")
@@ -594,7 +710,7 @@ async def main():
 
     with open(MANIFEST_PATH, "w", encoding="utf-8") as f:
         json.dump(new_manifest, f, ensure_ascii=False, indent=2)
-    print(f"Verified {len(CARDS_75)} studio Zen v18 Q/Exp pairs + {len(new_manifest['words'])} word pronunciations.")
+    print(f"Verified {len(CARDS_75)} studio Zen v18 Q/Exp pairs + {len(new_manifest['words'])} word MP3s + {len(new_manifest['vocab_cards'])} dual-mode vocab cards.")
 
 
 if __name__ == "__main__":

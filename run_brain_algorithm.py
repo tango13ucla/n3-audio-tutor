@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Antigravity N3 Central Brain Algorithm v2.0 (Dual-Hand + All-4-Module Sync)
-Merges answers from Phone/Desktop Audio PWA (practice_log.jsonl) and Grok Bots,
-updates S0-S3 mastery state across ALL 4 modules (grammar, henkei, vocab, listening),
-recomputes summary counts and PT countdown, and compiles index.html.
+Antigravity N3 Central Brain Algorithm v5.0 (Cross-Day 3/3 True Green + Dual-Hand Sync)
+Merges answers from Phone/Desktop Audio PWA (practice_log.jsonl & cloud_state_snapshot.json)
+and Grok Bots across ALL 4 modules (grammar, henkei, vocab, listening).
+
+Honest Mastery Rule (Zero Fake Green):
+- Stage 0/3 ("todo" -> red): Unfamiliar or lapsed today.
+- Stage 1/3 ("wip1:YYYYMMDD" -> yellow, streak=1): Passed once cleanly on 1 study date.
+- Stage 2/3 ("wip2:YYYYMMDD" -> yellow, streak=2): Passed cleanly across 2 distinct study dates.
+- Stage 3/3 ("done" -> green, streak=3): Passed cleanly across 3 distinct study dates (or explicitly sealed as 太熟).
+Same-day repeat passes NEVER advance more than +1 step per study date!
 """
 import datetime
 import json
@@ -18,22 +24,97 @@ LOG_PATH = os.path.join(BASE_DIR, "practice_log.jsonl")
 SNAPSHOT_PATH = os.path.join(BASE_DIR, "cloud_state_snapshot.json")
 EXAM_DATE = datetime.date(2026, 12, 6)
 PT_TZ = ZoneInfo("America/Los_Angeles")
+TRUE_GREEN_EPOCH = 1794761500
 
 
-def drain_cloud_relay() -> int:
-    import sys
-    if BASE_DIR not in sys.path:
-        sys.path.insert(0, BASE_DIR)
-    import sync_cloud_store as scs
-    return int(scs.main() or 0)
+def _iso_to_day_tag(ts_iso: str, fallback_tag: str) -> str:
+    if not ts_iso:
+        return fallback_tag
+    try:
+        s = str(ts_iso).strip().replace("Z", "+00:00")
+        dt = datetime.datetime.fromisoformat(s)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=datetime.timezone.utc)
+        dt_pt = dt.astimezone(PT_TZ) - datetime.timedelta(hours=5)
+        return dt_pt.strftime("%Y%m%d")
+    except Exception:
+        return fallback_tag
 
 
-def step_status(cur_status: str, ok: bool, again: bool) -> str:
-    if not ok:
-        return "red"
-    if again:
-        return "orange"
-    return "green" if cur_status in ("yellow", "green") else "yellow"
+def _cur_streak(item: dict) -> int:
+    if "streak" in item and isinstance(item["streak"], int):
+        return max(0, min(3, item["streak"]))
+    st = item.get("status", "red")
+    if st == "green":
+        return 3
+    if st == "yellow":
+        return 1
+    return 0
+
+
+def _apply_cross_day_step(item: dict, day_tag: str, ok: bool, again: bool, instant_done: bool = False) -> None:
+    if instant_done:
+        item["streak"] = 3
+        item["last_ok_date"] = day_tag
+        item["status"] = "green"
+        return
+    if not ok or again:
+        item["streak"] = 0
+        item["last_ng_date"] = day_tag
+        item["status"] = "red"
+        return
+
+    # Correct answer / Right-Swipe
+    if item.get("last_ng_date") == day_tag:
+        # Lapsed earlier on this same day: recovering today reaches at most 1/3
+        item["streak"] = 1
+        item["last_ok_date"] = day_tag
+        item["status"] = "yellow"
+        return
+
+    if item.get("last_ok_date") == day_tag:
+        # Already advanced on this study date: do not double-promote on same day
+        s = max(1, _cur_streak(item))
+        item["streak"] = s
+        item["status"] = "green" if s >= 3 else "yellow"
+        return
+
+    new_s = min(3, _cur_streak(item) + 1)
+    item["streak"] = new_s
+    item["last_ok_date"] = day_tag
+    item["status"] = "green" if new_s >= 3 else "yellow"
+
+
+def _apply_tier_override(item: dict, tier_raw: str) -> bool:
+    t = str(tier_raw or "").strip()
+    if not t:
+        return False
+    if t == "done":
+        item["streak"] = 3
+        item["status"] = "green"
+        return True
+    if t.startswith("todo"):
+        parts = t.split(":", 1)
+        item["streak"] = 0
+        item["status"] = "red"
+        if len(parts) == 2 and len(parts[1]) == 8:
+            item["last_ng_date"] = parts[1]
+        return True
+    if t.startswith("wip2"):
+        parts = t.split(":", 1)
+        item["streak"] = 2
+        item["status"] = "yellow"
+        if len(parts) == 2 and len(parts[1]) == 8:
+            item["last_ok_date"] = parts[1]
+        return True
+    if t.startswith("wip"):
+        parts = t.split(":", 1)
+        item["streak"] = 1
+        item["status"] = "yellow"
+        if len(parts) == 2 and len(parts[1]) == 8:
+            item["last_ok_date"] = parts[1]
+        return True
+    return False
 
 
 def _load_extra_vocab_meta() -> dict:
@@ -45,6 +126,7 @@ def _load_extra_vocab_meta() -> dict:
         from adaptive_bank import CORE_N3_KANA_VOCAB, EXTRA_WORDS
         from sentence_lexicon import SENTENCE_LEXICON
         from tutor_data import WORD_DICT
+        from vocab_cards import VOCAB_CARDS
         for src in (SENTENCE_LEXICON, WORD_DICT, EXTRA_WORDS):
             for w, info in src.items():
                 if isinstance(info, dict) and info.get("zh"):
@@ -52,6 +134,11 @@ def _load_extra_vocab_meta() -> dict:
                         "category": "核心词汇",
                         "note": info.get("tip") or info.get("zh") or "",
                     }
+        for w, vc in VOCAB_CARDS.items():
+            meta[w] = {
+                "category": "汉字读音与训读" if vc.get("mode") == "kanji_read" else "高频假名与副词",
+                "note": vc.get("twin") or vc.get("zh") or "",
+            }
         for kw, pitch, desc in CORE_N3_KANA_VOCAB:
             meta.setdefault(kw, {
                 "category": "高频假名副词",
@@ -68,11 +155,11 @@ def _enroll_vocab_if_needed(state: dict, v_map: dict, word: str, extra_meta: dic
     info = extra_meta.get(word, {})
     entry = {
         "word": word,
-        "category": info.get("category") or "睡前闪卡生词",
+        "category": info.get("category") or "今日生词",
         "status": init_status,
         "seen": 0,
         "wrong": 0,
-        "streak": 0,
+        "streak": 3 if init_status == "green" else (1 if init_status == "yellow" else 0),
         "classroom_note": info.get("note") or "",
     }
     state.setdefault("vocab_tracked", []).append(entry)
@@ -80,7 +167,7 @@ def _enroll_vocab_if_needed(state: dict, v_map: dict, word: str, extra_meta: dic
     return entry
 
 
-def apply_practice_logs(state: dict) -> int:
+def apply_practice_logs(state: dict, fallback_day_tag: str) -> int:
     applied = 0
     seen_ts = set(state.get("_processed_log_ts", []))
     extra_meta = _load_extra_vocab_meta()
@@ -106,81 +193,71 @@ def apply_practice_logs(state: dict) -> int:
                 rec_id = str(rec.get("id") or rec.get("question_id") or "").strip()
                 pt = str(rec.get("point", "")).strip()
                 choice = str(rec.get("choice", "")).strip()
-                is_flash = rec_id.startswith("FLASH-") or choice.startswith("闪卡:")
+                is_vocab_card = (
+                    rec_id.startswith("FLASH-")
+                    or rec_id.startswith("VC-")
+                    or choice.startswith("闪卡:")
+                    or choice.startswith("记词:")
+                )
                 dedup_key = f"{ts}|{rec_id}|{pt}|{choice}" if ts else ""
-                if ts and (dedup_key in seen_ts or (ts in seen_ts and not is_flash)):
+                if ts and (dedup_key in seen_ts or (ts in seen_ts and not is_vocab_card)):
                     continue
                 if dedup_key:
                     seen_ts.add(dedup_key)
-                applied += 1
 
+                # Never auto-promote passive timer events
+                if choice == "闪卡:顺过":
+                    continue
+
+                applied += 1
+                day_tag = _iso_to_day_tag(ts, fallback_day_tag)
                 ok = str(rec.get("correct", "")).lower() == "true"
                 again = str(rec.get("ask_again", "")).lower() == "true"
+                instant_seal = choice in ("记词:太熟", "闪卡:太熟")
 
-                if pt in g_map and not is_flash:
-                    gp = g_map[pt]
-                    gp["status"] = step_status(gp.get("status", "yellow"), ok, again)
-                elif (pt in h_map or pt in h_name_map) and not is_flash:
+                if pt in g_map and not is_vocab_card:
+                    _apply_cross_day_step(g_map[pt], day_tag, ok, again, instant_seal)
+                elif (pt in h_map or pt in h_name_map) and not is_vocab_card:
                     hp = h_map.get(pt) or h_name_map.get(pt)
-                    hp["status"] = step_status(hp.get("status", "gray"), ok, again)
-                elif (pt in l_map or pt in l_name_map) and not is_flash:
+                    _apply_cross_day_step(hp, day_tag, ok, again, instant_seal)
+                elif (pt in l_map or pt in l_name_map) and not is_vocab_card:
                     lp = l_map.get(pt) or l_name_map.get(pt)
-                    lp["status"] = step_status(lp.get("status", "gray"), ok, again)
-                elif pt in v_map or is_flash:
+                    _apply_cross_day_step(lp, day_tag, ok, again, instant_seal)
+                elif pt in v_map or is_vocab_card:
                     vp = v_map.get(pt)
-                    if vp is None and is_flash and pt in extra_meta:
-                        vp = _enroll_vocab_if_needed(state, v_map, pt, extra_meta, "yellow")
+                    if vp is None and is_vocab_card and pt in extra_meta:
+                        vp = _enroll_vocab_if_needed(state, v_map, pt, extra_meta, "red")
                     if vp is not None:
                         vp["seen"] = vp.get("seen", 0) + 1
-                        if choice == "闪卡:已熟":
-                            vp["streak"] = max(2, vp.get("streak", 0) + 1)
-                            vp["status"] = "green"
-                        elif choice == "闪卡:顺过":
-                            if vp.get("status") in ("red", "orange", "gray"):
-                                vp["streak"] = max(1, vp.get("streak", 0))
-                                vp["status"] = "yellow"
-                        elif not ok:
+                        if not ok and not instant_seal:
                             vp["wrong"] = vp.get("wrong", 0) + 1
-                            vp["streak"] = 0
-                            vp["status"] = "red"
-                        elif again:
-                            vp["streak"] = 0
-                            vp["status"] = "orange"
-                        else:
-                            vp["streak"] = vp.get("streak", 0) + 1
-                            vp["status"] = "green" if vp["streak"] >= 2 else "yellow"
+                        _apply_cross_day_step(vp, day_tag, ok, again, instant_seal)
 
-    # Reconcile latest masteryOverrides & 3-ritual progress from cloud_state_snapshot.json
+    # Reconcile latest post-epoch masteryOverrides & 3-ritual progress from cloud_state_snapshot.json
     if os.path.exists(SNAPSHOT_PATH):
         try:
             with open(SNAPSHOT_PATH, encoding="utf-8") as sf:
                 snap = json.load(sf)
             ov_seen = state.setdefault("_applied_override_ts", {})
-            tier_to_status = {"done": "green", "wip": "yellow", "todo": "red"}
             for mk, mv in (snap.get("masteryOverrides") or {}).items():
                 if not (isinstance(mv, list) and len(mv) >= 2):
                     continue
                 tier = str(mv[0] or "")
                 ts_i = int(mv[1] or 0)
-                if tier not in tier_to_status or ts_i <= int(ov_seen.get(mk) or 0):
+                if ts_i < TRUE_GREEN_EPOCH or ts_i <= int(ov_seen.get(mk) or 0):
                     continue
-                ov_seen[mk] = ts_i
-                st_val = tier_to_status[tier]
+                target_item = None
                 if mk in g_map:
-                    g_map[mk]["status"] = st_val
+                    target_item = g_map[mk]
                 elif mk in h_map or mk in h_name_map:
-                    (h_map.get(mk) or h_name_map.get(mk))["status"] = st_val
+                    target_item = h_map.get(mk) or h_name_map.get(mk)
                 elif mk in l_map or mk in l_name_map:
-                    (l_map.get(mk) or l_name_map.get(mk))["status"] = st_val
+                    target_item = l_map.get(mk) or l_name_map.get(mk)
                 elif mk in v_map or mk in extra_meta:
-                    vp = v_map.get(mk) or _enroll_vocab_if_needed(state, v_map, mk, extra_meta, st_val)
-                    if vp is not None:
-                        vp["status"] = st_val
-                        if st_val == "green":
-                            vp["streak"] = max(2, vp.get("streak", 0))
-                        elif st_val == "red":
-                            vp["streak"] = 0
-                applied += 1
+                    target_item = v_map.get(mk) or _enroll_vocab_if_needed(state, v_map, mk, extra_meta, "red")
+                if target_item is not None and _apply_tier_override(target_item, tier):
+                    ov_seen[mk] = ts_i
+                    applied += 1
 
             dates = snap.get("dates") or {}
             if dates:
@@ -231,7 +308,6 @@ def main():
     sync_only = ("--sync-only" in sys.argv) or ("--drain-only" in sys.argv)
     quiz_only = ("--quiz-only" in sys.argv)
 
-    # 1. Pull latest cross-platform answers from Cloud CRDT Bus into practice_log.jsonl & cloud_state_snapshot.json
     subprocess.run([sys.executable, os.path.join(BASE_DIR, "sync_cloud_store.py")], check=True)
 
     with open(STATE_PATH, encoding="utf-8") as f:
@@ -244,7 +320,7 @@ def main():
     state["study_date"] = study_dt.strftime("%Y-%m-%d")
     state["updated_at"] = now_pt.strftime("%Y-%m-%d %H:%M PT")
 
-    count = apply_practice_logs(state)
+    count = apply_practice_logs(state, study_dt.strftime("%Y%m%d"))
     recompute_summary(state)
 
     with open(STATE_PATH, "w", encoding="utf-8") as f:
@@ -257,7 +333,7 @@ def main():
         subprocess.run([sys.executable, os.path.join(BASE_DIR, "generate_daily_radio.py")], check=True)
 
     subprocess.run([sys.executable, os.path.join(BASE_DIR, "build_html.py")], check=True)
-    print(f"Brain algorithm v4 synced {count} records (sync_only={sync_only}, quiz_only={quiz_only}); days_left={days_left}.")
+    print(f"Brain algorithm v5 synced {count} records (sync_only={sync_only}, quiz_only={quiz_only}); days_left={days_left}.")
 
 
 if __name__ == "__main__":
