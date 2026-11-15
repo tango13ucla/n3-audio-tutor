@@ -237,8 +237,10 @@ def main():
         state = json.load(f)
 
     now_pt = datetime.datetime.now(PT_TZ)
-    days_left = max(0, (EXAM_DATE - now_pt.date()).days)
+    study_dt = (now_pt - datetime.timedelta(hours=5)).date()
+    days_left = max(0, (EXAM_DATE - study_dt).days)
     state["days_left"] = days_left
+    state["study_date"] = study_dt.strftime("%Y-%m-%d")
     state["updated_at"] = now_pt.strftime("%Y-%m-%d %H:%M PT")
 
     count = apply_practice_logs(state)

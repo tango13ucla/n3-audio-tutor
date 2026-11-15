@@ -62,7 +62,7 @@ PT_TZ = ZoneInfo("America/Los_Angeles")
 EXAM_DATE = datetime.date(2026, 12, 6)
 PROXY_URL = os.environ.get("HTTPS_PROXY") or os.environ.get("HTTP_PROXY") or None
 COMM_KWARGS = {"proxy": PROXY_URL} if PROXY_URL else {}
-MAX_TRIES = 4 if os.environ.get("GITHUB_ACTIONS") == "true" else 1
+MAX_TRIES = 5 if os.environ.get("GITHUB_ACTIONS") == "true" else 1
 GEMINI_API_KEY = (os.environ.get("GEMINI_API_KEY") or "").strip()
 GEMINI_TTS_MODEL = os.environ.get("GEMINI_TTS_MODEL", "gemini-2.5-flash-preview-tts")
 
@@ -99,6 +99,9 @@ def resolve_point_key(point_id: str) -> str:
     return point_id
 
 
+GENERIC_POINT_LABELS = {"口语听辨", "高频假名副词", "核心词汇", "语法", "活用"}
+
+
 def load_recent_mistakes() -> tuple[set, set]:
     """Returns (all_recent_weak_keys, very_recent_weak_keys_last_25)."""
     wrong_all = set()
@@ -119,12 +122,12 @@ def load_recent_mistakes() -> tuple[set, set]:
             if is_weak:
                 pt = str(rec.get("point", "")).strip()
                 qid = str(rec.get("id", "")).strip()
-                if pt:
+                if pt and pt not in GENERIC_POINT_LABELS:
                     wrong_all.add(pt)
                 if qid:
                     wrong_all.add(qid)
                 if idx >= max(0, total - 25):
-                    if pt:
+                    if pt and pt not in GENERIC_POINT_LABELS:
                         wrong_hot.add(pt)
                     if qid:
                         wrong_hot.add(qid)
@@ -160,19 +163,19 @@ def load_mastery_priority(state: dict, recent_wrong_keys: set, hot_wrong_keys: s
     return scores
 
 
-def load_previous_day_stories(today_str: str) -> set:
+def load_previous_day_stories(today_str: str) -> tuple[set, set]:
     if not os.path.exists(RADIO_HISTORY_PATH):
-        return set()
+        return set(), set()
     try:
         with open(RADIO_HISTORY_PATH, encoding="utf-8") as f:
             hist = json.load(f)
         by_date = hist.get("recent_days") or {}
         prior_dates = sorted(d for d in by_date.keys() if d < today_str)
-        if prior_dates:
-            return set(by_date.get(prior_dates[-1]) or [])
+        prev_1 = set(by_date.get(prior_dates[-1]) or []) if len(prior_dates) >= 1 else set()
+        prev_2 = set(by_date.get(prior_dates[-2]) or []) if len(prior_dates) >= 2 else set()
+        return prev_1, prev_2
     except Exception:
-        pass
-    return set()
+        return set(), set()
 
 
 def save_today_stories(today_str: str, story_ids: list) -> None:
@@ -610,32 +613,51 @@ async def main():
         state = json.load(f)
 
     now_pt = datetime.datetime.now(PT_TZ)
-    today_str = now_pt.strftime("%Y-%m-%d")
-    days_left = max(0, (EXAM_DATE - now_pt.date()).days)
+    study_dt = (now_pt - datetime.timedelta(hours=5)).date()
+    today_str = study_dt.strftime("%Y-%m-%d")
+    days_left = max(0, (EXAM_DATE - study_dt).days)
 
     recent_wrong, hot_wrong = load_recent_mistakes()
     scores = load_mastery_priority(state, recent_wrong, hot_wrong)
-    yesterday_stories = load_previous_day_stories(today_str)
+    yesterday_stories, two_days_ago_stories = load_previous_day_stories(today_str)
     rng = random.Random(today_str)
 
     def story_rank(st: dict) -> float:
         pids = st.get("point_ids") or []
         pt_vals = sorted((scores.get(pid, 2.2) for pid in pids), reverse=True)
         top_avg = sum(pt_vals[:3]) / max(1, len(pt_vals[:3])) if pt_vals else 2.2
-        has_hot_miss = any((pid in hot_wrong or resolve_point_key(pid) in hot_wrong) for pid in pids)
-        repeat_penalty = 1.45 if (st["id"] in yesterday_stories and not has_hot_miss) else 0.0
-        jitter = rng.uniform(-0.15, 0.15)
+        repeat_penalty = (
+            3.5 if st["id"] in yesterday_stories
+            else (1.2 if st["id"] in two_days_ago_stories else 0.0)
+        )
+        jitter = rng.uniform(-0.12, 0.12)
         return -(top_avg - repeat_penalty + jitter)
 
     ranked_ids = {st["id"] for st in sorted(SALON_STORIES, key=story_rank)[:6]}
     selected_stories = [st for st in SALON_STORIES if st["id"] in ranked_ids]
-    save_today_stories(today_str, [st["id"] for st in selected_stories])
 
-    closing_turns = [
-        ("D", "其实啊……不知不觉咱们这壶热茶又喝见底了。你想想看，不管是在涩谷撒丫子赶末班车，还是在京都面对那碗不敢真喝的茶泡饭，日本人的脾气秉性，全藏在他们说话留的那半截尾巴里。"),
-        ("X", "对，平时当闲篇儿听个乐呵，把这些风月掌故和男女心眼儿听熟了，下回再听见那些尾巴，根本不用过脑子，画面自个儿就蹦出来了。"),
-        ("W", "得嘞，今儿咱们仨就先白活到这儿！您路上慢点儿走……哦要是骑车就慢点儿蹬，咱们下回接着聊！"),
+    closing_pool = [
+        [
+            ("D", "其实啊……不知不觉咱们这壶热茶又喝见底了。你想想看，不管是在涩谷撒丫子赶末班车，还是在京都面对那碗不敢真喝的茶泡饭，日本人的脾气秉性，全藏在他们说话留的那半截尾巴里。"),
+            ("X", "对，平时当闲篇儿听个乐呵，把这些风月掌故和男女心眼儿听熟了，下回再听见那些尾巴，根本不用过脑子，画面自个儿就蹦出来了。"),
+            ("W", "得嘞，今儿咱们仨就先白活到这儿！您路上慢点儿走……哦要是骑车就慢点儿蹬，咱们下回接着聊！"),
+        ],
+        [
+            ("D", "其实啊……你看咱们今儿从早高峰车厢一路聊到深夜小酒馆，日本人表面上规矩捆得紧，可一旦钻进巷子端起酒杯，酸甜苦辣和人情冷暖全在几句短话里头露了底。"),
+            ("X", "没错，语言本来就不是印在纸上的死条文，把里头这些酒桌潜规则和男女小心思听出味儿来，那些说法自然就长在耳朵里了。"),
+            ("W", "行嘞，茶也凉透了，今儿这桌闲篇儿咱们就先撤席！您忙您的去，明儿咱们换壶热茶接着侃！"),
+        ],
+        [
+            ("D", "话说回来……每次咱们仨坐一块儿扯这些日本街头的烟火气，越聊越觉得，所谓地道的表达，其实就是替对方多留半寸台阶、或者替自己多藏半句真心。"),
+            ("X", "对，不管是职场上打太极还是酒桌上掏心窝子，听懂了那层窗户纸，日语最难缠的弯弯绕也就顺过来了。"),
+            ("W", "好家伙，一眨眼又聊到这会儿了！得，今儿咱们就散摊子，咱们下回接着聊！"),
+        ],
     ]
+    if today_str == "2026-11-14":
+        closing_turns = closing_pool[0]
+    else:
+        day_ord = study_dt.toordinal()
+        closing_turns = closing_pool[1 + (day_ord % (len(closing_pool) - 1))]
 
     # ZERO INTRO PREAMBLE, ZERO DATE, ZERO COUNTDOWN — COLD OPEN INTO CULTURAL SALON AT 00:00.0!
     raw_blocks = []
@@ -683,6 +705,7 @@ async def main():
         try:
             old_meta = json.load(open(RADIO_META_PATH, encoding="utf-8"))
             if old_meta.get("date") == today_str and old_meta.get("script_sig") == script_sig and os.path.getsize(RADIO_MP3_PATH) > 1_000_000:
+                save_today_stories(today_str, [st["id"] for st in selected_stories])
                 print(f"Daily Qiang-Qiang trio radio already up-to-date for {today_str} ({old_meta.get('duration_label')}).")
                 return
         except Exception:
@@ -713,7 +736,13 @@ async def main():
         ok_results = await asyncio.gather(
             *(synth_turn(k, voice_map[k], txt, raw_p, sem) for (k, txt), (raw_p, _) in unique_turns.items())
         )
-        print(f"Synthesized {sum(1 for x in ok_results if x)} / {len(unique_turns)} unique Qiang-Qiang trio prosody clips.")
+        ok_count = sum(1 for x in ok_results if x)
+        print(f"Synthesized {ok_count} / {len(unique_turns)} unique Qiang-Qiang trio prosody clips.")
+        min_required = max(1, int(len(unique_turns) * 0.95))
+        if ok_count < min_required:
+            raise RuntimeError(
+                f"TTS clip synthesis below safety threshold ({ok_count}/{len(unique_turns)} < {min_required}); refusing to overwrite daily_radio.mp3"
+            )
 
         turn_durs = {}
         trimmed_paths = {}
@@ -798,6 +827,7 @@ async def main():
         }
         with open(RADIO_META_PATH, "w", encoding="utf-8") as f:
             json.dump(meta_obj, f, ensure_ascii=False, indent=2)
+        save_today_stories(today_str, [st["id"] for st in selected_stories])
         print(f"Built Qiang-Qiang trio episode: {final_dur:.1f}s ({mins} mins), stories={[s['short_tab'] for s in selected_stories]}")
     finally:
         shutil.rmtree(tmpdir, ignore_errors=True)

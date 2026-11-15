@@ -190,14 +190,40 @@ def resolve_point_status(point_key: str) -> str:
     return "red"
 
 
-def weakness_multiplier(status: str) -> float:
+RECENT_GENERIC_LABELS = {"口语听辨", "高频假名副词", "核心词汇", "语法", "活用"}
+recent_weak_keys = set()
+log_path = os.path.join(BASE_DIR, "practice_log.jsonl")
+if os.path.exists(log_path):
+    try:
+        with open(log_path, encoding="utf-8") as lf:
+            for ln in [x.strip() for x in lf if x.strip()][-160:]:
+                rec = json.loads(ln)
+                if (
+                    str(rec.get("correct", "")).lower() == "false"
+                    or str(rec.get("ask_again", "")).lower() == "true"
+                    or str(rec.get("choice", "")).strip() == "不确定"
+                ):
+                    pt_lbl = str(rec.get("point", "")).strip()
+                    rec_qid = str(rec.get("id", "")).strip()
+                    if pt_lbl and pt_lbl not in RECENT_GENERIC_LABELS:
+                        recent_weak_keys.add(pt_lbl)
+                    if rec_qid:
+                        recent_weak_keys.add(rec_qid)
+    except Exception:
+        pass
+
+
+def weakness_multiplier(status: str, qid: str = "", point_key: str = "") -> float:
+    base = 0.20
     if status == "red":
-        return 1.00
-    if status in ("orange", "gray"):
-        return 0.92
-    if status == "yellow":
-        return 0.62
-    return 0.20
+        base = 1.00
+    elif status in ("orange", "gray"):
+        base = 0.92
+    elif status == "yellow":
+        base = 0.62
+    if (qid and qid in recent_weak_keys) or (point_key and point_key in recent_weak_keys):
+        base += 0.38
+    return base
 
 
 def has_mp3_pair(q_rel: str, exp_rel: str) -> bool:
@@ -262,7 +288,7 @@ def build_base_point(q: dict, subject: str, fallback_point_label: str) -> dict:
     pt_status = resolve_point_status(point_key)
     pmeta = POINT_META.get(qid, {"family": "general", "weight": 2.2})
     exam_weight = float(pmeta["weight"])
-    roi_score = round(exam_weight * weakness_multiplier(pt_status), 3)
+    roi_score = round(exam_weight * weakness_multiplier(pt_status, qid, point_key), 3)
     modality = MODALITY_MAP.get(qid, "listen" if is_listening else "both")
 
     raw_micro = t_item.get("micro_lesson") or {}
@@ -361,7 +387,7 @@ for ext in EXTRA_PRIMARY_CARDS:
         "family": ext["family"],
         "modality": MODALITY_MAP.get(qid, "listen" if is_l else "both"),
         "exam_weight": w,
-        "roi_score": round(w * weakness_multiplier(pt_status), 3),
+        "roi_score": round(w * weakness_multiplier(pt_status, qid, ext["point_key"]), 3),
         "teach": {
             "left": tl,
             "right": tr,
@@ -513,7 +539,11 @@ mastery_data = {
     "vocab": {"label": "核心词汇", "detail": "含常考假名副词", "exam_pts": 24, "counts": count_tiers(vocab_items), "items": vocab_items},
 }
 
-plan_date_str = live_state.get("updated_at", plan.get("plan_date", "2026-11-14"))[:10]
+plan_date_str = (
+    live_state.get("study_date")
+    or radio_meta.get("date")
+    or live_state.get("updated_at", plan.get("plan_date", "2026-11-14"))[:10]
+)
 cloud_cfg_path = os.path.join(BASE_DIR, "cloud_sync_config.json")
 cloud_snap_path = os.path.join(BASE_DIR, "cloud_state_snapshot.json")
 cloud_cfg = {}
@@ -5078,8 +5108,39 @@ window.addEventListener("hashchange", () => {
   }
 });
 
+let editionCheckBusy = false;
+function checkNewDailyEdition() {
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.getRegistration().then(reg => { if (reg) reg.update().catch(() => {}); }).catch(() => {});
+  }
+  if (editionCheckBusy) return;
+  editionCheckBusy = true;
+  fetch("./audio/daily_radio_meta.json?t=" + Date.now(), { cache: "no-store" })
+    .then(r => r.ok ? r.json() : null)
+    .then(rm => {
+      if (!rm || !rm.date) return;
+      const curRadioDate = (DATA.radio && DATA.radio.date) || DATA.plan_date || "";
+      const curSig = (DATA.radio && DATA.radio.script_sig) || "";
+      const isNewerDay = DATA.plan_date && rm.date > DATA.plan_date;
+      const isNewerAudio = curRadioDate && rm.date >= curRadioDate && rm.script_sig && curSig && rm.script_sig !== curSig;
+      if ((isNewerDay || isNewerAudio) && !activeKind && radioPlayer.paused) {
+        const targetKey = `${rm.date}_${rm.script_sig || ""}`;
+        try {
+          const prev = sessionStorage.getItem("n3_edition_reload") || "";
+          const parts = prev.split("@");
+          if (parts[0] === targetKey && (Date.now() - Number(parts[1] || 0)) < 20000) return;
+          sessionStorage.setItem("n3_edition_reload", `${targetKey}@${Date.now()}`);
+        } catch (e) {}
+        location.reload();
+      }
+    })
+    .catch(() => {})
+    .finally(() => { editionCheckBusy = false; });
+}
+
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") {
+    checkNewDailyEdition();
     pullCloudSync(true);
     connectCloudSSE();
   } else {
@@ -5092,6 +5153,7 @@ document.addEventListener("visibilitychange", () => {
 });
 
 window.addEventListener("online", () => {
+  checkNewDailyEdition();
   pullCloudSync(true);
   connectCloudSSE();
 });
@@ -5136,6 +5198,7 @@ function initApp() {
   else if (m === "radio" || m === "walk") switchMode("radio", false);
   else renderTutor();
 
+  checkNewDailyEdition();
   // Pull latest multi-platform cloud snapshot & auto-upload any local-only answers, then keep SSE live
   pullCloudSync(true).then(() => {
     connectCloudSSE();
@@ -5150,6 +5213,22 @@ initApp();
 final_html = html.replace("__PAYLOAD__", payload)
 with open(HTML_PATH, "w", encoding="utf-8") as f:
     f.write(final_html)
+
+sw_path = os.path.join(BASE_DIR, "sw.js")
+if os.path.exists(sw_path):
+    with open(sw_path, encoding="utf-8") as sf:
+        sw_src = sf.read()
+    new_stamp = f'{plan_date_str}_{radio_meta.get("script_sig", "")}'
+    sw_next = re.sub(
+        r'const BUILD_STAMP = "[^"]*";',
+        f'const BUILD_STAMP = "{new_stamp}";',
+        sw_src,
+        count=1,
+    )
+    if sw_next != sw_src:
+        with open(sw_path, "w", encoding="utf-8") as sf:
+            sf.write(sw_next)
+
 print(
     "Wrote Zen v12 N3 Platform:",
     HTML_PATH,
