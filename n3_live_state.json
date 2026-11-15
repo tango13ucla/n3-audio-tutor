@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-15 07:12 PT",
+  "updated_at": "2026-11-15 09:11 PT",
   "exam_date": "2026-12-06",
   "days_left": 21,
   "target_score": "120+ / 180",
@@ -10024,12 +10024,12 @@
     "沈む": 1794723226
   },
   "daily_rituals": {
-    "date": "2026-11-14",
-    "quiz_green": 50,
-    "radio_max_sec": 3820,
-    "flash_seen": 47,
-    "flash_target": 47,
-    "flash_done": true
+    "date": "2026-11-15",
+    "quiz_green": 10,
+    "radio_max_sec": 913,
+    "flash_seen": 0,
+    "flash_target": 0,
+    "flash_done": false
   },
   "study_date": "2026-11-15"
 }
