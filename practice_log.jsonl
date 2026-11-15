@@ -147,3 +147,7 @@
 {"id": "FLASH-輝く", "point": "輝く", "choice": "闪卡:不熟", "correct": "false", "ask_again": "false", "ts": "2026-11-15T07:14:35.000Z"}
 {"id": "FLASH-余る", "point": "余る", "choice": "闪卡:不熟", "correct": "false", "ask_again": "false", "ts": "2026-11-15T07:14:40.000Z"}
 {"id": "FLASH-慰める", "point": "慰める", "choice": "闪卡:不熟", "correct": "false", "ask_again": "false", "ts": "2026-11-15T07:14:42.000Z"}
+{"id": "H-20261114-02", "point": "V-032", "choice": "踏ませて", "correct": "false", "ask_again": "false", "ts": "2026-11-15T17:15:53.000Z"}
+{"id": "N3-H10", "point": "T-002", "choice": "閉まった", "correct": "true", "ask_again": "false", "ts": "2026-11-15T17:15:57.000Z"}
+{"id": "G-20261114-07", "point": "〜ずにはいられない", "choice": "泣かずにはいられなかった", "correct": "true", "ask_again": "false", "ts": "2026-11-15T17:16:04.000Z"}
+{"id": "G-20261114-11", "point": "〜らしい", "choice": "あるらしい", "correct": "true", "ask_again": "false", "ts": "2026-11-15T17:19:33.000Z"}
