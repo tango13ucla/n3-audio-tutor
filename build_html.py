@@ -852,7 +852,7 @@ html = r"""<!DOCTYPE html>
     flex-direction: column;
   }
 
-  @media (min-width: 860px) {
+  @media (min-width: 860px) and (min-height: 521px) {
     body { padding: 34px 48px 34px; }
     .zen-shell { max-width: 590px; }
     .zen-shell.wide-mode { max-width: 800px; }
@@ -867,6 +867,27 @@ html = r"""<!DOCTYPE html>
     color: inherit;
     cursor: pointer;
   }
+
+  /* Portrait guard (phone only): counter-rotate the app when the OS rotates to landscape anyway */
+  html.fp {
+    width: var(--fp-w);
+    height: var(--fp-h);
+    overflow: hidden;
+  }
+  html.fp body {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: var(--fp-h) !important;
+    height: var(--fp-w) !important;
+    padding-left: 26px;
+    padding-right: 26px;
+    transform-origin: 0 0;
+  }
+  html.fp-90 body { transform: translateY(var(--fp-h)) rotate(-90deg); }
+  html.fp-270 body { transform: translateX(var(--fp-w)) rotate(90deg); }
+  html.fp #tutor-view,
+  html.fp .focal-space { touch-action: manipulation; }
 
   /* ================= 1. STRICT GRID HEADER ================= */
   .zen-header {
@@ -1163,7 +1184,7 @@ html = r"""<!DOCTYPE html>
      Everything tappable lives in the right-thumb arc (~58-88% height) plus a quiet bottom-right nav,
      so the hand never shifts up to the top corners and never curls down into the bezel. */
   .thumb-nav { display: none; }
-  @media (max-width: 859px) {
+  @media (max-width: 859px), (max-height: 520px) {
     body {
       padding-bottom: calc(4px + env(safe-area-inset-bottom));
     }
@@ -1243,7 +1264,7 @@ html = r"""<!DOCTYPE html>
 
   /* Desktop vs Mobile Ergonomics (>=860px):
      Quiz centers optically; reading views stay anchored from top so tapping words shifts 0px. */
-  @media (min-width: 860px) {
+  @media (min-width: 860px) and (min-height: 521px) {
     #tutor-view .stage-wrap {
       justify-content: flex-start;
     }
@@ -1352,7 +1373,7 @@ html = r"""<!DOCTYPE html>
     letter-spacing: 0.035em;
     color: var(--sumi);
   }
-  @media (min-width: 860px) {
+  @media (min-width: 860px) and (min-height: 521px) {
     .quiz-ja { font-size: 30px; }
   }
 
@@ -1501,7 +1522,7 @@ html = r"""<!DOCTYPE html>
   .quiz-aux-row .aux-read-btn.playing { color: var(--moss); font-weight: 600; }
   .quiz-aux-row .unsure-btn:active,
   .quiz-aux-row .aux-read-btn:active { background: transparent; opacity: 0.5; }
-  @media (min-width: 860px) {
+  @media (min-width: 860px) and (min-height: 521px) {
     .quiz-aux-row .unsure-btn:hover,
     .quiz-aux-row .aux-read-btn:hover { background: transparent; color: var(--sumi); }
   }
@@ -1518,7 +1539,7 @@ html = r"""<!DOCTYPE html>
     flex-shrink: 0;
   }
   .unsure-btn .kbd-tag { display: none; }
-  @media (min-width: 860px) {
+  @media (min-width: 860px) and (min-height: 521px) {
     .zen-choice:hover, .listen-num-btn:hover { border-color: var(--sumi); background: #FFFFFF; }
     .unsure-btn:hover { border-color: var(--sumi); color: var(--sumi); background: rgba(252, 251, 248, 0.72); }
     .kbd-tag { opacity: 1; }
@@ -1779,7 +1800,7 @@ html = r"""<!DOCTYPE html>
     bottom: 12px;
     box-shadow: none;
   }
-  @media (min-width: 860px) {
+  @media (min-width: 860px) and (min-height: 521px) {
     #tutor-inline-lex {
       position: static;
       margin-top: 18px;
@@ -2006,7 +2027,7 @@ html = r"""<!DOCTYPE html>
     align-items: center;
     gap: 10px;
   }
-  @media (min-width: 860px) {
+  @media (min-width: 860px) and (min-height: 521px) {
     .transport-row { justify-content: space-between; }
   }
   .radio-spd-pill {
@@ -2089,7 +2110,7 @@ html = r"""<!DOCTYPE html>
   .ledger-back-fab {
     display: none;
   }
-  @media (max-width: 859px) {
+  @media (max-width: 859px), (max-height: 520px) {
     .ledger-back-fab {
       display: inline-flex;
       align-items: center;
@@ -2110,7 +2131,7 @@ html = r"""<!DOCTYPE html>
     }
   }
 
-  @media (min-width: 860px) {
+  @media (min-width: 860px) and (min-height: 521px) {
     .ledger-scroll { padding-bottom: 12px; }
     .ledger-layout {
       display: grid;
@@ -2277,7 +2298,7 @@ html = r"""<!DOCTYPE html>
     padding: 28px;
     z-index: 100;
   }
-  @media (max-width: 859px) {
+  @media (max-width: 859px), (max-height: 520px) {
     .modal-mask {
       align-items: flex-end;
       padding: 20px 20px calc(44px + env(safe-area-inset-bottom));
@@ -2707,6 +2728,51 @@ function tryLockPortrait() {
 tryLockPortrait();
 document.addEventListener("pointerdown", tryLockPortrait, { once: true, passive: true });
 document.addEventListener("touchstart", tryLockPortrait, { once: true, passive: true });
+
+// Portrait guard: if the phone still auto-rotates to landscape (system lock unsupported in this launch mode),
+// counter-rotate the whole app so it stays upright relative to the phone, like a real portrait-only app.
+let FP_ANGLE = 0;
+function currentScreenAngle() {
+  try {
+    if (screen && screen.orientation && typeof screen.orientation.angle === "number") return screen.orientation.angle;
+  } catch (e) {}
+  if (typeof window.orientation === "number") return (window.orientation + 360) % 360;
+  return -1;
+}
+function applyPortraitGuard() {
+  const root = document.documentElement;
+  const w = window.innerWidth || 0;
+  const h = window.innerHeight || 0;
+  const sw = (screen && screen.width) || w;
+  const sh = (screen && screen.height) || h;
+  const phone = Math.min(sw, sh) < 600;
+  const ang = currentScreenAngle();
+  let a = 0;
+  if (phone && w > h && (ang === 90 || ang === 270 || ang === -1)) a = ang === 270 ? 270 : 90;
+  FP_ANGLE = a;
+  root.classList.toggle("fp", a !== 0);
+  root.classList.toggle("fp-90", a === 90);
+  root.classList.toggle("fp-270", a === 270);
+  if (a && root.style && root.style.setProperty) {
+    root.style.setProperty("--fp-w", w + "px");
+    root.style.setProperty("--fp-h", h + "px");
+  }
+}
+function fpXY(cx, cy) {
+  if (FP_ANGLE === 90) return { x: window.innerHeight - cy, y: cx };
+  if (FP_ANGLE === 270) return { x: cy, y: window.innerWidth - cx };
+  return { x: cx, y: cy };
+}
+function fpX(p) { return fpXY(p.clientX, p.clientY).x; }
+function fpY(p) { return fpXY(p.clientX, p.clientY).y; }
+applyPortraitGuard();
+window.addEventListener("resize", applyPortraitGuard);
+window.addEventListener("orientationchange", () => { tryLockPortrait(); setTimeout(applyPortraitGuard, 60); });
+try {
+  if (screen && screen.orientation && screen.orientation.addEventListener) {
+    screen.orientation.addEventListener("change", () => { tryLockPortrait(); applyPortraitGuard(); });
+  }
+} catch (e) {}
 
 let expSpeed = parseFloat(localStorage.getItem("n3_exp_speed") || "1.0");
 if (!SPEEDS.includes(expSpeed)) expSpeed = 1.0;
@@ -5272,8 +5338,8 @@ window.addEventListener("wheel", e => {
     if (viewStage !== "result" && viewStage !== "teach") return;
     if (document.getElementById("app-modal").classList.contains("open")) return;
     if (!e.touches || e.touches.length !== 1) return;
-    sx = e.touches[0].clientX;
-    sy = e.touches[0].clientY;
+    sx = fpX(e.touches[0]);
+    sy = fpY(e.touches[0]);
     st = performance.now();
     axis = null;
     tracking = true;
@@ -5281,8 +5347,8 @@ window.addEventListener("wheel", e => {
 
   tutorEl.addEventListener("touchmove", e => {
     if (!tracking || !e.touches || e.touches.length !== 1) return;
-    const dx = e.touches[0].clientX - sx;
-    const dy = e.touches[0].clientY - sy;
+    const dx = fpX(e.touches[0]) - sx;
+    const dy = fpY(e.touches[0]) - sy;
 
     if (!axis) {
       if (Math.abs(dy) > 10 && Math.abs(dy) >= Math.abs(dx)) {
@@ -5331,7 +5397,7 @@ window.addEventListener("wheel", e => {
       axis = null;
       return;
     }
-    const dx = e.changedTouches[0].clientX - sx;
+    const dx = fpX(e.changedTouches[0]) - sx;
     const dt = Math.max(1, performance.now() - st);
     const vx = dx / dt;
     axis = null;
@@ -5367,14 +5433,14 @@ window.addEventListener("wheel", e => {
     if (activeMode !== "dash" || !e.touches || e.touches.length !== 1) return;
     const tag = (e.target && e.target.tagName || "").toLowerCase();
     if (tag === "input") return;
-    dsx = e.touches[0].clientX;
-    dsy = e.touches[0].clientY;
+    dsx = fpX(e.touches[0]);
+    dsy = fpY(e.touches[0]);
     dst = performance.now();
   }, { passive: true });
   dashEl.addEventListener("touchend", e => {
     if (activeMode !== "dash" || !dsx || !e.changedTouches || !e.changedTouches.length) return;
-    const dx = e.changedTouches[0].clientX - dsx;
-    const dy = e.changedTouches[0].clientY - dsy;
+    const dx = fpX(e.changedTouches[0]) - dsx;
+    const dy = fpY(e.changedTouches[0]) - dsy;
     const dt = performance.now() - dst;
     const fromEdgeZone = dsx < 160;
     dsx = 0;
@@ -6231,8 +6297,8 @@ function bindVocabCardGestures(cardEl) {
     if (typeof e.button === "number" && e.button !== 0) return;
     dragging = true;
     activePid = e.pointerId;
-    sx = e.clientX;
-    sy = e.clientY;
+    sx = fpX(e);
+    sy = fpY(e);
     st = performance.now();
     cardEl.classList.remove("settling");
     cardEl.classList.add("dragging");
@@ -6241,8 +6307,8 @@ function bindVocabCardGestures(cardEl) {
 
   cardEl.addEventListener("pointermove", e => {
     if (!dragging || e.pointerId !== activePid) return;
-    const dx = e.clientX - sx;
-    const dy = e.clientY - sy;
+    const dx = fpX(e) - sx;
+    const dy = fpY(e) - sy;
     cardEl.style.transform = `translate3d(${dx.toFixed(1)}px, ${(dy * 0.42).toFixed(1)}px, 0) rotate(${(dx * 0.038).toFixed(2)}deg)`;
 
     const stR = document.getElementById("vc-st-right");
@@ -6276,8 +6342,8 @@ function bindVocabCardGestures(cardEl) {
       resetVocabCardTransform();
       return;
     }
-    const dx = e.clientX - sx;
-    const dy = e.clientY - sy;
+    const dx = fpX(e) - sx;
+    const dy = fpY(e) - sy;
     const dt = Math.max(1, performance.now() - st);
     const vx = dx / dt;
     const vy = dy / dt;
