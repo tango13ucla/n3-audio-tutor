@@ -378,3 +378,8 @@
 {"id": "G-20261114-03", "point": "〜からこそ", "choice": "からこそ", "correct": "true", "ask_again": "false", "ts": "2026-11-15T19:44:27.000Z"}
 {"id": "H-20261114-06", "point": "V-045", "choice": "話しさせられた", "correct": "false", "ask_again": "false", "ts": "2026-11-15T19:44:38.000Z"}
 {"id": "V-20261114-08", "point": "出張", "choice": "しゅっちょう", "correct": "true", "ask_again": "false", "ts": "2026-11-15T19:46:48.000Z"}
+{"id": "VC-沈む", "point": "沈む", "choice": "记词:没记住", "correct": "false", "ask_again": "false", "ts": "2026-11-15T20:22:31.000Z"}
+{"id": "VC-書類", "point": "書類", "choice": "记词:记住", "correct": "true", "ask_again": "false", "ts": "2026-11-15T20:22:34.000Z"}
+{"id": "VC-からから", "point": "からから", "choice": "记词:没记住", "correct": "false", "ask_again": "false", "ts": "2026-11-15T20:22:43.000Z"}
+{"id": "N3-G21", "point": "〜ことはない", "choice": "ことはない", "correct": "true", "ask_again": "false", "ts": "2026-11-15T20:30:35.000Z"}
+{"id": "N3-G18", "point": "〜めったに〜ない", "choice": "めったに", "correct": "true", "ask_again": "false", "ts": "2026-11-15T20:30:45.000Z"}
