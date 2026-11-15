@@ -229,6 +229,7 @@ def recompute_summary(state: dict) -> None:
 def main():
     import sys
     sync_only = ("--sync-only" in sys.argv) or ("--drain-only" in sys.argv)
+    quiz_only = ("--quiz-only" in sys.argv)
 
     # 1. Pull latest cross-platform answers from Cloud CRDT Bus into practice_log.jsonl & cloud_state_snapshot.json
     subprocess.run([sys.executable, os.path.join(BASE_DIR, "sync_cloud_store.py")], check=True)
@@ -249,12 +250,14 @@ def main():
     with open(STATE_PATH, "w", encoding="utf-8") as f:
         json.dump(state, f, ensure_ascii=False, indent=2)
 
-    if not sync_only:
+    if quiz_only:
+        subprocess.run([sys.executable, os.path.join(BASE_DIR, "generate_neural_audio.py")], check=True)
+    elif not sync_only:
         subprocess.run([sys.executable, os.path.join(BASE_DIR, "generate_neural_audio.py")], check=True)
         subprocess.run([sys.executable, os.path.join(BASE_DIR, "generate_daily_radio.py")], check=True)
 
     subprocess.run([sys.executable, os.path.join(BASE_DIR, "build_html.py")], check=True)
-    print(f"Brain algorithm v4 synced {count} records (sync_only={sync_only}); days_left={days_left}.")
+    print(f"Brain algorithm v4 synced {count} records (sync_only={sync_only}, quiz_only={quiz_only}); days_left={days_left}.")
 
 
 if __name__ == "__main__":

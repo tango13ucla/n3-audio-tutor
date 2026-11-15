@@ -11,6 +11,7 @@ Aesthetic Philosophy: 禅 (Zen) · 余白 (Ma) · 新潮文庫級組版 (Optimal
 - Local storage historical union-merge + 1-tap cross-device sync link (#sync=...).
 """
 import glob
+import hashlib
 import json
 import os
 import re
@@ -4136,7 +4137,7 @@ function speakJapaneseFallback(text) {
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = "ja-JP";
-    u.rate = 0.92;
+    u.rate = 1.0;
     window.speechSynthesis.speak(u);
   } catch (e) {}
 }
@@ -4549,7 +4550,7 @@ function speakFlashCard(card, onDone) {
       };
       wordPlayer.src = card.audio;
       wordPlayer.currentTime = 0;
-      wordPlayer.playbackRate = 0.96;
+      wordPlayer.playbackRate = 1.0;
       const pr = wordPlayer.play();
       if (pr && pr.catch) {
         pr.catch(() => {
@@ -4573,7 +4574,7 @@ function speakUtteranceWithCallback(text, cb) {
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = "ja-JP";
-    u.rate = 0.9;
+    u.rate = 1.0;
     u.onend = cb;
     u.onerror = cb;
     window.speechSynthesis.speak(u);
@@ -5218,7 +5219,10 @@ sw_path = os.path.join(BASE_DIR, "sw.js")
 if os.path.exists(sw_path):
     with open(sw_path, encoding="utf-8") as sf:
         sw_src = sf.read()
-    new_stamp = f'{plan_date_str}_{radio_meta.get("script_sig", "")}'
+    manifest_sig = hashlib.sha256(
+        json.dumps(audio_manifest, sort_keys=True, ensure_ascii=False).encode("utf-8")
+    ).hexdigest()[:8]
+    new_stamp = f'{plan_date_str}_{radio_meta.get("script_sig", "")}_{manifest_sig}'
     sw_next = re.sub(
         r'const BUILD_STAMP = "[^"]*";',
         f'const BUILD_STAMP = "{new_stamp}";',

@@ -8,6 +8,11 @@ on:
     # Archive multi-platform cloud answers & self-heal daily build every 4 hours
     - cron: '0 */4 * * *'
   workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Refresh mode (full or quiz_only)'
+        required: false
+        default: 'full'
 
 permissions:
   contents: write
@@ -29,8 +34,15 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           EVENT_NAME: ${{ github.event_name }}
           CRON_SCHEDULE: ${{ github.event.schedule }}
+          INPUT_MODE: ${{ inputs.mode }}
         run: |
-          if python - <<'PY'
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$INPUT_MODE" = "quiz_only" ]; then
+            echo "[dispatch] Running fast quiz_only studio audio synthesis (preserving daily_radio.mp3)"
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq --no-install-recommends ffmpeg
+            pip install --quiet -U edge-tts certifi pykakasi
+            python run_brain_algorithm.py --quiz-only
+          elif python - <<'PY'
           import datetime, json, os, sys
           from zoneinfo import ZoneInfo
           now_pt = datetime.datetime.now(ZoneInfo("America/Los_Angeles"))
