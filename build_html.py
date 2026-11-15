@@ -27,7 +27,12 @@ from clear_explanations import CARDS_75
 from radio_dialogue_bank import MODALITY_MAP
 from sentence_lexicon import SENTENCE_LEXICON
 from tutor_data import KANA_ADVERBS_36, TUTOR_ITEMS, WORD_DICT
-from vocab_cards import VOCAB_CARDS, build_dynamic_vocab_card
+from vocab_cards import (
+    HAS_KANJI_RE,
+    VOCAB_CARDS,
+    analyze_kanji_reading_trap,
+    build_dynamic_vocab_card,
+)
 import tutor_prefs
 
 MEMORY_PREFS = tutor_prefs.load_prefs()
@@ -137,6 +142,14 @@ for surf, info in merged_raw_words.items():
     entry = dict(info)
     alias = info.get("audio_alias")
     entry["audio"] = word_audio_map.get(surf) or (word_audio_map.get(alias, "") if alias else "")
+    kana_val = str(entry.get("kana") or surf).strip()
+    if HAS_KANJI_RE.search(surf) and kana_val != surf:
+        thl, ttag, opq = analyze_kanji_reading_trap(
+            surf, kana_val, str(entry.get("zh") or ""), str(entry.get("head") or "")
+        )
+        entry["trap_hl"] = thl
+        entry["trap_tag"] = ttag
+        entry["zh_opaque"] = opq
     rich_words[surf] = entry
 
 
@@ -637,6 +650,9 @@ for vw in all_vc_keys:
         "chunk_ja": spec["chunk_ja"],
         "target": spec["target"],
         "kana": spec["kana"],
+        "trap_hl": spec.get("trap_hl") or [],
+        "trap_tag": spec.get("trap_tag") or "",
+        "zh_opaque": bool(spec.get("zh_opaque", True)),
         "pitch": spec["pitch"],
         "zh": spec["zh"],
         "twin": spec["twin"],
@@ -1476,16 +1492,33 @@ html = r"""<!DOCTYPE html>
 
   /* Tappable Japanese words + Fixed-Geometry Zen Meaning Card (Zero Layout Shift, Zero Touch Flicker) */
   .w-tok {
+    position: relative;
     cursor: pointer;
     padding: 1px 0;
     border-radius: 3px;
     -webkit-box-decoration-break: clone;
     box-decoration-break: clone;
   }
+  .w-tok.marked-tok::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -3px;
+    width: 4px;
+    height: 4px;
+    margin-left: -2px;
+    border-radius: 50%;
+    background: var(--bengara);
+    opacity: 0.86;
+    pointer-events: none;
+  }
   .w-tok.active-tok {
     color: var(--moss);
     background: var(--moss-soft);
     box-shadow: inset 0 -1.5px 0 var(--moss);
+  }
+  .w-tok.active-tok.marked-tok::after {
+    opacity: 0;
   }
 
   .inline-lex {
@@ -1546,10 +1579,21 @@ html = r"""<!DOCTYPE html>
   }
   .ilex-kana {
     font-size: 14.5px;
-    color: var(--moss);
+    color: var(--ink-2);
     font-weight: 500;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+  .kana-trap {
+    color: var(--bengara);
+    font-weight: 700;
+  }
+  .kana-tag {
+    font-size: 0.82em;
+    color: var(--ink-3);
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    margin-left: 4px;
   }
   .ilex-zh {
     height: 22px;
@@ -2139,9 +2183,9 @@ html = r"""<!DOCTYPE html>
     pointer-events: auto;
   }
   .vc-kana {
-    font-size: 18px;
+    font-size: 19.5px;
     font-weight: 500;
-    color: var(--moss);
+    color: var(--ink-2);
     letter-spacing: 0.04em;
     margin-bottom: 8px;
   }
@@ -2150,6 +2194,11 @@ html = r"""<!DOCTYPE html>
     font-weight: 600;
     color: var(--sumi);
     line-height: 1.42;
+  }
+  .vc-zh.quiet {
+    font-size: 16.5px;
+    font-weight: 400;
+    color: var(--ink-2);
   }
   .vc-twin {
     margin-top: 10px;
@@ -3210,6 +3259,7 @@ function applyIncomingPacket(pkt) {
       }
       saveAdaptiveState();
       renderGreenBoard();
+      if (typeof refreshMarkedWordTokens === "function") refreshMarkedWordTokens();
       if (activeMode === "tutor") {
         if (shownChanged || viewStage !== "result") renderTutor();
       } else if (activeMode === "dash") {
@@ -3569,6 +3619,10 @@ Object.keys(PARTICLE_FALLBACK).forEach(pk => {
 const DICT_KEYS = Object.keys(DATA.words).sort((a, b) => b.length - a.length);
 const CONTENT_KEYS = DICT_KEYS.filter(k => k.length >= 3 && !PARTICLE_FALLBACK[k]);
 const INTERJECTION_SET = new Set(["はい", "ええ", "うん", "いや", "あれ", "ほら"]);
+const TRIVIAL_TAP_WORDS = new Set([
+  "この", "その", "あの", "ここ", "そこ", "あそこ", "これ", "それ", "あれ", "どれ", "どちら",
+  "私", "僕", "彼", "彼女", "人", "今日", "明日", "昨日", "今", "もう", "また", "もっと", "だけ", "だから"
+]);
 
 function hasLongerContentWordAt(src, pos) {
   for (let c = 0; c < CONTENT_KEYS.length; c++) {
@@ -3583,6 +3637,66 @@ function escapeHtml(s) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+function isWordMarkedForReading(surface) {
+  if (!surface || PARTICLE_FALLBACK[surface] || TRIVIAL_TAP_WORDS.has(surface)) return false;
+  const inTapped = Array.isArray(A.tappedWords) && A.tappedWords.includes(surface);
+  const inFailed = !!(A.vocabSess && Array.isArray(A.vocabSess.failedWords) && A.vocabSess.failedWords.includes(surface));
+  if (!inTapped && !inFailed) return false;
+  let mKey = surface;
+  const vItems = (DATA.mastery && DATA.mastery.vocab && DATA.mastery.vocab.items) ? DATA.mastery.vocab.items : [];
+  for (let i = 0; i < vItems.length; i++) {
+    if (vItems[i].name === surface || vItems[i].key === surface) {
+      mKey = vItems[i].key || surface;
+      break;
+    }
+  }
+  return getEffectiveMastery(mKey, surface).tier !== "done";
+}
+
+function refreshMarkedWordTokens() {
+  if (typeof document === "undefined") return;
+  document.querySelectorAll(".w-tok[data-w]").forEach(el => {
+    const w = el.dataset.w || "";
+    el.classList.toggle("marked-tok", isWordMarkedForReading(w));
+  });
+}
+
+function renderTrapKanaHTML(surface, kana, trapHl, trapTag) {
+  const kStr = String(kana || "").trim();
+  if (!kStr) return "";
+  const hasKanji = /[\u4e00-\u9faf\u3400-\u4dbf]/.test(String(surface || ""));
+  if (!hasKanji) {
+    return kStr !== surface ? escapeHtml(kStr) : "";
+  }
+  const hlArr = (Array.isArray(trapHl) ? trapHl : []).map(x => String(x || "")).filter(Boolean);
+  const mask = new Array(kStr.length).fill(false);
+  let pos = 0;
+  for (let i = 0; i < hlArr.length; i++) {
+    const sub = hlArr[i];
+    let idx = kStr.indexOf(sub, pos);
+    if (idx < 0) idx = kStr.indexOf(sub, 0);
+    if (idx >= 0) {
+      for (let j = idx; j < idx + sub.length; j++) mask[j] = true;
+      pos = idx + sub.length;
+    }
+  }
+  let html = "";
+  let idx = 0;
+  while (idx < kStr.length) {
+    const flag = mask[idx];
+    let end = idx + 1;
+    while (end < kStr.length && mask[end] === flag) end++;
+    const seg = escapeHtml(kStr.slice(idx, end));
+    html += flag ? `<b class="kana-trap">${seg}</b>` : seg;
+    idx = end;
+  }
+  const tag = String(trapTag || "").trim();
+  if (tag) {
+    html += `<span class="kana-tag">· ${escapeHtml(tag)}</span>`;
+  }
+  return html;
 }
 
 // Tokenize full sentence first so multi-character words & conjugated chunks never get split in half!
@@ -3623,7 +3737,8 @@ function renderJapaneseWithHighlight(text, highlightTarget) {
       } else {
         innerHtml = escW;
       }
-      out += `<span class="w-tok" data-w="${escW}">${innerHtml}</span>`;
+      const mkCls = isWordMarkedForReading(matched) ? " marked-tok" : "";
+      out += `<span class="w-tok${mkCls}" data-w="${escW}">${innerHtml}</span>`;
       i = tEnd;
     } else {
       const ch = escapeHtml(src[i]);
@@ -4620,11 +4735,6 @@ function playDirectUrl(url) {
   wordPlayer.play().catch(() => {});
 }
 
-const TRIVIAL_TAP_WORDS = new Set([
-  "この", "その", "あの", "ここ", "そこ", "あそこ", "これ", "それ", "あれ", "どれ", "どちら",
-  "私", "僕", "彼", "彼女", "人", "今日", "明日", "昨日", "今", "もう", "また", "もっと", "だけ", "だから"
-]);
-
 function recordTappedWord(surface) {
   if (!surface || PARTICLE_FALLBACK[surface] || TRIVIAL_TAP_WORDS.has(surface)) return;
   const info = DATA.words[surface];
@@ -4636,21 +4746,25 @@ function recordTappedWord(surface) {
     if (A.tappedWords.length > 80) A.tappedWords = A.tappedWords.slice(-80);
     changed = true;
   }
-  if (A.vocabSess && A.vocabSess.date === DATA.plan_date && Array.isArray(A.vocabSess.queue) && !A.vocabSess.done) {
+  if (A.vocabSess && A.vocabSess.date === DATA.plan_date && Array.isArray(A.vocabSess.queue)) {
     const clearedArr = Array.isArray(A.vocabSess.clearedWords) ? A.vocabSess.clearedWords : [];
     if (!A.vocabSess.queue.includes(surface) && !clearedArr.includes(surface)) {
       const insPos = Math.min(1, A.vocabSess.queue.length);
       A.vocabSess.queue.splice(insPos, 0, surface);
       A.vocabSess.total = Math.max(A.vocabSess.queue.length + (A.vocabSess.cleared || 0), (A.vocabSess.total || 0) + 1);
+      A.vocabSess.done = false;
       A.vocabSess.updatedAt = nowUnixSec();
       changed = true;
     }
   }
   if (changed) {
     applyMasteryOverrides();
+    refreshMarkedWordTokens();
     renderGreenBoard();
     saveAdaptiveState();
     scheduleCloudPush(450);
+  } else {
+    refreshMarkedWordTokens();
   }
 }
 
@@ -4677,9 +4791,7 @@ function showInlineWordMeaning(surface, tokEl) {
 
   const headDiff = info.head && info.head !== surface ? `原形 ${info.head}` : "";
   const metaLine = [headDiff, info.pos, info.tip].filter(Boolean).join(" · ");
-  const kanaTxt = info.kana && info.kana !== surface
-    ? (info.kana + (info.pitch ? " " + info.pitch : ""))
-    : (info.pitch || "");
+  const kanaHtml = renderTrapKanaHTML(surface, info.kana || "", info.trap_hl, info.trap_tag);
 
   box.dataset.surface = surface;
   const surfEl = box.querySelector(".ilex-surf");
@@ -4687,7 +4799,7 @@ function showInlineWordMeaning(surface, tokEl) {
   const zhEl = box.querySelector(".ilex-zh");
   const metaEl = box.querySelector(".ilex-meta");
   if (surfEl) surfEl.textContent = surface;
-  if (kanaEl) kanaEl.textContent = kanaTxt;
+  if (kanaEl) kanaEl.innerHTML = kanaHtml;
   if (zhEl) zhEl.textContent = info.zh || "";
   if (metaEl) metaEl.textContent = metaLine;
   box.classList.remove("empty");
@@ -4930,10 +5042,13 @@ function getVocabCardSpec(surface) {
       chunk_ja: pre.chunk_ja || surface,
       target: pre.target || surface,
       kana: pre.kana || w.kana || surface,
+      trap_hl: Array.isArray(pre.trap_hl) ? pre.trap_hl : (w.trap_hl || []),
+      trap_tag: pre.trap_tag || w.trap_tag || "",
+      zh_opaque: typeof pre.zh_opaque === "boolean" ? pre.zh_opaque : (typeof w.zh_opaque === "boolean" ? w.zh_opaque : true),
       pitch: pre.pitch || w.pitch || "",
       zh: pre.zh || w.zh || (vItem && vItem.sub) || "",
       twin: pre.twin || "",
-      zh_speak: pre.zh_speak || cleanSpeakZh(pre.zh || w.zh || ""),
+      zh_speak: typeof pre.zh_speak === "string" ? pre.zh_speak : cleanSpeakZh(pre.zh || w.zh || ""),
       front_audio: pre.front_audio || "",
       rev_audio: pre.rev_audio || "",
       full_audio: pre.full_audio || "",
@@ -4944,6 +5059,7 @@ function getVocabCardSpec(surface) {
 
   const hasKanji = /[\u4e00-\u9faf\u3400-\u4dbf]/.test(surface);
   const zh = w.zh || (vItem && vItem.sub) || "";
+  const zhOpaque = hasKanji ? (typeof w.zh_opaque === "boolean" ? w.zh_opaque : true) : true;
   const tipParts = [];
   if (w.head && w.head !== surface) tipParts.push(`原形 ${w.head}`);
   let rawTip = w.tip || (vItem && vItem.note) || "";
@@ -4960,10 +5076,13 @@ function getVocabCardSpec(surface) {
     chunk_ja: surface,
     target: surface,
     kana: w.kana || surface,
+    trap_hl: Array.isArray(w.trap_hl) ? w.trap_hl : [],
+    trap_tag: w.trap_tag || "",
+    zh_opaque: zhOpaque,
     pitch: w.pitch || "",
     zh: zh,
     twin: tipParts.join(" · "),
-    zh_speak: cleanSpeakZh(zh),
+    zh_speak: (!hasKanji || zhOpaque) ? cleanSpeakZh(zh) : "",
     front_audio: "",
     rev_audio: "",
     full_audio: "",
@@ -5196,9 +5315,14 @@ function playUrlOnWordPlayer(url, myToken, onDone, onFail) {
 }
 
 function playBilingualFallback(card, includeJa, myToken, onDone) {
+  const zhVoiceTxt = String(typeof card.zh_speak === "string" ? card.zh_speak : (card.zh || "")).trim();
   const speakZhStep = () => {
     if (vcToken !== myToken) return;
-    speakUtteranceLang(card.zh_speak || card.zh, "zh-CN", 1.04, () => {
+    if (!zhVoiceTxt) {
+      if (onDone) onDone();
+      return;
+    }
+    speakUtteranceLang(zhVoiceTxt, "zh-CN", 1.04, () => {
       if (vcToken === myToken && onDone) onDone();
     });
   };
@@ -5212,6 +5336,10 @@ function playBilingualFallback(card, includeJa, myToken, onDone) {
       myToken,
       () => {
         if (vcToken !== myToken) return;
+        if (!zhVoiceTxt) {
+          if (onDone) onDone();
+          return;
+        }
         vcTimer = setTimeout(speakZhStep, 140);
       },
       () => {
@@ -5340,10 +5468,14 @@ function revealVocabCard(playAudioNow, forceFullBilingual) {
   const cueEl = document.getElementById("vc-cue-line");
   if (cueEl) {
     if (vcPendingLeft) {
-      cueEl.textContent = "已记入没记住 · 听完滑一下继续";
+      cueEl.textContent = card.mode === "kanji_read"
+        ? "已标待练读音 · 盯住红字听清再滑"
+        : "已记入没记住 · 听完滑一下继续";
       cueEl.className = "vc-cue ng";
     } else {
-      cueEl.textContent = "右滑记住 · 左滑没记住 · 上滑太熟";
+      cueEl.textContent = card.mode === "kanji_read"
+        ? "读音全准右滑 · 差一拍就左滑"
+        : "右滑记住 · 左滑没记住 · 上滑太熟";
       cueEl.className = "vc-cue";
     }
   }
@@ -5482,6 +5614,7 @@ function triggerVocabAction(dir) {
     }
     pushVocabRecord(card, "记词:没记住", false, stamp);
     applyMasteryOverrides();
+    refreshMarkedWordTokens();
     saveAdaptiveState();
     renderGreenBoard();
     scheduleCloudPush(100);
@@ -5495,7 +5628,7 @@ function triggerVocabAction(dir) {
       const dockEl = document.getElementById("vc-dock-row");
       if (dockEl) {
         dockEl.innerHTML = `
-          <button class="vc-btn mid" onclick="replayVocabAudio(event)">重听双语</button>
+          <button class="vc-btn mid" onclick="replayVocabAudio(event)">再听一遍</button>
           <button class="vc-btn ok" onclick="acknowledgePendingLeft('left')">听清了 · 稍后再考 →</button>
         `;
       }
@@ -5520,6 +5653,7 @@ function triggerVocabAction(dir) {
     }
     pushVocabRecord(card, "记词:太熟", true, stamp);
     applyMasteryOverrides();
+    refreshMarkedWordTokens();
     animateOutAndNext("fly-up", () => {
       sess.queue.shift();
       if (!Array.isArray(sess.clearedWords)) sess.clearedWords = [];
@@ -5541,6 +5675,7 @@ function triggerVocabAction(dir) {
   applyMasteryAction(card.key, card.word, hadFailToday ? "recover" : "pass", stamp);
   pushVocabRecord(card, "记词:记住", true, stamp);
   applyMasteryOverrides();
+  refreshMarkedWordTokens();
 
   animateOutAndNext("fly-right", () => {
     sess.queue.shift();
@@ -5691,10 +5826,17 @@ function renderVocabStage() {
   const leftLabel = isRequeued
     ? `回炉巩固 · 余 ${sess.queue.length} 词`
     : `今晚 ${posNum} / ${sess.total} 词${card.source ? " · " + card.source : ""}`;
-  const kanaLine = (card.kana && card.kana !== card.chunk_ja)
-    ? `${card.kana}${card.pitch ? " " + card.pitch : ""}`
-    : (card.pitch ? card.pitch : "");
-  const initCue = card.mode === "kanji_read" ? "默念读音与意思" : "听日文 · 想中文意思";
+  const isKanjiCard = card.mode === "kanji_read";
+  const hasTargetKanji = /[\u4e00-\u9faf\u3400-\u4dbf]/.test(card.target || card.word);
+  const kanaHtml = (hasTargetKanji && card.kana)
+    ? renderTrapKanaHTML(card.target || card.word, card.kana, card.trap_hl, card.trap_tag)
+    : "";
+  const quietZh = isKanjiCard && !card.zh_opaque;
+  const initCue = isKanjiCard ? "默念读音 · 有一拍不准就左滑" : "听日文 · 想中文意思";
+  const rightStampTxt = isKanjiCard ? "读准了" : "记住";
+  const leftStampTxt = isKanjiCard ? "读音待练" : "没记住";
+  const leftBtnTxt = isKanjiCard ? "← 读音不准" : "← 没记住";
+  const rightBtnTxt = isKanjiCard ? "读准了 →" : "记住 →";
 
   box.innerHTML = `
     <div class="meta-bar">
@@ -5707,25 +5849,25 @@ function renderVocabStage() {
 
     <div class="vc-deck-area">
       <div class="vc-card" id="vc-card">
-        <div class="vc-stamp right" id="vc-st-right">记住</div>
-        <div class="vc-stamp left" id="vc-st-left">没记住</div>
+        <div class="vc-stamp right" id="vc-st-right">${rightStampTxt}</div>
+        <div class="vc-stamp left" id="vc-st-left">${leftStampTxt}</div>
         <div class="vc-stamp up" id="vc-st-up">太熟封存</div>
 
         <div class="vc-cue" id="vc-cue-line">${initCue}</div>
         <div class="vc-chunk">${renderChunkHighlightHTML(card.chunk_ja, card.target)}</div>
 
         <div class="vc-reveal${vcRevealed ? " shown" : ""}" id="vc-reveal-box">
-          ${kanaLine ? `<div class="vc-kana">${escapeHtml(kanaLine)}</div>` : ""}
-          <div class="vc-zh">${escapeHtml(card.zh)}</div>
+          ${kanaHtml ? `<div class="vc-kana">${kanaHtml}</div>` : ""}
+          <div class="vc-zh${quietZh ? " quiet" : ""}">${escapeHtml(card.zh)}</div>
           ${card.twin ? `<div class="vc-twin">${escapeHtml(card.twin)}</div>` : ""}
         </div>
       </div>
     </div>
 
     <div class="vc-dock" id="vc-dock-row">
-      <button class="vc-btn ng" onclick="triggerVocabAction('left')">← 没记住</button>
+      <button class="vc-btn ng" onclick="triggerVocabAction('left')">${leftBtnTxt}</button>
       <button class="vc-btn mid" onclick="triggerVocabAction('up')">↑ 太熟</button>
-      <button class="vc-btn ok" onclick="triggerVocabAction('right')">记住 →</button>
+      <button class="vc-btn ok" onclick="triggerVocabAction('right')">${rightBtnTxt}</button>
     </div>
   `;
 

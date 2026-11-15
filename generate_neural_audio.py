@@ -600,9 +600,10 @@ async def main():
         vc_id = hashlib.sha256(vw.encode("utf-8")).hexdigest()[:10]
         mode = vc.get("mode", "kana_meaning")
         ja_s = str(vc.get("ja_speak") or vw).strip()
-        zh_s = str(vc.get("zh_speak") or vc.get("zh") or "").strip()
+        zh_s = str(vc["zh_speak"] if "zh_speak" in vc else vc.get("zh", "")).strip()
+        zh_turns = (expand_exp_turn("T", zh_s, False) if JA_SPAN_RE.search(zh_s) else [("T_VC", zh_s)]) if zh_s else []
         if mode == "kanji_read":
-            rev_turns = [("JF", ja_s), ("PAUSE", 0.22), ("T_VC", zh_s)] if zh_s else [("JF", ja_s)]
+            rev_turns = [("JF", ja_s), ("PAUSE", 0.22), *zh_turns] if zh_turns else [("JF", ja_s)]
             rev_file = f"vc_{vc_id}_rev.mp3"
             rev_hash = hashlib.sha256((f"v19vc:{vc_tag}:" + json.dumps(rev_turns, ensure_ascii=False)).encode("utf-8")).hexdigest()[:10]
             vc_specs[vw] = {"mode": mode, "front": None, "rev": (rev_file, rev_hash, rev_turns), "full": (rev_file, rev_hash, rev_turns)}
@@ -611,8 +612,8 @@ async def main():
                 vc_jobs[rev_file] = (rev_hash, rev_turns)
         else:
             front_turns = [("JF", ja_s)]
-            rev_turns = [("T_VC", zh_s)] if zh_s else [("JF", ja_s)]
-            full_turns = [("JF", ja_s), ("PAUSE", 0.22), ("T_VC", zh_s)] if zh_s else [("JF", ja_s)]
+            rev_turns = list(zh_turns) if zh_turns else [("JF", ja_s)]
+            full_turns = [("JF", ja_s), ("PAUSE", 0.22), *zh_turns] if zh_turns else [("JF", ja_s)]
             front_file = f"vc_{vc_id}_front.mp3"
             rev_file = f"vc_{vc_id}_rev.mp3"
             full_file = f"vc_{vc_id}_full.mp3"
