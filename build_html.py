@@ -27,6 +27,12 @@ from clear_explanations import CARDS_75
 from radio_dialogue_bank import MODALITY_MAP
 from sentence_lexicon import SENTENCE_LEXICON
 from tutor_data import KANA_ADVERBS_36, TUTOR_ITEMS, WORD_DICT
+import tutor_prefs
+
+MEMORY_PREFS = tutor_prefs.load_prefs()
+MEMORY_FOCUS = tutor_prefs.focus_set(MEMORY_PREFS)
+DECK_CAP = tutor_prefs.deck_cap(MEMORY_PREFS)
+TODAY_LOAD, TODAY_LOAD_WHY = tutor_prefs.today_load(MEMORY_PREFS)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 HTML_PATH = os.path.join(BASE_DIR, "index.html")
@@ -292,6 +298,8 @@ def weakness_multiplier(status: str, qid: str = "", point_key: str = "") -> floa
         base = 0.62
     if (qid and qid in recent_weak_keys) or (point_key and point_key in recent_weak_keys):
         base += 0.38
+    if (qid and qid in MEMORY_FOCUS) or (point_key and point_key in MEMORY_FOCUS):
+        base += 0.45
     return base
 
 
@@ -484,7 +492,7 @@ for ext in EXTRA_PRIMARY_CARDS:
     })
 
 raw_points.sort(key=lambda x: (-x["roi_score"], -x["exam_weight"], x["id"]))
-raw_points = raw_points[:50]
+raw_points = raw_points[:DECK_CAP]
 
 buckets = {"语法": [], "活用": [], "词汇": [], "听力": []}
 for p in raw_points:
@@ -5432,6 +5440,27 @@ initApp();
 """
 
 final_html = html.replace("__PAYLOAD__", payload)
+
+# ---- Memory-driven prefs: screen orientation (portrait lock for the installed phone app) ----
+_orient = tutor_prefs.orientation(MEMORY_PREFS)
+_manifest_path = os.path.join(BASE_DIR, "manifest.json")
+if os.path.exists(_manifest_path):
+    with open(_manifest_path, encoding="utf-8") as mf:
+        _mf = json.load(mf)
+    if _mf.get("orientation") != _orient:
+        _mf["orientation"] = _orient
+        with open(_manifest_path, "w", encoding="utf-8") as mf:
+            json.dump(_mf, mf, ensure_ascii=False, indent=2)
+            mf.write("\n")
+if _orient == "portrait":
+    _lock_js = (
+        "<script>(function(){function l(){try{if(screen.orientation&&screen.orientation.lock)"
+        "{screen.orientation.lock('portrait').catch(function(){});}}catch(e){}}"
+        "l();document.addEventListener('visibilitychange',l);"
+        "document.addEventListener('click',l,{once:true});})();</script>\n</body>"
+    )
+    final_html = final_html.replace("</body>", _lock_js, 1) if final_html.count("</body>") == 1 else final_html
+
 with open(HTML_PATH, "w", encoding="utf-8") as f:
     f.write(final_html)
 
@@ -5442,7 +5471,10 @@ if os.path.exists(sw_path):
     manifest_sig = hashlib.sha256(
         json.dumps(audio_manifest, sort_keys=True, ensure_ascii=False).encode("utf-8")
     ).hexdigest()[:8]
-    new_stamp = f'{plan_date_str}_{radio_meta.get("script_sig", "")}_{manifest_sig}'
+    prefs_sig = hashlib.sha256(
+        json.dumps({k: v for k, v in MEMORY_PREFS.items() if k != "generated_at"}, sort_keys=True, ensure_ascii=False).encode("utf-8")
+    ).hexdigest()[:6]
+    new_stamp = f'{plan_date_str}_{radio_meta.get("script_sig", "")}_{manifest_sig}_{prefs_sig}'
     sw_next = re.sub(
         r'const BUILD_STAMP = "[^"]*";',
         f'const BUILD_STAMP = "{new_stamp}";',

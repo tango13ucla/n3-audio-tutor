@@ -1,6 +1,10 @@
 name: Daily JLPT N3 Brain Refresh
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'tutor_prefs.json'
   schedule:
     # Early-morning full episode + daily deck synthesis at 05:35 AM PT (13:35 UTC) + 07:00 AM PT backup (15:00 UTC)
     - cron: '35 13 * * *'

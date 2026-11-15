@@ -48,6 +48,7 @@ except Exception:
 
 from adaptive_bank import EXTRA_PRIMARY_CARDS, POINT_META
 from radio_dialogue_bank import MODALITY_MAP, SALON_STORIES
+import tutor_prefs
 from tutor_data import TUTOR_ITEMS
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -632,6 +633,9 @@ async def main():
     yesterday_stories, two_days_ago_stories = load_previous_day_stories(today_str)
     rng = random.Random(today_str)
 
+    _rp = tutor_prefs.radio_prefs()
+    _focus = tutor_prefs.focus_set()
+
     def story_rank(st: dict) -> float:
         pids = st.get("point_ids") or []
         pt_vals = sorted((scores.get(pid, 2.2) for pid in pids), reverse=True)
@@ -640,8 +644,16 @@ async def main():
             3.5 if st["id"] in yesterday_stories
             else (1.2 if st["id"] in two_days_ago_stories else 0.0)
         )
+        memory_bonus = 0.0
+        if st["id"] in _rp["avoid_story_ids"]:
+            memory_bonus -= 9.0
+        if _focus and any(pid in _focus for pid in pids):
+            memory_bonus += 0.8
+        blob = f'{st.get("title", "")} {" ".join(st.get("tags", []) or [])}'
+        if any(tag and tag in blob for tag in _rp["prefer_tags"]):
+            memory_bonus += 0.3
         jitter = rng.uniform(-0.12, 0.12)
-        return -(top_avg - repeat_penalty + jitter)
+        return -(top_avg - repeat_penalty + memory_bonus + jitter)
 
     ranked_ids = {st["id"] for st in sorted(SALON_STORIES, key=story_rank)[:6]}
     selected_stories = [st for st in SALON_STORIES if st["id"] in ranked_ids]

@@ -1,0 +1,56 @@
+{
+  "schema": "n3-tutor-prefs/1",
+  "generated_at": "2026-11-15T09:10-0800",
+  "exam_date": "2026-12-06",
+  "daily_load": {
+    "2026-11-15": {
+      "load": "normal",
+      "why": "memory"
+    },
+    "2026-11-16": {
+      "load": "normal",
+      "why": "memory"
+    },
+    "2026-11-17": {
+      "load": "normal",
+      "why": "memory"
+    },
+    "2026-11-18": {
+      "load": "normal",
+      "why": "memory"
+    },
+    "2026-11-19": {
+      "load": "normal",
+      "why": "memory"
+    },
+    "2026-11-20": {
+      "load": "normal",
+      "why": "memory"
+    },
+    "2026-11-21": {
+      "load": "normal",
+      "why": "memory"
+    },
+    "2026-11-22": {
+      "load": "normal",
+      "why": "memory"
+    }
+  },
+  "load_caps": {
+    "normal": 50,
+    "light": 25,
+    "off": 10
+  },
+  "focus_points": [],
+  "radio": {
+    "prefer_tags": [
+      "日本文化",
+      "市井八卦",
+      "日剧原剧细节"
+    ],
+    "avoid_story_ids": []
+  },
+  "ui": {
+    "orientation": "portrait"
+  }
+}
