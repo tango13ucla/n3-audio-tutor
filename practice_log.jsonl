@@ -151,3 +151,11 @@
 {"id": "N3-H10", "point": "T-002", "choice": "閉まった", "correct": "true", "ask_again": "false", "ts": "2026-11-15T17:15:57.000Z"}
 {"id": "G-20261114-07", "point": "〜ずにはいられない", "choice": "泣かずにはいられなかった", "correct": "true", "ask_again": "false", "ts": "2026-11-15T17:16:04.000Z"}
 {"id": "G-20261114-11", "point": "〜らしい", "choice": "あるらしい", "correct": "true", "ask_again": "false", "ts": "2026-11-15T17:19:33.000Z"}
+{"id": "VC-ついてない", "point": "ついてない", "choice": "记词:没记住", "correct": "false", "ask_again": "false", "ts": "2026-11-15T17:47:44.000Z"}
+{"id": "VC-つい", "point": "つい", "choice": "记词:记住", "correct": "true", "ask_again": "false", "ts": "2026-11-15T17:47:49.000Z"}
+{"id": "VC-備える", "point": "備える", "choice": "记词:没记住", "correct": "false", "ask_again": "false", "ts": "2026-11-15T17:47:59.000Z"}
+{"id": "VC-沈む", "point": "沈む", "choice": "记词:没记住", "correct": "false", "ask_again": "false", "ts": "2026-11-15T17:48:04.000Z"}
+{"id": "VC-許す", "point": "許す", "choice": "记词:记住", "correct": "true", "ask_again": "false", "ts": "2026-11-15T17:48:10.000Z"}
+{"id": "VC-ついてない", "point": "ついてない", "choice": "记词:记住", "correct": "true", "ask_again": "false", "ts": "2026-11-15T17:48:15.000Z"}
+{"id": "VC-輝く", "point": "輝く", "choice": "记词:记住", "correct": "true", "ask_again": "false", "ts": "2026-11-15T17:48:18.000Z"}
+{"id": "VC-備える", "point": "備える", "choice": "记词:记住", "correct": "true", "ask_again": "false", "ts": "2026-11-15T17:48:22.000Z"}
