@@ -2583,7 +2583,9 @@ const DATA = __PAYLOAD__;
 const SPEEDS = [1.0, 1.15, 1.3, 1.5];
 const RADIO_SPEEDS = [1.0, 1.15, 1.3];
 const ADAPTIVE_KEY = "n3_adaptive_v13_" + DATA.plan_date;
-const RADIO_POS_KEY = "n3_radio_pos_" + (DATA.radio.date || DATA.plan_date);
+const RADIO_SIG = String((DATA.radio && DATA.radio.script_sig) || "").slice(0, 8);
+const LEGACY_RADIO_POS_KEY = "n3_radio_pos_" + (DATA.radio.date || DATA.plan_date);
+const RADIO_POS_KEY = LEGACY_RADIO_POS_KEY + (RADIO_SIG ? "_" + RADIO_SIG : "");
 const TODAY_TAG = String(DATA.plan_date || "").replace(/-/g, "");
 const TRUE_GREEN_EPOCH = Number(DATA.true_green_epoch || 1794761500);
 const BAKED_EPOCH = Number(DATA.baked_epoch || 0);
@@ -2674,6 +2676,7 @@ function createFreshAdaptiveState() {
     hotFamily: null,
     radioMaxSec: 0,
     radioPos: [0, 0],
+    radioSig: RADIO_SIG,
     flashProg: [0, 0, 0, 0],
     vocabSess: null,
     pts: pts,
@@ -2737,7 +2740,7 @@ function loadAdaptiveState() {
     const sd = cs.seeded_day || {};
     if (typeof sd.resetAt === "number" && sd.resetAt > base.resetAt) base.resetAt = Math.floor(sd.resetAt);
     if (typeof sd.radioMaxSec === "number" && sd.radioMaxSec > base.radioMaxSec) base.radioMaxSec = Math.floor(sd.radioMaxSec);
-    if (Array.isArray(sd.radioPos) && sd.radioPos.length === 2 && (sd.radioPos[1] || 0) > (base.radioPos[1] || 0)) {
+    if ((!RADIO_SIG || String(sd.radioSig || "") === RADIO_SIG) && Array.isArray(sd.radioPos) && sd.radioPos.length === 2 && (sd.radioPos[1] || 0) > (base.radioPos[1] || 0)) {
       base.radioPos = [Math.floor(sd.radioPos[0] || 0), Math.floor(sd.radioPos[1] || 0)];
     }
     const gMap = sd.greenAt || {};
@@ -2829,7 +2832,7 @@ function loadAdaptiveState() {
         if (typeof saved.radioMaxSec === "number" && saved.radioMaxSec > base.radioMaxSec) {
           base.radioMaxSec = Math.floor(saved.radioMaxSec);
         }
-        if (Array.isArray(saved.radioPos) && saved.radioPos.length === 2 && (saved.radioPos[1] || 0) > (base.radioPos[1] || 0)) {
+        if ((!RADIO_SIG || String(saved.radioSig || "") === RADIO_SIG) && Array.isArray(saved.radioPos) && saved.radioPos.length === 2 && (saved.radioPos[1] || 0) > (base.radioPos[1] || 0)) {
           base.radioPos = [Math.floor(saved.radioPos[0] || 0), Math.floor(saved.radioPos[1] || 0)];
         }
         if (saved.masteryOverrides && typeof saved.masteryOverrides === "object") {
@@ -2876,7 +2879,9 @@ function loadAdaptiveState() {
       } catch (innerErr) {}
     });
 
+    const legacyRadioPos = parseFloat(localStorage.getItem(LEGACY_RADIO_POS_KEY) || "0");
     const savedRadioPos = parseFloat(localStorage.getItem(RADIO_POS_KEY) || "0");
+    if (legacyRadioPos > base.radioMaxSec) base.radioMaxSec = Math.floor(legacyRadioPos);
     if (savedRadioPos > base.radioMaxSec) base.radioMaxSec = Math.floor(savedRadioPos);
     if (savedRadioPos > 0 && (base.radioPos[1] || 0) === 0) {
       base.radioPos = [Math.floor(savedRadioPos), 2];
@@ -3245,7 +3250,7 @@ function decodePointStates(z) {
 function buildCompactPacket() {
   const pkt = {
     a: "n3z",
-    v: 14,
+    v: 15,
     u: nowUnixSec(),
     d: DATA.plan_date,
     r: Math.floor(A.resetAt || 0),
@@ -3257,6 +3262,9 @@ function buildCompactPacket() {
     o: {},
     l: []
   };
+  if (RADIO_SIG && Array.isArray(A.radioPos) && (A.radioPos[1] || 0) > 0) {
+    pkt.rsig = A.radioSig || RADIO_SIG;
+  }
   let size = byteLen(JSON.stringify(pkt));
   // answers not yet confirmed by the relay go first (oldest first), never dropped
   const sentKeys = [];
@@ -3312,6 +3320,7 @@ function packetFingerprint(pkt) {
     r: Math.floor(pkt.r || 0),
     m: Math.floor((pkt.m || 0) / 30),
     rp: pkt.rp || [0, 0],
+    rsig: pkt.rsig || "",
     fp: Array.isArray(pkt.fp) ? [Math.floor(pkt.fp[0] || 0), Math.floor(pkt.fp[1] || 0), Math.floor(pkt.fp[2] || 0)] : [],
     z: String(pkt.z || "").split(";").filter(Boolean).sort().join(";"),
     c: pkt.c || [],
@@ -3394,12 +3403,13 @@ function applyIncomingPacket(pkt) {
       changed = true;
     }
 
-    if (Array.isArray(pkt.rp) && pkt.rp.length === 2) {
+    if ((!RADIO_SIG || String(pkt.rsig || "") === RADIO_SIG) && Array.isArray(pkt.rp) && pkt.rp.length === 2) {
       const rpSec = Math.floor(pkt.rp[0] || 0);
       const rpTs = Math.floor(pkt.rp[1] || 0);
       const myTs = (A.radioPos && A.radioPos[1]) || 0;
       if (rpTs > myTs || (rpTs === myTs && rpSec > ((A.radioPos && A.radioPos[0]) || 0))) {
         A.radioPos = [rpSec, rpTs];
+        A.radioSig = RADIO_SIG;
         try { localStorage.setItem(RADIO_POS_KEY, String(rpSec)); } catch (e) {}
         if (radioInitialized && radioPlayer.paused && Math.abs((radioPlayer.currentTime || 0) - rpSec) > 1) {
           lastSavedSec = rpSec;
@@ -4242,6 +4252,7 @@ function toggleRadioPlay(forcePlay) {
 
 function markRadioPosByUser(t) {
   A.radioPos = [Math.floor(t || 0), nowUnixSec()];
+  A.radioSig = RADIO_SIG;
   try { localStorage.setItem(RADIO_POS_KEY, String(Math.floor(t || 0))); } catch (e) {}
   saveAdaptiveState();
   scheduleCloudPush(800);
@@ -4281,7 +4292,7 @@ function cycleRadioSpeed() {
 function renderRadioChapters(activeChapIdx) {
   const chaps = DATA.radio.chapters || [];
   document.getElementById("radio-chap-pills").innerHTML = chaps.map(c => `
-    <button class="chap-link ${c.idx === activeChapIdx ? 'active' : ''}" onclick="jumpRadioChapter(${c.start})">${escapeHtml(c.title.replace(/^[①②③④]\s*/, ""))}</button>
+    <button class="chap-link ${c.idx === activeChapIdx ? 'active' : ''}" onclick="jumpRadioChapter(${c.start})">${escapeHtml(c.title.replace(/^[①②③④⑤⑥]\s*/, ""))}</button>
   `).join("");
 }
 
@@ -4298,7 +4309,10 @@ function updateRadioLiveDisplay(t) {
     const prevMin = Math.floor((A.radioMaxSec || 0) / 60);
     A.radioMaxSec = Math.floor(t);
     if (Math.floor(A.radioMaxSec / 60) !== prevMin) {
-      if (!radioPlayer.paused) A.radioPos = [Math.floor(t), nowUnixSec()];
+      if (!radioPlayer.paused) {
+        A.radioPos = [Math.floor(t), nowUnixSec()];
+        A.radioSig = RADIO_SIG;
+      }
       saveAdaptiveState();
       renderGreenBoard();
       if (Date.now() - lastRadioCloudPushMs > 55000) {
@@ -4326,7 +4340,7 @@ function updateRadioLiveDisplay(t) {
       const chaps = DATA.radio.chapters || [];
       const chapObj = chaps[curSeg.chapter] || chaps[0];
       if (chapObj) {
-        document.getElementById("radio-chap-lbl").textContent = chapObj.title.replace(/^[①②③④]\s*/, "");
+        document.getElementById("radio-chap-lbl").textContent = chapObj.title.replace(/^[①②③④⑤⑥]\s*/, "");
         renderRadioChapters(chapObj.idx);
       }
       document.getElementById("radio-live-title").textContent = curSeg.title;
@@ -4370,6 +4384,7 @@ radioPlayer.addEventListener("pause", () => {
   const t = Math.floor(radioPlayer.currentTime || 0);
   if (t > 2) {
     A.radioPos = [t, nowUnixSec()];
+    A.radioSig = RADIO_SIG;
     if (t > (A.radioMaxSec || 0)) A.radioMaxSec = t;
     try { localStorage.setItem(RADIO_POS_KEY, String(t)); } catch (e) {}
     saveAdaptiveState();
@@ -4380,6 +4395,7 @@ radioPlayer.addEventListener("ended", () => {
   const dur = Math.ceil(radioPlayer.duration || DATA.radio.duration_sec || 2100);
   A.radioMaxSec = dur;
   A.radioPos = [0, nowUnixSec()];
+  A.radioSig = RADIO_SIG;
   try { localStorage.setItem(RADIO_POS_KEY, "0"); } catch (e) {}
   saveAdaptiveState();
   renderGreenBoard();
@@ -4396,6 +4412,7 @@ radioPlayer.addEventListener("timeupdate", () => {
   if (!radioPlayer.paused && Math.abs(t - lastSavedSec) >= 3) {
     lastSavedSec = t;
     A.radioPos = [Math.floor(t), nowUnixSec()];
+    A.radioSig = RADIO_SIG;
     try { localStorage.setItem(RADIO_POS_KEY, String(Math.floor(t))); } catch (e) {}
     saveAdaptiveState();
     if (Date.now() - lastRadioCloudPushMs > 90000) {

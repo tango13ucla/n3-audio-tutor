@@ -15,7 +15,7 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: 'Refresh mode (full or quiz_only)'
+        description: 'Refresh mode (full, radio_only, or quiz_only)'
         required: false
         default: 'full'
 
@@ -52,8 +52,8 @@ jobs:
           study_pt = (now_pt - datetime.timedelta(hours=5)).strftime("%Y-%m-%d")
           ev = os.environ.get("EVENT_NAME", "")
           inp = os.environ.get("INPUT_MODE", "full")
-          if ev == "workflow_dispatch" and inp == "quiz_only":
-              print("quiz_only")
+          if ev == "workflow_dispatch" and inp in ("quiz_only", "radio_only"):
+              print(inp)
               raise SystemExit(0)
           meta_date = ""
           if os.path.exists("audio/daily_radio_meta.json"):
@@ -73,10 +73,15 @@ jobs:
             sudo apt-get install -y -qq --no-install-recommends ffmpeg
             pip install --quiet -U edge-tts certifi pykakasi
             python run_brain_algorithm.py --quiz-only
+          elif [ "$ACTION_MODE" = "radio_only" ]; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq --no-install-recommends ffmpeg
+            pip install --quiet -U numpy edge-tts certifi google-genai pykakasi
+            python run_brain_algorithm.py --radio-only
           elif [ "$ACTION_MODE" = "full" ]; then
             sudo apt-get update -qq
             sudo apt-get install -y -qq --no-install-recommends ffmpeg
-            pip install --quiet -U edge-tts certifi google-genai pykakasi
+            pip install --quiet -U numpy edge-tts certifi google-genai pykakasi
             python run_brain_algorithm.py
           else
             python run_brain_algorithm.py --sync-only

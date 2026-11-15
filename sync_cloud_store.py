@@ -219,6 +219,7 @@ def empty_crdt_state(plan_date: str) -> dict:
                 "resetAt": 0,
                 "radioMaxSec": 0,
                 "radioPos": [0, 0],
+                "radioSig": "",
                 "greenAt": {},
                 "retestAt": {},
                 "learning": {},
@@ -234,6 +235,7 @@ def merge_day_bucket(dst: dict, src: dict) -> dict:
         "resetAt": max(int(dst.get("resetAt") or 0), int(src.get("resetAt") or 0)),
         "radioMaxSec": max(int(dst.get("radioMaxSec") or 0), int(src.get("radioMaxSec") or 0)),
         "radioPos": list(dst.get("radioPos") or [0, 0]),
+        "radioSig": str(dst.get("radioSig") or ""),
         "greenAt": {
             k: int(v)
             for k, v in (dst.get("greenAt") or {}).items()
@@ -251,6 +253,7 @@ def merge_day_bucket(dst: dict, src: dict) -> dict:
         s_ts, d_ts = int(sp[1] or 0), int(out["radioPos"][1] or 0)
         if s_ts > d_ts or (s_ts == d_ts and int(sp[0] or 0) > int(out["radioPos"][0] or 0)):
             out["radioPos"] = [int(sp[0] or 0), int(sp[1] or 0)]
+            out["radioSig"] = str(src.get("radioSig") or "")
 
     out["sched"] = dict(dst.get("sched") or {})
     for pid, tup in (src.get("sched") or {}).items():
@@ -372,6 +375,7 @@ def unpack_compact_ntfy(pkt: dict) -> dict | None:
         "resetAt": int(pkt.get("r") or 0),
         "radioMaxSec": int(pkt.get("m") or 0),
         "radioPos": pkt.get("rp") if isinstance(pkt.get("rp"), list) else [0, 0],
+        "radioSig": str(pkt.get("rsig") or "")[:8],
         "greenAt": {k: int(v) for k, v in raw_g.items() if int(v or 0) >= MIN_REAL_TS},
         "retestAt": {k: int(v) for k, v in raw_t.items() if int(v or 0) >= MIN_REAL_TS},
         "learning": pkt.get("w") if isinstance(pkt.get("w"), dict) else {},
@@ -466,6 +470,8 @@ def pack_compact_ntfy(state: dict, plan_date: str, baked_epoch: int = 0) -> dict
         "o": {},
         "l": [],
     }
+    if day.get("radioSig"):
+        pkt["rsig"] = str(day["radioSig"])[:8]
     if isinstance(day.get("cursor"), list):
         pkt["c"] = day["cursor"]
     if isinstance(day.get("speeds"), list):

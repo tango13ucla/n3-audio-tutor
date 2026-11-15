@@ -454,6 +454,7 @@ def main():
     import sys
     sync_only = ("--sync-only" in sys.argv) or ("--drain-only" in sys.argv)
     quiz_only = ("--quiz-only" in sys.argv)
+    radio_only = ("--radio-only" in sys.argv)
 
     subprocess.run([sys.executable, os.path.join(BASE_DIR, "sync_cloud_store.py")], check=True)
 
@@ -477,12 +478,14 @@ def main():
 
     if quiz_only:
         subprocess.run([sys.executable, os.path.join(BASE_DIR, "generate_neural_audio.py")], check=True)
+    elif radio_only:
+        subprocess.run([sys.executable, os.path.join(BASE_DIR, "generate_daily_radio.py")], check=True)
     elif not sync_only:
         subprocess.run([sys.executable, os.path.join(BASE_DIR, "generate_neural_audio.py")], check=True)
         subprocess.run([sys.executable, os.path.join(BASE_DIR, "generate_daily_radio.py")], check=True)
 
     subprocess.run([sys.executable, os.path.join(BASE_DIR, "build_html.py")], check=True)
-    print(f"Brain algorithm v6 synced {count} records (sync_only={sync_only}, quiz_only={quiz_only}); days_left={days_left}.")
+    print(f"Brain algorithm v6 synced {count} records (sync_only={sync_only}, quiz_only={quiz_only}, radio_only={radio_only}); days_left={days_left}.")
 
 
 if __name__ == "__main__":
