@@ -144,16 +144,84 @@ def strip_opt_prefix(s: str) -> str:
 
 def clean_zen_text(s: str) -> str:
     txt = str(s or "").strip()
-    txt = re.sub(r"[✅❌⭕✕✓↑↓🎧]", "", txt)
-    txt = re.sub(r"\d+/\d+(?:\s*&\s*\d+/\d+)?\s*课上[^·。！!]*[·\s]*", "", txt)
+    txt = re.sub(r"[✅❌⭕✕✓↑↓🎧★]", "", txt)
+    txt = re.sub(r"\d+/\d+(?:\s*(?:&|与|和)\s*\d+/\d+)?\s*课[^·。！!：:]*[·：:\s]*", "", txt)
+    txt = txt.replace("——", "：")
     txt = re.sub(
         r"^(?:听力保命铁律|声音\+画面双锚|双重铁证|考场秒杀铁律|考试卷面铁律|秒杀铁律|记忆铁律|一眼锁死助词|看动词时态定画面|这对双胞胎反着记)[：:]\s*",
         "",
         txt,
     )
+    txt = re.sub(
+        r"^(?:正确接续|标准接续|得体地道|头号反向陷阱|反向陷阱|字面陷阱|N3\s*变形题头号陷阱)[！!：:\s]*",
+        "",
+        txt,
+    )
+    txt = re.sub(r"[，,]\s*(?:完美契合|N3\s*必考核心句型)(?=[。！!]?$)", "", txt)
     txt = re.sub(r"\s+", " ", txt).strip()
     txt = re.sub(r"[！!]+$", "。", txt)
+    txt = re.sub(r"[！!]+", "。", txt)
     return txt
+
+
+LISTENING_OPT_NOTES = {
+    "Q-20261114-001": {
+        "じゃあ、今日は作らなくていいね。": "「那今天不用做了呢。」把口语 しないと（必须做）听反了。",
+        "ほんとだ、急いで帰ろう。": "「真的耶，赶紧回去吧。」顺着女生催回家做晚饭自然回应。",
+        "夕飯、おいしかったね。": "「晚饭真好吃呢。」时态不对，晚饭还没开始准备。",
+    },
+    "Q-20261114-002": {
+        "袋をもらう。": "「要袋子。」误把礼貌谢绝的 袋はいいです 按字面听成要。",
+        "袋はいらない。": "「不要袋子。」客人谢绝装袋并说明直接拿回去。",
+        "大きい袋に変える。": "「换成大袋子。」对话中未提及。",
+    },
+    "Q-20261114-003": {
+        "えっ、本当？あそこ好きだったのに。": "「啊真的吗？我明明很喜欢那家的。」对老店歇业传闻的惊讶与惋惜。",
+        "うん、私が閉めたんだよ。": "「嗯，是我把门关上的。」把店歇业（閉まる）听成了自己关门（閉めた）。",
+        "パン、買ってきてくれたの？": "「你帮我买面包回来了吗？」答非所问。",
+    },
+    "Q-20261114-004": {
+        "昨日もう会議は終わりましたよ。": "「昨天会已经开完了哦。」与上司说的「开会前」矛盾。",
+        "コピー機は使いません。": "「不用复印机。」答非所问。",
+        "はい、すぐコピーしておきます。": "「好的，我马上提前印好。」听懂口语缩音 しといて，得体承接任务。",
+    },
+    "Q-20261114-005": {
+        "うん、引き継ぎをしておけば大丈夫だよ。": "「嗯，只要提前做好工作交接就没问题。」部长准假并叮嘱交接。",
+        "えっ、私に来週休んでほしいの？": "「咦，你要我下周休息吗？」把下属请假听反成了让部长休假。",
+        "金曜日ならもう休みましたよ。": "「周五的话已经休过了哦。」时态错误，请的是下周五的假。",
+    },
+    "N3-L06": {
+        "会議室を準備する": "「布置会议室。」课长说 会議室は後にして（先放后面再弄）。",
+        "資料を印刷する": "「打印资料。」课长明确指示 先に資料を印刷してくれる？（先印资料）。",
+        "課長にメールする": "「给课长发邮件。」对话中未提及。",
+    },
+    "VAR-L01": {
+        "うん、今すぐ払わないとね。": "「嗯，得马上交了呢。」用同义口语 払わないと 顺着附和。",
+        "じゃあ、払わなくてもいいんだね。": "「那不用交了呢。」把口语 払わなくちゃ（必须交）听反了。",
+        "昨日もう払ったよ。": "「昨天已经交了哦。」与男生刚发现还没交矛盾。",
+    },
+    "VAR-L04": {
+        "ホテルには泊まらないよ。": "「不住酒店哦。」答非所问。",
+        "旅行は楽しかったね。": "「旅行真开心呢。」过去式错误，旅行在下个月还没去。",
+        "わかった、今すぐ予約しておくね。": "「好，我现在就提前订好。」听懂口语缩音 しとかないと，回应马上订。",
+    },
+    "VAR-L06": {
+        "銀行へ行く": "「去银行。」前辈说 銀行はその後でね（排在回邮件之后）。",
+        "昼ご飯を食べる": "「吃午饭。」对话中未提及。",
+        "メールを返信する": "「回复邮件。」前辈要求 その前に（去银行前先把邮件回了）。",
+    },
+}
+
+
+def build_opt_notes(card_id: str, raw_notes: dict | None) -> dict:
+    if card_id in LISTENING_OPT_NOTES:
+        return dict(LISTENING_OPT_NOTES[card_id])
+    out = {}
+    for k, v in (raw_notes or {}).items():
+        cleaned = clean_zen_text(v)
+        if cleaned:
+            out[str(k)] = cleaned
+    return out
 
 
 def clean_ja_head(s: str) -> str:
@@ -255,6 +323,7 @@ for vc in VARIANT_CARDS:
             "zh_meaning": c75.get("zh_meaning", ""),
             "why_line": c75.get("why_line", ""),
             "form_line": c75.get("form_line") or clean_zen_text(vc["core_rule"]),
+            "opt_notes": build_opt_notes(vid, vc.get("option_notes")),
             "q_audio": q_rel,
             "exp_audio": exp_rel,
             "is_listening": vc["subject"] == "聴解",
@@ -293,7 +362,7 @@ def build_base_point(q: dict, subject: str, fallback_point_label: str) -> dict:
     modality = MODALITY_MAP.get(qid, "listen" if is_listening else "both")
 
     raw_micro = t_item.get("micro_lesson") or {}
-    opt_notes = {k: clean_zen_text(v) for k, v in (t_item.get("option_notes") or {}).items()}
+    opt_notes = build_opt_notes(qid, t_item.get("option_notes"))
     why_line = c75.get("why_line", "")
     form_line = c75.get("form_line") or clean_zen_text(raw_micro.get("hook") or "")
     zh_meaning = c75.get("zh_meaning", "")
@@ -340,6 +409,7 @@ def build_base_point(q: dict, subject: str, fallback_point_label: str) -> dict:
             "zh_meaning": zh_meaning,
             "why_line": why_line,
             "form_line": form_line,
+            "opt_notes": opt_notes,
             "q_audio": q_rel,
             "exp_audio": exp_rel,
             "is_listening": is_listening,
@@ -405,6 +475,7 @@ for ext in EXTRA_PRIMARY_CARDS:
             "zh_meaning": c75.get("zh_meaning", ""),
             "why_line": c75.get("why_line", ""),
             "form_line": c75.get("form_line") or clean_zen_text(ext["core_rule"]),
+            "opt_notes": build_opt_notes(qid, ext.get("option_notes")),
             "q_audio": q_rel,
             "exp_audio": exp_rel,
             "is_listening": is_l,
@@ -1149,9 +1220,9 @@ html = r"""<!DOCTYPE html>
   .result-ja {
     margin: 0;
     font-family: var(--serif-jp);
-    font-size: 24px;
+    font-size: 22.5px;
     font-weight: 500;
-    line-height: 1.76;
+    line-height: 1.68;
     letter-spacing: 0.03em;
     color: var(--sumi);
     white-space: pre-line;
@@ -1161,17 +1232,17 @@ html = r"""<!DOCTYPE html>
     font-weight: 600;
   }
   .result-zh {
-    margin: 10px 0 0;
-    font-size: 16px;
+    margin: 6px 0 0;
+    font-size: 15px;
     font-weight: 400;
-    color: var(--ink-2);
-    line-height: 1.66;
-    letter-spacing: 0.015em;
+    color: var(--ink-3);
+    line-height: 1.58;
+    letter-spacing: 0.012em;
   }
   .dlg {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 9px;
   }
   .dlg-row {
     display: grid;
@@ -1197,9 +1268,9 @@ html = r"""<!DOCTYPE html>
   }
   .dlg-ja {
     font-family: var(--serif-jp);
-    font-size: 20px;
+    font-size: 19px;
     font-weight: 500;
-    line-height: 1.62;
+    line-height: 1.58;
     letter-spacing: 0.02em;
     color: var(--sumi);
   }
@@ -1209,40 +1280,126 @@ html = r"""<!DOCTYPE html>
   }
   .dlg-zh {
     margin-top: 2px;
-    font-size: 14.5px;
+    font-size: 14px;
     font-weight: 400;
     color: var(--ink-3);
-    line-height: 1.55;
+    line-height: 1.52;
     letter-spacing: 0.01em;
   }
-  .listen-opt-review {
-    margin-top: 16px;
-    padding: 10px 14px;
-    border-radius: 7px;
-    background: rgba(252, 251, 248, 0.62);
-    border: 1px solid var(--hairline);
+  .res-cue {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 9px;
+    align-items: baseline;
+    margin-bottom: 10px;
+  }
+  .cue-tag {
+    font-family: var(--sans);
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--ink-3);
+    letter-spacing: 0.04em;
+    border: 1px solid var(--hairline-strong);
+    border-radius: 4px;
+    padding: 1px 6px;
+    line-height: 1.45;
+    white-space: nowrap;
+  }
+  .cue-txt {
+    font-size: 14.5px;
+    font-weight: 400;
+    color: var(--ink-2);
+    line-height: 1.56;
+    letter-spacing: 0.01em;
+  }
+  .opt-breakdown {
     display: flex;
     flex-direction: column;
-    gap: 4px;
   }
-  .lor-row {
-    font-family: var(--serif-jp);
-    font-size: 15.5px;
-    line-height: 1.56;
-    color: var(--ink-2);
-    display: flex;
-    gap: 8px;
+  .opt-row {
+    display: grid;
+    grid-template-columns: 20px 1fr;
+    column-gap: 9px;
+    padding: 9px 0;
+    border-top: 1px dashed rgba(28, 27, 24, 0.10);
+    align-items: baseline;
   }
-  .lor-row.ok {
-    color: var(--moss);
-    font-weight: 600;
+  .opt-breakdown.is-listen .opt-row {
+    grid-template-columns: 34px 1fr;
   }
-  .lor-row.ng {
+  .opt-row:first-child {
+    border-top: none;
+    padding-top: 2px;
+  }
+  .opt-row:last-child {
+    padding-bottom: 2px;
+  }
+  .opt-mark {
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .opt-row.ok .opt-mark {
+    color: #2D7A56;
+  }
+  .opt-row.ng .opt-mark {
     color: var(--bengara);
   }
-  .lor-num {
-    flex-shrink: 0;
-    font-variant-numeric: tabular-nums;
+  .opt-body {
+    min-width: 0;
+  }
+  .opt-head {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .opt-ja {
+    font-family: var(--serif-jp);
+    font-size: 17.5px;
+    font-weight: 600;
+    color: var(--sumi);
+    line-height: 1.45;
+  }
+  .opt-row.ok .opt-ja {
+    color: #266A4A;
+  }
+  .opt-row.ng .opt-ja {
+    color: var(--bengara);
+  }
+  .opt-row.dim .opt-ja {
+    font-weight: 500;
+    color: var(--ink-2);
+  }
+  .opt-badge {
+    font-family: var(--sans);
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 4px;
+    line-height: 1.4;
+    letter-spacing: 0.03em;
+  }
+  .opt-badge.ok {
+    color: #266A4A;
+    background: rgba(45, 122, 86, 0.11);
+  }
+  .opt-badge.ng {
+    color: var(--bengara);
+    background: rgba(166, 61, 47, 0.10);
+  }
+  .opt-desc {
+    margin-top: 2.5px;
+    font-size: 14.5px;
+    line-height: 1.56;
+    color: var(--ink-2);
+    letter-spacing: 0.01em;
+  }
+  .opt-row.dim .opt-desc {
+    color: var(--ink-3);
   }
 
   /* Tappable Japanese words + Fixed-Geometry Zen Meaning Card (Zero Layout Shift, Zero Touch Flicker) */
@@ -1357,7 +1514,7 @@ html = r"""<!DOCTYPE html>
   .result-divider {
     height: 1px;
     background: var(--hairline);
-    margin: 18px 0;
+    margin: 14px 0;
   }
   .result-logic {
     display: flex;
@@ -3065,7 +3222,7 @@ function computeDaily120Metrics() {
     quizRatio,
     quizDone,
     targetMins,
-    listenedMins,
+    listenedMins: radioDone ? targetMins : listenedMins,
     radioRatio: radioDone ? 1.0 : radioRatio,
     radioDone,
     flashSeen: flashDone ? Math.max(flashSeen, flashTarget) : flashSeen,
@@ -3305,13 +3462,35 @@ function renderDialogueHTML(fullJa, ans, zh) {
   }).join("")}</div>${!zhOk && zh ? `<p class="result-zh">${escapeHtml(zh)}</p>` : ""}`;
 }
 
-const preloadSet = new Set();
+const audioBlobMap = new Map();
+const audioFetchMap = new Map();
+let playReqSeq = 0;
+
 function warmAudio(url) {
-  if (!url || preloadSet.has(url)) return;
-  preloadSet.add(url);
-  const a = new Audio();
-  a.preload = "auto";
-  a.src = url;
+  if (!url) return Promise.resolve("");
+  if (audioBlobMap.has(url)) return Promise.resolve(audioBlobMap.get(url));
+  if (audioFetchMap.has(url)) return audioFetchMap.get(url);
+  const p = fetch(url)
+    .then(res => (res && res.ok ? res.blob() : null))
+    .then(blob => {
+      audioFetchMap.delete(url);
+      if (!blob || !blob.size) return url;
+      if (audioBlobMap.size >= 80) {
+        const oldestKey = audioBlobMap.keys().next().value;
+        const oldestUrl = audioBlobMap.get(oldestKey);
+        audioBlobMap.delete(oldestKey);
+        try { URL.revokeObjectURL(oldestUrl); } catch (e) {}
+      }
+      const blobUrl = URL.createObjectURL(blob);
+      audioBlobMap.set(url, blobUrl);
+      return blobUrl;
+    })
+    .catch(() => {
+      audioFetchMap.delete(url);
+      return url;
+    });
+  audioFetchMap.set(url, p);
+  return p;
 }
 
 function applyPlaybackRate(kind) {
@@ -3339,12 +3518,31 @@ function cycleExpSpeed() {
 }
 
 function stopQuizAudio() {
+  playReqSeq += 1;
   try {
     player.pause();
     player.currentTime = 0;
     wordPlayer.pause();
   } catch (e) {}
   activeKind = null;
+  syncAudioButtons();
+}
+
+function startResolvedClip(srcUrl, kind, seq) {
+  if (seq !== playReqSeq) return;
+  activeKind = kind;
+  player.src = srcUrl;
+  player.currentTime = 0;
+  applyPlaybackRate(kind);
+  const pr = player.play();
+  if (pr && typeof pr.catch === "function") {
+    pr.catch(() => {
+      if (seq === playReqSeq) {
+        activeKind = null;
+        syncAudioButtons();
+      }
+    });
+  }
   syncAudioButtons();
 }
 
@@ -3355,18 +3553,16 @@ function playMainClip(url, kind, toggleIfSame) {
     stopQuizAudio();
     return;
   }
-  activeKind = kind;
-  player.src = url;
-  player.currentTime = 0;
-  applyPlaybackRate(kind);
-  const pr = player.play();
-  if (pr && typeof pr.catch === "function") {
-    pr.catch(() => {
-      activeKind = null;
-      syncAudioButtons();
-    });
+  const seq = ++playReqSeq;
+  if (audioBlobMap.has(url)) {
+    startResolvedClip(audioBlobMap.get(url), kind, seq);
+    return;
   }
+  activeKind = kind;
   syncAudioButtons();
+  warmAudio(url).then(resolvedUrl => {
+    startResolvedClip(resolvedUrl || url, kind, seq);
+  });
 }
 
 player.addEventListener("play", () => {
@@ -3408,6 +3604,22 @@ function formatMMSS(sec) {
   return `${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
 }
 
+function paintRadioSeekProgress(t) {
+  const seekEl = document.getElementById("radio-seek");
+  const pillEl = document.getElementById("radio-date-pill");
+  const dur = Math.max(1, (radioPlayer.duration && isFinite(radioPlayer.duration)) ? radioPlayer.duration : (DATA.radio.duration_sec || 2100));
+  const rm = computeDaily120Metrics();
+  if (pillEl) {
+    const hostsLabel = DATA.radio.hosts || "文涛 · 文道 · 子东";
+    pillEl.textContent = rm.radioDone ? `锵锵三人 · ${hostsLabel} · 今日已听完 ✓` : `锵锵三人 · ${hostsLabel}`;
+  }
+  if (seekEl) {
+    const curPct = Math.max(0, Math.min(100, ((t || 0) / dur) * 100));
+    const maxPct = rm.radioDone ? 100 : Math.max(curPct, Math.min(100, ((A.radioMaxSec || 0) / dur) * 100));
+    seekEl.style.background = `linear-gradient(to right, #2D7A56 0%, #2D7A56 ${curPct.toFixed(1)}%, rgba(45, 122, 86, 0.36) ${curPct.toFixed(1)}%, rgba(45, 122, 86, 0.36) ${maxPct.toFixed(1)}%, rgba(28, 27, 24, 0.10) ${maxPct.toFixed(1)}%, rgba(28, 27, 24, 0.10) 100%)`;
+  }
+}
+
 function ensureRadioReady() {
   if (!radioInitialized) {
     radioInitialized = true;
@@ -3419,14 +3631,14 @@ function ensureRadioReady() {
     if (savedPos > 3 && savedPos < (DATA.radio.duration_sec || 2400) - 10) {
       radioPlayer.currentTime = savedPos;
     }
-    const hostsLabel = DATA.radio.hosts || "文涛 · 文道 · 子东";
-    document.getElementById("radio-date-pill").textContent = `锵锵三人 · ${hostsLabel}`;
     document.getElementById("radio-spd-btn").textContent = `${radioSpeed}x`;
     const seekEl = document.getElementById("radio-seek");
     seekEl.max = Math.ceil(DATA.radio.duration_sec || 2100);
     document.getElementById("radio-tot-time").textContent = formatMMSS(DATA.radio.duration_sec || 2100);
     renderRadioChapters(0);
     updateRadioLiveDisplay(radioPlayer.currentTime || savedPos || 0);
+  } else {
+    paintRadioSeekProgress(radioPlayer.currentTime || 0);
   }
   radioPlayer.defaultPlaybackRate = radioSpeed;
   radioPlayer.playbackRate = radioSpeed;
@@ -3530,6 +3742,7 @@ function updateRadioLiveDisplay(t) {
       }
     }
   }
+  paintRadioSeekProgress(t);
 
   const segs = DATA.radio.segments || [];
   let curSeg = null;
@@ -3830,36 +4043,24 @@ function resetTodayMission() {
   renderTutor();
 }
 
-const ENSO_CURVE = "M 8.2 5.7 C 12.6 2.5, 19.3 3.2, 22.6 7.8 C 25.8 12.3, 24.8 19.1, 20.1 22.4 C 15.4 25.7, 8.6 24.6, 5.4 19.9 C 3.4 16.9, 3.4 12.8, 5.1 9.6";
-const ENSO_ROTS = [-8, 34, -46];
 let prevEnsoDoneKey = "";
 
 function renderEnsoRingSVG(idx, ratio, isDone) {
-  const rot = ENSO_ROTS[idx] || 0;
   if (isDone) {
     return `<svg class="enso-svg" viewBox="0 0 28 28" aria-hidden="true">
-      <g transform="rotate(${rot} 14 14)">
-        <circle cx="14.1" cy="14.1" r="9.3" fill="rgba(43, 95, 73, 0.11)"/>
-        <path d="${ENSO_CURVE}" pathLength="100" fill="none" stroke="var(--moss)" stroke-width="1.45" stroke-linecap="round" stroke-dasharray="99 105"/>
-        <path d="${ENSO_CURVE}" pathLength="100" fill="none" stroke="var(--moss)" stroke-width="2.65" stroke-linecap="round" stroke-dasharray="66 105"/>
-        <path d="${ENSO_CURVE}" pathLength="100" fill="none" stroke="var(--moss)" stroke-width="3.3" stroke-linecap="round" stroke-dasharray="22 105"/>
-      </g>
+      <circle cx="14" cy="14" r="10.2" fill="#2D7A56"/>
+      <path d="M 9.6 14.3 L 12.6 17.2 L 18.7 10.9" fill="none" stroke="#FCFBF8" stroke-width="2.15" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>`;
   }
   if (ratio > 0.005) {
-    const drawLen = Math.max(8, Math.min(96, Math.round(ratio * 96)));
+    const pct = Math.max(8, Math.min(97, Math.round(ratio * 100)));
     return `<svg class="enso-svg" viewBox="0 0 28 28" aria-hidden="true">
-      <g transform="rotate(${rot} 14 14)">
-        <path d="${ENSO_CURVE}" pathLength="100" fill="none" stroke="rgba(28, 27, 24, 0.14)" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="9.5 6.5"/>
-        <circle cx="8.2" cy="5.7" r="1.32" fill="var(--sumi)"/>
-        <path d="${ENSO_CURVE}" pathLength="100" fill="none" stroke="var(--sumi)" stroke-width="2.35" stroke-linecap="round" stroke-dasharray="${drawLen} 105"/>
-      </g>
+      <circle cx="14" cy="14" r="9.8" fill="none" stroke="rgba(28, 27, 24, 0.13)" stroke-width="1.85"/>
+      <circle cx="14" cy="14" r="9.8" pathLength="100" fill="none" stroke="#2D7A56" stroke-width="2.35" stroke-linecap="round" stroke-dasharray="${pct} 105" transform="rotate(-90 14 14)"/>
     </svg>`;
   }
   return `<svg class="enso-svg" viewBox="0 0 28 28" aria-hidden="true">
-    <g transform="rotate(${rot} 14 14)">
-      <path d="${ENSO_CURVE}" pathLength="100" fill="none" stroke="rgba(28, 27, 24, 0.20)" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="9.5 6.5"/>
-    </g>
+    <circle cx="14" cy="14" r="9.8" fill="none" stroke="rgba(28, 27, 24, 0.20)" stroke-width="1.6" stroke-dasharray="3.6 3.2"/>
   </svg>`;
 }
 
@@ -4051,7 +4252,7 @@ function renderTutor() {
     return;
   }
 
-  // -------- RESULT (3-Step Clear Human Order: ① 句意 -> ② 为什么用 -> ③ 变形与辨析) --------
+  // -------- RESULT (Structured Scannable Zen Layout: ① 原句与翻译 -> ② 要点 -> ③ 逐项拆解) --------
   const q = activeQuizObj || p.primary;
   const isUnsure = pickedVal === "__UNSURE__";
   const isCorrect = !isUnsure && pickedVal === q.answer;
@@ -4073,14 +4274,36 @@ function renderTutor() {
       : `误选「${pickedVal}」 · 稍后复考`;
   }
 
-  const listenOptsReviewHTML = q.is_listening
-    ? `<div class="listen-opt-review">
-        ${currentChoices.map((opt, idx) => {
-          const cls = opt === q.answer ? "lor-row ok" : (opt === pickedVal ? "lor-row ng" : "lor-row");
-          return `<div class="${cls}"><span class="lor-num">${idx + 1}.</span><span>${annotateJapanese(opt)}</span></div>`;
-        }).join("")}
-      </div>`
-    : "";
+  const notesMap = q.opt_notes || {};
+  const orderedOpts = q.is_listening
+    ? currentChoices.map((opt, idx) => ({ opt, num: idx + 1 }))
+    : [
+        { opt: q.answer, num: 0 },
+        ...currentChoices
+          .filter(o => o !== q.answer)
+          .sort((a, b) => (a === pickedVal ? -1 : b === pickedVal ? 1 : 0))
+          .map(opt => ({ opt, num: 0 }))
+      ];
+
+  const optRowsHTML = orderedOpts.map(({ opt, num }) => {
+    const isAns = opt === q.answer;
+    const isMis = !isAns && !isUnsure && opt === pickedVal;
+    const rowCls = isAns ? "opt-row ok" : (isMis ? "opt-row ng" : "opt-row dim");
+    const markTxt = q.is_listening
+      ? (isAns ? `${num} ✓` : (isMis ? `${num} ✕` : `${num} ·`))
+      : (isAns ? "✓" : (isMis ? "✕" : "×"));
+    const badgeHTML = isAns
+      ? `<span class="opt-badge ok">正解</span>`
+      : (isMis ? `<span class="opt-badge ng">误选</span>` : "");
+    const descTxt = notesMap[opt] || (isAns ? (q.form_line || "") : "");
+    return `<div class="${rowCls}">
+      <span class="opt-mark">${markTxt}</span>
+      <div class="opt-body">
+        <div class="opt-head"><span class="opt-ja">${annotateJapanese(opt)}</span>${badgeHTML}</div>
+        ${descTxt ? `<div class="opt-desc">${escapeHtml(descTxt)}</div>` : ""}
+      </div>
+    </div>`;
+  }).join("");
 
   box.innerHTML = `
     <div class="meta-bar">
@@ -4095,12 +4318,9 @@ function renderTutor() {
     <div class="focal-space">
       ${(q.is_listening && renderDialogueHTML(q.full_ja, q.answer, q.zh_meaning)) || `<div class="result-ja">${annotateSentenceWithAnswer(q.full_ja, q.answer)}</div>
       ${q.zh_meaning ? `<p class="result-zh">${escapeHtml(q.zh_meaning)}</p>` : ""}`}
-      ${listenOptsReviewHTML}
       <div class="result-divider"></div>
-      <div class="result-logic">
-        ${q.why_line ? `<p class="logic-line">${escapeHtml(q.why_line)}</p>` : ""}
-        ${q.form_line ? `<p class="logic-line">${escapeHtml(q.form_line)}</p>` : ""}
-      </div>
+      ${q.why_line ? `<div class="res-cue"><span class="cue-tag">要点</span><span class="cue-txt">${escapeHtml(q.why_line)}</span></div>` : ""}
+      <div class="opt-breakdown${q.is_listening ? " is-listen" : ""}">${optRowsHTML}</div>
     </div>
 
     <div class="action-dock">

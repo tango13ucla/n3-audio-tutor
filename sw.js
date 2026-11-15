@@ -1,4 +1,4 @@
-const CACHE_NAME = "n3-studio-tutor-v26";
+const CACHE_NAME = "n3-studio-tutor-v27";
 const BUILD_STAMP = "2026-11-14_63c91c4a2ba436_68a74797";
 const CORE_SHELL = [
   "./",
