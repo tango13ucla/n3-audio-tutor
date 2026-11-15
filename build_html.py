@@ -1158,14 +1158,84 @@ html = r"""<!DOCTYPE html>
     padding-top: 10px;
   }
 
-  /* Right-Handed Single-Hand Mobile Ergonomics (<860px):
-     Elevate interactive docks out of the bottom bezel cramp into the natural right-thumb sweet arc (~54-82% height),
-     cluster quiz prompt + options comfortably, and never require sliding the hand down the phone. */
+  /* Right-Handed Single-Hand Mobile Ergonomics (<860px) · 上看下点:
+     The top of a tall phone is for READING only (zero taps needed there).
+     Everything tappable lives in the right-thumb arc (~58-88% height) plus a quiet bottom-right nav,
+     so the hand never shifts up to the top corners and never curls down into the bezel. */
+  .thumb-nav { display: none; }
   @media (max-width: 859px) {
+    body {
+      padding-bottom: calc(4px + env(safe-area-inset-bottom));
+    }
+    .zen-header { display: none; }
+    .zen-horizon { padding-top: 4px; }
+    .horizon-score .ledger-sep,
+    .horizon-score .ledger-tag { display: none; }
+
+    .thumb-nav {
+      flex-shrink: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--hairline);
+    }
+    /* 落款 seal: the signature stamp sits bottom-left, like on a scroll */
+    .thumb-seal {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border: 1px solid rgba(158, 62, 54, 0.55);
+      border-radius: 3px;
+      color: var(--bengara);
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      opacity: 0.78;
+      margin-left: 2px;
+    }
+    .thumb-tabs {
+      display: flex;
+      align-items: stretch;
+      margin-right: -10px;
+    }
+    .thumb-link {
+      position: relative;
+      height: 54px;
+      min-width: 60px;
+      padding: 0 11px;
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--ink-3);
+      letter-spacing: 0.04em;
+      transition: color 0.2s ease;
+    }
+    .thumb-link.active {
+      color: var(--sumi);
+      font-weight: 600;
+    }
+    /* Ink stroke resting on the hairline (mirror of the old header underline) */
+    .thumb-link.active::before {
+      content: "";
+      position: absolute;
+      top: -1px;
+      left: 50%;
+      width: 18px;
+      margin-left: -9px;
+      height: 1.5px;
+      background: var(--sumi);
+    }
+    .thumb-link.is-playing { color: var(--moss); }
+    .thumb-link:active { opacity: 0.6; }
+
+    .ledger-back-fab { display: none !important; }
+    .ledger-scroll { padding-bottom: 24px; }
+
     .action-dock,
     .radio-dock,
     .vc-dock {
-      padding-bottom: 38px;
+      padding-bottom: clamp(16px, 4.4vh, 44px);
     }
     #tutor-view .stage-quiz .focal-space {
       justify-content: flex-end;
@@ -1410,6 +1480,26 @@ html = r"""<!DOCTYPE html>
     transition: border-color 0.16s ease, color 0.16s ease, background 0.16s ease;
   }
   .unsure-btn:active { background: #EDEAE1; }
+
+  /* Quiz aux row: [ 不确定 · 直接看讲解 ][ 读题 ] — 读题 sits on the right edge, right under the thumb */
+  .quiz-aux-row {
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .quiz-aux-row .unsure-btn {
+    flex: 1;
+    width: auto;
+    margin-top: 0;
+  }
+  .quiz-aux-row .aux-read-btn {
+    height: auto;
+    min-height: 46px;
+    min-width: 78px;
+    padding: 0 16px;
+    background: var(--sheet);
+  }
 
   .desk-hint { display: none; }
   .kbd-tag {
@@ -2496,7 +2586,7 @@ html = r"""<!DOCTYPE html>
     <div class="horizon-meta">
       <div class="enso-trio" id="enso-trio"></div>
       <span class="sr-only" id="gm-left-txt"></span>
-      <button type="button" class="horizon-score" id="gm-right-txt" onclick="toggleDashLedger(event)">预计 <b>108分</b> · <span class="ledger-tag">总表</span></button>
+      <button type="button" class="horizon-score" id="gm-right-txt" onclick="toggleDashLedger(event)">预计 <b>108分</b><span class="ledger-sep"> · </span><span class="ledger-tag">总表</span></button>
     </div>
     <div class="horizon-track">
       <div class="horizon-fill" id="gm-fill" style="width:0%"></div>
@@ -2572,6 +2662,17 @@ html = r"""<!DOCTYPE html>
     </div>
     <button type="button" class="ledger-back-fab" onclick="toggleDashLedger(event)">← 返回</button>
   </section>
+
+  <!-- 4. RIGHT-THUMB NAV (phone only · 上看下点: top is for reading, bottom-right is for touching) -->
+  <nav class="thumb-nav" aria-label="切换">
+    <span class="thumb-seal" aria-hidden="true">N3</span>
+    <div class="thumb-tabs">
+      <button class="thumb-link active" id="btab-tutor" onclick="switchMode('tutor')">做题</button>
+      <button class="thumb-link" id="btab-radio" onclick="switchMode('radio', true)">随身听</button>
+      <button class="thumb-link" id="btab-vocab" onclick="switchMode('vocab')">记词</button>
+      <button class="thumb-link" id="btab-dash" onclick="switchMode('dash')">总表</button>
+    </div>
+  </nav>
 </div>
 
 <div class="modal-mask" id="app-modal" onclick="if(event.target===this)closeModal()">
@@ -4376,6 +4477,8 @@ function syncRadioUI() {
   if (btn) btn.textContent = playing ? "暂停" : "播放";
   const tabBtn = document.getElementById("tab-radio");
   if (tabBtn) tabBtn.classList.toggle("is-playing", playing);
+  const bTabBtn = document.getElementById("btab-radio");
+  if (bTabBtn) bTabBtn.classList.toggle("is-playing", playing);
 }
 
 radioPlayer.addEventListener("play", syncRadioUI);
@@ -4704,9 +4807,9 @@ function renderGreenBoard() {
     const ledgerTxt = activeMode === "dash" ? "收起总表" : "总表";
     rightEl.classList.toggle("active-ledger", activeMode === "dash");
     if (m.projScore >= 120) {
-      rightEl.innerHTML = `预计 <b class="moss">${m.projScore}分</b> · <span class="ledger-tag">${ledgerTxt}</span>`;
+      rightEl.innerHTML = `预计 <b class="moss">${m.projScore}分</b><span class="ledger-sep"> · </span><span class="ledger-tag">${ledgerTxt}</span>`;
     } else {
-      rightEl.innerHTML = `预计 <b>${m.projScore}分</b> · <span class="ledger-tag">${ledgerTxt}</span>`;
+      rightEl.innerHTML = `预计 <b>${m.projScore}分</b><span class="ledger-sep"> · </span><span class="ledger-tag">${ledgerTxt}</span>`;
     }
   }
   document.getElementById("gm-fill").style.width = `${m.dailyLockPct}%`;
@@ -4833,9 +4936,6 @@ function renderTutor() {
     box.innerHTML = `
       <div class="meta-bar">
         <span class="overline">${escapeHtml(label)}</span>
-        <div class="quiet-actions">
-          ${!activeQuizObj.is_listening ? `<button class="text-btn" id="q-play-btn" onclick="playMainClip(activeQuizObj.q_audio, 'q', true)">读题</button>` : ""}
-        </div>
       </div>
 
       <div class="focal-space">
@@ -4852,10 +4952,13 @@ function renderTutor() {
 
       <div class="action-dock">
         ${controlsHTML}
-        <button class="unsure-btn" onclick="revealWithoutGuess()">
-          <span>不确定 · 直接看讲解</span>
-          <span class="kbd-tag">0</span>
-        </button>
+        <div class="quiz-aux-row">
+          <button class="unsure-btn" onclick="revealWithoutGuess()">
+            <span>不确定 · 直接看讲解</span>
+            <span class="kbd-tag">0</span>
+          </button>
+          ${!activeQuizObj.is_listening ? `<button class="dock-replay-btn aux-read-btn" id="q-play-btn" onclick="playMainClip(activeQuizObj.q_audio, 'q', true)">读题</button>` : ""}
+        </div>
       </div>
     `;
     syncAudioButtons();
@@ -5343,6 +5446,10 @@ function switchMode(m, autoPlayRadio) {
   document.getElementById("tab-tutor").classList.toggle("active", m === "tutor");
   document.getElementById("tab-radio").classList.toggle("active", m === "radio");
   document.getElementById("tab-vocab").classList.toggle("active", m === "vocab");
+  ["tutor", "radio", "vocab", "dash"].forEach(k => {
+    const b = document.getElementById("btab-" + k);
+    if (b) b.classList.toggle("active", m === k);
+  });
 
   document.getElementById("tutor-view").classList.toggle("hidden", m !== "tutor");
   document.getElementById("radio-view").classList.toggle("hidden", m !== "radio");
