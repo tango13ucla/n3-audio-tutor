@@ -1,39 +1,11 @@
 {
-  "schema": "n3-tutor-prefs/1",
-  "generated_at": "2026-11-15T09:10-0800",
+  "schema": "n3-tutor-prefs/2",
+  "generated_at": "2026-11-15T09:20-0800",
   "exam_date": "2026-12-06",
   "daily_load": {
-    "2026-11-15": {
-      "load": "normal",
-      "why": "memory"
-    },
-    "2026-11-16": {
-      "load": "normal",
-      "why": "memory"
-    },
-    "2026-11-17": {
-      "load": "normal",
-      "why": "memory"
-    },
-    "2026-11-18": {
-      "load": "normal",
-      "why": "memory"
-    },
-    "2026-11-19": {
-      "load": "normal",
-      "why": "memory"
-    },
-    "2026-11-20": {
-      "load": "normal",
-      "why": "memory"
-    },
-    "2026-11-21": {
-      "load": "normal",
-      "why": "memory"
-    },
-    "2026-11-22": {
-      "load": "normal",
-      "why": "memory"
+    "2026-12-06": {
+      "load": "off",
+      "why": "exam_day"
     }
   },
   "load_caps": {

@@ -3,8 +3,8 @@
 """
 Memory-driven tutor prefs reader (sanitized; zero personal data).
 
-`tutor_prefs.json` is published twice daily from the private PM Twin memory
-(via the owner's Google Apps Script relay). It only contains learning knobs:
+`tutor_prefs.json` is exported from the private PM Twin memory (learning prefs only;
+the calendar is never consulted, exam prep first). It only contains learning knobs:
   - daily_load:   {"YYYY-MM-DD": {"load": "normal|light|off", "why": "..."}}
   - load_caps:    {"normal": 50, "light": 25, "off": 10}  quiz deck size per load
   - focus_points: point keys / names to prioritise in quiz + radio
