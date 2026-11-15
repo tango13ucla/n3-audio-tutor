@@ -1,6 +1,6 @@
 {
   "schema": "n3-tutor-prefs/3",
-  "generated_at": "2026-11-15T13:55-0800",
+  "generated_at": "2026-11-15T15:51-0800",
   "exam_date": "2026-12-06",
   "daily_load": {
     "2026-12-06": {
@@ -58,9 +58,12 @@
       "enabled": true,
       "start_date": "2026-11-15",
       "n3_gate_date": "2026-12-06",
+      "post_n3_ramp_days": 700,
+      "daily_step": "1/700",
       "pre_n3_ja_ratio": 0.1,
-      "post_n3_start_ja_ratio": 0.12,
-      "day_365_target_ja_ratio": 0.92
+      "post_n3_start_ja_ratio": 0.1,
+      "target_ja_ratio": 0.92,
+      "day_365_target_ja_ratio": 0.53
     }
   },
   "ui": {

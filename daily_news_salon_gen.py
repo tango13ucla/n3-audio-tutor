@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Live Japanese & World News Ingestion + 365-Day Dynamic 《锵锵三人行》 Roundtable Generator.
+Live Japanese & World News Ingestion + 700-Day (`1/700`) Dynamic 《锵锵三人行》 Roundtable Generator.
 
 1) Fetches live daily headlines & summaries from official NHK News Web RSS feeds:
    - 主要 (cat0), 政治 (cat6), 経済 (cat5), 科学・文化 (cat2), 国際 (cat3)
@@ -10,8 +10,8 @@ Live Japanese & World News Ingestion + 365-Day Dynamic 《锵锵三人行》 Rou
    roundtable (`文涛 · 文道 · 子东`) calibrated to today's exact `immersion_profile(day)`:
    - Pre-N3 (<= 2026-12-06): ~10% Japanese (pure Kana in speech spans for 100% clean TTS),
      weaving today's real news with top N3 weak points and foreshadowing later chapters ("前后照应").
-   - Post-N3 (2026-12-07 .. Day 365): smoothly escalates Japanese ratio from 12% -> 92% day by day
-     until the show organically becomes an almost-all-Japanese intellectual salon podcast!
+   - Post-N3 (2026-12-07 .. Post-N3 Day 700): gently escalates Japanese ratio by `1/700` per day
+     (10% -> ~35% at N2 -> ~53% at N1 -> 92% at Day 700) until the show organically becomes a near-all-Japanese podcast!
 3) Enforces a strict phonetic & style gate (zero Kanji-Kana collisions, zero fake laughs,
    zero date/countdown pressure). Gracefully returns None if offline or unavailable.
 """
@@ -167,6 +167,7 @@ def maybe_generate_live_news_story(
 
     ja_pct = int(round(float(imm_profile.get("ja_ratio", 0.10)) * 100))
     phase = imm_profile.get("phase", "n3_sprint")
+    ramp_days = int(imm_profile.get("ramp_days", 700))
     day_num = imm_profile.get("day_of_365", 1)
 
     sys_prompt = (
@@ -174,7 +175,8 @@ def maybe_generate_live_news_story(
         "文道(D，温厚博学、政经思想史视野)、子东(X，冷峻幽默、文学与人性解剖)。\n"
         "请根据今日真实日本与世界新闻，创作一段约 4.5 分钟（8到10轮 W/D/X 对白）的开篇时局深度圆桌。\n"
         "铁律：\n"
-        f"1. 当前处于365天双语演进计划第 {day_num} 天（阶段：{phase}），本段日语占比严格控制在约 {ja_pct}%。\n"
+        f"1. 当前处于 {ramp_days} 天（1/{ramp_days} 慢速养耳）双语演进计划第 {day_num} 天（阶段：{phase}），"
+        f"本段日语占比严格控制在约 {ja_pct}%（其余用自然地道的中文把思想与世情讲透，绝不拔苗助长）。\n"
         "2. 视角必须是日本社会内部（ウチ）与知识分子视角，聊透新闻背后的制度、阶层或人性逻辑，绝不聊游客老生常谈。\n"
         "3. 【极其重要·语音合成铁律】：对白文本中凡出现日文词或日文句子，必须100%写成纯平假名或纯片假名（前后留空格或中文标点），"
         "严禁在日文发音串里夹杂任何汉字或英文字母（汉字概念先在中文里说清，念日文时全用假名，例如：到手工资，念 てどり）。\n"

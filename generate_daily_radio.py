@@ -12,12 +12,12 @@ Key Broadcast Architecture (v29):
    - 3-Act Phoenix TV structure with 2 classic mid-episode ad breaks ("去一下广告，《锵锵三人行》，广告之后见！" + `qq_bumper.mp3`),
      plus subtle salon page-turn stings (`qq_sting.mp3`) on non-ad transitions.
    - Warm late-night Closing Theme (`qq_outro.mp3`) sneaking in underneath Wen Tao's final farewell and swelling out cleanly.
-2) Deep Intellectual & True Japanese "Uchi (内)" Content + 365-Day Progressive Immersion:
+2) Deep Intellectual & True Japanese "Uchi (内)" Content + 700-Day (`1/700`) Progressive Immersion:
    - Moves beyond tourist "Soto (外)" clichés into live Japanese/world current affairs, intellectual history (e.g. 1968 Todai Zenkyoto),
      literary masters (Mishima, Tanizaki, Dazai, Soseki), science institutions (Kyodai Nobel vs Kozasei), and closed-door Japanese family/work life,
      with cross-chapter callbacks ("前后照应") across a ~40-minute episode.
-   - Tracks `tutor_prefs.immersion_profile(day)`: ~10% Japanese up through 2026-12-06 N3 exam, then smoothly increases day by day
-     (12% -> 50% -> 92%) over 365 days with the exact same three hosts into a near-pure Japanese intellectual podcast.
+   - Tracks `tutor_prefs.immersion_profile(day)`: ~10% Japanese up through 2026-12-06 N3 exam, then gently increases by `1/700` per day
+     (10% -> ~35% at N2 -> ~53% at N1 -> 92% at Post-N3 Day 700) with the exact same three hosts into a near-pure Japanese intellectual podcast.
 3) Zero-Chop Natural Breath Prosody + Lossless 24kHz PCM Studio Mixing:
    - Full Mandarin sentences stay 100% intact in one continuous neural breath (never chopped on commas `,`, never jumping pitch/rate mid-sentence).
    - Inline Japanese words sit smoothly inside the host's conversational flow with zero forced periods (`。`) and sample-accurate 20ms PCM joins.

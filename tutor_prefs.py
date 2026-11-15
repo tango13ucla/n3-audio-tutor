@@ -82,10 +82,11 @@ def radio_prefs(prefs: dict | None = None) -> dict:
 
 def immersion_profile(prefs: dict | None = None, day: str | None = None) -> dict:
     """
-    Computes today's exact position on the 365-Day Qiang-Qiang Bilingual Immersion Ramp:
+    Computes today's exact position on the 700-Day (`1/700` slow ear-conditioning) Qiang-Qiang Bilingual Ramp:
       - Pre-N3 (up through 2026-12-06): ~10% Japanese, crisp -12% sentence tempo, Mandarin framing.
-      - Post-N3 (2026-12-07 -> Day 365): smooth daily increase (+0.23%/day) from 12% -> 92% Japanese,
-        while Japanese sentence tempo eases naturally from -12% -> +0% native broadcast speed.
+      - Post-N3 (2026-12-07 -> Post-N3 Day 700): ultra-gentle `1/700` daily step (~+0.12%/day) from 10% -> 92% Japanese
+        (~35% at 2027-07 N2, ~53% at 2027-12 N1, 92% at Day 700), while Japanese sentence tempo eases imperceptibly
+        over ~450 post-N3 days from -12% -> +0% native broadcast speed. Supports `hold_ja_ratio` plateau lock anytime.
     """
     rp = radio_prefs(prefs)
     imm = rp.get("immersion_365") or {}
@@ -96,27 +97,36 @@ def immersion_profile(prefs: dict | None = None, day: str | None = None) -> dict
         cur_dt = datetime.date.today()
     start_dt = datetime.date.fromisoformat(str(imm.get("start_date", "2026-11-15"))[:10])
     gate_dt = datetime.date.fromisoformat(str(imm.get("n3_gate_date", "2026-12-06"))[:10])
+    ramp_days = max(30, int(imm.get("post_n3_ramp_days", 700)))
     pre_ratio = float(imm.get("pre_n3_ja_ratio", 0.10))
-    post_start = float(imm.get("post_n3_start_ja_ratio", 0.12))
-    target_365 = float(imm.get("day_365_target_ja_ratio", 0.92))
+    post_start = float(imm.get("post_n3_start_ja_ratio", 0.10))
+    target_ratio = float(imm.get("target_ja_ratio", 0.92))
 
     day_num = max(1, (cur_dt - start_dt).days + 1)
-    total_post_days = max(1, 365 - max(0, (gate_dt - start_dt).days + 1))
 
     if cur_dt <= gate_dt:
+        days_after_n3 = 0
         ja_ratio = pre_ratio
         phase = "n3_sprint"
         ja_rate_pct = -12
     else:
         days_after_n3 = (cur_dt - gate_dt).days
-        prog = min(1.0, days_after_n3 / float(total_post_days))
-        ja_ratio = round(post_start + prog * (target_365 - post_start), 4)
-        # Smoothly lift Japanese sentence speed from -12% (Dec 7) to +0% native speed by ~Month 8
-        ja_rate_pct = min(0, int(round(-12 + min(1.0, prog * 1.35) * 12)))
-        phase = "n2_climb" if ja_ratio < 0.50 else ("n1_immersion" if ja_ratio < 0.82 else "native_podcast")
+        prog = min(1.0, days_after_n3 / float(ramp_days))
+        ja_ratio = round(post_start + prog * (target_ratio - post_start), 4)
+        # Gently lift Japanese sentence speed from -12% (Dec 7) to +0% native speed over ~450 post-N3 days
+        ja_rate_pct = min(0, int(round(-12 + min(1.0, days_after_n3 / 450.0) * 12)))
+        phase = "n2_climb" if ja_ratio < 0.42 else ("n1_immersion" if ja_ratio < 0.72 else "native_podcast")
+
+    if imm.get("hold_ja_ratio") is not None:
+        try:
+            ja_ratio = max(0.05, min(0.95, round(float(imm["hold_ja_ratio"]), 4)))
+        except Exception:
+            pass
 
     return {
-        "day_of_365": min(365, day_num),
+        "day_of_365": min(ramp_days, day_num),
+        "post_n3_day": days_after_n3,
+        "ramp_days": ramp_days,
         "phase": phase,
         "ja_ratio": ja_ratio,
         "ja_sentence_rate": f"{ja_rate_pct:+d}%",
