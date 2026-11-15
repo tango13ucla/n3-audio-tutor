@@ -1175,25 +1175,9 @@ html = r"""<!DOCTYPE html>
     .thumb-nav {
       flex-shrink: 0;
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-end;
       align-items: center;
       border-top: 1px solid var(--hairline);
-    }
-    /* 落款 seal: the signature stamp sits bottom-left, like on a scroll */
-    .thumb-seal {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 24px;
-      height: 24px;
-      border: 1px solid rgba(158, 62, 54, 0.55);
-      border-radius: 3px;
-      color: var(--bengara);
-      font-size: 10.5px;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-      opacity: 0.78;
-      margin-left: 2px;
     }
     .thumb-tabs {
       display: flex;
@@ -1481,24 +1465,45 @@ html = r"""<!DOCTYPE html>
   }
   .unsure-btn:active { background: #EDEAE1; }
 
-  /* Quiz aux row: [ 不确定 · 直接看讲解 ][ 读题 ] — 读题 sits on the right edge, right under the thumb */
+  /* Quiz aux row (簡素 · Kanso): two quiet ink words, no boxes.
+     The option cards stay the ONLY objects on the page; 读题 rests on the right edge under the thumb. */
   .quiz-aux-row {
     display: flex;
-    align-items: stretch;
-    gap: 10px;
-    margin-top: 12px;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+  }
+  .quiz-aux-row .unsure-btn,
+  .quiz-aux-row .aux-read-btn {
+    width: auto;
+    height: 48px;
+    min-height: 48px;
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    font-size: 14.5px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    transition: opacity 0.15s ease, color 0.2s ease;
   }
   .quiz-aux-row .unsure-btn {
-    flex: 1;
-    width: auto;
-    margin-top: 0;
+    flex: 0 1 auto;
+    justify-content: flex-start;
+    padding: 0 24px 0 2px;
+    color: var(--ink-3);
   }
   .quiz-aux-row .aux-read-btn {
-    height: auto;
-    min-height: 46px;
-    min-width: 78px;
-    padding: 0 16px;
-    background: var(--sheet);
+    flex-shrink: 0;
+    padding: 0 2px 0 28px;
+    color: var(--ink-2);
+  }
+  .quiz-aux-row .aux-read-btn.playing { color: var(--moss); font-weight: 600; }
+  .quiz-aux-row .unsure-btn:active,
+  .quiz-aux-row .aux-read-btn:active { background: transparent; opacity: 0.5; }
+  @media (min-width: 860px) {
+    .quiz-aux-row .unsure-btn:hover,
+    .quiz-aux-row .aux-read-btn:hover { background: transparent; color: var(--sumi); }
   }
 
   .desk-hint { display: none; }
@@ -2663,9 +2668,8 @@ html = r"""<!DOCTYPE html>
     <button type="button" class="ledger-back-fab" onclick="toggleDashLedger(event)">← 返回</button>
   </section>
 
-  <!-- 4. RIGHT-THUMB NAV (phone only · 上看下点: top is for reading, bottom-right is for touching) -->
+  <!-- 4. RIGHT-THUMB NAV (phone only · 上看下点: top is for reading, bottom-right is for touching; mirrors the old top header, no ornament) -->
   <nav class="thumb-nav" aria-label="切换">
-    <span class="thumb-seal" aria-hidden="true">N3</span>
     <div class="thumb-tabs">
       <button class="thumb-link active" id="btab-tutor" onclick="switchMode('tutor')">做题</button>
       <button class="thumb-link" id="btab-radio" onclick="switchMode('radio', true)">随身听</button>
