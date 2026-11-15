@@ -677,7 +677,7 @@ async def main():
         nb["events"] = expanded_evs
         blocks.append(nb)
 
-    sig_payload = f"v24_qq3_bespoke:{engine_tag}:" + json.dumps(voice_map, sort_keys=True) + json.dumps(blocks, ensure_ascii=False)
+    sig_payload = f"v25_qq3_script_true:{engine_tag}:" + json.dumps(voice_map, sort_keys=True) + json.dumps(blocks, ensure_ascii=False)
     script_sig = hashlib.sha256(sig_payload.encode("utf-8")).hexdigest()[:14]
     if os.path.exists(RADIO_MP3_PATH) and os.path.exists(RADIO_META_PATH):
         try:
@@ -688,7 +688,7 @@ async def main():
         except Exception:
             pass
 
-    tmpdir = tempfile.mkdtemp(prefix="n3_radio_v24_")
+    tmpdir = tempfile.mkdtemp(prefix="n3_radio_v25_")
     try:
         pause_durations = sorted({round(float(val), 2) for b in blocks for k, val in b["events"] if k == "PAUSE"})
         silence_files = {}
@@ -709,7 +709,7 @@ async def main():
                             os.path.join(tmpdir, f"trim_{thash}.mp3"),
                         )
 
-        sem = asyncio.Semaphore(14)
+        sem = asyncio.Semaphore(20)
         ok_results = await asyncio.gather(
             *(synth_turn(k, voice_map[k], txt, raw_p, sem) for (k, txt), (raw_p, _) in unique_turns.items())
         )
@@ -725,7 +725,7 @@ async def main():
                 return key, trim_p, probe_duration(trim_p)
             return key, None, 0.0
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=12) as pool:
             for key, trim_p, dur in pool.map(_trim_and_probe, unique_turns.items()):
                 if trim_p:
                     trimmed_paths[key] = trim_p
