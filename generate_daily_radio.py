@@ -66,8 +66,8 @@ MAX_TRIES = 5 if os.environ.get("GITHUB_ACTIONS") == "true" else 1
 GEMINI_API_KEY = (os.environ.get("GEMINI_API_KEY") or "").strip()
 GEMINI_TTS_MODEL = os.environ.get("GEMINI_TTS_MODEL", "gemini-2.5-flash-preview-tts")
 
-# Keeps multi-clause Japanese quotes together in ONE continuous slow (-33%) utterance by the SAME speaker!
-JA_SPAN_RE = re.compile(r"([\u3040-\u30ffー]+(?:[、。！？\s]+[\u3040-\u30ffー]+)*[。！？]?)")
+# Matches Japanese spans (inline words spoken at normal Qiang-Qiang speed; full sentences at clear -24%)
+JA_SPAN_RE = re.compile(r"([\u3040-\u30ffー・]+(?:[、。！？\s]+[\u3040-\u30ffー・]+)*[。！？]?)")
 
 # Prosodic gear cue detectors for human-like fast/slow & pitch modulation
 RUSH_CUE_RE = re.compile(
@@ -230,31 +230,34 @@ async def detect_voice_map() -> dict:
 
     vmap = {
         # W (文涛): 清亮偏高半度、跳脱脆生、快慢急转
-        "W":      (w_voice, "+7%", "+2Hz"),
-        "W_MID":  (w_voice, "+7%", "+2Hz"),
-        "W_FAST": (w_voice, "+13%", "+4Hz"),
-        "W_RUSH": (w_voice, "+19%", "+6Hz"),
-        "W_HES":  (w_voice, "-3%", "+1Hz"),
-        "W_LOW":  (w_voice, "-4%", "-1Hz"),
-        "W_JA":   (w_voice, "-33%", "+2Hz"),
+        "W":             (w_voice, "+7%", "+2Hz"),
+        "W_MID":         (w_voice, "+7%", "+2Hz"),
+        "W_FAST":        (w_voice, "+13%", "+4Hz"),
+        "W_RUSH":        (w_voice, "+19%", "+6Hz"),
+        "W_HES":         (w_voice, "-3%", "+1Hz"),
+        "W_LOW":         (w_voice, "-4%", "-1Hz"),
+        "W_JA_INLINE":   (w_voice, "+6%", "+2Hz"),
+        "W_JA":          (w_voice, "-24%", "+2Hz"),
         # D (文道): 东亚温厚低沉、从容儒雅的书房男中音
-        "D":      (d_voice, "+1%", "-4Hz"),
-        "D_MID":  (d_voice, "+1%", "-4Hz"),
-        "D_FAST": (d_voice, "+6%", "-3Hz"),
-        "D_RUSH": (d_voice, "+11%", "-2Hz"),
-        "D_HES":  (d_voice, "-6%", "-5Hz"),
-        "D_LOW":  (d_voice, "-6%", "-6Hz"),
-        "D_JA":   (d_voice, "-34%", "-4Hz"),
+        "D":             (d_voice, "+1%", "-4Hz"),
+        "D_MID":         (d_voice, "+1%", "-4Hz"),
+        "D_FAST":        (d_voice, "+6%", "-3Hz"),
+        "D_RUSH":        (d_voice, "+11%", "-2Hz"),
+        "D_HES":         (d_voice, "-6%", "-5Hz"),
+        "D_LOW":         (d_voice, "-6%", "-6Hz"),
+        "D_JA_INLINE":   (d_voice, "+1%", "-4Hz"),
+        "D_JA":          (d_voice, "-25%", "-4Hz"),
         # X (子东): 清瘦干脆、冷面毒舌的学者腔调
-        "X":      (x_voice, "+5%", "-1Hz"),
-        "X_MID":  (x_voice, "+5%", "-1Hz"),
-        "X_FAST": (x_voice, "+10%", "+1Hz"),
-        "X_RUSH": (x_voice, "+15%", "+2Hz"),
-        "X_HES":  (x_voice, "-3%", "-2Hz"),
-        "X_LOW":  (x_voice, "-5%", "-3Hz"),
-        "X_JA":   (x_voice, "-33%", "-1Hz"),
+        "X":             (x_voice, "+5%", "-1Hz"),
+        "X_MID":         (x_voice, "+5%", "-1Hz"),
+        "X_FAST":        (x_voice, "+10%", "+1Hz"),
+        "X_RUSH":        (x_voice, "+15%", "+2Hz"),
+        "X_HES":         (x_voice, "-3%", "-2Hz"),
+        "X_LOW":         (x_voice, "-5%", "-3Hz"),
+        "X_JA_INLINE":   (x_voice, "+4%", "-1Hz"),
+        "X_JA":          (x_voice, "-24%", "-1Hz"),
     }
-    for g in ("", "_MID", "_FAST", "_RUSH", "_HES", "_LOW", "_JA"):
+    for g in ("", "_MID", "_FAST", "_RUSH", "_HES", "_LOW", "_JA_INLINE", "_JA"):
         vmap[f"M{g}"] = vmap[f"W{g}"]
         vmap[f"F{g}"] = vmap[f"X{g}"]
     return vmap
@@ -378,7 +381,8 @@ def expand_turn_events(spk: str, val) -> list:
     if spk not in ("W", "D", "X", "M", "F"):
         return [(spk, txt)]
 
-    ja_spk = f"{spk}_JA"
+    ja_full_spk = f"{spk}_JA"
+    ja_inline_spk = f"{spk}_JA_INLINE"
     parts = JA_SPAN_RE.split(txt) if JA_SPAN_RE.search(txt) else [txt]
     out = []
     pending_pause = 0.0
@@ -392,20 +396,25 @@ def expand_turn_events(spk: str, val) -> list:
             if not ks:
                 continue
             ended_punct = ks[-1] in "。！？"
-            is_short_inline = (not ended_punct) and len(ks) <= 10
+            core_ks = ks[:-1] if ended_punct else ks
+            is_full_sentence = (
+                ("、" in core_ks)
+                or ("。" in core_ks)
+                or ("？" in core_ks)
+                or ("！" in core_ks)
+                or (ended_punct and len(core_ks) >= 13)
+            )
             if out:
-                min_pre = 0.11 if is_short_inline else 0.20
+                min_pre = 0.20 if is_full_sentence else 0.05
                 out.append(("PAUSE", round(max(pending_pause, min_pre), 2)))
             ja_utterance = ks if ended_punct else (ks + "。")
-            out.append((ja_spk, ja_utterance))
-            if ended_punct and len(ks) >= 7:
-                pending_pause = 0.48
+            out.append((ja_full_spk if is_full_sentence else ja_inline_spk, ja_utterance))
+            if is_full_sentence:
+                pending_pause = 0.42 if ended_punct else 0.20
             elif ended_punct:
-                pending_pause = 0.28
-            elif is_short_inline:
-                pending_pause = 0.12
+                pending_pause = 0.24
             else:
-                pending_pause = 0.18
+                pending_pause = 0.05
         else:
             lead_m = re.match(r"^[\s』」）]*([。！？；，、：…]+)[\s『「（]*", pt)
             if lead_m:
@@ -415,7 +424,7 @@ def expand_turn_events(spk: str, val) -> list:
                 elif any(c in pchars for c in "。！？；"):
                     pending_pause = max(pending_pause, 0.30)
                 else:
-                    pending_pause = max(pending_pause, 0.15)
+                    pending_pause = max(pending_pause, 0.14)
                 pt = pt[lead_m.end() :]
             pt_s = pt.strip()
             if not pt_s or not re.search(r"[\w\u3040-\u9fff]", pt_s):
@@ -424,7 +433,7 @@ def expand_turn_events(spk: str, val) -> list:
             if not zh_evs:
                 continue
             if out:
-                out.append(("PAUSE", round(max(pending_pause, 0.13), 2)))
+                out.append(("PAUSE", round(max(pending_pause, 0.05), 2)))
             out.extend(zh_evs)
             last_txt = str(zh_evs[-1][1])
             if pt_s.endswith("…"):
@@ -432,9 +441,9 @@ def expand_turn_events(spk: str, val) -> list:
             elif last_txt[-1] in "。！？；":
                 pending_pause = 0.24
             elif last_txt[-1] in "，、：":
-                pending_pause = 0.16
+                pending_pause = 0.15
             else:
-                pending_pause = 0.11
+                pending_pause = 0.05
     return out if out else [(f"{spk}_MID", txt)]
 
 
@@ -457,11 +466,12 @@ def synth_gemini_turn_sync(spk: str, text: str, out_mp3: str) -> bool:
     base = spk.split("_")[0]
     voice_map_g = {"W": "Puck", "D": "Charon", "X": "Orus"}
     voice_name = voice_map_g.get(base, "Puck")
-    prompt = (
-        f"Speak naturally with varied human tempo and warm conversational wit like Qiang Qiang Three: {text}"
-        if not spk.endswith("_JA")
-        else f"Speak this Japanese phrase slowly, clearly, and distinctly in your own voice: {text}"
-    )
+    if spk.endswith("_JA_INLINE"):
+        prompt = f"Speak this Japanese word naturally at normal brisk conversational speed in your own voice: {text}"
+    elif spk.endswith("_JA"):
+        prompt = f"Speak this Japanese sentence clearly and naturally in your own voice: {text}"
+    else:
+        prompt = f"Speak naturally with varied human tempo and warm conversational wit like Qiang Qiang Three: {text}"
     try:
         client = genai.Client(api_key=GEMINI_API_KEY)
         resp = client.models.generate_content(
@@ -699,7 +709,7 @@ async def main():
         nb["events"] = expanded_evs
         blocks.append(nb)
 
-    sig_payload = f"v25_qq3_script_true:{engine_tag}:" + json.dumps(voice_map, sort_keys=True) + json.dumps(blocks, ensure_ascii=False)
+    sig_payload = f"v26_qq3_salon_pure:{engine_tag}:" + json.dumps(voice_map, sort_keys=True) + json.dumps(blocks, ensure_ascii=False)
     script_sig = hashlib.sha256(sig_payload.encode("utf-8")).hexdigest()[:14]
     if os.path.exists(RADIO_MP3_PATH) and os.path.exists(RADIO_META_PATH):
         try:
