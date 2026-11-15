@@ -566,19 +566,39 @@ async def synth_turn(spk: str, voice_cfg: tuple, text: str, out_path: str, sem: 
                 return True
         if edge_tts is None:
             return False
-        speak_txt = text
-        # Do NOT force falling period "。" onto inline Japanese words!
-        if not spk.endswith("_JA_INLINE") and len(speak_txt) <= 2 and speak_txt[-1] not in "。！？，、：":
-            speak_txt = speak_txt + "，"
+        speak_txt = text.rstrip("，、：:； ")
+        if not speak_txt:
+            speak_txt = text.strip()
+        # Short <=2-char Chinese words need a period so multilingual G2P never drops them; inline Kana stays bare on pass 0
+        if not spk.endswith("_JA_INLINE") and len(speak_txt) <= 2 and speak_txt and speak_txt[-1] not in "。！？":
+            speak_txt = speak_txt + "。"
+        punct_stripped = speak_txt.rstrip("，、：:； ")
+        with_period = (punct_stripped + "。") if (punct_stripped and punct_stripped[-1] not in "。！？") else speak_txt
+        no_quotes = re.sub(r'[“”‘’「」『』"]', "", punct_stripped).strip()
+        no_quotes_period = (no_quotes + "。") if (no_quotes and no_quotes[-1] not in "。！？") else with_period
+        base_spk = spk.split("_")[0]
+        alt_voice = (
+            "en-AU-WilliamMultilingualNeural"
+            if base_spk in ("X", "F")
+            else ("ko-KR-HyunsuMultilingualNeural" if base_spk in ("W", "M") else "en-US-BrianMultilingualNeural")
+        )
         for attempt in range(MAX_TRIES):
-            use_voice = voice
-            use_txt = (speak_txt + "。") if (attempt >= 2 and speak_txt[-1] not in "。！？") else speak_txt
+            if attempt == 0:
+                use_voice, use_rate, use_pitch, use_txt = voice, rate, pitch, speak_txt
+            elif attempt == 1:
+                use_voice, use_rate, use_pitch, use_txt = voice, rate, pitch, with_period
+            elif attempt == 2:
+                use_voice, use_rate, use_pitch, use_txt = voice, rate, "+0Hz", no_quotes_period
+            elif attempt == 3:
+                use_voice, use_rate, use_pitch, use_txt = voice, "+0%", "+0Hz", no_quotes_period
+            else:
+                use_voice, use_rate, use_pitch, use_txt = alt_voice, rate, "+0Hz", no_quotes_period
             try:
                 buf = bytearray()
                 try:
-                    comm = edge_tts.Communicate(use_txt, use_voice, rate=rate, pitch=pitch, **COMM_KWARGS)
+                    comm = edge_tts.Communicate(use_txt, use_voice, rate=use_rate, pitch=use_pitch, **COMM_KWARGS)
                 except TypeError:
-                    comm = edge_tts.Communicate(use_txt, use_voice, rate=rate, **COMM_KWARGS)
+                    comm = edge_tts.Communicate(use_txt, use_voice, rate=use_rate, **COMM_KWARGS)
 
                 async def _pull():
                     async for chunk in comm.stream():
@@ -587,14 +607,16 @@ async def synth_turn(spk: str, voice_cfg: tuple, text: str, out_path: str, sem: 
 
                 await asyncio.wait_for(_pull(), timeout=55.0)
                 if buf:
+                    if use_voice != voice:
+                        print(f"[fallback-voice] {spk} -> {use_voice} for {speak_txt!r}")
                     with open(out_path, "wb") as f:
                         f.write(buf)
                     return True
             except Exception as e:
                 if attempt + 1 < MAX_TRIES:
-                    await asyncio.sleep(0.6 * (attempt + 1))
+                    await asyncio.sleep(0.45 * (attempt + 1))
                 elif MAX_TRIES > 1:
-                    print(f"[warn] radio turn synth failed ({use_voice}): {e!r}")
+                    print(f"[warn] radio turn synth failed ({use_voice} | {spk} | {speak_txt!r}): {e!r}")
     return False
 
 
@@ -833,7 +855,7 @@ async def main():
         jitter = rng.uniform(-0.12, 0.12)
         return -(top_avg - repeat_penalty + memory_bonus + jitter)
 
-    ranked_ids = {st["id"] for st in sorted(SALON_STORIES, key=story_rank)[:6]}
+    ranked_ids = {st["id"] for st in sorted(SALON_STORIES, key=story_rank)[:8]}
     selected_stories = [st for st in SALON_STORIES if st["id"] in ranked_ids]
 
     opening_turns = OPENING_GREETINGS_POOL[day_ord % len(OPENING_GREETINGS_POOL)]
@@ -862,7 +884,7 @@ async def main():
         })
 
     sig_obj = {
-        "ver": "v28_qq3_broadcast_suite",
+        "ver": "v28_1_qq3_zero_drop_8ch",
         "engine": engine_tag,
         "opening": opening_evs,
         "ad1": [ad1_out_evs, ad1_in_evs],
@@ -910,13 +932,13 @@ async def main():
                 t = np.arange(int(SR * dur_s), dtype=np.float32) / SR
                 clip_pcm[key] = (0.12 * np.sin(2.0 * np.pi * 220.0 * t)).astype(np.float32)
         else:
-            sem = asyncio.Semaphore(18)
+            sem = asyncio.Semaphore(16)
             ok_results = await asyncio.gather(
                 *(synth_turn(k, voice_map[k], txt, raw_p, sem) for (k, txt), raw_p in unique_turns.items())
             )
             ok_count = sum(1 for x in ok_results if x)
             print(f"Synthesized {ok_count} / {len(unique_turns)} unique Qiang-Qiang v28 full-breath clips.")
-            min_required = max(1, int(len(unique_turns) * 0.95))
+            min_required = max(1, int(len(unique_turns) * 0.98))
             if ok_count < min_required:
                 raise RuntimeError(
                     f"TTS clip synthesis below safety threshold ({ok_count}/{len(unique_turns)} < {min_required}); refusing to overwrite daily_radio.mp3"
@@ -968,17 +990,18 @@ async def main():
         mixer.advance(0.45)
 
         total_stories = len(story_blocks)
+        ad1_after = 2 if total_stories >= 7 else 1
+        ad2_after = 5 if total_stories >= 7 else 3
         for ch_idx, b in enumerate(story_blocks):
             seg_start = 0.0 if ch_idx == 0 else round(mixer.sec, 1)
             if ch_idx not in chapter_starts:
                 chapter_starts[ch_idx] = seg_start
 
-            # If returning from an ad break (start of Act 2 at ch_idx==2, Act 3 at ch_idx==4),
-            # Wen Tao welcomes listeners back right at the chapter mark!
-            if ch_idx == 2:
+            # If returning from an ad break, Wen Tao welcomes listeners back right at the chapter mark!
+            if ch_idx == ad1_after + 1:
                 _append_events(ad1_in_evs)
                 mixer.advance(0.42)
-            elif ch_idx == 4:
+            elif ch_idx == ad2_after + 1:
                 _append_events(ad2_in_evs)
                 mixer.advance(0.42)
 
@@ -986,15 +1009,14 @@ async def main():
             _append_events(b["events"])
 
             # End-of-Story Transitions:
-            if ch_idx == 1:
+            if ch_idx == ad1_after:
                 # End of Act 1 -> Classic Ad Break 1 ("《锵锵三人行》，广告之后见！" + Bumper Music)
                 mixer.advance(0.50)
                 _append_events(ad1_out_evs)
-                # Start bumper 0.18s before end of "见！" tail for crisp broadcast tightness
                 bumper_start = max(0.0, mixer.sec - 0.18)
                 bumper_end = mixer.place_at(bumper_start, pcm_bumper, gain=0.96)
                 mixer.cursor = int(round((bumper_end - 0.28) * SR))
-            elif ch_idx == 3:
+            elif ch_idx == ad2_after:
                 # End of Act 2 -> Classic Ad Break 2 ("《锵锵三人行》，广告之后见！" + Bumper Music)
                 mixer.advance(0.50)
                 _append_events(ad2_out_evs)
