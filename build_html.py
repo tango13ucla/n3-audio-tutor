@@ -5051,12 +5051,12 @@ function renderTutor() {
     overTxt = q.is_listening && ansIdx > 0 ? `本题过关 · 正解 ${ansIdx} · ${streakTxt}` : `本题过关 · ${streakTxt}`;
   } else if (isUnsure) {
     overCls = "overline warm";
-    overTxt = q.is_listening && ansIdx > 0 ? `直接看讲解 · 正解 ${ansIdx} · 稍后复考` : "直接看讲解 · 稍后复考";
+    overTxt = q.is_listening && ansIdx > 0 ? `未过关 · 正解 ${ansIdx} · 隔 3 题再考` : "未过关 · 隔 3 题再考";
   } else {
     overCls = "overline ng";
     overTxt = q.is_listening && ansIdx > 0
-      ? `误选 ${pickedIdx || ""} · 正解 ${ansIdx} · 稍后复考`
-      : `误选「${pickedVal}」 · 稍后复考`;
+      ? `误选 ${pickedIdx || ""} · 正解 ${ansIdx} · 隔 3 题再考`
+      : `误选「${pickedVal}」 · 隔 3 题再考`;
   }
 
   const notesMap = q.opt_notes || {};
@@ -5090,11 +5090,13 @@ function renderTutor() {
     </div>`;
   }).join("");
 
-  const leftStampLabel = isCorrect ? "← 稍后再考" : "稍后复考 →";
+  const leftStampLabel = isCorrect ? "← 稍后再考" : "← 隔 3 题再考";
   const leftStampTone = isCorrect ? "" : " moss-tone";
+  const rightStampLabel = isCorrect ? "下一题 →" : "隔 3 题再考 →";
+  const mainBtnLabel = isCorrect ? "下一题 →" : "继续 →";
 
   box.innerHTML = `
-    <div class="tutor-stamp right" id="tutor-st-right">下一题 →</div>
+    <div class="tutor-stamp right" id="tutor-st-right">${rightStampLabel}</div>
     <div class="tutor-stamp left${leftStampTone}" id="tutor-st-left">${leftStampLabel}</div>
     <div class="meta-bar">
       <span class="${overCls}">${escapeHtml(overTxt)}</span>
@@ -5116,7 +5118,7 @@ function renderTutor() {
       <div class="dock-row">
         <button class="dock-replay-btn" id="dock-exp-btn" onclick="playMainClip(activeQuizObj.exp_audio, 'exp', true)">讲解</button>
         ${isCorrect ? `<button class="ghost-btn" onclick="advanceNext(true)">← 再考</button>` : ""}
-        <button class="sumi-btn" onclick="advanceNext(false)"><span>下一题 →</span><span class="desk-hint">滚轮下滑 · Enter</span></button>
+        <button class="sumi-btn" onclick="advanceNext(false)"><span>${mainBtnLabel}</span><span class="desk-hint">滚轮下滑 · Enter</span></button>
       </div>
     </div>
     ${lexBoxHTML("tutor-inline-lex")}
