@@ -840,16 +840,16 @@ html = r"""<!DOCTYPE html>
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: calc(15px + env(safe-area-inset-top)) 28px calc(18px + env(safe-area-inset-bottom));
+    padding: calc(14px + env(safe-area-inset-top)) 26px calc(16px + env(safe-area-inset-bottom));
   }
 
   .zen-shell {
     width: 100%;
     max-width: 496px;
-    height: 100%;
+    flex: 1;
+    min-height: 0;
     display: flex;
     flex-direction: column;
-    min-height: 0;
   }
 
   @media (min-width: 860px) {
@@ -895,14 +895,15 @@ html = r"""<!DOCTYPE html>
   .zen-nav {
     display: flex;
     align-items: baseline;
-    gap: 24px;
+    gap: 20px;
   }
   .nav-link {
     font-size: 16.5px;
     font-weight: 500;
     color: var(--ink-3);
     letter-spacing: 0.04em;
-    padding-bottom: 5px;
+    padding: 6px 4px 5px;
+    margin: -6px -4px 0;
     position: relative;
     transition: color 0.2s ease;
   }
@@ -913,8 +914,8 @@ html = r"""<!DOCTYPE html>
   .nav-link.active::after {
     content: "";
     position: absolute;
-    left: 0;
-    right: 0;
+    left: 4px;
+    right: 4px;
     bottom: -15px;
     height: 1.5px;
     background: var(--sumi);
@@ -965,8 +966,8 @@ html = r"""<!DOCTYPE html>
     gap: 11px;
   }
   .enso-btn {
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -997,7 +998,8 @@ html = r"""<!DOCTYPE html>
     font-size: 13.5px;
     font-weight: 500;
     color: var(--ink-3);
-    padding: 4px 0;
+    padding: 8px 0 8px 10px;
+    margin: -4px 0;
   }
   .horizon-score .ledger-tag {
     color: var(--ink-2);
@@ -1011,7 +1013,7 @@ html = r"""<!DOCTYPE html>
     display: none;
   }
 
-  /* ================= 3. OPEN WASHI STAGE (余白 MA) ================= */
+  /* ================= 3. OPEN WASHI STAGE (余白 MA + TINDER SWIPE ERGONOMICS) ================= */
   .zen-panel {
     flex: 1;
     min-height: 0;
@@ -1021,6 +1023,9 @@ html = r"""<!DOCTYPE html>
   .zen-panel.hidden {
     display: none;
   }
+  #tutor-view {
+    touch-action: pan-y;
+  }
 
   .stage-wrap {
     position: relative;
@@ -1029,12 +1034,60 @@ html = r"""<!DOCTYPE html>
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding-top: 16px;
+    padding-top: 14px;
     animation: fadeTurn 0.18s ease-out;
+    will-change: transform, opacity;
   }
   @keyframes fadeTurn {
     from { opacity: 0.48; }
     to { opacity: 1; }
+  }
+
+  /* Tactile Tinder-style card physics on Result & Teach pages (frameless open Washi) */
+  .stage-wrap.tutor-dragging {
+    transition: none !important;
+    animation: none !important;
+  }
+  .stage-wrap.tutor-settling {
+    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease;
+  }
+  .stage-wrap.tutor-fly-right {
+    transform: translate3d(118%, 8px, 0) rotate(6.5deg) !important;
+    opacity: 0 !important;
+    transition: transform 0.21s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.19s ease !important;
+  }
+  .stage-wrap.tutor-fly-left {
+    transform: translate3d(-118%, 8px, 0) rotate(-6.5deg) !important;
+    opacity: 0 !important;
+    transition: transform 0.21s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.19s ease !important;
+  }
+  .tutor-stamp {
+    position: absolute;
+    top: 46px;
+    z-index: 30;
+    padding: 4px 11px;
+    border-radius: 5px;
+    font-size: 13.5px;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .tutor-stamp.right {
+    left: 2px;
+    color: var(--moss);
+    border: 1.5px solid var(--moss);
+    background: rgba(252, 251, 248, 0.94);
+  }
+  .tutor-stamp.left {
+    right: 2px;
+    color: var(--bengara);
+    border: 1.5px solid var(--bengara);
+    background: rgba(252, 251, 248, 0.94);
+  }
+  .tutor-stamp.left.moss-tone {
+    color: var(--moss);
+    border-color: var(--moss);
   }
 
   .meta-bar {
@@ -1061,7 +1114,7 @@ html = r"""<!DOCTYPE html>
   .quiet-actions {
     display: flex;
     align-items: center;
-    gap: 18px;
+    gap: 16px;
     flex-shrink: 0;
   }
   .text-btn {
@@ -1070,7 +1123,8 @@ html = r"""<!DOCTYPE html>
     color: var(--ink-2);
     letter-spacing: 0.03em;
     font-variant-numeric: tabular-nums;
-    padding: 4px 0;
+    padding: 8px 5px;
+    margin: -6px -5px;
   }
   .text-btn.playing {
     color: var(--moss);
@@ -1082,14 +1136,17 @@ html = r"""<!DOCTYPE html>
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    padding: 20px 0 26px;
+    padding: 16px 0 22px;
     scrollbar-width: none;
-    -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 26px), transparent 100%);
-    mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 26px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 22px), transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 22px), transparent 100%);
   }
+  .focal-space > * { flex-shrink: 0; }
   .focal-space::-webkit-scrollbar { display: none; }
   .stage-quiz .focal-space > :first-child,
   .stage-done .focal-space > :first-child { margin-top: auto; }
@@ -1098,12 +1155,40 @@ html = r"""<!DOCTYPE html>
 
   .action-dock {
     flex-shrink: 0;
-    padding-top: 12px;
+    padding-top: 10px;
   }
 
-  /* Desktop vs Mobile Ergonomics:
-     - Mobile (<860px): Content starts cleanly from top, interactive controls stay in bottom one-hand thumb zone.
-     - Desktop (>=860px): Quiz centers optically; reading views stay anchored from top so tapping words shifts 0px. */
+  /* Right-Handed Single-Hand Mobile Ergonomics (<860px):
+     Elevate interactive docks out of the bottom bezel cramp into the natural right-thumb sweet arc (~54-82% height),
+     cluster quiz prompt + options comfortably, and never require sliding the hand down the phone. */
+  @media (max-width: 859px) {
+    .action-dock,
+    .radio-dock,
+    .vc-dock {
+      padding-bottom: 38px;
+    }
+    #tutor-view .stage-quiz .focal-space {
+      justify-content: flex-end;
+      padding-bottom: 24px;
+      -webkit-mask-image: none;
+      mask-image: none;
+    }
+    #tutor-view .stage-quiz .focal-space > :first-child,
+    #tutor-view .stage-quiz .focal-space > :last-child {
+      margin-top: 0;
+      margin-bottom: 0;
+    }
+    #tutor-view .stage-quiz .quiz-focal {
+      min-height: 92px;
+      justify-content: flex-end;
+    }
+    #tutor-view .stage-quiz .listen-medallion-wrap {
+      padding: 12px 0 8px;
+    }
+  }
+
+  /* Desktop vs Mobile Ergonomics (>=860px):
+     Quiz centers optically; reading views stay anchored from top so tapping words shifts 0px. */
   @media (min-width: 860px) {
     #tutor-view .stage-wrap {
       justify-content: flex-start;
@@ -1326,17 +1411,23 @@ html = r"""<!DOCTYPE html>
   }
   .unsure-btn:active { background: #EDEAE1; }
 
-  .kbd-tag, .desk-hint { display: none; }
+  .desk-hint { display: none; }
+  .kbd-tag {
+    display: inline-block;
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--ink-3);
+    opacity: 0.45;
+    font-variant-numeric: tabular-nums;
+    margin-left: 10px;
+    flex-shrink: 0;
+  }
+  .unsure-btn .kbd-tag { display: none; }
   @media (min-width: 860px) {
     .zen-choice:hover, .listen-num-btn:hover { border-color: var(--sumi); background: #FFFFFF; }
     .unsure-btn:hover { border-color: var(--sumi); color: var(--sumi); background: rgba(252, 251, 248, 0.72); }
-    .kbd-tag {
-      display: inline-block;
-      font-family: var(--sans);
-      font-size: 13px;
-      color: var(--ink-3);
-      font-variant-numeric: tabular-nums;
-    }
+    .kbd-tag { opacity: 1; }
+    .unsure-btn .kbd-tag { display: inline-block; }
     .desk-hint {
       display: inline-block;
       font-size: 12.5px;
@@ -1345,6 +1436,9 @@ html = r"""<!DOCTYPE html>
       letter-spacing: 0.03em;
       margin-left: 10px;
     }
+  }
+  .quiz-ja {
+    cursor: pointer;
   }
 
   /* -------- RESULT VIEW (3-Step Human Clarity: 句意 -> 为什么用 -> 变形与辨析) -------- */
@@ -1533,7 +1627,7 @@ html = r"""<!DOCTYPE html>
     color: var(--ink-3);
   }
 
-  /* Tappable Japanese words + Fixed-Geometry Zen Meaning Card (Zero Layout Shift, Zero Touch Flicker) */
+  /* Tappable Japanese words + Fixed-Geometry Zen Meaning Card (Tap anywhere on card to replay pronunciation) */
   .w-tok {
     position: relative;
     cursor: pointer;
@@ -1568,7 +1662,7 @@ html = r"""<!DOCTYPE html>
     position: absolute;
     left: 0;
     right: 0;
-    bottom: 76px;
+    bottom: 108px;
     z-index: 20;
     height: 114px;
     padding: 12px 14px;
@@ -1581,6 +1675,10 @@ html = r"""<!DOCTYPE html>
     justify-content: flex-start;
     gap: 3px;
     overflow: hidden;
+    cursor: pointer;
+  }
+  .inline-lex:active {
+    background: #F4F1E8;
   }
   #radio-inline-lex {
     bottom: 12px;
@@ -1689,45 +1787,64 @@ html = r"""<!DOCTYPE html>
     letter-spacing: 0.015em;
   }
 
-  /* Architectural Sumi Buttons */
+  /* Right-Hand Ergonomic Architectural Sumi Buttons */
   .dock-row {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 10px;
+  }
+  .dock-replay-btn {
+    height: 52px;
+    padding: 0 14px;
+    border: 1px solid var(--hairline-strong);
+    border-radius: 8px;
+    font-size: 14.5px;
+    font-weight: 500;
+    color: var(--ink-2);
+    letter-spacing: 0.03em;
+    flex-shrink: 0;
+  }
+  .dock-replay-btn.playing {
+    border-color: var(--moss);
+    color: var(--moss);
+    font-weight: 600;
   }
   .sumi-btn {
-    flex: 1;
-    height: 54px;
+    flex: 1.45;
+    height: 52px;
     background: var(--sumi);
     color: var(--sheet);
     border-radius: 8px;
-    font-size: 17px;
+    font-size: 16.5px;
     font-weight: 500;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
     display: flex;
     align-items: center;
     justify-content: center;
   }
+  .sumi-btn:active { opacity: 0.88; }
   .ghost-btn {
-    height: 54px;
-    padding: 0 20px;
+    height: 52px;
+    padding: 0 16px;
     border: 1px solid var(--hairline-strong);
     border-radius: 8px;
-    font-size: 15.5px;
+    font-size: 15px;
     font-weight: 500;
     color: var(--ink-2);
-    letter-spacing: 0.04em;
+    letter-spacing: 0.03em;
+    flex-shrink: 0;
   }
+  .ghost-btn:active, .dock-replay-btn:active { background: #EDEAE1; }
 
-  /* ================= 4. TWO-COACH PODCAST SANCTUARY ("随身听") ================= */
+  /* ================= 4. THREE-HOST PODCAST SANCTUARY ("随身听") ================= */
   .radio-center {
     position: relative;
     flex: 1;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    padding-top: 34px;
-    gap: 16px;
+    padding-top: 28px;
+    gap: 15px;
   }
   .radio-chap {
     font-size: 14px;
@@ -1756,24 +1873,24 @@ html = r"""<!DOCTYPE html>
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    padding-top: 12px;
+    gap: 16px;
+    padding-top: 10px;
   }
   .scrub-wrap { width: 100%; }
   .zen-range {
     -webkit-appearance: none;
     appearance: none;
     width: 100%;
-    height: 2px;
+    height: 3px;
     background: var(--track);
     outline: none;
-    margin: 10px 0;
+    margin: 12px 0 8px;
     cursor: pointer;
   }
   .zen-range::-webkit-slider-thumb {
     -webkit-appearance: none;
-    width: 13px;
-    height: 13px;
+    width: 15px;
+    height: 15px;
     border-radius: 50%;
     background: var(--sumi);
     cursor: pointer;
@@ -1787,36 +1904,60 @@ html = r"""<!DOCTYPE html>
     letter-spacing: 0.04em;
   }
 
+  /* Right-Hand Thumb Transport Cluster: [1.0x] [-15s] [ 播放 ] [+15s] */
   .transport-row {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
+    gap: 10px;
+  }
+  @media (min-width: 860px) {
+    .transport-row { justify-content: space-between; }
+  }
+  .radio-spd-pill {
+    height: 48px;
+    padding: 0 13px;
+    border: 1px solid var(--hairline-strong);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink-2);
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
   }
   .step-time-btn {
+    height: 48px;
+    padding: 0 15px;
+    border: 1px solid var(--hairline-strong);
+    border-radius: 8px;
+    background: var(--sheet);
     font-size: 15px;
     font-weight: 500;
     color: var(--ink-2);
-    padding: 10px 6px;
     font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
   }
+  .step-time-btn:active, .radio-spd-pill:active { background: #EDEAE1; }
   .play-toggle-btn {
-    min-width: 132px;
-    height: 50px;
+    flex: 1;
+    max-width: 168px;
+    min-width: 118px;
+    height: 48px;
     border-radius: 8px;
     background: var(--sumi);
     color: var(--sheet);
-    font-size: 16.5px;
+    font-size: 16px;
     font-weight: 500;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
   }
 
   .chapter-strip {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 6px;
-    padding-top: 14px;
-    border-top: 1px solid var(--hairline);
+    gap: 8px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--hairline);
     overflow-x: auto;
     scrollbar-width: none;
   }
@@ -1826,26 +1967,56 @@ html = r"""<!DOCTYPE html>
     font-weight: 500;
     color: var(--ink-3);
     letter-spacing: 0.04em;
-    padding: 4px 2px;
+    padding: 7px 6px;
+    border-radius: 6px;
     white-space: nowrap;
     flex-shrink: 0;
   }
   .chap-link.active {
     color: var(--sumi);
+    background: rgba(28, 27, 24, 0.05);
     font-weight: 600;
   }
 
   /* ================= 5. ZEN LEDGER ("总表") ================= */
+  #dash-view {
+    position: relative;
+  }
   .ledger-scroll {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    padding: 16px 0 8px;
+    padding: 16px 0 78px;
     scrollbar-width: none;
   }
   .ledger-scroll::-webkit-scrollbar { display: none; }
 
+  .ledger-back-fab {
+    display: none;
+  }
+  @media (max-width: 859px) {
+    .ledger-back-fab {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      position: fixed;
+      right: 26px;
+      bottom: calc(44px + env(safe-area-inset-bottom));
+      z-index: 45;
+      height: 44px;
+      padding: 0 18px;
+      border-radius: 22px;
+      background: var(--sumi);
+      color: var(--sheet);
+      font-size: 14.5px;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      box-shadow: 0 4px 16px rgba(28, 27, 24, 0.16);
+    }
+  }
+
   @media (min-width: 860px) {
+    .ledger-scroll { padding-bottom: 12px; }
     .ledger-layout {
       display: grid;
       grid-template-columns: 270px 1fr;
@@ -1893,27 +2064,28 @@ html = r"""<!DOCTYPE html>
   .ledger-controls {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
+    align-items: center;
     padding-bottom: 12px;
     border-bottom: 1px solid var(--hairline);
     margin-bottom: 8px;
   }
-  .tier-links { display: flex; gap: 20px; }
+  .tier-links { display: flex; gap: 16px; }
   .tier-link {
     font-size: 15px;
     color: var(--ink-3);
     font-variant-numeric: tabular-nums;
+    padding: 6px 2px;
   }
   .tier-link.active {
     color: var(--sumi);
     font-weight: 600;
   }
   .zen-search {
-    width: 132px;
+    width: 128px;
     border: none;
     border-bottom: 1px solid var(--hairline-strong);
     background: transparent;
-    padding: 4px 0;
+    padding: 5px 0;
     font-family: inherit;
     font-size: 14.5px;
     color: var(--sumi);
@@ -1924,15 +2096,15 @@ html = r"""<!DOCTYPE html>
   .zen-search::placeholder { color: var(--ink-3); }
 
   .ledger-item {
-    padding: 14px 0;
+    padding: 13px 0;
     border-bottom: 1px solid var(--hairline);
     cursor: pointer;
   }
   .li-row {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
-    gap: 12px;
+    align-items: center;
+    gap: 10px;
   }
   .li-left {
     display: flex;
@@ -1957,14 +2129,14 @@ html = r"""<!DOCTYPE html>
   }
   .li-right {
     display: flex;
-    align-items: baseline;
-    gap: 14px;
+    align-items: center;
+    gap: 8px;
     flex-shrink: 0;
   }
   .li-sub {
-    font-size: 14px;
+    font-size: 13.5px;
     color: var(--ink-3);
-    max-width: 138px;
+    max-width: 116px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1978,10 +2150,19 @@ html = r"""<!DOCTYPE html>
   .li-streak.s-wip { color: var(--ochre); font-weight: 500; }
   .li-streak.s-done { color: var(--moss); font-weight: 500; }
   .li-act {
-    font-size: 14px;
+    font-size: 13.5px;
     color: var(--moss);
     font-weight: 500;
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(43, 95, 73, 0.22);
+    background: var(--sheet);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
+  .li-act:active { background: var(--moss-soft); }
   .li-note {
     margin-top: 9px;
     padding-left: 16.5px;
@@ -2001,20 +2182,26 @@ html = r"""<!DOCTYPE html>
     padding: 28px;
     z-index: 100;
   }
+  @media (max-width: 859px) {
+    .modal-mask {
+      align-items: flex-end;
+      padding: 20px 20px calc(44px + env(safe-area-inset-bottom));
+    }
+  }
   .modal-mask.open { display: flex; }
   .modal-card {
     width: 100%;
-    max-width: 380px;
+    max-width: 396px;
     background: var(--sheet);
     border: 1px solid var(--hairline-strong);
-    border-radius: 10px;
-    padding: 26px;
+    border-radius: 12px;
+    padding: 24px 22px;
   }
   .modal-h { margin: 0 0 12px; font-size: 18px; font-weight: 600; letter-spacing: 0.04em; }
   .modal-body { margin: 0 0 14px; font-size: 16px; color: var(--ink-2); line-height: 1.85; font-variant-numeric: tabular-nums; }
   .modal-promise { margin: 0 0 16px; padding-top: 12px; border-top: 1px solid var(--hairline); font-size: 14.5px; color: var(--moss); line-height: 1.65; font-weight: 500; }
   .sync-box {
-    margin: 0 0 20px;
+    margin: 0 0 18px;
     padding: 12px 14px;
     border-radius: 8px;
     background: rgba(245, 242, 235, 0.7);
@@ -2028,7 +2215,7 @@ html = r"""<!DOCTYPE html>
   }
   .sync-btn {
     width: 100%;
-    height: 40px;
+    height: 42px;
     border: 1px solid var(--hairline-strong);
     border-radius: 6px;
     background: var(--sheet);
@@ -2326,9 +2513,6 @@ html = r"""<!DOCTYPE html>
     <div class="stage-wrap">
       <div class="meta-bar">
         <span class="overline" id="radio-date-pill">锵锵三人 · 文涛 · 文道 · 子东</span>
-        <div class="quiet-actions">
-          <button class="text-btn" id="radio-spd-btn" onclick="cycleRadioSpeed()">1.0x</button>
-        </div>
       </div>
 
       <div class="radio-center">
@@ -2346,6 +2530,8 @@ html = r"""<!DOCTYPE html>
       </div>
 
       <div class="radio-dock">
+        <div class="chapter-strip" id="radio-chap-pills"></div>
+
         <div class="scrub-wrap">
           <input type="range" class="zen-range" id="radio-seek" min="0" max="2100" value="0" step="1" oninput="onRadioScrub(this.value)" />
           <div class="time-pair">
@@ -2355,12 +2541,11 @@ html = r"""<!DOCTYPE html>
         </div>
 
         <div class="transport-row">
+          <button class="radio-spd-pill" id="radio-spd-btn" onclick="cycleRadioSpeed()">1.0x</button>
           <button class="step-time-btn" onclick="seekRadioBy(-15)">-15s</button>
           <button class="play-toggle-btn" id="radio-play-btn" onclick="toggleRadioPlay()">播放</button>
           <button class="step-time-btn" onclick="seekRadioBy(15)">+15s</button>
         </div>
-
-        <div class="chapter-strip" id="radio-chap-pills"></div>
       </div>
     </div>
   </section>
@@ -2385,6 +2570,7 @@ html = r"""<!DOCTYPE html>
         </div>
       </div>
     </div>
+    <button type="button" class="ledger-back-fab" onclick="toggleDashLedger(event)">← 返回</button>
   </section>
 </div>
 
@@ -2400,6 +2586,7 @@ const ADAPTIVE_KEY = "n3_adaptive_v13_" + DATA.plan_date;
 const RADIO_POS_KEY = "n3_radio_pos_" + (DATA.radio.date || DATA.plan_date);
 const TODAY_TAG = String(DATA.plan_date || "").replace(/-/g, "");
 const TRUE_GREEN_EPOCH = Number(DATA.true_green_epoch || 1794761500);
+const BAKED_EPOCH = Number(DATA.baked_epoch || 0);
 const MIN_REAL_TS = 1700000000;
 const VOCAB_BATCH_SIZE = 18;
 
@@ -3957,11 +4144,16 @@ function syncAudioButtons() {
     qBtn.classList.toggle("playing", onQ);
     qBtn.textContent = onQ ? "暂停" : "读题";
   }
+  const onExp = (activeKind === "exp" || activeKind === "teach") && !player.paused;
   const repBtn = document.getElementById("exp-replay-btn");
   if (repBtn) {
-    const on = (activeKind === "exp" || activeKind === "teach") && !player.paused;
-    repBtn.classList.toggle("playing", on);
-    repBtn.textContent = on ? "暂停" : "讲解";
+    repBtn.classList.toggle("playing", onExp);
+    repBtn.textContent = onExp ? "暂停" : "讲解";
+  }
+  const dockRepBtn = document.getElementById("dock-exp-btn");
+  if (dockRepBtn) {
+    dockRepBtn.classList.toggle("playing", onExp);
+    dockRepBtn.textContent = onExp ? "暂停" : "讲解";
   }
 }
 
@@ -4523,14 +4715,16 @@ function renderTutor() {
     ? "done"
     : ((viewStage === "quiz" && activeQuizObj) ? "quiz" : viewStage);
   box.className = "stage-wrap stage-" + effStage;
+  box.style.transform = "";
+  box.style.opacity = "";
 
   if (viewStage === "done" || !curPointId) {
     const m = computeDaily120Metrics();
     const nextBtn = !m.radioDone
-      ? `<button class="sumi-btn" onclick="switchMode('radio', true)">去听随身听</button>`
+      ? `<button class="sumi-btn" onclick="switchMode('radio', true)">去听随身听 →</button>`
       : (!m.flashDone
-          ? `<button class="sumi-btn" onclick="switchMode('vocab')">去单手记词</button>`
-          : `<button class="sumi-btn" onclick="switchMode('dash')">查看总表</button>`);
+          ? `<button class="sumi-btn" onclick="switchMode('vocab')">去单手记词 →</button>`
+          : `<button class="sumi-btn" onclick="switchMode('dash')">查看总表 →</button>`);
     box.innerHTML = `
       <div class="meta-bar"><span class="overline ok">${m.allThreeDone ? "今日三修圆满 · 稳过 120 分" : "今日五十道题已全部过关"}</span></div>
       <div class="focal-space">
@@ -4557,10 +4751,11 @@ function renderTutor() {
     warmAudio(p.teach.audio);
     warmAudio(p.primary.q_audio);
     box.innerHTML = `
+      <div class="tutor-stamp right" id="tutor-st-right">开始做题 →</div>
+      <div class="tutor-stamp left moss-tone" id="tutor-st-left">开始做题 →</div>
       <div class="meta-bar">
         <span class="overline warm">${escapeHtml(p.subject)} · 考点梳理</span>
         <div class="quiet-actions">
-          <button class="text-btn" id="exp-replay-btn" onclick="playMainClip('${p.teach.audio}', 'teach', true)">讲解</button>
           <button class="text-btn" id="ans-spd-btn" onclick="cycleExpSpeed()">${expSpeed}x</button>
         </div>
       </div>
@@ -4583,7 +4778,10 @@ function renderTutor() {
       </div>
 
       <div class="action-dock">
-        <button class="sumi-btn" style="width:100%;" onclick="completeTeachCard()"><span>继续</span><span class="desk-hint">滚轮下滑 · Enter</span></button>
+        <div class="dock-row">
+          <button class="dock-replay-btn" id="dock-exp-btn" onclick="playMainClip('${p.teach.audio}', 'teach', true)">讲解</button>
+          <button class="sumi-btn" onclick="completeTeachCard()"><span>开始做题 →</span><span class="desk-hint">滚轮下滑 · Enter</span></button>
+        </div>
       </div>
       ${lexBoxHTML("tutor-inline-lex")}
     `;
@@ -4631,7 +4829,7 @@ function renderTutor() {
               <svg class="med-ic" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86A1 1 0 0 0 8 5.14z"/></svg>
               <div class="med-waves"><span></span><span></span><span></span></div>
             </button>
-          </div>` : `<p class="quiz-ja">${escapeHtml(activeQuizObj.prompt)}</p>`}
+          </div>` : `<p class="quiz-ja" onclick="playMainClip(activeQuizObj.q_audio, 'q', true)" title="轻点重听题目">${escapeHtml(activeQuizObj.prompt)}</p>`}
         </div>
       </div>
 
@@ -4702,12 +4900,16 @@ function renderTutor() {
     </div>`;
   }).join("");
 
+  const leftStampLabel = isCorrect ? "← 稍后再考" : "稍后复考 →";
+  const leftStampTone = isCorrect ? "" : " moss-tone";
+
   box.innerHTML = `
+    <div class="tutor-stamp right" id="tutor-st-right">下一题 →</div>
+    <div class="tutor-stamp left${leftStampTone}" id="tutor-st-left">${leftStampLabel}</div>
     <div class="meta-bar">
       <span class="${overCls}">${escapeHtml(overTxt)}</span>
       <div class="quiet-actions">
         <button class="text-btn" onclick="playMainClip(activeQuizObj.q_audio, 'q', true)">原题</button>
-        <button class="text-btn" id="exp-replay-btn" onclick="playMainClip(activeQuizObj.exp_audio, 'exp', true)">讲解</button>
         <button class="text-btn" id="ans-spd-btn" onclick="cycleExpSpeed()">${expSpeed}x</button>
       </div>
     </div>
@@ -4722,8 +4924,9 @@ function renderTutor() {
 
     <div class="action-dock">
       <div class="dock-row">
-        ${isCorrect ? `<button class="ghost-btn" onclick="advanceNext(true)">再考</button>` : ""}
-        <button class="sumi-btn" onclick="advanceNext(false)"><span>下一题</span><span class="desk-hint">滚轮下滑 · Enter</span></button>
+        <button class="dock-replay-btn" id="dock-exp-btn" onclick="playMainClip(activeQuizObj.exp_audio, 'exp', true)">讲解</button>
+        ${isCorrect ? `<button class="ghost-btn" onclick="advanceNext(true)">← 再考</button>` : ""}
+        <button class="sumi-btn" onclick="advanceNext(false)"><span>下一题 →</span><span class="desk-hint">滚轮下滑 · Enter</span></button>
       </div>
     </div>
     ${lexBoxHTML("tutor-inline-lex")}
@@ -4861,12 +5064,11 @@ function showInlineWordMeaning(surface, tokEl) {
 
 document.addEventListener("click", e => {
   if (activeMode === "vocab") return;
-  const speakBtn = e.target.closest && e.target.closest(".ilex-speak");
-  if (speakBtn) {
+  const lexCard = e.target.closest && e.target.closest(".inline-lex");
+  if (lexCard && !lexCard.classList.contains("empty")) {
     e.preventDefault();
     e.stopPropagation();
-    const box = speakBtn.closest(".inline-lex");
-    if (box && box.dataset.surface) playWordAudio(box.dataset.surface, true);
+    if (lexCard.dataset.surface) playWordAudio(lexCard.dataset.surface, true);
     return;
   }
   const tok = e.target.closest && e.target.closest(".w-tok");
@@ -4876,7 +5078,7 @@ document.addEventListener("click", e => {
     showInlineWordMeaning(tok.dataset.w, tok);
     return;
   }
-  if (!e.target.closest || !e.target.closest(".inline-lex")) {
+  if (!lexCard) {
     const targetBoxId = activeMode === "radio" ? "radio-inline-lex" : "tutor-inline-lex";
     const box = document.getElementById(targetBoxId);
     if (box && !box.classList.contains("empty") && (e.target.closest(".focal-space") || e.target.closest(".radio-center"))) {
@@ -4886,11 +5088,12 @@ document.addEventListener("click", e => {
   }
 });
 
-// ================= DESKTOP MOUSE WHEEL & MOBILE SWIPE ERGONOMICS =================
+// ================= DESKTOP MOUSE WHEEL & TINDER-STYLE RIGHT-HAND SWIPE ERGONOMICS =================
 let lastWheelAdvanceAt = 0;
+let tutorSwipeAnimating = false;
 
 window.addEventListener("wheel", e => {
-  if (activeMode !== "tutor") return;
+  if (activeMode !== "tutor" || tutorSwipeAnimating) return;
   if (viewStage !== "result" && viewStage !== "teach") return;
   if (document.getElementById("app-modal").classList.contains("open")) return;
   if (e.deltaY < 24 || Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
@@ -4908,31 +5111,154 @@ window.addEventListener("wheel", e => {
   else advanceNext(false);
 }, { passive: true });
 
-let touchStartX = 0;
-let touchStartY = 0;
-let touchStartTime = 0;
+(function bindRightHandTouchErgonomics() {
+  const tutorEl = document.getElementById("tutor-view");
+  const dashEl = document.getElementById("dash-view");
+  let sx = 0, sy = 0, st = 0;
+  let axis = null; // null | "x" | "y"
+  let tracking = false;
 
-document.getElementById("tutor-view").addEventListener("touchstart", e => {
-  if (!e.touches || e.touches.length !== 1) return;
-  touchStartX = e.touches[0].clientX;
-  touchStartY = e.touches[0].clientY;
-  touchStartTime = performance.now();
-}, { passive: true });
-
-document.getElementById("tutor-view").addEventListener("touchend", e => {
-  if (activeMode !== "tutor") return;
-  if (viewStage !== "result" && viewStage !== "teach") return;
-  if (document.getElementById("app-modal").classList.contains("open")) return;
-  if (!e.changedTouches || e.changedTouches.length !== 1) return;
-
-  const dx = e.changedTouches[0].clientX - touchStartX;
-  const dy = e.changedTouches[0].clientY - touchStartY;
-  const dt = performance.now() - touchStartTime;
-  if (dx <= -56 && Math.abs(dx) > Math.abs(dy) * 1.7 && dt < 650) {
-    if (viewStage === "teach") completeTeachCard();
-    else advanceNext(false);
+  function resetTutorDrag() {
+    const card = document.getElementById("voice-card");
+    if (card) {
+      card.classList.remove("tutor-dragging");
+      card.classList.add("tutor-settling");
+      card.style.transform = "";
+    }
+    ["tutor-st-right", "tutor-st-left"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.opacity = "0";
+    });
   }
-}, { passive: true });
+
+  function flyTutorCard(dir, onDone) {
+    const card = document.getElementById("voice-card");
+    if (!card) { onDone(); return; }
+    tutorSwipeAnimating = true;
+    card.classList.remove("tutor-dragging", "tutor-settling");
+    card.classList.add(dir === "right" ? "tutor-fly-right" : "tutor-fly-left");
+    setTimeout(() => {
+      tutorSwipeAnimating = false;
+      onDone();
+    }, 180);
+  }
+
+  tutorEl.addEventListener("touchstart", e => {
+    if (tutorSwipeAnimating || activeMode !== "tutor") return;
+    if (viewStage !== "result" && viewStage !== "teach") return;
+    if (document.getElementById("app-modal").classList.contains("open")) return;
+    if (!e.touches || e.touches.length !== 1) return;
+    sx = e.touches[0].clientX;
+    sy = e.touches[0].clientY;
+    st = performance.now();
+    axis = null;
+    tracking = true;
+  }, { passive: true });
+
+  tutorEl.addEventListener("touchmove", e => {
+    if (!tracking || !e.touches || e.touches.length !== 1) return;
+    const dx = e.touches[0].clientX - sx;
+    const dy = e.touches[0].clientY - sy;
+
+    if (!axis) {
+      if (Math.abs(dy) > 10 && Math.abs(dy) >= Math.abs(dx)) {
+        axis = "y";
+        tracking = false;
+        return;
+      }
+      if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) * 1.18) {
+        axis = "x";
+        const card = document.getElementById("voice-card");
+        if (card) {
+          card.classList.remove("tutor-settling");
+          card.classList.add("tutor-dragging");
+        }
+      } else {
+        return;
+      }
+    }
+
+    if (axis === "x") {
+      if (e.cancelable) e.preventDefault();
+      const card = document.getElementById("voice-card");
+      if (card) {
+        card.style.transform = `translate3d(${dx.toFixed(1)}px, ${(dy * 0.14).toFixed(1)}px, 0) rotate(${(dx * 0.026).toFixed(2)}deg)`;
+      }
+      const stR = document.getElementById("tutor-st-right");
+      const stL = document.getElementById("tutor-st-left");
+      if (dx > 16) {
+        if (stR) stR.style.opacity = String(Math.min(1, (dx - 14) / 48));
+        if (stL) stL.style.opacity = "0";
+      } else if (dx < -16) {
+        if (stL) stL.style.opacity = String(Math.min(1, (-dx - 14) / 48));
+        if (stR) stR.style.opacity = "0";
+      } else {
+        if (stR) stR.style.opacity = "0";
+        if (stL) stL.style.opacity = "0";
+      }
+    }
+  }, { passive: false });
+
+  function endTutorTouch(e, cancelled) {
+    if (!tracking) return;
+    tracking = false;
+    if (cancelled || axis !== "x" || !e.changedTouches || !e.changedTouches.length) {
+      if (axis === "x") resetTutorDrag();
+      axis = null;
+      return;
+    }
+    const dx = e.changedTouches[0].clientX - sx;
+    const dt = Math.max(1, performance.now() - st);
+    const vx = dx / dt;
+    axis = null;
+
+    if (dx >= 56 || (dx >= 30 && vx > 0.42)) {
+      flyTutorCard("right", () => {
+        if (viewStage === "teach") completeTeachCard();
+        else advanceNext(false);
+      });
+      return;
+    }
+    if (dx <= -56 || (dx <= -30 && vx < -0.42)) {
+      flyTutorCard("left", () => {
+        if (viewStage === "teach") {
+          completeTeachCard();
+        } else {
+          const q = activeQuizObj || (curPointId && getPointById(curPointId) && getPointById(curPointId).primary);
+          const wasRight = !!(q && pickedVal !== "__UNSURE__" && pickedVal === q.answer);
+          advanceNext(wasRight);
+        }
+      });
+      return;
+    }
+    resetTutorDrag();
+  }
+
+  tutorEl.addEventListener("touchend", e => endTutorTouch(e, false), { passive: true });
+  tutorEl.addEventListener("touchcancel", e => endTutorTouch(e, true), { passive: true });
+
+  // Swipe right from left half on Ledger ("总表") to close back to previous mode one-handed
+  let dsx = 0, dsy = 0, dst = 0;
+  dashEl.addEventListener("touchstart", e => {
+    if (activeMode !== "dash" || !e.touches || e.touches.length !== 1) return;
+    const tag = (e.target && e.target.tagName || "").toLowerCase();
+    if (tag === "input") return;
+    dsx = e.touches[0].clientX;
+    dsy = e.touches[0].clientY;
+    dst = performance.now();
+  }, { passive: true });
+  dashEl.addEventListener("touchend", e => {
+    if (activeMode !== "dash" || !dsx || !e.changedTouches || !e.changedTouches.length) return;
+    const dx = e.changedTouches[0].clientX - dsx;
+    const dy = e.changedTouches[0].clientY - dsy;
+    const dt = performance.now() - dst;
+    const fromEdgeZone = dsx < 160;
+    dsx = 0;
+    if (fromEdgeZone && dx >= 68 && Math.abs(dx) > Math.abs(dy) * 1.6 && dt < 600) {
+      toggleDashLedger();
+    }
+  }, { passive: true });
+})();
 
 // ================= KEYBOARD =================
 document.addEventListener("keydown", e => {
@@ -6270,10 +6596,27 @@ const sb = {
 };
 sb.window = sb; sb.self = sb; sb.globalThis = sb;
 vm.runInNewContext(m[1], sb, { filename: 'index.html.js' });
+const pkt0 = sb.buildCompactPacket();
+if (!pkt0 || pkt0.a !== 'n3z') throw new Error('Smoke check failed: invalid compact packet');
 sb.switchMode('radio', false);
 sb.switchMode('vocab');
+sb.onVocabCardTapOrReplay();
+sb.triggerVocabAction('right');
 sb.switchMode('dash');
+sb.openSessionModal();
+sb.closeModal();
 sb.switchMode('tutor');
+if (typeof sb.completeTeachCard === 'function') {
+  try { sb.completeTeachCard(); } catch (e) { throw new Error('completeTeachCard failed: ' + e.message); }
+}
+const choices = vm.runInNewContext('currentChoices', sb);
+if (Array.isArray(choices) && choices.length > 0) {
+  sb.submitAnswer(choices[0]);
+  const pkt1 = sb.buildCompactPacket();
+  if (!pkt1 || typeof pkt1.z !== 'string') throw new Error('Packet after submitAnswer invalid');
+  sb.pushCloudSync(false);
+  sb.advanceNext(false);
+}
 const stageHtml = Object.values(els).map(e => e.innerHTML || '').join('');
 if (stageHtml.length < 200) {
   throw new Error('Smoke check failed: tutor stage did not render!');
