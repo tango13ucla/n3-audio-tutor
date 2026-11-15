@@ -1,6 +1,6 @@
 {
-  "schema": "n3-tutor-prefs/2",
-  "generated_at": "2026-11-15T11:48-0800",
+  "schema": "n3-tutor-prefs/3",
+  "generated_at": "2026-11-15T13:55-0800",
   "exam_date": "2026-12-06",
   "daily_load": {
     "2026-12-06": {
@@ -14,38 +14,54 @@
     "off": 10
   },
   "focus_points": [
-    "〜てたまらない",
-    "ついてない",
-    "うっとり",
     "そうだ（伝聞）",
-    "K-041",
     "組む",
-    "V-031",
     "加える",
-    "V-037",
     "疑問",
     "指示",
-    "V-045",
     "からから",
     "ぶらぶら",
-    "T-044",
-    "T-004",
     "N3L-048",
+    "〜てたまらない",
+    "〜わりに",
+    "V-031",
+    "T-004",
+    "K-041",
     "慰める",
     "がっかり",
-    "書類",
     "〜てくれる／もらう",
     "K-013",
     "N3L-017",
-    "N3L-085"
+    "N3L-085",
+    "T-001",
+    "N3L-025",
+    "〜っぱなし",
+    "ついてない"
   ],
   "radio": {
     "prefer_tags": [
-      "日本文化",
-      "市井八卦",
+      "ウチ内幕",
+      "日本时局新闻",
+      "思想史专题",
+      "文学巨匠",
+      "科学体制",
+      "前后照应",
       "日剧原剧细节"
     ],
-    "avoid_story_ids": []
+    "avoid_story_ids": [],
+    "episode_minutes": [
+      39,
+      43
+    ],
+    "perspective": "uchi_intellectual_and_news",
+    "immersion_365": {
+      "enabled": true,
+      "start_date": "2026-11-15",
+      "n3_gate_date": "2026-12-06",
+      "pre_n3_ja_ratio": 0.1,
+      "post_n3_start_ja_ratio": 0.12,
+      "day_365_target_ja_ratio": 0.92
+    }
   },
   "ui": {
     "orientation": "portrait"

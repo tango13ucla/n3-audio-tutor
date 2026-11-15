@@ -390,8 +390,12 @@ VOCAB_RECALL_ITEMS = []
 
 from radio_salon_expansion_a import NEW_MODALITY_A, SALON_STORIES_A
 from radio_salon_expansion_b import SALON_STORIES_B
+from radio_salon_uchi_intellectual import UCHI_MODALITY_MAP, SALON_STORIES_UCHI
 
 MODALITY_MAP.update(NEW_MODALITY_A)
+MODALITY_MAP.update(UCHI_MODALITY_MAP)
 SALON_STORIES.extend(SALON_STORIES_A)
 SALON_STORIES.extend(SALON_STORIES_B)
+SALON_STORIES = list(SALON_STORIES_UCHI) + SALON_STORIES
+
 

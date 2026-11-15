@@ -25,6 +25,7 @@ concurrency:
 
 permissions:
   contents: write
+  models: read
 
 jobs:
   refresh-brain:
@@ -41,6 +42,7 @@ jobs:
       - name: Run Cloud Sync or Full N3 Brain Audio Refresh
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GITHUB_MODELS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           EVENT_NAME: ${{ github.event_name }}
           CRON_SCHEDULE: ${{ github.event.schedule }}
           INPUT_MODE: ${{ inputs.mode }}

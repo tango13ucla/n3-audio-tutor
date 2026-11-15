@@ -1,22 +1,26 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Generates the Daily ~33 Minute "Qiang Qiang Three" Cultural Salon Podcast (audio/daily_radio.mp3)
-+ Exact Segment & Chapter Timestamp Map (audio/daily_radio_meta.json) — Zen v28 Broadcast Salon Edition.
+Generates the Daily ~40 Minute "Qiang Qiang Three" Intellectual & Uchi Salon Podcast (audio/daily_radio.mp3)
++ Exact Segment & Chapter Timestamp Map (audio/daily_radio_meta.json) — Zen v29 Uchi & 365-Day Edition.
 
 Hosts: 文涛 (W) · 文道 (D) · 子东 (X)
-Key Broadcast Architecture (v28):
+Key Broadcast Architecture (v29):
 1) Authentic 《锵锵三人行》 Show Structure & Music Suite (`compose_qq_music.py`):
    - Classic upbeat Jazz-Mambo + "锵！锵！" (`京小锣`) Opening Theme (`qq_intro.mp3`) with real TV ducked voice entry.
    - Authentic trio greeting (`文涛 · 文道 · 子东` greeting each other & listeners, zero date/exam countdown!).
-   - 3-Act Phoenix TV structure with 2 classic mid-episode ad breaks ("去一下广告，《锵锵三人行》，广告之后见！" + `qq_bumper.mp3`)
-     after Story 2 and Story 4, plus subtle salon page-turn stings (`qq_sting.mp3`) on non-ad transitions.
+   - 3-Act Phoenix TV structure with 2 classic mid-episode ad breaks ("去一下广告，《锵锵三人行》，广告之后见！" + `qq_bumper.mp3`),
+     plus subtle salon page-turn stings (`qq_sting.mp3`) on non-ad transitions.
    - Warm late-night Closing Theme (`qq_outro.mp3`) sneaking in underneath Wen Tao's final farewell and swelling out cleanly.
-2) Zero-Chop Natural Breath Prosody + Lossless 24kHz PCM Studio Mixing:
+2) Deep Intellectual & True Japanese "Uchi (内)" Content + 365-Day Progressive Immersion:
+   - Moves beyond tourist "Soto (外)" clichés into live Japanese/world current affairs, intellectual history (e.g. 1968 Todai Zenkyoto),
+     literary masters (Mishima, Tanizaki, Dazai, Soseki), science institutions (Kyodai Nobel vs Kozasei), and closed-door Japanese family/work life,
+     with cross-chapter callbacks ("前后照应") across a ~40-minute episode.
+   - Tracks `tutor_prefs.immersion_profile(day)`: ~10% Japanese up through 2026-12-06 N3 exam, then smoothly increases day by day
+     (12% -> 50% -> 92%) over 365 days with the exact same three hosts into a near-pure Japanese intellectual podcast.
+3) Zero-Chop Natural Breath Prosody + Lossless 24kHz PCM Studio Mixing:
    - Full Mandarin sentences stay 100% intact in one continuous neural breath (never chopped on commas `,`, never jumping pitch/rate mid-sentence).
-   - Inline Japanese words sit smoothly inside the host's conversational flow with zero forced periods (`。`) and sample-accurate 20ms PCM joins (zero MP3 frame-padding gaps).
-   - Standalone Japanese demonstration sentences are spoken clearly in each host's OWN vocal cords at natural unhurried `-12%` / `-13%`.
-   - Continuous `-58 dBFS` warm studio room tone eliminates harsh `-inf dB` digital mute-gate splices.
+   - Inline Japanese words sit smoothly inside the host's conversational flow with zero forced periods (`。`) and sample-accurate 20ms PCM joins.
 """
 from __future__ import annotations
 import asyncio
@@ -52,6 +56,7 @@ except Exception:
 
 from adaptive_bank import EXTRA_PRIMARY_CARDS, POINT_META
 from compose_qq_music import ensure_qq_music_assets
+from daily_news_salon_gen import maybe_generate_live_news_story
 from radio_dialogue_bank import MODALITY_MAP, SALON_STORIES
 import tutor_prefs
 from tutor_data import TUTOR_ITEMS
@@ -97,81 +102,106 @@ GENERIC_POINT_LABELS = {"口语听辨", "高频假名副词", "核心词汇", "�
 
 # ==============================================================================
 # Authentic 《锵锵三人行》 Rotating Opening Greetings, Ad Bumpers & Closings
-# (100% Zero Date / Zero Exam Countdown — Pure Phoenix TV Late-Night Salon Vibe)
+# (100% Zero Date / Zero Exam Countdown — True Intellectual Gentlemen Salon Vibe)
 # ==============================================================================
 OPENING_GREETINGS_POOL = [
     [
         ("W", "《锵锵三人行》！哎，文道好，子东好，各位好！"),
         ("D", "文涛好，大家好。"),
         ("X", "文涛好，各位好。"),
-        ("W", "今儿咱们老哥仨坐一块儿啊，热茶刚沏上，不端架子不掉书袋，专门聊几桩日本市井饮食男女里头最有嚼头的人情世故。来，咱们先从头一桩热闹事儿说起！"),
+        ("W", "今儿咱们老哥仨坐一块儿啊，热茶刚沏满。咱们不聊游客明信片上那套表皮风光，专门掀开帘子，往日本政坛时局、文坛旧案，还有普通日本人关起门来算计的真日子里头扎进去聊。来，先看今儿头一桩热闹事儿！"),
     ],
     [
         ("W", "《锵锵三人行》！欢迎文道，欢迎子东，二位好，各位好！"),
         ("D", "文涛好，各位听众朋友好。"),
-        ("X", "文涛好，大家好。哎我看你今儿一坐下就憋着坏笑，手里又攒了什么风月八卦准备兜售啊？"),
-        ("W", "知我者许老师也！今儿还真攒了几段日本街头巷尾的奇闻妙事，咱们就着这壶热茶一件一件剥开来聊啊。"),
+        ("X", "文涛好，大家好。看你今儿面前摊着一摞剪报，又是国会吵架又是老作家八卦，准备从哪头开刀啊？"),
+        ("W", "知我者许老师也！咱们表面上是插科打诨扯闲篇儿，底子里头聊的都是东亚社会骨头缝里的真问题，从眼下新闻一路串到历史、文学和科学体制，前后都能对上账！"),
     ],
     [
         ("W", "《锵锵三人行》！文道、子东，二位好，各位好！"),
         ("D", "文涛好，大家好。"),
         ("X", "文涛好，各位好。"),
-        ("W", "每次跟你们二位坐一桌我就来精神，一个满肚子历史掌故，一个专挑人性骨头缝里的刺儿。今儿咱们接着钻进日本车站、酒馆和老街巷子里头探探虚实，先看头一段！"),
+        ("W", "日本社会最妙的地方，就是它永远分两层：给外人看的那层叫外，念 そと；自家人关上玄关门算账叹气那层叫内，念 うち。今儿咱们就着这壶热茶，专门钻进日本人的 うち 里头探探虚实！"),
     ],
     [
-        ("W", "《锵锵三人行》！各位好，今天又是咱们仨坐镇啊，文道好，子东好！"),
+        ("W", "《锵锵三人行》！各位好，今天还是咱们仨坐镇啊，文道好，子东好！"),
         ("D", "文涛好，大家好。"),
         ("X", "文涛好，各位好。"),
-        ("W", "我老觉得看一个社会最真切的地方，不在新闻标题上，全在老百姓挤电车、下馆子、谈恋爱那半截话尾巴里头。来，趁着茶热，咱们开聊今儿头一桩！"),
+        ("W", "每次跟你们二位同桌我就来劲，一个满脑子政治思想史，一个专扒大文豪和现代家庭的底牌。今儿咱们前前后后串成一条大长线，先从眼皮底下热气腾腾的时局说起！"),
     ],
 ]
 
 AD_BREAK_1_POOL = [
     (
-        [("W", "哎，聊到这个节骨眼儿上咱们先打住一下，去一下广告，喝口热茶回头接着跟你们讲。《锵锵三人行》，广告之后见！")],
-        [("W", "欢迎继续回到《锵锵三人行》！刚才前头聊得正热乎，咱们茶也添满了，接着往下侃啊。")],
+        [("W", "哎，聊到这个节骨眼儿上咱们先打住一下，去一下广告，喝口热茶回头接着往深里头扒。《锵锵三人行》，广告之后见！")],
+        [("W", "欢迎继续回到《锵锵三人行》！刚才前头铺了政经和历史的底子，茶添满了，咱们顺着这条暗线接着往下聊啊。")],
     ),
     (
-        [("W", "得，这事儿越琢磨越有意思，咱们先去下广告，马上回来接着聊。《锵锵三人行》，广告之后见！")],
-        [("W", "《锵锵三人行》，欢迎回来！咱们话不停嘴，接着看下一桩日本世相啊。")],
+        [("W", "得，这事儿越往骨子里琢磨越有嚼头，咱们先去下广告，马上回来接着聊。《锵锵三人行》，广告之后见！")],
+        [("W", "《锵锵三人行》，欢迎回来！咱们话不停嘴，顺着刚才的话茬儿往文学和体制深水区里头走啊。")],
     ),
     (
-        [("W", "好，说到这儿咱们先喘口气，去一下广告，后头还有更绝的段子等着二位。《锵锵三人行》，广告之后见！")],
-        [("W", "好，欢迎继续收听《锵锵三人行》，咱们接着刚才的兴头往下聊！")],
+        [("W", "好，说到这儿咱们先喘口气，去一下广告，后头还有几位日本文坛与科学界的奇人等着二位开方子呢。《锵锵三人行》，广告之后见！")],
+        [("W", "好，欢迎继续收听《锵锵三人行》，咱们接着刚才的兴头往下侃！")],
     ),
 ]
 
 AD_BREAK_2_POOL = [
     (
-        [("W", "你看这人情世故真是处处留心皆学问，咱们再去一下广告，最后一段回来接着聊。《锵锵三人行》，广告之后见！")],
-        [("W", "欢迎回到《锵锵三人行》，咱们进入今儿最后一段闲篇儿啊！")],
+        [("W", "你看这历史文脉和制度骨架一摆出来，很多怪事儿就全通了。咱们再去一下广告，回来钻进今天东京人关起门来的家庭与职场。《锵锵三人行》，广告之后见！")],
+        [("W", "欢迎回到《锵锵三人行》！前头聊了庙堂和书斋，最后这一大段咱们直接推开日本中产家庭的客厅门瞧瞧！")],
     ),
     (
         [("W", "行，聊到这儿咱们再去下广告，稍事休息马上回来。《锵锵三人行》，广告之后见！")],
-        [("W", "《锵锵三人行》，咱们回来接着聊，把最后这两碟下酒菜端上来！")],
+        [("W", "《锵锵三人行》，咱们回来接着聊，把最后这几桩日本人关起门来最扎心的家务事端上桌！")],
     ),
     (
-        [("W", "哎，先别急，咱们去一下广告，广告之后还有两桩压箱底的妙事儿。《锵锵三人行》，广告之后见！")],
-        [("W", "继续回到《锵锵三人行》，咱们接着把最后这两段聊透！")],
+        [("W", "哎，先别急，咱们去一下广告，广告之后把前头埋的伏笔全拢到今天日本人的饭桌和房产证上。《锵锵三人行》，广告之后见！")],
+        [("W", "继续回到《锵锵三人行》，咱们接着把最后这几段聊透！")],
     ),
 ]
 
 CLOSING_POOL = [
     [
-        ("D", "其实啊，不知不觉咱们这壶热茶又喝见底了。你想想看，不管是在涩谷赶末班电车，还是在老街酒馆里头推杯换盏，日本人的脾气秉性，全藏在他们说话留的那半截尾巴里。"),
-        ("X", "对，平时当闲篇儿听个乐呵，把这些风月掌故和男女心眼儿听熟了，下回再听见那些说法，根本不用过脑子，画面自个儿就蹦出来了。"),
-        ("W", "得嘞，今儿咱们仨就先白活到这儿，感谢文道，感谢子东，也谢谢各位收听！《锵锵三人行》，咱们明天见！"),
+        ("D", "其实啊，不知不觉咱们这壶热茶又喝见底了。你回头串起来看，不管是永田町的密室政治、东大与京大的学风分野，还是中年人面对塔楼和老家清退的叹息，背后全是同一套日本社会的内外法则在咬合运转。"),
+        ("X", "对，而且只有从游客看热闹的外面 そと，真正走进日本人关起门来焦灼算计的里面 うち，那些话尾巴上的分寸和潜台词才真正在耳朵里活过来了。"),
+        ("W", "得嘞，今儿咱们老哥仨就先白活到这儿，感谢文道，感谢子东，也谢谢各位收听！《锵锵三人行》，咱们明天接着聊，明天见！"),
     ],
     [
-        ("D", "你看咱们今儿从街头巷尾一路聊到深夜酒馆，日本人表面上规矩捆得紧，可一旦钻进巷子端起酒杯，酸甜苦辣和人情冷暖全在几句短话里头露了底。"),
-        ("X", "没错，语言本来就不是印在纸上的死条文，把里头这些酒桌潜规则和男女小心思听出味儿来，那些地道说法自然就长在耳朵里了。"),
-        ("W", "行嘞，茶也喝透了，感谢文道、感谢子东，也谢谢各位一路听过来！《锵锵三人行》，咱们下回接着聊！"),
+        ("D", "你看咱们今儿从时局账本一路聊到文学巨匠和职场冷暖，前前后后一照应就会发现，日本知识分子百年前犯的焦虑，跟今天东京上班族挤电车叹的气，其实是同一条根上长出来的。"),
+        ("X", "没错，每天就当听老朋友喝茶扯闲篇儿，把这些政经掌故、文坛八卦和家常暗语一点点浸在耳朵里，日久天长自个儿就长进骨肉里了。"),
+        ("W", "行嘞，茶也喝透了，感谢文道、感谢子东，也谢谢各位一路听过来！《锵锵三人行》，咱们明天见！"),
     ],
-    [
-        ("D", "话说回来，每次咱们仨坐一块儿扯这些日本街头的烟火气，越聊越觉得，所谓地道的表达，其实就是替对方多留半寸台阶，或者替自己多藏半句真心。"),
-        ("X", "对，不管是职场上打太极还是酒桌上掏心窝子，听懂了那层窗户纸，日语最难缠的弯弯绕也就顺过来了。"),
-        ("W", "好家伙，一眨眼又聊到这会儿了！感谢二位，也谢谢各位收听，《锵锵三人行》，咱们明天见！"),
-    ],
+]
+
+# Post-N3 (2026-12-07 -> Day 365) Progressive Japanese Salon Framing Pools
+POST_N3_BILINGUAL_OPENING = [
+    ("W", "《锵锵三人行》！みなさん、こんばんは！文道好，子东好，各位好！"),
+    ("D", "こんばんは。文涛好，大家好。"),
+    ("X", "こんばんは。きょうもよろしくおねがいします。"),
+    ("W", "咱们老哥仨每天一壶热茶接着聊啊，日文每天多说一点点，今天接着往日本社会真正的 うち 深水区里头走：さっそく、きょうのさいしょのわだいからいきましょう！"),
+]
+
+POST_N3_NATIVE_OPENING = [
+    ("W", "みなさん、こんばんは。きょうもさんにんで、おちゃをのみながら、にほんのせいじやぶんがく、そしてほんねのしゃかいをじっくりかたっていきましょう。おふたりとも、よろしくおねがいします！"),
+    ("D", "こんばんは。きょうもたいへんおもしろいテーマがそろっていますね。よろしくおねがいします。"),
+    ("X", "こんばんは。おもてむきのきれいごとではなく、にほんのほんとうのすがたをさぐっていきましょう。"),
+]
+
+POST_N3_NATIVE_AD1 = (
+    [("W", "はなしがもりあがってきたところですが、ここでいったんコマーシャルです。コマーシャルのあとで、またすぐにおあいしましょう！")],
+    [("W", "さあ、ばんぐみにまいりましょう。さきほどのつづきから、さらにふかくほりさげていきますよ！")],
+)
+
+POST_N3_NATIVE_AD2 = (
+    [("W", "なるほど、すべてがつながってきましたね。ここでふたたびコマーシャルです。さいごのパートもどうぞおたのしみに！")],
+    [("W", "おまちどおさまでした。それではきょうのさいごのパートにはいっていきましょう！")],
+)
+
+POST_N3_NATIVE_CLOSING = [
+    ("D", "きょうもあっというまにおちゃがなくなってしまいましたね。れきしやぶんがくから、げんだいのかぞくのもんだいまで、すべてがひとつにつながっていることがよくわかります。"),
+    ("X", "そうですね。まいにちすこしずつ、こうしてにほんのほんねにふれていくことが、いちばんのちかみちだとおもいます。"),
+    ("W", "おふたりとも、きょうもありがとうございました。きいてくださったみなさんも、ありがとうございます。それでは、またあしたおあいしましょう！"),
 ]
 
 
@@ -278,7 +308,13 @@ def save_today_stories(today_str: str, story_ids: list) -> None:
         json.dump(hist, f, ensure_ascii=False, indent=2)
 
 
-async def detect_voice_map() -> dict:
+def estimate_story_seconds(st: dict) -> float:
+    """Empirical v28/v29 studio timing: ~0.206s per spoken char + 2.5s transition sting."""
+    chars = sum(len(str(t)) for _, t in (st.get("turns") or []))
+    return chars * 0.206 + 2.5
+
+
+async def detect_voice_map(ja_sentence_rate: str = "-12%") -> dict:
     """
     Coherent, natural host voices (ZERO mid-sentence pitch/rate jumping):
     - W (文涛): en-US-BrianMultilingualNeural (bright, nimble northern host cadence)
@@ -288,6 +324,14 @@ async def detect_voice_map() -> dict:
     w_voice = "en-US-BrianMultilingualNeural"
     d_voice = "ko-KR-HyunsuMultilingualNeural"
     x_voice = "fr-FR-RemyMultilingualNeural"
+
+    try:
+        base_ja_pct = int(ja_sentence_rate.replace("%", "").strip())
+    except Exception:
+        base_ja_pct = -12
+    w_ja_rate = f"{base_ja_pct:+d}%"
+    d_ja_rate = f"{max(-15, base_ja_pct - 1):+d}%"
+    x_ja_rate = f"{base_ja_pct:+d}%"
 
     if edge_tts is not None:
         try:
@@ -305,32 +349,32 @@ async def detect_voice_map() -> dict:
                 if cand_x in short_names and cand_x not in (w_voice, d_voice):
                     x_voice = cand_x
                     break
-            print(f"Qiang-Qiang trio voices: W(文涛)={w_voice}, D(文道)={d_voice}, X(子东)={x_voice}")
+            print(f"Qiang-Qiang trio voices: W(文涛)={w_voice}, D(文道)={d_voice}, X(子东)={x_voice}, ja_rate={w_ja_rate}")
         except Exception as e:
             print(f"[info] list_voices fallback to default trio voices: {e}")
 
     vmap = {
-        # W (文涛): 자연灵动，绝不忽高忽低跳调
+        # W (文涛): 自然灵动，绝不忽高忽低跳调
         "W":             (w_voice, "+7%", "+2Hz"),
         "W_MID":         (w_voice, "+7%", "+2Hz"),
         "W_FAST":        (w_voice, "+10%", "+2Hz"),
         "W_LOW":         (w_voice, "+4%", "+1Hz"),
         "W_JA_INLINE":   (w_voice, "+6%", "+2Hz"),
-        "W_JA":          (w_voice, "-12%", "+2Hz"),
+        "W_JA":          (w_voice, w_ja_rate, "+2Hz"),
         # D (文道): 温厚沉稳书卷气
         "D":             (d_voice, "+2%", "-4Hz"),
         "D_MID":         (d_voice, "+2%", "-4Hz"),
         "D_FAST":        (d_voice, "+5%", "-3Hz"),
         "D_LOW":         (d_voice, "+0%", "-4Hz"),
         "D_JA_INLINE":   (d_voice, "+2%", "-4Hz"),
-        "D_JA":          (d_voice, "-13%", "-4Hz"),
+        "D_JA":          (d_voice, d_ja_rate, "-4Hz"),
         # X (子东): 清脆干练冷幽默
         "X":             (x_voice, "+5%", "-1Hz"),
         "X_MID":         (x_voice, "+5%", "-1Hz"),
         "X_FAST":        (x_voice, "+8%", "+0Hz"),
         "X_LOW":         (x_voice, "+3%", "-1Hz"),
         "X_JA_INLINE":   (x_voice, "+5%", "-1Hz"),
-        "X_JA":          (x_voice, "-12%", "-1Hz"),
+        "X_JA":          (x_voice, x_ja_rate, "-1Hz"),
     }
     for g in ("", "_MID", "_FAST", "_LOW", "_JA_INLINE", "_JA"):
         vmap[f"M{g}"] = vmap[f"W{g}"]
@@ -803,7 +847,20 @@ async def main():
         print("Skipping live radio MP3 synthesis (edge_tts or ffmpeg unavailable in local sandbox).")
         return
 
-    voice_map = await detect_voice_map() if not dry_test else {
+    with open(STATE_PATH, encoding="utf-8") as f:
+        state = json.load(f)
+
+    now_pt = datetime.datetime.now(PT_TZ)
+    study_dt = (now_pt - datetime.timedelta(hours=5)).date()
+    today_str = study_dt.strftime("%Y-%m-%d")
+    days_left = max(0, (EXAM_DATE - study_dt).days)
+    day_ord = study_dt.toordinal()
+
+    _rp = tutor_prefs.radio_prefs()
+    _focus = tutor_prefs.focus_set()
+    imm_profile = tutor_prefs.immersion_profile(day=today_str)
+
+    voice_map = await detect_voice_map(ja_sentence_rate=imm_profile["ja_sentence_rate"]) if not dry_test else {
         f"{s}{g}": (s, "+5%", "+0Hz")
         for s in ("W", "D", "X", "M", "F")
         for g in ("", "_MID", "_FAST", "_LOW", "_JA_INLINE", "_JA")
@@ -818,22 +875,10 @@ async def main():
         )
     )
 
-    with open(STATE_PATH, encoding="utf-8") as f:
-        state = json.load(f)
-
-    now_pt = datetime.datetime.now(PT_TZ)
-    study_dt = (now_pt - datetime.timedelta(hours=5)).date()
-    today_str = study_dt.strftime("%Y-%m-%d")
-    days_left = max(0, (EXAM_DATE - study_dt).days)
-    day_ord = study_dt.toordinal()
-
     recent_wrong, hot_wrong = load_recent_mistakes()
     scores = load_mastery_priority(state, recent_wrong, hot_wrong)
     prev_1, prev_2, prev_3 = load_previous_day_stories(today_str)
     rng = random.Random(today_str)
-
-    _rp = tutor_prefs.radio_prefs()
-    _focus = tutor_prefs.focus_set()
 
     def story_rank(st: dict) -> float:
         pids = st.get("point_ids") or []
@@ -847,6 +892,11 @@ async def main():
         memory_bonus = 0.0
         if st["id"] in _rp["avoid_story_ids"]:
             memory_bonus -= 9.0
+        tier = st.get("tier", "")
+        if tier == "live_news":
+            memory_bonus += 5.2
+        elif tier == "uchi_intellectual":
+            memory_bonus += 3.2
         if _focus and any((pid in _focus or pk in _focus) for pid, pk in zip(pids, pkeys)):
             memory_bonus += 0.8
         blob = f'{st.get("title", "")} {" ".join(st.get("tags", []) or [])}'
@@ -855,13 +905,49 @@ async def main():
         jitter = rng.uniform(-0.12, 0.12)
         return -(top_avg - repeat_penalty + memory_bonus + jitter)
 
-    ranked_ids = {st["id"] for st in sorted(SALON_STORIES, key=story_rank)[:8]}
-    selected_stories = [st for st in SALON_STORIES if st["id"] in ranked_ids]
+    # Optionally script a fresh daily NHK news Act-1 roundtable calibrated to today's 365-day ja_ratio
+    top_focus_labels = [resolve_point_key(pid) for pid, _ in sorted(scores.items(), key=lambda kv: kv[1], reverse=True)[:6]]
+    uchi_companion_titles = [st["title"] for st in SALON_STORIES[:5]]
+    live_news_story = maybe_generate_live_news_story(
+        today_str=today_str,
+        imm_profile=imm_profile,
+        focus_points=top_focus_labels,
+        companion_titles=uchi_companion_titles,
+        dry_test=dry_test,
+    )
+    candidate_pool = ([live_news_story] if live_news_story else []) + list(SALON_STORIES)
 
-    opening_turns = OPENING_GREETINGS_POOL[day_ord % len(OPENING_GREETINGS_POOL)]
-    ad1_out_turns, ad1_in_turns = AD_BREAK_1_POOL[day_ord % len(AD_BREAK_1_POOL)]
-    ad2_out_turns, ad2_in_turns = AD_BREAK_2_POOL[(day_ord + 1) % len(AD_BREAK_2_POOL)]
-    closing_turns = CLOSING_POOL[day_ord % len(CLOSING_POOL)]
+    min_ep_min, max_ep_min = _rp["episode_minutes"]
+    target_sec = ((min_ep_min + max_ep_min) / 2.0) * 60.0
+    max_sec = (max_ep_min + 1.0) * 60.0
+    est_sec = 72.0  # Opening theme + greeting + 2 ad bumpers + closing & outro
+    picked_ids: set[str] = set()
+    for st in sorted(candidate_pool, key=story_rank):
+        s_dur = estimate_story_seconds(st)
+        if len(picked_ids) >= 8 and (est_sec + s_dur > max_sec or est_sec >= target_sec):
+            break
+        picked_ids.add(st["id"])
+        est_sec += s_dur
+        if len(picked_ids) >= 12:
+            break
+    # Preserve candidate_pool narrative order so cross-chapter callbacks ("前后照应") stay sequential!
+    selected_stories = [st for st in candidate_pool if st["id"] in picked_ids]
+
+    if imm_profile["ja_ratio"] >= 0.65:
+        opening_turns = POST_N3_NATIVE_OPENING
+        ad1_out_turns, ad1_in_turns = POST_N3_NATIVE_AD1
+        ad2_out_turns, ad2_in_turns = POST_N3_NATIVE_AD2
+        closing_turns = POST_N3_NATIVE_CLOSING
+    elif imm_profile["bilingual_framing"]:
+        opening_turns = POST_N3_BILINGUAL_OPENING
+        ad1_out_turns, ad1_in_turns = AD_BREAK_1_POOL[day_ord % len(AD_BREAK_1_POOL)]
+        ad2_out_turns, ad2_in_turns = AD_BREAK_2_POOL[(day_ord + 1) % len(AD_BREAK_2_POOL)]
+        closing_turns = CLOSING_POOL[day_ord % len(CLOSING_POOL)]
+    else:
+        opening_turns = OPENING_GREETINGS_POOL[day_ord % len(OPENING_GREETINGS_POOL)]
+        ad1_out_turns, ad1_in_turns = AD_BREAK_1_POOL[day_ord % len(AD_BREAK_1_POOL)]
+        ad2_out_turns, ad2_in_turns = AD_BREAK_2_POOL[(day_ord + 1) % len(AD_BREAK_2_POOL)]
+        closing_turns = CLOSING_POOL[day_ord % len(CLOSING_POOL)]
 
     opening_evs = turns_to_expanded_events(opening_turns)
     ad1_out_evs = turns_to_expanded_events(ad1_out_turns)
@@ -884,8 +970,9 @@ async def main():
         })
 
     sig_obj = {
-        "ver": "v28_1_qq3_zero_drop_8ch",
+        "ver": "v29_qq3_uchi_40m_365",
         "engine": engine_tag,
+        "imm_day": imm_profile["day_of_365"],
         "opening": opening_evs,
         "ad1": [ad1_out_evs, ad1_in_evs],
         "ad2": [ad2_out_evs, ad2_in_evs],
@@ -937,7 +1024,7 @@ async def main():
                 *(synth_turn(k, voice_map[k], txt, raw_p, sem) for (k, txt), raw_p in unique_turns.items())
             )
             ok_count = sum(1 for x in ok_results if x)
-            print(f"Synthesized {ok_count} / {len(unique_turns)} unique Qiang-Qiang v28 full-breath clips.")
+            print(f"Synthesized {ok_count} / {len(unique_turns)} unique Qiang-Qiang v29 full-breath clips.")
             min_required = max(1, int(len(unique_turns) * 0.98))
             if ok_count < min_required:
                 raise RuntimeError(
@@ -963,7 +1050,7 @@ async def main():
         pcm_sting = decode_to_pcm_f32(music_paths["sting"], trim_speech=False)
         pcm_outro = decode_to_pcm_f32(music_paths["outro"], trim_speech=False)
 
-        mixer = StudioTimelineMixer(est_minutes=45.0)
+        mixer = StudioTimelineMixer(est_minutes=52.0)
 
         def _append_events(ev_list: list[tuple[str, object]]) -> None:
             for idx, (k, val) in enumerate(ev_list):
@@ -990,8 +1077,10 @@ async def main():
         mixer.advance(0.45)
 
         total_stories = len(story_blocks)
-        ad1_after = 2 if total_stories >= 7 else 1
-        ad2_after = 5 if total_stories >= 7 else 3
+        act1_cnt = max(2, (total_stories + 2) // 3)
+        act2_cnt = max(2, (total_stories - act1_cnt + 1) // 2)
+        ad1_after = act1_cnt - 1
+        ad2_after = min(total_stories - 2, act1_cnt + act2_cnt - 1)
         for ch_idx, b in enumerate(story_blocks):
             seg_start = 0.0 if ch_idx == 0 else round(mixer.sec, 1)
             if ch_idx not in chapter_starts:
@@ -1059,7 +1148,7 @@ async def main():
             test_mp3 = os.path.join(tmpdir, "dry_test_radio.mp3")
             dur = mixer.render_mp3(test_mp3)
             print(f"[dry-test] Rendered full broadcast timeline MP3: {dur:.1f}s ({os.path.getsize(test_mp3)} bytes)")
-            print(f"[dry-test] Chapters: {chapter_starts}")
+            print(f"[dry-test] Act breaks after ch {ad1_after} & {ad2_after}; Chapters: {chapter_starts}")
             return
 
         final_dur = mixer.render_mp3(RADIO_MP3_PATH)
@@ -1093,13 +1182,14 @@ async def main():
             "duration_sec": final_dur,
             "duration_label": f"{mins} 分钟",
             "hosts": "文涛 · 文道 · 子东",
+            "immersion_365": imm_profile,
             "chapters": chapters_meta,
             "segments": segments_meta,
         }
         with open(RADIO_META_PATH, "w", encoding="utf-8") as f:
             json.dump(meta_obj, f, ensure_ascii=False, indent=2)
         save_today_stories(today_str, [st["id"] for st in selected_stories])
-        print(f"Built Qiang-Qiang v28 Broadcast Episode: {final_dur:.1f}s ({mins} mins), stories={[s['short_tab'] for s in selected_stories]}")
+        print(f"Built Qiang-Qiang v29 Uchi Episode: {final_dur:.1f}s ({mins} mins), stories={[s['short_tab'] for s in selected_stories]}")
     finally:
         shutil.rmtree(tmpdir, ignore_errors=True)
 
