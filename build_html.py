@@ -2400,6 +2400,7 @@ const ADAPTIVE_KEY = "n3_adaptive_v13_" + DATA.plan_date;
 const RADIO_POS_KEY = "n3_radio_pos_" + (DATA.radio.date || DATA.plan_date);
 const TODAY_TAG = String(DATA.plan_date || "").replace(/-/g, "");
 const TRUE_GREEN_EPOCH = Number(DATA.true_green_epoch || 1794761500);
+const MIN_REAL_TS = 1700000000;
 const VOCAB_BATCH_SIZE = 18;
 
 function tryLockPortrait() {
@@ -2433,7 +2434,8 @@ if ("serviceWorker" in navigator) {
   navigator.serviceWorker.addEventListener("controllerchange", () => {
     if (swRefreshing) return;
     swRefreshing = true;
-    if (!activeKind && radioPlayer.paused) location.reload();
+    const radioIdle = (typeof radioPlayer === "undefined") || radioPlayer.paused;
+    if (!activeKind && radioIdle) location.reload();
   });
 }
 
@@ -6190,7 +6192,7 @@ function initApp() {
       st.session.doneIds.forEach(rawId => {
         const pid = CARD_TO_POINT_ID[rawId] || rawId;
         if (A.pts[pid] && A.pts[pid].status !== "green") {
-          A.pts[pid].greenAt = Math.max(A.pts[pid].greenAt || 0, 2);
+          A.pts[pid].greenAt = Math.max(A.pts[pid].greenAt || 0, nowUnixSec());
           changed = true;
         }
       });
@@ -6230,6 +6232,55 @@ final_html = html.replace("__PAYLOAD__", payload)
 with open(HTML_PATH, "w", encoding="utf-8") as f:
     f.write(final_html)
 
+# Built-in JS runtime boot & mode-switch smoke gate (prevents shipping any ReferenceError/TypeError)
+import shutil
+import subprocess
+
+if shutil.which("node"):
+    smoke_js = r"""
+const fs = require('fs');
+const vm = require('vm');
+const html = fs.readFileSync(process.argv[1], 'utf8');
+const m = html.match(/<script[^>]*>([\s\S]*?)<\/script>/);
+if (!m) throw new Error('No <script> found in index.html');
+function makeEl(id) {
+  return {
+    id: id || '', style: {}, dataset: {}, innerHTML: '', textContent: '', value: '', children: [],
+    classList: { _s: new Set(), add(...x){x.forEach(k=>this._s.add(k));}, remove(...x){x.forEach(k=>this._s.delete(k));}, toggle(k,f){if(f===undefined){if(this._s.has(k)){this._s.delete(k);return false;}this._s.add(k);return true;}if(f)this._s.add(k);else this._s.delete(k);return f;}, contains(k){return this._s.has(k);} },
+    appendChild(c){this.children.push(c);return c;}, removeChild(){}, setAttribute(k,v){this[k]=v;}, getAttribute(k){return this[k]||null;},
+    addEventListener(){}, removeEventListener(){}, querySelector(){return makeEl();}, querySelectorAll(){return [];},
+    getBoundingClientRect(){return {left:0,top:0,width:390,height:844};}, scrollTo(){}, focus(){}, blur(){},
+    play(){return Promise.resolve();}, pause(){}, load(){}
+  };
+}
+const els = {}, store = {};
+const sb = {
+  console, Math, Date, JSON, Object, Array, String, Number, Boolean, Set, Map, RegExp, Error, Promise, URL, URLSearchParams,
+  performance:{now:()=>Date.now()}, innerWidth:390, innerHeight:844, scrollTo:()=>{}, addEventListener:()=>{}, removeEventListener:()=>{},
+  parseInt, parseFloat, isNaN, isFinite, encodeURIComponent, decodeURIComponent,
+  setTimeout:()=>1, clearTimeout:()=>{}, setInterval:()=>1, clearInterval:()=>{}, requestAnimationFrame:()=>1, cancelAnimationFrame:()=>{},
+  localStorage:{getItem:k=>(k in store?store[k]:null), setItem:(k,v)=>{store[k]=String(v);}, removeItem:k=>{delete store[k];}},
+  sessionStorage:{getItem:()=>null, setItem:()=>{}, removeItem:()=>{}},
+  navigator:{userAgent:'Mozilla/5.0 Mobile', serviceWorker:{register:()=>Promise.resolve({update:()=>Promise.resolve()}), getRegistration:()=>Promise.resolve(null), addEventListener:()=>{}}, mediaSession:{metadata:null, setActionHandler:()=>{}}, onLine:true, sendBeacon:()=>true},
+  MediaMetadata:function(x){Object.assign(this,x);}, Audio:function(){return makeEl('audio');}, EventSource:function(){return {addEventListener(){},close(){}};},
+  fetch:()=>Promise.resolve({ok:true, text:()=>Promise.resolve(''), json:()=>Promise.resolve({})}),
+  location:{href:'https://tango13ucla.github.io/n3-audio-tutor/', hostname:'tango13ucla.github.io', search:'', hash:'', reload:()=>{}},
+  history:{replaceState:()=>{}, pushState:()=>{}}, screen:{orientation:{lock:()=>Promise.resolve()}}, matchMedia:()=>({matches:false, addEventListener:()=>{}}),
+  document:{body:makeEl('body'), documentElement:makeEl('html'), visibilityState:'visible', getElementById:id=>(els[id]||(els[id]=makeEl(id))), querySelector:s=>makeEl(s), querySelectorAll:()=>[], createElement:t=>makeEl(t), addEventListener:()=>{}}
+};
+sb.window = sb; sb.self = sb; sb.globalThis = sb;
+vm.runInNewContext(m[1], sb, { filename: 'index.html.js' });
+sb.switchMode('radio', false);
+sb.switchMode('vocab');
+sb.switchMode('dash');
+sb.switchMode('tutor');
+const stageHtml = Object.values(els).map(e => e.innerHTML || '').join('');
+if (stageHtml.length < 200) {
+  throw new Error('Smoke check failed: tutor stage did not render!');
+}
+"""
+    subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
+
 sw_path = os.path.join(BASE_DIR, "sw.js")
 if os.path.exists(sw_path):
     with open(sw_path, encoding="utf-8") as sf:
@@ -6240,7 +6291,8 @@ if os.path.exists(sw_path):
     prefs_sig = hashlib.sha256(
         json.dumps({k: v for k, v in MEMORY_PREFS.items() if k != "generated_at"}, sort_keys=True, ensure_ascii=False).encode("utf-8")
     ).hexdigest()[:6]
-    new_stamp = f'{plan_date_str}_{radio_meta.get("script_sig", "")}_{manifest_sig}_{prefs_sig}'
+    html_sig = hashlib.sha256(final_html.encode("utf-8")).hexdigest()[:8]
+    new_stamp = f'{plan_date_str}_{radio_meta.get("script_sig", "")}_{manifest_sig}_{prefs_sig}_{html_sig}'
     sw_next = re.sub(
         r'const BUILD_STAMP = "[^"]*";',
         f'const BUILD_STAMP = "{new_stamp}";',
