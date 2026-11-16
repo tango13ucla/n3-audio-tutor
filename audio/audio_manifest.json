@@ -627,7 +627,23 @@
     "従う": "./audio/words/w_9818e9b0fc.mp3",
     "聞き入った": "./audio/words/w_a29256abc8.mp3",
     "調えた": "./audio/words/w_276320ba8c.mp3",
-    "ぼんやり": "./audio/words/w_55bd630b22.mp3"
+    "ぼんやり": "./audio/words/w_55bd630b22.mp3",
+    "展覧会": "./audio/words/w_90105a89d8.mp3",
+    "猛暑": "./audio/words/w_5e6b8b9c03.mp3",
+    "時給": "./audio/words/w_a502857b25.mp3",
+    "寝不足": "./audio/words/w_09257b8295.mp3",
+    "歩き回って": "./audio/words/w_5909aa64dd.mp3",
+    "賞味期限": "./audio/words/w_df11dd94b7.mp3",
+    "飲みかけ": "./audio/words/w_96ff710b1b.mp3",
+    "塩分": "./audio/words/w_c6a2bdb3a1.mp3",
+    "控える": "./audio/words/w_b5686ba0a8.mp3",
+    "一人暮らし": "./audio/words/w_b27b459fa3.mp3",
+    "パンフレット": "./audio/words/w_2894b79a37.mp3",
+    "名簿": "./audio/words/w_c387784e90.mp3",
+    "新入社員": "./audio/words/w_564e27b722.mp3",
+    "本社": "./audio/words/w_6f13ebd1bb.mp3",
+    "応募": "./audio/words/w_dab2fb440d.mp3",
+    "乗り越えた": "./audio/words/w_c7bd13e59b.mp3"
   },
   "vocab_cards": {
     "書類": {
@@ -997,8 +1013,8 @@
     },
     "無断": {
       "front": "",
-      "rev": "./audio/words/vc_9777a97fe6_rev.mp3?v=4dbda89e",
-      "full": "./audio/words/vc_9777a97fe6_rev.mp3?v=4dbda89e"
+      "rev": "./audio/words/vc_9777a97fe6_rev.mp3?v=e40debe9",
+      "full": "./audio/words/vc_9777a97fe6_rev.mp3?v=e40debe9"
     },
     "ゆっくり": {
       "front": "./audio/words/vc_da12b4a6e0_front.mp3?v=ca2ea361",
@@ -1036,9 +1052,9 @@
       "full": "./audio/words/vc_599114ccbe_full.mp3?v=b9617007"
     },
     "ぼんやり": {
-      "front": "./audio/words/vc_55bd630b22_front.mp3?v=73ff520c",
-      "rev": "./audio/words/vc_55bd630b22_rev.mp3?v=93c7ba3f",
-      "full": "./audio/words/vc_55bd630b22_full.mp3?v=9561547c"
+      "front": "./audio/words/vc_55bd630b22_front.mp3?v=3f985e6e",
+      "rev": "./audio/words/vc_55bd630b22_rev.mp3?v=60d6f1d7",
+      "full": "./audio/words/vc_55bd630b22_full.mp3?v=da5c1112"
     }
   },
   "vocab_card_hashes": {
@@ -1185,7 +1201,7 @@
     "vc_25161e4413_front.mp3": "1c85576562",
     "vc_25161e4413_rev.mp3": "e647eec51c",
     "vc_25161e4413_full.mp3": "d3fb580a3e",
-    "vc_9777a97fe6_rev.mp3": "4dbda89e28",
+    "vc_9777a97fe6_rev.mp3": "e40debe918",
     "vc_da12b4a6e0_front.mp3": "ca2ea36160",
     "vc_da12b4a6e0_rev.mp3": "7374f1d393",
     "vc_da12b4a6e0_full.mp3": "ffa9130bb3",
@@ -1203,9 +1219,9 @@
     "vc_599114ccbe_front.mp3": "4b09793e2d",
     "vc_599114ccbe_rev.mp3": "4a74fc68b8",
     "vc_599114ccbe_full.mp3": "b9617007aa",
-    "vc_55bd630b22_front.mp3": "73ff520ccb",
-    "vc_55bd630b22_rev.mp3": "93c7ba3f89",
-    "vc_55bd630b22_full.mp3": "9561547c16"
+    "vc_55bd630b22_front.mp3": "3f985e6e7c",
+    "vc_55bd630b22_rev.mp3": "60d6f1d7c1",
+    "vc_55bd630b22_full.mp3": "da5c111247"
   },
   "G-20261114-01_q.mp3": "aec3cb11fd34",
   "G-20261114-01_exp.mp3": "45fc72ef02a3",
@@ -1983,6 +1999,244 @@
     "q_audio": "./audio/VAR-V16_q.mp3?v=5136e7e2",
     "exp_audio": "./audio/VAR-V16_exp.mp3?v=e7655c5c",
     "spoken_text": "冲了个热水澡，头脑和身体都神清气爽。 洗掉一身疲惫汗水之后，整个人清爽舒畅。 神清气爽用「すっきり」；失望泄气才是「がっかり」。"
+  },
+  "N3-G30_q.mp3": "a8ac9c77d29a",
+  "N3-G30_exp.mp3": "4631b0184792",
+  "meta:N3-G30": {
+    "q_audio": "./audio/N3-G30_q.mp3?v=a8ac9c77",
+    "exp_audio": "./audio/N3-G30_exp.mp3?v=4631b018",
+    "spoken_text": "桌子上还放着一杯喝了一半没喝完的咖啡。 修饰名词「コーヒー」，表示喝了几口还没喝完的半截状态。 动作做到一半用「ます形词干＋かけの＋名词」（飲みかけのコーヒー）；「っぱなし」强调敞着不管。"
+  },
+  "N3-H17_q.mp3": "ed3b273f6f1b",
+  "N3-H17_exp.mp3": "bc0ba6e69a4e",
+  "meta:N3-H17": {
+    "q_audio": "./audio/N3-H17_q.mp3?v=ed3b273f",
+    "exp_audio": "./audio/N3-H17_exp.mp3?v=bc0ba6e6",
+    "spoken_text": "部长，刚才发邮件呈送的新策划书，请问您已经过目了吗？ 这句话是在问「部长您看过了吗」，看策划书的人是部长。 上司或客户「看」必用尊敬语「ご覧になる」；「拝見する」是谦让语，只能说「我拜读了」。"
+  },
+  "N3-H18_q.mp3": "83d22ec0ef38",
+  "N3-H18_exp.mp3": "4bbcd7fd24c9",
+  "meta:N3-H18": {
+    "q_audio": "./audio/N3-H18_q.mp3?v=83d22ec0",
+    "exp_audio": "./audio/N3-H18_exp.mp3?v=4bbcd7fd",
+    "spoken_text": "山田老师在昨天的会议上也说了完全一样的话哦。 主语是「山田先生も」，转述老师说过的话。 老师或客户「说」必用特殊尊敬语「おっしゃる」；「申す」是谦让语，只能用于自己。"
+  },
+  "N3-L13_q.mp3": "162cb6c2923b",
+  "N3-L13_exp.mp3": "98b006de64bf",
+  "meta:N3-L13": {
+    "q_audio": "./audio/N3-L13_q.mp3?v=162cb6c2",
+    "exp_audio": "./audio/N3-L13_exp.mp3?v=98b006de",
+    "spoken_text": "女：「刚才给你打电话你没接呢。」 男：「抱歉，当时戴着耳机正听歌呢，完全没察觉。」 男生解释原因用了口语缩音「音楽聴いてて」（＝音楽を聴いていて），正听着歌没听见铃声。 口语把「〜ていて」里的「い」吞掉变成「〜てて」，选第 1 项「音楽を聴いていたから」。"
+  },
+  "N3-L14_q.mp3": "a4b61dd0127c",
+  "N3-L14_exp.mp3": "5189e6ea1ab7",
+  "meta:N3-L14": {
+    "q_audio": "./audio/N3-L14_q.mp3?v=a4b61dd0",
+    "exp_audio": "./audio/N3-L14_exp.mp3?v=5189e6ea",
+    "spoken_text": "男：「这块蛋糕我先放进冰箱里了哦。」 女：「啊，那个保质期只到今天，咱们现在干脆吃掉吧。」 虽然男生刚放进冰箱，但女生指出保质期只到今天，拍板「今食べちゃおうよ（现在吃掉吧）」。 「食べちゃおう」是「食べてしまおう」的口语缩音，选第 1 项「今から一緒に食べる」。"
+  },
+  "N3-L15_q.mp3": "eebd0e6a8d51",
+  "N3-L15_exp.mp3": "eaf629493b67",
+  "meta:N3-L15": {
+    "q_audio": "./audio/N3-L15_q.mp3?v=eebd0e6a",
+    "exp_audio": "./audio/N3-L15_exp.mp3?v=eaf62949",
+    "spoken_text": "女：「咦，今天的聚餐田中不来吗？」 男：「嗯，他来消息说突然插进来一件急活，去不了了。」 「急な仕事が入っちゃって」＝「急な仕事が入ってしまって」，带着遗憾交代缺席原因。 口语「〜ちゃって」在句中表令人无奈的突发原因，选第 1 项「急に仕事が入ったから」。"
+  },
+  "N3-L16_q.mp3": "02f0201ce6e1",
+  "N3-L16_exp.mp3": "e5f128730507",
+  "meta:N3-L16": {
+    "q_audio": "./audio/N3-L16_q.mp3?v=02f0201c",
+    "exp_audio": "./audio/N3-L16_exp.mp3?v=e5f12873",
+    "spoken_text": "男：「明明在减肥，结果顺路进便利店一看到新款冰淇淋，没忍住顺手就买了。」 女：「太懂了，半夜看到根本忍不了嘛。」 副词「つい」配「買っちゃった」，表示明明不该买却没管住手买下来了。 「つい〜てしまう」核心就是「我慢できずに（没忍住不知不觉做了）」，选第 1 项。"
+  },
+  "N3-V22_q.mp3": "eee20d5b28a6",
+  "N3-V22_exp.mp3": "07104063fc92",
+  "meta:N3-V22": {
+    "q_audio": "./audio/N3-V22_q.mp3?v=eee20d5b",
+    "exp_audio": "./audio/N3-V22_exp.mp3?v=07104063",
+    "spoken_text": "从三月底左右开始，白天的气温渐渐暖和起来了。 季节入春回暖是一天一天自然平缓过渡的过程。 随时间平缓渐变用「だんだん」；势头猛烈飞快推进才用「どんどん」。"
+  },
+  "N3-V23_q.mp3": "855d6f085894",
+  "N3-V23_exp.mp3": "0489e47eb998",
+  "meta:N3-V23": {
+    "q_audio": "./audio/N3-V23_q.mp3?v=855d6f08",
+    "exp_audio": "./audio/N3-V23_exp.mp3?v=0489e47e",
+    "spoken_text": "装上新系统之后，积压的工作接二连三飞快地清完了。 换上新工具后效率大增，积压的活儿一件接一件迅速搞定。 节奏快、势头猛、接连不断推进用「どんどん」；缓慢自然渐变才用「だんだん」。"
+  },
+  "N3-V24_q.mp3": "26b50bbb521d",
+  "N3-V24_exp.mp3": "2784381d9643",
+  "meta:N3-V24": {
+    "q_audio": "./audio/N3-V24_q.mp3?v=26b50bbb",
+    "exp_audio": "./audio/N3-V24_exp.mp3?v=2784381d",
+    "spoken_text": "筹备了半年的展览会，明天终于要正式开幕了。 句尾是「明日始まる」，站在大幕拉开的前夜，心情既期待又紧张。 重大时刻「终于马上就要到了（面向未来）」必选「いよいよ」；「ようやく」多配已经熬出头的结果。"
+  },
+  "N3-V25_q.mp3": "c240f0de4bdc",
+  "N3-V25_exp.mp3": "3534838b9587",
+  "meta:N3-V25": {
+    "q_audio": "./audio/N3-V25_q.mp3?v=c240f0de",
+    "exp_audio": "./audio/N3-V25_exp.mp3?v=3534838b",
+    "spoken_text": "好不容易早起做了便当，结果却忘在家里没带出来。 后半句「〜のに、忘れてきてしまった」感叹一番辛苦全白费了。 「せっかく〜のに」是黄金搭档（好不容易费心做了某事却白费）；「わざわざ」强调专程多跑一趟。"
+  },
+  "N3-V26_q.mp3": "4d20ba488025",
+  "N3-V26_exp.mp3": "cfd3bd551d27",
+  "meta:N3-V26": {
+    "q_audio": "./audio/N3-V26_q.mp3?v=4d20ba48",
+    "exp_audio": "./audio/N3-V26_exp.mp3?v=cfd3bd55",
+    "spoken_text": "百忙之中还劳驾您专程跑到这么远的车站来接我，非常感谢。 直接向对方道谢，感谢对方特意费心跑远路。 寒暄道谢「劳您专程跑一趟」固定用「わざわざ〜てくださってありがとうございます」。"
+  },
+  "N3-V27_q.mp3": "0e87051c4c16",
+  "N3-V27_exp.mp3": "d74b909cdcaa",
+  "meta:N3-V27": {
+    "q_audio": "./audio/N3-V27_q.mp3?v=0e87051c",
+    "exp_audio": "./audio/N3-V27_exp.mp3?v=d74b909c",
+    "spoken_text": "因为睡眠不足脑子迷迷糊糊的，下午开会讲的内容几乎没听进去。 缺觉导致大脑昏沉发懵、注意力涣散，所以听不进会议内容。 脑子发懵、视线模糊或坐着发呆用「ぼんやり」；清晰分明才用「はっきり」。"
+  },
+  "N3-V28_q.mp3": "d5df699aef01",
+  "N3-V28_exp.mp3": "9971aa4ba89e",
+  "meta:N3-V28": {
+    "q_audio": "./audio/N3-V28_q.mp3?v=d5df699a",
+    "exp_audio": "./audio/N3-V28_exp.mp3?v=9971aa4b",
+    "spoken_text": "大热天在外面奔波了一整天，回到酒店累得瘫倒在床一动也动不了。 酷暑走了一整天，体力彻底耗尽瘫软下来。 精疲力竭浑身瘫软用「ぐったり」；尺码时间严丝合缝刚刚好才用「ぴったり」。"
+  },
+  "N3-V29_q.mp3": "1d2dfbe30021",
+  "N3-V29_exp.mp3": "f8f3fc56885b",
+  "meta:N3-V29": {
+    "q_audio": "./audio/N3-V29_q.mp3?v=1d2dfbe3",
+    "exp_audio": "./audio/N3-V29_exp.mp3?v=f8f3fc56",
+    "spoken_text": "这双鞋尺码跟我的脚严丝合缝刚刚好，走起路来特别舒服。 鞋子不松不紧贴合双脚，所以很好走路。 「サイズがぴったり合う」是固定搭配（尺码严丝合缝）；「ぎりぎり」是卡死线勉强赶上。"
+  },
+  "N3-V30_q.mp3": "010ae3234fa0",
+  "N3-V30_exp.mp3": "4f40c853b709",
+  "meta:N3-V30": {
+    "q_audio": "./audio/N3-V30_q.mp3?v=010ae323",
+    "exp_audio": "./audio/N3-V30_exp.mp3?v=4f40c853",
+    "spoken_text": "诚心诚意道歉之后，前辈笑着原谅了我的失误。 考单汉字五段动词「許す（原谅、允许）」的训读。 「許す」训读为「ゆるす → ゆるして」；「のこして」是「残して（留下）」。"
+  },
+  "N3-V31_q.mp3": "03beb3351a9c",
+  "N3-V31_exp.mp3": "5f3db2d5c810",
+  "meta:N3-V31": {
+    "q_audio": "./audio/N3-V31_q.mp3?v=03beb335",
+    "exp_audio": "./audio/N3-V31_exp.mp3?v=5f3db2d5",
+    "spoken_text": "奶奶把邻居家的小猫当成自己亲孙子一样疼爱。 比作「就像自己的孙子一样」，自然是满心欢喜地宠溺疼爱。 把「かわいい」词尾「い」换成「がる」变成他动词「かわいがる（疼爱、宠爱）」。"
+  },
+  "N3-V32_q.mp3": "66801aa1ede2",
+  "N3-V32_exp.mp3": "f409af476bff",
+  "meta:N3-V32": {
+    "q_audio": "./audio/N3-V32_q.mp3?v=66801aa1",
+    "exp_audio": "./audio/N3-V32_exp.mp3?v=f409af47",
+    "spoken_text": "聚会的菜做得太多了，盘子里剩下了好多。 考高频自动词「余る（剩下、富余）」的训读。 「余る」训读为「あまる → あまった」；「たまった」是「溜まった（积攒、堆积）」。"
+  },
+  "VAR-G16_q.mp3": "c6bd884dd3ff",
+  "VAR-G16_exp.mp3": "6af0f237b79a",
+  "meta:VAR-G16": {
+    "q_audio": "./audio/VAR-G16_q.mp3?v=c6bd884d",
+    "exp_audio": "./audio/VAR-G16_exp.mp3?v=6af0f237",
+    "spoken_text": "一到机场，我立刻给您打电话。 空格前是ます形词干「着き」，后半句承诺马上打电话。 「ます形词干＋しだい」＝ 一旦完成前项就立刻做后项（着きしだい）。"
+  },
+  "VAR-G25_q.mp3": "5ae1149e63dd",
+  "VAR-G25_exp.mp3": "faa36468337a",
+  "meta:VAR-G25": {
+    "q_audio": "./audio/VAR-G25_q.mp3?v=5ae1149e",
+    "exp_audio": "./audio/VAR-G25_exp.mp3?v=faa36468",
+    "spoken_text": "假定按时薪一千五百日元来算的话，干八个小时就是一万两千日元。 前半句设定计算前提（时薪1500），后半句算出八小时的总额。 假定条件并据此推算结果用「普通形＋とすると」（千五百円だとすると）。"
+  },
+  "VAR-GQ02_q.mp3": "b370b2318ab8",
+  "VAR-GQ02_exp.mp3": "0b1285e5623c",
+  "meta:VAR-GQ02": {
+    "q_audio": "./audio/VAR-GQ02_q.mp3?v=b370b231",
+    "exp_audio": "./audio/VAR-GQ02_exp.mp3?v=0b1285e5",
+    "spoken_text": "体检之后，被医生叮嘱要少吃盐。 间接转述医生的嘱咐内容（「要控制盐分」）。 转述叮嘱、警告或要求固定用「原形／ない形＋ように言う／言われる」。"
+  },
+  "VAR-G19_q.mp3": "fff18de36f7b",
+  "VAR-G19_exp.mp3": "a4d9b27a40a8",
+  "meta:VAR-G19": {
+    "q_audio": "./audio/VAR-G19_q.mp3?v=fff18de3",
+    "exp_audio": "./audio/VAR-G19_exp.mp3?v=a4d9b27a",
+    "spoken_text": "一旦开始独居生活，蔬菜就难免动不动摄入不足。 独居做饭嫌麻烦，不知不觉容易出现营养失衡的负面倾向。 负面老毛病容易发生用「ます形词干／名词＋がち」：不足しがち。"
+  },
+  "VAR-G03_q.mp3": "fbaef8edbd79",
+  "VAR-G03_exp.mp3": "4f59c70d5d83",
+  "meta:VAR-G03": {
+    "q_audio": "./audio/VAR-G03_q.mp3?v=fbaef8ed",
+    "exp_audio": "./audio/VAR-G03_exp.mp3?v=4f59c70d",
+    "spoken_text": "正因为扛过了每天严酷的训练，才最终拿到了冠军。 句尾有「〜のだ」呼应，强调夺冠最核心、最值得肯定的原因。 强调唯一核心因果「正因为…才…」用「〜からこそ」。"
+  },
+  "VAR-G04_q.mp3": "9b2abeaaa2fb",
+  "VAR-G04_exp.mp3": "7fff721f4401",
+  "meta:VAR-G04": {
+    "q_audio": "./audio/VAR-G04_q.mp3?v=9b2abeaa",
+    "exp_audio": "./audio/VAR-G04_exp.mp3?v=7fff721f",
+    "spoken_text": "小时候一到暑假，每天都在这条河里游泳呢。 句首有「子どもの頃は」，回想童年经常做的往事。 「动词た形＋ものだ」专门用来怀念过去常做的事（よく泳いだものだ）。"
+  },
+  "VAR-G26_q.mp3": "73535bee14a1",
+  "VAR-G26_exp.mp3": "c7c6d4f544fe",
+  "meta:VAR-G26": {
+    "q_audio": "./audio/VAR-G26_q.mp3?v=73535bee",
+    "exp_audio": "./audio/VAR-G26_exp.mp3?v=c7c6d4f5",
+    "spoken_text": "一贯认真的他竟然一声不吭没来上班，简直令人难以置信。 平时最老实的人居然无故旷工，后接「信じられない」表达震惊。 对意外之事感叹「竟然…简直不敢信」用「〜なんて信じられない」。"
+  },
+  "VAR-G29_q.mp3": "2e33177fd9b4",
+  "VAR-G29_exp.mp3": "e5a6ee7dcee7",
+  "meta:VAR-G29": {
+    "q_audio": "./audio/VAR-G29_q.mp3?v=2e33177f",
+    "exp_audio": "./audio/VAR-G29_exp.mp3?v=e5a6ee7d",
+    "spoken_text": "今天承蒙您在百忙之中带我前往会场，非常感谢。 对方费心带「我」去会场，我是得到照顾的一方。 「我得到尊长的帮助」用谦让受惠的「〜ていただく → 案内していただき」。"
+  },
+  "VAR-H09_q.mp3": "f0233be9d4d6",
+  "VAR-H09_exp.mp3": "67da3f9eeb22",
+  "meta:VAR-H09": {
+    "q_audio": "./audio/VAR-H09_q.mp3?v=f0233be9",
+    "exp_audio": "./audio/VAR-H09_exp.mp3?v=67da3f9e",
+    "spoken_text": "离车站步行只要五分钟，所以就算没车每天也能轻松通勤。 考五段动词「通う（かよう）」的可能形。 五段动词词尾う段「う」变え段「え」＋ます → 通えます（能去、能通勤）。"
+  },
+  "VAR-H13_q.mp3": "5af8c950e215",
+  "VAR-H13_exp.mp3": "d41679947753",
+  "meta:VAR-H13": {
+    "q_audio": "./audio/VAR-H13_q.mp3?v=5af8c950",
+    "exp_audio": "./audio/VAR-H13_exp.mp3?v=d4167994",
+    "spoken_text": "拜读了贵公司的宣传册之后，非常希望能报名应聘。 后半句说「我想应聘」，说明看宣传册的人是求职者「我」。 自己的动作压低身段表敬意，必用谦让语「拝見する → 拝見して」。"
+  },
+  "VAR-H14_q.mp3": "b2389770acf3",
+  "VAR-H14_exp.mp3": "292d7f36fe17",
+  "meta:VAR-H14": {
+    "q_audio": "./audio/VAR-H14_q.mp3?v=b2389770",
+    "exp_audio": "./audio/VAR-H14_exp.mp3?v=292d7f36",
+    "spoken_text": "社长现在在三楼的会议室里。 主语是「社長」，表达社长此刻「在」某处。 「いる・行く・来る」的尊敬语都是「いらっしゃる → いらっしゃいます」。"
+  },
+  "VAR-H15_q.mp3": "bb3546efa24b",
+  "VAR-H15_exp.mp3": "4c39cd11173b",
+  "meta:VAR-H15": {
+    "q_audio": "./audio/VAR-H15_q.mp3?v=bb3546ef",
+    "exp_audio": "./audio/VAR-H15_exp.mp3?v=4c39cd11",
+    "spoken_text": "刮起大风，明明关好的窗户自己吹开了。 空格前是「窓が勝手に（窗户自己…）」，没有人在推窗。 「窓が」配五段自动词「開く（あく → 開いて）」；人去开窗才说「窓を開けて」。"
+  },
+  "VAR-L10_q.mp3": "feed82f8ae0f",
+  "VAR-L10_exp.mp3": "7911b64f8874",
+  "meta:VAR-L10": {
+    "q_audio": "./audio/VAR-L10_q.mp3?v=feed82f8",
+    "exp_audio": "./audio/VAR-L10_exp.mp3?v=7911b64f",
+    "spoken_text": "男：「体检结果不太理想，我决定从今天起不坐电梯改走楼梯了。」 女：「挺好呀，我也缺乏运动，要不一起走吧。」 用「エレベーターじゃなくて」排除了电梯，拍板「階段を使うことにした（决定走楼梯）」。 「〜ことにした」表示个人主观立下新决定，选第 1 项「毎日階段を使うこと」。"
+  },
+  "VAR-V17_q.mp3": "2f71184e55b7",
+  "VAR-V17_exp.mp3": "081e955ea534",
+  "meta:VAR-V17": {
+    "q_audio": "./audio/VAR-V17_q.mp3?v=2f71184e",
+    "exp_audio": "./audio/VAR-V17_exp.mp3?v=081e955e",
+    "spoken_text": "用温暖的话语安慰了落榜没精打采的朋友。 复测单汉字动词「慰める（安慰）」的四拍训读。 「慰める」训读「なぐさめる → なぐさめた」；「たしかめた」是「確かめた（确认）」。"
+  },
+  "VAR-V21_q.mp3": "0291855df5c6",
+  "VAR-V21_exp.mp3": "ae91544e1f8c",
+  "meta:VAR-V21": {
+    "q_audio": "./audio/VAR-V21_q.mp3?v=0291855d",
+    "exp_audio": "./audio/VAR-V21_exp.mp3?v=ae91544e",
+    "spoken_text": "往花名册里新添了三名新员工的名字。 复测单汉字动词「加える（添加、加入）」的三拍训读。 「加える」训读「くわえる → くわえた」；「そろえた」是「揃えた（凑齐、摆齐）」。"
+  },
+  "VAR-V08_q.mp3": "2ef59f9497d4",
+  "VAR-V08_exp.mp3": "cfb808b23557",
+  "meta:VAR-V08": {
+    "q_audio": "./audio/VAR-V08_q.mp3?v=2ef59f94",
+    "exp_audio": "./audio/VAR-V08_exp.mp3?v=cfb808b2",
+    "spoken_text": "从下周一起要去大阪总部出差三天。 考商务高频词「出張（出差）」中间的促音陷阱。 出差「出張」必带促音读「しゅっちょう」；漏掉促音念「しゅちょう」就变成「主張（主张观点）」。"
   },
   "done.mp3": "8116f5a629ae"
 }
