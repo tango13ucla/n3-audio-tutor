@@ -39,6 +39,7 @@ MIN_REAL_TS = 1_700_000_000
 SKIP_VOCAB_ENROLL = {
     "口语听辨", "高频假名副词", "核心词汇", "语法", "活用",
     "では", "には", "から", "まで", "ので", "のだ", "だよ", "だね",
+    "こと", "おく", "ない", "だ",
     "ぱさぱさ", "ずしっと", "万年筆",
 }
 
@@ -327,6 +328,11 @@ def apply_practice_logs(state: dict, fallback_day_tag: str = "") -> int:
 
 
 def recompute_summary(state: dict) -> None:
+    if "vocab_tracked" in state:
+        state["vocab_tracked"] = [
+            x for x in state["vocab_tracked"]
+            if x.get("word") and x.get("word") not in SKIP_VOCAB_ENROLL
+        ]
     summary = state.setdefault("summary", {})
     for key, arr_key in (
         ("grammar", "grammar_points"),

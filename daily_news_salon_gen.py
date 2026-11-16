@@ -101,31 +101,34 @@ def _call_chat_llm(system_prompt: str, user_prompt: str) -> str | None:
             else "https://models.github.ai/inference/chat/completions"
         )
         token = openai_key or gh_token
-        model = "gpt-4.1" if openai_key else "openai/gpt-4.1"
-        payload = json.dumps({
-            "model": model,
-            "temperature": 0.65,
-            "response_format": {"type": "json_object"},
-            "messages": [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
-            ],
-        }).encode("utf-8")
-        try:
-            req = urllib.request.Request(
-                url,
-                data=payload,
-                headers={
-                    "Authorization": f"Bearer {token}",
-                    "Content-Type": "application/json",
-                },
-                method="POST",
-            )
-            with urllib.request.urlopen(req, timeout=38.0) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-            return data["choices"][0]["message"]["content"]
-        except Exception as e:
-            print(f"[info] live news LLM endpoint skipped: {e}")
+        models = ("gpt-4o", "gpt-4o-mini") if openai_key else ("openai/gpt-4o", "openai/gpt-4o-mini")
+        for model in models:
+            payload = json.dumps({
+                "model": model,
+                "temperature": 0.65,
+                "response_format": {"type": "json_object"},
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+            }).encode("utf-8")
+            try:
+                req = urllib.request.Request(
+                    url,
+                    data=payload,
+                    headers={
+                        "Authorization": f"Bearer {token}",
+                        "Content-Type": "application/json",
+                    },
+                    method="POST",
+                )
+                with urllib.request.urlopen(req, timeout=38.0) as resp:
+                    data = json.loads(resp.read().decode("utf-8"))
+                content = (data.get("choices") or [{}])[0].get("message", {}).get("content")
+                if content and content.strip():
+                    return content
+            except Exception as e:
+                print(f"[info] live news LLM endpoint ({model}) skipped: {e}")
 
     if gemini_key:
         try:

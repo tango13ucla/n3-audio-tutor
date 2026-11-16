@@ -886,17 +886,17 @@ async def main():
         pt_vals = sorted((scores.get(pid, 2.2) for pid in pids), reverse=True)
         top_avg = sum(pt_vals[:3]) / max(1, len(pt_vals[:3])) if pt_vals else 2.2
         repeat_penalty = (
-            4.5 if st["id"] in prev_1
-            else (2.5 if st["id"] in prev_2 else (1.2 if st["id"] in prev_3 else 0.0))
+            6.5 if st["id"] in prev_1
+            else (3.5 if st["id"] in prev_2 else (1.5 if st["id"] in prev_3 else 0.0))
         )
         memory_bonus = 0.0
         if st["id"] in _rp["avoid_story_ids"]:
             memory_bonus -= 9.0
         tier = st.get("tier", "")
         if tier == "live_news":
-            memory_bonus += 5.2
+            memory_bonus += 6.2
         elif tier == "uchi_intellectual":
-            memory_bonus += 3.2
+            memory_bonus += 5.0
         if _focus and any((pid in _focus or pk in _focus) for pid, pk in zip(pids, pkeys)):
             memory_bonus += 0.8
         blob = f'{st.get("title", "")} {" ".join(st.get("tags", []) or [])}'
@@ -905,15 +905,27 @@ async def main():
         jitter = rng.uniform(-0.12, 0.12)
         return -(top_avg - repeat_penalty + memory_bonus + jitter)
 
-    # Optionally script a fresh daily NHK news Act-1 roundtable calibrated to today's 365-day ja_ratio
+    # Optionally script a fresh daily NHK news Act-1 roundtable calibrated to today's ja_ratio
+    # (Skip LLM generation if SALON_STORIES already has an unplayed curated 今日时局 chapter)
+    has_unplayed_curated_news = any(
+        st.get("short_tab") == "今日时局"
+        and st["id"] not in prev_1
+        and st["id"] not in prev_2
+        and st["id"] not in prev_3
+        for st in SALON_STORIES
+    )
     top_focus_labels = [resolve_point_key(pid) for pid, _ in sorted(scores.items(), key=lambda kv: kv[1], reverse=True)[:6]]
     uchi_companion_titles = [st["title"] for st in SALON_STORIES[:5]]
-    live_news_story = maybe_generate_live_news_story(
-        today_str=today_str,
-        imm_profile=imm_profile,
-        focus_points=top_focus_labels,
-        companion_titles=uchi_companion_titles,
-        dry_test=dry_test,
+    live_news_story = (
+        None
+        if has_unplayed_curated_news
+        else maybe_generate_live_news_story(
+            today_str=today_str,
+            imm_profile=imm_profile,
+            focus_points=top_focus_labels,
+            companion_titles=uchi_companion_titles,
+            dry_test=dry_test,
+        )
     )
     candidate_pool = ([live_news_story] if live_news_story else []) + list(SALON_STORIES)
 

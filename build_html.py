@@ -168,7 +168,7 @@ def clean_zen_text(s: str) -> str:
     txt = str(s or "").strip()
     txt = re.sub(r"[✅❌⭕✕✓↑↓🎧★]", "", txt)
     txt = re.sub(r"\d+/\d+(?:\s*(?:&|与|和)\s*\d+/\d+)?\s*课[^·。！!：:]*[·：:\s]*", "", txt)
-    txt = txt.replace("——", "：")
+    txt = txt.replace("——", "：").replace("—", "：")
     txt = re.sub(
         r"^(?:听力保命铁律|声音\+画面双锚|双重铁证|考场秒杀铁律|考试卷面铁律|秒杀铁律|记忆铁律|一眼锁死助词|看动词时态定画面|这对双胞胎反着记)[：:]\s*",
         "",
@@ -233,6 +233,11 @@ LISTENING_OPT_NOTES = {
         "メールを返信する": "「回复邮件。」前辈要求 その前に（去银行前先把邮件回了）。",
     },
 }
+try:
+    from weak_expansion_wave2 import WAVE2_LISTENING_OPT_NOTES
+    LISTENING_OPT_NOTES.update(WAVE2_LISTENING_OPT_NOTES)
+except Exception:
+    pass
 
 
 def build_opt_notes(card_id: str, raw_notes: dict | None) -> dict:
@@ -555,6 +560,22 @@ touched_today_ids = set()
 for cid in list(clean_green_at.keys()) + list(clean_retest_at.keys()) + list((seeded_day.get("sched") or {}).keys()):
     touched_today_ids.add(card_to_base.get(cid, cid))
 
+prev_day_touched_ids = set()
+try:
+    all_snap_dates = sorted(d for d in (cloud_snap.get("dates") or {}).keys() if d < plan_date_str)
+    if all_snap_dates:
+        prev_day_obj = (cloud_snap.get("dates") or {}).get(all_snap_dates[-1]) or {}
+        for cid in list((prev_day_obj.get("greenAt") or {}).keys()) + list((prev_day_obj.get("retestAt") or {}).keys()):
+            prev_day_touched_ids.add(card_to_base.get(cid, cid))
+except Exception:
+    pass
+
+try:
+    import datetime as _dt_mod
+    _plan_day_ord = _dt_mod.date.fromisoformat(plan_date_str[:10]).toordinal()
+except Exception:
+    _plan_day_ord = 1
+
 
 def deck_sort_key(p: dict):
     qid = p["id"]
@@ -567,6 +588,25 @@ def deck_sort_key(p: dict):
 
 raw_points.sort(key=deck_sort_key)
 raw_points = raw_points[:DECK_CAP]
+
+# Cross-day fresh sentence rotation: if a point was NOT yet touched today, has variants,
+# and was answered yesterday (or is in cross-day consolidation), swap in a fresh variant sentence
+# as today's primary while preserving the original in variants for same-day retest!
+for _p in raw_points:
+    _qid = _p["id"]
+    _vars = list(_p.get("variants") or [])
+    if _qid in touched_today_ids or not _vars:
+        continue
+    if _qid in prev_day_touched_ids:
+        _all_cards = [_p["primary"]] + _vars
+        _pick_idx = 1 + (_plan_day_ord % len(_vars))
+        _new_prim = _all_cards[_pick_idx]
+        _p["primary"] = _new_prim
+        _p["variants"] = [_c for _i, _c in enumerate(_all_cards) if _i != _pick_idx]
+        if _p.get("teach"):
+            _p["teach"]["example_ja"] = _new_prim.get("full_ja") or _p["teach"].get("example_ja", "")
+            _p["teach"]["zh_meaning"] = _new_prim.get("zh_meaning") or _p["teach"].get("zh_meaning", "")
+            _p["teach"]["audio"] = _new_prim.get("exp_audio") or _p["teach"].get("audio", "")
 
 buckets = {"语法": [], "活用": [], "词汇": [], "听力": []}
 for p in raw_points:
@@ -650,7 +690,7 @@ for p in live_state.get("listening_points", []):
         "note": clean_zen_text(p.get("trap", "") or p.get("note", "")),
     })
 
-DROP_CASUAL_WORDS = {"ぱさぱさ", "ずしっと", "万年筆"}
+DROP_CASUAL_WORDS = {"ぱさぱさ", "ずしっと", "万年筆", "こと", "おく", "ない", "だ"}
 vocab_items = []
 seen_vocab_words = set()
 vc_audio_manifest = audio_manifest.get("vocab_cards", {})

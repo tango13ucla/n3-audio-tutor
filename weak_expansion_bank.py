@@ -763,3 +763,16 @@ NEW_EXTRA_WORDS = {
     "調えた": {"kana": "ととのえた", "pitch": "④", "head": "調える", "pos": "一段・他動詞", "zh": "调好（味道）、整理好", "tip": "味を調える"},
     "奥歯": {"kana": "おくば", "pitch": "①", "head": "奥歯", "pos": "名詞", "zh": "后槽牙、臼齿", "tip": "奥歯が痛くてしかたがない"},
 }
+
+from weak_expansion_wave2 import (
+    WAVE2_EXTRA_WORDS,
+    WAVE2_POINT_META,
+    WAVE2_PRIMARY_CARDS,
+    WAVE2_VARIANT_CARDS,
+)
+
+NEW_POINT_META.update(WAVE2_POINT_META)
+NEW_PRIMARY_CARDS.extend(WAVE2_PRIMARY_CARDS)
+NEW_VARIANT_CARDS.extend(WAVE2_VARIANT_CARDS)
+NEW_EXTRA_WORDS.update(WAVE2_EXTRA_WORDS)
+
