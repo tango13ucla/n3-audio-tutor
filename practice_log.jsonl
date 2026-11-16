@@ -514,3 +514,53 @@
 {"id": "N3-L11", "point": "N3L-003", "choice": "あ、まだ決めてないんです。おすすめはありますか。", "correct": "true", "ask_again": "false", "ts": "2026-11-15T23:33:54.000Z"}
 {"id": "N3-L09", "point": "N3L-016", "choice": "まだ少し時間あるよ、手伝おうか？", "correct": "true", "ask_again": "false", "ts": "2026-11-15T23:34:09.000Z"}
 {"id": "VC-ない", "point": "ない", "choice": "记词:记住", "correct": "true", "ask_again": "false", "ts": "2026-11-15T23:43:26.000Z"}
+{"id": "GROK-657", "point": "〜てたまらない", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-15T14:41:01-08:00"}
+{"id": "GROK-658", "point": "K-004", "correct": true, "ask_again": true, "source": "grok", "ts": "2026-11-15T14:41:02-08:00"}
+{"id": "GROK-658-2", "point": "K-013", "correct": true, "ask_again": true, "source": "grok", "ts": "2026-11-15T14:41:03-08:00"}
+{"id": "GROK-659", "point": "T-004", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-15T14:42:01-08:00"}
+{"id": "GROK-660", "point": "T-044", "correct": false, "ask_again": false, "source": "grok", "ts": "2026-11-15T14:42:02-08:00"}
+{"id": "GROK-661", "point": "〜向き", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-15T14:43:01-08:00", "choice": "Grok:不用再考"}
+{"id": "GROK-662", "point": "T-044", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-15T14:43:02-08:00"}
+{"id": "GROK-663", "point": "V-031", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-15T14:43:03-08:00"}
+{"id": "GROK-664", "point": "V-045", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-15T14:44:01-08:00"}
+{"id": "GROK-665", "point": "ぎりぎり", "correct": false, "ask_again": false, "source": "grok", "ts": "2026-11-15T14:45:01-08:00"}
+{"id": "GROK-666", "point": "つい", "correct": true, "ask_again": true, "source": "grok", "ts": "2026-11-15T14:51:01-08:00"}
+{"id": "GROK-667", "point": "N3L-016", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-15T14:52:01-08:00"}
+{"id": "GROK-668", "point": "ぐったり", "correct": true, "ask_again": true, "source": "grok", "ts": "2026-11-15T16:17:01-08:00"}
+{"id": "GROK-669", "point": "N3L-085", "correct": true, "ask_again": true, "source": "grok", "ts": "2026-11-15T16:19:01-08:00"}
+{"id": "GROK-670", "point": "N3L-007", "correct": false, "ask_again": false, "source": "grok", "ts": "2026-11-15T16:20:01-08:00"}
+{"id": "GROK-671", "point": "内緒", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-15T16:20:02-08:00", "choice": "Grok:不用再考"}
+{"id": "GROK-672", "point": "N3L-017", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-15T16:21:01-08:00"}
+{"id": "GROK-673", "point": "続く", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-15T16:23:01-08:00", "choice": "Grok:不用再考"}
+{"id": "GROK-674", "point": "N3L-025", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-15T16:27:01-08:00"}
+{"id": "GROK-675", "point": "出張", "correct": false, "ask_again": false, "source": "grok", "ts": "2026-11-15T16:27:02-08:00"}
+{"id": "GROK-676", "point": "N3L-016", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-15T16:28:01-08:00", "choice": "Grok:不用再考"}
+{"id": "GROK-677", "point": "N3L-087", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-15T16:28:02-08:00"}
+{"id": "GROK-678", "point": "沈む", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-15T16:28:03-08:00", "choice": "Grok:不用再考"}
+{"id": "GROK-679", "point": "N3L-086", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-15T16:29:01-08:00"}
+{"id": "GROK-680", "point": "次々に", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-15T16:29:02-08:00"}
+{"id": "GROK-681", "point": "N3L-007", "correct": true, "ask_again": true, "source": "grok", "ts": "2026-11-15T16:30:01-08:00"}
+{"id": "GROK-682", "point": "ぴったり", "correct": false, "ask_again": false, "source": "grok", "ts": "2026-11-15T16:31:01-08:00"}
+{"id": "GROK-683", "point": "かわいがる", "correct": false, "ask_again": false, "source": "grok", "ts": "2026-11-15T16:31:02-08:00"}
+{"id": "GROK-684", "point": "備える", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-15T16:32:01-08:00", "choice": "Grok:不用再考"}
+{"id": "GROK-685", "point": "N3L-002", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-15T16:33:01-08:00"}
+{"id": "GROK-686", "point": "許す", "correct": true, "ask_again": true, "source": "grok", "ts": "2026-11-15T16:33:02-08:00"}
+{"id": "GROK-687", "point": "N3L-039", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-15T16:34:01-08:00"}
+{"id": "GROK-688", "point": "N3L-010", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-15T16:34:02-08:00"}
+{"id": "GROK-689", "point": "余る", "correct": false, "ask_again": false, "source": "grok", "ts": "2026-11-15T16:34:03-08:00"}
+{"id": "GROK-690", "point": "V-037", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-15T16:34:04-08:00"}
+{"id": "GROK-691", "point": "N3L-048", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-15T16:35:01-08:00"}
+{"id": "GROK-692", "point": "ぼんやり", "correct": false, "ask_again": false, "source": "grok", "ts": "2026-11-15T16:35:02-08:00"}
+{"id": "GROK-693", "point": "うっかり", "correct": false, "ask_again": false, "source": "grok", "ts": "2026-11-15T16:35:03-08:00"}
+{"id": "GROK-694", "point": "K-041", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-15T16:35:04-08:00"}
+{"id": "GROK-695", "point": "〜めったに〜ない", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-15T14:44:02-08:00"}
+{"id": "GROK-696", "point": "〜た結果", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-15T14:45:02-08:00", "choice": "Grok:不用再考"}
+{"id": "GROK-697", "point": "〜ことになる", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-15T16:21:02-08:00"}
+{"id": "GROK-698", "point": "〜らしい", "correct": false, "ask_again": false, "source": "grok", "ts": "2026-11-15T16:23:02-08:00"}
+{"id": "GROK-699", "point": "〜がちだ", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-15T16:25:01-08:00"}
+{"id": "GROK-700", "point": "〜とすると", "correct": false, "ask_again": false, "source": "grok", "ts": "2026-11-15T16:28:04-08:00"}
+{"id": "GROK-701", "point": "〜わけだ", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-15T16:29:03-08:00"}
+{"id": "GROK-702", "point": "〜しだい", "correct": true, "ask_again": true, "source": "grok", "ts": "2026-11-15T16:29:04-08:00"}
+{"id": "GROK-703", "point": "まるで〜のように", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-15T16:31:03-08:00"}
+{"id": "GROK-704", "point": "〜っぱなし", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-15T16:31:04-08:00", "choice": "Grok:不用再考"}
+{"id": "GROK-705", "point": "〜ように言う", "correct": true, "ask_again": true, "source": "grok", "ts": "2026-11-15T16:32:02-08:00"}
