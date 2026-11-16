@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-11-15 22:45 PT",
+  "updated_at": "2026-11-16 07:07 PT",
   "exam_date": "2026-12-06",
-  "days_left": 21,
+  "days_left": 20,
   "target_score": "120+ / 180",
   "mocks": [
     {
@@ -11681,6 +11681,6 @@
     "flash_target": 25,
     "flash_done": true
   },
-  "study_date": "2026-11-15",
-  "_baked_epoch": 1794811510
+  "study_date": "2026-11-16",
+  "_baked_epoch": 1794841673
 }

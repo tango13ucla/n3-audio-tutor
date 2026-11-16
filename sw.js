@@ -1,5 +1,5 @@
 const CACHE_NAME = "n3-studio-tutor-v36";
-const BUILD_STAMP = "2026-11-15_b55457efc7dd82_c0805bef_a57bdb_3bb3accb";
+const BUILD_STAMP = "2026-11-16_b55457efc7dd82_c0805bef_a57bdb_215900b0";
 const CORE_SHELL = [
   "./",
   "./index.html",
