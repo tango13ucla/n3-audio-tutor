@@ -626,7 +626,8 @@
     "報告書": "./audio/words/w_af350b69d5.mp3",
     "従う": "./audio/words/w_9818e9b0fc.mp3",
     "聞き入った": "./audio/words/w_a29256abc8.mp3",
-    "調えた": "./audio/words/w_276320ba8c.mp3"
+    "調えた": "./audio/words/w_276320ba8c.mp3",
+    "ぼんやり": "./audio/words/w_55bd630b22.mp3"
   },
   "vocab_cards": {
     "書類": {
@@ -1033,6 +1034,11 @@
       "front": "./audio/words/vc_599114ccbe_front.mp3?v=4b09793e",
       "rev": "./audio/words/vc_599114ccbe_rev.mp3?v=4a74fc68",
       "full": "./audio/words/vc_599114ccbe_full.mp3?v=b9617007"
+    },
+    "ぼんやり": {
+      "front": "./audio/words/vc_55bd630b22_front.mp3?v=73ff520c",
+      "rev": "./audio/words/vc_55bd630b22_rev.mp3?v=93c7ba3f",
+      "full": "./audio/words/vc_55bd630b22_full.mp3?v=9561547c"
     }
   },
   "vocab_card_hashes": {
@@ -1196,7 +1202,10 @@
     "vc_74f94e7a20_full.mp3": "c0e8869a70",
     "vc_599114ccbe_front.mp3": "4b09793e2d",
     "vc_599114ccbe_rev.mp3": "4a74fc68b8",
-    "vc_599114ccbe_full.mp3": "b9617007aa"
+    "vc_599114ccbe_full.mp3": "b9617007aa",
+    "vc_55bd630b22_front.mp3": "73ff520ccb",
+    "vc_55bd630b22_rev.mp3": "93c7ba3f89",
+    "vc_55bd630b22_full.mp3": "9561547c16"
   },
   "G-20261114-01_q.mp3": "aec3cb11fd34",
   "G-20261114-01_exp.mp3": "45fc72ef02a3",
