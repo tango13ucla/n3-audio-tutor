@@ -33,7 +33,21 @@
       "uchi2_oshikatsu_marriage",
       "uchi2_shinkansen_local_decay",
       "uchi2_shimbashi_yakitori_honne"
+    ],
+    "2026-11-17": [
+      "uchi_nov26_wage_tax",
+      "uchi_zenkyoto_1968",
+      "uchi_mishima_tanizaki",
+      "uchi_dazai_watakushi",
+      "uchi_soseki_gaihatsu",
+      "uchi_kyodai_nobel_ikyoku",
+      "uchi_tawaman_sapix",
+      "uchi_doki_naiji_madogiwa",
+      "uchi_jukunen_rikon",
+      "uchi_jikkajimai_akiya",
+      "story_asakusa_kyou_luck",
+      "story_kamakura_shihatsu_ranuki"
     ]
   },
-  "last_date": "2026-11-16"
+  "last_date": "2026-11-17"
 }

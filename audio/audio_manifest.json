@@ -1055,6 +1055,11 @@
       "front": "./audio/words/vc_55bd630b22_front.mp3?v=3f985e6e",
       "rev": "./audio/words/vc_55bd630b22_rev.mp3?v=60d6f1d7",
       "full": "./audio/words/vc_55bd630b22_full.mp3?v=da5c1112"
+    },
+    "しといて": {
+      "front": "./audio/words/vc_9550dc5f28_front.mp3?v=dd949783",
+      "rev": "./audio/words/vc_9550dc5f28_rev.mp3?v=320a20dc",
+      "full": "./audio/words/vc_9550dc5f28_full.mp3?v=c3f04c5d"
     }
   },
   "vocab_card_hashes": {
@@ -1221,7 +1226,10 @@
     "vc_599114ccbe_full.mp3": "b9617007aa",
     "vc_55bd630b22_front.mp3": "3f985e6e7c",
     "vc_55bd630b22_rev.mp3": "60d6f1d7c1",
-    "vc_55bd630b22_full.mp3": "da5c111247"
+    "vc_55bd630b22_full.mp3": "da5c111247",
+    "vc_9550dc5f28_front.mp3": "dd9497837c",
+    "vc_9550dc5f28_rev.mp3": "320a20dc71",
+    "vc_9550dc5f28_full.mp3": "c3f04c5dda"
   },
   "G-20261114-01_q.mp3": "aec3cb11fd34",
   "G-20261114-01_exp.mp3": "45fc72ef02a3",
