@@ -643,7 +643,13 @@
     "新入社員": "./audio/words/w_564e27b722.mp3",
     "本社": "./audio/words/w_6f13ebd1bb.mp3",
     "応募": "./audio/words/w_dab2fb440d.mp3",
-    "乗り越えた": "./audio/words/w_c7bd13e59b.mp3"
+    "乗り越えた": "./audio/words/w_c7bd13e59b.mp3",
+    "二次会": "./audio/words/w_c55fb13821.mp3",
+    "カタログ": "./audio/words/w_3f435649d4.mp3",
+    "澄んで": "./audio/words/w_69397a03f5.mp3",
+    "チャイム": "./audio/words/w_561897d01e.mp3",
+    "読みかけ": "./audio/words/w_4c4f8eebba.mp3",
+    "叱られた": "./audio/words/w_41d3b7d9b6.mp3"
   },
   "vocab_cards": {
     "書類": {
@@ -2245,6 +2251,238 @@
     "q_audio": "./audio/VAR-V08_q.mp3?v=2ef59f94",
     "exp_audio": "./audio/VAR-V08_exp.mp3?v=cfb808b2",
     "spoken_text": "从下周一起要去大阪总部出差三天。 考商务高频词「出張（出差）」中间的促音陷阱。 出差「出張」必带促音读「しゅっちょう」；漏掉促音念「しゅちょう」就变成「主張（主张观点）」。"
+  },
+  "VAR-G30_q.mp3": "3d2169b96f0c",
+  "VAR-G30_exp.mp3": "1445f28bae08",
+  "meta:VAR-G30": {
+    "q_audio": "./audio/VAR-G30_q.mp3?v=3d2169b9",
+    "exp_audio": "./audio/VAR-G30_exp.mp3?v=1445f28b",
+    "spoken_text": "书桌上还摊着一本读了一半没读完的书。 书摊在桌上才读到中途，属于做到一半还没完成的半截状态。 动词连用形「読み」接「かけの＋本」表读了一半的书；「っぱなし」不加「の」表读到一半。"
+  },
+  "VAR-H17_q.mp3": "c5d03bda1dab",
+  "VAR-H17_exp.mp3": "a0cd78002317",
+  "meta:VAR-H17": {
+    "q_audio": "./audio/VAR-H17_q.mp3?v=c5d03bda",
+    "exp_audio": "./audio/VAR-H17_exp.mp3?v=a0cd7800",
+    "spoken_text": "客人，请问这本新图册您已经看过了吗？ 直接询问「お客様（客人您看过了吗）」，动作主语是客人。 客户或上司「看」必用尊敬语「ご覧になりましたか」；「拝見しました」只能说我自己看。"
+  },
+  "VAR-H18_exp.mp3": "bd2ac3225227",
+  "meta:VAR-H18": {
+    "q_audio": "",
+    "exp_audio": "./audio/VAR-H18_exp.mp3?v=bd2ac322",
+    "spoken_text": "刚才社长在电话里说，明天的会议从十点开始。 向公司同事转述「社長が（社长刚才说）」，动作主语是社长。 尊长「说」用特殊尊敬语「おっしゃっていました」；「申す」是自谦语。"
+  },
+  "VAR-L13_q.mp3": "2a0201baf43b",
+  "VAR-L13_exp.mp3": "a1132175c444",
+  "meta:VAR-L13": {
+    "q_audio": "./audio/VAR-L13_q.mp3?v=2a0201ba",
+    "exp_audio": "./audio/VAR-L13_exp.mp3?v=a1132175",
+    "spoken_text": "女：「刚才按了玄关门铃，你没发觉吗？」 男：「抱歉，当时正冲着澡呢，完全没听见。」 男生解释原因说「シャワー浴びてて」（＝浴びていて），当时正冲澡没听见门铃。 口语吞掉「い」变成「浴びてて」，选第 1 项「シャワーを浴びていたから」。"
+  },
+  "VAR-L14_q.mp3": "6fcfeb4c4933",
+  "VAR-L14_exp.mp3": "5a49ae2067bb",
+  "meta:VAR-L14": {
+    "q_audio": "./audio/VAR-L14_q.mp3?v=6fcfeb4c",
+    "exp_audio": "./audio/VAR-L14_exp.mp3?v=5a49ae20",
+    "spoken_text": "女：「还有点时间呢，去咖啡馆坐坐？」 男：「不了，看天快下雨了，今天干脆先把东西收拾完吧。」 男生否决喝咖啡，提议趁下雨前「先に片付けちゃおうよ（干脆先收拾完吧）」。 「片付けちゃおう」＝「片付けてしまおう」，选第 1 项「今のうちに片付けを終わらせる」。"
+  },
+  "VAR-L15_q.mp3": "9b6437cadb5b",
+  "VAR-L15_exp.mp3": "97cf7b5c2a72",
+  "meta:VAR-L15": {
+    "q_audio": "./audio/VAR-L15_q.mp3?v=9b6437ca",
+    "exp_audio": "./audio/VAR-L15_exp.mp3?v=97cf7b5c",
+    "spoken_text": "男：「怎么啦？一大早就没精打采的。」 女：「昨晚追剧看到太晚，困死了。」 女生用「ドラマ見ちゃって」（＝見てしまって）懊悔交代缺觉原因。 口语「〜ちゃって」表带悔意的原因，选第 1 项「夜遅くまでドラマを見たから」。"
+  },
+  "VAR-L16_q.mp3": "b299f85fc961",
+  "VAR-L16_exp.mp3": "ee8004306e6b",
+  "meta:VAR-L16": {
+    "q_audio": "./audio/VAR-L16_q.mp3?v=b299f85f",
+    "exp_audio": "./audio/VAR-L16_exp.mp3?v=ee800430",
+    "spoken_text": "女：「咦，你原本不是只打算买一本书吗？」 男：「是啊，在书店翻着翻着觉得挺有意思，没忍住一下买了三本。」 「つい三冊も買っちゃった」表示一时手痒没忍住，比原计划多买了。 「つい〜ちゃった」表不由自主多做了某事，选第 1 项。"
+  },
+  "VAR-V22_q.mp3": "bae87856ddec",
+  "VAR-V22_exp.mp3": "a68da653a8fd",
+  "meta:VAR-V22": {
+    "q_audio": "./audio/VAR-V22_q.mp3?v=bae87856",
+    "exp_audio": "./audio/VAR-V22_exp.mp3?v=a68da653",
+    "spoken_text": "到了傍晚，外面的天色渐渐暗下来了。 傍晚天黑是随时间一点一滴平缓过渡的自然变化。 自然平缓渐变用「だんだん」；迅猛推进才用「どんどん」。"
+  },
+  "VAR-V23_q.mp3": "89098bb5fd8e",
+  "VAR-V23_exp.mp3": "8e32803183d8",
+  "meta:VAR-V23": {
+    "q_audio": "./audio/VAR-V23_q.mp3?v=89098bb5",
+    "exp_audio": "./audio/VAR-V23_exp.mp3?v=8e328031",
+    "spoken_text": "新工厂建成后，年轻人正源源不断地搬到这座小镇来。 形容新厂带动下人口接二连三、势头旺盛地涌入。 势头迅猛接连不断用「どんどん」；「ぼんやり」是迷糊发呆。"
+  },
+  "VAR-V24_q.mp3": "a72d74245a80",
+  "VAR-V24_exp.mp3": "67c87ee05723",
+  "meta:VAR-V24": {
+    "q_audio": "./audio/VAR-V24_q.mp3?v=a72d7424",
+    "exp_audio": "./audio/VAR-V24_exp.mp3?v=67c87ee0",
+    "spoken_text": "漫长的冬天结束了，从下周起新学期的课终于要开始了。 熬过整个冬天，终于迎来下周正式开学的关键节点。 期盼已久的时刻终于到来用「いよいよ」；「だんだん」表平缓渐变。"
+  },
+  "VAR-V25_q.mp3": "f9038e9292e7",
+  "VAR-V25_exp.mp3": "8456d4c11169",
+  "meta:VAR-V25": {
+    "q_audio": "./audio/VAR-V25_q.mp3?v=f9038e92",
+    "exp_audio": "./audio/VAR-V25_exp.mp3?v=8456d4c1",
+    "spoken_text": "难得大老远来一趟京都，去看看有名的神社再回去吧。 后接「〜のだから、見て帰ろう」，强调别白白浪费来京都的难得机会。 「せっかく〜のだから（难得…就别白来）」是固定黄金搭配；「わざわざ」强调专程费事。"
+  },
+  "VAR-V26_q.mp3": "79bef3d215ba",
+  "VAR-V26_exp.mp3": "bad9ea3814ae",
+  "meta:VAR-V26": {
+    "q_audio": "./audio/VAR-V26_q.mp3?v=79bef3d2",
+    "exp_audio": "./audio/VAR-V26_exp.mp3?v=bad9ea38",
+    "spoken_text": "明明发封邮件就够了，课长却特意走到我座位旁来指点我。 前面明确说了「メールで十分だったのに（发邮件本来就够了）」，课长却不怕麻烦亲自走一趟。 本不必如此却专程费心跑一趟必用「わざわざ」；「せっかく」表难得可贵别浪费。"
+  },
+  "VAR-V27_q.mp3": "cf4555264aec",
+  "VAR-V27_exp.mp3": "fb8aeaf86186",
+  "meta:VAR-V27": {
+    "q_audio": "./audio/VAR-V27_q.mp3?v=cf455526",
+    "exp_audio": "./audio/VAR-V27_exp.mp3?v=fb8aeaf8",
+    "spoken_text": "坐在咖啡馆窗边，出神地望着下雨的街道。 独自坐在咖啡馆隔着雨窗放空发呆、眼神不聚焦地闲看。 出神发呆或模糊不清用「ぼんやり」；清晰分明才是「はっきり」。"
+  },
+  "VAR-V28_q.mp3": "44f5cf156c08",
+  "VAR-V28_exp.mp3": "bdf88dae1a2f",
+  "meta:VAR-V28": {
+    "q_audio": "./audio/VAR-V28_q.mp3?v=44f5cf15",
+    "exp_audio": "./audio/VAR-V28_exp.mp3?v=bdf88dae",
+    "spoken_text": "搬了一整天的搬家行李，晚上累得瘫倒在沙发上动弹不得。 搬重物累了一整天，全身力气抽空瘫在沙发上。 精疲力竭瘫软无力用「ぐったり」；尺寸时间严丝合缝用「ぴったり」。"
+  },
+  "VAR-V29_q.mp3": "bcb0dc46c31c",
+  "VAR-V29_exp.mp3": "5ebadef1c2ec",
+  "meta:VAR-V29": {
+    "q_audio": "./audio/VAR-V29_q.mp3?v=bcb0dc46",
+    "exp_audio": "./audio/VAR-V29_exp.mp3?v=5ebadef1",
+    "spoken_text": "新干线完全按照时刻表，九点整分秒不差抵达了东京站。 前面有「時刻表どおり（完全按时刻表）」，说明九点整准点到站。 时刻后接「ぴったり」表示整点分秒不差；「ぎりぎり」是卡在最后一秒勉强赶上。"
+  },
+  "VAR-V30_q.mp3": "dd84ddd7e698",
+  "VAR-V30_exp.mp3": "3cd5d3b4e876",
+  "meta:VAR-V30": {
+    "q_audio": "./audio/VAR-V30_q.mp3?v=dd84ddd7",
+    "exp_audio": "./audio/VAR-V30_exp.mp3?v=3cd5d3b4",
+    "spoken_text": "只要时间允许，我想去各种各样的国家旅行看看。 考单汉字动词「許す（允许、原谅）」在惯用搭配里的训读。 「時間が許す（时间允许）」训读「ゆるす」；「のこす」是「残す（留下）」。"
+  },
+  "VAR-V31_q.mp3": "bf23dadd3bc3",
+  "VAR-V31_exp.mp3": "612a1ae2b11f",
+  "meta:VAR-V31": {
+    "q_audio": "./audio/VAR-V31_q.mp3?v=bf23dadd",
+    "exp_audio": "./audio/VAR-V31_exp.mp3?v=612a1ae2",
+    "spoken_text": "课长总是把新进公司的后辈当亲弟弟一样疼惜关照。 前面说「弟のように（像对待亲弟弟一样）」，自然是爱护关照。 疼爱照顾晚辈用「かわいがる → かわいがって」；「いやがる」是嫌弃抗拒。"
+  },
+  "VAR-V32_q.mp3": "f47604082082",
+  "VAR-V32_exp.mp3": "27285ab5e2c1",
+  "meta:VAR-V32": {
+    "q_audio": "./audio/VAR-V32_q.mp3?v=f4760408",
+    "exp_audio": "./audio/VAR-V32_exp.mp3?v=27285ab5",
+    "spoken_text": "会议提前结束，时间富余了三十分钟，就去喝了杯茶。 昨晚刚错过的双胞胎读音题：「余った（富余剩下）」vs「溜まった（积压）」。 时间或预算富余剩下写「余る」必读「あまる → あまった」；攒钱或积压工作才读「たまった」。"
+  },
+  "VAR-L07_q.mp3": "5b5f54b3366c",
+  "VAR-L07_exp.mp3": "9f4da0340e0c",
+  "meta:VAR-L07": {
+    "q_audio": "./audio/VAR-L07_q.mp3?v=5b5f54b3",
+    "exp_audio": "./audio/VAR-L07_exp.mp3?v=9f4da034",
+    "spoken_text": "男：「下周六想去那家超火的餐厅，不知道要紧吗。」 女：「周末肯定爆满，趁今天先订好位子吧。」 女生拍板「今日のうちに予約しとこうよ」（＝予約しておこう），趁今天提前订妥。 口语「〜とこう」＝「〜ておこう（提前办好吧）」，选第 1 项今天预订餐厅。"
+  },
+  "VAR-L11_q.mp3": "ab8907aaecfb",
+  "VAR-L11_exp.mp3": "8a1f1c94989f",
+  "meta:VAR-L11": {
+    "q_audio": "./audio/VAR-L11_q.mp3?v=ab8907aa",
+    "exp_audio": "./audio/VAR-L11_exp.mp3?v=8a1f1c94",
+    "spoken_text": "女：「下周会议的资料你已经看过了吗？」 男：「抱歉，刚才才拿到手，还没看呢。」 「まだ読んでないんだ」＝「まだ読んでいない」，刚拿到还没看。 口语把「〜ていない」里的「い」吃掉变成「〜てない」，选第 1 项。"
+  },
+  "VAR-V05_q.mp3": "b0d9c0df518d",
+  "VAR-V05_exp.mp3": "684403db95ba",
+  "meta:VAR-V05": {
+    "q_audio": "./audio/VAR-V05_q.mp3?v=b0d9c0df",
+    "exp_audio": "./audio/VAR-V05_exp.mp3?v=684403db",
+    "spoken_text": "今天空气清澈，连远处的富士山都看得一清二楚。 前面给出原因「空気が澄んでいて（空气澄澈透亮）」，远山轮廓清晰可见。 清楚分明用「はっきり」；雾蒙蒙看不清或发呆才是「ぼんやり」。"
+  },
+  "VAR3-L04_q.mp3": "25572be27cee",
+  "VAR3-L04_exp.mp3": "d3752227dad3",
+  "meta:VAR3-L04": {
+    "q_audio": "./audio/VAR3-L04_q.mp3?v=25572be2",
+    "exp_audio": "./audio/VAR3-L04_exp.mp3?v=d3752227",
+    "spoken_text": "女：「客人来之前，你能先把会议室窗户打开通通风吗？」 男：「好的，我现在马上去开好。」 「窓を開けといて」＝「窓を開けておいて」，提前打开窗户备着。 口语「〜といて」＝「〜ておいて」，选第 1 项先把会议室窗户打开。"
+  },
+  "VAR3-L10_q.mp3": "b55f02662a01",
+  "VAR3-L10_exp.mp3": "20d0ebfb6418",
+  "meta:VAR3-L10": {
+    "q_audio": "./audio/VAR3-L10_q.mp3?v=b55f0266",
+    "exp_audio": "./audio/VAR3-L10_exp.mp3?v=20d0ebfb",
+    "spoken_text": "男：「虽然没发烧，但从早上起嗓子就特别疼。」 女：「别硬撑了，今天早点回去休息比较好吧？」 女生句尾升调说「早く帰って休んだらいいんじゃない？」，委婉建议他早回家休息。 口语「〜んじゃない？」升调表柔和建议，选第 1 项早点回家休息。"
+  },
+  "VAR3-H13_exp.mp3": "614bc3096f55",
+  "meta:VAR3-H13": {
+    "q_audio": "",
+    "exp_audio": "./audio/VAR3-H13_exp.mp3?v=614bc309",
+    "spoken_text": "老师您写的新书，我昨天第一时间拜读了。 写书的是老师（已用尊敬语お書きになった），但后半句「昨天拜读了」是「我」做的动作。 自己读尊长的书必用谦让语「拝見しました」；「ご覧になりました」是尊长看。"
+  },
+  "VAR3-G13_q.mp3": "bed0815d6bb1",
+  "VAR3-G13_exp.mp3": "562ceddc78b9",
+  "meta:VAR3-G13": {
+    "q_audio": "./audio/VAR3-G13_q.mp3?v=bed0815d",
+    "exp_audio": "./audio/VAR3-G13_exp.mp3?v=562ceddc",
+    "spoken_text": "据新闻报道，从下个月起电费又要涨了。 句首有铁证「ニュースによると（据新闻说）」，属于转述消息来源的传闻。 传闻句型用动词简体原形「上がる＋そうだ」；去ます连用形「上がりそうだ」是眼看快要发生。"
+  },
+  "VAR3-H05_q.mp3": "701bb0dd9275",
+  "VAR3-H05_exp.mp3": "72900b88b126",
+  "meta:VAR3-H05": {
+    "q_audio": "./audio/VAR3-H05_q.mp3?v=701bb0dd",
+    "exp_audio": "./audio/VAR3-H05_exp.mp3?v=72900b88",
+    "spoken_text": "老师，我身体稍微有点不舒服，今天能准许我先回去吗？ 身体不适向老师请假，恳请老师「允许我先回家」。 五段动词「帰る」变使役て形「帰らせて」＋「いただけませんか」（恳请准许我…）。"
+  },
+  "VAR3-G22_exp.mp3": "7d73c625ebae",
+  "meta:VAR3-G22": {
+    "q_audio": "",
+    "exp_audio": "./audio/VAR3-G22_exp.mp3?v=7d73c625",
+    "spoken_text": "空调坏了，屋子里热得受不了。 昨晚刚混过的双胞胎：「たまらない（受不了）」vs「かまわない（没关系）」。 「暑くてたまらない」＝热得难以忍受；「暑くてもかまわない」＝就算热也没关系。"
+  },
+  "VAR3-H09_q.mp3": "745875fcdfa9",
+  "VAR3-H09_exp.mp3": "5956512922b7",
+  "meta:VAR3-H09": {
+    "q_audio": "./audio/VAR3-H09_q.mp3?v=745875fc",
+    "exp_audio": "./audio/VAR3-H09_exp.mp3?v=59565129",
+    "spoken_text": "因为每天坚持练习，现在能游五十米了。 考五段动词「泳ぐ（およぐ）」的可能形。 五段动词词尾「ぐ」直接变え段「げ＋る」→「泳げる」；绝不加「られる」。"
+  },
+  "VAR3-L06_q.mp3": "17c062c60f91",
+  "VAR3-L06_exp.mp3": "4eba23b0d516",
+  "meta:VAR3-L06": {
+    "q_audio": "./audio/VAR3-L06_q.mp3?v=17c062c6",
+    "exp_audio": "./audio/VAR3-L06_exp.mp3?v=4eba23b0",
+    "spoken_text": "女：「辛苦啦，我先把这个包裹送去邮局寄了吧？」 男：「啊，邮局先往后放，在那之前能先把这份文件交给课长吗？」 「郵便局は後にして（邮局往后放）」＋「その前に（在那之前先…）」把交文件插到了第一位。 抓准「その前に」后面的动作，选第 1 项「課長に書類を渡す」。"
+  },
+  "VAR3-H02_exp.mp3": "b5cbd5019d8d",
+  "meta:VAR3-H02": {
+    "q_audio": "",
+    "exp_audio": "./audio/VAR3-H02_exp.mp3?v=b5cbd501",
+    "spoken_text": "小时候考试分数差，经常被妈妈批评。 前面有「母に（被妈妈…）」，考五段动词被动形。 「叱る（しかる）」五段被动形：る→ら＋れた＝「叱られた」；「叱らせた」是使役。"
+  },
+  "VAR3-L01_q.mp3": "cc51b453b494",
+  "VAR3-L01_exp.mp3": "3a6daaeb1357",
+  "meta:VAR3-L01": {
+    "q_audio": "./audio/VAR3-L01_q.mp3?v=cc51b453",
+    "exp_audio": "./audio/VAR3-L01_exp.mp3?v=3a6daaeb",
+    "spoken_text": "女：「咦，图书馆借的书，还书期限不是到今天为止吗？」 男：「真的耶！趁关门前必须赶紧去还了。」 男生喊「急いで返さなくちゃ」（＝返さなくてはいけない），必须马上赶在闭馆前去还书。 口语句尾「〜なくちゃ」表必须做某事，选第 1 项今天去图书馆还书。"
+  },
+  "VAR3-H11_exp.mp3": "d85a906067ad",
+  "meta:VAR3-H11": {
+    "q_audio": "",
+    "exp_audio": "./audio/VAR3-H11_exp.mp3?v=d85a9060",
+    "spoken_text": "让您久等了，我们负责人马上就过来。 接待来访客户时，向客户说明「本公司负责人（自家人）马上过来」。 对外人谈本公司人员去来，一律用谦让语「参ります」；绝不能对自家人用「いらっしゃいます」。"
+  },
+  "VAR3-H06_exp.mp3": "ed7394295bc4",
+  "meta:VAR3-H06": {
+    "q_audio": "",
+    "exp_audio": "./audio/VAR3-H06_exp.mp3?v=ed739429",
+    "spoken_text": "没法拒绝前辈，在第二场酒局上被逼着喝到了很晚。 前面说「先輩に断れなくて（没法推辞前辈）」，说明是被迫喝酒。 被迫做某事用使役受身形：「飲む」→「飲まされた（被灌酒）」。"
+  },
+  "VAR3-G10_q.mp3": "586d62b3b191",
+  "VAR3-G10_exp.mp3": "e89fbde22c3a",
+  "meta:VAR3-G10": {
+    "q_audio": "./audio/VAR3-G10_q.mp3?v=586d62b3",
+    "exp_audio": "./audio/VAR3-G10_exp.mp3?v=e89fbde2",
+    "spoken_text": "刚才来消息说已经出车站了，按理说马上就该到了，怎么还没来呢。 凭「刚才已出站」这一客观依据推断按理该到了，但现实还没到。 客观依据推断＋现实落差固定用「〜はずなんですが」；「わけだ」解释既成事实。"
   },
   "done.mp3": "8116f5a629ae"
 }
