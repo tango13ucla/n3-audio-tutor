@@ -5,6 +5,10 @@ on:
     branches: [main]
     paths:
       - 'tutor_prefs.json'
+      - 'radio_salon_*.py'
+      - 'radio_dialogue_bank.py'
+      - 'weak_expansion_*.py'
+      - 'weak_explanations_bank.py'
   schedule:
     # Early-morning full episode + daily deck synthesis at 05:11 AM, 05:23 AM, 06:18 AM, and 07:00 AM PT
     - cron: '11 13 * * *'
@@ -66,6 +70,36 @@ jobs:
                   meta_date = ""
           if ev == "workflow_dispatch" or meta_date != study_pt:
               print("full")
+              raise SystemExit(0)
+          need_new_vol = False
+          need_new_cards = False
+          try:
+              from radio_dialogue_bank import SALON_STORIES
+              rhist = (json.load(open("audio/radio_history.json", encoding="utf-8")).get("recent_days") or {}) if os.path.exists("audio/radio_history.json") else {}
+              today_sids = set(rhist.get(study_pt) or [])
+              past_sids = {sid for d, sids in rhist.items() if d < study_pt for sid in (sids or [])}
+              if SALON_STORIES:
+                  top_st = SALON_STORIES[0]
+                  top_id = str(top_st.get("id") or "")
+                  if (top_id.startswith("uchi") or top_st.get("tier") == "uchi_intellectual") and top_id not in past_sids and top_id not in today_sids:
+                      need_new_vol = True
+          except Exception:
+              pass
+          try:
+              from weak_explanations_bank import NEW_CARDS_AUDIO
+              mf = json.load(open("audio/audio_manifest.json", encoding="utf-8")) if os.path.exists("audio/audio_manifest.json") else {}
+              for cid in NEW_CARDS_AUDIO:
+                  q_rel = (mf.get(f"meta:{cid}") or {}).get("q_audio", "")
+                  if not q_rel or not os.path.exists(q_rel):
+                      need_new_cards = True
+                      break
+          except Exception:
+              pass
+          if need_new_vol:
+              print("full")
+              raise SystemExit(0)
+          if need_new_cards:
+              print("quiz_only")
               raise SystemExit(0)
           print("sync_check")
           PY

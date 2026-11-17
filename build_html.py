@@ -238,6 +238,11 @@ try:
     LISTENING_OPT_NOTES.update(WAVE2_LISTENING_OPT_NOTES)
 except Exception:
     pass
+try:
+    from weak_expansion_wave3 import WAVE3_LISTENING_OPT_NOTES
+    LISTENING_OPT_NOTES.update(WAVE3_LISTENING_OPT_NOTES)
+except Exception:
+    pass
 
 
 def build_opt_notes(card_id: str, raw_notes: dict | None) -> dict:
@@ -560,21 +565,85 @@ touched_today_ids = set()
 for cid in list(clean_green_at.keys()) + list(clean_retest_at.keys()) + list((seeded_day.get("sched") or {}).keys()):
     touched_today_ids.add(card_to_base.get(cid, cid))
 
+answered_today_ids = set()
+for cid in list(clean_green_at.keys()) + list(clean_retest_at.keys()):
+    answered_today_ids.add(card_to_base.get(cid, cid))
+for cid, s_arr in (seeded_day.get("sched") or {}).items():
+    if isinstance(s_arr, list) and ((s_arr[0] if len(s_arr) > 0 else 0) > 0 or (s_arr[2] if len(s_arr) > 2 else 0) > 0):
+        answered_today_ids.add(card_to_base.get(cid, cid))
+
 prev_day_touched_ids = set()
+prev_day_seen_cards = set()
+ever_seen_order = {}
+_seen_seq = 0
+try:
+    import datetime as _dt_mod
+    from zoneinfo import ZoneInfo as _ZoneInfo
+    _pt_tz = _ZoneInfo("America/Los_Angeles")
+    _plan_day_ord = _dt_mod.date.fromisoformat(plan_date_str[:10]).toordinal()
+except Exception:
+    import datetime as _dt_mod
+    _pt_tz = _dt_mod.timezone(_dt_mod.timedelta(hours=-8))
+    _plan_day_ord = 1
+
 try:
     all_snap_dates = sorted(d for d in (cloud_snap.get("dates") or {}).keys() if d < plan_date_str)
+    for _sd in all_snap_dates:
+        _day_obj = (cloud_snap.get("dates") or {}).get(_sd) or {}
+        _day_pairs = []
+        for _cid, _ts in (_day_obj.get("greenAt") or {}).items():
+            if int(_ts or 0) >= MIN_REAL_TS:
+                _day_pairs.append((int(_ts), _cid))
+        for _cid, _ts in (_day_obj.get("retestAt") or {}).items():
+            if int(_ts or 0) >= MIN_REAL_TS:
+                _day_pairs.append((int(_ts), _cid))
+        _day_pairs.sort()
+        for _, _cid in _day_pairs:
+            _seen_seq += 1
+            ever_seen_order[_cid] = _seen_seq
     if all_snap_dates:
         prev_day_obj = (cloud_snap.get("dates") or {}).get(all_snap_dates[-1]) or {}
         for cid in list((prev_day_obj.get("greenAt") or {}).keys()) + list((prev_day_obj.get("retestAt") or {}).keys()):
+            prev_day_seen_cards.add(cid)
             prev_day_touched_ids.add(card_to_base.get(cid, cid))
 except Exception:
     pass
 
 try:
-    import datetime as _dt_mod
-    _plan_day_ord = _dt_mod.date.fromisoformat(plan_date_str[:10]).toordinal()
+    _plog_path = os.path.join(BASE_DIR, "practice_log.jsonl")
+    if os.path.exists(_plog_path):
+        _plog_by_day = {}
+        with open(_plog_path, encoding="utf-8") as _pf:
+            for _line in _pf:
+                _line = _line.strip()
+                if not _line:
+                    continue
+                try:
+                    _ev = json.loads(_line)
+                except Exception:
+                    continue
+                _cid = str(_ev.get("id") or "").strip()
+                if not _cid or _cid.startswith("VC-"):
+                    continue
+                _ts_raw = str(_ev.get("ts") or "").strip()
+                _sday = ""
+                if _ts_raw:
+                    try:
+                        _dt_utc = _dt_mod.datetime.fromisoformat(_ts_raw.replace("Z", "+00:00"))
+                        _sday = (_dt_utc.astimezone(_pt_tz) - _dt_mod.timedelta(hours=5)).strftime("%Y-%m-%d")
+                    except Exception:
+                        _sday = _ts_raw[:10]
+                if _sday and _sday < plan_date_str:
+                    _plog_by_day.setdefault(_sday, []).append(_cid)
+                    _seen_seq += 1
+                    ever_seen_order[_cid] = _seen_seq
+        if _plog_by_day:
+            _latest_plog_day = sorted(_plog_by_day.keys())[-1]
+            for _cid in _plog_by_day[_latest_plog_day]:
+                prev_day_seen_cards.add(_cid)
+                prev_day_touched_ids.add(card_to_base.get(_cid, _cid))
 except Exception:
-    _plan_day_ord = 1
+    pass
 
 
 def deck_sort_key(p: dict):
@@ -589,24 +658,35 @@ def deck_sort_key(p: dict):
 raw_points.sort(key=deck_sort_key)
 raw_points = raw_points[:DECK_CAP]
 
-# Cross-day fresh sentence rotation: if a point was NOT yet touched today, has variants,
-# and was answered yesterday (or is in cross-day consolidation), swap in a fresh variant sentence
-# as today's primary while preserving the original in variants for same-day retest!
+# Cross-day fresh sentence rotation: if a point was NOT yet touched today and has variants,
+# never show a sentence answered yesterday when an unseen or older variant is available!
 for _p in raw_points:
     _qid = _p["id"]
     _vars = list(_p.get("variants") or [])
-    if _qid in touched_today_ids or not _vars:
+    if _qid in answered_today_ids or not _vars:
         continue
-    if _qid in prev_day_touched_ids:
+    _prim_id = _p["primary"]["id"]
+    if _prim_id in prev_day_seen_cards or _qid in prev_day_touched_ids or _prim_id in ever_seen_order:
         _all_cards = [_p["primary"]] + _vars
-        _pick_idx = 1 + (_plan_day_ord % len(_vars))
-        _new_prim = _all_cards[_pick_idx]
-        _p["primary"] = _new_prim
-        _p["variants"] = [_c for _i, _c in enumerate(_all_cards) if _i != _pick_idx]
-        if _p.get("teach"):
-            _p["teach"]["example_ja"] = _new_prim.get("full_ja") or _p["teach"].get("example_ja", "")
-            _p["teach"]["zh_meaning"] = _new_prim.get("zh_meaning") or _p["teach"].get("zh_meaning", "")
-            _p["teach"]["audio"] = _new_prim.get("exp_audio") or _p["teach"].get("audio", "")
+        _unseen = [_c for _c in _all_cards if _c["id"] not in prev_day_seen_cards and _c["id"] not in ever_seen_order]
+        if _unseen:
+            _new_prim = _unseen[_plan_day_ord % len(_unseen)]
+        else:
+            _not_prev = [_c for _c in _all_cards if _c["id"] not in prev_day_seen_cards]
+            if _not_prev:
+                _not_prev.sort(key=lambda _c: (ever_seen_order.get(_c["id"], -1), _c["id"]))
+                _new_prim = _not_prev[0]
+            else:
+                _others = [_c for _c in _all_cards if _c["id"] != _prim_id] or _all_cards
+                _others.sort(key=lambda _c: (ever_seen_order.get(_c["id"], -1), _c["id"]))
+                _new_prim = _others[0]
+        if _new_prim["id"] != _prim_id:
+            _p["primary"] = _new_prim
+            _p["variants"] = [_c for _c in _all_cards if _c["id"] != _new_prim["id"]]
+            if _p.get("teach"):
+                _p["teach"]["example_ja"] = _new_prim.get("full_ja") or _p["teach"].get("example_ja", "")
+                _p["teach"]["zh_meaning"] = _new_prim.get("zh_meaning") or _p["teach"].get("zh_meaning", "")
+                _p["teach"]["audio"] = _new_prim.get("exp_audio") or _p["teach"].get("audio", "")
 
 buckets = {"语法": [], "活用": [], "词汇": [], "听力": []}
 for p in raw_points:

@@ -90,19 +90,12 @@ def validate_generated_story(st: dict) -> bool:
 
 
 def _call_chat_llm(system_prompt: str, user_prompt: str) -> str | None:
-    gh_token = (os.environ.get("GITHUB_MODELS_TOKEN") or "").strip()
     openai_key = (os.environ.get("OPENAI_API_KEY") or "").strip()
     gemini_key = (os.environ.get("GEMINI_API_KEY") or "").strip()
 
-    if openai_key or gh_token:
-        url = (
-            "https://api.openai.com/v1/chat/completions"
-            if openai_key
-            else "https://models.github.ai/inference/chat/completions"
-        )
-        token = openai_key or gh_token
-        models = ("gpt-4o", "gpt-4o-mini") if openai_key else ("openai/gpt-4o", "openai/gpt-4o-mini")
-        for model in models:
+    if openai_key:
+        url = "https://api.openai.com/v1/chat/completions"
+        for model in ("gpt-4o", "gpt-4o-mini"):
             payload = json.dumps({
                 "model": model,
                 "temperature": 0.65,
@@ -117,7 +110,7 @@ def _call_chat_llm(system_prompt: str, user_prompt: str) -> str | None:
                     url,
                     data=payload,
                     headers={
-                        "Authorization": f"Bearer {token}",
+                        "Authorization": f"Bearer {openai_key}",
                         "Content-Type": "application/json",
                     },
                     method="POST",

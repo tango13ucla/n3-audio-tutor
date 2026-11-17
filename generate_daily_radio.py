@@ -274,20 +274,25 @@ def load_mastery_priority(state: dict, recent_wrong_keys: set, hot_wrong_keys: s
     return scores
 
 
-def load_previous_day_stories(today_str: str) -> tuple[set, set, set]:
+def load_recent_story_ages(today_str: str, max_days: int = 14) -> dict[str, int]:
+    """Returns {story_id: days_ago (1 = most recent prior broadcast day)} across up to `max_days`."""
     if not os.path.exists(RADIO_HISTORY_PATH):
-        return set(), set(), set()
+        return {}
     try:
         with open(RADIO_HISTORY_PATH, encoding="utf-8") as f:
             hist = json.load(f)
         by_date = hist.get("recent_days") or {}
-        prior_dates = sorted(d for d in by_date.keys() if d < today_str)
-        prev_1 = set(by_date.get(prior_dates[-1]) or []) if len(prior_dates) >= 1 else set()
-        prev_2 = set(by_date.get(prior_dates[-2]) or []) if len(prior_dates) >= 2 else set()
-        prev_3 = set(by_date.get(prior_dates[-3]) or []) if len(prior_dates) >= 3 else set()
-        return prev_1, prev_2, prev_3
+        prior_dates = sorted(d for d in by_date.keys() if d < today_str)[-max_days:]
+        ages: dict[str, int] = {}
+        # Iterate oldest -> newest so most recent play overwrites with smallest `days_ago`
+        total_prior = len(prior_dates)
+        for idx, d_str in enumerate(prior_dates):
+            days_ago = total_prior - idx
+            for sid in (by_date.get(d_str) or []):
+                ages[str(sid)] = days_ago
+        return ages
     except Exception:
-        return set(), set(), set()
+        return {}
 
 
 def save_today_stories(today_str: str, story_ids: list) -> None:
@@ -302,7 +307,7 @@ def save_today_stories(today_str: str, story_ids: list) -> None:
             hist = {"recent_days": {}}
     hist["last_date"] = today_str
     hist["recent_days"][today_str] = list(story_ids)
-    keep_dates = sorted(hist["recent_days"].keys())[-10:]
+    keep_dates = sorted(hist["recent_days"].keys())[-14:]
     hist["recent_days"] = {k: hist["recent_days"][k] for k in keep_dates}
     with open(RADIO_HISTORY_PATH, "w", encoding="utf-8") as f:
         json.dump(hist, f, ensure_ascii=False, indent=2)
@@ -877,26 +882,29 @@ async def main():
 
     recent_wrong, hot_wrong = load_recent_mistakes()
     scores = load_mastery_priority(state, recent_wrong, hot_wrong)
-    prev_1, prev_2, prev_3 = load_previous_day_stories(today_str)
+    recent_ages = load_recent_story_ages(today_str, max_days=14)
     rng = random.Random(today_str)
+    pool_order = {st["id"]: idx for idx, st in enumerate(SALON_STORIES)}
 
     def story_rank(st: dict) -> float:
         pids = st.get("point_ids") or []
         pkeys = [resolve_point_key(pid) for pid in pids]
         pt_vals = sorted((scores.get(pid, 2.2) for pid in pids), reverse=True)
         top_avg = sum(pt_vals[:3]) / max(1, len(pt_vals[:3])) if pt_vals else 2.2
-        repeat_penalty = (
-            6.5 if st["id"] in prev_1
-            else (3.5 if st["id"] in prev_2 else (1.5 if st["id"] in prev_3 else 0.0))
-        )
+        days_ago = recent_ages.get(st["id"], 0)
+        # Hard 14-day anti-repeat gate: any chapter played within 14 days gets -86..-98 so it NEVER beats unplayed chapters
+        repeat_penalty = (100.0 - min(14, days_ago) * 2.0) if days_ago > 0 else 0.0
         memory_bonus = 0.0
         if st["id"] in _rp["avoid_story_ids"]:
-            memory_bonus -= 9.0
+            memory_bonus -= 50.0
         tier = st.get("tier", "")
         if tier == "live_news":
             memory_bonus += 6.2
         elif tier == "uchi_intellectual":
             memory_bonus += 5.0
+            # Keep newest unplayed 11-chapter Uchi volume cohesive so all 11 callback chapters play together
+            p_idx = pool_order.get(st["id"], 50)
+            memory_bonus += max(0.0, 1.5 - 0.04 * p_idx)
         if _focus and any((pid in _focus or pk in _focus) for pid, pk in zip(pids, pkeys)):
             memory_bonus += 0.8
         blob = f'{st.get("title", "")} {" ".join(st.get("tags", []) or [])}'
@@ -909,9 +917,7 @@ async def main():
     # (Skip LLM generation if SALON_STORIES already has an unplayed curated 今日时局 chapter)
     has_unplayed_curated_news = any(
         st.get("short_tab") == "今日时局"
-        and st["id"] not in prev_1
-        and st["id"] not in prev_2
-        and st["id"] not in prev_3
+        and st["id"] not in recent_ages
         for st in SALON_STORIES
     )
     top_focus_labels = [resolve_point_key(pid) for pid, _ in sorted(scores.items(), key=lambda kv: kv[1], reverse=True)[:6]]
