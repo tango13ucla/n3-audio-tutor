@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-17 09:06 PT",
+  "updated_at": "2026-11-17 13:44 PT",
   "exam_date": "2026-12-06",
   "days_left": 19,
   "target_score": "120+ / 180",
@@ -11782,11 +11782,11 @@
   "daily_rituals": {
     "date": "2026-11-17",
     "quiz_green": 0,
-    "radio_max_sec": 686,
+    "radio_max_sec": 840,
     "flash_seen": 0,
     "flash_target": 0,
     "flash_done": false
   },
   "study_date": "2026-11-17",
-  "_baked_epoch": 1794935167
+  "_baked_epoch": 1794951872
 }
