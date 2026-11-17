@@ -90,7 +90,8 @@ jobs:
               mf = json.load(open("audio/audio_manifest.json", encoding="utf-8")) if os.path.exists("audio/audio_manifest.json") else {}
               for cid in NEW_CARDS_AUDIO:
                   q_rel = (mf.get(f"meta:{cid}") or {}).get("q_audio", "")
-                  if not q_rel or not os.path.exists(q_rel):
+                  q_clean = q_rel.split("?")[0].lstrip("./") if q_rel else ""
+                  if not q_clean or not os.path.exists(q_clean):
                       need_new_cards = True
                       break
           except Exception:

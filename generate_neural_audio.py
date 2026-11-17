@@ -206,7 +206,10 @@ async def detect_voice_map() -> dict:
 def expand_q_turn(spk: str, val) -> list:
     if spk == "PAUSE":
         return [("PAUSE", float(val))]
-    return [(spk, str(val).strip())]
+    txt = str(val).strip()
+    if not txt or not re.search(r"[\w\u3040-\u30ff\u4e00-\u9fff]", txt):
+        return []
+    return [(spk, txt)]
 
 
 def expand_exp_turn(spk: str, val, two_speaker_dialogue: bool) -> list:
