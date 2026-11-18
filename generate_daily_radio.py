@@ -1023,7 +1023,7 @@ async def main():
         state = json.load(f)
 
     now_pt = datetime.datetime.now(PT_TZ)
-    study_dt = (now_pt - datetime.timedelta(hours=5)).date()
+    study_dt = (now_pt - datetime.timedelta(hours=4)).date()
     today_str = study_dt.strftime("%Y-%m-%d")
     days_left = max(0, (EXAM_DATE - study_dt).days)
     day_ord = study_dt.toordinal()

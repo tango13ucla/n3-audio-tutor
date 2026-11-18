@@ -85,7 +85,7 @@ def _iso_to_study_date(ts_iso: str) -> str:
     dt = _parse_iso_dt(ts_iso)
     if dt is None:
         return ""
-    dt_pt = dt.astimezone(PT_TZ) - datetime.timedelta(hours=5)
+    dt_pt = dt.astimezone(PT_TZ) - datetime.timedelta(hours=4)
     return dt_pt.strftime("%Y-%m-%d")
 
 

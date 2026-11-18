@@ -35,7 +35,7 @@ def load_prefs() -> dict:
 
 def study_date() -> str:
     now = datetime.datetime.now(PT_TZ)
-    return (now - datetime.timedelta(hours=5)).date().isoformat()
+    return (now - datetime.timedelta(hours=4)).date().isoformat()
 
 
 def today_load(prefs: dict | None = None, day: str | None = None) -> tuple[str, str]:

@@ -630,7 +630,7 @@ try:
                 if _ts_raw:
                     try:
                         _dt_utc = _dt_mod.datetime.fromisoformat(_ts_raw.replace("Z", "+00:00"))
-                        _sday = (_dt_utc.astimezone(_pt_tz) - _dt_mod.timedelta(hours=5)).strftime("%Y-%m-%d")
+                        _sday = (_dt_utc.astimezone(_pt_tz) - _dt_mod.timedelta(hours=4)).strftime("%Y-%m-%d")
                     except Exception:
                         _sday = _ts_raw[:10]
                 if _sday and _sday < plan_date_str:

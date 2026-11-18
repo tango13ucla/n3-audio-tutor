@@ -22,12 +22,17 @@ on:
       - 'run_brain_algorithm.py'
       - 'sync_cloud_store.py'
       - 'audio/qq_real_*.wav'
+      - 'macmini_heartbeat.json'
+      - '.github/workflows/daily-n3-brain.yml'
   schedule:
     # Stage 1 (02:03 AM PT = 10:03 UTC in PST): Post-midnight study close-out & focus-point summary
     - cron: '3 10 * * *'
-    # Stage 2 (05:02 AM, 05:23 AM, 06:18 AM, 07:00 AM PT): Morning content prep + 40m episode & zero-repeat deck synthesis
+    # Stage 2 (04:12, 04:42, 05:02, 05:23, 05:48, 06:18, 07:00 AM PT): Morning content prep + 40m episode & zero-repeat deck synthesis
+    - cron: '12 12 * * *'
+    - cron: '42 12 * * *'
     - cron: '2 13 * * *'
     - cron: '23 13 * * *'
+    - cron: '48 13 * * *'
     - cron: '18 14 * * *'
     - cron: '0 15 * * *'
     # Daytime cloud answer & Grok brief sync (09:17, 13:17, 17:17, 21:17 PT in PST).
@@ -60,7 +65,7 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Run 02:00 AM Night Summary or 05:00 AM Full N3 Brain Refresh
+      - name: Run 02:00 AM Night Summary or 04:00+ AM Full N3 Brain Refresh
         id: brain_step
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
@@ -74,14 +79,14 @@ jobs:
           import datetime, json, os
           from zoneinfo import ZoneInfo
           now_pt = datetime.datetime.now(ZoneInfo("America/Los_Angeles"))
-          study_pt = (now_pt - datetime.timedelta(hours=5)).strftime("%Y-%m-%d")
+          study_pt = (now_pt - datetime.timedelta(hours=4)).strftime("%Y-%m-%d")
           ev = os.environ.get("EVENT_NAME", "")
           cron_s = os.environ.get("CRON_SCHEDULE", "")
           inp = os.environ.get("INPUT_MODE", "full")
           if ev == "workflow_dispatch" and inp in ("quiz_only", "radio_only", "night_summary", "full"):
               print(inp)
               raise SystemExit(0)
-          if ev == "schedule" and cron_s == "3 10 * * *":
+          if ev == "schedule" and cron_s == "3 10 * * *" and now_pt.hour < 4:
               print("night_summary")
               raise SystemExit(0)
           meta_date = ""
@@ -139,8 +144,8 @@ jobs:
               print("quiz_only")
               raise SystemExit(0)
           if need_new_cards:
-              # Before midnight while today's deck is already active, pre-bake MP3s quietly without swapping today's HTML!
-              print("prebake_cards" if (17 <= now_pt.hour or now_pt.hour < 5) else "quiz_only")
+              # Before 04:00 AM PT while today's deck is still active, pre-bake MP3s quietly without swapping HTML!
+              print("prebake_cards" if (17 <= now_pt.hour or now_pt.hour < 4) else "quiz_only")
               raise SystemExit(0)
           print("sync_check")
           PY

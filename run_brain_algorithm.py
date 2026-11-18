@@ -52,7 +52,7 @@ def _iso_to_day_tag(ts_iso: str, fallback_tag: str) -> str:
         dt = datetime.datetime.fromisoformat(s)
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=datetime.timezone.utc)
-        dt_pt = dt.astimezone(PT_TZ) - datetime.timedelta(hours=5)
+        dt_pt = dt.astimezone(PT_TZ) - datetime.timedelta(hours=4)
         return dt_pt.strftime("%Y%m%d")
     except Exception:
         return fallback_tag
@@ -199,7 +199,7 @@ def _enroll_vocab_if_needed(state: dict, v_map: dict, word: str, extra_meta: dic
 def apply_practice_logs(state: dict, fallback_day_tag: str = "") -> int:
     if not fallback_day_tag:
         now_pt = datetime.datetime.now(PT_TZ)
-        fallback_day_tag = (now_pt - datetime.timedelta(hours=5)).strftime("%Y%m%d")
+        fallback_day_tag = (now_pt - datetime.timedelta(hours=4)).strftime("%Y%m%d")
 
     applied = 0
     seen_ts = set(state.get("_processed_log_ts", []))
@@ -522,7 +522,7 @@ def main():
         state = json.load(f)
 
     now_pt = datetime.datetime.now(PT_TZ)
-    study_dt = (now_pt - datetime.timedelta(hours=5)).date()
+    study_dt = (now_pt - datetime.timedelta(hours=4)).date()
     days_left = max(0, (EXAM_DATE - study_dt).days)
     state["days_left"] = days_left
     state["study_date"] = study_dt.strftime("%Y-%m-%d")

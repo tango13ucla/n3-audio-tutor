@@ -99,7 +99,7 @@ def collect_study_history(cutoff_study_day: str | None = None) -> tuple[
             if ts_raw:
                 try:
                     dt_utc = datetime.datetime.fromisoformat(ts_raw.replace("Z", "+00:00"))
-                    sday = (dt_utc.astimezone(PT_TZ) - datetime.timedelta(hours=5)).strftime("%Y-%m-%d")
+                    sday = (dt_utc.astimezone(PT_TZ) - datetime.timedelta(hours=4)).strftime("%Y-%m-%d")
                 except Exception:
                     sday = ts_raw[:10]
             if not sday or (cutoff_study_day and sday > cutoff_study_day):
@@ -108,7 +108,7 @@ def collect_study_history(cutoff_study_day: str | None = None) -> tuple[
             cid = str(ev.get("id") or "").strip()
             pt = str(ev.get("point") or "").strip()
             ok = str(ev.get("correct", "")).lower() == "true" or ev.get("correct") is True
-            ask_again = str(ev.get("ask_again", "")).lower() == "true" or ev.get("ask_again") is True
+            ask_again = str(ev.get("ask_again", "")).lower() == "true" or ev.get("ask_again", "") is True
             choice = str(ev.get("choice") or "")
 
             if cid.startswith("LK:"):
@@ -138,11 +138,11 @@ def collect_study_history(cutoff_study_day: str | None = None) -> tuple[
     return by_day_events, ever_seen_cards, missed_by_day, missed_vocab_by_day, looked_up_by_day
 
 
-def run_night_summary() -> int:
+def run_night_summary(target_closed_day: str | None = None) -> int:
     subprocess.run([sys.executable, str(BASE_DIR / "sync_cloud_store.py")], cwd=str(BASE_DIR), check=False)
     now_pt = datetime.datetime.now(PT_TZ)
-    # At 02:00 AM PT, now_pt - 5h is 21:00 of the just-finished study day!
-    closed_study_day = (now_pt - datetime.timedelta(hours=5)).strftime("%Y-%m-%d")
+    # At 02:00 AM PT, now_pt - 4h is 22:00 of the just-finished study day; when called from morning-prepare (>=04:00 AM), target_closed_day is yesterday.
+    closed_study_day = target_closed_day or (now_pt - datetime.timedelta(hours=4)).strftime("%Y-%m-%d")
     by_day, ever_seen, missed_by_day, missed_vocab_by_day, looked_up_by_day = collect_study_history(
         cutoff_study_day=closed_study_day
     )
@@ -304,11 +304,13 @@ def _author_trio_chapter(
 
 
 def run_morning_prepare() -> int:
-    # Ensure night_summary & lookup ledger are completely fresh even if late cloud sync packets arrived!
-    run_night_summary()
-
     now_pt = datetime.datetime.now(PT_TZ)
-    study_today = (now_pt - datetime.timedelta(hours=5)).strftime("%Y-%m-%d")
+    study_today_dt = (now_pt - datetime.timedelta(hours=4)).date()
+    study_today = study_today_dt.strftime("%Y-%m-%d")
+    yesterday_str = (study_today_dt - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+    # Ensure yesterday's night_summary & lookup ledger are completely fresh even if 02:00 AM cron was delayed/skipped!
+    run_night_summary(target_closed_day=yesterday_str)
+
     _, ever_seen, missed_by_day, missed_vocab_by_day, looked_up_by_day = collect_study_history(cutoff_study_day=None)
 
     prior_days = sorted(
