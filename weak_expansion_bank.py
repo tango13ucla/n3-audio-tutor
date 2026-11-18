@@ -792,4 +792,26 @@ from weak_expansion_wave4 import (
 NEW_VARIANT_CARDS.extend(WAVE4_VARIANT_CARDS)
 NEW_EXTRA_WORDS.update(WAVE4_EXTRA_WORDS)
 
+try:
+    from weak_expansion_wave5 import (
+        WAVE5_EXTRA_WORDS,
+        WAVE5_VARIANT_CARDS,
+    )
+    NEW_VARIANT_CARDS.extend(WAVE5_VARIANT_CARDS)
+    NEW_EXTRA_WORDS.update(WAVE5_EXTRA_WORDS)
+except ImportError:
+    pass
 
+try:
+    from weak_expansion_wave6 import (
+        WAVE6_EXTRA_WORDS,
+        WAVE6_POINT_META,
+        WAVE6_PRIMARY_CARDS,
+        WAVE6_VARIANT_CARDS,
+    )
+    NEW_POINT_META.update(WAVE6_POINT_META)
+    NEW_PRIMARY_CARDS.extend(WAVE6_PRIMARY_CARDS)
+    NEW_VARIANT_CARDS.extend(WAVE6_VARIANT_CARDS)
+    NEW_EXTRA_WORDS.update(WAVE6_EXTRA_WORDS)
+except ImportError:
+    pass

@@ -548,4 +548,14 @@ NEW_CARDS_AUDIO.update(WAVE2_CARDS_AUDIO)
 NEW_CARDS_AUDIO.update(WAVE3_CARDS_AUDIO)
 NEW_CARDS_AUDIO.update(WAVE4_CARDS_AUDIO)
 
+try:
+    from weak_expansion_wave5 import WAVE5_CARDS_AUDIO
+    NEW_CARDS_AUDIO.update(WAVE5_CARDS_AUDIO)
+except ImportError:
+    pass
 
+try:
+    from weak_expansion_wave6 import WAVE6_CARDS_AUDIO
+    NEW_CARDS_AUDIO.update(WAVE6_CARDS_AUDIO)
+except ImportError:
+    pass

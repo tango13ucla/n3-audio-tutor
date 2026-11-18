@@ -1095,7 +1095,7 @@ def _clean_listen_ordinal(txt: str) -> str:
     s = _re.sub(r"第[一二三123][句项]给课长发邮件", "给课长发邮件那项", s)
     s = _re.sub(r"第[一二三123][句项]去银行", "去银行那项", s)
     s = _re.sub(r"第[一二三123][句项]吃午饭", "吃午饭那项", s)
-    s = _re.sub(r"\s+([\u4e00-\u9fff])", r"\1", s)
+    s = _re.sub(r"(?<![\u3040-\u30ffー・])\s+([\u4e00-\u9fff])", r"\1", s)
     return s
 
 

@@ -79,7 +79,7 @@ PT_TZ = ZoneInfo("America/Los_Angeles")
 EXAM_DATE = datetime.date(2026, 12, 6)
 PROXY_URL = os.environ.get("HTTPS_PROXY") or os.environ.get("HTTP_PROXY") or None
 COMM_KWARGS = {"proxy": PROXY_URL} if PROXY_URL else {}
-MAX_TRIES = 5 if os.environ.get("GITHUB_ACTIONS") == "true" else 1
+MAX_TRIES = 6 if os.environ.get("GITHUB_ACTIONS") == "true" else 1
 GEMINI_API_KEY = (os.environ.get("GEMINI_API_KEY") or "").strip()
 GEMINI_TTS_MODEL = os.environ.get("GEMINI_TTS_MODEL", "gemini-2.5-flash-preview-tts")
 
@@ -94,7 +94,7 @@ SLIP_SPLIT_RE = re.compile(
 
 EXCITED_TURN_RE = re.compile(
     r"^(?:《锵锵三人行》|欢迎继续|欢迎回到|好家伙|神了|哎哟|等会儿|学会了|妙啊|太有画面|真是服了|这下记得|"
-    r"不不不|岂止是|那当然|对极了|我跟你说|我的问题是|你的意思是)"
+    r"不不不|岂止是|那当然|对极了|我跟你说|我的问题是|你的意思是|哪儿止|得了吧)"
 )
 SLOW_PIVOT_RE = re.compile(
     r"^(?:其实|你想想看|换句话说|说白了|某种程度上|话说回来|所以你想|而且讲句老实话|讲句老实话|"
@@ -103,14 +103,14 @@ SLOW_PIVOT_RE = re.compile(
 )
 JAB_SENT_RE = re.compile(
     r"^(?:不不不|对极了|对啊|没错|神了|等会儿|岂止是|那当然|一点儿没错|一点儿不差|完全正确|太准了|"
-    r"问到点子上了|哎哟|妙啊|我跟你说|我的问题是|你的意思是|你看啊|结果呢|那可不嘛)"
+    r"问到点子上了|哎哟|妙啊|我跟你说|我的问题是|你的意思是|你看啊|结果呢|那可不嘛|哪儿啊|哪儿止|未必|恰恰相反)"
 )
 LAND_END_RE = re.compile(r"(?:[？！][”』」）]*$|(?:对不对|是不是|你说是不是|这才叫绝|一模一样|全在里头了)[。！？][”』」）]*$)")
 REFLECT_TURN_RE = SLOW_PIVOT_RE
 LATCH_START_RE = re.compile(
-    r"^(?:神了|等会儿|等等|那我肯定|对极了|对啊|对，|对。|对！|没错|不是|不不|不，|可不嘛|一点儿没错|一点儿不差|"
-    r"完全正确|太准了|问到点子上了|哎哟|哎，|哦！|妙啊|我知道|我就干过|你看|我跟你说|连个人|结果才|"
-    r"岂止是|那当然|我的问题是|你的意思是|这就是)"
+    r"^(?:神了|等会儿|等等|那我肯定|对极了|对啊|对，|对。|对！|没错|不是|不不|不，|可不嘛|可不是嘛|一点儿没错|一点儿不差|"
+    r"完全正确|太准了|问到点子上了|哎哟|哎，|害，|哦！|妙啊|我知道|我就干过|你看|我跟你说|连个人|结果才|"
+    r"岂止是|那当然|我的问题是|你的意思是|这就是|得了吧|拉倒吧|你说得对|你别说|问题就在这儿|哪儿啊|哪儿止|未必|恰恰相反|那可不)"
 )
 
 GENERIC_POINT_LABELS = {"口语听辨", "高频假名副词", "核心词汇", "语法", "活用"}
@@ -535,8 +535,8 @@ def split_mandarin_natural(
 
 
 def expand_turn_events(spk: str, val) -> list:
-    if spk == "PAUSE":
-        return [("PAUSE", float(val))]
+    if spk in ("PAUSE", "LATCH"):
+        return [(spk, float(val))]
     txt = str(val).strip()
     if spk not in ("W", "D", "X", "M", "F"):
         return [(spk, txt)]
@@ -627,17 +627,35 @@ def expand_turn_events(spk: str, val) -> list:
     return out if out else [(turn_gear, txt)]
 
 
-def turn_switch_pause(next_spk: str, next_txt: str) -> float:
+def turn_switch_transition(prev_spk: str, prev_txt: str, next_spk: str, next_txt: str) -> tuple[str, float]:
+    """
+    Calibrated to 421 real 《锵锵三人行》 broadcast episodes (<0.00s median speaker-switch gap):
+    - Snappy latches / short interruptions crossfade 58ms-85ms over the ducked tail of the prior speaker.
+    - NEVER overlaps if the prior turn ended on Japanese kana or the next turn begins on Japanese kana,
+      keeping 100% of Japanese target expressions crystal-clear in the ear.
+    """
+    p = str(prev_txt).strip()
     s = str(next_txt).strip()
-    if len(s) <= 16 or LATCH_START_RE.search(s):
-        return 0.06
+    prev_ends_ja = bool(re.search(r"[\u3040-\u30ffー][。！？、”』」）\s]*$", p))
+    next_starts_ja = bool(re.match(r"^[\s“『「（]*[\u3040-\u30ffー]", s))
+    if (
+        prev_spk != next_spk
+        and not prev_ends_ja
+        and not next_starts_ja
+        and (len(s) <= 14 or LATCH_START_RE.search(s))
+    ):
+        if p.endswith(("……", "…", "——")):
+            return ("LATCH", 0.085)
+        return ("LATCH", 0.058)
+    if len(s) <= 18 or LATCH_START_RE.search(s):
+        return ("PAUSE", 0.038)
     if SLOW_PIVOT_RE.search(s):
-        return 0.28
+        return ("PAUSE", 0.22)
     if next_spk == "W":
-        return 0.14
+        return ("PAUSE", 0.095)
     if next_spk == "D":
-        return 0.21
-    return 0.16
+        return ("PAUSE", 0.155)
+    return ("PAUSE", 0.115)
 
 
 def synth_gemini_turn_sync(spk: str, text: str, out_mp3: str) -> bool:
@@ -712,12 +730,15 @@ async def synth_turn(spk: str, voice_cfg: tuple, text: str, out_path: str, sem: 
         with_period = (punct_stripped + "。") if (punct_stripped and punct_stripped[-1] not in "。！？") else speak_txt
         no_quotes = re.sub(r'[“”‘’「」『』"]', "", punct_stripped).strip()
         no_quotes_period = (no_quotes + "。") if (no_quotes and no_quotes[-1] not in "。！？") else with_period
+        bare_no_punct = no_quotes.rstrip("。！？、 ") or no_quotes_period
         base_spk = spk.split("_")[0]
+        # Never let D (Liang Wendao baritone) fall back to W's en-US-BrianMultilingualNeural!
         alt_voice = (
-            "en-AU-WilliamMultilingualNeural"
-            if base_spk in ("X", "F")
-            else ("ko-KR-HyunsuMultilingualNeural" if base_spk in ("W", "M") else "en-US-BrianMultilingualNeural")
+            "it-IT-GiuseppeMultilingualNeural"
+            if base_spk == "D"
+            else "en-AU-WilliamMultilingualNeural"
         )
+        alt_pitch = "-3Hz" if base_spk == "D" else "+0Hz"
         for attempt in range(MAX_TRIES):
             if attempt == 0:
                 use_voice, use_rate, use_pitch, use_txt = voice, rate, pitch, speak_txt
@@ -727,8 +748,10 @@ async def synth_turn(spk: str, voice_cfg: tuple, text: str, out_path: str, sem: 
                 use_voice, use_rate, use_pitch, use_txt = voice, rate, "+0Hz", no_quotes_period
             elif attempt == 3:
                 use_voice, use_rate, use_pitch, use_txt = voice, "+0%", "+0Hz", no_quotes_period
+            elif attempt == 4:
+                use_voice, use_rate, use_pitch, use_txt = voice, "+0%", "+0Hz", bare_no_punct
             else:
-                use_voice, use_rate, use_pitch, use_txt = alt_voice, rate, "+0Hz", no_quotes_period
+                use_voice, use_rate, use_pitch, use_txt = alt_voice, rate, alt_pitch, bare_no_punct
             try:
                 buf = bytearray()
                 try:
@@ -911,6 +934,8 @@ class StudioTimelineMixer:
             return
         ov = int(round(crossfade_sec * SR)) if crossfade_sec > 0 else 0
         if ov > 0 and self.cursor >= ov:
+            duck_curve = np.linspace(1.0, 0.42, ov, dtype=np.float32)
+            self.buf[self.cursor - ov : self.cursor] *= duck_curve
             self.cursor -= ov
         end = self.cursor + len(clip)
         self._ensure_cap(end)
@@ -997,13 +1022,14 @@ def make_outro_swell_envelope(n_samples: int, voice_over_sec: float) -> np.ndarr
 def turns_to_expanded_events(turns: list[tuple[str, object]]) -> list[tuple[str, object]]:
     raw_evs = []
     for idx, (spk, val) in enumerate(turns):
-        if spk == "PAUSE":
-            raw_evs.append(("PAUSE", float(val)))
+        if spk in ("PAUSE", "LATCH"):
+            raw_evs.append((spk, float(val)))
         else:
             raw_evs.append((spk, str(val)))
-            if idx + 1 < len(turns) and turns[idx + 1][0] != "PAUSE":
+            if idx + 1 < len(turns) and turns[idx + 1][0] not in ("PAUSE", "LATCH"):
                 next_spk, next_val = turns[idx + 1]
-                raw_evs.append(("PAUSE", turn_switch_pause(next_spk, str(next_val))))
+                tr_kind, tr_sec = turn_switch_transition(spk, str(val), next_spk, str(next_val))
+                raw_evs.append((tr_kind, tr_sec))
     expanded = []
     for spk, val in raw_evs:
         expanded.extend(expand_turn_events(spk, val))
@@ -1133,36 +1159,99 @@ async def main():
             base_pool.append(st)
     candidate_pool = ([live_news_story] if live_news_story else []) + base_pool
 
-    # If today_str already has a full Uchi volume assigned in radio_history.json, keep that exact volume on same-day re-builds
+    def _uchi_vol_prefix(sid: str) -> str:
+        if sid.startswith(("uchi_night_focus_", "uchi_auto_")):
+            return ""
+        m = re.match(r"^(uchi\d*_)", sid)
+        return m.group(1) if m else ""
+
+    def _is_epilogue_story(st: dict) -> bool:
+        sid = str(st.get("id") or "")
+        if sid.endswith("_epilogue") or "_epilogue" in sid:
+            return True
+        turns = st.get("turns") or []
+        if turns:
+            last_t = str(turns[-1][1])
+            if "锵锵三人行" in last_t and any(w in last_t for w in ("明天见", "下期见", "再见", "回见")):
+                return True
+        return False
+
+    story_by_id = {st["id"]: st for st in candidate_pool}
+
+    # If today_str already has a Uchi volume assigned in radio_history.json, keep that cohesive volume
+    # (auto-including all sibling chapters of the same uchiN_ volume and stripping stray non-Uchi story_* tails)
     pinned_today_ids: list[str] = []
     if os.path.exists(RADIO_HISTORY_PATH):
         try:
             _rh = json.load(open(RADIO_HISTORY_PATH, encoding="utf-8")).get("recent_days") or {}
             _tids = [str(x) for x in (_rh.get(today_str) or []) if x]
             if len(_tids) >= 8 and any(x.startswith("uchi") for x in _tids):
-                pinned_today_ids = _tids
+                _clean_tids = [x for x in _tids if not x.startswith("story_") and x in story_by_id]
+                _dom_prefixes = [_uchi_vol_prefix(x) for x in _clean_tids if _uchi_vol_prefix(x)]
+                if _dom_prefixes:
+                    _vpref = _dom_prefixes[0]
+                    _full_vol = [st["id"] for st in candidate_pool if _uchi_vol_prefix(st["id"]) == _vpref]
+                    if live_news_story and live_news_story["id"] not in _full_vol:
+                        pinned_today_ids = [live_news_story["id"]] + _full_vol
+                    else:
+                        pinned_today_ids = _full_vol
+                else:
+                    pinned_today_ids = _clean_tids
         except Exception:
             pinned_today_ids = []
 
-    story_by_id = {st["id"]: st for st in SALON_STORIES}
     if pinned_today_ids and all(sid in story_by_id for sid in pinned_today_ids):
         selected_stories = [story_by_id[sid] for sid in pinned_today_ids]
     else:
-        min_ep_min, max_ep_min = _rp["episode_minutes"]
-        target_sec = ((min_ep_min + max_ep_min) / 2.0) * 60.0
-        max_sec = (max_ep_min + 1.0) * 60.0
-        est_sec = 72.0  # Opening theme + greeting + 2 ad bumpers + closing & outro
-        picked_ids: set[str] = set()
-        for st in sorted(candidate_pool, key=story_rank):
-            s_dur = estimate_story_seconds(st)
-            if len(picked_ids) >= 8 and (est_sec + s_dur > max_sec or est_sec >= target_sec):
-                break
-            picked_ids.add(st["id"])
-            est_sec += s_dur
-            if len(picked_ids) >= 12:
-                break
-        # Preserve candidate_pool narrative order so cross-chapter callbacks ("前后照应") stay sequential!
-        selected_stories = [st for st in candidate_pool if st["id"] in picked_ids]
+        # Select a complete cohesive unplayed uchiN_ volume in authored narrative order when available
+        vol_groups: dict[str, list[dict]] = {}
+        vol_order: list[str] = []
+        for st in candidate_pool:
+            vp = _uchi_vol_prefix(st["id"])
+            if vp and recent_ages.get(st["id"], 0) == 0:
+                if vp not in vol_groups:
+                    vol_groups[vp] = []
+                    vol_order.append(vp)
+                vol_groups[vp].append(st)
+        cohesive_vp = next((vp for vp in vol_order if len(vol_groups[vp]) >= 8), "")
+        if cohesive_vp:
+            picked_list: list[dict] = []
+            if live_news_story:
+                picked_list.append(live_news_story)
+            for st in candidate_pool:
+                if str(st.get("id") or "").startswith(f"uchi_night_focus_{today_str.replace('-', '')}") and st not in picked_list:
+                    picked_list.append(st)
+            picked_list.extend(vol_groups[cohesive_vp])
+            selected_stories = picked_list
+        else:
+            min_ep_min, max_ep_min = _rp["episode_minutes"]
+            target_sec = ((min_ep_min + max_ep_min) / 2.0) * 60.0
+            max_sec = (max_ep_min + 1.0) * 60.0
+            est_sec = 72.0  # Opening theme + greeting + 2 ad bumpers + closing & outro
+            picked_ids: set[str] = set()
+            has_epilogue = False
+            for st in sorted(candidate_pool, key=story_rank):
+                is_ep = _is_epilogue_story(st)
+                if is_ep and has_epilogue:
+                    continue
+                if len(picked_ids) >= 8 and str(st.get("id") or "").startswith("story_") and any(x.startswith("uchi") for x in picked_ids):
+                    continue
+                s_dur = estimate_story_seconds(st)
+                if len(picked_ids) >= 8 and (est_sec + s_dur > max_sec or est_sec >= target_sec):
+                    break
+                picked_ids.add(st["id"])
+                if is_ep:
+                    has_epilogue = True
+                est_sec += s_dur
+                if len(picked_ids) >= 12:
+                    break
+            # Preserve candidate_pool narrative order so cross-chapter callbacks ("前后照应") stay sequential!
+            selected_stories = [st for st in candidate_pool if st["id"] in picked_ids]
+
+    # Hard guarantee: epilogue chapter ALWAYS sits at the very end, NEVER mid-episode!
+    _non_ep = [st for st in selected_stories if not _is_epilogue_story(st)]
+    _eps = [st for st in selected_stories if _is_epilogue_story(st)]
+    selected_stories = _non_ep + (_eps[-1:] if _eps else [])
 
     if imm_profile["ja_ratio"] >= 0.65:
         opening_turns = POST_N3_NATIVE_OPENING
@@ -1189,6 +1278,11 @@ async def main():
             spk0, txt0 = st_turns[0][0], str(st_turns[0][1]).strip()
             if "锵锵三人行" not in txt0[:18]:
                 st_turns[0] = (spk0, f"《锵锵三人行》，{txt0}")
+        elif ch_idx > 0 and st_turns:
+            spk0, txt0 = st_turns[0][0], str(st_turns[0][1]).strip()
+            txt0_clean = re.sub(r"^《锵锵三人行》[，、：\s]*", "", txt0).strip()
+            if txt0_clean and txt0_clean != txt0:
+                st_turns[0] = (spk0, f"哎，再说回眼跟前儿这笔账，{txt0_clean}")
         story_blocks.append({
             "chapter": ch_idx,
             "short_tab": st["short_tab"],
@@ -1214,7 +1308,7 @@ async def main():
     closing_evs = turns_to_expanded_events(closing_turns) if closing_turns else []
 
     sig_obj = {
-        "ver": "v33_3182corpus_3host_timbre_4gear_prosody",
+        "ver": "v34_3182_short_banter_latch",
         "engine": engine_tag,
         "imm_day": imm_profile["day_of_365"],
         "opening": opening_evs,
@@ -1250,12 +1344,12 @@ async def main():
         *(b["events"] for b in story_blocks),
     ]
 
-    tmpdir = tempfile.mkdtemp(prefix="n3_radio_v33_")
+    tmpdir = tempfile.mkdtemp(prefix="n3_radio_v34_")
     try:
         unique_turns: dict[tuple[str, str], str] = {}
         for ev_list in all_event_lists:
             for k, val in ev_list:
-                if k != "PAUSE":
+                if k not in ("PAUSE", "LATCH"):
                     key = (k, str(val))
                     if key not in unique_turns:
                         thash = hashlib.sha256(f"{k}:{val}".encode("utf-8")).hexdigest()[:12]
@@ -1265,7 +1359,7 @@ async def main():
             print(f"[dry-test] Stories={[b['short_tab'] for b in story_blocks]}, unique_clips={len(unique_turns)}, script_sig={script_sig}")
             clip_pcm: dict[tuple[str, str], np.ndarray] = {}
             for key in unique_turns:
-                dur_s = min(3.5, max(0.35, len(key[1]) * 0.08))
+                dur_s = max(0.32, len(key[1]) * 0.192)
                 t = np.arange(int(SR * dur_s), dtype=np.float32) / SR
                 raw_tone = (0.11 * np.sin(2.0 * np.pi * 180.0 * t) + 0.05 * np.sin(2.0 * np.pi * 1650.0 * t)).astype(np.float32)
                 clip_pcm[key] = apply_host_vocal_timbre(raw_tone, key[0])
@@ -1275,7 +1369,7 @@ async def main():
                 *(synth_turn(k, voice_map[k], txt, raw_p, sem) for (k, txt), raw_p in unique_turns.items())
             )
             ok_count = sum(1 for x in ok_results if x)
-            print(f"Synthesized {ok_count} / {len(unique_turns)} unique Qiang-Qiang v33 multi-gear full-breath clips.")
+            print(f"Synthesized {ok_count} / {len(unique_turns)} unique Qiang-Qiang v34 short-banter latch clips.")
             min_required = max(1, int(len(unique_turns) * 0.98))
             if ok_count < min_required:
                 raise RuntimeError(
@@ -1303,15 +1397,19 @@ async def main():
         mixer = StudioTimelineMixer(est_minutes=52.0)
 
         def _append_events(ev_list: list[tuple[str, object]]) -> None:
+            pending_latch = 0.0
             for idx, (k, val) in enumerate(ev_list):
                 if k == "PAUSE":
-                    sec = float(val)
-                    mixer.advance(sec)
+                    pending_latch = 0.0
+                    mixer.advance(float(val))
+                elif k == "LATCH":
+                    pending_latch = float(val)
                 else:
                     key = (k, str(val))
                     arr = clip_pcm.get(key)
                     if arr is not None:
-                        mixer.append_clip(arr, gain=gear_gain_linear(k))
+                        mixer.append_clip(arr, gain=gear_gain_linear(k), crossfade_sec=pending_latch)
+                    pending_latch = 0.0
 
         # 1) 00:00.0 — Authentic 《锵锵三人行》 Opening Theme -> Clean Studio Entry!
         intro_dur_sec = len(pcm_intro) / float(SR)
@@ -1379,7 +1477,7 @@ async def main():
                 mixer.cursor = int(round((bumper_end + 0.24) * SR))
             elif ch_idx < total_stories - 1:
                 # Direct natural conversational continuation — ZERO chime/sting!
-                mixer.advance(0.36)
+                mixer.advance(0.32)
             elif closing_turns:
                 mixer.advance(0.35)
                 pre_close_evs = turns_to_expanded_events(closing_turns[:-1]) if len(closing_turns) >= 2 else []
@@ -1431,7 +1529,7 @@ async def main():
         ]
         meta_obj = {
             "date": today_str,
-            "radio_ver": "v32_real_qq_music",
+            "radio_ver": "v34_3182_short_banter_latch",
             "display_date": "锵锵三人",
             "days_left": days_left,
             "script_sig": script_sig,
@@ -1446,7 +1544,7 @@ async def main():
         with open(RADIO_META_PATH, "w", encoding="utf-8") as f:
             json.dump(meta_obj, f, ensure_ascii=False, indent=2)
         save_today_stories(today_str, [st["id"] for st in selected_stories])
-        print(f"Built Qiang-Qiang v29 Uchi Episode: {final_dur:.1f}s ({mins} mins), stories={[s['short_tab'] for s in selected_stories]}")
+        print(f"Built Qiang-Qiang v34 Uchi Episode: {final_dur:.1f}s ({mins} mins), stories={[s['short_tab'] for s in selected_stories]}")
     finally:
         shutil.rmtree(tmpdir, ignore_errors=True)
 

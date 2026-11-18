@@ -86,11 +86,28 @@ def fetch_live_nhk_news(max_items: int = 8, timeout: float = 8.0) -> list[dict]:
     return items
 
 
+BANNED_CLASSROOM_RE = re.compile(
+    r"汉字写|训读|音读|自动词|他动词|五段动词|一段动词|可能形|使役被动|尊他语|谦让语|语法上|句型|接续|词尾|必用"
+)
+
+
+def _strip_json_fence(text: str) -> str:
+    s = (text or "").strip()
+    if s.startswith("```"):
+        s = re.sub(r"^```(?:json)?\s*", "", s, flags=re.IGNORECASE)
+        s = re.sub(r"\s*```$", "", s)
+    start = s.find("{")
+    end = s.rfind("}")
+    if start != -1 and end != -1 and end > start:
+        return s[start : end + 1].strip()
+    return s
+
+
 def validate_generated_story(st: dict) -> bool:
     if not isinstance(st, dict):
         return False
     turns = st.get("turns")
-    if not isinstance(turns, list) or not (7 <= len(turns) <= 26):
+    if not isinstance(turns, list) or not (12 <= len(turns) <= 58):
         return False
     for entry in turns:
         if not isinstance(entry, (list, tuple)) or len(entry) != 2:
@@ -98,8 +115,10 @@ def validate_generated_story(st: dict) -> bool:
         spk, txt = str(entry[0]).strip(), str(entry[1]).strip()
         if spk not in ("W", "D", "X") or len(txt) < 2:
             return False
-        # Zero fake laughs, zero exam countdowns, zero ASCII/digits in speech spans
+        # Zero fake laughs, zero exam countdowns, zero ASCII/digits, zero classroom lecturing in speech spans
         if re.search(r"哈哈|噗|倒计时|还有\d+天考试|[A-Za-z0-9]", txt):
+            return False
+        if BANNED_CLASSROOM_RE.search(txt):
             return False
         # Zero Kanji immediately glued to Kana (guarantees clean multilingual G2P)
         if re.search(r"[\u4e00-\u9fff][\u3040-\u30ff]+|[\u3040-\u30ff]+[\u4e00-\u9fff]", txt):
@@ -142,30 +161,42 @@ def _call_chat_llm(system_prompt: str, user_prompt: str) -> str | None:
                     method="POST",
                 )
                 with urllib.request.urlopen(req, timeout=38.0) as resp:
-                    data = json.loads(resp.read().decode("utf-8"))
-                content = (data.get("choices") or [{}])[0].get("message", {}).get("content")
-                if content and content.strip():
+                    raw_body = resp.read().decode("utf-8", errors="replace").strip()
+                if not raw_body:
+                    continue
+                data = json.loads(raw_body)
+                content = _strip_json_fence((data.get("choices") or [{}])[0].get("message", {}).get("content") or "")
+                if content:
+                    json.loads(content)
                     return content
             except Exception as e:
                 print(f"[info] live news LLM endpoint ({model}) skipped: {e}")
 
     if gemini_key:
-        try:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key={gemini_key}"
-            payload = json.dumps({
-                "contents": [{"parts": [{"text": system_prompt + "\n\n" + user_prompt}]}],
-                "generationConfig": {"responseMimeType": "application/json", "temperature": 0.65},
-            }).encode("utf-8")
-            req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"}, method="POST")
-            with urllib.request.urlopen(req, timeout=38.0) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-            return data["candidates"][0]["content"]["parts"][0]["text"]
-        except Exception as e:
-            print(f"[info] Gemini live news generation skipped: {e}")
+        for g_model in ("gemini-2.5-pro", "gemini-2.5-flash"):
+            try:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{g_model}:generateContent?key={gemini_key}"
+                payload = json.dumps({
+                    "contents": [{"parts": [{"text": system_prompt + "\n\n" + user_prompt}]}],
+                    "generationConfig": {"responseMimeType": "application/json", "temperature": 0.65},
+                }).encode("utf-8")
+                req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"}, method="POST")
+                with urllib.request.urlopen(req, timeout=38.0) as resp:
+                    raw_body = resp.read().decode("utf-8", errors="replace").strip()
+                if not raw_body:
+                    continue
+                data = json.loads(raw_body)
+                content = _strip_json_fence(data["candidates"][0]["content"]["parts"][0]["text"])
+                if content:
+                    json.loads(content)
+                    return content
+            except Exception as e:
+                print(f"[info] Gemini live news generation ({g_model}) skipped: {e}")
 
     if gh_models_token:
         endpoints = [
-            ("https://models.github.ai/inference/chat/completions", ("openai/gpt-4.1", "openai/gpt-4o", "openai/gpt-4o-mini")),
+            ("https://models.inference.ai.azure.com/chat/completions", ("gpt-4o", "gpt-4o-mini")),
+            ("https://models.github.ai/inference/chat/completions", ("openai/gpt-4o", "openai/gpt-4o-mini", "gpt-4o-mini")),
         ]
         for url, models in endpoints:
             for model in models:
@@ -178,29 +209,28 @@ def _call_chat_llm(system_prompt: str, user_prompt: str) -> str | None:
                         {"role": "user", "content": user_prompt},
                     ],
                 }).encode("utf-8")
+                headers = {
+                    "Authorization": f"Bearer {gh_models_token}",
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                    "User-Agent": "n3-audio-tutor-cloud/2.0",
+                }
+                if "models.github.ai" in url:
+                    headers["X-GitHub-Api-Version"] = "2022-11-28"
                 try:
-                    req = urllib.request.Request(
-                        url,
-                        data=payload,
-                        headers={
-                            "Authorization": f"Bearer {gh_models_token}",
-                            "Content-Type": "application/json",
-                            "Accept": "application/json",
-                            "X-GitHub-Api-Version": "2022-11-28",
-                            "User-Agent": "n3-audio-tutor-cloud/1.0",
-                        },
-                        method="POST",
-                    )
+                    req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
                     with urllib.request.urlopen(req, timeout=42.0) as resp:
+                        ctype = (resp.headers.get("Content-Type") or "").lower()
                         raw_body = resp.read().decode("utf-8", errors="replace").strip()
-                    if not raw_body:
+                    if not raw_body or ("json" not in ctype and not raw_body.startswith("{")):
                         continue
                     data = json.loads(raw_body)
-                    content = (data.get("choices") or [{}])[0].get("message", {}).get("content")
-                    if content and content.strip():
+                    content = _strip_json_fence((data.get("choices") or [{}])[0].get("message", {}).get("content") or "")
+                    if content:
+                        json.loads(content)
                         return content
                 except Exception as e:
-                    print(f"[info] GitHub Models endpoint ({model}) skipped: {e}")
+                    print(f"[info] GitHub Models endpoint ({url.split('/')[2]} | {model}) skipped: {e}")
     return None
 
 
@@ -268,16 +298,16 @@ def maybe_generate_live_news_story(
 
     sys_prompt = (
         "你是凤凰卫视《锵锵三人行》原班总撰稿（已吃透全部 3,182 期完整实录与 421 期原声轻重缓急规律）。\n"
-        "三位老友：窦文涛(W，北方清亮活泛、俗人切口、爱重复接对方最后四五个字搭茬、高频用『我跟你说』『不是』『你看』)、"
-        "梁文道(D，温厚男中音、先短句『对』『没错』接话再慢起长句铺陈东亚历史与制度脉络，爱用『你想想看』『换句话说』『吊诡』)、"
+        "三位老友：窦文涛(W，北方清亮活泛、俗人切口、爱搭茬重复对方尾词、高频用『我跟你说』『不是』『你看』)、"
+        "梁文道(D，温厚男中音、先短句『对』『没错』接话再拆成两三轮推进东亚历史与制度脉络，爱用『你想想看』『换句话说』『吊诡』)、"
         "许子东(X，清瘦冷峻学者、短刀直入『不不不』『我的问题是』『你的意思是说』一针见血拆台)。\n"
-        "请根据今日真实日本与世界新闻，并优先揉入听众昨晚刚卡壳的日语薄弱点，创作一段约 4.5 分钟（13到18轮 W/D/X 对白）的开篇时局圆桌。\n"
+        "请根据今日真实日本与世界新闻，并自然揉入听众昨晚刚卡壳的日语表达，创作一段约 3.5 分钟（26 到 36 轮短促乒乓交锋）的开篇时局圆桌。\n"
         "核心铁律：\n"
-        "0. 【去排排坐朗读感·真实轻重缓急句法】：严禁机械按 W->D->X->W->D->X 轮流念百字长文！必须有 D 与 X 直接交锋过招，穿插 4 到 15 字的短促抢白、反问或冷幽默拆台，长发言内部写出『快切入 -> 铺事实 -> 沉吟转折 -> 重落点』的呼吸层次。\n"
-        "1. 【原版文涛冷开场】：第一轮 W 直接以『《锵锵三人行》，』连着今日最抓人的具体新闻或包袱单刀直入（把『文道』『子东/许老师』顺嘴嵌进句子里），严禁『大家好、文道好、子东好』等模板客套。\n"
-        f"2. 当前处于 {ramp_days} 天（1/{ramp_days} 慢速养耳）双语演进计划第 {day_num} 天（阶段：{phase}），日语占比约 {ja_pct}%。\n"
-        "3. 对熟知人物与头衔（如教授 きょうじゅ、部长 ぶちょう、课长 かちょう、社长 しゃちょう、医局 いきょく、先生 せんせい、财前五郎 ざいぜんごろう、东教授 あずまきょうじゅ）直接用日文或首提中文后全程日文。\n"
-        "4. 【语音合成硬铁律】：对白文本中凡出现日文词句，必须 100% 写成纯平假名或纯片假名（前后留空格或中文标点），严禁汉字紧贴假名，严禁任何英文字母或阿拉伯数字（数字全写中文），严禁『哈哈』『噗』、日期倒计时或语法术语。\n"
+        "0. 【真实 3,182 期短句乒乓节奏】：严禁一人独白百字长段，严禁按 W->D->X 排排坐念稿！全章中位轮长控制在 18 到 26 字，至少 40% 的发言在 16 字以内（如『不不不，你反过来想。』『哪儿止啊！』『对，吊诡就在这儿。』），至少 28% 为 D 与 X 直接交锋过招。\n"
+        "1. 【零课堂说教感】：严禁出现任何老师讲课口吻！绝对禁用『汉字写』『训读』『音读』『自动词』『他动词』『句型』『接续』『词尾』『必用』等字眼，把日文原词原句当成三位老友引述日本政客、记者或小市民现场原话自然带出。\n"
+        "2. 【原版文涛冷开场】：第一轮 W 直接以『《锵锵三人行》，』连着今日最抓人的具体新闻单刀直入，严禁『大家好、文道好、子东好』模板客套。\n"
+        f"3. 当前处于 {ramp_days} 天双语演进计划第 {day_num} 天（阶段：{phase}），日语占比约 {ja_pct}%。\n"
+        "4. 【语音合成硬铁律】：对白文本中凡出现日文词句，必须 100% 写成纯平假名或纯片假名（前后留空格或中文标点），严禁汉字紧贴假名，严禁任何英文字母或阿拉伯数字（数字全写中文），严禁『哈哈』『噗』或考试倒计时。\n"
         "5. 自然融入 2 到 4 个昨晚薄弱日语表达，结尾顺嘴拐弯引出后续专题。\n"
         "输出严格为 JSON：{\"short_tab\": \"今日时局\", \"title\": \"...\", \"ja_focus\": \"...(此处可正常写日文汉字假名供屏幕显示)\", "
         "\"turns\": [[\"W\", \"...\"], [\"X\", \"...\"], [\"D\", \"...\"], ...]}"

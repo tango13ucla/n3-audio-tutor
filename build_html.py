@@ -240,6 +240,21 @@ try:
     LISTENING_OPT_NOTES.update(WAVE3_LISTENING_OPT_NOTES)
 except Exception:
     pass
+try:
+    from weak_expansion_wave4 import WAVE4_LISTENING_OPT_NOTES
+    LISTENING_OPT_NOTES.update(WAVE4_LISTENING_OPT_NOTES)
+except Exception:
+    pass
+try:
+    from weak_expansion_wave5 import WAVE5_LISTENING_OPT_NOTES
+    LISTENING_OPT_NOTES.update(WAVE5_LISTENING_OPT_NOTES)
+except Exception:
+    pass
+try:
+    from weak_expansion_wave6 import WAVE6_LISTENING_OPT_NOTES
+    LISTENING_OPT_NOTES.update(WAVE6_LISTENING_OPT_NOTES)
+except Exception:
+    pass
 
 
 def build_opt_notes(card_id: str, raw_notes: dict | None) -> dict:
