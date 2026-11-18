@@ -1,7 +1,7 @@
 {
   "v": 15,
   "app": "n3-zen",
-  "updatedAt": 1795018324,
+  "updatedAt": 1795026626,
   "dates": {
     "2026-11-14": {
       "resetAt": 0,
@@ -1566,12 +1566,12 @@
     },
     "2026-11-18": {
       "resetAt": 1795016690,
-      "radioMaxSec": 0,
+      "radioMaxSec": 33,
       "radioPos": [
-        0,
-        0
+        33,
+        1795026626
       ],
-      "radioSig": "",
+      "radioSig": "4f1b99db",
       "greenAt": {},
       "retestAt": {
         "N3-L11": 1795016678
