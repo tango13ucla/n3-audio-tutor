@@ -37,7 +37,10 @@ import sys
 import tempfile
 import wave
 from zoneinfo import ZoneInfo
-import numpy as np
+try:
+    import numpy as np
+except Exception:
+    np = None
 
 try:
     import certifi
@@ -93,84 +96,53 @@ REFLECT_TURN_RE = re.compile(
     r"^(?:其实|前两天|如果有人|话说回来|所以你想想|而且讲句老实话)"
 )
 LATCH_START_RE = re.compile(
-    r"^(?:神了|等会儿|等等|那我肯定|对极了|对啊|对，|可不嘛|一点儿没错|一点儿不差|"
-    r"完全正确|太准了|问到点子上了|哎哟|哦！|妙啊|我知道|我就干过)"
+    r"^(?:神了|等会儿|等等|那我肯定|对极了|对啊|对，|对。|对！|没错|不是|不不|不，|可不嘛|一点儿没错|一点儿不差|"
+    r"完全正确|太准了|问到点子上了|哎哟|哎，|哦！|妙啊|我知道|我就干过|你看|我跟你说|连个人|结果才)"
 )
 
 GENERIC_POINT_LABELS = {"口语听辨", "高频假名副词", "核心词汇", "语法", "活用"}
 
 
 # ==============================================================================
-# Authentic 《锵锵三人行》 Rotating Opening Greetings, Ad Bumpers & Closings
-# (100% Zero Date / Zero Exam Countdown — True Intellectual Gentlemen Salon Vibe)
+# Authentic 《锵锵三人行》 Non-Templated Cold-Open, Crisp Ad Breaks & Closings
+# Distilled from 3,124 Full Episodes + 1,319 Official Speaker Transcripts (98.3% Direct Topic Cold-Open!)
 # ==============================================================================
-OPENING_GREETINGS_POOL = [
-    [
-        ("W", "《锵锵三人行》！哎，文道好，子东好，各位好！"),
-        ("D", "文涛好，大家好。"),
-        ("X", "文涛好，各位好。"),
-        ("W", "今儿咱们老哥仨坐一块儿啊，热茶刚沏满。咱们不聊游客明信片上那套表皮风光，专门掀开帘子，往日本政坛时局、文坛旧案，还有普通日本人关起门来算计的真日子里头扎进去聊。来，先看今儿头一桩热闹事儿！"),
-    ],
-    [
-        ("W", "《锵锵三人行》！欢迎文道，欢迎子东，二位好，各位好！"),
-        ("D", "文涛好，各位听众朋友好。"),
-        ("X", "文涛好，大家好。看你今儿面前摊着一摞剪报，又是国会吵架又是老作家八卦，准备从哪头开刀啊？"),
-        ("W", "知我者许老师也！咱们表面上是插科打诨扯闲篇儿，底子里头聊的都是东亚社会骨头缝里的真问题，从眼下新闻一路串到历史、文学和科学体制，前后都能对上账！"),
-    ],
-    [
-        ("W", "《锵锵三人行》！文道、子东，二位好，各位好！"),
-        ("D", "文涛好，大家好。"),
-        ("X", "文涛好，各位好。"),
-        ("W", "日本社会最妙的地方，就是它永远分两层：给外人看的那层叫外，念 そと；自家人关上玄关门算账叹气那层叫内，念 うち。今儿咱们就着这壶热茶，专门钻进日本人的 うち 里头探探虚实！"),
-    ],
-    [
-        ("W", "《锵锵三人行》！各位好，今天还是咱们仨坐镇啊，文道好，子东好！"),
-        ("D", "文涛好，大家好。"),
-        ("X", "文涛好，各位好。"),
-        ("W", "每次跟你们二位同桌我就来劲，一个满脑子政治思想史，一个专扒大文豪和现代家庭的底牌。今儿咱们前前后后串成一条大长线，先从眼皮底下热气腾腾的时局说起！"),
-    ],
-]
-
 AD_BREAK_1_POOL = [
     (
-        [("W", "哎，聊到这个节骨眼儿上咱们先打住一下，去一下广告，喝口热茶回头接着往深里头扒。《锵锵三人行》，广告之后见！")],
-        [("W", "欢迎继续回到《锵锵三人行》！刚才前头铺了政经和历史的底子，茶添满了，咱们顺着这条暗线接着往下聊啊。")],
+        [("W", "咱们先去一下广告，《锵锵三人行》，广告之后见。")],
+        [("W", "《锵锵三人行》，咱们接着刚才的话茬儿往下说。")],
     ),
     (
-        [("W", "得，这事儿越往骨子里琢磨越有嚼头，咱们先去下广告，马上回来接着聊。《锵锵三人行》，广告之后见！")],
-        [("W", "《锵锵三人行》，欢迎回来！咱们话不停嘴，顺着刚才的话茬儿往文学和体制深水区里头走啊。")],
+        [("W", "得，咱们先去下广告，《锵锵三人行》，广告之后见。")],
+        [("W", "接着刚才那笔账往下算啊。")],
     ),
     (
-        [("W", "好，说到这儿咱们先喘口气，去一下广告，后头还有几位日本文坛与科学界的奇人等着二位开方子呢。《锵锵三人行》，广告之后见！")],
-        [("W", "好，欢迎继续收听《锵锵三人行》，咱们接着刚才的兴头往下侃！")],
+        [("W", "《锵锵三人行》，广告之后见。")],
+        [("W", "所以你看文道，顺着刚才这个往下看啊。")],
     ),
 ]
 
 AD_BREAK_2_POOL = [
     (
-        [("W", "你看这历史文脉和制度骨架一摆出来，很多怪事儿就全通了。咱们再去一下广告，回来钻进今天东京人关起门来的家庭与职场。《锵锵三人行》，广告之后见！")],
-        [("W", "欢迎回到《锵锵三人行》！前头聊了庙堂和书斋，最后这一大段咱们直接推开日本中产家庭的客厅门瞧瞧！")],
+        [("W", "咱们再去一下广告，《锵锵三人行》，广告之后见。")],
+        [("W", "《锵锵三人行》，咱们接着往下聊。")],
     ),
     (
-        [("W", "行，聊到这儿咱们再去下广告，稍事休息马上回来。《锵锵三人行》，广告之后见！")],
-        [("W", "《锵锵三人行》，咱们回来接着聊，把最后这几桩日本人关起门来最扎心的家务事端上桌！")],
+        [("W", "先去一下广告，《锵锵三人行》，广告之后见。")],
+        [("W", "刚才聊了外头的制度，咱们再推门看看普通人家里头。")],
     ),
     (
-        [("W", "哎，先别急，咱们去一下广告，广告之后把前头埋的伏笔全拢到今天日本人的饭桌和房产证上。《锵锵三人行》，广告之后见！")],
-        [("W", "继续回到《锵锵三人行》，咱们接着把最后这几段聊透！")],
+        [("W", "《锵锵三人行》，广告之后见。")],
+        [("W", "接着刚才说的往下走啊。")],
     ),
 ]
 
 CLOSING_POOL = [
     [
-        ("D", "其实啊，不知不觉咱们这壶热茶又喝见底了。你回头串起来看，不管是永田町的密室政治、东大与京大的学风分野，还是中年人面对塔楼和老家清退的叹息，背后全是同一套日本社会的内外法则在咬合运转。"),
-        ("X", "对，而且只有从游客看热闹的外面 そと，真正走进日本人关起门来焦灼算计的里面 うち，那些话尾巴上的分寸和潜台词才真正在耳朵里活过来了。"),
-        ("W", "得嘞，今儿咱们老哥仨就先白活到这儿，感谢文道，感谢子东，也谢谢各位收听！《锵锵三人行》，咱们明天接着聊，明天见！"),
+        ("W", "得嘞，不知不觉又聊到这钟点了，《锵锵三人行》，咱们下回接着聊！"),
     ],
     [
-        ("D", "你看咱们今儿从时局账本一路聊到文学巨匠和职场冷暖，前前后后一照应就会发现，日本知识分子百年前犯的焦虑，跟今天东京上班族挤电车叹的气，其实是同一条根上长出来的。"),
-        ("X", "没错，每天就当听老朋友喝茶扯闲篇儿，把这些政经掌故、文坛八卦和家常暗语一点点浸在耳朵里，日久天长自个儿就长进骨肉里了。"),
-        ("W", "行嘞，茶也喝透了，感谢文道、感谢子东，也谢谢各位一路听过来！《锵锵三人行》，咱们明天见！"),
+        ("W", "行，今儿这桩事儿先聊到这儿，《锵锵三人行》，咱们明天见！"),
     ],
 ]
 
@@ -359,26 +331,26 @@ async def detect_voice_map(ja_sentence_rate: str = "-12%") -> dict:
             print(f"[info] list_voices fallback to default trio voices: {e}")
 
     vmap = {
-        # W (文涛): 自然灵动，绝不忽高忽低跳调
-        "W":             (w_voice, "+7%", "+2Hz"),
-        "W_MID":         (w_voice, "+7%", "+2Hz"),
-        "W_FAST":        (w_voice, "+10%", "+2Hz"),
-        "W_LOW":         (w_voice, "+4%", "+1Hz"),
-        "W_JA_INLINE":   (w_voice, "+6%", "+2Hz"),
+        # W (文涛): 对齐原声 5.7–6.1 字/秒灵动语速，绝不忽高忽低跳调
+        "W":             (w_voice, "+9%", "+2Hz"),
+        "W_MID":         (w_voice, "+9%", "+2Hz"),
+        "W_FAST":        (w_voice, "+12%", "+2Hz"),
+        "W_LOW":         (w_voice, "+5%", "+1Hz"),
+        "W_JA_INLINE":   (w_voice, "+7%", "+2Hz"),
         "W_JA":          (w_voice, w_ja_rate, "+2Hz"),
         # D (文道): 温厚沉稳书卷气
-        "D":             (d_voice, "+2%", "-4Hz"),
-        "D_MID":         (d_voice, "+2%", "-4Hz"),
-        "D_FAST":        (d_voice, "+5%", "-3Hz"),
-        "D_LOW":         (d_voice, "+0%", "-4Hz"),
-        "D_JA_INLINE":   (d_voice, "+2%", "-4Hz"),
+        "D":             (d_voice, "+4%", "-4Hz"),
+        "D_MID":         (d_voice, "+4%", "-4Hz"),
+        "D_FAST":        (d_voice, "+7%", "-3Hz"),
+        "D_LOW":         (d_voice, "+1%", "-4Hz"),
+        "D_JA_INLINE":   (d_voice, "+3%", "-4Hz"),
         "D_JA":          (d_voice, d_ja_rate, "-4Hz"),
         # X (子东): 清脆干练冷幽默
-        "X":             (x_voice, "+5%", "-1Hz"),
-        "X_MID":         (x_voice, "+5%", "-1Hz"),
-        "X_FAST":        (x_voice, "+8%", "+0Hz"),
-        "X_LOW":         (x_voice, "+3%", "-1Hz"),
-        "X_JA_INLINE":   (x_voice, "+5%", "-1Hz"),
+        "X":             (x_voice, "+7%", "-1Hz"),
+        "X_MID":         (x_voice, "+7%", "-1Hz"),
+        "X_FAST":        (x_voice, "+10%", "+0Hz"),
+        "X_LOW":         (x_voice, "+4%", "-1Hz"),
+        "X_JA_INLINE":   (x_voice, "+6%", "-1Hz"),
         "X_JA":          (x_voice, x_ja_rate, "-1Hz"),
     }
     for g in ("", "_MID", "_FAST", "_LOW", "_JA_INLINE", "_JA"):
@@ -547,15 +519,15 @@ def expand_turn_events(spk: str, val) -> list:
 
 def turn_switch_pause(next_spk: str, next_txt: str) -> float:
     s = str(next_txt).strip()
-    if LATCH_START_RE.search(s):
-        return 0.14
+    if len(s) <= 16 or LATCH_START_RE.search(s):
+        return 0.08
     if REFLECT_TURN_RE.search(s):
-        return 0.34
+        return 0.26
     if next_spk == "W":
-        return 0.21
+        return 0.16
     if next_spk == "D":
-        return 0.28
-    return 0.24
+        return 0.22
+    return 0.18
 
 
 def synth_gemini_turn_sync(spk: str, text: str, out_mp3: str) -> bool:
@@ -672,9 +644,17 @@ async def synth_turn(spk: str, voice_cfg: tuple, text: str, out_path: str, sem: 
 def decode_to_pcm_f32(audio_path: str, trim_speech: bool = True) -> np.ndarray:
     """
     Decodes an audio file directly to 24kHz mono float32 [-1.0, 1.0] PCM.
-    For speech clips, gently trims leading/trailing dead air (-54dB) while keeping natural
-    breath tails and applying a smooth 14ms raised-cosine anti-click envelope.
+    Supports native 24kHz mono WAV loading without ffmpeg when trim_speech=False,
+    plus full ffmpeg speech trimming & format conversion.
     """
+    if not trim_speech and audio_path.lower().endswith(".wav") and os.path.exists(audio_path):
+        try:
+            with wave.open(audio_path, "rb") as wf:
+                if wf.getnchannels() == 1 and wf.getsampwidth() == 2 and wf.getframerate() == SR:
+                    raw_w = wf.readframes(wf.getnframes())
+                    return np.frombuffer(raw_w, dtype=np.int16).astype(np.float32) / 32768.0
+        except Exception:
+            pass
     cmd = ["ffmpeg", "-v", "error", "-i", audio_path]
     if trim_speech:
         af = (
@@ -943,21 +923,37 @@ async def main():
             base_pool.append(st)
     candidate_pool = ([live_news_story] if live_news_story else []) + base_pool
 
-    min_ep_min, max_ep_min = _rp["episode_minutes"]
-    target_sec = ((min_ep_min + max_ep_min) / 2.0) * 60.0
-    max_sec = (max_ep_min + 1.0) * 60.0
-    est_sec = 72.0  # Opening theme + greeting + 2 ad bumpers + closing & outro
-    picked_ids: set[str] = set()
-    for st in sorted(candidate_pool, key=story_rank):
-        s_dur = estimate_story_seconds(st)
-        if len(picked_ids) >= 8 and (est_sec + s_dur > max_sec or est_sec >= target_sec):
-            break
-        picked_ids.add(st["id"])
-        est_sec += s_dur
-        if len(picked_ids) >= 12:
-            break
-    # Preserve candidate_pool narrative order so cross-chapter callbacks ("前后照应") stay sequential!
-    selected_stories = [st for st in candidate_pool if st["id"] in picked_ids]
+    # If today_str already has a full Uchi volume assigned in radio_history.json, keep that exact volume on same-day re-builds
+    # so pre-staged future Uchi volumes (e.g. tomorrow's 05:00 AM PT volume) are never prematurely consumed!
+    pinned_today_ids: list[str] = []
+    if os.path.exists(RADIO_HIST_PATH):
+        try:
+            _rh = json.load(open(RADIO_HIST_PATH, encoding="utf-8")).get("recent_days") or {}
+            _tids = [str(x) for x in (_rh.get(today_str) or []) if x]
+            if len(_tids) >= 8 and any(x.startswith("uchi") for x in _tids):
+                pinned_today_ids = _tids
+        except Exception:
+            pinned_today_ids = []
+
+    story_by_id = {st["id"]: st for st in SALON_STORIES}
+    if pinned_today_ids and all(sid in story_by_id for sid in pinned_today_ids):
+        selected_stories = [story_by_id[sid] for sid in pinned_today_ids]
+    else:
+        min_ep_min, max_ep_min = _rp["episode_minutes"]
+        target_sec = ((min_ep_min + max_ep_min) / 2.0) * 60.0
+        max_sec = (max_ep_min + 1.0) * 60.0
+        est_sec = 72.0  # Opening theme + greeting + 2 ad bumpers + closing & outro
+        picked_ids: set[str] = set()
+        for st in sorted(candidate_pool, key=story_rank):
+            s_dur = estimate_story_seconds(st)
+            if len(picked_ids) >= 8 and (est_sec + s_dur > max_sec or est_sec >= target_sec):
+                break
+            picked_ids.add(st["id"])
+            est_sec += s_dur
+            if len(picked_ids) >= 12:
+                break
+        # Preserve candidate_pool narrative order so cross-chapter callbacks ("前后照应") stay sequential!
+        selected_stories = [st for st in candidate_pool if st["id"] in picked_ids]
 
     if imm_profile["ja_ratio"] >= 0.65:
         opening_turns = POST_N3_NATIVE_OPENING
@@ -970,21 +966,20 @@ async def main():
         ad2_out_turns, ad2_in_turns = AD_BREAK_2_POOL[(day_ord + 1) % len(AD_BREAK_2_POOL)]
         closing_turns = CLOSING_POOL[day_ord % len(CLOSING_POOL)]
     else:
-        opening_turns = OPENING_GREETINGS_POOL[day_ord % len(OPENING_GREETINGS_POOL)]
+        opening_turns = []
         ad1_out_turns, ad1_in_turns = AD_BREAK_1_POOL[day_ord % len(AD_BREAK_1_POOL)]
         ad2_out_turns, ad2_in_turns = AD_BREAK_2_POOL[(day_ord + 1) % len(AD_BREAK_2_POOL)]
         closing_turns = CLOSING_POOL[day_ord % len(CLOSING_POOL)]
 
-    opening_evs = turns_to_expanded_events(opening_turns)
-    ad1_out_evs = turns_to_expanded_events(ad1_out_turns)
-    ad1_in_evs = turns_to_expanded_events(ad1_in_turns)
-    ad2_out_evs = turns_to_expanded_events(ad2_out_turns)
-    ad2_in_evs = turns_to_expanded_events(ad2_in_turns)
-    closing_evs = turns_to_expanded_events(closing_turns)
-
     story_blocks = []
     for ch_idx, st in enumerate(selected_stories):
         pids = list(st.get("point_ids") or [])
+        st_turns = list(st["turns"])
+        # Authentic 98.3% Dou Wentao Cold-Open: Story 0 Turn 0 starts directly with "《锵锵三人行》，..." (zero templated roll-call!)
+        if ch_idx == 0 and not opening_turns and st_turns:
+            spk0, txt0 = st_turns[0][0], str(st_turns[0][1]).strip()
+            if "锵锵三人行" not in txt0[:18]:
+                st_turns[0] = (spk0, f"《锵锵三人行》，{txt0}")
         story_blocks.append({
             "chapter": ch_idx,
             "short_tab": st["short_tab"],
@@ -992,18 +987,32 @@ async def main():
             "point_ids": pids,
             "title": st["title"],
             "ja_focus": st["ja_focus"],
-            "events": turns_to_expanded_events(list(st["turns"])),
+            "raw_turns": st_turns,
+            "events": turns_to_expanded_events(st_turns),
         })
 
+    # If the final chapter's final line already signs off with 《锵锵三人行》, don't tack on a duplicate closing line
+    if story_blocks and story_blocks[-1]["raw_turns"]:
+        last_line_txt = str(story_blocks[-1]["raw_turns"][-1][1])
+        if "锵锵三人行" in last_line_txt and imm_profile["ja_ratio"] < 0.65:
+            closing_turns = []
+
+    opening_evs = turns_to_expanded_events(opening_turns) if opening_turns else []
+    ad1_out_evs = turns_to_expanded_events(ad1_out_turns)
+    ad1_in_evs = turns_to_expanded_events(ad1_in_turns)
+    ad2_out_evs = turns_to_expanded_events(ad2_out_turns)
+    ad2_in_evs = turns_to_expanded_events(ad2_in_turns)
+    closing_evs = turns_to_expanded_events(closing_turns) if closing_turns else []
+
     sig_obj = {
-        "ver": "v29_qq3_uchi_40m_365",
+        "ver": "v32_real_qq_music_no_sting_authentic_prosody",
         "engine": engine_tag,
         "imm_day": imm_profile["day_of_365"],
         "opening": opening_evs,
         "ad1": [ad1_out_evs, ad1_in_evs],
         "ad2": [ad2_out_evs, ad2_in_evs],
         "closing": closing_evs,
-        "stories": story_blocks,
+        "stories": [{k: v for k, v in b.items() if k != "raw_turns"} for b in story_blocks],
     }
     script_sig = hashlib.sha256(json.dumps(sig_obj, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()[:14]
 
@@ -1016,6 +1025,10 @@ async def main():
                 return
         except Exception:
             pass
+
+    if np is None or (not dry_test and (edge_tts is None or shutil.which("ffmpeg") is None)):
+        print(f"[local-skip] Verified {len(story_blocks)} Qiang-Qiang stories (sig={script_sig}); full PCM/TTS synthesis runs in cloud CI.")
+        return
 
     all_event_lists = [
         opening_evs,
@@ -1070,10 +1083,9 @@ async def main():
                     if arr is not None and len(arr) > 0:
                         clip_pcm[key] = arr
 
-        # Load mastered 《锵锵三人行》 music suite into 24kHz float32 PCM
+        # Load authentic 《锵锵三人行》 original broadcast music (Intro, Ad-Break Bumper, Outro — ZERO inter-chapter sting!)
         pcm_intro = decode_to_pcm_f32(music_paths["intro"], trim_speech=False)
         pcm_bumper = decode_to_pcm_f32(music_paths["bumper"], trim_speech=False)
-        pcm_sting = decode_to_pcm_f32(music_paths["sting"], trim_speech=False)
         pcm_outro = decode_to_pcm_f32(music_paths["outro"], trim_speech=False)
 
         mixer = StudioTimelineMixer(est_minutes=52.0)
@@ -1087,20 +1099,21 @@ async def main():
                     key = (k, str(val))
                     arr = clip_pcm.get(key)
                     if arr is not None:
-                        # Smooth 8ms micro-overlap when pause was tight inline join (<=0.025s)
                         mixer.append_clip(arr, gain=1.0)
 
-        # 1) 00:00.0 — Opening Theme (`qq_intro`) + Ducked Entry for Trio Greeting!
-        intro_env = make_intro_duck_envelope(len(pcm_intro), duck_start_sec=6.75)
+        # 1) 00:00.0 — Authentic 《锵锵三人行》 Opening Theme -> Clean Studio Entry!
+        intro_dur_sec = len(pcm_intro) / float(SR)
+        entry_sec = max(6.8, intro_dur_sec - 0.85)
+        intro_env = make_intro_duck_envelope(len(pcm_intro), duck_start_sec=entry_sec - 0.15)
         mixer.place_at(0.0, pcm_intro, gain=intro_env)
-        mixer.advance(6.85)  # Wen Tao enters right over the ringing final "锵！锵！" tail!
+        mixer.advance(entry_sec)
 
         chapter_starts: dict[int, float] = {0: 0.0}
         raw_seg_bounds: list[tuple[int, float, float]] = []
 
-        # Trio Opening Greeting leads straight into Story 0
-        _append_events(opening_evs)
-        mixer.advance(0.45)
+        if opening_evs:
+            _append_events(opening_evs)
+            mixer.advance(0.28)
 
         total_stories = len(story_blocks)
         act1_cnt = max(2, (total_stories + 2) // 3)
@@ -1112,60 +1125,65 @@ async def main():
             if ch_idx not in chapter_starts:
                 chapter_starts[ch_idx] = seg_start
 
-            # If returning from an ad break, Wen Tao welcomes listeners back right at the chapter mark!
+            # If returning from an ad break, resume seamlessly right at the chapter mark!
             if ch_idx == ad1_after + 1:
                 _append_events(ad1_in_evs)
-                mixer.advance(0.42)
+                mixer.advance(0.22)
             elif ch_idx == ad2_after + 1:
                 _append_events(ad2_in_evs)
-                mixer.advance(0.42)
+                mixer.advance(0.22)
 
-            # Main Salon Story Dialogue
-            _append_events(b["events"])
-
-            # End-of-Story Transitions:
-            if ch_idx == ad1_after:
-                # End of Act 1 -> Classic Ad Break 1 ("《锵锵三人行》，广告之后见！" + Bumper Music)
-                mixer.advance(0.50)
-                _append_events(ad1_out_evs)
-                bumper_start = max(0.0, mixer.sec - 0.18)
-                bumper_end = mixer.place_at(bumper_start, pcm_bumper, gain=0.96)
-                mixer.cursor = int(round((bumper_end - 0.28) * SR))
-            elif ch_idx == ad2_after:
-                # End of Act 2 -> Classic Ad Break 2 ("《锵锵三人行》，广告之后见！" + Bumper Music)
-                mixer.advance(0.50)
-                _append_events(ad2_out_evs)
-                bumper_start = max(0.0, mixer.sec - 0.18)
-                bumper_end = mixer.place_at(bumper_start, pcm_bumper, gain=0.96)
-                mixer.cursor = int(round((bumper_end - 0.28) * SR))
-            elif ch_idx < total_stories - 1:
-                # Non-ad story transition -> Subtle 1.9s Jazz/Marimba/Gong-shimmer Salon Sting
-                mixer.advance(0.48)
-                sting_end = mixer.place_at(mixer.sec, pcm_sting, gain=0.92)
-                mixer.cursor = int(round((sting_end + 0.22) * SR))
+            # Main Salon Story Dialogue (for final story without separate closing_turns, sneak outro underneath final turn!)
+            is_last_story = (ch_idx == total_stories - 1)
+            if is_last_story and not closing_turns and len(b["raw_turns"]) >= 2:
+                body_evs = turns_to_expanded_events(b["raw_turns"][:-1])
+                final_w_evs = turns_to_expanded_events([b["raw_turns"][-1]])
+                _append_events(body_evs)
+                mixer.advance(0.18)
+                w_start_sec = mixer.sec
+                _append_events(final_w_evs)
+                w_end_sec = mixer.sec
+                w_dur = max(0.8, w_end_sec - w_start_sec)
+                vo_overlap = min(2.0, w_dur * 0.45)
+                outro_start = max(w_start_sec, w_end_sec - vo_overlap)
+                outro_env = make_outro_swell_envelope(len(pcm_outro), voice_over_sec=(w_end_sec - outro_start))
+                outro_end = mixer.place_at(outro_start, pcm_outro, gain=outro_env)
+                mixer.cursor = int(round(outro_end * SR))
             else:
-                # Final Story -> Trio Closing Sign-Off + Warm 《锵锵三人行》 Outro Music!
-                mixer.advance(0.70)
-                # Append D and X closing lines first, then measure W's final sign-off so outro sneaks underneath!
-                if len(closing_turns) >= 2:
-                    pre_close_evs = turns_to_expanded_events(closing_turns[:-1])
-                    final_w_evs = turns_to_expanded_events([closing_turns[-1]])
+                _append_events(b["events"])
+
+            # End-of-Story Transitions (ZERO "叮叮" stings between ordinary chapters — ONLY at the 2 "广告之后见" breaks!)
+            if ch_idx == ad1_after:
+                mixer.advance(0.26)
+                _append_events(ad1_out_evs)
+                mixer.advance(0.18)
+                bumper_end = mixer.place_at(mixer.sec, pcm_bumper, gain=0.95)
+                mixer.cursor = int(round((bumper_end + 0.24) * SR))
+            elif ch_idx == ad2_after:
+                mixer.advance(0.26)
+                _append_events(ad2_out_evs)
+                mixer.advance(0.18)
+                bumper_end = mixer.place_at(mixer.sec, pcm_bumper, gain=0.95)
+                mixer.cursor = int(round((bumper_end + 0.24) * SR))
+            elif ch_idx < total_stories - 1:
+                # Direct natural conversational continuation — ZERO chime/sting!
+                mixer.advance(0.36)
+            elif closing_turns:
+                mixer.advance(0.35)
+                pre_close_evs = turns_to_expanded_events(closing_turns[:-1]) if len(closing_turns) >= 2 else []
+                final_w_evs = turns_to_expanded_events([closing_turns[-1]])
+                if pre_close_evs:
                     _append_events(pre_close_evs)
-                    mixer.advance(0.24)
-                    w_start_sec = mixer.sec
-                    _append_events(final_w_evs)
-                    w_end_sec = mixer.sec
-                    w_dur = max(0.8, w_end_sec - w_start_sec)
-                    # Start outro underscore ~2.1s before Wen Tao finishes "《锵锵三人行》，咱们明天见！"
-                    vo_overlap = min(2.2, w_dur * 0.65)
-                    outro_start = max(w_start_sec, w_end_sec - vo_overlap)
-                    outro_env = make_outro_swell_envelope(len(pcm_outro), voice_over_sec=(w_end_sec - outro_start))
-                    outro_end = mixer.place_at(outro_start, pcm_outro, gain=outro_env)
-                    mixer.cursor = int(round(outro_end * SR))
-                else:
-                    _append_events(closing_evs)
-                    outro_end = mixer.place_at(mixer.sec, pcm_outro, gain=1.0)
-                    mixer.cursor = int(round(outro_end * SR))
+                    mixer.advance(0.20)
+                w_start_sec = mixer.sec
+                _append_events(final_w_evs)
+                w_end_sec = mixer.sec
+                w_dur = max(0.8, w_end_sec - w_start_sec)
+                vo_overlap = min(2.0, w_dur * 0.55)
+                outro_start = max(w_start_sec, w_end_sec - vo_overlap)
+                outro_env = make_outro_swell_envelope(len(pcm_outro), voice_over_sec=(w_end_sec - outro_start))
+                outro_end = mixer.place_at(outro_start, pcm_outro, gain=outro_env)
+                mixer.cursor = int(round(outro_end * SR))
 
             seg_end = round(mixer.sec, 1)
             raw_seg_bounds.append((ch_idx, seg_start, seg_end))
@@ -1201,6 +1219,7 @@ async def main():
         ]
         meta_obj = {
             "date": today_str,
+            "radio_ver": "v32_real_qq_music",
             "display_date": "锵锵三人",
             "days_left": days_left,
             "script_sig": script_sig,

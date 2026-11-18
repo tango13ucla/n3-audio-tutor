@@ -332,8 +332,19 @@ def merge_crdt(a: dict, b: dict) -> dict:
         "updatedAt": max(int(a.get("updatedAt") or 0), int(b.get("updatedAt") or 0)),
         "dates": {},
         "masteryOverrides": clean_a_ov,
+        "wordLookups": dict(a.get("wordLookups") or {}),
         "records": [],
     }
+    for surf, lobj in (b.get("wordLookups") or {}).items():
+        if not isinstance(lobj, dict) or not surf:
+            continue
+        cur_lk = out["wordLookups"].get(surf) or {"count": 0, "last_ts": "", "contexts": []}
+        ctxs = list(dict.fromkeys(list(cur_lk.get("contexts") or []) + list(lobj.get("contexts") or [])))[-12:]
+        out["wordLookups"][surf] = {
+            "count": max(int(cur_lk.get("count") or 0), int(lobj.get("count") or 0)),
+            "last_ts": max(str(cur_lk.get("last_ts") or ""), str(lobj.get("last_ts") or "")),
+            "contexts": ctxs,
+        }
     all_dates = set((a.get("dates") or {}).keys()) | set((b.get("dates") or {}).keys())
     for d in sorted(all_dates):
         da = (a.get("dates") or {}).get(d) or {}
@@ -547,6 +558,8 @@ def seed_from_practice_log(state: dict, plan_date: str) -> tuple[dict, list[dict
     day["retestAt"] = {k: int(v) for k, v in (day.get("retestAt") or {}).items() if int(v or 0) >= MIN_REAL_TS}
 
     tag = plan_date.replace("-", "")
+    lk_events: dict[str, set[str]] = {}
+    listen_pass_streak: dict[str, int] = {}
     with open(LOG_PATH, encoding="utf-8") as f:
         for raw_line in f:
             line = raw_line.strip()
@@ -557,9 +570,26 @@ def seed_from_practice_log(state: dict, plan_date: str) -> tuple[dict, list[dict
             except Exception:
                 continue
             existing_lines.append(rec)
+            raw_qid = str(rec.get("id", ""))
+            if raw_qid.startswith("LK:"):
+                surf = raw_qid[3:].strip() or str(rec.get("choice") or "").strip()
+                ts_lk = str(rec.get("ts") or "")
+                ctx_lk = str(rec.get("point") or "").strip()
+                if surf:
+                    ev_set = lk_events.setdefault(surf, set())
+                    ev_set.add(ts_lk or f"row_{len(ev_set)}")
+                    cur_lk = state.setdefault("wordLookups", {}).get(surf) or {"count": 0, "last_ts": "", "contexts": []}
+                    ctxs = list(cur_lk.get("contexts") or [])
+                    if ctx_lk and ctx_lk not in ctxs:
+                        ctxs.append(ctx_lk)
+                    state["wordLookups"][surf] = {
+                        "count": max(int(cur_lk.get("count") or 0), len(ev_set)),
+                        "last_ts": max(str(cur_lk.get("last_ts") or ""), ts_lk),
+                        "contexts": ctxs[-12:],
+                    }
+                continue
             if str(rec.get("source") or "") == "grok":
                 continue
-            raw_qid = str(rec.get("id", ""))
             if (
                 not raw_qid
                 or raw_qid.startswith("GROK-")
@@ -574,13 +604,21 @@ def seed_from_practice_log(state: dict, plan_date: str) -> tuple[dict, list[dict
             if rec_sdate != plan_date or ts_sec < MIN_REAL_TS:
                 continue
             pid = variant_parent.get(raw_qid, raw_qid)
+            is_listen_pid = ("-L" in pid or pid.startswith("Q-20261114-00"))
             if tag in pid or pid.startswith("N3-") or "-20261114-" in pid:
                 ok = str(rec.get("correct", "")).lower() == "true"
                 again = str(rec.get("ask_again", "")).lower() == "true"
                 if ok and not again:
-                    if ts_sec > int(day["greenAt"].get(pid) or 0):
-                        day["greenAt"][pid] = ts_sec
+                    had_fail_today = int(day["retestAt"].get(pid) or 0) >= MIN_REAL_TS
+                    if is_listen_pid and had_fail_today:
+                        listen_pass_streak[pid] = listen_pass_streak.get(pid, 0) + 1
+                        if listen_pass_streak[pid] >= 2 and ts_sec > int(day["greenAt"].get(pid) or 0):
+                            day["greenAt"][pid] = ts_sec
+                    else:
+                        if ts_sec > int(day["greenAt"].get(pid) or 0):
+                            day["greenAt"][pid] = ts_sec
                 else:
+                    listen_pass_streak[pid] = 0
                     if ts_sec > int(day["retestAt"].get(pid) or 0):
                         day["retestAt"][pid] = ts_sec
                     cur_l = day["learning"].get(pid) or [0, 0]
@@ -750,6 +788,27 @@ def main():
         if r.get("id") and r.get("ts") and k not in existing_keys:
             existing_keys.add(k)
             new_recs.append(r)
+        rid_s = str(r.get("id") or "")
+        if rid_s.startswith("LK:"):
+            surf = rid_s[3:].strip() or str(r.get("choice") or "").strip()
+            ts_lk = str(r.get("ts") or "")
+            ctx_lk = str(r.get("point") or "").strip()
+            if surf:
+                cur_lk = state.setdefault("wordLookups", {}).get(surf) or {"count": 0, "last_ts": "", "contexts": []}
+                ctxs = list(cur_lk.get("contexts") or [])
+                if ctx_lk and ctx_lk not in ctxs:
+                    ctxs.append(ctx_lk)
+                inc = 1 if ts_lk > str(cur_lk.get("last_ts") or "") else 0
+                state["wordLookups"][surf] = {
+                    "count": max(1, int(cur_lk.get("count") or 0) + inc),
+                    "last_ts": max(str(cur_lk.get("last_ts") or ""), ts_lk),
+                    "contexts": ctxs[-12:],
+                }
+    for d_key, d_bucket in (state.get("dates") or {}).items():
+        for tw in (d_bucket or {}).get("tappedWords") or []:
+            tw_s = str(tw or "").strip()
+            if tw_s and tw_s not in state.setdefault("wordLookups", {}):
+                state["wordLookups"][tw_s] = {"count": 1, "last_ts": d_key, "contexts": [f"date:{d_key}"]}
 
     grok_cloud_recs = pull_grok_ntfy_bus(cfg, existing_log + new_recs)
     new_recs.extend(grok_cloud_recs)

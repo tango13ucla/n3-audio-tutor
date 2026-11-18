@@ -9,6 +9,16 @@ on:
       - 'radio_dialogue_bank.py'
       - 'weak_expansion_*.py'
       - 'weak_explanations_bank.py'
+      - 'clear_explanations.py'
+      - 'phrase_and_word_lexicon.py'
+      - 'sentence_lexicon.py'
+      - 'compose_qq_music.py'
+      - 'generate_daily_radio.py'
+      - 'generate_neural_audio.py'
+      - 'build_html.py'
+      - 'run_brain_algorithm.py'
+      - 'sync_cloud_store.py'
+      - 'audio/qq_real_*.wav'
   schedule:
     # Stage 1 (02:03 AM PT = 10:03 UTC in PST): Post-midnight study close-out & focus-point summary
     - cron: '3 10 * * *'
@@ -71,16 +81,20 @@ jobs:
               print("night_summary")
               raise SystemExit(0)
           meta_date = ""
+          radio_ver = ""
           if os.path.exists("audio/daily_radio_meta.json"):
               try:
-                  meta_date = json.load(open("audio/daily_radio_meta.json", encoding="utf-8")).get("date", "")
+                  _rm = json.load(open("audio/daily_radio_meta.json", encoding="utf-8"))
+                  meta_date = _rm.get("date", "")
+                  radio_ver = _rm.get("radio_ver", "")
               except Exception:
                   meta_date = ""
-          if meta_date != study_pt:
+          if meta_date != study_pt or radio_ver != "v32_real_qq_music":
               print("full")
               raise SystemExit(0)
           need_new_vol = False
           need_new_cards = False
+          need_listen_parts = False
           today_has_uchi = False
           try:
               from radio_dialogue_bank import SALON_STORIES
@@ -96,6 +110,8 @@ jobs:
           except Exception:
               pass
           try:
+              import re
+              from clear_explanations import CARDS_75
               from weak_explanations_bank import NEW_CARDS_AUDIO
               mf = json.load(open("audio/audio_manifest.json", encoding="utf-8")) if os.path.exists("audio/audio_manifest.json") else {}
               for cid in NEW_CARDS_AUDIO:
@@ -104,10 +120,19 @@ jobs:
                   if not q_clean or not os.path.exists(q_clean):
                       need_new_cards = True
                       break
+              for cid, cobj in CARDS_75.items():
+                  qt = cobj.get("q_turns") or []
+                  if any(s in ("JF", "JM") and re.match(r"^(?:いち|に|さん)[。、\s]", str(t)) for s, t in qt):
+                      if not (mf.get(f"meta:{cid}") or {}).get("listen_parts"):
+                          need_listen_parts = True
+                          break
           except Exception:
               pass
           if need_new_vol:
               print("full")
+              raise SystemExit(0)
+          if need_listen_parts:
+              print("quiz_only")
               raise SystemExit(0)
           if need_new_cards:
               # Before midnight while today's deck is already active, pre-bake MP3s quietly without swapping today's HTML!

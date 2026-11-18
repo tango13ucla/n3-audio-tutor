@@ -83,10 +83,9 @@ def _apply_cross_day_step(item: dict, day_tag: str, ok: bool, again: bool, insta
 
     # Correct answer / Right-Swipe
     if item.get("last_ng_date") == day_tag:
-        # Lapsed earlier on this same day: recovering today reaches at most 1/3
-        item["streak"] = 1
-        item["last_ok_date"] = day_tag
-        item["status"] = "yellow"
+        # Lapsed or peeked ("直接看讲解") earlier on this same day: NEVER promote on the day of a miss!
+        item["streak"] = 0
+        item["status"] = "red"
         return
 
     if item.get("last_ok_date") == day_tag:
@@ -240,6 +239,22 @@ def apply_practice_logs(state: dict, fallback_day_tag: str = "") -> int:
                 if dedup_key:
                     seen_ts.add(dedup_key)
 
+                # Lookup telemetry ("LK:<surface>"): record to brain without mutating active practice queue!
+                if rec_id.startswith("LK:") or src == "lookup":
+                    surf = rec_id[3:].strip() if rec_id.startswith("LK:") else choice
+                    if surf:
+                        wlk = state.setdefault("word_lookups", {})
+                        cur_lk = wlk.get(surf) or {"count": 0, "last_ts": "", "contexts": []}
+                        ctxs = list(cur_lk.get("contexts") or [])
+                        if pt and pt not in ctxs:
+                            ctxs.append(pt)
+                        wlk[surf] = {
+                            "count": int(cur_lk.get("count") or 0) + 1,
+                            "last_ts": max(str(cur_lk.get("last_ts") or ""), ts),
+                            "contexts": ctxs[-12:],
+                        }
+                    continue
+
                 # Never auto-promote passive timer events
                 if choice == "闪卡:顺过":
                     continue
@@ -294,14 +309,26 @@ def apply_practice_logs(state: dict, fallback_day_tag: str = "") -> int:
                     ov_seen[mk] = ts_i
                     applied += 1
 
+            for surf, lobj in (snap.get("wordLookups") or {}).items():
+                if isinstance(lobj, dict) and surf:
+                    wlk = state.setdefault("word_lookups", {})
+                    cur_lk = wlk.get(surf) or {"count": 0, "last_ts": "", "contexts": []}
+                    ctxs = list(dict.fromkeys(list(cur_lk.get("contexts") or []) + list(lobj.get("contexts") or [])))[-12:]
+                    wlk[surf] = {
+                        "count": max(int(cur_lk.get("count") or 0), int(lobj.get("count") or 0)),
+                        "last_ts": max(str(cur_lk.get("last_ts") or ""), str(lobj.get("last_ts") or "")),
+                        "contexts": ctxs,
+                    }
+
             dates = snap.get("dates") or {}
             if dates:
                 latest_d = sorted(dates.keys())[-1]
                 day = dates.get(latest_d) or {}
                 for tw in day.get("tappedWords") or []:
                     tw_s = str(tw or "").strip()
-                    if tw_s and tw_s not in v_map and tw_s in extra_meta:
-                        _enroll_vocab_if_needed(state, v_map, tw_s, extra_meta, "red")
+                    if tw_s:
+                        wlk = state.setdefault("word_lookups", {})
+                        wlk.setdefault(tw_s, {"count": 1, "last_ts": latest_d, "contexts": [f"date:{latest_d}"]})
                 r_at = int(day.get("resetAt") or 0)
                 g_cnt = sum(
                     1

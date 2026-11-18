@@ -14,7 +14,10 @@ import os
 import subprocess
 import tempfile
 import wave
-import numpy as np
+try:
+    import numpy as np
+except Exception:
+    np = None
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 AUDIO_DIR = os.path.join(BASE_DIR, "audio")
@@ -570,16 +573,25 @@ def master_to_mp3(samples: np.ndarray, out_mp3: str, target_i_lufs: float = -18.
 
 def ensure_qq_music_assets(force: bool = False) -> dict[str, str]:
     os.makedirs(AUDIO_DIR, exist_ok=True)
+    real_paths = {
+        "intro": os.path.join(AUDIO_DIR, "qq_real_intro.wav"),
+        "bumper": os.path.join(AUDIO_DIR, "qq_real_bumper.wav"),
+        "outro": os.path.join(AUDIO_DIR, "qq_real_outro.wav"),
+    }
+    if all(os.path.exists(p) and os.path.getsize(p) > 4096 for p in real_paths.values()):
+        return {
+            "intro": real_paths["intro"],
+            "bumper": real_paths["bumper"],
+            "outro": real_paths["outro"],
+        }
     paths = {
         "intro": os.path.join(AUDIO_DIR, "qq_intro.mp3"),
         "bumper": os.path.join(AUDIO_DIR, "qq_bumper.mp3"),
-        "sting": os.path.join(AUDIO_DIR, "qq_sting.mp3"),
         "outro": os.path.join(AUDIO_DIR, "qq_outro.mp3"),
     }
     builders = {
         "intro": (build_intro_cue, -21.0),
         "bumper": (build_bumper_cue, -21.5),
-        "sting": (build_sting_cue, -24.0),
         "outro": (build_outro_cue, -21.5),
     }
     for key, path in paths.items():

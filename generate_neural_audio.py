@@ -46,6 +46,7 @@ except Exception:
 
 from adaptive_bank import CORE_N3_KANA_VOCAB, EXTRA_WORDS
 from clear_explanations import CARDS_75
+from phrase_and_word_lexicon import PHRASE_AND_WORD_LEXICON
 from sentence_lexicon import SENTENCE_LEXICON
 from tutor_data import KANA_ADVERBS_36, WORD_DICT
 from vocab_cards import VOCAB_CARDS
@@ -458,8 +459,20 @@ async def main():
 
     to_build_q = {}
     to_build_exp = {}
+    to_build_lp = {}  # filename -> list of (spk, val) turns for dynamic listening shuffle
     hashes_q = {}
     hashes_exp = {}
+    hashes_lp = {}
+    listen_specs = {}  # qid -> {"stem_file": ..., "opt_spk": ..., "opt_files": [(choice, fn), ...]}
+
+    LISTEN_OPT_RE = re.compile(r"^(?:いち|に|さん)[。、\s]+")
+    for spk_code in ("JF", "JM"):
+        for idx_n, num_ja in ((1, "いち。"), (2, "に。"), (3, "さん。")):
+            n_fn = f"num_{spk_code}_{idx_n}.mp3"
+            n_hash = hashlib.sha256(f"v18lp:{spk_code}:{num_ja}".encode("utf-8")).hexdigest()[:12]
+            hashes_lp[n_fn] = n_hash
+            if old_manifest.get(n_fn) != n_hash or not os.path.exists(os.path.join(AUDIO_DIR, n_fn)):
+                to_build_lp[n_fn] = [(spk_code, num_ja)]
 
     for qid, card in CARDS_75.items():
         q_sig = "v18q:+0%:" + json.dumps(card["q_turns"], ensure_ascii=False)
@@ -472,6 +485,43 @@ async def main():
             for spk, val in card["q_turns"]:
                 q_expanded.extend(expand_q_turn(spk, val))
             to_build_q[qid] = q_expanded
+
+        # Split blind listening cards into stem + 3 option clips so retries can shuffle 1/2/3 audio!
+        q_turns = card.get("q_turns") or []
+        first_opt_idx = next(
+            (i for i, (s, v) in enumerate(q_turns) if s in ("JF", "JM") and LISTEN_OPT_RE.match(str(v))),
+            None,
+        )
+        if first_opt_idx is not None and len(card.get("choices") or []) == 3:
+            raw_stem = list(q_turns[:first_opt_idx])
+            while raw_stem and raw_stem[-1][0] == "PAUSE":
+                raw_stem.pop()
+            stem_expanded = []
+            for s, v in raw_stem:
+                stem_expanded.extend(expand_q_turn(s, v))
+            opt_turns_raw = [
+                (s, LISTEN_OPT_RE.sub("", str(v)).strip())
+                for s, v in q_turns[first_opt_idx:]
+                if s in ("JF", "JM") and LISTEN_OPT_RE.match(str(v))
+            ]
+            if stem_expanded and len(opt_turns_raw) == 3:
+                opt_spk = opt_turns_raw[0][0]
+                stem_fn = f"{qid}_stem.mp3"
+                stem_h = hashlib.sha256(("v18lps:" + json.dumps(stem_expanded, ensure_ascii=False)).encode("utf-8")).hexdigest()[:12]
+                hashes_lp[stem_fn] = stem_h
+                if old_manifest.get(stem_fn) != stem_h or not os.path.exists(os.path.join(AUDIO_DIR, stem_fn)):
+                    to_build_lp[stem_fn] = stem_expanded
+                opt_files = []
+                for o_idx, (o_spk, o_txt) in enumerate(opt_turns_raw):
+                    c_label = str(card["choices"][o_idx])
+                    o_fn = f"{qid}_opt{o_idx}.mp3"
+                    o_turns = [(o_spk, o_txt if o_txt.endswith(("。", "！", "？")) else (o_txt + "。"))]
+                    o_h = hashlib.sha256(("v18lpo:" + json.dumps(o_turns, ensure_ascii=False)).encode("utf-8")).hexdigest()[:12]
+                    hashes_lp[o_fn] = o_h
+                    if old_manifest.get(o_fn) != o_h or not os.path.exists(os.path.join(AUDIO_DIR, o_fn)):
+                        to_build_lp[o_fn] = o_turns
+                    opt_files.append((c_label, o_fn))
+                listen_specs[qid] = {"stem_fn": stem_fn, "opt_spk": opt_spk, "opt_files": opt_files}
 
         spk_set = {s for s, _ in card["exp_turns"]}
         two_spk = ("JF" in spk_set and "JM" in spk_set)
@@ -489,13 +539,14 @@ async def main():
     sem = asyncio.Semaphore(14)
     built_q_ok = set()
     built_e_ok = set()
+    built_lp_ok = set()
 
-    if can_synth and (to_build_q or to_build_exp):
+    if can_synth and (to_build_q or to_build_exp or to_build_lp):
         tmpdir = tempfile.mkdtemp(prefix="n3_cards_v18_")
         try:
             needed_clips = {}
             needed_pauses = set()
-            for turns in list(to_build_q.values()) + list(to_build_exp.values()):
+            for turns in list(to_build_q.values()) + list(to_build_exp.values()) + list(to_build_lp.values()):
                 for spk, val in turns:
                     if spk == "PAUSE":
                         needed_pauses.add(round(float(val), 2))
@@ -548,9 +599,24 @@ async def main():
                 else:
                     print(f"[warn] stitch_turns incomplete for Exp {qid}")
 
-            print(f"Synthesized & trimmed {len(built_q_ok)}/{len(to_build_q)} Q MP3s (+0%) and {len(built_e_ok)}/{len(to_build_exp)} Exp MP3s (+5% ZH / +0% JA).")
+            for lp_fn, turns in to_build_lp.items():
+                lp_abs = os.path.join(AUDIO_DIR, lp_fn)
+                if stitch_turns(turns, clip_lookup, silence_lookup, lp_abs, tmpdir, f"lp_{lp_fn.replace('.mp3', '')}"):
+                    built_lp_ok.add(lp_fn)
+                else:
+                    print(f"[warn] stitch_turns incomplete for LP {lp_fn}")
+
+            print(
+                f"Synthesized & trimmed {len(built_q_ok)}/{len(to_build_q)} Q MP3s, "
+                f"{len(built_e_ok)}/{len(to_build_exp)} Exp MP3s, and {len(built_lp_ok)}/{len(to_build_lp)} Listening-Part MP3s."
+            )
         finally:
             shutil.rmtree(tmpdir, ignore_errors=True)
+
+    for lp_fn, lph in hashes_lp.items():
+        lp_abs = os.path.join(AUDIO_DIR, lp_fn)
+        if os.path.exists(lp_abs):
+            new_manifest[lp_fn] = lph if (lp_fn not in to_build_lp or lp_fn in built_lp_ok) else old_manifest.get(lp_fn, lph)
 
     for qid, card in CARDS_75.items():
         q_file = f"{qid}_q.mp3"
@@ -567,16 +633,38 @@ async def main():
 
         q_ver = new_manifest.get(q_file, qh)[:8]
         e_ver = new_manifest.get(e_file, eh)[:8]
-        new_manifest[f"meta:{qid}"] = {
+        meta_entry = {
             "q_audio": f"./audio/{q_file}?v={q_ver}" if os.path.exists(q_abs) else "",
             "exp_audio": f"./audio/{e_file}?v={e_ver}" if os.path.exists(e_abs) else "",
             "spoken_text": f"{card['zh_meaning']} {card['why_line']} {card['form_line']}",
         }
+        lspec = listen_specs.get(qid)
+        if lspec:
+            stem_fn = lspec["stem_fn"]
+            opt_spk = lspec["opt_spk"]
+            num_fns = [f"num_{opt_spk}_1.mp3", f"num_{opt_spk}_2.mp3", f"num_{opt_spk}_3.mp3"]
+            all_lp_exist = (
+                os.path.exists(os.path.join(AUDIO_DIR, stem_fn))
+                and all(os.path.exists(os.path.join(AUDIO_DIR, nf)) for nf in num_fns)
+                and all(os.path.exists(os.path.join(AUDIO_DIR, ofn)) for _, ofn in lspec["opt_files"])
+            )
+            if all_lp_exist:
+                stem_ver = new_manifest.get(stem_fn, hashes_lp.get(stem_fn, ""))[:8]
+                meta_entry["listen_parts"] = {
+                    "stem": f"./audio/{stem_fn}?v={stem_ver}",
+                    "nums": [f"./audio/{nf}" for nf in num_fns],
+                    "opts": {
+                        c_lbl: f"./audio/{ofn}?v={new_manifest.get(ofn, hashes_lp.get(ofn, ''))[:8]}"
+                        for c_lbl, ofn in lspec["opt_files"]
+                    },
+                }
+        new_manifest[f"meta:{qid}"] = meta_entry
 
-    # Word pronunciations across full sentence lexicon
+    # Word pronunciations across full sentence & phrase lexicon
     merged_words = dict(SENTENCE_LEXICON)
     merged_words.update(WORD_DICT)
     merged_words.update(EXTRA_WORDS)
+    merged_words.update(PHRASE_AND_WORD_LEXICON)
     for w, _, _ in CORE_N3_KANA_VOCAB:
         if w not in merged_words:
             merged_words[w] = {"kana": w}

@@ -1039,6 +1039,7 @@ CARDS_75 = {
 }
 
 from weak_explanations_bank import NEW_CARDS_AUDIO
+import re as _re
 
 CARDS_75.update(NEW_CARDS_AUDIO)
 
@@ -1072,4 +1073,40 @@ try:
                 }
 except Exception:
     pass
+
+
+def _clean_listen_ordinal(txt: str) -> str:
+    s = str(txt or "")
+    s = _re.sub(r"所以第一步选第[一二三123][句项个]\s*", "所以第一步该选 ", s)
+    s = _re.sub(r"所以最先做的是第[一二三123][句项个]\s*", "所以最先做的是", s)
+    s = _re.sub(r"所以(?:女生|同事|男生)?接第[一二三123][句项个]\s*", "所以应该接 ", s)
+    s = _re.sub(r"所以选第[一二三123][句项个][，、]?\s*", "所以应该选 ", s)
+    s = _re.sub(r"(?<=[，。])\s*选第[一二三123][句项个]\s*", "应该选 ", s)
+    s = _re.sub(r"第[一二三123]句回答\s*", "地道回答是 ", s)
+    s = _re.sub(r"第[一二三123][句项]说", "错误项里说", s)
+    s = _re.sub(r"第[一二三123][句项]问", "错误项里问", s)
+    s = _re.sub(r"第[一二三123][句项]反问", "错误项反问", s)
+    s = _re.sub(r"第[一二三123][句项]以为", "错误项以为", s)
+    s = _re.sub(r"第[一二三123][句项]既跑题", "有个干扰项既跑题", s)
+    s = _re.sub(r"第[一二三123][句项]用了过去式", "过去式那句", s)
+    s = _re.sub(r"第[一二三123][句项]是要袋子", "说要袋子那项", s)
+    s = _re.sub(r"第[一二三123][句项]换大袋子", "换大袋子那项", s)
+    s = _re.sub(r"第[一二三123][句项]布置会议室", "布置会议室那项", s)
+    s = _re.sub(r"第[一二三123][句项]给课长发邮件", "给课长发邮件那项", s)
+    s = _re.sub(r"第[一二三123][句项]去银行", "去银行那项", s)
+    s = _re.sub(r"第[一二三123][句项]吃午饭", "吃午饭那项", s)
+    s = _re.sub(r"\s+([\u4e00-\u9fff])", r"\1", s)
+    return s
+
+
+for _qid, _c in CARDS_75.items():
+    _qt = _c.get("q_turns") or []
+    if any(_spk in ("JF", "JM") and _re.match(r"^(?:いち|に|さん)[。、\s]", str(_t)) for _spk, _t in _qt):
+        if "form_line" in _c:
+            _c["form_line"] = _re.sub(r"第\s*[123一二三]\s*[句项]\s*", "", str(_c["form_line"])).strip()
+        if "exp_turns" in _c:
+            _c["exp_turns"] = [
+                (_spk, _clean_listen_ordinal(_t) if _spk == "T" else _t)
+                for _spk, _t in _c["exp_turns"]
+            ]
 

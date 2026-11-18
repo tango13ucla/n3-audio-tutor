@@ -25,6 +25,7 @@ from adaptive_bank import (
     VARIANT_CARDS,
 )
 from clear_explanations import CARDS_75
+from phrase_and_word_lexicon import PHRASE_AND_WORD_LEXICON
 from radio_dialogue_bank import MODALITY_MAP
 from sentence_lexicon import SENTENCE_LEXICON
 from tutor_data import KANA_ADVERBS_36, TUTOR_ITEMS, WORD_DICT
@@ -94,18 +95,14 @@ h_state_map = {p["id"]: p for p in live_state.get("henkei_points", [])}
 v_state_map = {p["word"]: p for p in live_state.get("vocab_tracked", [])}
 l_state_map = {p["id"]: p for p in live_state.get("listening_points", [])}
 
-# Exclude non-idiomatic multi-word phrases so users can tap specific individual words cleanly
+# Exclude only non-idiomatic demonstrative/adjective combinations; keep ALL real phrases & collocations!
 DROP_MULTIWORD_PHRASES = {
-    "小さな子ども", "目線を合わせる", "ひざを曲げて", "耳をすまして", "手が滑って",
-    "道に迷っていたら", "走っている途中", "話し合った結果", "大きな声", "強い風",
-    "急な仕事", "親切な人", "混む前に", "あの二人", "この本", "寝る前",
-    "子どもの頃", "後ろの席", "降りる駅", "隣の人", "十一時以降", "１１時以降",
-    "夜遅くまで", "甘い物", "目の前", "予約しておく", "コピーしといて",
+    "あの二人", "この本", "小さな子ども", "大きな声", "強い風", "急な仕事", "親切な人",
 }
 
 word_audio_map = audio_manifest.get("words", {})
 merged_raw_words = {}
-for src_dict in (SENTENCE_LEXICON, WORD_DICT, EXTRA_WORDS):
+for src_dict in (SENTENCE_LEXICON, WORD_DICT, EXTRA_WORDS, PHRASE_AND_WORD_LEXICON):
     for surf, info in src_dict.items():
         if surf in DROP_MULTIWORD_PHRASES and surf not in v_state_map:
             continue
@@ -360,6 +357,7 @@ for vc in VARIANT_CARDS:
             "opt_notes": build_opt_notes(vid, vc.get("option_notes")),
             "q_audio": q_rel,
             "exp_audio": exp_rel,
+            "listen_parts": meta.get("listen_parts"),
             "is_listening": vc["subject"] == "聴解",
         }
         variants_by_base.setdefault(vc["variant_of"], []).append(v_obj)
@@ -446,6 +444,7 @@ def build_base_point(q: dict, subject: str, fallback_point_label: str) -> dict:
             "opt_notes": opt_notes,
             "q_audio": q_rel,
             "exp_audio": exp_rel,
+            "listen_parts": meta.get("listen_parts"),
             "is_listening": is_listening,
         },
         "variants": variants_by_base.get(qid, []),
@@ -512,6 +511,7 @@ for ext in EXTRA_PRIMARY_CARDS:
             "opt_notes": build_opt_notes(qid, ext.get("option_notes")),
             "q_audio": q_rel,
             "exp_audio": exp_rel,
+            "listen_parts": meta.get("listen_parts"),
             "is_listening": is_l,
         },
         "variants": variants_by_base.get(qid, []),
@@ -2950,6 +2950,10 @@ function createFreshAdaptiveState() {
       audioPrimed: false,
       variantIdx: 0,
       useVariant: false,
+      retryCardId: "",
+      passStreak: 0,
+      reqPasses: 1,
+      lastChoiceOrder: null,
       dueStep: 0,
       wrongCount: 0,
       lt: 0
@@ -2972,6 +2976,7 @@ function createFreshAdaptiveState() {
     vocabSess: null,
     pts: pts,
     tappedWords: [],
+    wordLookups: {},
     masteryOverrides: {},
     masteryOverrideTs: {},
     recentRecords: []
@@ -3010,10 +3015,11 @@ function recomputeStatusesFromCRDT(st) {
     ps.variantIdx = Math.floor(ps.variantIdx || 0);
     if (ps.greenAt >= minTs && ps.greenAt >= ps.retestAt) {
       ps.status = "green";
-    } else if (ps.retestAt >= minTs || ps.wrongCount > 0 || ps.audioPrimed) {
+      ps.retryCardId = "";
+    } else if (ps.retestAt >= minTs) {
       ps.status = "learning";
-      if (ps.wrongCount > 0 && p.variants && p.variants.length > 0) {
-        ps.useVariant = true;
+      if (!ps.reqPasses || ps.reqPasses < 1) {
+        ps.reqPasses = (p.primary && p.primary.is_listening && p.variants && p.variants.length > 0) ? 2 : 1;
       }
     } else {
       ps.status = "unseen";
@@ -3142,12 +3148,29 @@ function loadAdaptiveState() {
             if (r && r.id) base.recentRecords.push(r);
           });
         }
+        if (saved.wordLookups && typeof saved.wordLookups === "object") {
+          Object.keys(saved.wordLookups).forEach(wk => {
+            const wv = saved.wordLookups[wk];
+            if (Array.isArray(wv) && wv.length >= 2) {
+              const curW = base.wordLookups[wk] || [0, 0, ""];
+              base.wordLookups[wk] = [
+                Math.max(curW[0] || 0, Math.floor(wv[0] || 0)),
+                Math.max(curW[1] || 0, Math.floor(wv[1] || 0)),
+                String(wv[2] || curW[2] || "")
+              ];
+            }
+          });
+        }
         if (saved.pts && typeof saved.pts === "object") {
           Object.keys(saved.pts).forEach(rawId => {
             const pid = CARD_TO_POINT_ID[rawId] || rawId;
             const sp = saved.pts[rawId];
             const cur = base.pts[pid];
             if (!sp || !cur) return;
+            if (sp.retryCardId) cur.retryCardId = String(sp.retryCardId);
+            if (typeof sp.passStreak === "number") cur.passStreak = Math.max(cur.passStreak || 0, Math.floor(sp.passStreak));
+            if (typeof sp.reqPasses === "number") cur.reqPasses = Math.max(cur.reqPasses || 1, Math.floor(sp.reqPasses));
+            if (sp.lastChoiceOrder && typeof sp.lastChoiceOrder === "object") cur.lastChoiceOrder = sp.lastChoiceOrder;
             if (typeof sp.greenAt === "number" && sp.greenAt >= MIN_REAL_TS && sp.greenAt > cur.greenAt) {
               cur.greenAt = Math.floor(sp.greenAt);
             }
@@ -3333,10 +3356,10 @@ function computeNextMasteryState(curObj, action, dayTag) {
   const d = dayTag || TODAY_TAG;
   if (action === "seal") return "done";
   if (action === "fail") return `todo:${d}`;
-  if (curObj.tier === "done") return "done";
   if (action === "recover" || curObj.mstate === `todo:${d}`) {
-    return `wip1:${d}`;
+    return `todo:${d}`;
   }
+  if (curObj.tier === "done") return "done";
   if (curObj.lastDate === d && curObj.streak >= 1) {
     return curObj.mstate;
   }
@@ -4061,8 +4084,8 @@ function selectNextPointId(forcedId) {
   const ready = pool.filter(p => A.pts[p.id].dueStep <= A.step);
   if (ready.length) {
     ready.sort((a, b) => {
-      const ma = a.modality === "memorize" ? 0.25 : (a.modality === "both" ? 0.12 : 0);
-      const mb = b.modality === "memorize" ? 0.25 : (b.modality === "both" ? 0.12 : 0);
+      const ma = (a.modality === "memorize" ? 0.25 : (a.modality === "both" ? 0.12 : 0)) + (A.pts[a.id].audioPrimed ? 0.10 : 0);
+      const mb = (b.modality === "memorize" ? 0.25 : (b.modality === "both" ? 0.12 : 0)) + (A.pts[b.id].audioPrimed ? 0.10 : 0);
       return (b.roi_score + mb) - (a.roi_score + ma);
     });
     return ready[0].id;
@@ -4083,18 +4106,58 @@ function getPointById(pid) {
 }
 
 function getQuizForPoint(p, pState) {
-  if (pState.useVariant && p.variants && p.variants.length > 0) {
+  if (pState && pState.retryCardId) {
+    if (p.primary && p.primary.id === pState.retryCardId) return p.primary;
+    const hitV = (p.variants || []).find(v => v.id === pState.retryCardId);
+    if (hitV) return hitV;
+  }
+  if (pState && pState.useVariant && p.variants && p.variants.length > 0) {
     return p.variants[pState.variantIdx % p.variants.length];
   }
   return p.primary;
 }
 
-function prepareChoices(qObj, salt) {
-  const arr = qObj.choices.slice();
-  if (!qObj.is_listening && arr.length === 2) {
-    let h = salt || 0;
-    for (let i = 0; i < qObj.id.length; i++) h = (h * 31 + qObj.id.charCodeAt(i)) >>> 0;
-    if (h % 2 === 1) arr.reverse();
+function canShuffleListeningCard(qObj) {
+  if (!qObj || !qObj.is_listening) return true;
+  const lp = qObj.listen_parts;
+  if (!lp || !lp.stem || !Array.isArray(lp.nums) || lp.nums.length < 3 || !lp.opts) return false;
+  return (qObj.choices || []).length === 3 && qObj.choices.every(c => !!lp.opts[c]);
+}
+
+function prepareChoices(qObj, salt, pState) {
+  const arr = (qObj.choices || []).slice();
+  if (arr.length < 2 || !canShuffleListeningCard(qObj)) return arr;
+
+  let seed = ((salt || 0) * 9973 + 17) >>> 0;
+  for (let i = 0; i < qObj.id.length; i++) {
+    seed = (Math.imul(seed, 31) + qObj.id.charCodeAt(i)) >>> 0;
+  }
+  function nextRand() {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    return seed;
+  }
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = nextRand() % (i + 1);
+    const tmp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = tmp;
+  }
+
+  // On any retry (including missing a 2nd/3rd time), strictly guarantee a DIFFERENT option order than last attempt!
+  const prev = pState && pState.lastChoiceOrder && pState.lastChoiceOrder.qid === qObj.id
+    ? pState.lastChoiceOrder.order
+    : null;
+  if (Array.isArray(prev) && prev.length === arr.length) {
+    const sameFull = arr.every((v, idx) => v === prev[idx]);
+    const prevAnsIdx = prev.indexOf(qObj.answer);
+    const curAnsIdx = arr.indexOf(qObj.answer);
+    if (sameFull || (arr.length >= 3 && prevAnsIdx >= 0 && curAnsIdx === prevAnsIdx)) {
+      const first = arr.shift();
+      arr.push(first);
+    }
+  }
+  if (pState) {
+    pState.lastChoiceOrder = { qid: qObj.id, order: arr.slice() };
   }
   return arr;
 }
@@ -4112,7 +4175,8 @@ function setupCurrentTurn(forcedId) {
   const ps = A.pts[curPointId];
   viewStage = "quiz";
   activeQuizObj = getQuizForPoint(p, ps);
-  currentChoices = prepareChoices(activeQuizObj, ps.wrongCount);
+  const attemptSalt = (ps.wrongCount || 0) * 7 + (ps.passStreak || 0) * 3 + 1;
+  currentChoices = prepareChoices(activeQuizObj, attemptSalt, ps);
   if (syncStampReady) saveAdaptiveState();
 }
 setupCurrentTurn((A.cur && A.pts[A.cur] && A.pts[A.cur].status !== "green") ? A.cur : undefined);
@@ -4156,7 +4220,7 @@ Object.keys(PARTICLE_FALLBACK).forEach(pk => {
 
 const DICT_KEYS = Object.keys(DATA.words).sort((a, b) => b.length - a.length);
 const CONTENT_KEYS = DICT_KEYS.filter(k => k.length >= 3 && !PARTICLE_FALLBACK[k]);
-const INTERJECTION_SET = new Set(["はい", "ええ", "うん", "いや", "あれ", "ほら"]);
+const INTERJECTION_SET = new Set(["はい", "ええ", "うん", "いや", "あれ", "ほら", "あ", "え", "お"]);
 const TRIVIAL_TAP_WORDS = new Set([
   "この", "その", "あの", "ここ", "そこ", "あそこ", "これ", "それ", "あれ", "どれ", "どちら",
   "私", "僕", "彼", "彼女", "人", "今日", "明日", "昨日", "今", "もう", "また", "もっと", "だけ", "だから"
@@ -4378,8 +4442,16 @@ function cycleExpSpeed() {
   if (spdBtn) spdBtn.textContent = `${expSpeed}x`;
 }
 
+let listenSeqQueue = [];
+let listenSeqTimer = null;
+
 function stopQuizAudio() {
   playReqSeq += 1;
+  listenSeqQueue = [];
+  if (listenSeqTimer) {
+    clearTimeout(listenSeqTimer);
+    listenSeqTimer = null;
+  }
   try {
     player.pause();
     player.currentTime = 0;
@@ -4399,6 +4471,7 @@ function startResolvedClip(srcUrl, kind, seq) {
   if (pr && typeof pr.catch === "function") {
     pr.catch(() => {
       if (seq === playReqSeq) {
+        listenSeqQueue = [];
         activeKind = null;
         syncAudioButtons();
       }
@@ -4407,12 +4480,76 @@ function startResolvedClip(srcUrl, kind, seq) {
   syncAudioButtons();
 }
 
+function stepListeningSequence(seq) {
+  if (seq !== playReqSeq) return;
+  if (!listenSeqQueue.length) {
+    activeKind = null;
+    syncAudioButtons();
+    return;
+  }
+  const item = listenSeqQueue.shift();
+  const runUrl = url => {
+    if (seq !== playReqSeq) return;
+    if (audioBlobMap.has(url)) {
+      startResolvedClip(audioBlobMap.get(url), "q", seq);
+    } else {
+      warmAudio(url).then(resolved => startResolvedClip(resolved || url, "q", seq));
+    }
+  };
+  if (item.waitMs > 0) {
+    listenSeqTimer = setTimeout(() => {
+      listenSeqTimer = null;
+      runUrl(item.url);
+    }, item.waitMs);
+  } else {
+    runUrl(item.url);
+  }
+}
+
+function playQuizQuestionAudio(qObj, toggleIfSame) {
+  if (!qObj) return;
+  if (toggleIfSame && activeKind === "q" && (!player.paused || listenSeqQueue.length > 0 || listenSeqTimer)) {
+    stopQuizAudio();
+    return;
+  }
+  if (canShuffleListeningCard(qObj) && qObj.is_listening && qObj.listen_parts && currentChoices.length === 3) {
+    if (!radioPlayer.paused) radioPlayer.pause();
+    if (listenSeqTimer) {
+      clearTimeout(listenSeqTimer);
+      listenSeqTimer = null;
+    }
+    const lp = qObj.listen_parts;
+    const urls = [
+      { url: lp.stem, waitMs: 0 },
+      { url: lp.nums[0], waitMs: 460 },
+      { url: lp.opts[currentChoices[0]], waitMs: 70 },
+      { url: lp.nums[1], waitMs: 380 },
+      { url: lp.opts[currentChoices[1]], waitMs: 70 },
+      { url: lp.nums[2], waitMs: 380 },
+      { url: lp.opts[currentChoices[2]], waitMs: 70 }
+    ];
+    urls.forEach(u => warmAudio(u.url));
+    const seq = ++playReqSeq;
+    listenSeqQueue = urls;
+    activeKind = "q";
+    syncAudioButtons();
+    stepListeningSequence(seq);
+    return;
+  }
+  playMainClip(qObj.q_audio, "q", toggleIfSame);
+}
+
 function playMainClip(url, kind, toggleIfSame) {
   if (!url) return;
   if (!radioPlayer.paused) radioPlayer.pause();
   if (toggleIfSame && activeKind === kind && !player.paused) {
     stopQuizAudio();
     return;
+  }
+  listenSeqQueue = [];
+  if (listenSeqTimer) {
+    clearTimeout(listenSeqTimer);
+    listenSeqTimer = null;
   }
   const seq = ++playReqSeq;
   if (audioBlobMap.has(url)) {
@@ -4432,16 +4569,20 @@ player.addEventListener("play", () => {
 });
 player.addEventListener("pause", syncAudioButtons);
 player.addEventListener("ended", () => {
+  if (activeKind === "q" && listenSeqQueue.length > 0) {
+    stepListeningSequence(playReqSeq);
+    return;
+  }
   activeKind = null;
   syncAudioButtons();
 });
 
 function syncAudioButtons() {
+  const onQ = activeKind === "q" && (!player.paused || listenSeqQueue.length > 0 || !!listenSeqTimer);
   const orb = document.getElementById("voice-orb");
-  if (orb) orb.classList.toggle("speaking", activeKind === "q" && !player.paused);
+  if (orb) orb.classList.toggle("speaking", onQ);
   const qBtn = document.getElementById("q-play-btn");
   if (qBtn) {
-    const onQ = activeKind === "q" && !player.paused;
     qBtn.classList.toggle("playing", onQ);
     qBtn.textContent = onQ ? "暂停" : "读题";
   }
@@ -4649,7 +4790,6 @@ function updateRadioLiveDisplay(t) {
         const ps = A.pts[pid];
         if (ps && !ps.audioPrimed) {
           ps.audioPrimed = true;
-          if (ps.status === "unseen") ps.status = "learning";
           changed = true;
         }
       }
@@ -4772,7 +4912,7 @@ function completeTeachCard() {
   autoPlayCurrentTurn();
 }
 
-// Calm zero-guess escape hatch: never force a blind 50/50 guess (which risks lucky false-greens).
+// Calm zero-guess escape hatch: never force a blind guess, and NEVER count peeking as passed!
 function revealWithoutGuess() {
   if (viewStage !== "quiz" || !activeQuizObj) return;
   clearActiveWordToken();
@@ -4785,13 +4925,13 @@ function revealWithoutGuess() {
   const p = getPointById(curPointId);
   const ps = A.pts[p.id];
   ps.retestAt = Math.max(stamp, (ps.greenAt || 0) + 1);
+  ps.greenAt = 0;
   ps.status = "learning";
-  ps.wrongCount += 1;
-  if (p.variants && p.variants.length > 0) {
-    if (ps.useVariant) ps.variantIdx += 1;
-    ps.useVariant = true;
-  }
-  ps.dueStep = A.step + 4;
+  ps.wrongCount = (ps.wrongCount || 0) + 1;
+  ps.passStreak = 0;
+  ps.reqPasses = (activeQuizObj.is_listening && p.variants && p.variants.length > 0) ? 2 : 1;
+  ps.retryCardId = activeQuizObj.id;
+  ps.dueStep = A.step + 3;
   A.hotFamily = p.family;
   A.step += 1;
   A.lastPointId = p.id;
@@ -4818,23 +4958,55 @@ function submitAnswer(val) {
   const hadWrongToday = (ps.wrongCount || 0) > 0 || ((ps.retestAt || 0) > (A.resetAt || 0));
 
   if (isCorrect) {
-    ps.greenAt = Math.max(stamp, (ps.retestAt || 0), (A.resetAt || 0) + 1);
-    ps.status = "green";
-    A.hotFamily = null;
-    A.step += 1;
-    A.lastPointId = p.id;
-    recomputeStatusesFromCRDT(A);
-    const nextMs = applyMasteryAction(p.point_key, p.point, hadWrongToday ? "recover" : "pass", ps.greenAt);
-    syncBackendRecord(p, activeQuizObj.id, val, true, false, nextMs, ps.greenAt);
+    if (hadWrongToday) {
+      ps.passStreak = (ps.passStreak || 0) + 1;
+      const needed = ps.reqPasses || ((activeQuizObj.is_listening && p.variants && p.variants.length > 0) ? 2 : 1);
+      if (ps.passStreak < needed) {
+        // Passed the exact missed listening dialogue once; schedule a variant check 3 steps later before daily pass!
+        ps.retryCardId = "";
+        if (p.variants && p.variants.length > 0) {
+          if (ps.useVariant) ps.variantIdx = (ps.variantIdx || 0) + 1;
+          ps.useVariant = true;
+        }
+        ps.status = "learning";
+        ps.dueStep = A.step + 3;
+        A.hotFamily = null;
+        A.step += 1;
+        A.lastPointId = p.id;
+        recomputeStatusesFromCRDT(A);
+        const nextMs = applyMasteryAction(p.point_key, p.point, "recover", stamp);
+        syncBackendRecord(p, activeQuizObj.id, val, true, false, nextMs, stamp);
+      } else {
+        ps.retryCardId = "";
+        ps.greenAt = Math.max(stamp, (ps.retestAt || 0) + 1, (A.resetAt || 0) + 1);
+        ps.status = "green";
+        A.hotFamily = null;
+        A.step += 1;
+        A.lastPointId = p.id;
+        recomputeStatusesFromCRDT(A);
+        const nextMs = applyMasteryAction(p.point_key, p.point, "recover", ps.greenAt);
+        syncBackendRecord(p, activeQuizObj.id, val, true, false, nextMs, ps.greenAt);
+      }
+    } else {
+      ps.retryCardId = "";
+      ps.greenAt = Math.max(stamp, (ps.retestAt || 0), (A.resetAt || 0) + 1);
+      ps.status = "green";
+      A.hotFamily = null;
+      A.step += 1;
+      A.lastPointId = p.id;
+      recomputeStatusesFromCRDT(A);
+      const nextMs = applyMasteryAction(p.point_key, p.point, "pass", ps.greenAt);
+      syncBackendRecord(p, activeQuizObj.id, val, true, false, nextMs, ps.greenAt);
+    }
   } else {
     ps.retestAt = Math.max(stamp, (ps.greenAt || 0) + 1);
+    ps.greenAt = 0;
     ps.status = "learning";
-    ps.wrongCount += 1;
-    if (p.variants && p.variants.length > 0) {
-      if (ps.useVariant) ps.variantIdx += 1;
-      ps.useVariant = true;
-    }
-    ps.dueStep = A.step + 4;
+    ps.wrongCount = (ps.wrongCount || 0) + 1;
+    ps.passStreak = 0;
+    ps.reqPasses = (activeQuizObj.is_listening && p.variants && p.variants.length > 0) ? 2 : 1;
+    ps.retryCardId = activeQuizObj.id;
+    ps.dueStep = A.step + 3;
     A.hotFamily = p.family;
     A.step += 1;
     A.lastPointId = p.id;
@@ -4855,9 +5027,12 @@ function advanceNext(forceRetestCurrent) {
     const p = getPointById(curPointId);
     const ps = A.pts[curPointId];
     ps.retestAt = Math.max(stamp, (ps.greenAt || 0) + 1);
+    ps.greenAt = 0;
     ps.status = "learning";
+    ps.passStreak = 0;
+    ps.retryCardId = "";
     if (p && p.variants && p.variants.length > 0) ps.useVariant = true;
-    ps.dueStep = A.step + 4;
+    ps.dueStep = A.step + 3;
     recomputeStatusesFromCRDT(A);
     if (p) {
       const nextMs = applyMasteryAction(p.point_key, p.point, "fail", ps.retestAt);
@@ -4875,8 +5050,8 @@ function autoPlayCurrentTurn() {
   if (viewStage === "teach") {
     const p = getPointById(curPointId);
     if (p && p.teach.audio) playMainClip(p.teach.audio, "teach", false);
-  } else if (viewStage === "quiz" && activeQuizObj && activeQuizObj.q_audio) {
-    playMainClip(activeQuizObj.q_audio, "q", false);
+  } else if (viewStage === "quiz" && activeQuizObj) {
+    playQuizQuestionAudio(activeQuizObj, false);
   } else if (viewStage === "done") {
     playMainClip(DATA.done_audio, "done", false);
   }
@@ -4899,6 +5074,7 @@ function resetTodayMission() {
   const keepOverrides = A.masteryOverrides || {};
   const keepOverrideTs = A.masteryOverrideTs || {};
   const keepTapped = A.tappedWords || [];
+  const keepWordLookups = A.wordLookups || {};
   const keepRadio = A.radioMaxSec || 0;
   const keepRadioPos = A.radioPos || [0, 0];
   const keepFlashProg = A.flashProg || [0, 0, 0, 0];
@@ -4909,6 +5085,7 @@ function resetTodayMission() {
   A.masteryOverrides = keepOverrides;
   A.masteryOverrideTs = keepOverrideTs;
   A.tappedWords = keepTapped;
+  A.wordLookups = keepWordLookups;
   A.radioMaxSec = keepRadio;
   A.radioPos = keepRadioPos;
   A.flashProg = keepFlashProg;
@@ -5074,12 +5251,12 @@ function renderTutor() {
         <h2 class="point-heading">${escapeHtml(p.point)}</h2>
         <div class="zen-pair">
           <div class="zen-pair-row">
-            <div class="zp-ja"><span class="zp-dot"></span><span>${escapeHtml(p.teach.left.ja)}</span></div>
+            <div class="zp-ja"><span class="zp-dot"></span><span>${annotateJapanese(p.teach.left.ja)}</span></div>
             <div class="zp-sub">${escapeHtml(p.teach.left.sub)}</div>
           </div>
           ${p.teach.right && p.teach.right.ja ? `
           <div class="zen-pair-row">
-            <div class="zp-ja"><span class="zp-dot muted"></span><span>${escapeHtml(p.teach.right.ja)}</span></div>
+            <div class="zp-ja"><span class="zp-dot muted"></span><span>${annotateJapanese(p.teach.right.ja)}</span></div>
             <div class="zp-sub">${escapeHtml(p.teach.right.sub)}</div>
           </div>` : ""}
         </div>
@@ -5104,8 +5281,10 @@ function renderTutor() {
     warmAudio(activeQuizObj.q_audio);
     warmAudio(activeQuizObj.exp_audio);
     const isVariant = activeQuizObj.id !== p.primary.id;
+    const isRetrySame = (ps.wrongCount || 0) > 0 && !isVariant;
     let label = p.subject;
-    if (isVariant) label += " · 换题复考";
+    if (isRetrySame) label += " · 乱序重考";
+    else if (isVariant) label += " · 换题复考";
     else if (ps.audioPrimed) label += " · 随身听已聊";
 
     const controlsHTML = activeQuizObj.is_listening
@@ -5132,11 +5311,11 @@ function renderTutor() {
         <div class="quiz-focal">
           ${activeQuizObj.is_listening ? `
           <div class="listen-medallion-wrap">
-            <button class="listen-medallion" id="voice-orb" onclick="playMainClip(activeQuizObj.q_audio, 'q', true)" aria-label="播放">
+            <button class="listen-medallion" id="voice-orb" onclick="playQuizQuestionAudio(activeQuizObj, true)" aria-label="播放">
               <svg class="med-ic" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86A1 1 0 0 0 8 5.14z"/></svg>
               <div class="med-waves"><span></span><span></span><span></span></div>
             </button>
-          </div>` : `<p class="quiz-ja" onclick="playMainClip(activeQuizObj.q_audio, 'q', true)" title="轻点重听题目">${escapeHtml(activeQuizObj.prompt)}</p>`}
+          </div>` : `<p class="quiz-ja" onclick="playQuizQuestionAudio(activeQuizObj, true)" title="轻点重听题目">${escapeHtml(activeQuizObj.prompt)}</p>`}
         </div>
       </div>
 
@@ -5147,7 +5326,7 @@ function renderTutor() {
             <span>不确定 · 直接看讲解</span>
             <span class="kbd-tag">0</span>
           </button>
-          ${!activeQuizObj.is_listening ? `<button class="dock-replay-btn aux-read-btn" id="q-play-btn" onclick="playMainClip(activeQuizObj.q_audio, 'q', true)">读题</button>` : ""}
+          ${!activeQuizObj.is_listening ? `<button class="dock-replay-btn aux-read-btn" id="q-play-btn" onclick="playQuizQuestionAudio(activeQuizObj, true)">读题</button>` : ""}
         </div>
       </div>
     `;
@@ -5164,19 +5343,27 @@ function renderTutor() {
   const effM = getEffectiveMastery(p.point_key, p.point);
   const streakTxt = effM.streak >= 3 ? "满 3/3 已掌握" : `记忆 ${effM.streak}/3`;
 
+  const stillNeedsVariantPass = isCorrect && ps.status !== "green";
   let overCls = "overline ng";
   let overTxt = "";
-  if (isCorrect) {
+  if (isCorrect && stillNeedsVariantPass) {
+    overCls = "overline warm";
+    overTxt = q.is_listening && ansIdx > 0
+      ? `首轮订正答对 · 正解 ${ansIdx} · 3 题后再过变式题即通关`
+      : `首轮订正答对 · 3 题后再过变式题即通关`;
+  } else if (isCorrect) {
     overCls = "overline ok";
     overTxt = q.is_listening && ansIdx > 0 ? `本题过关 · 正解 ${ansIdx} · ${streakTxt}` : `本题过关 · ${streakTxt}`;
   } else if (isUnsure) {
     overCls = "overline warm";
-    overTxt = q.is_listening && ansIdx > 0 ? `未过关 · 正解 ${ansIdx} · 隔 3 题再考` : "未过关 · 隔 3 题再考";
+    overTxt = q.is_listening && ansIdx > 0
+      ? `未过关（记 0/3） · 正解 ${ansIdx} · 3 题后乱序重考`
+      : "未过关（记 0/3） · 3 题后乱序重考";
   } else {
     overCls = "overline ng";
     overTxt = q.is_listening && ansIdx > 0
-      ? `误选 ${pickedIdx || ""} · 正解 ${ansIdx} · 隔 3 题再考`
-      : `误选「${pickedVal}」 · 隔 3 题再考`;
+      ? `答错未过（记 0/3） · 误选 ${pickedIdx || ""} · 正解 ${ansIdx} · 3 题后乱序重考`
+      : `答错未过（记 0/3） · 误选「${pickedVal}」 · 3 题后乱序重考`;
   }
 
   const notesMap = q.opt_notes || {};
@@ -5210,10 +5397,11 @@ function renderTutor() {
     </div>`;
   }).join("");
 
-  const leftStampLabel = isCorrect ? "← 稍后再考" : "← 隔 3 题再考";
-  const leftStampTone = isCorrect ? "" : " moss-tone";
-  const rightStampLabel = isCorrect ? "下一题 →" : "隔 3 题再考 →";
-  const mainBtnLabel = isCorrect ? "下一题 →" : "继续 →";
+  const fullyPassed = isCorrect && !stillNeedsVariantPass;
+  const leftStampLabel = fullyPassed ? "← 稍后再考" : "← 3 题后重考";
+  const leftStampTone = fullyPassed ? "" : " moss-tone";
+  const rightStampLabel = fullyPassed ? "下一题 →" : (stillNeedsVariantPass ? "3 题后复考 →" : "未过 · 3 题后重考 →");
+  const mainBtnLabel = fullyPassed ? "下一题 →" : (stillNeedsVariantPass ? "继续（3 题后复考） →" : "未过 · 3 题后重考 →");
 
   box.innerHTML = `
     <div class="tutor-stamp right" id="tutor-st-right">${rightStampLabel}</div>
@@ -5221,7 +5409,7 @@ function renderTutor() {
     <div class="meta-bar">
       <span class="${overCls}">${escapeHtml(overTxt)}</span>
       <div class="quiet-actions">
-        <button class="text-btn" onclick="playMainClip(activeQuizObj.q_audio, 'q', true)">原题</button>
+        <button class="text-btn" onclick="playQuizQuestionAudio(activeQuizObj, true)">原题</button>
         <button class="text-btn" id="ans-spd-btn" onclick="cycleExpSpeed()">${expSpeed}x</button>
       </div>
     </div>
@@ -5237,7 +5425,7 @@ function renderTutor() {
     <div class="action-dock">
       <div class="dock-row">
         <button class="dock-replay-btn" id="dock-exp-btn" onclick="playMainClip(activeQuizObj.exp_audio, 'exp', true)">讲解</button>
-        ${isCorrect ? `<button class="ghost-btn" onclick="advanceNext(true)">← 再考</button>` : ""}
+        ${fullyPassed ? `<button class="ghost-btn" onclick="advanceNext(true)">← 再考</button>` : ""}
         <button class="sumi-btn" onclick="advanceNext(false)"><span>${mainBtnLabel}</span><span class="desk-hint">滚轮下滑 · Enter</span></button>
       </div>
     </div>
@@ -5300,37 +5488,81 @@ function playDirectUrl(url) {
   wordPlayer.play().catch(() => {});
 }
 
+function getLookupContextId() {
+  if (activeMode === "radio") {
+    const segs = (DATA.radio && DATA.radio.segments) || [];
+    const curSeg = segs[lastRenderedSegIdx];
+    return curSeg ? `radio:${curSeg.title || lastRenderedSegIdx}` : "radio";
+  }
+  if (activeQuizObj && activeQuizObj.id) return activeQuizObj.id;
+  if (curPointId) return curPointId;
+  return activeMode || "tutor";
+}
+
 function recordTappedWord(surface) {
   if (!surface || PARTICLE_FALLBACK[surface] || TRIVIAL_TAP_WORDS.has(surface)) return;
   const info = DATA.words[surface];
   if (!info || !info.zh) return;
   if (!Array.isArray(A.tappedWords)) A.tappedWords = [];
+  if (!A.wordLookups || typeof A.wordLookups !== "object") A.wordLookups = {};
+
+  const stamp = nowUnixSec();
+  const ctxId = getLookupContextId();
   let changed = false;
+
   if (!A.tappedWords.includes(surface)) {
     A.tappedWords.push(surface);
     if (A.tappedWords.length > 80) A.tappedWords = A.tappedWords.slice(-80);
     changed = true;
   }
-  if (A.vocabSess && A.vocabSess.date === DATA.plan_date && Array.isArray(A.vocabSess.queue)) {
-    const clearedArr = Array.isArray(A.vocabSess.clearedWords) ? A.vocabSess.clearedWords : [];
-    if (!A.vocabSess.queue.includes(surface) && !clearedArr.includes(surface)) {
-      const insPos = Math.min(1, A.vocabSess.queue.length);
-      A.vocabSess.queue.splice(insPos, 0, surface);
-      A.vocabSess.total = Math.max(A.vocabSess.queue.length + (A.vocabSess.cleared || 0), (A.vocabSess.total || 0) + 1);
-      A.vocabSess.done = false;
-      A.vocabSess.updatedAt = nowUnixSec();
-      changed = true;
-    }
+
+  // Record every word/phrase lookup to PM Twin's brain WITHOUT mutating active practice queue (vocabSess)!
+  const prevLk = Array.isArray(A.wordLookups[surface]) ? A.wordLookups[surface] : [0, 0, ""];
+  if (stamp - (prevLk[1] || 0) >= 15) {
+    const nextCnt = (prevLk[0] || 0) + 1;
+    A.wordLookups[surface] = [nextCnt, stamp, ctxId];
+    const isoTs = new Date(stamp * 1000).toISOString();
+    const ob = loadOutbox();
+    ob.push([`LK:${surface}`, ctxId, surface, 1, isoTs]);
+    saveOutbox(ob);
+    changed = true;
   }
+
   if (changed) {
-    applyMasteryOverrides();
     refreshMarkedWordTokens();
-    renderGreenBoard();
     saveAdaptiveState();
     scheduleCloudPush(450);
   } else {
     refreshMarkedWordTokens();
   }
+}
+
+function buildSubwordBreakdown(surface) {
+  if (!surface || surface.length < 4) return "";
+  const subs = [];
+  const seen = new Set();
+  for (let i = 0; i < surface.length; ) {
+    let hit = null;
+    for (let k = 0; k < DICT_KEYS.length; k++) {
+      const w = DICT_KEYS[k];
+      if (w.length < 2 || w === surface || PARTICLE_FALLBACK[w] || TRIVIAL_TAP_WORDS.has(w)) continue;
+      if (surface.startsWith(w, i) && DATA.words[w] && DATA.words[w].zh) {
+        hit = w;
+        break;
+      }
+    }
+    if (hit) {
+      if (!seen.has(hit)) {
+        seen.add(hit);
+        const shortZh = String(DATA.words[hit].zh).split(/[；，（(]/)[0].trim();
+        if (shortZh) subs.push(`${hit}（${shortZh}）`);
+      }
+      i += hit.length;
+    } else {
+      i += 1;
+    }
+  }
+  return subs.length >= 1 ? `词素：${subs.slice(0, 3).join("＋")}` : "";
 }
 
 function showInlineWordMeaning(surface, tokEl) {
@@ -5355,7 +5587,8 @@ function showInlineWordMeaning(surface, tokEl) {
   }
 
   const headDiff = info.head && info.head !== surface ? `原形 ${info.head}` : "";
-  const metaLine = [headDiff, info.pos, info.tip].filter(Boolean).join(" · ");
+  const subBreak = buildSubwordBreakdown(surface);
+  const metaLine = [headDiff, info.pos, info.tip, subBreak].filter(Boolean).join(" · ");
   const kanaHtml = renderTrapKanaHTML(surface, info.kana || "", info.trap_hl, info.trap_tag);
 
   box.dataset.surface = surface;
@@ -6936,6 +7169,29 @@ if (Array.isArray(choices) && choices.length > 0) {
 const stageHtml = Object.values(els).map(e => e.innerHTML || '').join('');
 if (stageHtml.length < 200) {
   throw new Error('Smoke check failed: tutor stage did not render!');
+}
+// Self-test 1: Retry option shuffling strictly changes choice order on consecutive retries
+const dummyPS = { lastChoiceOrder: null };
+const dummyQ = { id: 'TEST-Q', choices: ['A', 'B', 'C'], answer: 'A', is_listening: false };
+const ord1 = sb.prepareChoices(dummyQ, 1, dummyPS);
+const ord2 = sb.prepareChoices(dummyQ, 8, dummyPS);
+const ord3 = sb.prepareChoices(dummyQ, 15, dummyPS);
+if (ord1.join('|') === ord2.join('|') || ord2.join('|') === ord3.join('|')) {
+  throw new Error('Self-test failed: prepareChoices did not change order on retry!');
+}
+// Self-test 2: Answering wrong/peeking NEVER promotes mastery to wip1 on same day
+const mFail = sb.computeNextMasteryState({ tier: 'todo', streak: 0, mstate: 'todo' }, 'fail', '20261117');
+const mRec = sb.computeNextMasteryState({ tier: 'todo', streak: 0, mstate: mFail }, 'recover', '20261117');
+if (!mRec.startsWith('todo:')) {
+  throw new Error('Self-test failed: recover on failed day promoted mastery (' + mRec + ')!');
+}
+// Self-test 3: Word lookup records LK:* without mutating vocabSess.queue
+const qLenBefore = vm.runInNewContext('A.vocabSess ? A.vocabSess.queue.length : -1', sb);
+sb.recordTappedWord('予約しとこう');
+const qLenAfter = vm.runInNewContext('A.vocabSess ? A.vocabSess.queue.length : -1', sb);
+const lkRec = vm.runInNewContext('A.wordLookups["予約しとこう"]', sb);
+if (qLenBefore !== qLenAfter || !Array.isArray(lkRec) || lkRec[0] < 1) {
+  throw new Error('Self-test failed: recordTappedWord either mutated vocabSess or missed wordLookups!');
 }
 """
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)

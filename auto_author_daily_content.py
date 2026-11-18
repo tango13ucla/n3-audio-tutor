@@ -86,13 +86,13 @@ def collect_study_history(cutoff_study_day: str | None = None) -> tuple[dict[str
                 continue
             by_day_events.setdefault(sday, []).append(ev)
             cid = str(ev.get("id") or "").strip()
-            if cid and not cid.startswith("VC-") and not cid.startswith("GROK-"):
+            if cid and not cid.startswith("VC-") and not cid.startswith("GROK-") and not cid.startswith("LK:"):
                 ever_seen_cards.add(cid)
             ok = str(ev.get("correct", "")).lower() == "true" or ev.get("correct") is True
             ask_again = str(ev.get("ask_again", "")).lower() == "true" or ev.get("ask_again") is True
             choice = str(ev.get("choice") or "")
             pt = str(ev.get("point") or "").strip()
-            if pt and not cid.startswith("VC-") and (not ok or ask_again or choice == "不确定"):
+            if pt and not cid.startswith("VC-") and not cid.startswith("LK:") and (not ok or ask_again or choice == "不确定"):
                 pts = missed_by_day.setdefault(sday, [])
                 if not contains_pii(pt) and pt not in pts:
                     pts.append(pt)
