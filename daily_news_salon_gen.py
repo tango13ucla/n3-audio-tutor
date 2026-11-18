@@ -24,6 +24,8 @@ import xml.etree.ElementTree as ET
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 AUDIO_DIR = os.path.join(BASE_DIR, "audio")
+CORPUS_KB_PATH = os.path.join(BASE_DIR, "qq_corpus_knowledge.json")
+NIGHT_SUMMARY_PATH = os.path.join(BASE_DIR, "night_summary.json")
 
 NHK_FEEDS = [
     ("主要", "https://www.nhk.or.jp/rss/news/cat0.xml"),
@@ -32,6 +34,29 @@ NHK_FEEDS = [
     ("科学文化", "https://www.nhk.or.jp/rss/news/cat2.xml"),
     ("国際", "https://www.nhk.or.jp/rss/news/cat3.xml"),
 ]
+
+
+def load_qq_corpus_exemplars(day_seed: str, count: int = 2) -> list[dict]:
+    if not os.path.exists(CORPUS_KB_PATH):
+        return []
+    try:
+        kb = json.load(open(CORPUS_KB_PATH, encoding="utf-8"))
+        exs = kb.get("few_shot_trio_exchanges") or []
+        if not exs:
+            return []
+        offset = sum(ord(c) for c in str(day_seed)) % len(exs)
+        return [exs[(offset + i) % len(exs)] for i in range(min(count, len(exs)))]
+    except Exception:
+        return []
+
+
+def load_last_night_signals() -> dict:
+    if not os.path.exists(NIGHT_SUMMARY_PATH):
+        return {}
+    try:
+        return json.load(open(NIGHT_SUMMARY_PATH, encoding="utf-8"))
+    except Exception:
+        return {}
 
 
 def fetch_live_nhk_news(max_items: int = 8, timeout: float = 8.0) -> list[dict]:
@@ -65,7 +90,7 @@ def validate_generated_story(st: dict) -> bool:
     if not isinstance(st, dict):
         return False
     turns = st.get("turns")
-    if not isinstance(turns, list) or not (7 <= len(turns) <= 22):
+    if not isinstance(turns, list) or not (7 <= len(turns) <= 26):
         return False
     for entry in turns:
         if not isinstance(entry, (list, tuple)) or len(entry) != 2:
@@ -228,28 +253,41 @@ def maybe_generate_live_news_story(
     ramp_days = int(imm_profile.get("ramp_days", 700))
     day_num = imm_profile.get("day_of_365", 1)
 
+    night_sig = load_last_night_signals()
+    night_missed = (night_sig.get("missed_or_unsure_points") or [])[:5]
+    night_vocab = (night_sig.get("missed_vocab_words") or [])[:4]
+    night_lookups = (night_sig.get("looked_up_expressions") or [
+        x.get("surface") for x in (night_sig.get("top_looked_up_words") or [])[:4] if isinstance(x, dict) and x.get("surface")
+    ])[:4]
+    combined_targets = []
+    for x in night_missed + night_vocab + night_lookups + list(focus_points):
+        if x and x not in combined_targets:
+            combined_targets.append(x)
+
+    exemplars = load_qq_corpus_exemplars(today_str, count=2)
+
     sys_prompt = (
-        "你是凤凰卫视《锵锵三人行》原班总撰稿（已吃透 3,124 期真实文字实录与音频节奏）。主持人是窦文涛(W，俗人切口、插科打诨、高频使用『我跟你说』『不是』『你看』)、"
-        "梁文道(D，温厚博学、短促应答『对』『没错』与东亚思想史长句交替)、许子东(X，冷峻幽默、爱用『不不不』『你的意思是说』一针见血拆台)。\n"
-        "请根据今日真实日本与世界新闻，创作一段约 4.5 分钟（11到16轮 W/D/X 对白，长短句交错，必须穿插真实《锵锵》短接茬）的开篇时局圆桌。\n"
-        "铁律：\n"
-        "0. 【原版文涛开场铁律】：第一轮 W 必须直接以『《锵锵三人行》，』连着今日最抓人的具体新闻或包袱单刀直入（把『文道』『子东/许老师』顺嘴嵌进句子里），"
-        "严禁写『大家好、文道好、子东好、热茶沏满了』等任何模板化客套点名（真实 1,290 期实录中 98.3% 零客套直接进事儿）。\n"
-        f"1. 当前处于 {ramp_days} 天（1/{ramp_days} 慢速养耳）双语演进计划第 {day_num} 天（阶段：{phase}），"
-        f"本段日语占比严格控制在约 {ja_pct}%（其余用自然地道的中文把思想与世情讲透，绝不拔苗助长）。\n"
-        "2. 视角必须是日本社会内部（ウチ）与知识分子视角；对听众熟知的人物与头衔（如教授 きょうじゅ、部长 ぶちょう、课长 かちょう、社长 しゃちょう、医局 いきょく、先生 せんせい、财前五郎 ざいぜんごろう、东教授 あずまきょうじゅ）直接用日文或首提中文后全程日文。\n"
-        "3. 【极其重要·语音合成铁律】：对白文本中凡出现日文词或日文句子，必须100%写成纯平假名或纯片假名（前后留空格或中文标点），"
-        "严禁在日文发音串里夹杂任何汉字或英文字母（汉字概念先在中文里说清，念日文时全用假名，例如：到手工资，念 てどり）。\n"
-        "4. 严禁出现『哈哈』『噗』等字面笑声，严禁报几月几号或考试倒计时，严禁出现语法术语（如ます形/て形）。\n"
-        "5. 自然融入2到3个目标日语表达，并在结尾顺嘴拐弯衔接后续专题（参考伴随标题），零总结腔。\n"
-        "输出严格为 JSON 对象：{\"short_tab\": \"今日时局\", \"title\": \"...\", \"ja_focus\": \"...(此处可正常日文汉字假名供屏幕显示)\", "
-        "\"turns\": [[\"W\", \"...\"], [\"D\", \"...\"], [\"X\", \"...\"], ...]}"
+        "你是凤凰卫视《锵锵三人行》原班总撰稿（已吃透全部 3,182 期完整实录与 421 期原声轻重缓急规律）。\n"
+        "三位老友：窦文涛(W，北方清亮活泛、俗人切口、爱重复接对方最后四五个字搭茬、高频用『我跟你说』『不是』『你看』)、"
+        "梁文道(D，温厚男中音、先短句『对』『没错』接话再慢起长句铺陈东亚历史与制度脉络，爱用『你想想看』『换句话说』『吊诡』)、"
+        "许子东(X，清瘦冷峻学者、短刀直入『不不不』『我的问题是』『你的意思是说』一针见血拆台)。\n"
+        "请根据今日真实日本与世界新闻，并优先揉入听众昨晚刚卡壳的日语薄弱点，创作一段约 4.5 分钟（13到18轮 W/D/X 对白）的开篇时局圆桌。\n"
+        "核心铁律：\n"
+        "0. 【去排排坐朗读感·真实轻重缓急句法】：严禁机械按 W->D->X->W->D->X 轮流念百字长文！必须有 D 与 X 直接交锋过招，穿插 4 到 15 字的短促抢白、反问或冷幽默拆台，长发言内部写出『快切入 -> 铺事实 -> 沉吟转折 -> 重落点』的呼吸层次。\n"
+        "1. 【原版文涛冷开场】：第一轮 W 直接以『《锵锵三人行》，』连着今日最抓人的具体新闻或包袱单刀直入（把『文道』『子东/许老师』顺嘴嵌进句子里），严禁『大家好、文道好、子东好』等模板客套。\n"
+        f"2. 当前处于 {ramp_days} 天（1/{ramp_days} 慢速养耳）双语演进计划第 {day_num} 天（阶段：{phase}），日语占比约 {ja_pct}%。\n"
+        "3. 对熟知人物与头衔（如教授 きょうじゅ、部长 ぶちょう、课长 かちょう、社长 しゃちょう、医局 いきょく、先生 せんせい、财前五郎 ざいぜんごろう、东教授 あずまきょうじゅ）直接用日文或首提中文后全程日文。\n"
+        "4. 【语音合成硬铁律】：对白文本中凡出现日文词句，必须 100% 写成纯平假名或纯片假名（前后留空格或中文标点），严禁汉字紧贴假名，严禁任何英文字母或阿拉伯数字（数字全写中文），严禁『哈哈』『噗』、日期倒计时或语法术语。\n"
+        "5. 自然融入 2 到 4 个昨晚薄弱日语表达，结尾顺嘴拐弯引出后续专题。\n"
+        "输出严格为 JSON：{\"short_tab\": \"今日时局\", \"title\": \"...\", \"ja_focus\": \"...(此处可正常写日文汉字假名供屏幕显示)\", "
+        "\"turns\": [[\"W\", \"...\"], [\"X\", \"...\"], [\"D\", \"...\"], ...]}"
     )
     usr_prompt = json.dumps({
         "nhk_live_headlines": headlines,
-        "target_japanese_points": focus_points[:5],
+        "last_night_priority_targets": combined_targets[:6],
         "later_chapters_for_callbacks": companion_titles[:4],
         "authentic_qqsrx_style_reference": load_cloud_qq_style_exemplars(today_str),
+        "authentic_qiangqiang_cadence_examples": exemplars,
     }, ensure_ascii=False, indent=2)
 
     raw = _call_chat_llm(sys_prompt, usr_prompt)
