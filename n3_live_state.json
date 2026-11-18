@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-18 08:00 PT",
+  "updated_at": "2026-11-18 08:15 PT",
   "exam_date": "2026-12-06",
   "days_left": 18,
   "target_score": "120+ / 180",
@@ -118,9 +118,9 @@
         "gray": 379
       },
       "green": 13,
-      "yellow": 20,
+      "yellow": 21,
       "orange": 0,
-      "red": 7,
+      "red": 6,
       "gray": 363,
       "total": 403
     },
@@ -4807,10 +4807,9 @@
       "meaning": "还没/没在做",
       "trap": "与「〜ない」否定混淆；还没≠不做",
       "is_core165": true,
-      "status": "red",
+      "status": "yellow",
       "note": "未测",
-      "streak": 0,
-      "last_ng_date": "20261117",
+      "streak": 1,
       "last_ok_date": "20261116"
     },
     {
@@ -11867,7 +11866,6 @@
     "そっくり": 1794785082,
     "ぼろぼろ": 1794785105,
     "K-013": 1794981898,
-    "N3L-003": 1795016678,
     "N3L-016": 1794785649,
     "N3L-018": 1794895251,
     "N3L-025": 1794785315,
@@ -11910,7 +11908,7 @@
     "flash_done": false
   },
   "study_date": "2026-11-18",
-  "_baked_epoch": 1795017603,
+  "_baked_epoch": 1795018546,
   "word_lookups": {
     "おく": {
       "count": 1,

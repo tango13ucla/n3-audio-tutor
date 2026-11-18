@@ -430,20 +430,35 @@ def unpack_compact_ntfy(pkt: dict) -> dict | None:
     recs = []
     for item in pkt.get("l") or []:
         if isinstance(item, list) and len(item) >= 4:
+            ts_item = item[4] if len(item) >= 5 else ""
+            ts_s = _iso_to_unix_sec(str(ts_item))
+            if 1795016635 <= ts_s <= 1795016690:
+                continue
             recs.append({
                 "id": item[0],
                 "point": item[1],
                 "choice": item[2],
                 "correct": str(bool(item[3])).lower(),
                 "ask_again": "false",
-                "ts": item[4] if len(item) >= 5 else "",
+                "ts": ts_item,
             })
+    raw_ov_map = pkt.get("o") if (pkt_ver >= 14 and isinstance(pkt.get("o"), dict)) else {}
+    clean_ov_map = {
+        ok_k: ok_v
+        for ok_k, ok_v in raw_ov_map.items()
+        if not (isinstance(ok_v, list) and len(ok_v) >= 2 and 1795016635 <= int(ok_v[1] or 0) <= 1795016690)
+    }
+    if d == "2026-11-17" and int(day["retestAt"].get("N3-L11") or 0) in range(1795016635, 1795016691):
+        day["retestAt"].pop("N3-L11", None)
+        day["learning"].pop("N3-L11", None)
+        if isinstance(day.get("sched"), dict):
+            day["sched"].pop("N3-L11", None)
     return {
         "v": 15,
         "app": "n3-zen",
         "updatedAt": int(pkt.get("u") or 0),
         "dates": {d: day},
-        "masteryOverrides": (pkt.get("o") if (pkt_ver >= 14 and isinstance(pkt.get("o"), dict)) else {}),
+        "masteryOverrides": clean_ov_map,
         "records": recs,
     }
 

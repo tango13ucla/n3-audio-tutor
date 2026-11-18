@@ -646,8 +646,24 @@ except Exception:
     pass
 
 
+locked_same_day_ids = []
+if os.path.exists(HTML_PATH) and os.environ.get("FORCE_REDECK") != "1":
+    try:
+        with open(HTML_PATH, encoding="utf-8") as _ef:
+            _ehtml = _ef.read()
+        _em = re.search(r"const DATA = (\{.*?\});\n", _ehtml)
+        if _em:
+            _edata = json.loads(_em.group(1))
+            if _edata.get("plan_date") == plan_date_str and len(_edata.get("points") or []) == DECK_CAP:
+                locked_same_day_ids = [str(_ep["id"]) for _ep in _edata["points"] if _ep.get("id")]
+    except Exception:
+        locked_same_day_ids = []
+
+
 def deck_sort_key(p: dict):
     qid = p["id"]
+    if locked_same_day_ids and qid in locked_same_day_ids:
+        return (-1, locked_same_day_ids.index(qid), qid)
     if qid in touched_today_ids:
         return (0, -p["roi_score"], -p["exam_weight"], qid)
     st = resolve_point_status(p["point_key"])

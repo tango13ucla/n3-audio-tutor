@@ -545,7 +545,8 @@ def main():
         subprocess.run([sys.executable, os.path.join(BASE_DIR, "generate_neural_audio.py")], check=True)
         subprocess.run([sys.executable, os.path.join(BASE_DIR, "generate_daily_radio.py")], check=True)
 
-    subprocess.run([sys.executable, os.path.join(BASE_DIR, "build_html.py")], check=True)
+    if not sync_only:
+        subprocess.run([sys.executable, os.path.join(BASE_DIR, "build_html.py")], check=True)
     print(f"Brain algorithm v6 synced {count} records (sync_only={sync_only}, quiz_only={quiz_only}, radio_only={radio_only}); days_left={days_left}.")
 
 
