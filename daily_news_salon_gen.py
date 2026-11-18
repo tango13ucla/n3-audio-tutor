@@ -92,6 +92,7 @@ def validate_generated_story(st: dict) -> bool:
 def _call_chat_llm(system_prompt: str, user_prompt: str) -> str | None:
     openai_key = (os.environ.get("OPENAI_API_KEY") or "").strip()
     gemini_key = (os.environ.get("GEMINI_API_KEY") or "").strip()
+    gh_models_token = (os.environ.get("GITHUB_MODELS_TOKEN") or "").strip()
 
     if openai_key:
         url = "https://api.openai.com/v1/chat/completions"
@@ -136,6 +137,41 @@ def _call_chat_llm(system_prompt: str, user_prompt: str) -> str | None:
             return data["candidates"][0]["content"]["parts"][0]["text"]
         except Exception as e:
             print(f"[info] Gemini live news generation skipped: {e}")
+
+    if gh_models_token:
+        endpoints = [
+            ("https://models.github.ai/inference/chat/completions", ("openai/gpt-4.1", "openai/gpt-4o")),
+            ("https://models.inference.ai.azure.com/chat/completions", ("gpt-4o", "gpt-4o-mini")),
+        ]
+        for url, models in endpoints:
+            for model in models:
+                payload = json.dumps({
+                    "model": model,
+                    "temperature": 0.62,
+                    "response_format": {"type": "json_object"},
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt},
+                    ],
+                }).encode("utf-8")
+                try:
+                    req = urllib.request.Request(
+                        url,
+                        data=payload,
+                        headers={
+                            "Authorization": f"Bearer {gh_models_token}",
+                            "Content-Type": "application/json",
+                            "Accept": "application/vnd.github+json",
+                        },
+                        method="POST",
+                    )
+                    with urllib.request.urlopen(req, timeout=42.0) as resp:
+                        data = json.loads(resp.read().decode("utf-8"))
+                    content = (data.get("choices") or [{}])[0].get("message", {}).get("content")
+                    if content and content.strip():
+                        return content
+                except Exception as e:
+                    print(f"[info] GitHub Models endpoint ({model}) skipped: {e}")
     return None
 
 

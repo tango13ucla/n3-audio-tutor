@@ -913,18 +913,18 @@ async def main():
         jitter = rng.uniform(-0.12, 0.12)
         return -(top_avg - repeat_penalty + memory_bonus + jitter)
 
-    # Optionally script a fresh daily NHK news Act-1 roundtable calibrated to today's ja_ratio
-    # (Skip LLM generation if SALON_STORIES already has an unplayed curated 今日时局 chapter)
-    has_unplayed_curated_news = any(
-        st.get("short_tab") == "今日时局"
-        and st["id"] not in recent_ages
+    # Script a fresh daily NHK news Act-1 roundtable calibrated to today's ja_ratio + last night's mistakes
+    # (Skip LLM generation only if SALON_STORIES already has an unplayed chapter explicitly dated today_str)
+    has_today_dated_news = any(
+        today_str.replace("-", "") in st["id"] or today_str in st["id"]
         for st in SALON_STORIES
+        if st["id"] not in recent_ages
     )
     top_focus_labels = [resolve_point_key(pid) for pid, _ in sorted(scores.items(), key=lambda kv: kv[1], reverse=True)[:6]]
     uchi_companion_titles = [st["title"] for st in SALON_STORIES[:5]]
     live_news_story = (
         None
-        if has_unplayed_curated_news
+        if has_today_dated_news
         else maybe_generate_live_news_story(
             today_str=today_str,
             imm_profile=imm_profile,
@@ -933,7 +933,15 @@ async def main():
             dry_test=dry_test,
         )
     )
-    candidate_pool = ([live_news_story] if live_news_story else []) + list(SALON_STORIES)
+    base_pool = []
+    for st in SALON_STORIES:
+        if live_news_story and st.get("short_tab") == "今日时局":
+            st_copy = dict(st)
+            st_copy["short_tab"] = "民生账本"
+            base_pool.append(st_copy)
+        else:
+            base_pool.append(st)
+    candidate_pool = ([live_news_story] if live_news_story else []) + base_pool
 
     min_ep_min, max_ep_min = _rp["episode_minutes"]
     target_sec = ((min_ep_min + max_ep_min) / 2.0) * 60.0

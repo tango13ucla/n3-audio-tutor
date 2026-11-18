@@ -954,4 +954,17 @@ EXTRA_PRIMARY_CARDS.extend(NEW_PRIMARY_CARDS)
 VARIANT_CARDS.extend(NEW_VARIANT_CARDS)
 EXTRA_WORDS.update(NEW_EXTRA_WORDS)
 
+try:
+    import json as _json_ab, os as _os_ab
+    _auto_v_ab = _os_ab.path.join(_os_ab.path.dirname(_os_ab.path.abspath(__file__)), "audio", "auto_generated_variants.json")
+    if _os_ab.path.exists(_auto_v_ab):
+        _existing_vids = {str(v.get("id") or "") for v in VARIANT_CARDS}
+        for _av in _json_ab.load(open(_auto_v_ab, encoding="utf-8")):
+            _vid = str(_av.get("id") or "")
+            if _vid and _vid not in _existing_vids:
+                VARIANT_CARDS.append(_av)
+                _existing_vids.add(_vid)
+except Exception:
+    pass
+
 

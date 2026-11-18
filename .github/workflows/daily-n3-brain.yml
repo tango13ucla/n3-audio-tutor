@@ -10,17 +10,19 @@ on:
       - 'weak_expansion_*.py'
       - 'weak_explanations_bank.py'
   schedule:
-    # Early-morning full episode + daily deck synthesis at 05:11 AM, 05:23 AM, 06:18 AM, and 07:00 AM PT
-    - cron: '11 13 * * *'
+    # Stage 1 (02:03 AM PT = 10:03 UTC in PST): Post-midnight study close-out & focus-point summary
+    - cron: '3 10 * * *'
+    # Stage 2 (05:02 AM, 05:23 AM, 06:18 AM, 07:00 AM PT): Morning content prep + 40m episode & zero-repeat deck synthesis
+    - cron: '2 13 * * *'
     - cron: '23 13 * * *'
     - cron: '18 14 * * *'
     - cron: '0 15 * * *'
-    # Ingest cloud answers + Grok ntfy batches & refresh Grok daily brief every 4 hours (off-peak minute :17)
+    # Every 4h cloud answer & Grok brief sync
     - cron: '17 */4 * * *'
   workflow_dispatch:
     inputs:
       mode:
-        description: 'Refresh mode (full, radio_only, or quiz_only)'
+        description: 'Refresh mode (full, night_summary, radio_only, or quiz_only)'
         required: false
         default: 'full'
 
@@ -44,9 +46,11 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Run Cloud Sync or Full N3 Brain Audio Refresh
+      - name: Run 02:00 AM Night Summary or 05:00 AM Full N3 Brain Refresh
+        id: brain_step
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GITHUB_MODELS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           EVENT_NAME: ${{ github.event_name }}
           CRON_SCHEDULE: ${{ github.event.schedule }}
@@ -58,9 +62,13 @@ jobs:
           now_pt = datetime.datetime.now(ZoneInfo("America/Los_Angeles"))
           study_pt = (now_pt - datetime.timedelta(hours=5)).strftime("%Y-%m-%d")
           ev = os.environ.get("EVENT_NAME", "")
+          cron_s = os.environ.get("CRON_SCHEDULE", "")
           inp = os.environ.get("INPUT_MODE", "full")
-          if ev == "workflow_dispatch" and inp in ("quiz_only", "radio_only"):
+          if ev == "workflow_dispatch" and inp in ("quiz_only", "radio_only", "night_summary", "full"):
               print(inp)
+              raise SystemExit(0)
+          if ev == "schedule" and cron_s == "3 10 * * *":
+              print("night_summary")
               raise SystemExit(0)
           meta_date = ""
           if os.path.exists("audio/daily_radio_meta.json"):
@@ -68,17 +76,19 @@ jobs:
                   meta_date = json.load(open("audio/daily_radio_meta.json", encoding="utf-8")).get("date", "")
               except Exception:
                   meta_date = ""
-          if ev == "workflow_dispatch" or meta_date != study_pt:
+          if meta_date != study_pt:
               print("full")
               raise SystemExit(0)
           need_new_vol = False
           need_new_cards = False
+          today_has_uchi = False
           try:
               from radio_dialogue_bank import SALON_STORIES
               rhist = (json.load(open("audio/radio_history.json", encoding="utf-8")).get("recent_days") or {}) if os.path.exists("audio/radio_history.json") else {}
               today_sids = set(rhist.get(study_pt) or [])
+              today_has_uchi = any(str(s).startswith("uchi") or str(s).startswith("live_nhk_news_") for s in today_sids)
               past_sids = {sid for d, sids in rhist.items() if d < study_pt for sid in (sids or [])}
-              if SALON_STORIES:
+              if SALON_STORIES and not today_has_uchi:
                   top_st = SALON_STORIES[0]
                   top_id = str(top_st.get("id") or "")
                   if (top_id.startswith("uchi") or top_st.get("tier") == "uchi_intellectual") and top_id not in past_sids and top_id not in today_sids:
@@ -100,13 +110,36 @@ jobs:
               print("full")
               raise SystemExit(0)
           if need_new_cards:
-              print("quiz_only")
+              # Before midnight while today's deck is already active, pre-bake MP3s quietly without swapping today's HTML!
+              print("prebake_cards" if (17 <= now_pt.hour or now_pt.hour < 5) else "quiz_only")
               raise SystemExit(0)
           print("sync_check")
           PY
           )
           echo "[mode] ACTION_MODE=$ACTION_MODE"
-          if [ "$ACTION_MODE" = "quiz_only" ]; then
+          echo "action_mode=$ACTION_MODE" >> "$GITHUB_OUTPUT"
+          if [ "$ACTION_MODE" = "night_summary" ]; then
+            python auto_author_daily_content.py --mode night-summary
+            if python - <<'PY'
+          import json, os, sys
+          st = json.load(open("n3_live_state.json", encoding="utf-8"))
+          mf = json.load(open("audio/audio_manifest.json", encoding="utf-8")) if os.path.exists("audio/audio_manifest.json") else {}
+          vc_mf = mf.get("vocab_cards") or {}
+          missing = [p["word"] for p in st.get("vocab_tracked", []) if p.get("word") and p["word"] not in vc_mf]
+          sys.exit(0 if missing else 1)
+          PY
+            then
+              sudo apt-get update -qq
+              sudo apt-get install -y -qq --no-install-recommends ffmpeg
+              pip install --quiet -U edge-tts certifi pykakasi
+              python generate_neural_audio.py
+            fi
+          elif [ "$ACTION_MODE" = "prebake_cards" ]; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq --no-install-recommends ffmpeg
+            pip install --quiet -U edge-tts certifi pykakasi
+            python generate_neural_audio.py
+          elif [ "$ACTION_MODE" = "quiz_only" ]; then
             sudo apt-get update -qq
             sudo apt-get install -y -qq --no-install-recommends ffmpeg
             pip install --quiet -U edge-tts certifi pykakasi
@@ -120,6 +153,7 @@ jobs:
             sudo apt-get update -qq
             sudo apt-get install -y -qq --no-install-recommends ffmpeg
             pip install --quiet -U numpy edge-tts certifi google-genai pykakasi
+            python auto_author_daily_content.py --mode morning-prepare
             python run_brain_algorithm.py
           else
             python run_brain_algorithm.py --sync-only
@@ -139,17 +173,18 @@ jobs:
               sudo apt-get install -y -qq --no-install-recommends ffmpeg
               pip install --quiet -U edge-tts certifi pykakasi
               python generate_neural_audio.py
-              python build_html.py
             fi
           fi
 
       - name: Commit & Push Updated State
+        env:
+          ACTION_MODE: ${{ steps.brain_step.outputs.action_mode }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           STAGE_DIR=$(mktemp -d)
           cp -a audio "$STAGE_DIR/"
-          for f in n3_live_state.json practice_log.jsonl cloud_sync_config.json cloud_state_snapshot.json grok_daily_brief.md grok_daily_brief.json brain_plan_*.json; do
+          for f in n3_live_state.json practice_log.jsonl cloud_sync_config.json cloud_state_snapshot.json tutor_prefs.json night_summary.json grok_daily_brief.md grok_daily_brief.json brain_plan_*.json; do
             [ -f "$f" ] && cp -a "$f" "$STAGE_DIR/" || true
           done
           for attempt in 1 2 3; do
@@ -159,13 +194,16 @@ jobs:
             for sf in "$STAGE_DIR"/*.json "$STAGE_DIR"/*.jsonl "$STAGE_DIR"/*.md; do
               [ -f "$sf" ] && cp -a "$sf" ./ || true
             done
-            python build_html.py
-            git add n3_live_state.json practice_log.jsonl cloud_sync_config.json cloud_state_snapshot.json grok_daily_brief.md grok_daily_brief.json brain_plan_*.json index.html sw.js audio/
+            if [ "$ACTION_MODE" = "full" ] || [ "$ACTION_MODE" = "quiz_only" ] || [ "$ACTION_MODE" = "radio_only" ]; then
+              python build_html.py
+            fi
+            git add n3_live_state.json practice_log.jsonl cloud_sync_config.json cloud_state_snapshot.json tutor_prefs.json grok_daily_brief.md grok_daily_brief.json brain_plan_*.json index.html sw.js audio/
+            [ -f night_summary.json ] && git add night_summary.json || true
             if git diff --cached --quiet; then
               echo "No changes to commit."
               break
             fi
-            git commit -m "chore(sync): multi-platform N3 progress & studio audio sync"
+            git commit -m "chore(sync): ${ACTION_MODE} N3 progress & studio audio sync"
             if git push origin main; then
               break
             fi

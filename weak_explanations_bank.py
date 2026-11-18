@@ -542,7 +542,10 @@ NEW_CARDS_AUDIO = {
 
 from weak_expansion_wave2 import WAVE2_CARDS_AUDIO
 from weak_expansion_wave3 import WAVE3_CARDS_AUDIO
+from weak_expansion_wave4 import WAVE4_CARDS_AUDIO
 
 NEW_CARDS_AUDIO.update(WAVE2_CARDS_AUDIO)
 NEW_CARDS_AUDIO.update(WAVE3_CARDS_AUDIO)
+NEW_CARDS_AUDIO.update(WAVE4_CARDS_AUDIO)
+
 

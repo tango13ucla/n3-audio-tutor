@@ -393,19 +393,39 @@ from radio_salon_expansion_b import SALON_STORIES_B
 from radio_salon_uchi_intellectual import UCHI_MODALITY_MAP, SALON_STORIES_UCHI
 from radio_salon_uchi_vol2 import UCHI_VOL2_MODALITY_MAP, SALON_STORIES_UCHI_VOL2
 from radio_salon_uchi_vol3 import UCHI_VOL3_MODALITY_MAP, SALON_STORIES_UCHI_VOL3
+from radio_salon_uchi_vol4 import UCHI_VOL4_MODALITY_MAP, SALON_STORIES_UCHI_VOL4
 
 MODALITY_MAP.update(NEW_MODALITY_A)
 MODALITY_MAP.update(UCHI_MODALITY_MAP)
 MODALITY_MAP.update(UCHI_VOL2_MODALITY_MAP)
 MODALITY_MAP.update(UCHI_VOL3_MODALITY_MAP)
+MODALITY_MAP.update(UCHI_VOL4_MODALITY_MAP)
 SALON_STORIES.extend(SALON_STORIES_A)
 SALON_STORIES.extend(SALON_STORIES_B)
 SALON_STORIES = (
-    list(SALON_STORIES_UCHI_VOL3)
+    list(SALON_STORIES_UCHI_VOL4)
+    + list(SALON_STORIES_UCHI_VOL3)
     + list(SALON_STORIES_UCHI_VOL2)
     + list(SALON_STORIES_UCHI)
     + SALON_STORIES
 )
+
+try:
+    import json as _json_rb, os as _os_rb
+    _auto_s_path = _os_rb.path.join(_os_rb.path.dirname(_os_rb.path.abspath(__file__)), "audio", "auto_generated_salon.json")
+    if _os_rb.path.exists(_auto_s_path):
+        _existing_sids = {str(s.get("id") or "") for s in SALON_STORIES}
+        _auto_stories = []
+        for _as in _json_rb.load(open(_auto_s_path, encoding="utf-8")):
+            _sid = str(_as.get("id") or "")
+            if _sid and _sid not in _existing_sids and isinstance(_as.get("turns"), list):
+                _as["turns"] = [tuple(t) for t in _as["turns"] if isinstance(t, (list, tuple)) and len(t) == 2]
+                _auto_stories.append(_as)
+                _existing_sids.add(_sid)
+        if _auto_stories:
+            SALON_STORIES = _auto_stories + SALON_STORIES
+except Exception:
+    pass
 
 
 

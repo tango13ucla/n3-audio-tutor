@@ -784,3 +784,12 @@ from weak_expansion_wave3 import (
 NEW_VARIANT_CARDS.extend(WAVE3_VARIANT_CARDS)
 NEW_EXTRA_WORDS.update(WAVE3_EXTRA_WORDS)
 
+from weak_expansion_wave4 import (
+    WAVE4_EXTRA_WORDS,
+    WAVE4_VARIANT_CARDS,
+)
+
+NEW_VARIANT_CARDS.extend(WAVE4_VARIANT_CARDS)
+NEW_EXTRA_WORDS.update(WAVE4_EXTRA_WORDS)
+
+

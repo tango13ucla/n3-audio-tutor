@@ -1042,3 +1042,34 @@ from weak_explanations_bank import NEW_CARDS_AUDIO
 
 CARDS_75.update(NEW_CARDS_AUDIO)
 
+try:
+    import json as _json_ce, os as _os_ce
+    _auto_v_path = _os_ce.path.join(_os_ce.path.dirname(_os_ce.path.abspath(__file__)), "audio", "auto_generated_variants.json")
+    if _os_ce.path.exists(_auto_v_path):
+        for _av in _json_ce.load(open(_auto_v_path, encoding="utf-8")):
+            _cid = str(_av.get("id") or "")
+            if _cid and _cid not in CARDS_75:
+                _qt = []
+                if _av.get("q_before"):
+                    _qt.append(("JF", str(_av["q_before"])))
+                if _av.get("q_after"):
+                    if _qt:
+                        _qt.append(("PAUSE", 0.32))
+                    _qt.append(("JF", str(_av["q_after"])))
+                if not _qt:
+                    _qt = [("JF", str(_av.get("full_ja") or ""))]
+                CARDS_75[_cid] = {
+                    "q_turns": _qt,
+                    "full_ja": str(_av.get("full_ja") or ""),
+                    "zh_meaning": str(_av.get("zh_meaning") or ""),
+                    "why_line": str(_av.get("why_line") or ""),
+                    "form_line": str(_av.get("core_rule") or ""),
+                    "exp_turns": [
+                        ("JF", str(_av.get("full_ja") or "")),
+                        ("PAUSE", 0.26),
+                        ("T", str(_av.get("exp_zh") or "")),
+                    ],
+                }
+except Exception:
+    pass
+
