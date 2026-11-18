@@ -1598,7 +1598,410 @@
     "文庫本": "./audio/words/w_da4d0a6a8c.mp3",
     "買い": "./audio/words/w_fc161d291c.mp3",
     "余白": "./audio/words/w_4167c0e28e.mp3",
-    "せわしない": "./audio/words/w_01232c5cc6.mp3"
+    "せわしない": "./audio/words/w_01232c5cc6.mp3",
+    "山": "./audio/words/w_4862540a29.mp3",
+    "初めて": "./audio/words/w_25e40ba120.mp3",
+    "登る": "./audio/words/w_b68f51280c.mp3",
+    "おいしい": "./audio/words/w_55094920af.mp3",
+    "ふわふわ": "./audio/words/w_4cb55d8b61.mp3",
+    "高く": "./audio/words/w_3b34089404.mp3",
+    "冷たく": "./audio/words/w_9372a2bd43.mp3",
+    "冷たくなってきた": "./audio/words/w_d92623a8df.mp3",
+    "台所": "./audio/words/w_1bcb370394.mp3",
+    "あれば": "./audio/words/w_22660e1b78.mp3",
+    "移動": "./audio/words/w_de2596ff85.mp3",
+    "メッセージ": "./audio/words/w_94d14c42c7.mp3",
+    "調べれます": "./audio/words/w_e5d23bb527.mp3",
+    "送った": "./audio/words/w_2207c099d2.mp3",
+    "調べられます": "./audio/words/w_ec0eb66ea1.mp3",
+    "見てない": "./audio/words/w_7665ebad29.mp3",
+    "ずっと": "./audio/words/w_e27f5c4e9c.mp3",
+    "見てなかった": "./audio/words/w_545ef66367.mp3",
+    "美術館": "./audio/words/w_2e13d0ce0a.mp3",
+    "写真": "./audio/words/w_9c3250ff63.mp3",
+    "料理してて": "./audio/words/w_d1a1c69941.mp3",
+    "撮らない": "./audio/words/w_944bbe0068.mp3",
+    "館内": "./audio/words/w_ca3460c379.mp3",
+    "ことに": "./audio/words/w_32fb05f388.mp3",
+    "注意された": "./audio/words/w_4ce6e0d0ae.mp3",
+    "一時間": "./audio/words/w_f64a32e382.mp3",
+    "使わせて": "./audio/words/w_e641d7e52b.mp3",
+    "使って": "./audio/words/w_fd9da92ade.mp3",
+    "見始める": "./audio/words/w_7e3c2aea5f.mp3",
+    "洗う": "./audio/words/w_bbe0499c0e.mp3",
+    "使わせていただけませんか": "./audio/words/w_087c831dd7.mp3",
+    "晩ご飯": "./audio/words/w_49020d6abb.mp3",
+    "ご飯": "./audio/words/w_36e5865591.mp3",
+    "見よう": "./audio/words/w_a862139087.mp3",
+    "でも": "./audio/words/w_870b8730ba.mp3",
+    "作り始める": "./audio/words/w_0bd4380380.mp3",
+    "英語": "./audio/words/w_57b8fc274f.mp3",
+    "話せます": "./audio/words/w_a7620ff8ab.mp3",
+    "店員さん": "./audio/words/w_f7402423e6.mp3",
+    "中国語": "./audio/words/w_01e048ed6d.mp3",
+    "洗っちゃおう": "./audio/words/w_14dd989896.mp3",
+    "今朝": "./audio/words/w_e4a62aaa75.mp3",
+    "充電": "./audio/words/w_228ba12eb9.mp3",
+    "話されます": "./audio/words/w_df1357c81c.mp3",
+    "紙": "./audio/words/w_8436738202.mp3",
+    "電池": "./audio/words/w_1ce227a37e.mp3",
+    "地図": "./audio/words/w_401cafbae2.mp3",
+    "充電しなきゃ": "./audio/words/w_281b49440e.mp3",
+    "充電する": "./audio/words/w_022363917c.mp3",
+    "見られなくなる": "./audio/words/w_4334ecd37a.mp3",
+    "五パーセント": "./audio/words/w_82f041e998.mp3",
+    "毎週": "./audio/words/w_227060417a.mp3",
+    "水曜日": "./audio/words/w_a4b6bf54a5.mp3",
+    "困る": "./audio/words/w_c4f7c8639a.mp3",
+    "パン屋": "./audio/words/w_67498e6a82.mp3",
+    "休み": "./audio/words/w_27cad35e13.mp3",
+    "食事会": "./audio/words/w_76c6dada11.mp3",
+    "来られます": "./audio/words/w_ef610366d4.mp3",
+    "休みらしい": "./audio/words/w_df92c434f6.mp3",
+    "来れます": "./audio/words/w_f53484d009.mp3",
+    "休みだらしい": "./audio/words/w_5740616443.mp3",
+    "山田さん": "./audio/words/w_5f98c884cd.mp3",
+    "コンサート": "./audio/words/w_49b34a8a3c.mp3",
+    "当たった": "./audio/words/w_5bdd14b944.mp3",
+    "並べる": "./audio/words/w_7eef529842.mp3",
+    "入れて": "./audio/words/w_61c1c01d6a.mp3",
+    "行けなくなった": "./audio/words/w_d51f9bc11b.mp3",
+    "コップ": "./audio/words/w_69bab4e203.mp3",
+    "注いで": "./audio/words/w_489487c7de.mp3",
+    "買ってきた": "./audio/words/w_d80a733598.mp3",
+    "冷やしておく": "./audio/words/w_99667dd91a.mp3",
+    "冷やしといてくれる": "./audio/words/w_3012d4a6d7.mp3",
+    "ジュース": "./audio/words/w_4d0b5449c8.mp3",
+    "せいで": "./audio/words/w_386810999e.mp3",
+    "持ってくる": "./audio/words/w_118f6634ee.mp3",
+    "安い": "./audio/words/w_685cf10081.mp3",
+    "置けば": "./audio/words/w_6aff22e5cf.mp3",
+    "食堂": "./audio/words/w_180c7b13bd.mp3",
+    "食べに": "./audio/words/w_877d667000.mp3",
+    "最近": "./audio/words/w_997a5e6e51.mp3",
+    "お昼": "./audio/words/w_6cc8423a11.mp3",
+    "節約": "./audio/words/w_c6556bc012.mp3",
+    "食べずに": "./audio/words/w_9b368e5dde.mp3",
+    "食費": "./audio/words/w_7b96c26b45.mp3",
+    "外国": "./audio/words/w_eef932646f.mp3",
+    "こんな": "./audio/words/w_f3eab5dd02.mp3",
+    "偶然": "./audio/words/w_ff5ff75bed.mp3",
+    "会う": "./audio/words/w_edd3904078.mp3",
+    "節約したい": "./audio/words/w_89af11c17a.mp3",
+    "小銭": "./audio/words/w_6653a2924f.mp3",
+    "昔": "./audio/words/w_f0a0d67e80.mp3",
+    "なしで": "./audio/words/w_c2cc0360a8.mp3",
+    "お釣り": "./audio/words/w_9e18b24236.mp3",
+    "出したら": "./audio/words/w_1f99a16bd5.mp3",
+    "取り消す": "./audio/words/w_3804deb71b.mp3",
+    "旅館": "./audio/words/w_c7eba51862.mp3",
+    "八百円": "./audio/words/w_1b2a689d96.mp3",
+    "現金": "./audio/words/w_abfcd7a552.mp3",
+    "払えた": "./audio/words/w_2f84e9c1ed.mp3",
+    "カード": "./audio/words/w_a586e52ce9.mp3",
+    "下ろしておく": "./audio/words/w_4a977d29ba.mp3",
+    "下ろしとかないと": "./audio/words/w_6ed84218c5.mp3",
+    "温泉": "./audio/words/w_bf259856d4.mp3",
+    "そうなんだ": "./audio/words/w_bd461cef8e.mp3",
+    "作る": "./audio/words/w_77cf242975.mp3",
+    "みたい": "./audio/words/w_ece4829ed7.mp3",
+    "夜空": "./audio/words/w_71e2d7f9cf.mp3",
+    "星": "./audio/words/w_83e9c51b3d.mp3",
+    "光って": "./audio/words/w_487e7926ea.mp3",
+    "宝石": "./audio/words/w_9b94e941be.mp3",
+    "きれい": "./audio/words/w_dcb5ff87f3.mp3",
+    "きれいな": "./audio/words/w_8fd3ae09ed.mp3",
+    "きれいだ": "./audio/words/w_b809283884.mp3",
+    "光っていて": "./audio/words/w_c1039d8794.mp3",
+    "朝寝坊": "./audio/words/w_f8ca12f091.mp3",
+    "遅れた": "./audio/words/w_8524e9b3e4.mp3",
+    "事故": "./audio/words/w_867d0e7007.mp3",
+    "方向": "./audio/words/w_1121471a0f.mp3",
+    "逆": "./audio/words/w_86eb7b94c9.mp3",
+    "乗って": "./audio/words/w_b43cf7609a.mp3",
+    "反対方向": "./audio/words/w_69ae34b7f0.mp3",
+    "止まっていた": "./audio/words/w_de2c668ffe.mp3",
+    "乗っちゃって": "./audio/words/w_47264cace3.mp3",
+    "急いでたら": "./audio/words/w_8f4e3f5759.mp3",
+    "引き返した": "./audio/words/w_3f5c0f72a9.mp3",
+    "子犬": "./audio/words/w_f3da735f88.mp3",
+    "飼い始めた": "./audio/words/w_93debd1583.mp3",
+    "家族": "./audio/words/w_3c659f5514.mp3",
+    "いる": "./audio/words/w_da88437283.mp3",
+    "ほら": "./audio/words/w_f38442f96e.mp3",
+    "ほしがって": "./audio/words/w_90aded5cd2.mp3",
+    "タオル": "./audio/words/w_142901e3a0.mp3",
+    "タオルで": "./audio/words/w_666499164a.mp3",
+    "一杯": "./audio/words/w_aff352b1a6.mp3",
+    "すぐ拭いて": "./audio/words/w_532bedb3a0.mp3",
+    "入れよう": "./audio/words/w_82d0bf97a4.mp3",
+    "お気に入り": "./audio/words/w_15708cdc61.mp3",
+    "似合っている": "./audio/words/w_b48aa4d10d.mp3",
+    "こぼしちゃった": "./audio/words/w_e3329e10fc.mp3",
+    "うどん": "./audio/words/w_63e6f12b7f.mp3",
+    "温まって": "./audio/words/w_df85c797d2.mp3",
+    "寒い": "./audio/words/w_de5aa095ec.mp3",
+    "窓口": "./audio/words/w_d2b6a39262.mp3",
+    "食べ終わった": "./audio/words/w_95e6aeab83.mp3",
+    "食べてかない": "./audio/words/w_198e967292.mp3",
+    "一分": "./audio/words/w_e7194cf439.mp3",
+    "一分前": "./audio/words/w_2fe70174c7.mp3",
+    "出かける": "./audio/words/w_6fffaff012.mp3",
+    "着いて": "./audio/words/w_6923a5ca6d.mp3",
+    "かける": "./audio/words/w_fbde11554c.mp3",
+    "急いでいて": "./audio/words/w_07bb9cdee6.mp3",
+    "忘れて": "./audio/words/w_3823261648.mp3",
+    "ひも": "./audio/words/w_a65c98f209.mp3",
+    "忘れてしまった": "./audio/words/w_0efa113ca1.mp3",
+    "切れる": "./audio/words/w_a0c8c706e2.mp3",
+    "本当に": "./audio/words/w_9bcb3cc745.mp3",
+    "海": "./audio/words/w_0ac6d5192e.mp3",
+    "夕日": "./audio/words/w_acfb31839d.mp3",
+    "ことにした": "./audio/words/w_d927821176.mp3",
+    "テニス": "./audio/words/w_77a465374f.mp3",
+    "しばらく": "./audio/words/w_46fbcdee1f.mp3",
+    "冷たい": "./audio/words/w_391c95870c.mp3",
+    "約束": "./audio/words/w_5c9caad4eb.mp3",
+    "公園": "./audio/words/w_d4791fb114.mp3",
+    "ぺこぺこ": "./audio/words/w_568534c91b.mp3",
+    "ペア": "./audio/words/w_6741a3f494.mp3",
+    "組んで": "./audio/words/w_2276498008.mp3",
+    "並んだ": "./audio/words/w_bc6223e9e1.mp3",
+    "会話": "./audio/words/w_098eb2e372.mp3",
+    "売り切れて": "./audio/words/w_f7ec29be02.mp3",
+    "読み方": "./audio/words/w_8216ec1e59.mp3",
+    "くんで": "./audio/words/w_27be123b2c.mp3",
+    "について": "./audio/words/w_5d8618e957.mp3",
+    "進め方": "./audio/words/w_e76056f0b0.mp3",
+    "詳しい": "./audio/words/w_3e5d2eea56.mp3",
+    "男": "./audio/words/w_4e79758a99.mp3",
+    "ぐんで": "./audio/words/w_acdfad3f07.mp3",
+    "女": "./audio/words/w_0ab4610b92.mp3",
+    "男の人": "./audio/words/w_b288b2075f.mp3",
+    "どう": "./audio/words/w_d1a5f02053.mp3",
+    "どうして": "./audio/words/w_92c867289a.mp3",
+    "遅れました": "./audio/words/w_b69409b24b.mp3",
+    "さん": "./audio/words/w_93663a3517.mp3",
+    "いち": "./audio/words/w_6f649784b6.mp3",
+    "びっくりした": "./audio/words/w_765f4efadb.mp3",
+    "することにしました": "./audio/words/w_c4695d1e5f.mp3",
+    "気づく": "./audio/words/w_2f714a0fda.mp3",
+    "留学生": "./audio/words/w_0aafc21fe0.mp3",
+    "気づきませんでした": "./audio/words/w_7e4b925fdb.mp3",
+    "がっかりした": "./audio/words/w_e6d8673774.mp3",
+    "最中に": "./audio/words/w_ac74b696e0.mp3",
+    "同窓会": "./audio/words/w_47f022da8d.mp3",
+    "ありがたい": "./audio/words/w_891f4b2513.mp3",
+    "ルームメイト": "./audio/words/w_ba0f6372b4.mp3",
+    "セミナー": "./audio/words/w_47ac2d0dfa.mp3",
+    "部屋探し": "./audio/words/w_59528727bc.mp3",
+    "口が堅い": "./audio/words/w_6f20e9cfff.mp3",
+    "ご存じ": "./audio/words/w_74d6daa7cc.mp3",
+    "急行電車": "./audio/words/w_f99de2bc73.mp3",
+    "変更": "./audio/words/w_856252cfcb.mp3",
+    "伺う": "./audio/words/w_d062d4e3a5.mp3",
+    "柵": "./audio/words/w_cb73f25852.mp3",
+    "生地": "./audio/words/w_386c838249.mp3",
+    "世界地図": "./audio/words/w_dc94efdb4e.mp3",
+    "よさそう": "./audio/words/w_e8dc51482b.mp3",
+    "大晦日": "./audio/words/w_b0a568ffa4.mp3",
+    "表紙": "./audio/words/w_b8edc4069d.mp3",
+    "こたつ": "./audio/words/w_d1e906d0e1.mp3",
+    "歓迎会": "./audio/words/w_57e4921ff3.mp3",
+    "着心地": "./audio/words/w_a6312a3081.mp3",
+    "貼ってあります": "./audio/words/w_e000283901.mp3",
+    "読み返した": "./audio/words/w_222bad9958.mp3",
+    "外食": "./audio/words/w_a666ef05af.mp3",
+    "経験豊富": "./audio/words/w_5fd85b08d7.mp3",
+    "自炊": "./audio/words/w_ac1f9e4751.mp3",
+    "取引先": "./audio/words/w_04306227bd.mp3",
+    "人通り": "./audio/words/w_1d0f1f07d7.mp3",
+    "両面印刷": "./audio/words/w_c98712ec5c.mp3",
+    "発売": "./audio/words/w_5ed1e6fcf5.mp3",
+    "総務": "./audio/words/w_5993adccc0.mp3",
+    "大家さん": "./audio/words/w_4ed759441b.mp3",
+    "洗濯機": "./audio/words/w_7fc4848472.mp3",
+    "向こう岸": "./audio/words/w_93e73e1771.mp3",
+    "濃い霧": "./audio/words/w_c2ddb90a70.mp3",
+    "倉庫": "./audio/words/w_2113227fb3.mp3",
+    "段ボール": "./audio/words/w_1491a826f3.mp3",
+    "応接室": "./audio/words/w_c5c3e46cfa.mp3",
+    "掃く": "./audio/words/w_4d24e1c0bc.mp3",
+    "落ち葉": "./audio/words/w_61e5dd125a.mp3",
+    "航空券": "./audio/words/w_f7a06b3654.mp3",
+    "刷っちゃおう": "./audio/words/w_859dffb559.mp3",
+    "アンケート": "./audio/words/w_76ec41a4da.mp3",
+    "暖房": "./audio/words/w_1633467925.mp3",
+    "締め切り": "./audio/words/w_e4e63c53a6.mp3",
+    "紅葉": "./audio/words/w_5c300a483e.mp3",
+    "受付": "./audio/words/w_0634cc2853.mp3",
+    "処方箋": "./audio/words/w_455d261760.mp3",
+    "大切にする": "./audio/words/w_7b04081dac.mp3",
+    "六時": "./audio/words/w_e12696f7c9.mp3",
+    "起きられます": "./audio/words/w_596cf48030.mp3",
+    "出しといて": "./audio/words/w_79fb9c1e22.mp3",
+    "に対して": "./audio/words/w_5dedefe773.mp3",
+    "難しくて": "./audio/words/w_3917836e42.mp3",
+    "帰る": "./audio/words/w_1b8a029485.mp3",
+    "帰るしかない": "./audio/words/w_88bdc50296.mp3",
+    "病気": "./audio/words/w_a67e196503.mp3",
+    "帰ることはない": "./audio/words/w_764275f38a.mp3",
+    "会った": "./audio/words/w_cfd6040856.mp3",
+    "出れば": "./audio/words/w_ea601350e8.mp3",
+    "病気になって": "./audio/words/w_02177b65bf.mp3",
+    "高校時代": "./audio/words/w_3433c6db06.mp3",
+    "秘密": "./audio/words/w_062a2931da.mp3",
+    "他人": "./audio/words/w_6de77d02f7.mp3",
+    "乗った": "./audio/words/w_c6c75cf0c8.mp3",
+    "一年目": "./audio/words/w_da1ccf4a28.mp3",
+    "落ち着いている": "./audio/words/w_49edcef278.mp3",
+    "乗らないと": "./audio/words/w_672f447ba5.mp3",
+    "乗り場": "./audio/words/w_39a8205867.mp3",
+    "タクシー乗り場": "./audio/words/w_569a1a8db0.mp3",
+    "入社一年目": "./audio/words/w_509cda5fe8.mp3",
+    "連休": "./audio/words/w_72f0730faa.mp3",
+    "任せよう": "./audio/words/w_358377f1c4.mp3",
+    "伺った": "./audio/words/w_fb058db35d.mp3",
+    "使い方": "./audio/words/w_17c9e4160d.mp3",
+    "店選び": "./audio/words/w_585c564cf7.mp3",
+    "出社": "./audio/words/w_a6b5433a25.mp3",
+    "伺ってもよろしいですか": "./audio/words/w_f1967d4d0b.mp3",
+    "出す": "./audio/words/w_d593929bac.mp3",
+    "参加": "./audio/words/w_041ef3e9eb.mp3",
+    "十五分": "./audio/words/w_8467686a09.mp3",
+    "北海道": "./audio/words/w_800953e13e.mp3",
+    "同時": "./audio/words/w_ef85cca073.mp3",
+    "出社したばかり": "./audio/words/w_0089811106.mp3",
+    "同時に": "./audio/words/w_3f63815f25.mp3",
+    "今度": "./audio/words/w_35ca8ad36d.mp3",
+    "今回": "./audio/words/w_63858527d1.mp3",
+    "壁": "./audio/words/w_b5f0f70d8d.mp3",
+    "回さない": "./audio/words/w_580ed81514.mp3",
+    "社員旅行": "./audio/words/w_5ed417b262.mp3",
+    "壊して": "./audio/words/w_76c7bd02c2.mp3",
+    "囲んで": "./audio/words/w_282a74ff18.mp3",
+    "教室": "./audio/words/w_df7a65bb13.mp3",
+    "売れていった": "./audio/words/w_f37c3e3686.mp3",
+    "存じております": "./audio/words/w_79b5ee8bf9.mp3",
+    "多い": "./audio/words/w_a50e59f52d.mp3",
+    "庭": "./audio/words/w_81b3ed91bd.mp3",
+    "寒かった": "./audio/words/w_82c1f79c12.mp3",
+    "学生時代": "./audio/words/w_17e06840c1.mp3",
+    "必要": "./audio/words/w_884e78e7d5.mp3",
+    "届いた": "./audio/words/w_8bed772461.mp3",
+    "待って": "./audio/words/w_6cfdaafcc6.mp3",
+    "形": "./audio/words/w_88731a8fb9.mp3",
+    "急ぎ": "./audio/words/w_8baba14a7f.mp3",
+    "必要はない": "./audio/words/w_a33ed662e4.mp3",
+    "待たずに": "./audio/words/w_5ff2eafced.mp3",
+    "掃いて": "./audio/words/w_c85cc9da3c.mp3",
+    "打ってて": "./audio/words/w_bd209daae1.mp3",
+    "振った": "./audio/words/w_3a04cef670.mp3",
+    "打っていた": "./audio/words/w_6ab8573432.mp3",
+    "捨ててしまう": "./audio/words/w_8f14d21f6c.mp3",
+    "昼休み": "./audio/words/w_d9e1d35388.mp3",
+    "普段": "./audio/words/w_dd5265e7d3.mp3",
+    "描いた": "./audio/words/w_d8b485edc5.mp3",
+    "素晴らしい": "./audio/words/w_023b32cb4b.mp3",
+    "書いて": "./audio/words/w_f4ee466642.mp3",
+    "書店": "./audio/words/w_df7371d7b2.mp3",
+    "絵に描いたように": "./audio/words/w_72cc0baf9d.mp3",
+    "最終": "./audio/words/w_39736cc099.mp3",
+    "木": "./audio/words/w_9213ab0589.mp3",
+    "飛行機": "./audio/words/w_0677ae4d3d.mp3",
+    "来て": "./audio/words/w_85b972bfc7.mp3",
+    "歌手": "./audio/words/w_cfb624b8a2.mp3",
+    "金沢": "./audio/words/w_3120f29a8a.mp3",
+    "深まる": "./audio/words/w_99c6a56ee2.mp3",
+    "柔らかくて": "./audio/words/w_c23dc69568.mp3",
+    "人気歌手": "./audio/words/w_ba173cb918.mp3",
+    "誕生日": "./audio/words/w_bfe2f4a952.mp3",
+    "眼鏡": "./audio/words/w_48aa98edfe.mp3",
+    "注文できる": "./audio/words/w_5749ae2d92.mp3",
+    "秋": "./audio/words/w_5a2e5e4b12.mp3",
+    "確かめる": "./audio/words/w_880022c6c6.mp3",
+    "知ってる": "./audio/words/w_cf4b7e7037.mp3",
+    "眼鏡をかけて": "./audio/words/w_4ccd47e7c3.mp3",
+    "箱": "./audio/words/w_702dff9922.mp3",
+    "笑い方": "./audio/words/w_06c25e6ded.mp3",
+    "ごみ箱": "./audio/words/w_bfc0867eb1.mp3",
+    "話し方": "./audio/words/w_80c076a005.mp3",
+    "美しかった": "./audio/words/w_f9fbe63554.mp3",
+    "絵": "./audio/words/w_99369fd992.mp3",
+    "行かず": "./audio/words/w_d8d9f3cf4f.mp3",
+    "行ける": "./audio/words/w_4f09540007.mp3",
+    "行こう": "./audio/words/w_6359b0c30a.mp3",
+    "見えない": "./audio/words/w_3adb6cf927.mp3",
+    "聞きに行く": "./audio/words/w_d1141b9ef8.mp3",
+    "貼っています": "./audio/words/w_36567664b7.mp3",
+    "起きた": "./audio/words/w_d53fcb3691.mp3",
+    "中身": "./audio/words/w_c780445656.mp3",
+    "運ぶ": "./audio/words/w_7e52f7e7bc.mp3",
+    "言ってた": "./audio/words/w_d5d80f9361.mp3",
+    "運びましょうか": "./audio/words/w_eb91d31a14.mp3",
+    "夜十時過ぎ": "./audio/words/w_ad9e658c4d.mp3",
+    "過ぎ": "./audio/words/w_b864af4891.mp3",
+    "鍋": "./audio/words/w_ed6a2e4d3f.mp3",
+    "店長": "./audio/words/w_24e0a4640f.mp3",
+    "通り過ぎちゃった": "./audio/words/w_8d8ac49123.mp3",
+    "開けちゃだめ": "./audio/words/w_1f2d39ecbd.mp3",
+    "開けずに": "./audio/words/w_fde7b6009e.mp3",
+    "開店前": "./audio/words/w_4ea1158435.mp3",
+    "顔": "./audio/words/w_1021854fee.mp3",
+    "食べれます": "./audio/words/w_de5307100a.mp3",
+    "金利": "./audio/words/w_f53bd27b1d.mp3",
+    "食べられます": "./audio/words/w_c732ca8a61.mp3",
+    "夫婦": "./audio/words/w_3360a52193.mp3",
+    "高すぎて": "./audio/words/w_d50352e024.mp3",
+    "思っていた": "./audio/words/w_01bbbffed2.mp3",
+    "伺ってもよろしいでしょうか": "./audio/words/w_c3a9ec5ac0.mp3",
+    "返済": "./audio/words/w_5c25457eac.mp3",
+    "伺っ": "./audio/words/w_cdfd261069.mp3",
+    "若者": "./audio/words/w_2b04e4c6f0.mp3",
+    "夢": "./audio/words/w_1544852c3a.mp3",
+    "辞める": "./audio/words/w_401b64981d.mp3",
+    "重くなっている": "./audio/words/w_08c8759846.mp3",
+    "帰れない": "./audio/words/w_4a4b983a6b.mp3",
+    "自由": "./audio/words/w_d1047eed5d.mp3",
+    "一方だ": "./audio/words/w_fc2d422bf0.mp3",
+    "華やかな": "./audio/words/w_4d763153b8.mp3",
+    "女優": "./audio/words/w_9607d86f9c.mp3",
+    "西洋": "./audio/words/w_fcee03ce89.mp3",
+    "結局": "./audio/words/w_9a3017542e.mp3",
+    "自由な": "./audio/words/w_a41bf6b31f.mp3",
+    "変わった": "./audio/words/w_e2410e0ac8.mp3",
+    "失ってはじめて": "./audio/words/w_51974a79c1.mp3",
+    "暇": "./audio/words/w_69817082b6.mp3",
+    "愚かさ": "./audio/words/w_3bf2de12e7.mp3",
+    "食べて": "./audio/words/w_a49b99e295.mp3",
+    "絶望している": "./audio/words/w_d86bf475e8.mp3",
+    "銀座": "./audio/words/w_51e88f355a.mp3",
+    "食卓": "./audio/words/w_e67d993c76.mp3",
+    "余計なこと": "./audio/words/w_ec37b78631.mp3",
+    "弁護士": "./audio/words/w_e515bb1781.mp3",
+    "相続税": "./audio/words/w_b739115213.mp3",
+    "寝られない": "./audio/words/w_10da03a34b.mp3",
+    "教育されている": "./audio/words/w_f3e44ca146.mp3",
+    "発注": "./audio/words/w_886a4f2ce6.mp3",
+    "並べている": "./audio/words/w_2b5a95f6de.mp3",
+    "行かされる": "./audio/words/w_d97412825d.mp3",
+    "お渡しする": "./audio/words/w_ac2701d030.mp3",
+    "羊羹": "./audio/words/w_a922415379.mp3",
+    "持たせる": "./audio/words/w_2f9a753853.mp3",
+    "虎屋": "./audio/words/w_7334975f99.mp3",
+    "老舗": "./audio/words/w_e292412bb8.mp3",
+    "冤罪": "./audio/words/w_38ef69b54c.mp3",
+    "両手": "./audio/words/w_55f9db70fd.mp3",
+    "怖い": "./audio/words/w_c79c9d3568.mp3",
+    "食事": "./audio/words/w_0061e563a0.mp3",
+    "お世話": "./audio/words/w_521b4e737b.mp3",
+    "北鎌倉": "./audio/words/w_41517005bf.mp3",
+    "静まる": "./audio/words/w_2f18cfe8aa.mp3",
+    "敷いてある": "./audio/words/w_74e60eb16e.mp3",
+    "場面": "./audio/words/w_9f67aa8f65.mp3",
+    "流れ": "./audio/words/w_9f6e121f36.mp3",
+    "散る": "./audio/words/w_a50fdfb550.mp3",
+    "降りてはじめて": "./audio/words/w_9117d863e8.mp3"
   },
   "vocab_cards": {
     "書類": {
@@ -2320,6 +2723,78 @@
   "VAR4-L08_opt0.mp3": "ce07699db824",
   "VAR4-L08_opt1.mp3": "d771a642029c",
   "VAR4-L08_opt2.mp3": "cf231c701cc6",
+  "VAR5-04_stem.mp3": "7a85df782d0d",
+  "VAR5-04_opt0.mp3": "b48bc3946d55",
+  "VAR5-04_opt1.mp3": "2be862bb9026",
+  "VAR5-04_opt2.mp3": "93736b7313d5",
+  "VAR5-07_stem.mp3": "2c842e08f225",
+  "VAR5-07_opt0.mp3": "a3450e65028b",
+  "VAR5-07_opt1.mp3": "8cc1a289bb1f",
+  "VAR5-07_opt2.mp3": "f7bde117e37a",
+  "VAR5-10_stem.mp3": "e867f1bf465d",
+  "VAR5-10_opt0.mp3": "0c7c6b936851",
+  "VAR5-10_opt1.mp3": "ab981db8a827",
+  "VAR5-10_opt2.mp3": "41e5f3ee422f",
+  "VAR5-14_stem.mp3": "f13bc190524e",
+  "VAR5-14_opt0.mp3": "fd764f769162",
+  "VAR5-14_opt1.mp3": "3bb71e76e411",
+  "VAR5-14_opt2.mp3": "e23059b5cb10",
+  "VAR5-16_stem.mp3": "3bd37dbd2f58",
+  "VAR5-16_opt0.mp3": "529f427fc1a1",
+  "VAR5-16_opt1.mp3": "a98536537d0f",
+  "VAR5-16_opt2.mp3": "c9234dd90535",
+  "VAR5-19_stem.mp3": "7b21bab184ec",
+  "VAR5-19_opt0.mp3": "0cdf281f7c60",
+  "VAR5-19_opt1.mp3": "c199efab4e79",
+  "VAR5-19_opt2.mp3": "539451d131ce",
+  "VAR5-21_stem.mp3": "43c8bcd42dec",
+  "VAR5-21_opt0.mp3": "a0cf898ee33c",
+  "VAR5-21_opt1.mp3": "832a3481c337",
+  "VAR5-21_opt2.mp3": "8c66d02a323b",
+  "VAR5-23_stem.mp3": "ca71de765f0e",
+  "VAR5-23_opt0.mp3": "4f6c3445fa98",
+  "VAR5-23_opt1.mp3": "d67c89e6a481",
+  "VAR5-23_opt2.mp3": "c5fd067d83e5",
+  "VAR5-24_stem.mp3": "c599b98525e4",
+  "VAR5-24_opt0.mp3": "88f813344ba8",
+  "VAR5-24_opt1.mp3": "c7dcd978d51f",
+  "VAR5-24_opt2.mp3": "b424d6247f56",
+  "N3-L17_stem.mp3": "0c2670ee99c3",
+  "N3-L17_opt0.mp3": "5c98639cf238",
+  "N3-L17_opt1.mp3": "d452eca43b31",
+  "N3-L17_opt2.mp3": "8f46d5f01323",
+  "N3-L18_stem.mp3": "a0dcfc9e6db5",
+  "N3-L18_opt0.mp3": "cf88bcd619a0",
+  "N3-L18_opt1.mp3": "bcbc4aa991f8",
+  "N3-L18_opt2.mp3": "679f122d857c",
+  "VAR6-07_stem.mp3": "c18b57e8238d",
+  "VAR6-07_opt0.mp3": "c1d86495b73b",
+  "VAR6-07_opt1.mp3": "e0e71366d041",
+  "VAR6-07_opt2.mp3": "85670b0a11eb",
+  "VAR6-10_stem.mp3": "41a2bef009d1",
+  "VAR6-10_opt0.mp3": "4854df9da44e",
+  "VAR6-10_opt1.mp3": "b9615ceae092",
+  "VAR6-10_opt2.mp3": "a7f8cc0f9c69",
+  "VAR6-11_stem.mp3": "e1885b6e8bc6",
+  "VAR6-11_opt0.mp3": "72ad573e3435",
+  "VAR6-11_opt1.mp3": "b912a3787019",
+  "VAR6-11_opt2.mp3": "4600c081d977",
+  "VAR6-12_stem.mp3": "2f06030a2c6f",
+  "VAR6-12_opt0.mp3": "c0212607462e",
+  "VAR6-12_opt1.mp3": "194257e621fe",
+  "VAR6-12_opt2.mp3": "7771ce3d382f",
+  "VAR6-13_stem.mp3": "fa30c4945075",
+  "VAR6-13_opt0.mp3": "ac5958933e34",
+  "VAR6-13_opt1.mp3": "b5da8c4141c9",
+  "VAR6-13_opt2.mp3": "c6a72eacb5fc",
+  "VAR6-14_stem.mp3": "e78ec4d5db8d",
+  "VAR6-14_opt0.mp3": "e53670e9b915",
+  "VAR6-14_opt1.mp3": "32052a79f57a",
+  "VAR6-14_opt2.mp3": "8050979a0a1b",
+  "VAR6-15_stem.mp3": "c28621c54c6b",
+  "VAR6-15_opt0.mp3": "34286dfdaac5",
+  "VAR6-15_opt1.mp3": "ffc8dcd734a9",
+  "VAR6-15_opt2.mp3": "993b74277816",
   "G-20261114-01_q.mp3": "aec3cb11fd34",
   "G-20261114-01_exp.mp3": "45fc72ef02a3",
   "meta:G-20261114-01": {
@@ -4142,6 +4617,737 @@
     "q_audio": "./audio/VAR4-V27_q.mp3?v=38ea3b70",
     "exp_audio": "./audio/VAR4-V27_exp.mp3?v=883652a0",
     "spoken_text": "因为是很小的时候发生的事了，现在只剩模模糊糊的印象。 后半句「〜としか覚えていない（只记得个大概影儿）」说明记忆早已模糊淡化。 记忆依稀模糊用「ぼんやり」；记得清清楚楚、扎扎实实才是「しっかり覚えている」。"
+  },
+  "VAR5-01_q.mp3": "7f6f798a87cd",
+  "VAR5-01_exp.mp3": "af3df7200874",
+  "meta:VAR5-01": {
+    "q_audio": "./audio/VAR5-01_q.mp3?v=7f6f798a",
+    "exp_audio": "./audio/VAR5-01_exp.mp3?v=af3df720",
+    "spoken_text": "随着往山上越爬越高，周围的空气也渐渐变冷起来了。 海拔往上升与气温往下掉同步发生，属于客观伴随的比例渐变。 动词原形「登る＋にしたがって」表伴随变化；「ついでに」只能用于人顺手办小事。"
+  },
+  "VAR5-02_q.mp3": "abe662d55ac1",
+  "VAR5-02_exp.mp3": "10edc95a537c",
+  "meta:VAR5-02": {
+    "q_audio": "./audio/VAR5-02_q.mp3?v=abe662d5",
+    "exp_audio": "./audio/VAR5-02_exp.mp3?v=10edc95a",
+    "spoken_text": "按第一次做来说，这个面包烤得又松软又好吃。 按「新手第一次烤面包」的常理本以为会硬邦邦，结果却松软美味超出预期。 动词简体「作った＋にしては」表与预期标准不符的反差；「にとって」只能接在名词后面。"
+  },
+  "VAR5-03_q.mp3": "d62a7f8a556e",
+  "VAR5-03_exp.mp3": "de330289260d",
+  "meta:VAR5-03": {
+    "q_audio": "./audio/VAR5-03_q.mp3?v=d62a7f8a",
+    "exp_audio": "./audio/VAR5-03_exp.mp3?v=de330289",
+    "spoken_text": "只要有智能手机，遇到不懂的词随时都能轻松查到。 考一段动词「調べる（查询）」的标准可能形与口语吞音的区别。 一段动词去「る」完整加「られます」→「調べられます」；少掉「ら」的「調べれます」卷面必错。"
+  },
+  "VAR5-04_q.mp3": "753917aeab00",
+  "VAR5-04_exp.mp3": "1e7f481c10ee",
+  "meta:VAR5-04": {
+    "q_audio": "./audio/VAR5-04_q.mp3?v=753917ae",
+    "exp_audio": "./audio/VAR5-04_exp.mp3?v=1e7f481c",
+    "spoken_text": "男：「刚才给你发了消息，你还没看吗？」 女：「啊，抱歉！刚才一直在厨房做菜呢，没看手机。」 女生解释说「ずっと台所で料理してて」，刚才一直在厨房忙着做菜。 口语把「料理していて」里的「い」吃掉变成「料理してて」，选「台所で料理をしていたから」。",
+    "listen_parts": {
+      "stem": "./audio/VAR5-04_stem.mp3?v=7a85df78",
+      "nums": [
+        "./audio/num_JM_1.mp3",
+        "./audio/num_JM_2.mp3",
+        "./audio/num_JM_3.mp3"
+      ],
+      "opts": {
+        "台所で料理をしていたから": "./audio/VAR5-04_opt0.mp3?v=b48bc394",
+        "スマホを家に忘れたから": "./audio/VAR5-04_opt1.mp3?v=2be862bb",
+        "電車で移動していたから": "./audio/VAR5-04_opt2.mp3?v=93736b73"
+      }
+    }
+  },
+  "VAR5-05_q.mp3": "f62a34f21dda",
+  "VAR5-05_exp.mp3": "004148202a19",
+  "meta:VAR5-05": {
+    "q_audio": "./audio/VAR5-05_q.mp3?v=f62a34f2",
+    "exp_audio": "./audio/VAR5-05_exp.mp3?v=00414820",
+    "spoken_text": "在美术馆里，被工作人员提醒不要在馆内拍照。 转述工作人员发出的禁止或提醒内容，属于间接祈使句型。 被提醒不要做某事固定用「〜ないように注意された」；「ことに」不能搭配「注意された」。"
+  },
+  "VAR5-06_q.mp3": "f56a36984aa4",
+  "VAR5-06_exp.mp3": "96961a926490",
+  "meta:VAR5-06": {
+    "q_audio": "./audio/VAR5-06_q.mp3?v=f56a3698",
+    "exp_audio": "./audio/VAR5-06_exp.mp3?v=96961a92",
+    "spoken_text": "不好意思，从下午三点起只用一小时，能否请您允许我们使用这间会议室？ 要借用会议室的是我们自己，礼貌恳请对方「准许我方使用」。 五段动词「使う」词尾「う」变「わ＋せて」→「使わせていただけませんか」；「使って」会变成让对方去用。"
+  },
+  "VAR5-07_q.mp3": "4f27111ef1a1",
+  "VAR5-07_exp.mp3": "b5c7e80d7aeb",
+  "meta:VAR5-07": {
+    "q_audio": "./audio/VAR5-07_q.mp3?v=4f27111e",
+    "exp_audio": "./audio/VAR5-07_exp.mp3?v=b5c7e80d",
+    "spoken_text": "男：「晚饭真好吃呀，接下来看部电影吧？」 女：「好呀！不过留到待会儿就懒得动了，咱们干脆先把盘子洗完吧。」 女生虽然赞成看电影，但紧接着用「でも…先にお皿だけ洗っちゃおうよ」把洗盘子排到了最前面。 「洗っちゃおう」＝「洗ってしまおう（干脆先洗完吧）」，选先把盘子洗了。",
+    "listen_parts": {
+      "stem": "./audio/VAR5-07_stem.mp3?v=2c842e08",
+      "nums": [
+        "./audio/num_JM_1.mp3",
+        "./audio/num_JM_2.mp3",
+        "./audio/num_JM_3.mp3"
+      ],
+      "opts": {
+        "映画を見始める": "./audio/VAR5-07_opt0.mp3?v=a3450e65",
+        "先にお皿を洗う": "./audio/VAR5-07_opt1.mp3?v=8cc1a289",
+        "晩ご飯を作り始める": "./audio/VAR5-07_opt2.mp3?v=f7bde117"
+      }
+    }
+  },
+  "VAR5-08_q.mp3": "12aa41fa2472",
+  "VAR5-08_exp.mp3": "ea0b71b3a798",
+  "meta:VAR5-08": {
+    "q_audio": "./audio/VAR5-08_q.mp3?v=12aa41fa",
+    "exp_audio": "./audio/VAR5-08_exp.mp3?v=ea0b71b3",
+    "spoken_text": "新来的店员英语和中文都能说得很流利。 前面说「英語も中国語も上手に」，考查个人掌握某种外语的能力表达。 五段动词「話す」词尾「す」变え段「せ＋ます」＝「話せます」；「話されます」是被动或尊敬。"
+  },
+  "VAR5-09_q.mp3": "c5367c2c5aae",
+  "VAR5-09_exp.mp3": "2a8e7f5857f4",
+  "meta:VAR5-09": {
+    "q_audio": "./audio/VAR5-09_q.mp3?v=c5367c2c",
+    "exp_audio": "./audio/VAR5-09_exp.mp3?v=2a8e7f58",
+    "spoken_text": "老师，今天早上的电视新闻您已经看过了吗？ 直接问「先生（老师您看过了吗）」，看新闻的人是老师。 尊长「看」必用特殊尊敬语「ご覧になりましたか」；「拝見しました」只能说我自己看。"
+  },
+  "VAR5-10_q.mp3": "7208189f4542",
+  "VAR5-10_exp.mp3": "2b28c80805a6",
+  "meta:VAR5-10": {
+    "q_audio": "./audio/VAR5-10_q.mp3?v=7208189f",
+    "exp_audio": "./audio/VAR5-10_exp.mp3?v=2b28c808",
+    "spoken_text": "男：「咦，手机电量只剩百分之五了哦。」 女：「真的耶！要是看不了地图就麻烦了，赶紧找家咖啡馆进去充会儿电吧。」 女生怕没电看不了地图，当场决定「カフェに入って充電しなきゃ」。 口语句尾「充電しなきゃ」＝「充電しなくてはいけない（必须充电）」，选去咖啡馆给手机充电。",
+    "listen_parts": {
+      "stem": "./audio/VAR5-10_stem.mp3?v=e867f1bf",
+      "nums": [
+        "./audio/num_JM_1.mp3",
+        "./audio/num_JM_2.mp3",
+        "./audio/num_JM_3.mp3"
+      ],
+      "opts": {
+        "新しいスマホを買いに行く": "./audio/VAR5-10_opt0.mp3?v=0c7c6b93",
+        "カフェでスマホを充電する": "./audio/VAR5-10_opt1.mp3?v=ab981db8",
+        "紙の地図を本屋で買う": "./audio/VAR5-10_opt2.mp3?v=41e5f3ee"
+      }
+    }
+  },
+  "VAR5-11_q.mp3": "58587199eca3",
+  "VAR5-11_exp.mp3": "c0348b05f46d",
+  "meta:VAR5-11": {
+    "q_audio": "./audio/VAR5-11_q.mp3?v=58587199",
+    "exp_audio": "./audio/VAR5-11_exp.mp3?v=c0348b05",
+    "spoken_text": "据店门口的告示写着，这家面包店好像每周三店休。 既有「案内によると（据告示说）」的客观依据，又考名词接「らしい」的铁律。 名词直接加「らしい」→「休みらしい」，中间绝不加「だ」（「休みだらしい」必错）。"
+  },
+  "VAR5-12_q.mp3": "1885cc6fe467",
+  "VAR5-12_exp.mp3": "e670b8beea5c",
+  "meta:VAR5-12": {
+    "q_audio": "./audio/VAR5-12_q.mp3?v=1885cc6f",
+    "exp_audio": "./audio/VAR5-12_exp.mp3?v=e670b8be",
+    "spoken_text": "下周六的聚餐，山田先生也能来参加吗？ 考不规则动词「来る」变成可能形时的标准写法与读音。 「来る」的标准可能形必须保留「ら」→「来られます（こられます）」；「来れます」属口语ら抜き。"
+  },
+  "VAR5-13_q.mp3": "4a485afb12b9",
+  "VAR5-13_exp.mp3": "d5044710df9c",
+  "meta:VAR5-13": {
+    "q_audio": "./audio/VAR5-13_q.mp3?v=4a485afb",
+    "exp_audio": "./audio/VAR5-13_exp.mp3?v=d5044710",
+    "spoken_text": "好不容易抽中了演唱会的门票，结果因为临时出差去不成了。 抽中门票是难得的好运气，结果却因临时出差泡汤，满心惋惜。 「せっかく〜のに」表达难得的好事白白浪费；抽奖中签不是人故意费事，绝不能用「わざわざ」。"
+  },
+  "VAR5-14_q.mp3": "aed42f6b11cc",
+  "VAR5-14_exp.mp3": "7a632db5770c",
+  "meta:VAR5-14": {
+    "q_audio": "./audio/VAR5-14_q.mp3?v=aed42f6b",
+    "exp_audio": "./audio/VAR5-14_exp.mp3?v=7a632db5",
+    "spoken_text": "男：「买回来的果汁，放在桌子上就行吗？」 女：「谢谢。离大家过来还有段时间，你能先放进冰箱里冰着吗？」 女生没有让放桌上，而是交代趁客人来之前「冷蔵庫に入れて冷やしといてくれる？」。 口语「冷やしといて」＝「冷やしておいて（提前冰镇好）」，选放进冰箱冰着。",
+    "listen_parts": {
+      "stem": "./audio/VAR5-14_stem.mp3?v=f13bc190",
+      "nums": [
+        "./audio/num_JM_1.mp3",
+        "./audio/num_JM_2.mp3",
+        "./audio/num_JM_3.mp3"
+      ],
+      "opts": {
+        "テーブルの上に並べる": "./audio/VAR5-14_opt0.mp3?v=fd764f76",
+        "コップに注いで飲む": "./audio/VAR5-14_opt1.mp3?v=3bb71e76",
+        "冷蔵庫に入れて冷やしておく": "./audio/VAR5-14_opt2.mp3?v=e23059b5"
+      }
+    }
+  },
+  "VAR5-15_q.mp3": "c4b154f1d47c",
+  "VAR5-15_exp.mp3": "03b6b8eb1472",
+  "meta:VAR5-15": {
+    "q_audio": "./audio/VAR5-15_q.mp3?v=c4b154f1",
+    "exp_audio": "./audio/VAR5-15_exp.mp3?v=03b6b8eb",
+    "spoken_text": "因为发了高烧，一整天都浑身无力地瘫在床上。 前半句「高い熱が出たせいで（都怪发了高烧）」决定了身体极度虚弱疲惫。 高烧或酷暑导致浑身瘫软没劲用「ぐったり」；清爽舒畅才是「すっきり」。"
+  },
+  "VAR5-16_q.mp3": "80a0f3e57ecc",
+  "VAR5-16_exp.mp3": "17c40937139e",
+  "meta:VAR5-16": {
+    "q_audio": "./audio/VAR5-16_q.mp3?v=80a0f3e5",
+    "exp_audio": "./audio/VAR5-16_exp.mp3?v=17c40937",
+    "spoken_text": "女：「最近中午都不出去吃饭了吗？」 男：「嗯，我想省点伙食费，所以从这个月起决定每天自己做便当带过来了。」 男生明确用个人决定句型「〜ことにした」说出新规矩：自己做便当带来上班。 抓准「自分で弁当を作って持ってくることにしたんだ」，选自己做便当带来。",
+    "listen_parts": {
+      "stem": "./audio/VAR5-16_stem.mp3?v=3bd37dbd",
+      "nums": [
+        "./audio/num_JF_1.mp3",
+        "./audio/num_JF_2.mp3",
+        "./audio/num_JF_3.mp3"
+      ],
+      "opts": {
+        "自分で弁当を作って持ってくる": "./audio/VAR5-16_opt0.mp3?v=529f427f",
+        "毎日安い食堂へ食べに行く": "./audio/VAR5-16_opt1.mp3?v=a9853653",
+        "昼ご飯を食べずに仕事をする": "./audio/VAR5-16_opt2.mp3?v=c9234dd9"
+      }
+    }
+  },
+  "VAR5-17_q.mp3": "82cde7c2e221",
+  "VAR5-17_exp.mp3": "62beb24599dc",
+  "meta:VAR5-17": {
+    "q_audio": "./audio/VAR5-17_q.mp3?v=82cde7c2",
+    "exp_audio": "./audio/VAR5-17_exp.mp3?v=62beb245",
+    "spoken_text": "居然会在这么遥远的外国碰巧遇见老朋友，真是吓了一跳。 异国他乡偶遇老友是做梦也没想到的意外惊喜，句尾配「びっくりした」。 表示出乎意料、难以置信用「会うなんてびっくりした」；「たびに」是每次总是。"
+  },
+  "VAR5-18_q.mp3": "063bcb26283d",
+  "VAR5-18_exp.mp3": "13bc4da7c840",
+  "meta:VAR5-18": {
+    "q_audio": "./audio/VAR5-18_q.mp3?v=063bcb26",
+    "exp_audio": "./audio/VAR5-18_exp.mp3?v=13bc4da7",
+    "spoken_text": "把钱包里的零钱掏出来一凑，不用找零整整八百日元刚好付清了。 「お釣りなしで（不用找零）」说明硬币金额不多不少刚好凑成整八百日元。 金额、时刻、尺寸严丝合缝用「ぴったり」；「ぎりぎり」是差点不够勉强过关。"
+  },
+  "VAR5-19_q.mp3": "b9056e59e9e3",
+  "VAR5-19_exp.mp3": "99b1b660cbe7",
+  "meta:VAR5-19": {
+    "q_audio": "./audio/VAR5-19_q.mp3?v=b9056e59",
+    "exp_audio": "./audio/VAR5-19_exp.mp3?v=99b1b660",
+    "spoken_text": "女：「明天要去的温泉旅馆，好像刷不了卡哦。」 男：「咦，是这样啊。那得趁今天先去银行把现金取出来备好才行呢。」 听说温泉旅馆只收现金，男生立刻说「今日のうちに銀行で現金を下ろしとかないとね」。 口语双重缩音「下ろしとかないと」＝「下ろしておかないといけない」，选去银行提前取好现金。",
+    "listen_parts": {
+      "stem": "./audio/VAR5-19_stem.mp3?v=7b21bab1",
+      "nums": [
+        "./audio/num_JF_1.mp3",
+        "./audio/num_JF_2.mp3",
+        "./audio/num_JF_3.mp3"
+      ],
+      "opts": {
+        "旅館の予約を取り消す": "./audio/VAR5-19_opt0.mp3?v=0cdf281f",
+        "銀行で現金を下ろしておく": "./audio/VAR5-19_opt1.mp3?v=c199efab",
+        "新しいカードを作る": "./audio/VAR5-19_opt2.mp3?v=539451d1"
+      }
+    }
+  },
+  "VAR5-20_q.mp3": "2e3ac4c57f36",
+  "VAR5-20_exp.mp3": "2001267285d2",
+  "meta:VAR5-20": {
+    "q_audio": "./audio/VAR5-20_q.mp3?v=2e3ac4c5",
+    "exp_audio": "./audio/VAR5-20_exp.mp3?v=20012672",
+    "spoken_text": "夜空里繁星闪耀，简直像宝石一样美丽。 句中有比喻标志副词「まるで（简直就像）」，把星星比作宝石。 「まるで＋名詞＋のように」是固定比喻搭档；「のために」表目的或原因。"
+  },
+  "VAR5-21_q.mp3": "4959ecaa170b",
+  "VAR5-21_exp.mp3": "4d941b2e0fdf",
+  "meta:VAR5-21": {
+    "q_audio": "./audio/VAR5-21_q.mp3?v=4959ecaa",
+    "exp_audio": "./audio/VAR5-21_exp.mp3?v=4d941b2e",
+    "spoken_text": "男：「辛苦啦。真少见呀，你居然会开会迟到。」 女：「抱歉！刚才太着急不小心坐上了反方向的电车，半路又折返回来的。」 女生懊恼解释「反対方向の電車に乗っちゃって」，坐反了电车方向半路折返。 「反対方向」换言成选项里的「逆の方向」，「乗っちゃって」＝「乗ってしまって」，选坐反方向那一项。",
+    "listen_parts": {
+      "stem": "./audio/VAR5-21_stem.mp3?v=43c8bcd4",
+      "nums": [
+        "./audio/num_JM_1.mp3",
+        "./audio/num_JM_2.mp3",
+        "./audio/num_JM_3.mp3"
+      ],
+      "opts": {
+        "朝寝坊して家を出るのが遅れたから": "./audio/VAR5-21_opt0.mp3?v=a0cf898e",
+        "事故で電車が止まっていたから": "./audio/VAR5-21_opt1.mp3?v=832a3481",
+        "逆の方向の電車に乗ってしまったから": "./audio/VAR5-21_opt2.mp3?v=8c66d02a"
+      }
+    }
+  },
+  "VAR5-22_q.mp3": "16372eedc684",
+  "VAR5-22_exp.mp3": "f7e8e0f87c19",
+  "meta:VAR5-22": {
+    "q_audio": "./audio/VAR5-22_q.mp3?v=16372eed",
+    "exp_audio": "./audio/VAR5-22_exp.mp3?v=f7e8e0f8",
+    "spoken_text": "从上个月起家里新养的小狗，全家人全都特别疼爱它。 前半句已说明小狗从上个月起就养在家里了，全家人天天围着宠它。 宠爱小动物或疼惜晚辈用「かわいがっている」；还没到手想要得到才说「ほしがっている」。"
+  },
+  "VAR5-23_q.mp3": "07e575a7e6a0",
+  "VAR5-23_exp.mp3": "14c38c1efffb",
+  "meta:VAR5-23": {
+    "q_audio": "./audio/VAR5-23_q.mp3?v=07e575a7",
+    "exp_audio": "./audio/VAR5-23_exp.mp3?v=14c38c1e",
+    "spoken_text": "女：「啊，糟了！我不小心把咖啡洒在最心爱的白衬衫上了！」 「あ、大変！」配「こぼしちゃった（こぼしてしまった）」，咖啡刚洒在白衬衫上急需擦掉。 「给，快用这条毛巾马上擦擦」最合常理；另外两项完全没接住弄脏衣服的状况。",
+    "listen_parts": {
+      "stem": "./audio/VAR5-23_stem.mp3?v=ca71de76",
+      "nums": [
+        "./audio/num_JM_1.mp3",
+        "./audio/num_JM_2.mp3",
+        "./audio/num_JM_3.mp3"
+      ],
+      "opts": {
+        "ほら、このタオルですぐ拭いて！": "./audio/VAR5-23_opt0.mp3?v=4f6c3445",
+        "じゃあ、コーヒーをもう一杯入れようか。": "./audio/VAR5-23_opt1.mp3?v=d67c89e6",
+        "新しいシャツ、とても似合っているよ。": "./audio/VAR5-23_opt2.mp3?v=c5fd067d"
+      }
+    }
+  },
+  "VAR5-24_q.mp3": "d06fbf21485f",
+  "VAR5-24_exp.mp3": "0d5b8f2e2536",
+  "meta:VAR5-24": {
+    "q_audio": "./audio/VAR5-24_q.mp3?v=d06fbf21",
+    "exp_audio": "./audio/VAR5-24_exp.mp3?v=0d5b8f2e",
+    "spoken_text": "男：「外头特别冷，要不要去车站前的店里吃碗热乌冬面再走？」 「食べてかない？」＝「食べていかない？」，下班或回家路上提议顺路吃碗热面再回去。 「好呀，稍微暖和一下身子再回去吧」精准回应邀约；其余两项时态或方向皆错。",
+    "listen_parts": {
+      "stem": "./audio/VAR5-24_stem.mp3?v=c599b985",
+      "nums": [
+        "./audio/num_JF_1.mp3",
+        "./audio/num_JF_2.mp3",
+        "./audio/num_JF_3.mp3"
+      ],
+      "opts": {
+        "うん、今日は何も食べずに来たよ。": "./audio/VAR5-24_opt0.mp3?v=88f81334",
+        "いいね、少し温まってから帰ろう。": "./audio/VAR5-24_opt1.mp3?v=c7dcd978",
+        "うどんはもう食べ終わったよ。": "./audio/VAR5-24_opt2.mp3?v=b424d624"
+      }
+    }
+  },
+  "VAR5-25_q.mp3": "7e1d9ae861eb",
+  "VAR5-25_exp.mp3": "f9d049ae9592",
+  "meta:VAR5-25": {
+    "q_audio": "./audio/VAR5-25_q.mp3?v=7e1d9ae8",
+    "exp_audio": "./audio/VAR5-25_exp.mp3?v=f9d049ae",
+    "spoken_text": "在窗口关门前一分钟赶到，好险擦边赶上了办理手续。 只差一分钟窗口就要关了，属于千钧一发、险些迟到的极限边缘。 擦边勉强来得及固定用「ぎりぎり間に合った」；「ぴったり」用于尺寸合适或整点不差。"
+  },
+  "VAR5-26_q.mp3": "bd304a7c0ba5",
+  "VAR5-26_exp.mp3": "d44670bd859c",
+  "meta:VAR5-26": {
+    "q_audio": "./audio/VAR5-26_q.mp3?v=bd304a7c",
+    "exp_audio": "./audio/VAR5-26_exp.mp3?v=d44670bd",
+    "spoken_text": "出门的时候太匆忙，一不留神忘了锁家门。 匆忙出门一时走神漏锁了门，属于无心疏忽的小失误。 一时大意忘事必用「うっかり忘れてしまった」；「しっかり」是稳妥扎实，不能修饰忘事。"
+  },
+  "VAR5-27_q.mp3": "b241284094fc",
+  "VAR5-27_exp.mp3": "7ed61b0d01d3",
+  "meta:VAR5-27": {
+    "q_audio": "./audio/VAR5-27_q.mp3?v=b2412840",
+    "exp_audio": "./audio/VAR5-27_exp.mp3?v=7ed61b0d",
+    "spoken_text": "盼了好久的店偏偏店休，鞋带又断了，今天真是点儿背倒霉透了。 白跑一趟吃闭门羹再加上鞋带崩断，倒霉事全赶在同一天。 感叹运气差、真倒霉用「今日は本当についてない」；「たまらない」前必须接て形。"
+  },
+  "VAR5-28_q.mp3": "03791923b8d1",
+  "VAR5-28_exp.mp3": "8fc827b4af14",
+  "meta:VAR5-28": {
+    "q_audio": "./audio/VAR5-28_q.mp3?v=03791923",
+    "exp_audio": "./audio/VAR5-28_exp.mp3?v=8fc827b4",
+    "spoken_text": "望着缓缓沉入大海的美丽夕阳，陶醉地看了好一会儿。 面朝大海欣赏绝美落日，眼神和心情都沉醉其中。 被美景或乐声迷住如痴如醉用「うっとり眺める」；期望落空沮丧才是「がっかり」。"
+  },
+  "VAR5-29_q.mp3": "b3ce66feb0b6",
+  "VAR5-29_exp.mp3": "3296751fce0e",
+  "meta:VAR5-29": {
+    "q_audio": "./audio/VAR5-29_q.mp3?v=b3ce66fe",
+    "exp_audio": "./audio/VAR5-29_exp.mp3?v=3296751f",
+    "spoken_text": "大热天打完网球之后，嗓子干得冒烟，喝了好多冰茶。 烈日下运动出汗后猛灌冰茶，说明喉咙干渴到了极点。 口渴干透用清音「のどがからから」；浊音「がらがら」指车厢空荡或声音嘶哑。"
+  },
+  "VAR5-30_q.mp3": "33a1be2c298f",
+  "VAR5-30_exp.mp3": "a505b2eac742",
+  "meta:VAR5-30": {
+    "q_audio": "./audio/VAR5-30_q.mp3?v=33a1be2c",
+    "exp_audio": "./audio/VAR5-30_exp.mp3?v=a505b2ea",
+    "spoken_text": "离约好的时间还有富余，就在附近的公园里悠闲地溜达了一圈。 前面点明「余裕があったので（时间充裕不赶路）」，于是在公园里慢悠悠闲逛。 悠闲溜达散步用「ぶらぶら歩く」；「ぺこぺこ」形容肚子饿扁或点头哈腰。"
+  },
+  "VAR5-31_q.mp3": "b50798ebfb5f",
+  "VAR5-31_exp.mp3": "ee3eeaea97d8",
+  "meta:VAR5-31": {
+    "q_audio": "./audio/VAR5-31_q.mp3?v=b50798eb",
+    "exp_audio": "./audio/VAR5-31_exp.mp3?v=ee3eeaea",
+    "spoken_text": "满怀期待排队买人气蛋糕，结果偏偏在眼皮底下卖光了，真是大失所望。 排了半天队眼看轮到自己却售罄了，心里一下子凉了半截。 希望落空感到失望用「がっかりした」；自己粗心走神才是「うっかり」。"
+  },
+  "VAR5-32_q.mp3": "ebcdc3e8add6",
+  "VAR5-32_exp.mp3": "aa8b193c6f57",
+  "meta:VAR5-32": {
+    "q_audio": "./audio/VAR5-32_q.mp3?v=ebcdc3e8",
+    "exp_audio": "./audio/VAR5-32_exp.mp3?v=aa8b193c",
+    "spoken_text": "在课上，和邻座的人结成搭档练习了会话。 考高频五段动词「組む（结组、编排）」变形后的词首清浊音。 「組む（くむ）」→ て形拨音便「組んで（くんで）」，词首保持清音「く」，绝不浊化成「ぐんで」。"
+  },
+  "VAR5-33_q.mp3": "29e29058dc99",
+  "VAR5-33_exp.mp3": "614cb05681a9",
+  "meta:VAR5-33": {
+    "q_audio": "./audio/VAR5-33_q.mp3?v=29e29058",
+    "exp_audio": "./audio/VAR5-33_exp.mp3?v=614cb056",
+    "spoken_text": "关于新工作的推进方式，得到了课长详细的指示。 考商务高频双汉字词「指示」的前后清浊顺序。 「指示」读作「しじ」（前清し＋后浊じ），切勿颠倒成「じし」。"
+  },
+  "N3-G31_q.mp3": "9c7cb94549b9",
+  "N3-G31_exp.mp3": "a4de5d549bca",
+  "meta:N3-G31": {
+    "q_audio": "./audio/N3-G31_q.mp3?v=9c7cb945",
+    "exp_audio": "./audio/N3-G31_exp.mp3?v=a4de5d54",
+    "spoken_text": "对留学生来说，在日本找房子手续繁琐，非常不容易。 后半句「手続きが難しくて大変だ」是在谈感受与难易评价。 站在某人立场上作评价用「〜にとって」；朝某对象采取态度或行动才用「〜に対して」。"
+  },
+  "N3-G32_q.mp3": "c4cacf5383d2",
+  "N3-G32_exp.mp3": "fab73f6f3800",
+  "meta:N3-G32": {
+    "q_audio": "./audio/N3-G32_q.mp3?v=c4cacf53",
+    "exp_audio": "./audio/N3-G32_exp.mp3?v=fab73f6f",
+    "spoken_text": "正当重要会议开到一半时，房间的灯突然灭了。 重要会议正在紧锣密鼓进行时，冷不防被突发停电打断。 正当某事进行到最高潮时突发意外，用「名词の＋最中に（さいちゅうに）」。"
+  },
+  "N3-G33_q.mp3": "6a618b687f9a",
+  "N3-G33_exp.mp3": "6e7119b137eb",
+  "meta:N3-G33": {
+    "q_audio": "./audio/N3-G33_q.mp3?v=6a618b68",
+    "exp_audio": "./audio/N3-G33_exp.mp3?v=6e7119b1",
+    "spoken_text": "末班电车和公交车都已经停运了，只好走路回家了。 电车公交全没了，没有别的交通方式可选。 「別无他法、只好…」用「帰るしかない」；「帰ることはない」是没必要回去。"
+  },
+  "N3-G34_q.mp3": "39f21b4cbba0",
+  "N3-G34_exp.mp3": "f20156c571e4",
+  "meta:N3-G34": {
+    "q_audio": "./audio/N3-G34_q.mp3?v=39f21b4c",
+    "exp_audio": "./audio/N3-G34_exp.mp3?v=f20156c5",
+    "spoken_text": "直到生了病之后，才真正体会到日常健康有多么宝贵。 平时身在福中不知福，亲身经历生病之后才头一回彻悟。 经历某事后才真正明白，固定用「て形＋はじめて」（病気になってはじめて）。"
+  },
+  "N3-G35_q.mp3": "06978c754db0",
+  "N3-G35_exp.mp3": "34bb87591154",
+  "meta:N3-G35": {
+    "q_audio": "./audio/N3-G35_q.mp3?v=06978c75",
+    "exp_audio": "./audio/N3-G35_exp.mp3?v=34bb8759",
+    "spoken_text": "在昨天的同学会上，时隔十年见到了高中时代的挚友。 昨晚那场同学会是一次久别重逢，不是每隔十年定期打卡。 单次久别「时隔多久才又…」用「十年ぶりに」；周期性「每隔多久」才用「おきに」。"
+  },
+  "N3-G36_q.mp3": "42382020446f",
+  "N3-G36_exp.mp3": "1cdf249f38ec",
+  "meta:N3-G36": {
+    "q_audio": "./audio/N3-G36_q.mp3?v=42382020",
+    "exp_audio": "./audio/N3-G36_exp.mp3?v=1cdf249f",
+    "spoken_text": "请室友教我日语，作为交换，我教他英语。 你教我日语、我教你英语，属于双方互换条件。 表示「作为交换回报」或「代替」，用「〜かわりに」（教えてもらうかわりに）。"
+  },
+  "N3-G37_q.mp3": "b3bd82c4a001",
+  "N3-G37_exp.mp3": "d44063a088e9",
+  "meta:N3-G37": {
+    "q_audio": "./audio/N3-G37_q.mp3?v=b3bd82c4",
+    "exp_audio": "./audio/N3-G37_exp.mp3?v=d44063a0",
+    "spoken_text": "要是再早五分钟出门的话，本来就能赶上急行快车了。 句尾有「間に合ったのに」，说明实际上没赶上，站在站台上拍大腿后悔。 与句尾遗憾「〜たのに」呼应表反事实假设，前面用「出れば」。"
+  },
+  "N3-G38_q.mp3": "a59fe28c5d5c",
+  "N3-G38_exp.mp3": "7ace3d7e4072",
+  "meta:N3-G38": {
+    "q_audio": "./audio/N3-G38_q.mp3?v=a59fe28c",
+    "exp_audio": "./audio/N3-G38_exp.mp3?v=7ace3d7e",
+    "spoken_text": "嘴那么严的她，绝不可能把重要秘密讲给外人听。 前半句给出硬凭据「あんなに口が堅い（她嘴那么严）」，彻底否定泄密可能。 断定「绝无可能」用「話すわけがない」；委婉说「倒也并非…」才用「わけではない」。"
+  },
+  "N3-H19_q.mp3": "5c3c684ec634",
+  "N3-H19_exp.mp3": "93307a8c541a",
+  "meta:N3-H19": {
+    "q_audio": "./audio/N3-H19_q.mp3?v=5c3c684e",
+    "exp_audio": "./audio/N3-H19_exp.mp3?v=93307a8c",
+    "spoken_text": "课长，请问您知道下周研讨会的会场改地方了吗？ 当面询问上司「课长您知道吗」，动作属于课长。 问尊长是否知晓用「ご存じですか」；自己回答「我知道」才说「存じております」。"
+  },
+  "N3-H20_q.mp3": "6a5336ed47fd",
+  "N3-H20_exp.mp3": "14e1a4bd9373",
+  "meta:N3-H20": {
+    "q_audio": "./audio/N3-H20_q.mp3?v=6a5336ed",
+    "exp_audio": "./audio/N3-H20_exp.mp3?v=14e1a4bd",
+    "spoken_text": "明天下午三点，我去贵公司办公室拜访可以吗？ 明天下午登门拜访对方办公室的人是「我自己」。 自己去拜访客户或请教尊长用「伺う → 伺っても」；「いらっしゃる」只能用于对方。"
+  },
+  "N3-H21_q.mp3": "ad64ea8a1f0d",
+  "N3-H21_exp.mp3": "625ca97f461d",
+  "meta:N3-H21": {
+    "q_audio": "./audio/N3-H21_q.mp3?v=ad64ea8a",
+    "exp_audio": "./audio/N3-H21_exp.mp3?v=625ca97f",
+    "spoken_text": "因为昨天的大风，院子里的木栅栏坏掉了。 前面有原因「昨日の強い風で」和主语「柵が」，描述木栅栏受损。 「柵が」配「壊れてしまった」；有人动手破坏配「柵を壊してしまった」。"
+  },
+  "N3-H22_q.mp3": "47e3f32a41ed",
+  "N3-H22_exp.mp3": "ff4314a70b84",
+  "meta:N3-H22": {
+    "q_audio": "./audio/N3-H22_q.mp3?v=47e3f32a",
+    "exp_audio": "./audio/N3-H22_exp.mp3?v=ff4314a7",
+    "spoken_text": "教室后面的墙上，贴着一张很大的世界地图。 世界地图不会自己长在墙上，是老师或同学特意贴上去并一直留着的。 「対象が＋貼ってあります」表人为布置好的状态；不能说「地図が貼っています」。"
+  },
+  "N3-H23_q.mp3": "552042956e4b",
+  "N3-H23_exp.mp3": "08dfa2241676",
+  "meta:N3-H23": {
+    "q_audio": "./audio/N3-H23_q.mp3?v=55204295",
+    "exp_audio": "./audio/N3-H23_exp.mp3?v=08dfa224",
+    "spoken_text": "这件毛衣面料很柔软，看起来穿在身上会特别舒服。 摸到毛衣料子软乎乎的，凭眼前的手感推断穿起来肯定舒服。 「いい」表样态「看起来很好」必须变成「よさそうだ」；「いいそうだ」是听说。"
+  },
+  "N3-V33_q.mp3": "9b5ac10166b7",
+  "N3-V33_exp.mp3": "b5b3d3044727",
+  "meta:N3-V33": {
+    "q_audio": "./audio/N3-V33_q.mp3?v=9b5ac101",
+    "exp_audio": "./audio/N3-V33_exp.mp3?v=b5b3d304",
+    "spoken_text": "从学生时代起翻阅了好多年，这本词典的封面已经破破烂烂了。 一本词典翻了多少年，书皮边角全都磨破卷边了。 衣服、鞋子、书皮磨得破破烂烂用「ぼろぼろ」；零散不齐才用「ばらばら」。"
+  },
+  "N3-V34_q.mp3": "4fd1459038ff",
+  "N3-V34_exp.mp3": "52c4f2386b64",
+  "meta:N3-V34": {
+    "q_audio": "./audio/N3-V34_q.mp3?v=4fd14590",
+    "exp_audio": "./audio/N3-V34_exp.mp3?v=52c4f238",
+    "spoken_text": "她不光是长相，连说话方式和笑起来的样子都跟母亲一模一样。 从五官到言谈笑貌全都像一个模子刻出来的。 与某人长得或神态酷似用「母親にそっくりだ」；「うっかり」是犯迷糊。"
+  },
+  "N3-V35_q.mp3": "33c1006f90df",
+  "N3-V35_exp.mp3": "32e7938688f6",
+  "meta:N3-V35": {
+    "q_audio": "./audio/N3-V35_q.mp3?v=33c1006f",
+    "exp_audio": "./audio/N3-V35_exp.mp3?v=32e79386",
+    "spoken_text": "除夕夜里，全家人围坐在被炉旁吃了火锅。 考高频动词「囲む（围住、围坐）」的读音。 「こたつを囲む」读作「かこむ → かこんで」；「つつんで」是「包んで（包起来）」。"
+  },
+  "N3-V36_q.mp3": "486503ec8266",
+  "N3-V36_exp.mp3": "21fb45d3064f",
+  "meta:N3-V36": {
+    "q_audio": "./audio/N3-V36_q.mp3?v=486503ec",
+    "exp_audio": "./audio/N3-V36_exp.mp3?v=21fb45d3",
+    "spoken_text": "下个月迎新会的选店工作，就放心交给经验丰富的田中吧。 考高频动词「任せる（委托、交给）」的读音。 「田中さんに任せる」读作「まかせる → まかせよう」；「すませよう」是办完事。"
+  },
+  "N3-V37_q.mp3": "4a81ff8da743",
+  "N3-V37_exp.mp3": "cce226fc5f93",
+  "meta:N3-V37": {
+    "q_audio": "./audio/N3-V37_q.mp3?v=4a81ff8d",
+    "exp_audio": "./audio/N3-V37_exp.mp3?v=cce226fc",
+    "spoken_text": "平时都在家自己做饭，所以工作日晚上很少在外面吃。 因为习惯自己做饭，工作日下馆子的次数屈指可数，句尾有否定「しない」。 「めったに＋否定（しない）」表示极少、难得做某事。"
+  },
+  "N3-L17_q.mp3": "a0388809db17",
+  "N3-L17_exp.mp3": "d209996043ae",
+  "meta:N3-L17": {
+    "q_audio": "./audio/N3-L17_q.mp3?v=a0388809",
+    "exp_audio": "./audio/N3-L17_exp.mp3?v=d2099960",
+    "spoken_text": "男：「咦，桌上有个漂亮的盒子呢，能打开看看吗？」 女：「啊，等一下！那是明天妈妈生日要送的礼物，现在还不能拆哦。」 女生急忙拦住说「まだ開けちゃだめだよ」（＝まだ開けてはだめだよ，现在不能拆）。 口语「〜ちゃだめ」表禁止，对应「その箱を開けずにそのままにしておく（不拆开原样放着）」。",
+    "listen_parts": {
+      "stem": "./audio/N3-L17_stem.mp3?v=0c2670ee",
+      "nums": [
+        "./audio/num_JM_1.mp3",
+        "./audio/num_JM_2.mp3",
+        "./audio/num_JM_3.mp3"
+      ],
+      "opts": {
+        "その箱を開けずにそのままにしておく": "./audio/N3-L17_opt0.mp3?v=5c98639c",
+        "今すぐ箱を開けて中身を確かめる": "./audio/N3-L17_opt1.mp3?v=d452eca4",
+        "箱をごみ箱に捨ててしまう": "./audio/N3-L17_opt2.mp3?v=8f46d5f0"
+      }
+    }
+  },
+  "N3-L18_q.mp3": "90f148c6aacb",
+  "N3-L18_exp.mp3": "52e5688331ed",
+  "meta:N3-L18": {
+    "q_audio": "./audio/N3-L18_q.mp3?v=90f148c6",
+    "exp_audio": "./audio/N3-L18_exp.mp3?v=52e56883",
+    "spoken_text": "男：「不好意思，今天新到的复印机，你知道怎么双面复印吗？」 女：「抱歉，我也是刚到公司完全搞不懂，你去问问总务部的林同事吧。」 女生说自己「全然わかんない」（＝全然わからない），并指路让去问「総務の林さん」。 口语常把「わからない」缩成「わかんない」，对应「総務の林さんに使い方を聞きに行く」。",
+    "listen_parts": {
+      "stem": "./audio/N3-L18_stem.mp3?v=a0dcfc9e",
+      "nums": [
+        "./audio/num_JM_1.mp3",
+        "./audio/num_JM_2.mp3",
+        "./audio/num_JM_3.mp3"
+      ],
+      "opts": {
+        "総務の林さんに使い方を聞きに行く": "./audio/N3-L18_opt0.mp3?v=cf88bcd6",
+        "女の人に使い方を教えてもらう": "./audio/N3-L18_opt1.mp3?v=bcbc4aa9",
+        "コピーを使うのをあきらめて帰る": "./audio/N3-L18_opt2.mp3?v=679f122d"
+      }
+    }
+  },
+  "VAR6-01_q.mp3": "674cc1b75b8c",
+  "VAR6-01_exp.mp3": "1dc9587eb660",
+  "meta:VAR6-01": {
+    "q_audio": "./audio/VAR6-01_q.mp3?v=674cc1b7",
+    "exp_audio": "./audio/VAR6-01_exp.mp3?v=1dc9587e",
+    "spoken_text": "随着夜色越来越深，车站前的行人渐渐变少了。 夜色越深，路上的行人就越稀少，两边同步渐变。 伴随前项推进而后项同步渐变用「深まるにしたがって」；「ついでに」只表顺手捎带。"
+  },
+  "VAR6-02_q.mp3": "dc3c6f778423",
+  "VAR6-02_exp.mp3": "02dd0cb2a127",
+  "meta:VAR6-02": {
+    "q_audio": "./audio/VAR6-02_q.mp3?v=dc3c6f77",
+    "exp_audio": "./audio/VAR6-02_exp.mp3?v=02dd0cb2",
+    "spoken_text": "客户那边的部长也夸奖说，这次的新设计非常棒哦。 主语是「取引先の部長も」，转述外部客户的夸奖。 客户方尊长「说」用「おっしゃっていました」；「申していました」是压低己方的词。"
+  },
+  "VAR6-03_q.mp3": "7624d16ee63c",
+  "VAR6-03_exp.mp3": "56f476036a4e",
+  "meta:VAR6-03": {
+    "q_audio": "./audio/VAR6-03_q.mp3?v=7624d16e",
+    "exp_audio": "./audio/VAR6-03_exp.mp3?v=56f47603",
+    "spoken_text": "人气歌手的演唱会门票，开票的同时就一张接一张飞快卖光了。 有「発売が始まると同時に（开票一瞬间）」，抢票势头极其猛烈迅速。 势头迅猛接二连三推进用「どんどん」；跨月跨年平缓过渡才用「だんだん」。"
+  },
+  "VAR6-04_q.mp3": "ff71464a92e6",
+  "VAR6-04_exp.mp3": "2b7b055d089a",
+  "meta:VAR6-04": {
+    "q_audio": "./audio/VAR6-04_q.mp3?v=ff71464a",
+    "exp_audio": "./audio/VAR6-04_exp.mp3?v=2b7b055d",
+    "spoken_text": "按刚入职第一年的新人来说，他给客人讲解得非常沉稳老练。 拿「刚进公司第一年」这把尺子一量，他却一点不怯场，出人意料。 名词直接加「にしては」（入社一年目にしては），感叹实际表现超出该身份常规印象。"
+  },
+  "VAR6-05_q.mp3": "10d3b7720b03",
+  "VAR6-05_exp.mp3": "624fe4917013",
+  "meta:VAR6-05": {
+    "q_audio": "./audio/VAR6-05_q.mp3?v=10d3b772",
+    "exp_audio": "./audio/VAR6-05_exp.mp3?v=624fe491",
+    "spoken_text": "这家食堂座位很多，哪怕午休时间也不用排队，马上就能吃上饭哦。 考正式书面语法中「食べる（能吃上）」的标准形式。 正式书面语必须保留「ら」写成「食べられます」；少掉「ら」的「食べれます」考试判错。"
+  },
+  "VAR6-06_q.mp3": "263090d41271",
+  "VAR6-06_exp.mp3": "15e21c85b0f3",
+  "meta:VAR6-06": {
+    "q_audio": "./audio/VAR6-06_q.mp3?v=263090d4",
+    "exp_audio": "./audio/VAR6-06_exp.mp3?v=15e21c85",
+    "spoken_text": "既然是网上就能轻松下单买到的书，就没必要大老远专门跑去书店买了。 网上点一下就能买到，再跑远路纯属多此一举，句尾接「必要はない」。 「わざわざ〜行く必要はない（没必要特意跑一趟）」是高频固定搭配。"
+  },
+  "VAR6-07_q.mp3": "2807e9197190",
+  "VAR6-07_exp.mp3": "1540a46d3016",
+  "meta:VAR6-07": {
+    "q_audio": "./audio/VAR6-07_q.mp3?v=2807e919",
+    "exp_audio": "./audio/VAR6-07_exp.mp3?v=1540a46d",
+    "spoken_text": "女：「昨天在检票口前冲你挥手，结果你直接走过去了呀。」 男：「啊真的吗？抱歉，我当时正拿手机敲一封急件邮件，完全没看周围。」 男生解释原因用了口语缩音「メールを打ってて」（＝打っていて）。 听懂「打ってて＝打っていて（正低头敲邮件）」，对应「スマホでメールを打っていたから」。",
+    "listen_parts": {
+      "stem": "./audio/VAR6-07_stem.mp3?v=c18b57e8",
+      "nums": [
+        "./audio/num_JF_1.mp3",
+        "./audio/num_JF_2.mp3",
+        "./audio/num_JF_3.mp3"
+      ],
+      "opts": {
+        "スマホでメールを打っていたから": "./audio/VAR6-07_opt0.mp3?v=c1d86495",
+        "眼鏡をかけていなかったから": "./audio/VAR6-07_opt1.mp3?v=e0e71366",
+        "急いで走っていたから": "./audio/VAR6-07_opt2.mp3?v=85670b0a"
+      }
+    }
+  },
+  "VAR6-08_q.mp3": "c414ce514296",
+  "VAR6-08_exp.mp3": "f94d7942feff",
+  "meta:VAR6-08": {
+    "q_audio": "./audio/VAR6-08_q.mp3?v=c414ce51",
+    "exp_audio": "./audio/VAR6-08_exp.mp3?v=f94d7942",
+    "spoken_text": "被房东提醒，晚上十点以后不要开洗衣机。 间接转述房东对租客的叮嘱和警告（「夜深别开洗衣机」）。 转述禁止与叮嘱固定用「ない形＋ように注意された」（回さないように注意された）。"
+  },
+  "VAR6-09_q.mp3": "41c3f8e7d178",
+  "VAR6-09_exp.mp3": "75ea0c3ced39",
+  "meta:VAR6-09": {
+    "q_audio": "./audio/VAR6-09_q.mp3?v=41c3f8e7",
+    "exp_audio": "./audio/VAR6-09_exp.mp3?v=75ea0c3c",
+    "spoken_text": "今天早上起了浓雾，对岸山的轮廓只能模模糊糊看个大概。 大雾弥漫挡住视线，句尾又是「〜としか見えない（只能隐约看见一点）」。 视线受阻影影绰绰看不真切用「ぼんやり」；轮廓分明清晰可见才是「はっきり」。"
+  },
+  "VAR6-10_q.mp3": "e825a8ed4cd3",
+  "VAR6-10_exp.mp3": "302b8565e8da",
+  "meta:VAR6-10": {
+    "q_audio": "./audio/VAR6-10_q.mp3?v=e825a8ed",
+    "exp_audio": "./audio/VAR6-10_exp.mp3?v=302b8565",
+    "spoken_text": "男：「下周会议的资料，咱们明早再一起复印吧？」 女：「明早复印机特别挤，咱们干脆趁今天印出来吧。」 女生指出明早机器排队，提议「今日のうちに刷っちゃおうよ」（＝刷ってしまおうよ）。 「刷っちゃおう」是「刷ってしまおう（干脆印完吧）」的口语缩音，对应「今日のうちに資料を印刷してしまう」。",
+    "listen_parts": {
+      "stem": "./audio/VAR6-10_stem.mp3?v=41a2bef0",
+      "nums": [
+        "./audio/num_JM_1.mp3",
+        "./audio/num_JM_2.mp3",
+        "./audio/num_JM_3.mp3"
+      ],
+      "opts": {
+        "今日のうちに資料を印刷してしまう": "./audio/VAR6-10_opt0.mp3?v=4854df9d",
+        "明日の朝早く来て印刷する": "./audio/VAR6-10_opt1.mp3?v=b9615cea",
+        "資料をメールで送るだけにする": "./audio/VAR6-10_opt2.mp3?v=a7f8cc0f"
+      }
+    }
+  },
+  "VAR6-11_q.mp3": "e4c33523a24b",
+  "VAR6-11_exp.mp3": "4f4909f29977",
+  "meta:VAR6-11": {
+    "q_audio": "./audio/VAR6-11_q.mp3?v=e4c33523",
+    "exp_audio": "./audio/VAR6-11_exp.mp3?v=4f4909f2",
+    "spoken_text": "女：「店长，我先把送到的纸箱货物搬进仓库好吗？」 男：「啊，货物先往后放，趁开门营业前能先把店门口的落叶扫了吗？」 店长说「荷物は後にして（货物放后面再搬）」，紧接着安排先扫门口落叶。 排除「後にして」推迟的纸箱，最先做的是「店の前の落ち葉を掃く」。",
+    "listen_parts": {
+      "stem": "./audio/VAR6-11_stem.mp3?v=e1885b6e",
+      "nums": [
+        "./audio/num_JF_1.mp3",
+        "./audio/num_JF_2.mp3",
+        "./audio/num_JF_3.mp3"
+      ],
+      "opts": {
+        "店の前の落ち葉を掃く": "./audio/VAR6-11_opt0.mp3?v=72ad573e",
+        "段ボールを倉庫へ運ぶ": "./audio/VAR6-11_opt1.mp3?v=b912a378",
+        "レジのお金を数える": "./audio/VAR6-11_opt2.mp3?v=4600c081"
+      }
+    }
+  },
+  "VAR6-12_q.mp3": "9b9a872d639b",
+  "VAR6-12_exp.mp3": "fb52b189def7",
+  "meta:VAR6-12": {
+    "q_audio": "./audio/VAR6-12_q.mp3?v=9b9a872d",
+    "exp_audio": "./audio/VAR6-12_exp.mp3?v=fb52b189",
+    "spoken_text": "男：「不好了，离末班新干线只剩十五分钟了！得赶紧坐出租车才行！」 「すぐタクシー乗らないと！」省略了「いけない」，催促火速打车赶末班新干线。 顺着紧迫语气接「うん、急いでタクシー乗り場へ行こう。」最自然得体。",
+    "listen_parts": {
+      "stem": "./audio/VAR6-12_stem.mp3?v=2f06030a",
+      "nums": [
+        "./audio/num_JF_1.mp3",
+        "./audio/num_JF_2.mp3",
+        "./audio/num_JF_3.mp3"
+      ],
+      "opts": {
+        "うん、急いでタクシー乗り場へ行こう。": "./audio/VAR6-12_opt0.mp3?v=c0212607",
+        "じゃあ、ゆっくり歩いて行けるね。": "./audio/VAR6-12_opt1.mp3?v=194257e6",
+        "昨日もう新幹線には乗ったよ。": "./audio/VAR6-12_opt2.mp3?v=7771ce3d"
+      }
+    }
+  },
+  "VAR6-13_q.mp3": "d7c8afb4c72a",
+  "VAR6-13_exp.mp3": "a41117940842",
+  "meta:VAR6-13": {
+    "q_audio": "./audio/VAR6-13_q.mp3?v=d7c8afb4",
+    "exp_audio": "./audio/VAR6-13_exp.mp3?v=a4111794",
+    "spoken_text": "女：「客人马上就要到了，能帮我先把接待室的暖气开好吗？」 「つけといてくれる？」是「つけておいてくれる？（提前开好暖气）」的口语缩音。 下属用礼貌完整的「はい、今すぐつけておきます。」回应上级嘱咐最地道。",
+    "listen_parts": {
+      "stem": "./audio/VAR6-13_stem.mp3?v=fa30c494",
+      "nums": [
+        "./audio/num_JM_1.mp3",
+        "./audio/num_JM_2.mp3",
+        "./audio/num_JM_3.mp3"
+      ],
+      "opts": {
+        "はい、今すぐつけておきます。": "./audio/VAR6-13_opt0.mp3?v=ac595893",
+        "いいえ、暖房は壊れていませんよ。": "./audio/VAR6-13_opt1.mp3?v=b5da8c41",
+        "昨日はとても寒かったですね。": "./audio/VAR6-13_opt2.mp3?v=c6a72eac"
+      }
+    }
+  },
+  "VAR6-14_q.mp3": "a8ae22a81bc2",
+  "VAR6-14_exp.mp3": "bc049219ece7",
+  "meta:VAR6-14": {
+    "q_audio": "./audio/VAR6-14_q.mp3?v=a8ae22a8",
+    "exp_audio": "./audio/VAR6-14_exp.mp3?v=bc049219",
+    "spoken_text": "女：「这次连休，你之前说要坐飞机去北海道对吧？」 男：「嗯，本来是那么打算的，但机票太贵了，这次决定改坐新干线去金泽了。」 「そのつもりだったんだけど（原本打算去北海道）」已被推翻，最后拍板是「金沢へ行くことにした」。 抓准转折后的最终决定「ことにした」，对应「新幹線で金沢へ行く」。",
+    "listen_parts": {
+      "stem": "./audio/VAR6-14_stem.mp3?v=e78ec4d5",
+      "nums": [
+        "./audio/num_JF_1.mp3",
+        "./audio/num_JF_2.mp3",
+        "./audio/num_JF_3.mp3"
+      ],
+      "opts": {
+        "新幹線で金沢へ行く": "./audio/VAR6-14_opt0.mp3?v=e53670e9",
+        "飛行機で北海道へ行く": "./audio/VAR6-14_opt1.mp3?v=32052a79",
+        "連休はどこへも行かず家で休む": "./audio/VAR6-14_opt2.mp3?v=8050979a"
+      }
+    }
+  },
+  "VAR6-15_q.mp3": "4dbc12539b1f",
+  "VAR6-15_exp.mp3": "37d0fb90bc88",
+  "meta:VAR6-15": {
+    "q_audio": "./audio/VAR6-15_q.mp3?v=4dbc1253",
+    "exp_audio": "./audio/VAR6-15_exp.mp3?v=37d0fb90",
+    "spoken_text": "女：「下个月员工旅行的调查表，你已经交了吗？」 男：「啊，还没交呢。截止是今天傍晚对吧？我现在马上填好交上去。」 「まだ出してない（＝まだ出していない）」说明还没交，紧接着说马上填好交。 听准口语省略「い」的「まだ出してない」，对应「まだ出していないので今日中に出す」。",
+    "listen_parts": {
+      "stem": "./audio/VAR6-15_stem.mp3?v=c28621c5",
+      "nums": [
+        "./audio/num_JF_1.mp3",
+        "./audio/num_JF_2.mp3",
+        "./audio/num_JF_3.mp3"
+      ],
+      "opts": {
+        "まだ出していないので今日中に出す": "./audio/VAR6-15_opt0.mp3?v=34286dfd",
+        "昨日のうちにもう出してしまった": "./audio/VAR6-15_opt1.mp3?v=ffc8dcd7",
+        "社員旅行には参加しないと断った": "./audio/VAR6-15_opt2.mp3?v=993b7427"
+      }
+    }
+  },
+  "VAR6-16_q.mp3": "bb7c6e31f684",
+  "VAR6-16_exp.mp3": "5402ae41965a",
+  "meta:VAR6-16": {
+    "q_audio": "./audio/VAR6-16_q.mp3?v=bb7c6e31",
+    "exp_audio": "./audio/VAR6-16_exp.mp3?v=5402ae41",
+    "spoken_text": "秋天京都的红叶，简直像画里描绘出来的一样美。 前半句有打比方的信号词「まるで（宛如、简直就像）」。 「まるで〜ように」首尾呼应表比喻（まるで絵に描いたように美しい）。"
+  },
+  "VAR6-17_q.mp3": "c621fac79de4",
+  "VAR6-17_exp.mp3": "fe94a884779f",
+  "meta:VAR6-17": {
+    "q_audio": "./audio/VAR6-17_q.mp3?v=c621fac7",
+    "exp_audio": "./audio/VAR6-17_exp.mp3?v=fe94a884",
+    "spoken_text": "「现在方便耽误一下吗？」「抱歉，我现在正忙着汇总报告书呢，再等我十分钟。」 有「今ちょうど（眼下正好）」，说明人正处在汇总报告的节骨眼上。 「今ちょうど＋ているところだ」表示此刻正在进行某动作的当口。"
+  },
+  "VAR6-18_q.mp3": "1628b119df49",
+  "VAR6-18_exp.mp3": "d4f0e4bad048",
+  "meta:VAR6-18": {
+    "q_audio": "./audio/VAR6-18_q.mp3?v=1628b119",
+    "exp_audio": "./audio/VAR6-18_exp.mp3?v=d4f0e4ba",
+    "spoken_text": "开着空调暖气睡了一夜，早上起来时嗓子干得冒烟。 整夜吹暖气抽干了屋里水分，早上起来喉咙干透。 嗓子干渴水分全无用「のどがからからになる」；零散不齐才用「ばらばら」。"
   },
   "done.mp3": "8116f5a629ae"
 }
