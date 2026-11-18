@@ -30,7 +30,12 @@ BASE_DIR = pathlib.Path(__file__).resolve().parent
 if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
-from daily_news_salon_gen import _call_chat_llm, fetch_live_nhk_news, validate_generated_story
+from daily_news_salon_gen import (
+    _call_chat_llm,
+    fetch_live_nhk_news,
+    load_cloud_qq_style_exemplars,
+    validate_generated_story,
+)
 from grok_point_resolver import assert_zero_pii_text, contains_pii
 import tutor_prefs
 
@@ -133,11 +138,44 @@ def run_night_summary() -> int:
 
     subprocess.run([sys.executable, str(BASE_DIR / "run_brain_algorithm.py"), "--sync-only"], cwd=str(BASE_DIR), check=True)
 
+    # Cloud-native compilation of word/phrase lookup telemetry (zero Mac mini dependency!)
+    st_live = json.loads((BASE_DIR / "n3_live_state.json").read_text(encoding="utf-8")) if (BASE_DIR / "n3_live_state.json").exists() else {}
+    word_lookups = st_live.get("word_lookups") or {}
+    sorted_lookups = sorted(
+        word_lookups.items(),
+        key=lambda kv: (-int((kv[1] or {}).get("count") or 1), str((kv[1] or {}).get("last_ts") or "")),
+    )
+
+    ledger_path = BASE_DIR / "lookup_weakness_ledger.md"
+    ledger_lines = [
+        "# Cloud Lookup & Weakness Telemetry Ledger",
+        "",
+        f"- Updated: `{now_pt.strftime('%Y-%m-%d %H:%M PT')}`",
+        f"- Closed Study Day: `{closed_study_day}`",
+        f"- Total Looked-Up Words/Phrases: `{len(sorted_lookups)}`",
+        "",
+        "| Word / Phrase | Lookups | Last Seen | Contexts |",
+        "| :--- | :---: | :--- | :--- |",
+    ]
+    for surf, lobj in sorted_lookups[:120]:
+        cnt = int((lobj or {}).get("count") or 1)
+        lts = str((lobj or {}).get("last_ts") or "")[:16].replace("T", " ")
+        ctxs = ", ".join((lobj or {}).get("contexts") or [])[:60]
+        ledger_lines.append(f"| `{surf}` | {cnt} | `{lts}` | {ctxs} |")
+    ledger_txt = "\n".join(ledger_lines) + "\n"
+    assert_zero_pii_text(ledger_txt, "lookup_weakness_ledger.md")
+    ledger_path.write_text(ledger_txt, encoding="utf-8")
+
     summary_obj = {
         "closed_study_day": closed_study_day,
         "summarized_at_pt": now_pt.isoformat(timespec="seconds"),
         "day_events_count": len(day_events),
         "missed_or_unsure_points": missed_today[:30],
+        "looked_up_words_count": len(sorted_lookups),
+        "top_looked_up_words": [
+            {"surface": k, "count": int((v or {}).get("count") or 1), "last_ts": str((v or {}).get("last_ts") or "")}
+            for k, v in sorted_lookups[:40]
+        ],
         "ever_seen_cards_count": len(ever_seen),
     }
     sum_txt = json.dumps(summary_obj, ensure_ascii=False, indent=2) + "\n"
@@ -229,7 +267,12 @@ def run_morning_prepare() -> int:
                 "\"turns\": [[\"W\", \"...\"], [\"D\", \"...\"], [\"X\", \"...\"], ...]}"
             )
             usr_p = json.dumps(
-                {"theme": theme_desc, "target_points": target_Slice, "nhk_context": headlines[:3]},
+                {
+                    "theme": theme_desc,
+                    "target_points": target_Slice,
+                    "nhk_context": headlines[:3],
+                    "authentic_qqsrx_style_reference": load_cloud_qq_style_exemplars(f"{study_today}:{idx_t}"),
+                },
                 ensure_ascii=False,
             )
             raw = _call_chat_llm(sys_p, usr_p)

@@ -6047,11 +6047,10 @@ function curateVocabBatch(limitCnt) {
     out.push(surface);
   }
 
-  // 1) Words tapped today during quiz / podcast (newest first)
-  const tapped = Array.isArray(A.tappedWords) ? A.tappedWords.slice().reverse() : [];
-  tapped.forEach(sw => tryAdd(sw));
+  // Note: Tapped words/phrases (A.tappedWords / A.wordLookups) are recorded silently to the cloud brain
+  // without immediately altering active practice queues.
 
-  // 2) Recently missed words (from tutor or Grok practice)
+  // 1) Recently missed words (from tutor or Grok practice)
   const recentWeak = Array.isArray(DATA.recent_weak_words) ? DATA.recent_weak_words : [];
   recentWeak.forEach(sw => tryAdd(sw));
 

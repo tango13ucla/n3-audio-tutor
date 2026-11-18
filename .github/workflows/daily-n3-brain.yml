@@ -209,7 +209,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           STAGE_DIR=$(mktemp -d)
           cp -a audio "$STAGE_DIR/"
-          for f in n3_live_state.json practice_log.jsonl cloud_sync_config.json cloud_state_snapshot.json tutor_prefs.json night_summary.json grok_daily_brief.md grok_daily_brief.json brain_plan_*.json; do
+          for f in n3_live_state.json practice_log.jsonl cloud_sync_config.json cloud_state_snapshot.json tutor_prefs.json night_summary.json lookup_weakness_ledger.md grok_daily_brief.md grok_daily_brief.json brain_plan_*.json; do
             [ -f "$f" ] && cp -a "$f" "$STAGE_DIR/" || true
           done
           for attempt in 1 2 3; do
@@ -224,6 +224,7 @@ jobs:
             fi
             git add n3_live_state.json practice_log.jsonl cloud_sync_config.json cloud_state_snapshot.json tutor_prefs.json grok_daily_brief.md grok_daily_brief.json brain_plan_*.json index.html sw.js audio/
             [ -f night_summary.json ] && git add night_summary.json || true
+            [ -f lookup_weakness_ledger.md ] && git add lookup_weakness_ledger.md || true
             if git diff --cached --quiet; then
               echo "No changes to commit."
               break

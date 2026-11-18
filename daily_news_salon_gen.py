@@ -140,8 +140,7 @@ def _call_chat_llm(system_prompt: str, user_prompt: str) -> str | None:
 
     if gh_models_token:
         endpoints = [
-            ("https://models.github.ai/inference/chat/completions", ("openai/gpt-4.1", "openai/gpt-4o")),
-            ("https://models.inference.ai.azure.com/chat/completions", ("gpt-4o", "gpt-4o-mini")),
+            ("https://models.github.ai/inference/chat/completions", ("openai/gpt-4.1", "openai/gpt-4o", "openai/gpt-4o-mini")),
         ]
         for url, models in endpoints:
             for model in models:
@@ -161,18 +160,45 @@ def _call_chat_llm(system_prompt: str, user_prompt: str) -> str | None:
                         headers={
                             "Authorization": f"Bearer {gh_models_token}",
                             "Content-Type": "application/json",
-                            "Accept": "application/vnd.github+json",
+                            "Accept": "application/json",
+                            "X-GitHub-Api-Version": "2022-11-28",
+                            "User-Agent": "n3-audio-tutor-cloud/1.0",
                         },
                         method="POST",
                     )
                     with urllib.request.urlopen(req, timeout=42.0) as resp:
-                        data = json.loads(resp.read().decode("utf-8"))
+                        raw_body = resp.read().decode("utf-8", errors="replace").strip()
+                    if not raw_body:
+                        continue
+                    data = json.loads(raw_body)
                     content = (data.get("choices") or [{}])[0].get("message", {}).get("content")
                     if content and content.strip():
                         return content
                 except Exception as e:
                     print(f"[info] GitHub Models endpoint ({model}) skipped: {e}")
     return None
+
+
+def load_cloud_qq_style_exemplars(seed_key: str = "") -> dict:
+    """Load real 3,124-episode《锵锵三人行》trio style stats & rotating openings directly in the cloud."""
+    corpus_path = os.path.join(BASE_DIR, "qiangqiang_trio_corpus.json")
+    if not os.path.exists(corpus_path):
+        return {}
+    try:
+        data = json.load(open(corpus_path, encoding="utf-8"))
+        samples = data.get("sample_authentic_trio_openings") or []
+        picked = []
+        if samples:
+            offset = sum(ord(c) for c in str(seed_key)) % len(samples)
+            picked = [samples[(offset + i) % len(samples)] for i in range(min(3, len(samples)))]
+        return {
+            "wentao_opening_stats": data.get("wentao_opening_stats") or {},
+            "speaker_turn_char_length": data.get("speaker_turn_char_length") or {},
+            "signature_phrases": data.get("signature_phrases") or {},
+            "authentic_trio_opening_exemplars": picked,
+        }
+    except Exception:
+        return {}
 
 
 def maybe_generate_live_news_story(
@@ -223,6 +249,7 @@ def maybe_generate_live_news_story(
         "nhk_live_headlines": headlines,
         "target_japanese_points": focus_points[:5],
         "later_chapters_for_callbacks": companion_titles[:4],
+        "authentic_qqsrx_style_reference": load_cloud_qq_style_exemplars(today_str),
     }, ensure_ascii=False, indent=2)
 
     raw = _call_chat_llm(sys_prompt, usr_prompt)

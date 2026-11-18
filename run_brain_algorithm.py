@@ -483,6 +483,33 @@ def write_cloud_grok_brief(state: dict) -> None:
         f.write(md_txt)
 
 
+def write_cloud_lookup_ledger(state: dict) -> None:
+    word_lookups = state.get("word_lookups") or {}
+    sorted_lookups = sorted(
+        word_lookups.items(),
+        key=lambda kv: (-int((kv[1] or {}).get("count") or 1), str((kv[1] or {}).get("last_ts") or "")),
+    )
+    ledger_lines = [
+        "# Cloud Lookup & Weakness Telemetry Ledger",
+        "",
+        f"- Updated: `{state.get('updated_at', '')}`",
+        f"- Study Date: `{state.get('study_date', '')}`",
+        f"- Total Looked-Up Words/Phrases: `{len(sorted_lookups)}`",
+        "",
+        "| Word / Phrase | Lookups | Last Seen | Contexts |",
+        "| :--- | :---: | :--- | :--- |",
+    ]
+    for surf, lobj in sorted_lookups[:200]:
+        cnt = int((lobj or {}).get("count") or 1)
+        lts = str((lobj or {}).get("last_ts") or "")[:16].replace("T", " ")
+        ctxs = ", ".join((lobj or {}).get("contexts") or [])[:72]
+        ledger_lines.append(f"| `{surf}` | {cnt} | `{lts}` | {ctxs} |")
+    ledger_txt = "\n".join(ledger_lines) + "\n"
+    assert_zero_pii_text(ledger_txt, "lookup_weakness_ledger.md")
+    with open(os.path.join(BASE_DIR, "lookup_weakness_ledger.md"), "w", encoding="utf-8") as f:
+        f.write(ledger_txt)
+
+
 def main():
     import sys
     sync_only = ("--sync-only" in sys.argv) or ("--drain-only" in sys.argv)
@@ -505,6 +532,7 @@ def main():
     count = apply_practice_logs(state, study_dt.strftime("%Y%m%d"))
     recompute_summary(state)
     write_cloud_grok_brief(state)
+    write_cloud_lookup_ledger(state)
 
     with open(STATE_PATH, "w", encoding="utf-8") as f:
         json.dump(state, f, ensure_ascii=False, indent=2)
