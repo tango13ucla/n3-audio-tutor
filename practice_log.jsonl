@@ -719,3 +719,5 @@
 {"id": "VAR-L07", "point": "N3L-048", "choice": "今日レストランを予約する", "correct": "true", "ask_again": "false", "ts": "2026-11-18T05:52:34.000Z"}
 {"id": "VAR4-H18", "point": "K-002", "choice": "おっしゃいます", "correct": "true", "ask_again": "false", "ts": "2026-11-18T05:52:42.000Z"}
 {"id": "VAR3-L01", "point": "N3L-015", "choice": "友達に本を貸してあげる", "correct": "false", "ask_again": "false", "ts": "2026-11-18T05:53:01.000Z"}
+{"id": "VAR3-L04", "point": "N3L-007", "choice": "会議室の窓を全部閉める", "correct": "false", "ask_again": "false", "ts": "2026-11-18T05:56:33.000Z"}
+{"id": "VAR4-L08", "point": "N3L-010", "choice": "すぐ謝って、正しいのを送り直したほうがいいよ。", "correct": "true", "ask_again": "false", "ts": "2026-11-18T05:56:49.000Z"}
