@@ -1,8 +1,8 @@
 {
   "schema": "n3-grok-cloud-brief/1",
-  "study_date": "2026-11-17",
-  "updated_at": "2026-11-17 22:39 PT",
-  "days_left": 19,
+  "study_date": "2026-11-18",
+  "updated_at": "2026-11-18 08:00 PT",
+  "days_left": 18,
   "grok_cloud_ingest_url": "https://ntfy.sh/n3grok_9c71e4b2a85f13d06e24ab891f03",
   "grammar": {
     "red": [
@@ -197,6 +197,7 @@
   },
   "listening": {
     "red": [
+      "N3L-003 〜てない",
       "N3L-004 〜てて",
       "N3L-007 〜といて",
       "N3L-009 〜ちゃう",
@@ -219,7 +220,6 @@
       "N3L-403 「〜んだって/〜らしい/〜ですよ」"
     ],
     "yellow_2": [
-      "N3L-003 〜てない",
       "N3L-010 〜ちゃった",
       "N3L-012 〜ちゃって",
       "N3L-017 〜ないと",

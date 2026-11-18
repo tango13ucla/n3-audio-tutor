@@ -1,0 +1,73 @@
+{
+  "closed_study_day": "2026-11-17",
+  "summarized_at_pt": "2026-11-18T07:59:57-08:00",
+  "day_events_count": 100,
+  "missed_or_unsure_points": [
+    "N3L-087",
+    "どんどん",
+    "N3L-009",
+    "ぼんやり",
+    "K-002",
+    "N3L-015",
+    "N3L-007",
+    "N3L-085",
+    "N3L-004",
+    "〜ように言う",
+    "V-031",
+    "〜にしたがって",
+    "〜にしては"
+  ],
+  "missed_vocab_words": [
+    "わざわざ"
+  ],
+  "looked_up_expressions": [],
+  "looked_up_words_count": 9,
+  "top_looked_up_words": [
+    {
+      "surface": "おく",
+      "count": 1,
+      "last_ts": "2026-11-15"
+    },
+    {
+      "surface": "こと",
+      "count": 1,
+      "last_ts": "2026-11-15"
+    },
+    {
+      "surface": "買い物",
+      "count": 1,
+      "last_ts": "2026-11-15"
+    },
+    {
+      "surface": "高い",
+      "count": 1,
+      "last_ts": "2026-11-15"
+    },
+    {
+      "surface": "だ",
+      "count": 1,
+      "last_ts": "2026-11-15"
+    },
+    {
+      "surface": "ゆっくり",
+      "count": 1,
+      "last_ts": "2026-11-15"
+    },
+    {
+      "surface": "無断",
+      "count": 1,
+      "last_ts": "2026-11-15"
+    },
+    {
+      "surface": "ない",
+      "count": 1,
+      "last_ts": "2026-11-15"
+    },
+    {
+      "surface": "しといて",
+      "count": 1,
+      "last_ts": "2026-11-16"
+    }
+  ],
+  "ever_seen_cards_count": 195
+}

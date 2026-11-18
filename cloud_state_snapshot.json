@@ -1,7 +1,7 @@
 {
   "v": 15,
   "app": "n3-zen",
-  "updatedAt": 1794982617,
+  "updatedAt": 1795016737,
   "dates": {
     "2026-11-14": {
       "resetAt": 0,
@@ -1254,7 +1254,8 @@
         "GQ-20261114-02": 1794982435,
         "N3-H12": 1794982573,
         "G-20261114-05": 1794982579,
-        "G-20261114-06": 1794982583
+        "G-20261114-06": 1794982583,
+        "N3-L11": 1795016678
       },
       "learning": {
         "N3-L06": [
@@ -1308,6 +1309,10 @@
         "G-20261114-06": [
           1,
           0
+        ],
+        "N3-L11": [
+          13,
+          1
         ]
       },
       "sched": {
@@ -1548,14 +1553,21 @@
           1,
           0,
           1794982583296
+        ],
+        "N3-L11": [
+          96,
+          2,
+          13,
+          1,
+          1795016678067
         ]
       },
       "cursor": [
-        "",
-        79,
-        "H-20261114-07",
-        "",
-        1794982616942
+        "N3-L11",
+        94,
+        "N3-L11",
+        "listen_contract",
+        1795016678067
       ],
       "flashProg": [
         18,
@@ -1563,6 +1575,26 @@
         1794974362,
         1794974362
       ]
+    },
+    "2026-11-18": {
+      "resetAt": 0,
+      "radioMaxSec": 0,
+      "radioPos": [
+        0,
+        0
+      ],
+      "radioSig": "",
+      "greenAt": {},
+      "retestAt": {
+        "N3-L11": 1795016678
+      },
+      "learning": {
+        "N3-L11": [
+          1,
+          0
+        ]
+      },
+      "sched": {}
     }
   },
   "masteryOverrides": {
@@ -1927,8 +1959,8 @@
       1794981898
     ],
     "N3L-003": [
-      "wip2:20261116",
-      1794891889
+      "todo:20261117",
+      1795016678
     ],
     "N3L-016": [
       "wip1:20261115",
@@ -1951,8 +1983,8 @@
       1794895251
     ],
     "聴解「〜てない」还没做": [
-      "wip2:20261116",
-      1794891889
+      "todo:20261117",
+      1795016678
     ],
     "聴解「〜なくちゃ」必须得做": [
       "wip1:20261115",
@@ -2217,126 +2249,6 @@
     }
   },
   "records": [
-    {
-      "id": "N3-H12",
-      "point": "V-031",
-      "choice": "起きられる",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-15T22:32:52.000Z"
-    },
-    {
-      "id": "N3-G23",
-      "point": "〜わりに",
-      "choice": "わりに",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-15T22:33:00.000Z"
-    },
-    {
-      "id": "N3-L10",
-      "point": "N3L-085",
-      "choice": "不确定",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-15T22:33:25.000Z"
-    },
-    {
-      "id": "N3-V15",
-      "point": "ぶらぶら",
-      "choice": "ぶらぶら",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-15T22:34:27.000Z"
-    },
-    {
-      "id": "VAR-V16",
-      "point": "がっかり",
-      "choice": "すっきり",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-15T22:34:32.000Z"
-    },
-    {
-      "id": "N3-L08",
-      "point": "N3L-010",
-      "choice": "不确定",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-15T22:34:47.000Z"
-    },
-    {
-      "id": "N3-L10",
-      "point": "N3L-085",
-      "choice": "不确定",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-15T22:35:06.000Z"
-    },
-    {
-      "id": "N3-G26",
-      "point": "〜なんて",
-      "choice": "なんて",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-15T22:35:18.000Z"
-    },
-    {
-      "id": "N3-G25",
-      "point": "〜とすると",
-      "choice": "不确定",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-15T22:35:49.000Z"
-    },
-    {
-      "id": "N3-L08",
-      "point": "N3L-010",
-      "choice": "新しいかばん、買えてよかったね。",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-15T22:38:34.000Z"
-    },
-    {
-      "id": "N3-L10",
-      "point": "N3L-085",
-      "choice": "不确定",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-15T22:38:57.000Z"
-    },
-    {
-      "id": "N3-G27",
-      "point": "まるで〜のように",
-      "choice": "のように",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-15T22:39:13.000Z"
-    },
-    {
-      "id": "N3-G27",
-      "point": "まるで〜のように",
-      "choice": "のように",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-15T22:39:17.000Z"
-    },
-    {
-      "id": "N3-G25",
-      "point": "〜とすると",
-      "choice": "とすると",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-15T22:39:29.000Z"
-    },
-    {
-      "id": "VC-ぶらぶら",
-      "point": "ぶらぶら",
-      "choice": "记词:记住",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-15T23:21:35.000Z"
-    },
     {
       "id": "VC-無断",
       "point": "無断",
@@ -4616,6 +4528,126 @@
       "correct": "true",
       "ask_again": "false",
       "ts": "2026-11-18T06:16:54.000Z"
+    },
+    {
+      "id": "VAR-L11",
+      "point": "N3L-003",
+      "choice": "もう資料を読み終わった",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-18T15:43:57.000Z"
+    },
+    {
+      "id": "VAR-L11",
+      "point": "N3L-003",
+      "choice": "もう資料を読み終わった",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-18T15:44:00.000Z"
+    },
+    {
+      "id": "VAR-L11",
+      "point": "N3L-003",
+      "choice": "まだ資料を読んでいない",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-18T15:44:02.000Z"
+    },
+    {
+      "id": "N3-L11",
+      "point": "N3L-003",
+      "choice": "いいえ、昨日は来ませんでした。",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-18T15:44:04.000Z"
+    },
+    {
+      "id": "N3-L11",
+      "point": "N3L-003",
+      "choice": "いいえ、昨日は来ませんでした。",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-18T15:44:07.000Z"
+    },
+    {
+      "id": "N3-L11",
+      "point": "N3L-003",
+      "choice": "はい、もうお腹いっぱいです。",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-18T15:44:10.000Z"
+    },
+    {
+      "id": "N3-L11",
+      "point": "N3L-003",
+      "choice": "はい、もうお腹いっぱいです。",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-18T15:44:13.000Z"
+    },
+    {
+      "id": "N3-L11",
+      "point": "N3L-003",
+      "choice": "いいえ、昨日は来ませんでした。",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-18T15:44:16.000Z"
+    },
+    {
+      "id": "N3-L11",
+      "point": "N3L-003",
+      "choice": "いいえ、昨日は来ませんでした。",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-18T15:44:18.000Z"
+    },
+    {
+      "id": "N3-L11",
+      "point": "N3L-003",
+      "choice": "いいえ、昨日は来ませんでした。",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-18T15:44:21.000Z"
+    },
+    {
+      "id": "N3-L11",
+      "point": "N3L-003",
+      "choice": "いいえ、昨日は来ませんでした。",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-18T15:44:23.000Z"
+    },
+    {
+      "id": "N3-L11",
+      "point": "N3L-003",
+      "choice": "いいえ、昨日は来ませんでした。",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-18T15:44:25.000Z"
+    },
+    {
+      "id": "N3-L11",
+      "point": "N3L-003",
+      "choice": "いいえ、昨日は来ませんでした。",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-18T15:44:31.000Z"
+    },
+    {
+      "id": "N3-L11",
+      "point": "N3L-003",
+      "choice": "あ、まだ決めてないんです。おすすめはありますか。",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-18T15:44:34.000Z"
+    },
+    {
+      "id": "N3-L11",
+      "point": "N3L-003",
+      "choice": "はい、もうお腹いっぱいです。",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-18T15:44:38.000Z"
     }
   ]
 }
