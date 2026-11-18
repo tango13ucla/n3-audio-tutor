@@ -27,8 +27,9 @@ on:
     - cron: '23 13 * * *'
     - cron: '18 14 * * *'
     - cron: '0 15 * * *'
-    # Every 4h cloud answer & Grok brief sync
-    - cron: '17 */4 * * *'
+    # Daytime cloud answer & Grok brief sync (09:17, 13:17, 17:17, 21:17 PT in PST).
+    # Skips 00:17 / 04:17 PT so it never overlaps the Mac mini 04:00 PT night shift.
+    - cron: '17 1,5,17,21 * * *'
   workflow_dispatch:
     inputs:
       mode:

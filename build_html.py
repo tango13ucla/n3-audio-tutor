@@ -7097,6 +7097,46 @@ function initApp() {
   });
 }
 initApp();
+
+// Mac mini 04:00 PT night-shift heartbeat check (timestamp only, zero personal data).
+// Silent when the heartbeat file does not exist yet or the shift arrived on time.
+function ptParts(d) {
+  const f = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Los_Angeles", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false });
+  const o = {};
+  f.formatToParts(d).forEach(p => { o[p.type] = p.value; });
+  return { date: `${o.year}-${o.month}-${o.day}`, mins: (Number(o.hour) % 24) * 60 + Number(o.minute) };
+}
+function checkMacMiniShift() {
+  fetch("./macmini_heartbeat.json?t=" + Date.now(), { cache: "no-store" })
+    .then(r => r.ok ? r.json() : null)
+    .then(hb => {
+      const old = document.getElementById("macmini-shift-hint");
+      if (!hb || !hb.finished_at) { if (old) old.remove(); return; }
+      const hbDate = new Date(hb.finished_at);
+      if (isNaN(hbDate.getTime())) return;
+      const now = new Date();
+      const n = ptParts(now), h = ptParts(hbDate);
+      const ok = n.mins >= 330 ? h.date === n.date : (now - hbDate) < 26 * 3600 * 1000;
+      let dismissed = "";
+      try { dismissed = localStorage.getItem("macmini_hint_dismissed") || ""; } catch (e) {}
+      if (ok || dismissed === n.date) { if (old) old.remove(); return; }
+      if (old) return;
+      const el = document.createElement("div");
+      el.id = "macmini-shift-hint";
+      el.textContent = "Mac mini 今天凌晨没交班，邮件和记忆可能还没更新（点一下关闭）";
+      el.style.cssText = "position:fixed;top:calc(env(safe-area-inset-top, 0px) + 6px);left:50%;transform:translateX(-50%);z-index:9999;max-width:92vw;padding:6px 12px;border-radius:14px;background:rgba(40,40,40,0.82);color:#f3efe6;font-size:12px;line-height:1.4;text-align:center;";
+      el.addEventListener("click", () => {
+        try { localStorage.setItem("macmini_hint_dismissed", n.date); } catch (e) {}
+        el.remove();
+      });
+      document.body.appendChild(el);
+    })
+    .catch(() => {});
+}
+checkMacMiniShift();
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") checkMacMiniShift();
+});
 </script>
 </body>
 </html>
