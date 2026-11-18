@@ -926,9 +926,9 @@ async def main():
     # If today_str already has a full Uchi volume assigned in radio_history.json, keep that exact volume on same-day re-builds
     # so pre-staged future Uchi volumes (e.g. tomorrow's 05:00 AM PT volume) are never prematurely consumed!
     pinned_today_ids: list[str] = []
-    if os.path.exists(RADIO_HIST_PATH):
+    if os.path.exists(RADIO_HISTORY_PATH):
         try:
-            _rh = json.load(open(RADIO_HIST_PATH, encoding="utf-8")).get("recent_days") or {}
+            _rh = json.load(open(RADIO_HISTORY_PATH, encoding="utf-8")).get("recent_days") or {}
             _tids = [str(x) for x in (_rh.get(today_str) or []) if x]
             if len(_tids) >= 8 and any(x.startswith("uchi") for x in _tids):
                 pinned_today_ids = _tids
