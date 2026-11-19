@@ -1,7 +1,7 @@
 {
   "v": 15,
   "app": "n3-zen",
-  "updatedAt": 1795070721,
+  "updatedAt": 1795105968,
   "dates": {
     "2026-11-14": {
       "resetAt": 0,
@@ -2031,6 +2031,19 @@
         1795067010,
         1795067010
       ]
+    },
+    "2026-11-19": {
+      "resetAt": 0,
+      "radioMaxSec": 0,
+      "radioPos": [
+        0,
+        0
+      ],
+      "radioSig": "",
+      "greenAt": {},
+      "retestAt": {},
+      "learning": {},
+      "sched": {}
     }
   },
   "masteryOverrides": {

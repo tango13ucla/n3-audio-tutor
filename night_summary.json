@@ -1,24 +1,32 @@
 {
-  "closed_study_day": "2026-11-17",
-  "summarized_at_pt": "2026-11-18T09:55:43-08:00",
-  "day_events_count": 100,
+  "closed_study_day": "2026-11-18",
+  "summarized_at_pt": "2026-11-19T08:47:55-08:00",
+  "day_events_count": 104,
   "missed_or_unsure_points": [
-    "N3L-087",
-    "どんどん",
-    "N3L-009",
     "ぼんやり",
-    "K-002",
-    "N3L-015",
-    "N3L-007",
+    "だんだん",
+    "N3L-087",
     "N3L-085",
-    "N3L-004",
-    "〜ように言う",
-    "V-031",
-    "〜にしたがって",
-    "〜にしては"
+    "〜てたまらない",
+    "許す",
+    "加える",
+    "組む",
+    "N3L-012",
+    "〜はずだ",
+    "ぎりぎり",
+    "はっきり",
+    "うっとり",
+    "からから",
+    "ぶらぶら",
+    "まるで〜のように",
+    "N3L-003",
+    "ついてない",
+    "〜ところだ",
+    "指示"
   ],
   "missed_vocab_words": [
-    "わざわざ"
+    "慰める",
+    "ぼんやり"
   ],
   "looked_up_expressions": [],
   "looked_up_words_count": 9,
@@ -69,5 +77,5 @@
       "last_ts": "2026-11-16"
     }
   ],
-  "ever_seen_cards_count": 195
+  "ever_seen_cards_count": 245
 }
