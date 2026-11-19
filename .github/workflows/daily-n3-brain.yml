@@ -26,19 +26,12 @@ on:
       - 'macmini_heartbeat.json'
       - '.github/workflows/daily-n3-brain.yml'
   schedule:
-    # Stage 1 (02:03 AM PT = 10:03 UTC in PST): Post-midnight study close-out & focus-point summary
-    - cron: '3 10 * * *'
-    # Stage 2 (04:12, 04:42, 05:02, 05:23, 05:48, 06:18, 07:00 AM PT): Morning content prep + 40m episode & zero-repeat deck synthesis
-    - cron: '12 12 * * *'
-    - cron: '42 12 * * *'
-    - cron: '2 13 * * *'
-    - cron: '23 13 * * *'
-    - cron: '48 13 * * *'
-    - cron: '18 14 * * *'
-    - cron: '0 15 * * *'
-    # Daytime cloud answer & Grok brief sync (09:17, 13:17, 17:17, 21:17 PT in PST).
-    # Skips 00:17 / 04:17 PT so it never overlaps the Mac mini 04:00 PT night shift.
-    - cron: '17 1,5,17,21 * * *'
+    # Run at :13 and :43 every hour across all 24h.
+    # GitHub Actions schedule queues have lagged 5-9 hours for multiple consecutive days;
+    # firing every 30 min ensures a tick ALWAYS lands in 02:00-03:59 PT (night_summary)
+    # and >=04:15 PT (morning full refresh) regardless of queue lag (0h, 4h, 8h, or 12h),
+    # while unneeded ticks exit in ~5s as `noop` with zero commits and zero Pages rebuilds.
+    - cron: '13,43 * * * *'
   workflow_dispatch:
     inputs:
       mode:
@@ -82,12 +75,18 @@ jobs:
           now_pt = datetime.datetime.now(ZoneInfo("America/Los_Angeles"))
           study_pt = (now_pt - datetime.timedelta(hours=4)).strftime("%Y-%m-%d")
           ev = os.environ.get("EVENT_NAME", "")
-          cron_s = os.environ.get("CRON_SCHEDULE", "")
           inp = os.environ.get("INPUT_MODE", "full")
           if ev == "workflow_dispatch" and inp in ("quiz_only", "radio_only", "night_summary", "full"):
               print(inp)
               raise SystemExit(0)
-          if ev == "schedule" and cron_s == "3 10 * * *" and now_pt.hour < 4:
+          # Stage 1 (02:00-03:59 AM PT): close out the just-finished study day ONCE regardless of cron lag
+          night_closed = ""
+          if os.path.exists("night_summary.json"):
+              try:
+                  night_closed = str(json.load(open("night_summary.json", encoding="utf-8")).get("closed_study_day") or "")
+              except Exception:
+                  night_closed = ""
+          if 2 <= now_pt.hour < 4 and night_closed != study_pt:
               print("night_summary")
               raise SystemExit(0)
           meta_date = ""
@@ -99,7 +98,22 @@ jobs:
                   radio_ver = _rm.get("radio_ver", "")
               except Exception:
                   meta_date = ""
+          # Stage 2 (>=04:00 AM PT): study_pt has flipped to the new day.
+          # Give Mac mini's 04:00 AM shift until 04:15 PT to push macmini_heartbeat.json (which triggers ev=="push" immediately);
+          # from 04:15 PT onward, any scheduled tick flips immediately even if Mac mini did not run.
           if meta_date != study_pt or (study_pt >= "2026-11-19" and radio_ver != "v36_qq_real_public_memory"):
+              if ev == "schedule" and now_pt.hour == 4 and now_pt.minute < 15:
+                  hb_date = ""
+                  if os.path.exists("macmini_heartbeat.json"):
+                      try:
+                          hb_raw = str(json.load(open("macmini_heartbeat.json", encoding="utf-8")).get("finished_at") or "")
+                          if hb_raw:
+                              hb_date = datetime.datetime.fromisoformat(hb_raw).astimezone(ZoneInfo("America/Los_Angeles")).strftime("%Y-%m-%d")
+                      except Exception:
+                          hb_date = ""
+                  if hb_date != study_pt:
+                      print("noop")
+                      raise SystemExit(0)
               print("full")
               raise SystemExit(0)
           need_new_vol = False
@@ -145,12 +159,28 @@ jobs:
               # Before 04:00 AM PT while today's deck is still active, pre-bake MP3s & listen_parts quietly without swapping HTML!
               print("prebake_cards" if (17 <= now_pt.hour or now_pt.hour < 4) else "quiz_only")
               raise SystemExit(0)
+          # For scheduled ticks when today's content is already live, only run daytime sync_check
+          # between 06:00-23:59 PT when >= 3 hours have elapsed since the last sync; otherwise fast noop.
+          if ev == "schedule":
+              baked_epoch = 0
+              if os.path.exists("n3_live_state.json"):
+                  try:
+                      baked_epoch = int(json.load(open("n3_live_state.json", encoding="utf-8")).get("_baked_epoch") or 0)
+                  except Exception:
+                      baked_epoch = 0
+              age_sec = int(now_pt.timestamp()) - baked_epoch
+              if now_pt.hour < 6 or age_sec < 3 * 3600:
+                  print("noop")
+                  raise SystemExit(0)
           print("sync_check")
           PY
           )
           echo "[mode] ACTION_MODE=$ACTION_MODE"
           echo "action_mode=$ACTION_MODE" >> "$GITHUB_OUTPUT"
-          if [ "$ACTION_MODE" = "night_summary" ]; then
+          if [ "$ACTION_MODE" = "noop" ]; then
+            echo "[noop] Today's content & recent sync are already up to date; skipping."
+            exit 0
+          elif [ "$ACTION_MODE" = "night_summary" ]; then
             python auto_author_daily_content.py --mode night-summary
             if python - <<'PY'
           import json, os, sys
@@ -209,6 +239,7 @@ jobs:
           fi
 
       - name: Commit & Push Updated State
+        if: steps.brain_step.outputs.action_mode != 'noop'
         env:
           ACTION_MODE: ${{ steps.brain_step.outputs.action_mode }}
         run: |
