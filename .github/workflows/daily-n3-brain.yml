@@ -23,13 +23,12 @@ on:
       - 'run_brain_algorithm.py'
       - 'sync_cloud_store.py'
       - 'audio/qq_real_*.wav'
-      - 'macmini_heartbeat.json'
       - '.github/workflows/daily-n3-brain.yml'
   schedule:
-    # Run at :13 and :43 every hour across all 24h.
+    # Run at :13 and :43 every hour across all 24h (100% pure cloud, zero Mac mini dependency).
     # GitHub Actions schedule queues have lagged 5-9 hours for multiple consecutive days;
     # firing every 30 min ensures a tick ALWAYS lands in 02:00-03:59 PT (night_summary)
-    # and >=04:15 PT (morning full refresh) regardless of queue lag (0h, 4h, 8h, or 12h),
+    # and >=04:00 PT (morning full refresh) regardless of queue lag (0h, 4h, 8h, or 12h),
     # while unneeded ticks exit in ~5s as `noop` with zero commits and zero Pages rebuilds.
     - cron: '13,43 * * * *'
   workflow_dispatch:
@@ -98,22 +97,8 @@ jobs:
                   radio_ver = _rm.get("radio_ver", "")
               except Exception:
                   meta_date = ""
-          # Stage 2 (>=04:00 AM PT): study_pt has flipped to the new day.
-          # Give Mac mini's 04:00 AM shift until 04:15 PT to push macmini_heartbeat.json (which triggers ev=="push" immediately);
-          # from 04:15 PT onward, any scheduled tick flips immediately even if Mac mini did not run.
+          # Stage 2 (>=04:00 AM PT): study_pt has flipped to the new day; flip immediately in pure cloud mode.
           if meta_date != study_pt or (study_pt >= "2026-11-19" and radio_ver != "v36_qq_real_public_memory"):
-              if ev == "schedule" and now_pt.hour == 4 and now_pt.minute < 15:
-                  hb_date = ""
-                  if os.path.exists("macmini_heartbeat.json"):
-                      try:
-                          hb_raw = str(json.load(open("macmini_heartbeat.json", encoding="utf-8")).get("finished_at") or "")
-                          if hb_raw:
-                              hb_date = datetime.datetime.fromisoformat(hb_raw).astimezone(ZoneInfo("America/Los_Angeles")).strftime("%Y-%m-%d")
-                      except Exception:
-                          hb_date = ""
-                  if hb_date != study_pt:
-                      print("noop")
-                      raise SystemExit(0)
               print("full")
               raise SystemExit(0)
           need_new_vol = False

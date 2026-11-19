@@ -872,3 +872,5 @@
 {"id": "VAR5-27", "point": "ついてない", "choice": "たまらない", "correct": "false", "ask_again": "false", "ts": "2026-11-19T06:45:12.000Z"}
 {"id": "VAR5-33", "point": "指示", "choice": "しじ", "correct": "true", "ask_again": "false", "ts": "2026-11-19T06:45:15.000Z"}
 {"id": "VAR5-27", "point": "ついてない", "choice": "ついてない", "correct": "true", "ask_again": "false", "ts": "2026-11-19T06:45:18.000Z"}
+{"id": "GROK-706", "point": "〜ように言う", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-18T15:53:00-08:00"}
+{"id": "GROK-707", "point": "N3L-048", "correct": false, "ask_again": false, "source": "grok", "ts": "2026-11-18T15:54:19-08:00"}
