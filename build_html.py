@@ -255,6 +255,11 @@ try:
     LISTENING_OPT_NOTES.update(WAVE6_LISTENING_OPT_NOTES)
 except Exception:
     pass
+try:
+    from weak_expansion_wave8 import WAVE8_LISTENING_OPT_NOTES
+    LISTENING_OPT_NOTES.update(WAVE8_LISTENING_OPT_NOTES)
+except Exception:
+    pass
 
 
 def build_opt_notes(card_id: str, raw_notes: dict | None) -> dict:
@@ -303,25 +308,40 @@ def resolve_point_status(point_key: str) -> str:
     return "red"
 
 
+def resolve_point_streak(point_key: str) -> int:
+    for sm in (g_state_map, h_state_map, v_state_map, l_state_map):
+        if point_key in sm:
+            val = sm[point_key].get("streak")
+            if val is not None:
+                return int(val)
+            return 3 if sm[point_key].get("status") == "green" else 0
+    return 0
+
+
 RECENT_GENERIC_LABELS = {"口语听辨", "高频假名副词", "核心词汇", "语法", "活用"}
 recent_weak_keys = set()
 log_path = os.path.join(BASE_DIR, "practice_log.jsonl")
 if os.path.exists(log_path):
     try:
+        _latest_outcome_by_key = {}
         with open(log_path, encoding="utf-8") as lf:
-            for ln in [x.strip() for x in lf if x.strip()][-160:]:
+            for ln in [x.strip() for x in lf if x.strip()][-200:]:
                 rec = json.loads(ln)
-                if (
+                rec_qid = str(rec.get("id", "")).strip()
+                if not rec_qid or rec_qid.startswith(("LK:", "VC-")):
+                    continue
+                is_miss = (
                     str(rec.get("correct", "")).lower() == "false"
                     or str(rec.get("ask_again", "")).lower() == "true"
                     or str(rec.get("choice", "")).strip() == "不确定"
-                ):
-                    pt_lbl = str(rec.get("point", "")).strip()
-                    rec_qid = str(rec.get("id", "")).strip()
-                    if pt_lbl and pt_lbl not in RECENT_GENERIC_LABELS:
-                        recent_weak_keys.add(pt_lbl)
-                    if rec_qid:
-                        recent_weak_keys.add(rec_qid)
+                )
+                pt_lbl = str(rec.get("point", "")).strip()
+                _latest_outcome_by_key[rec_qid] = is_miss
+                if pt_lbl and pt_lbl not in RECENT_GENERIC_LABELS:
+                    _latest_outcome_by_key[pt_lbl] = is_miss
+        for _k, _was_miss in _latest_outcome_by_key.items():
+            if _was_miss:
+                recent_weak_keys.add(_k)
     except Exception:
         pass
 
@@ -334,10 +354,11 @@ def weakness_multiplier(status: str, qid: str = "", point_key: str = "") -> floa
         base = 0.92
     elif status == "yellow":
         base = 0.62
-    if (qid and qid in recent_weak_keys) or (point_key and point_key in recent_weak_keys):
-        base += 0.38
-    if (qid and qid in MEMORY_FOCUS) or (point_key and point_key in MEMORY_FOCUS):
-        base += 0.45
+    if status != "green":
+        if (qid and qid in recent_weak_keys) or (point_key and point_key in recent_weak_keys):
+            base += 0.35
+        if (qid and qid in MEMORY_FOCUS) or (point_key and point_key in MEMORY_FOCUS):
+            base += 0.28
     return base
 
 
@@ -590,6 +611,7 @@ for cid, s_arr in (seeded_day.get("sched") or {}).items():
 prev_day_touched_ids = set()
 prev_day_seen_cards = set()
 ever_seen_order = {}
+last_practiced_day_by_base = {}
 _seen_seq = 0
 try:
     import datetime as _dt_mod
@@ -616,6 +638,9 @@ try:
         for _, _cid in _day_pairs:
             _seen_seq += 1
             ever_seen_order[_cid] = _seen_seq
+            _bid = card_to_base.get(_cid, _cid)
+            if _sd > last_practiced_day_by_base.get(_bid, ""):
+                last_practiced_day_by_base[_bid] = _sd
     if all_snap_dates:
         prev_day_obj = (cloud_snap.get("dates") or {}).get(all_snap_dates[-1]) or {}
         for cid in list((prev_day_obj.get("greenAt") or {}).keys()) + list((prev_day_obj.get("retestAt") or {}).keys()):
@@ -638,7 +663,7 @@ try:
                 except Exception:
                     continue
                 _cid = str(_ev.get("id") or "").strip()
-                if not _cid or _cid.startswith("VC-"):
+                if not _cid or _cid.startswith(("VC-", "LK:", "GROK-")):
                     continue
                 _ts_raw = str(_ev.get("ts") or "").strip()
                 _sday = ""
@@ -652,6 +677,9 @@ try:
                     _plog_by_day.setdefault(_sday, []).append(_cid)
                     _seen_seq += 1
                     ever_seen_order[_cid] = _seen_seq
+                    _bid = card_to_base.get(_cid, _cid)
+                    if _sday > last_practiced_day_by_base.get(_bid, ""):
+                        last_practiced_day_by_base[_bid] = _sday
         if _plog_by_day:
             _latest_plog_day = sorted(_plog_by_day.keys())[-1]
             for _cid in _plog_by_day[_latest_plog_day]:
@@ -675,19 +703,153 @@ if os.path.exists(HTML_PATH) and os.environ.get("FORCE_REDECK") != "1":
         locked_same_day_ids = []
 
 
-def deck_sort_key(p: dict):
-    qid = p["id"]
-    if locked_same_day_ids and qid in locked_same_day_ids:
-        return (-1, locked_same_day_ids.index(qid), qid)
-    if qid in touched_today_ids:
-        return (0, -p["roi_score"], -p["exam_weight"], qid)
+def _days_since_last(qid: str) -> int:
+    ld = last_practiced_day_by_base.get(qid, "")
+    if not ld:
+        return 999
+    try:
+        return max(1, _plan_day_ord - _dt_mod.date.fromisoformat(ld[:10]).toordinal())
+    except Exception:
+        return 2
+
+
+try:
+    _exam_date_str = str(MEMORY_PREFS.get("exam_date") or "2026-12-06")
+    _days_to_exam = max(0, (_dt_mod.date.fromisoformat(_exam_date_str) - _dt_mod.date.fromisoformat(plan_date_str[:10])).days)
+except Exception:
+    _days_to_exam = 14
+
+
+def _is_active_miss(p: dict) -> bool:
     st = resolve_point_status(p["point_key"])
-    is_graduated = 1 if st == "green" else 0
-    return (1 + is_graduated, -p["roi_score"], -p["exam_weight"], qid)
+    if st == "green":
+        return False
+    if st in ("red", "orange"):
+        return True
+    qid = p["id"]
+    pk = p["point_key"]
+    return (qid in recent_weak_keys) or (pk in recent_weak_keys)
 
 
-raw_points.sort(key=deck_sort_key)
-raw_points = raw_points[:DECK_CAP]
+def _spaced_wave_key(p: dict, allow_miss_top: bool = True):
+    qid = p["id"]
+    pk = p["point_key"]
+    st = resolve_point_status(pk)
+    streak = resolve_point_streak(pk)
+    dsl = _days_since_last(qid)
+    is_miss = _is_active_miss(p)
+    in_focus = 1 if (qid in MEMORY_FOCUS or pk in MEMORY_FOCUS) else 0
+    if st == "green":
+        return (5, -dsl, -p["exam_weight"], qid)
+    if is_miss and allow_miss_top:
+        return (0, -p["roi_score"], -p["exam_weight"], qid)
+    if dsl >= 999:
+        # Tier 1: Brand-new unseen N3 syllabus point — rollout systematically by exam ROI!
+        return (1, -p["exam_weight"], -in_focus, -p["roi_score"], qid)
+    min_gap = 1 if _days_to_exam <= 4 else 2
+    if dsl >= min_gap and not is_miss:
+        # Tier 2: Spaced-repetition due (healthy >= 2-day confirmation gap before exam week)
+        return (2, -dsl, streak, -p["exam_weight"], -in_focus, qid)
+    if is_miss:
+        # Tier 3: Overflow active misses beyond the 50% per-subject miss cap
+        return (3, -p["roi_score"], -p["exam_weight"], qid)
+    # Tier 4: Recently practiced yellow (days_since == 1) — only used when fresh & due are exhausted
+    return (4, streak, -p["exam_weight"], -p["roi_score"], qid)
+
+
+def select_balanced_spaced_deck(candidates: list[dict], cap: int) -> list[dict]:
+    by_id = {p["id"]: p for p in candidates}
+    chosen: list[dict] = []
+    chosen_ids: set[str] = set()
+
+    # Step A: Exact same-day deck lock (never reshuffle mid-day once today's 50 cards are generated)
+    if locked_same_day_ids:
+        for lid in locked_same_day_ids:
+            if lid in by_id and lid not in chosen_ids:
+                chosen.append(by_id[lid])
+                chosen_ids.add(lid)
+        if len(chosen) >= cap:
+            return chosen[:cap]
+
+    # Step B: Always preserve any card already touched today
+    touched_pool = [p for p in candidates if p["id"] in touched_today_ids and p["id"] not in chosen_ids]
+    touched_pool.sort(key=lambda p: (-p["roi_score"], -p["exam_weight"], p["id"]))
+    for p in touched_pool:
+        if len(chosen) >= cap:
+            break
+        chosen.append(p)
+        chosen_ids.add(p["id"])
+    if len(chosen) >= cap:
+        return chosen[:cap]
+
+    # Step C: Exam-ROI Balanced Subject Quotas (24 Grammar / 10 Listening / 8 Henkei / 8 Vocab for cap=50)
+    remaining_cap = cap - len(chosen)
+    if remaining_cap == 50:
+        quotas = {"语法": 24, "听力": 10, "活用": 8, "词汇": 8}
+    else:
+        q_g = max(1, round(remaining_cap * 0.48))
+        q_l = max(1, round(remaining_cap * 0.20))
+        q_h = max(1, round(remaining_cap * 0.16))
+        q_v = max(0, remaining_cap - q_g - q_l - q_h)
+        quotas = {"语法": q_g, "听力": q_l, "活用": q_h, "词汇": q_v}
+
+    rem_by_subj = {"语法": [], "听力": [], "活用": [], "词汇": []}
+    for p in candidates:
+        if p["id"] not in chosen_ids:
+            rem_by_subj.setdefault(p["subject"], []).append(p)
+
+    # First pass: fill each subject quota using ONLY non-green candidates, capping active misses at 50% of quota
+    for subj in ("语法", "听力", "活用", "词汇"):
+        q = quotas.get(subj, 0)
+        if q <= 0:
+            continue
+        non_green = [p for p in rem_by_subj.get(subj, []) if resolve_point_status(p["point_key"]) != "green"]
+        miss_cap = max(1, q // 2)
+        misses = [p for p in non_green if _is_active_miss(p)]
+        misses.sort(key=lambda p: _spaced_wave_key(p, allow_miss_top=True))
+        picked_subj: list[dict] = []
+        picked_ids_subj: set[str] = set()
+        for p in misses[:miss_cap]:
+            picked_subj.append(p)
+            picked_ids_subj.add(p["id"])
+        rest = [p for p in non_green if p["id"] not in picked_ids_subj]
+        rest.sort(key=lambda p: _spaced_wave_key(p, allow_miss_top=False))
+        for p in rest:
+            if len(picked_subj) >= q:
+                break
+            picked_subj.append(p)
+            picked_ids_subj.add(p["id"])
+        for p in picked_subj:
+            chosen.append(p)
+            chosen_ids.add(p["id"])
+
+    # Second pass: automatic spillover across all remaining non-green candidates (e.g. once Vocab/Listening graduate!)
+    if len(chosen) < cap:
+        spill_non_green = [
+            p for p in candidates
+            if p["id"] not in chosen_ids and resolve_point_status(p["point_key"]) != "green"
+        ]
+        spill_non_green.sort(key=lambda p: _spaced_wave_key(p, allow_miss_top=True))
+        for p in spill_non_green:
+            if len(chosen) >= cap:
+                break
+            chosen.append(p)
+            chosen_ids.add(p["id"])
+
+    # Third pass: only if entire N3 syllabus non-green pool < cap, fill remaining with oldest green review cards
+    if len(chosen) < cap:
+        greens = [p for p in candidates if p["id"] not in chosen_ids]
+        greens.sort(key=lambda p: _spaced_wave_key(p, allow_miss_top=False))
+        for p in greens:
+            if len(chosen) >= cap:
+                break
+            chosen.append(p)
+            chosen_ids.add(p["id"])
+
+    return chosen[:cap]
+
+
+raw_points = select_balanced_spaced_deck(raw_points, DECK_CAP)
 
 # Cross-day fresh sentence rotation: if a point was NOT yet touched today and has variants,
 # never show a sentence answered yesterday when an unseen or older variant is available!
@@ -742,9 +904,10 @@ def norm_tier_meta(p_obj: dict) -> tuple[str, str, int]:
         return "todo", "todo", 0
     if status == "green":
         return "done", "done", 3
-    if status == "gray":
+    raw_streak = p_obj.get("streak")
+    if status == "gray" or (raw_streak is not None and int(raw_streak) == 0):
         return "wip", "wip0", 0
-    s = 2 if int(p_obj.get("streak") or 1) >= 2 else 1
+    s = 2 if int(raw_streak or 1) >= 2 else 1
     ok_d = str(p_obj.get("last_ok_date") or "20261114").replace("-", "")[:8] or "20261114"
     return "wip", f"wip{s}:{ok_d}", s
 
@@ -883,7 +1046,7 @@ def count_tiers(items):
 
 
 mastery_data = {
-    "grammar": {"label": "语法", "detail": "147 核心考点", "exam_pts": 38, "counts": count_tiers(grammar_items), "items": grammar_items},
+    "grammar": {"label": "语法", "detail": f"{len(grammar_items)} 核心考点", "exam_pts": 38, "counts": count_tiers(grammar_items), "items": grammar_items},
     "henkei": {"label": "活用与敬语", "detail": "变形与授受尊谦", "exam_pts": 28, "counts": count_tiers(henkei_items), "items": henkei_items},
     "listening": {"label": "听力口语", "detail": "卷面 60 分", "exam_pts": 60, "counts": count_tiers(listening_items), "items": listening_items},
     "vocab": {"label": "核心词汇", "detail": "含常考假名副词", "exam_pts": 24, "counts": count_tiers(vocab_items), "items": vocab_items},

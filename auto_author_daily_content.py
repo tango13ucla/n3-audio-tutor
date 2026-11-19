@@ -156,6 +156,21 @@ def run_night_summary(target_closed_day: str | None = None) -> int:
         latest_d = sorted(missed_by_day.keys())[-1]
         missed_today = list(missed_by_day[latest_d])
 
+    subprocess.run([sys.executable, str(BASE_DIR / "run_brain_algorithm.py"), "--sync-only"], cwd=str(BASE_DIR), check=True)
+    st_live = json.loads((BASE_DIR / "n3_live_state.json").read_text(encoding="utf-8")) if (BASE_DIR / "n3_live_state.json").exists() else {}
+    green_keys: set[str] = set()
+    for _mod, _fld in (
+        ("grammar_points", "name"),
+        ("henkei_points", "id"),
+        ("vocab_tracked", "word"),
+        ("listening_points", "id"),
+    ):
+        for _it in st_live.get(_mod, []):
+            if _it.get("status") == "green":
+                _k = str(_it.get(_fld) or "").strip()
+                if _k:
+                    green_keys.add(_k)
+
     old_prefs = json.loads(PREFS_PATH.read_text(encoding="utf-8")) if PREFS_PATH.exists() else {}
     prefs = json.loads(json.dumps(old_prefs, ensure_ascii=False))
     prefs["schema"] = prefs.get("schema") or "n3-tutor-prefs/3"
@@ -165,19 +180,16 @@ def run_night_summary(target_closed_day: str | None = None) -> int:
     prev_focus = [p for p in prefs.get("focus_points", []) if isinstance(p, str)]
     merged_focus: list[str] = []
     for p in missed_today + missed_vocab_today + prev_focus:
-        if p and not contains_pii(p) and p not in merged_focus:
+        if p and p not in green_keys and not contains_pii(p) and p not in merged_focus:
             merged_focus.append(p)
-    prefs["focus_points"] = merged_focus[: max(52, len(prev_focus))]
+    prefs["focus_points"] = merged_focus[:32]
     prefs["ui"] = {"orientation": "portrait"}
     prefs["generated_at"] = now_pt.strftime("%Y-%m-%dT%H:%M%z")
     prefs_txt = json.dumps(prefs, ensure_ascii=False, indent=2) + "\n"
     assert_zero_pii_text(prefs_txt, "tutor_prefs.json")
     PREFS_PATH.write_text(prefs_txt, encoding="utf-8")
 
-    subprocess.run([sys.executable, str(BASE_DIR / "run_brain_algorithm.py"), "--sync-only"], cwd=str(BASE_DIR), check=True)
-
     # Cloud-native compilation of word/phrase lookup telemetry (zero Mac mini dependency!)
-    st_live = json.loads((BASE_DIR / "n3_live_state.json").read_text(encoding="utf-8")) if (BASE_DIR / "n3_live_state.json").exists() else {}
     word_lookups = st_live.get("word_lookups") or {}
     sorted_lookups = sorted(
         word_lookups.items(),
@@ -259,16 +271,16 @@ def _author_trio_chapter(
     pair_part: int = 0,
 ) -> dict | None:
     sys_p = (
-        "你是凤凰卫视《锵锵三人行》原班总撰稿（深谙 3,182 期实录里的『人味』与『把一个具体人物故事剥洋葱讲透』的叙事功力）。\n"
-        "三位老友：窦文涛(W，俗人真性情、爱自曝糗事认怂自嘲、好奇心重爱追问荒唐细节、绝不当报幕员)、"
-        "梁文道(D，温厚会讲故事、用具体人物物件和悬念反转层层推进，绝不堆砌白皮书统计数字)、"
-        "许子东(X，冷幽默学者、一句话拆穿体面背后的虚荣与人性算计)。\n"
-        f"请围绕主题「{theme_desc}」【只讲透一个有头有尾、有悬念反转的具体人物故事】（约 6.5 分钟，22 到 32 轮，日语假名占比约 {ja_pct}%），严禁泛泛议论或罗列多个案例！\n"
+        "你是凤凰卫视《锵锵三人行》原班总撰稿（深谙 3,182 期实录里的『人味』与『把一个真实历史事件剥洋葱讲透』的叙事功力）。\n"
+        "三位老友：窦文涛(W，俗人真性情、好奇心重爱追问荒唐细节、绝不当报幕员)、"
+        "梁文道(D，温厚会讲真实历史故事、用真实年份地点人物原话和命运反转层层推进，绝不堆砌白皮书统计数字)、"
+        "许子东(X，冷幽默学者、一句话拆穿时代体面背后的人性与社会结构)。\n"
+        f"请围绕主题「{theme_desc}」【只讲透这一个 100% 真实发生过的日本历史事件或国民公共记忆】（约 7.5 分钟，24 到 34 轮，日语假名占比约 {ja_pct}%），严禁泛泛议论、严禁虚构不存在的虚构人物或编造故事！\n"
         "硬性铁律：\n"
-        "1. 【有故事、有人味】：用具体的人名、物件、尴尬场面和反转推进故事，文涛穿插亲身糗事或自嘲，子东冷幽默拆台，绝不写成百科科普。\n"
-        "2. 【黄金比例顺嘴点拨日文（约 75% 讲故事闲聊 + 25% 顺嘴点透提到的 N3 语法单字）】：自然融入给定的 2 到 3 个目标 N3 表达；每当该表达在故事人物原话里出现时，由 D 或 X 顺嘴用一两句大白话点明意思、口语缩音或易混双胞胎词（例如『日语里表示……用……，注意别跟……弄混了』），W 活学活用接一句，恰到好处不过度说教，绝不解释初级简单词。\n"
+        "1. 【100% 真实公共记忆、绝对不要编】：所有人物、年份、地名、事件、公司与名言必须是真实日本公共记忆（日本人聊天一提就懂的文化暗号），让听众每天听，听满三年能像本地通一样无缝融入日本社会。\n"
+        "2. 【黄金比例顺嘴点拨日文（约 75% 讲真实故事闲聊 + 25% 顺嘴点透提到的 N3 语法单字）】：自然融入给定的 2 到 3 个目标 N3 表达；每当该表达在真实历史场景或人物原话里出现时，由 D 或 X 顺嘴用一两句大白话点明意思、口语缩音或易混双胞胎词（例如『日语里表示……用……，注意别跟……弄混了』），W 活学活用接一句，恰到好处不过度说教，绝不解释初级简单词。\n"
         "3. 对白内所有日文词句必须 100% 用纯平假名或纯片假名书写，前后用空格或中文标点与汉字隔开，严禁汉字紧贴假名，严禁夹杂单字中文孤岛！\n"
-        "4. 严禁任何英文字母、阿拉伯数字（数字全写中文）、『哈哈』『噗』、日期或考试倒计时。\n"
+        "4. 严禁任何英文字母、阿拉伯数字（数字全写中文）、破折号、『哈哈』『噗』、日期或考试倒计时。\n"
         "输出 JSON：{\"short_tab\": \"四字标签\", \"title\": \"章节标题\", \"ja_focus\": \"日文原句(此处可写汉字假名供屏幕显示)\", "
         "\"turns\": [[\"W\", \"...\"], [\"X\", \"...\"], [\"D\", \"...\"], ...]}"
     )
@@ -291,7 +303,7 @@ def _author_trio_chapter(
             "id": cid,
             "tier": "uchi_intellectual",
             "short_tab": str(parsed.get("short_tab") or tab_label)[:5],
-            "tags": ["人味故事", "深讲一件事", "前后照应"],
+            "tags": ["真实日本公共记忆", "少而透深故事", "润物细无声N3"],
             "title": str(parsed.get("title") or theme_desc),
             "point_ids": ["N3-G13", "G-20261114-10"],
             "ja_focus": str(parsed.get("ja_focus") or ""),
@@ -304,6 +316,28 @@ def _author_trio_chapter(
     except Exception:
         return None
     return None
+
+
+def _load_unused_public_memory_topics(used_ids: set[str], existing_titles: set[str]) -> list[tuple[str, str, list[str]]]:
+    cat_path = BASE_DIR / "public_memory_catalog.json"
+    if not cat_path.exists():
+        return []
+    try:
+        raw_cat = json.loads(cat_path.read_text(encoding="utf-8"))
+        topics = raw_cat.get("topics") if isinstance(raw_cat, dict) else raw_cat
+        out = []
+        for tp in (topics or []):
+            tid = str(tp.get("id") or "")
+            tab = str(tp.get("short_tab") or "公共记忆")[:4]
+            title = str(tp.get("title") or "")
+            summary = str(tp.get("real_facts") or tp.get("summary") or "")
+            targets = list(tp.get("n3_targets") or [])
+            if not title or any(tid and tid in uid for uid in used_ids) or title in existing_titles:
+                continue
+            out.append((tab, f"{title}：{summary}", targets))
+        return out
+    except Exception:
+        return []
 
 
 def run_morning_prepare() -> int:
@@ -331,7 +365,7 @@ def run_morning_prepare() -> int:
     if not combined_last_night:
         combined_last_night = tutor_prefs.load_prefs().get("focus_points", [])[:10]
 
-    # 1. Check unplayed Uchi 3-story reserve (6 scenes = 1 full 40-min 3-Story Deep Salon)
+    # 1. Check unplayed Uchi real public-memory reserve (5 scenes = 1 full 40-min 3-Act Deep Salon)
     from radio_dialogue_bank import SALON_STORIES
     from adaptive_bank import EXTRA_PRIMARY_CARDS, VARIANT_CARDS
     from tutor_data import TUTOR_ITEMS
@@ -381,6 +415,9 @@ def run_morning_prepare() -> int:
         except Exception:
             existing_auto = []
     existing_ids = {st["id"] for st in SALON_STORIES} | {st.get("id") for st in existing_auto if isinstance(st, dict)}
+    existing_titles = {str(st.get("title") or "") for st in SALON_STORIES} | {
+        str(st.get("title") or "") for st in existing_auto if isinstance(st, dict)
+    }
 
     imm = tutor_prefs.immersion_profile(day=study_today)
     ja_pct = int(round(float(imm.get("ja_ratio", 0.14)) * 100))
@@ -388,24 +425,24 @@ def run_morning_prepare() -> int:
     exemplars = load_qq_corpus_exemplars(study_today, count=2)
     added_chapters = 0
 
-    # Only synthesize fallback 3-story scenes when curated 6-scene Uchi volumes run low (< 6 scenes);
-    # when a curated 3-story volume is available, live_news_salon_gen handles last night's fresh misses cleanly!
-    if len(unplayed_uchi) < 6:
-        needed_n = max(0, 6 - len(unplayed_uchi))
-        topic_themes = [
-            ("老铺奇闻", "一位普通人卷入京都或东京百年家族规矩的真实悲喜剧（只讲透这一个人从隐忍到破局的全过程）"),
-            ("文豪奇情", "夏目漱石、太宰治或松本清张某一部代表作或真实人生里最荒唐动人的一个完整故事"),
-            ("深夜酒馆", "新宿小巷或铁道桥下小酒馆里两个普通陌生人真实交集的一晚（最有烟火气与人味）"),
+    # Only synthesize fallback 2-real-story (4-scene) blocks when curated Uchi volumes run low (< 5 scenes);
+    # live_news_salon_gen always supplies Act 1 (real daily news), so 4 scenes = 2 deeply told real public-memory stories!
+    if len(unplayed_uchi) < 5:
+        needed_n = max(0, 4 - len(unplayed_uchi))
+        catalog_topics = _load_unused_public_memory_topics(existing_ids | recent_played, existing_titles)
+        topic_themes = catalog_topics[:2] if catalog_topics else [
+            ("时代拐点", "1964年东京奥运会与东海道新干线通车改变全日本生活节奏的真实国民记忆", ["〜につれて", "〜ばかりだ"]),
+            ("商业传奇", "1979年索尼盛田昭夫力排众议推出Walkman随身听改写世界音乐史的真实内幕", ["〜にもかかわらず", "〜ことにする"]),
         ]
         newly_built = []
         for idx_t in range(min(needed_n, len(topic_themes) * 2)):
-            base_label, base_desc = topic_themes[(idx_t // 2) % len(topic_themes)]
+            base_label, base_desc, base_targets = topic_themes[(idx_t // 2) % len(topic_themes)]
             part_no = (idx_t % 2) + 1
-            part_tag = "上半场悬念铺陈" if part_no == 1 else "下半场反转收束"
+            part_tag = "上半场真实历史铺陈与悬念" if part_no == 1 else "下半场关键转折与今天日本社会的余波"
             cid = f"uchi_auto_{study_today.replace('-', '')}_{idx_t + 1}"
             if cid in existing_ids:
                 continue
-            target_slice = combined_last_night[idx_t * 2 : idx_t * 2 + 3] or combined_last_night[:3]
+            target_slice = (base_targets + combined_last_night[idx_t * 2 : idx_t * 2 + 2])[:3] or combined_last_night[:3]
             st_obj = _author_trio_chapter(
                 cid=cid,
                 tab_label=base_label,

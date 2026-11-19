@@ -815,3 +815,32 @@ try:
     NEW_EXTRA_WORDS.update(WAVE6_EXTRA_WORDS)
 except ImportError:
     pass
+
+try:
+    from weak_expansion_wave7 import (
+        WAVE7_EXTRA_WORDS,
+        WAVE7_POINT_META,
+        WAVE7_PRIMARY_CARDS,
+        WAVE7_VARIANT_CARDS,
+    )
+    NEW_POINT_META.update(WAVE7_POINT_META)
+    NEW_PRIMARY_CARDS.extend(WAVE7_PRIMARY_CARDS)
+    NEW_VARIANT_CARDS.extend(WAVE7_VARIANT_CARDS)
+    NEW_EXTRA_WORDS.update(WAVE7_EXTRA_WORDS)
+except ImportError:
+    pass
+
+try:
+    from weak_expansion_wave8 import (
+        WAVE8_EXTRA_WORDS,
+        WAVE8_POINT_META,
+        WAVE8_PRIMARY_CARDS,
+        WAVE8_VARIANT_CARDS,
+    )
+    NEW_POINT_META.update(WAVE8_POINT_META)
+    NEW_PRIMARY_CARDS.extend(WAVE8_PRIMARY_CARDS)
+    NEW_VARIANT_CARDS.extend(WAVE8_VARIANT_CARDS)
+    NEW_EXTRA_WORDS.update(WAVE8_EXTRA_WORDS)
+except ImportError:
+    pass
+

@@ -1190,11 +1190,12 @@ async def main():
                 _dom_prefixes = [_uchi_vol_prefix(x) for x in _clean_tids if _uchi_vol_prefix(x)]
                 if _dom_prefixes:
                     _vpref = _dom_prefixes[0]
-                    _full_vol = [st["id"] for st in candidate_pool if _uchi_vol_prefix(st["id"]) == _vpref]
-                    if live_news_story and live_news_story["id"] not in _full_vol:
-                        pinned_today_ids = [live_news_story["id"]] + _full_vol
+                    _full_vol_objs = [st for st in candidate_pool if _uchi_vol_prefix(st["id"]) == _vpref]
+                    if live_news_story and live_news_story["id"] not in [st["id"] for st in _full_vol_objs]:
+                        _non_news_vol = [st["id"] for st in _full_vol_objs if not st.get("is_news_slot")]
+                        pinned_today_ids = [live_news_story["id"]] + _non_news_vol
                     else:
-                        pinned_today_ids = _full_vol
+                        pinned_today_ids = [st["id"] for st in _full_vol_objs]
                 else:
                     pinned_today_ids = _clean_tids
         except Exception:
@@ -1221,7 +1222,11 @@ async def main():
             for st in candidate_pool:
                 if str(st.get("id") or "").startswith(f"uchi_night_focus_{today_str.replace('-', '')}") and st not in picked_list:
                     picked_list.append(st)
-            picked_list.extend(vol_groups[cohesive_vp])
+            _vol_chapters = vol_groups[cohesive_vp]
+            if live_news_story and any(st.get("is_news_slot") for st in _vol_chapters):
+                # Cleanly replace fallback Act-1 news slot with today's fresh live NHK news (keeps 3-Act 5-scene cadence)
+                _vol_chapters = [st for st in _vol_chapters if not st.get("is_news_slot")]
+            picked_list.extend(_vol_chapters)
             selected_stories = picked_list
         else:
             min_ep_min, max_ep_min = _rp["episode_minutes"]
@@ -1295,6 +1300,38 @@ async def main():
             "events": turns_to_expanded_events(st_turns),
         })
 
+    # Compute exact 3-Act ad-break positions upfront (never splitting pair_part=1 from pair_part=2)
+    total_stories = len(story_blocks)
+    act1_cnt = max(2, (total_stories + 2) // 3)
+    act2_cnt = max(2, (total_stories - act1_cnt + 1) // 2)
+    raw_ad1 = act1_cnt - 1
+    raw_ad2 = min(total_stories - 2, act1_cnt + act2_cnt - 1)
+    valid_breaks = [i for i in range(total_stories - 1) if story_blocks[i].get("pair_part") != 1]
+    if len(valid_breaks) >= 2:
+        ad1_after = min(valid_breaks[:-1], key=lambda x: abs(x - raw_ad1))
+        rem_breaks = [x for x in valid_breaks if x > ad1_after]
+        ad2_after = min(rem_breaks, key=lambda x: abs(x - raw_ad2))
+    else:
+        ad1_after = raw_ad1
+        ad2_after = raw_ad2
+
+    # Deduplicate ad-break transitions when authored scenes already cue "进广告 / 广告回来" naturally
+    if imm_profile["ja_ratio"] < 0.65:
+        if 0 <= ad1_after < total_stories and story_blocks[ad1_after]["raw_turns"]:
+            if "广告" in str(story_blocks[ad1_after]["raw_turns"][-1][1])[-70:]:
+                ad1_out_turns = []
+        if 0 <= ad1_after + 1 < total_stories and story_blocks[ad1_after + 1]["raw_turns"]:
+            _head1 = str(story_blocks[ad1_after + 1]["raw_turns"][0][1])[:12]
+            if "广告" in _head1 or "回来" in _head1:
+                ad1_in_turns = []
+        if 0 <= ad2_after < total_stories and story_blocks[ad2_after]["raw_turns"]:
+            if "广告" in str(story_blocks[ad2_after]["raw_turns"][-1][1])[-70:]:
+                ad2_out_turns = []
+        if 0 <= ad2_after + 1 < total_stories and story_blocks[ad2_after + 1]["raw_turns"]:
+            _head2 = str(story_blocks[ad2_after + 1]["raw_turns"][0][1])[:12]
+            if "广告" in _head2 or "回来" in _head2:
+                ad2_in_turns = []
+
     # If the final chapter's final line already signs off with 《锵锵三人行》, don't tack on a duplicate closing line
     if story_blocks and story_blocks[-1]["raw_turns"]:
         last_line_txt = str(story_blocks[-1]["raw_turns"][-1][1])
@@ -1302,13 +1339,13 @@ async def main():
             closing_turns = []
 
     opening_evs = turns_to_expanded_events(opening_turns) if opening_turns else []
-    ad1_out_evs = turns_to_expanded_events(ad1_out_turns)
-    ad1_in_evs = turns_to_expanded_events(ad1_in_turns)
-    ad2_out_evs = turns_to_expanded_events(ad2_out_turns)
-    ad2_in_evs = turns_to_expanded_events(ad2_in_turns)
+    ad1_out_evs = turns_to_expanded_events(ad1_out_turns) if ad1_out_turns else []
+    ad1_in_evs = turns_to_expanded_events(ad1_in_turns) if ad1_in_turns else []
+    ad2_out_evs = turns_to_expanded_events(ad2_out_turns) if ad2_out_turns else []
+    ad2_in_evs = turns_to_expanded_events(ad2_in_turns) if ad2_in_turns else []
     closing_evs = turns_to_expanded_events(closing_turns) if closing_turns else []
 
-    radio_ver_tag = "v35_qq_deep_story_3act" if today_str >= "2026-11-19" else "v34_3182_short_banter_latch"
+    radio_ver_tag = "v36_qq_real_public_memory" if today_str >= "2026-11-19" else "v34_3182_short_banter_latch"
     sig_obj = {
         "ver": radio_ver_tag,
         "engine": engine_tag,
@@ -1428,29 +1465,16 @@ async def main():
             _append_events(opening_evs)
             mixer.advance(0.28)
 
-        total_stories = len(story_blocks)
-        act1_cnt = max(2, (total_stories + 2) // 3)
-        act2_cnt = max(2, (total_stories - act1_cnt + 1) // 2)
-        raw_ad1 = act1_cnt - 1
-        raw_ad2 = min(total_stories - 2, act1_cnt + act2_cnt - 1)
-        valid_breaks = [i for i in range(total_stories - 1) if story_blocks[i].get("pair_part") != 1]
-        if len(valid_breaks) >= 2:
-            ad1_after = min(valid_breaks[:-1], key=lambda x: abs(x - raw_ad1))
-            rem_breaks = [x for x in valid_breaks if x > ad1_after]
-            ad2_after = min(rem_breaks, key=lambda x: abs(x - raw_ad2))
-        else:
-            ad1_after = raw_ad1
-            ad2_after = raw_ad2
         for ch_idx, b in enumerate(story_blocks):
             seg_start = 0.0 if ch_idx == 0 else round(mixer.sec, 1)
             if ch_idx not in chapter_starts:
                 chapter_starts[ch_idx] = seg_start
 
             # If returning from an ad break, resume seamlessly right at the chapter mark!
-            if ch_idx == ad1_after + 1:
+            if ch_idx == ad1_after + 1 and ad1_in_evs:
                 _append_events(ad1_in_evs)
                 mixer.advance(0.22)
-            elif ch_idx == ad2_after + 1:
+            elif ch_idx == ad2_after + 1 and ad2_in_evs:
                 _append_events(ad2_in_evs)
                 mixer.advance(0.22)
 
@@ -1476,14 +1500,16 @@ async def main():
             # End-of-Story Transitions (ZERO "叮叮" stings between ordinary chapters — ONLY at the 2 "广告之后见" breaks!)
             if ch_idx == ad1_after:
                 mixer.advance(0.26)
-                _append_events(ad1_out_evs)
-                mixer.advance(0.18)
+                if ad1_out_evs:
+                    _append_events(ad1_out_evs)
+                    mixer.advance(0.18)
                 bumper_end = mixer.place_at(mixer.sec, pcm_bumper, gain=0.95)
                 mixer.cursor = int(round((bumper_end + 0.24) * SR))
             elif ch_idx == ad2_after:
                 mixer.advance(0.26)
-                _append_events(ad2_out_evs)
-                mixer.advance(0.18)
+                if ad2_out_evs:
+                    _append_events(ad2_out_evs)
+                    mixer.advance(0.18)
                 bumper_end = mixer.place_at(mixer.sec, pcm_bumper, gain=0.95)
                 mixer.cursor = int(round((bumper_end + 0.24) * SR))
             elif ch_idx < total_stories - 1:

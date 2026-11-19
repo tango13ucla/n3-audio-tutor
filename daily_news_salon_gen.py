@@ -83,6 +83,24 @@ def fetch_live_nhk_news(max_items: int = 8, timeout: float = 8.0) -> list[dict]:
             continue
         if len(items) >= max_items:
             break
+    if len(items) < 3:
+        # Fallback to Google News Japan RSS if NHK RSS is throttled or unreachable
+        try:
+            g_url = "https://news.google.com/rss?hl=ja&gl=JP&ceid=JP:ja"
+            req = urllib.request.Request(g_url, headers={"User-Agent": "Mozilla/5.0 N3SalonBot/1.0"})
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                raw = resp.read()
+            root = ET.fromstring(raw)
+            for it in root.findall(".//item"):
+                title = (it.findtext("title") or "").strip()
+                if not title or title in seen_titles:
+                    continue
+                seen_titles.add(title)
+                items.append({"category": "日本総合", "title": title, "summary": title[:180]})
+                if len(items) >= max_items:
+                    break
+        except Exception:
+            pass
     return items
 
 
@@ -106,6 +124,28 @@ def _strip_json_fence(text: str) -> str:
     return s
 
 
+_DIGIT_ZH = str.maketrans("0123456789", "零一二三四五六七八九")
+
+
+def _sanitize_generated_turns(turns: list) -> list[tuple[str, str]]:
+    """Lightly normalize harmless LLM formatting slips (em-dashes, digits, Katakana spacing) without masking Kanji+Hiragana errors."""
+    cleaned: list[tuple[str, str]] = []
+    for entry in turns or []:
+        if not isinstance(entry, (list, tuple)) or len(entry) != 2:
+            continue
+        spk = str(entry[0]).strip()
+        txt = str(entry[1]).strip()
+        txt = txt.replace("——", "，").replace("—", "，")
+        txt = re.sub(r"哈哈+", "哎呀", txt)
+        txt = re.sub(r"(\d+)%", lambda m: "百分之" + m.group(1).translate(_DIGIT_ZH), txt)
+        txt = re.sub(r"\d+", lambda m: m.group(0).translate(_DIGIT_ZH), txt)
+        txt = re.sub(r"([\u4e00-\u9fff])([\u30a0-\u30ff])", r"\1 \2", txt)
+        txt = re.sub(r"([\u30a0-\u30ff])([\u4e00-\u9fff])", r"\1 \2", txt)
+        txt = re.sub(r"\s{2,}", " ", txt).strip()
+        cleaned.append((spk, txt))
+    return cleaned
+
+
 def validate_generated_story(st: dict, require_light_explain: bool = True) -> bool:
     if not isinstance(st, dict):
         return False
@@ -119,7 +159,7 @@ def validate_generated_story(st: dict, require_light_explain: bool = True) -> bo
         spk, txt = str(entry[0]).strip(), str(entry[1]).strip()
         if spk not in ("W", "D", "X") or len(txt) < 2:
             return False
-        if re.search(r"哈哈|噗|倒计时|还有\d+天考试|[A-Za-z0-9]", txt):
+        if re.search(r"哈哈|噗|倒计时|还有\d+天考试|[A-Za-z0-9—]", txt):
             return False
         if BANNED_CLASSROOM_RE.search(txt):
             return False
@@ -202,8 +242,7 @@ def _call_chat_llm(system_prompt: str, user_prompt: str) -> str | None:
 
     if gh_models_token:
         endpoints = [
-            ("https://models.inference.ai.azure.com/chat/completions", ("gpt-4o", "gpt-4o-mini")),
-            ("https://models.github.ai/inference/chat/completions", ("openai/gpt-4o", "openai/gpt-4o-mini", "gpt-4o-mini")),
+            ("https://models.github.ai/inference/chat/completions", ("openai/gpt-4.1", "openai/gpt-4o", "openai/gpt-4o-mini")),
         ]
         for url, models in endpoints:
             for model in models:
@@ -221,21 +260,28 @@ def _call_chat_llm(system_prompt: str, user_prompt: str) -> str | None:
                     "Content-Type": "application/json",
                     "Accept": "application/json",
                     "User-Agent": "n3-audio-tutor-cloud/2.0",
+                    "X-GitHub-Api-Version": "2022-11-28",
                 }
-                if "models.github.ai" in url:
-                    headers["X-GitHub-Api-Version"] = "2022-11-28"
                 try:
                     req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
-                    with urllib.request.urlopen(req, timeout=42.0) as resp:
+                    with urllib.request.urlopen(req, timeout=45.0) as resp:
                         ctype = (resp.headers.get("Content-Type") or "").lower()
                         raw_body = resp.read().decode("utf-8", errors="replace").strip()
                     if not raw_body or ("json" not in ctype and not raw_body.startswith("{")):
+                        print(f"[info] GitHub Models ({model}) returned non-JSON ({ctype}): {raw_body[:140]}")
                         continue
                     data = json.loads(raw_body)
                     content = _strip_json_fence((data.get("choices") or [{}])[0].get("message", {}).get("content") or "")
                     if content:
                         json.loads(content)
                         return content
+                except urllib.error.HTTPError as he:
+                    err_body = ""
+                    try:
+                        err_body = he.read().decode("utf-8", errors="replace")[:180]
+                    except Exception:
+                        pass
+                    print(f"[info] GitHub Models ({model}) HTTP {he.code}: {err_body}")
                 except Exception as e:
                     print(f"[info] GitHub Models endpoint ({url.split('/')[2]} | {model}) skipped: {e}")
     return None
@@ -304,17 +350,18 @@ def maybe_generate_live_news_story(
     exemplars = load_qq_corpus_exemplars(today_str, count=2)
 
     sys_prompt = (
-        "你是凤凰卫视《锵锵三人行》原班总撰稿（深谙 3,182 期实录里的『人味』与『把一件小事剥洋葱讲透』的叙事功力）。\n"
-        "三位老友：窦文涛(W，俗人真性情、爱自曝糗事认怂自嘲、好奇心重爱打听荒唐细节、绝不当报幕员)、"
-        "梁文道(D，温厚会讲故事、用具体人物物件和悬念剥笋推进，绝不堆砌白皮书统计数字)、"
-        "许子东(X，冷幽默学者、一句话拆穿体面背后的虚荣算计)。\n"
-        "请从今日真实日本新闻里【只挑一件最有戏剧冲突、最见人性的具体故事】彻底讲透（约 4.5 分钟，22 到 30 轮），严禁串烧多条新闻泛泛报菜名！\n"
+        "你是凤凰卫视《锵锵三人行》原班总撰稿（深谙 3,182 期实录里的『人味』与『把一件真实新闻剥洋葱讲透』的叙事功力）。\n"
+        "三位老友：窦文涛(W，俗人真性情、爱自嘲好奇、绝不当报幕员)、"
+        "梁文道(D，温厚会讲故事、把当日真实新闻放进日本社会背景与公共记忆里剥笋深聊)、"
+        "许子东(X，冷幽默学者、一句话点破人情世故与社会真相)。\n"
+        "请从今日真实日本新闻里【只挑一两件最有冲突感、最反映日本当下世相的真新闻】彻底讲透（约 7 分钟，24 到 32 轮），绝不串烧报菜名！\n"
         "核心铁律：\n"
-        "1. 【有故事、有人味】：开篇第一轮 W 直接以『《锵锵三人行》，』连着这桩奇事或自己的亲身糗事切入，先抛悬念细节（如现场留下了什么怪东西、当事人干了什么反常举动），让三人猜错、吐槽、层层反转，绝不泛泛议论宏大概念。\n"
-        "2. 【黄金比例顺嘴点拨日文（约 74% 故事闲聊 + 26% 顺嘴点透提到的 N3 语法单字）】：自然揉入 2 到 3 个昨晚刚卡壳的目标 N3 表达；每当该表达在故事人物台词里出现时，由 D 或 X 顺嘴用一两句大白话点明它的意思、口语缩音或易混双胞胎词（例如『日语里表示……用……，注意别跟……弄混了』），W 活学活用接一句，恰到好处不过度说教，更绝不解释 N5/N4 初级简单词。\n"
-        f"3. 当前处于 {ramp_days} 天双语计划第 {day_num} 天（阶段：{phase}），日语假名占比约 {ja_pct}%。\n"
-        "4. 【语音合成硬铁律】：对白文本中凡出现日文词句，必须 100% 写成纯平假名或纯片假名（前后留空格或中文标点），严禁汉字紧贴假名，严禁夹杂单字中文孤岛，严禁任何英文字母或阿拉伯数字（数字全写中文），严禁『哈哈』『噗』或考试倒计时。\n"
-        "输出严格为 JSON：{\"short_tab\": \"今日奇闻\", \"title\": \"...\", \"ja_focus\": \"...(此处可正常写日文汉字假名供屏幕显示)\", "
+        "1. 【100% 真实新闻，严禁编造人物】：只能聊输入里的真实新闻与真实日本历史背景，绝对不允许虚构任何假朋友、假同事、假邻居故事！\n"
+        "2. 【开篇与收束自然衔接】：开篇第一轮 W 直接以『《锵锵三人行》，』切入今日最热日本新闻；最后两轮由 D/W 自然预告广告后要深聊的今日两段日本真实公共记忆大故事（参考 companion_titles）。\n"
+        "3. 【黄金比例顺嘴点拨日文（约 75% 真新闻深聊 + 25% 顺嘴点透 N3 语法单字）】：自然揉入 2 到 3 个昨晚刚卡壳的目标 N3 表达；每当该表达出现时，由 D 或 X 顺嘴用一两句大白话点明它的意思、接续或易混双胞胎词（例如『日语里表示……用……，注意别跟……弄混了』），W 活学活用接一句，恰到好处绝不背书说教。\n"
+        f"4. 当前处于 {ramp_days} 天双语计划第 {day_num} 天（阶段：{phase}），日语假名占比约 {ja_pct}%。\n"
+        "5. 【语音合成硬铁律】：对白文本中凡出现日文词句，必须 100% 写成纯平假名或纯片假名（前后留空格或中文标点），严禁汉字紧贴假名，严禁夹杂单字中文孤岛，严禁破折号（—/——），严禁任何英文字母或阿拉伯数字（数字全写中文），严禁『哈哈』『噗』或考试倒计时。\n"
+        "输出严格为 JSON：{\"short_tab\": \"今日时局\", \"title\": \"...\", \"ja_focus\": \"...(此处可正常写日文汉字假名供屏幕显示)\", "
         "\"turns\": [[\"W\", \"...\"], [\"X\", \"...\"], [\"D\", \"...\"], ...]}"
     )
     usr_prompt = json.dumps({
@@ -334,11 +381,11 @@ def maybe_generate_live_news_story(
             "id": f"live_nhk_news_{today_str}",
             "tier": "live_news",
             "short_tab": str(parsed.get("short_tab") or "今日时局")[:6],
-            "tags": ["日本时局新闻", "ウチ内幕", "前后照应"],
+            "tags": ["今日日本时局", "真实日本公共记忆", "润物细无声N3"],
             "title": str(parsed.get("title") or "今日日本时局观察"),
             "point_ids": ["N3-G13", "N3-G23"],
             "ja_focus": str(parsed.get("ja_focus") or ""),
-            "turns": [(str(s).strip(), str(t).strip()) for s, t in (parsed.get("turns") or [])],
+            "turns": _sanitize_generated_turns(parsed.get("turns") or []),
         }
         if validate_generated_story(story, require_light_explain=(imm_profile.get("ja_ratio", 0.14) < 0.45)):
             os.makedirs(AUDIO_DIR, exist_ok=True)

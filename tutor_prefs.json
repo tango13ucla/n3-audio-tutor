@@ -1,6 +1,6 @@
 {
   "schema": "n3-tutor-prefs/3",
-  "generated_at": "2026-11-18T21:58-0800",
+  "generated_at": "2026-11-18T23:32-0800",
   "exam_date": "2026-12-06",
   "daily_load": {
     "2026-12-06": {
@@ -17,7 +17,6 @@
     "N3L-017",
     "N3L-085",
     "T-001",
-    "N3L-025",
     "N3L-087",
     "どんどん",
     "N3L-009",
@@ -33,44 +32,37 @@
     "わざわざ",
     "〜てたまらない",
     "〜はずだ",
-    "はっきり",
     "N3L-048",
     "V-027",
     "V-037",
     "慰める",
-    "加える",
-    "無断",
     "だんだん",
-    "いよいよ",
-    "せっかく",
-    "〜かけだ",
     "K-004",
-    "K-013",
-    "T-044",
     "N3L-012",
-    "ぎりぎり",
-    "つい",
-    "ぐったり",
-    "ぴったり",
-    "かわいがる",
-    "許す"
+    "〜うちに",
+    "〜ばかりだ",
+    "〜のに",
+    "〜とおりに",
+    "〜に基づいて",
+    "〜ようとする",
+    "〜ながらも"
   ],
   "radio": {
     "prefer_tags": [
-      "有人味讲故事",
+      "真实日本公共记忆",
+      "今日日本时局",
       "少而透深故事",
       "ウチ内幕",
-      "文学巨匠名作",
-      "真实人物悲喜剧",
-      "日本时局奇闻"
+      "润物细无声N3",
+      "真实人物历史"
     ],
     "avoid_story_ids": [],
     "episode_minutes": [
       39,
       43
     ],
-    "perspective": "uchi_intellectual_and_news",
-    "story_structure": "3_deep_human_stories_per_episode",
+    "perspective": "uchi_real_public_memory_and_news",
+    "story_structure": "3_act_news_plus_2_real_public_memory",
     "teaching_balance": "vol2_vol3_light_inline_explain",
     "immersion_365": {
       "enabled": true,

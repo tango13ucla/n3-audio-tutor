@@ -559,3 +559,16 @@ try:
     NEW_CARDS_AUDIO.update(WAVE6_CARDS_AUDIO)
 except ImportError:
     pass
+
+try:
+    from weak_expansion_wave7 import WAVE7_CARDS_AUDIO
+    NEW_CARDS_AUDIO.update(WAVE7_CARDS_AUDIO)
+except ImportError:
+    pass
+
+try:
+    from weak_expansion_wave8 import WAVE8_CARDS_AUDIO
+    NEW_CARDS_AUDIO.update(WAVE8_CARDS_AUDIO)
+except ImportError:
+    pass
+

@@ -16,6 +16,7 @@ on:
       - 'generate_daily_radio.py'
       - 'daily_news_salon_gen.py'
       - 'auto_author_daily_content.py'
+      - 'public_memory_catalog.json'
       - 'qq_corpus_knowledge.json'
       - 'generate_neural_audio.py'
       - 'build_html.py'
@@ -98,7 +99,7 @@ jobs:
                   radio_ver = _rm.get("radio_ver", "")
               except Exception:
                   meta_date = ""
-          if meta_date != study_pt or (study_pt >= "2026-11-19" and radio_ver != "v35_qq_deep_story_3act"):
+          if meta_date != study_pt or (study_pt >= "2026-11-19" and radio_ver != "v36_qq_real_public_memory"):
               print("full")
               raise SystemExit(0)
           need_new_vol = False
@@ -140,11 +141,8 @@ jobs:
           if need_new_vol:
               print("full")
               raise SystemExit(0)
-          if need_listen_parts:
-              print("quiz_only")
-              raise SystemExit(0)
-          if need_new_cards:
-              # Before 04:00 AM PT while today's deck is still active, pre-bake MP3s quietly without swapping HTML!
+          if need_new_cards or need_listen_parts:
+              # Before 04:00 AM PT while today's deck is still active, pre-bake MP3s & listen_parts quietly without swapping HTML!
               print("prebake_cards" if (17 <= now_pt.hour or now_pt.hour < 4) else "quiz_only")
               raise SystemExit(0)
           print("sync_check")
