@@ -98,7 +98,7 @@ jobs:
                   radio_ver = _rm.get("radio_ver", "")
               except Exception:
                   meta_date = ""
-          if meta_date != study_pt or radio_ver != "v34_3182_short_banter_latch":
+          if meta_date != study_pt or (study_pt >= "2026-11-19" and radio_ver != "v35_qq_deep_story_3act"):
               print("full")
               raise SystemExit(0)
           need_new_vol = False

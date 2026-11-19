@@ -1185,7 +1185,7 @@ async def main():
         try:
             _rh = json.load(open(RADIO_HISTORY_PATH, encoding="utf-8")).get("recent_days") or {}
             _tids = [str(x) for x in (_rh.get(today_str) or []) if x]
-            if len(_tids) >= 8 and any(x.startswith("uchi") for x in _tids):
+            if len(_tids) >= 5 and any(x.startswith("uchi") for x in _tids):
                 _clean_tids = [x for x in _tids if not x.startswith("story_") and x in story_by_id]
                 _dom_prefixes = [_uchi_vol_prefix(x) for x in _clean_tids if _uchi_vol_prefix(x)]
                 if _dom_prefixes:
@@ -1213,7 +1213,7 @@ async def main():
                     vol_groups[vp] = []
                     vol_order.append(vp)
                 vol_groups[vp].append(st)
-        cohesive_vp = next((vp for vp in vol_order if len(vol_groups[vp]) >= 8), "")
+        cohesive_vp = next((vp for vp in vol_order if len(vol_groups[vp]) >= 5), "")
         if cohesive_vp:
             picked_list: list[dict] = []
             if live_news_story:
@@ -1234,10 +1234,10 @@ async def main():
                 is_ep = _is_epilogue_story(st)
                 if is_ep and has_epilogue:
                     continue
-                if len(picked_ids) >= 8 and str(st.get("id") or "").startswith("story_") and any(x.startswith("uchi") for x in picked_ids):
+                if len(picked_ids) >= 5 and str(st.get("id") or "").startswith("story_") and any(x.startswith("uchi") for x in picked_ids):
                     continue
                 s_dur = estimate_story_seconds(st)
-                if len(picked_ids) >= 8 and (est_sec + s_dur > max_sec or est_sec >= target_sec):
+                if len(picked_ids) >= 5 and (est_sec + s_dur > max_sec or est_sec >= target_sec):
                     break
                 picked_ids.add(st["id"])
                 if is_ep:
@@ -1290,6 +1290,7 @@ async def main():
             "point_ids": pids,
             "title": st["title"],
             "ja_focus": st["ja_focus"],
+            "pair_part": int(st.get("pair_part") or 0),
             "raw_turns": st_turns,
             "events": turns_to_expanded_events(st_turns),
         })
@@ -1307,26 +1308,28 @@ async def main():
     ad2_in_evs = turns_to_expanded_events(ad2_in_turns)
     closing_evs = turns_to_expanded_events(closing_turns) if closing_turns else []
 
+    radio_ver_tag = "v35_qq_deep_story_3act" if today_str >= "2026-11-19" else "v34_3182_short_banter_latch"
     sig_obj = {
-        "ver": "v34_3182_short_banter_latch",
+        "ver": radio_ver_tag,
         "engine": engine_tag,
         "imm_day": imm_profile["day_of_365"],
         "opening": opening_evs,
         "ad1": [ad1_out_evs, ad1_in_evs],
         "ad2": [ad2_out_evs, ad2_in_evs],
         "closing": closing_evs,
-        "stories": [{k: v for k, v in b.items() if k != "raw_turns"} for b in story_blocks],
+        "stories": [{k: v for k, v in b.items() if k not in ("raw_turns", "pair_part")} for b in story_blocks],
     }
     script_sig = hashlib.sha256(json.dumps(sig_obj, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()[:14]
 
     if not dry_test and os.path.exists(RADIO_MP3_PATH) and os.path.exists(RADIO_META_PATH):
         try:
             old_meta = json.load(open(RADIO_META_PATH, encoding="utf-8"))
-            # Never overwrite 2026-11-17's already-completed episode tonight; rebuild starts fresh on 2026-11-18 05:00 AM PT!
+            # Never overwrite 2026-11-18's already-completed episode tonight; v35 rebuild starts fresh on 2026-11-19!
             if old_meta.get("date") == today_str and (
-                old_meta.get("script_sig") == script_sig or today_str <= "2026-11-17"
+                old_meta.get("script_sig") == script_sig or today_str <= "2026-11-18"
             ) and os.path.getsize(RADIO_MP3_PATH) > 1_000_000:
-                save_today_stories(today_str, [st["id"] for st in selected_stories])
+                if today_str > "2026-11-18":
+                    save_today_stories(today_str, [st["id"] for st in selected_stories])
                 print(f"Daily Qiang-Qiang trio radio already up-to-date for {today_str} ({old_meta.get('duration_label')}).")
                 return
         except Exception:
@@ -1428,8 +1431,16 @@ async def main():
         total_stories = len(story_blocks)
         act1_cnt = max(2, (total_stories + 2) // 3)
         act2_cnt = max(2, (total_stories - act1_cnt + 1) // 2)
-        ad1_after = act1_cnt - 1
-        ad2_after = min(total_stories - 2, act1_cnt + act2_cnt - 1)
+        raw_ad1 = act1_cnt - 1
+        raw_ad2 = min(total_stories - 2, act1_cnt + act2_cnt - 1)
+        valid_breaks = [i for i in range(total_stories - 1) if story_blocks[i].get("pair_part") != 1]
+        if len(valid_breaks) >= 2:
+            ad1_after = min(valid_breaks[:-1], key=lambda x: abs(x - raw_ad1))
+            rem_breaks = [x for x in valid_breaks if x > ad1_after]
+            ad2_after = min(rem_breaks, key=lambda x: abs(x - raw_ad2))
+        else:
+            ad1_after = raw_ad1
+            ad2_after = raw_ad2
         for ch_idx, b in enumerate(story_blocks):
             seg_start = 0.0 if ch_idx == 0 else round(mixer.sec, 1)
             if ch_idx not in chapter_starts:
@@ -1529,7 +1540,7 @@ async def main():
         ]
         meta_obj = {
             "date": today_str,
-            "radio_ver": "v34_3182_short_banter_latch",
+            "radio_ver": radio_ver_tag,
             "display_date": "锵锵三人",
             "days_left": days_left,
             "script_sig": script_sig,
@@ -1544,7 +1555,7 @@ async def main():
         with open(RADIO_META_PATH, "w", encoding="utf-8") as f:
             json.dump(meta_obj, f, ensure_ascii=False, indent=2)
         save_today_stories(today_str, [st["id"] for st in selected_stories])
-        print(f"Built Qiang-Qiang v34 Uchi Episode: {final_dur:.1f}s ({mins} mins), stories={[s['short_tab'] for s in selected_stories]}")
+        print(f"Built Qiang-Qiang {radio_ver_tag} Uchi Episode: {final_dur:.1f}s ({mins} mins), stories={[s['short_tab'] for s in selected_stories]}")
     finally:
         shutil.rmtree(tmpdir, ignore_errors=True)
 

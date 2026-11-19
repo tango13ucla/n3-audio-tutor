@@ -768,3 +768,11 @@
 {"id": "VAR4-G06", "point": "〜にしては", "choice": "にしては", "correct": "true", "ask_again": "false", "ts": "2026-11-18T06:16:36.000Z"}
 {"id": "VAR-G26", "point": "〜なんて", "choice": "なんて", "correct": "true", "ask_again": "false", "ts": "2026-11-18T06:16:41.000Z"}
 {"id": "VAR4-H07", "point": "T-006", "choice": "終えて", "correct": "true", "ask_again": "false", "ts": "2026-11-18T06:16:54.000Z"}
+{"id": "VC-ぎりぎり", "point": "ぎりぎり", "choice": "记词:记住", "correct": "true", "ask_again": "false", "ts": "2026-11-18T23:43:04.000Z"}
+{"id": "VC-許す", "point": "許す", "choice": "记词:记住", "correct": "true", "ask_again": "false", "ts": "2026-11-18T23:43:05.000Z"}
+{"id": "VC-うっかり", "point": "うっかり", "choice": "记词:记住", "correct": "true", "ask_again": "false", "ts": "2026-11-18T23:43:08.000Z"}
+{"id": "VC-かわいがる", "point": "かわいがる", "choice": "记词:记住", "correct": "true", "ask_again": "false", "ts": "2026-11-18T23:43:09.000Z"}
+{"id": "VC-ぴったり", "point": "ぴったり", "choice": "记词:记住", "correct": "true", "ask_again": "false", "ts": "2026-11-18T23:43:11.000Z"}
+{"id": "VC-ぐったり", "point": "ぐったり", "choice": "记词:记住", "correct": "true", "ask_again": "false", "ts": "2026-11-18T23:43:12.000Z"}
+{"id": "VAR4-V23", "point": "どんどん", "choice": "どんどん", "correct": "true", "ask_again": "false", "ts": "2026-11-19T04:45:48.000Z"}
+{"id": "VAR-V26", "point": "わざわざ", "choice": "わざわざ", "correct": "true", "ask_again": "false", "ts": "2026-11-19T04:45:56.000Z"}

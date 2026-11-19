@@ -1,6 +1,6 @@
 {
   "schema": "n3-tutor-prefs/3",
-  "generated_at": "2026-11-18T09:55-0800",
+  "generated_at": "2026-11-18T21:58-0800",
   "exam_date": "2026-12-06",
   "daily_load": {
     "2026-12-06": {
@@ -14,6 +14,10 @@
     "off": 10
   },
   "focus_points": [
+    "N3L-017",
+    "N3L-085",
+    "T-001",
+    "N3L-025",
     "N3L-087",
     "どんどん",
     "N3L-009",
@@ -21,7 +25,6 @@
     "K-002",
     "N3L-015",
     "N3L-007",
-    "N3L-085",
     "N3L-004",
     "〜ように言う",
     "V-031",
@@ -50,20 +53,16 @@
     "ぐったり",
     "ぴったり",
     "かわいがる",
-    "許す",
-    "余る",
-    "うっかり",
-    "出張"
+    "許す"
   ],
   "radio": {
     "prefer_tags": [
+      "有人味讲故事",
+      "少而透深故事",
       "ウチ内幕",
-      "日本时局新闻",
-      "思想史专题",
-      "文学巨匠",
-      "科学体制",
-      "前后照应",
-      "日剧原剧细节"
+      "文学巨匠名作",
+      "真实人物悲喜剧",
+      "日本时局奇闻"
     ],
     "avoid_story_ids": [],
     "episode_minutes": [
@@ -71,14 +70,16 @@
       43
     ],
     "perspective": "uchi_intellectual_and_news",
+    "story_structure": "3_deep_human_stories_per_episode",
+    "teaching_balance": "vol2_vol3_light_inline_explain",
     "immersion_365": {
       "enabled": true,
       "start_date": "2026-11-15",
       "n3_gate_date": "2026-12-06",
       "post_n3_ramp_days": 700,
       "daily_step": "1/700",
-      "pre_n3_ja_ratio": 0.1,
-      "post_n3_start_ja_ratio": 0.1,
+      "pre_n3_ja_ratio": 0.14,
+      "post_n3_start_ja_ratio": 0.14,
       "target_ja_ratio": 0.92,
       "day_365_target_ja_ratio": 0.53
     }

@@ -256,17 +256,18 @@ def _author_trio_chapter(
     headlines: list[dict],
     exemplars: list[dict],
     seed_key: str = "",
+    pair_part: int = 0,
 ) -> dict | None:
     sys_p = (
-        "你是凤凰卫视《锵锵三人行》日本深水区版总撰稿（已吃透 3,182 期文字实录与 421 期原声轻重缓急规律）。\n"
-        "主持人：窦文涛(W，北方清亮活泛、爱搭茬重复对方尾词、高频短句追问)、"
-        "梁文道(D，温厚男中音、先短句接话再拆成两三轮推进东亚制度与文学思想)、"
-        "许子东(X，清瘦冷峻、善用『不不不』『我的问题是』『你的意思是说』短刀拆台)。\n"
-        f"请围绕主题「{theme_desc}」创作一章 26 到 36 轮短促乒乓交锋的深度圆桌（日语占比约 {ja_pct}%）。\n"
+        "你是凤凰卫视《锵锵三人行》原班总撰稿（深谙 3,182 期实录里的『人味』与『把一个具体人物故事剥洋葱讲透』的叙事功力）。\n"
+        "三位老友：窦文涛(W，俗人真性情、爱自曝糗事认怂自嘲、好奇心重爱追问荒唐细节、绝不当报幕员)、"
+        "梁文道(D，温厚会讲故事、用具体人物物件和悬念反转层层推进，绝不堆砌白皮书统计数字)、"
+        "许子东(X，冷幽默学者、一句话拆穿体面背后的虚荣与人性算计)。\n"
+        f"请围绕主题「{theme_desc}」【只讲透一个有头有尾、有悬念反转的具体人物故事】（约 6.5 分钟，22 到 32 轮，日语假名占比约 {ja_pct}%），严禁泛泛议论或罗列多个案例！\n"
         "硬性铁律：\n"
-        "1. 严禁一人独白长段或机械按 W->D->X 排排坐念稿！中位轮长控制在 18 到 26 字，至少 40% 发言不超过 16 字，至少 28% 为 D 与 X 直接交锋过招。\n"
-        "2. 【零课堂说教感】：绝对禁用『汉字写』『训读』『音读』『自动词』『他动词』『句型』『接续』『词尾』『必用』等教学字眼！日文原话必须作为人物现场台词或社会切口自然长在对话里。\n"
-        "3. 对白内所有日文词句必须 100% 用纯平假名或纯片假名书写，前后用空格或中文标点与汉字隔开，严禁汉字紧贴假名！\n"
+        "1. 【有故事、有人味】：用具体的人名、物件、尴尬场面和反转推进故事，文涛穿插亲身糗事或自嘲，子东冷幽默拆台，绝不写成百科科普。\n"
+        "2. 【黄金比例顺嘴点拨日文（约 75% 讲故事闲聊 + 25% 顺嘴点透提到的 N3 语法单字）】：自然融入给定的 2 到 3 个目标 N3 表达；每当该表达在故事人物原话里出现时，由 D 或 X 顺嘴用一两句大白话点明意思、口语缩音或易混双胞胎词（例如『日语里表示……用……，注意别跟……弄混了』），W 活学活用接一句，恰到好处不过度说教，绝不解释初级简单词。\n"
+        "3. 对白内所有日文词句必须 100% 用纯平假名或纯片假名书写，前后用空格或中文标点与汉字隔开，严禁汉字紧贴假名，严禁夹杂单字中文孤岛！\n"
         "4. 严禁任何英文字母、阿拉伯数字（数字全写中文）、『哈哈』『噗』、日期或考试倒计时。\n"
         "输出 JSON：{\"short_tab\": \"四字标签\", \"title\": \"章节标题\", \"ja_focus\": \"日文原句(此处可写汉字假名供屏幕显示)\", "
         "\"turns\": [[\"W\", \"...\"], [\"X\", \"...\"], [\"D\", \"...\"], ...]}"
@@ -290,13 +291,15 @@ def _author_trio_chapter(
             "id": cid,
             "tier": "uchi_intellectual",
             "short_tab": str(parsed.get("short_tab") or tab_label)[:5],
-            "tags": ["ウチ内幕", "昨晚靶向", "前后照应"],
+            "tags": ["人味故事", "深讲一件事", "前后照应"],
             "title": str(parsed.get("title") or theme_desc),
             "point_ids": ["N3-G13", "G-20261114-10"],
             "ja_focus": str(parsed.get("ja_focus") or ""),
             "turns": [[str(s).strip(), str(t).strip()] for s, t in (parsed.get("turns") or [])],
         }
-        if validate_generated_story(st_obj) and not contains_pii(json.dumps(st_obj, ensure_ascii=False)):
+        if pair_part in (1, 2):
+            st_obj["pair_part"] = pair_part
+        if validate_generated_story(st_obj, require_light_explain=(ja_pct < 45)) and not contains_pii(json.dumps(st_obj, ensure_ascii=False)):
             return st_obj
     except Exception:
         return None
@@ -328,7 +331,7 @@ def run_morning_prepare() -> int:
     if not combined_last_night:
         combined_last_night = tutor_prefs.load_prefs().get("focus_points", [])[:10]
 
-    # 1. Check unplayed Uchi chapter reserve + last night's uncovered items
+    # 1. Check unplayed Uchi 3-story reserve (6 scenes = 1 full 40-min 3-Story Deep Salon)
     from radio_dialogue_bank import SALON_STORIES
     from adaptive_bank import EXTRA_PRIMARY_CARDS, VARIANT_CARDS
     from tutor_data import TUTOR_ITEMS
@@ -380,58 +383,46 @@ def run_morning_prepare() -> int:
     existing_ids = {st["id"] for st in SALON_STORIES} | {st.get("id") for st in existing_auto if isinstance(st, dict)}
 
     imm = tutor_prefs.immersion_profile(day=study_today)
-    ja_pct = int(round(float(imm.get("ja_ratio", 0.10)) * 100))
+    ja_pct = int(round(float(imm.get("ja_ratio", 0.14)) * 100))
     headlines = fetch_live_nhk_news(max_items=6)
     exemplars = load_qq_corpus_exemplars(study_today, count=2)
     added_chapters = 0
 
-    # Author 1 dedicated chapter targeting last night's uncovered mistakes/lookups when present
-    night_cid = f"uchi_night_focus_{study_today.replace('-', '')}"
-    if uncovered_last_night and night_cid not in existing_ids:
-        st_night = _author_trio_chapter(
-            cid=night_cid,
-            tab_label="夜话深解",
-            theme_desc="东京职场与市井人情背后的潜台词（专门把昨晚练习中卡壳和点查的表达聊透）",
-            target_items=uncovered_last_night[:4],
-            ja_pct=ja_pct,
-            headlines=headlines,
-            exemplars=exemplars,
-            seed_key=f"{study_today}:night",
-        )
-        if st_night:
-            existing_auto.insert(0, st_night)
-            existing_ids.add(night_cid)
-            added_chapters += 1
-
-    if len(unplayed_uchi) + added_chapters < 9:
-        needed_n = max(0, 10 - (len(unplayed_uchi) + added_chapters))
+    # Only synthesize fallback 3-story scenes when curated 6-scene Uchi volumes run low (< 6 scenes);
+    # when a curated 3-story volume is available, live_news_salon_gen handles last night's fresh misses cleanly!
+    if len(unplayed_uchi) < 6:
+        needed_n = max(0, 6 - len(unplayed_uchi))
         topic_themes = [
-            ("永田町政局", "日本政界密室协调、预算拉锯与官僚忖度逻辑"),
-            ("近代思想史", "丸山真男、福泽谕吉或吉野作造看日本现代社会的组织性格"),
-            ("日本文学大家", "夏目漱石、谷崎润一郎、村上春树或松本清张笔下的人性幽微"),
-            ("日剧体制解剖", "《白色巨塔》《半泽直树》或《四重奏》原剧经典冲突与成年人潜台词"),
-            ("东京中产暗流", "名校受验、职场人事内示、独居养老或地方老家清退的真实算计"),
+            ("老铺奇闻", "一位普通人卷入京都或东京百年家族规矩的真实悲喜剧（只讲透这一个人从隐忍到破局的全过程）"),
+            ("文豪奇情", "夏目漱石、太宰治或松本清张某一部代表作或真实人生里最荒唐动人的一个完整故事"),
+            ("深夜酒馆", "新宿小巷或铁道桥下小酒馆里两个普通陌生人真实交集的一晚（最有烟火气与人味）"),
         ]
-        for idx_t in range(min(needed_n, len(topic_themes))):
-            tab_label, theme_desc = topic_themes[idx_t]
+        newly_built = []
+        for idx_t in range(min(needed_n, len(topic_themes) * 2)):
+            base_label, base_desc = topic_themes[(idx_t // 2) % len(topic_themes)]
+            part_no = (idx_t % 2) + 1
+            part_tag = "上半场悬念铺陈" if part_no == 1 else "下半场反转收束"
             cid = f"uchi_auto_{study_today.replace('-', '')}_{idx_t + 1}"
             if cid in existing_ids:
                 continue
             target_slice = combined_last_night[idx_t * 2 : idx_t * 2 + 3] or combined_last_night[:3]
             st_obj = _author_trio_chapter(
                 cid=cid,
-                tab_label=tab_label,
-                theme_desc=theme_desc,
+                tab_label=base_label,
+                theme_desc=f"{base_desc}（{part_tag}）",
                 target_items=target_slice,
                 ja_pct=ja_pct,
                 headlines=headlines,
                 exemplars=exemplars,
                 seed_key=f"{study_today}:{idx_t}",
+                pair_part=part_no,
             )
             if st_obj:
-                existing_auto.insert(0, st_obj)
+                newly_built.append(st_obj)
                 existing_ids.add(cid)
                 added_chapters += 1
+        if newly_built:
+            existing_auto = newly_built + existing_auto
 
     if added_chapters > 0:
         AUTO_SALON_JSON.parent.mkdir(parents=True, exist_ok=True)

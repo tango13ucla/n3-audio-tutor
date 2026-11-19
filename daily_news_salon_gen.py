@@ -87,7 +87,10 @@ def fetch_live_nhk_news(max_items: int = 8, timeout: float = 8.0) -> list[dict]:
 
 
 BANNED_CLASSROOM_RE = re.compile(
-    r"汉字写|训读|音读|自动词|他动词|五段动词|一段动词|可能形|使役被动|尊他语|谦让语|语法上|句型|接续|词尾|必用"
+    r"第[一二三四]个语法|下面我们学习|请大家跟读|本课重点|今天我们来学习"
+)
+LIGHT_EXPLAIN_CUE_RE = re.compile(
+    r"日语|日文|念|读作|缩成|缩音|省成|别跟|弄混|口语里|说法|尊敬语|谦让语"
 )
 
 
@@ -103,23 +106,25 @@ def _strip_json_fence(text: str) -> str:
     return s
 
 
-def validate_generated_story(st: dict) -> bool:
+def validate_generated_story(st: dict, require_light_explain: bool = True) -> bool:
     if not isinstance(st, dict):
         return False
     turns = st.get("turns")
-    if not isinstance(turns, list) or not (12 <= len(turns) <= 58):
+    if not isinstance(turns, list) or not (12 <= len(turns) <= 85):
         return False
+    explain_hits = 0
     for entry in turns:
         if not isinstance(entry, (list, tuple)) or len(entry) != 2:
             return False
         spk, txt = str(entry[0]).strip(), str(entry[1]).strip()
         if spk not in ("W", "D", "X") or len(txt) < 2:
             return False
-        # Zero fake laughs, zero exam countdowns, zero ASCII/digits, zero classroom lecturing in speech spans
         if re.search(r"哈哈|噗|倒计时|还有\d+天考试|[A-Za-z0-9]", txt):
             return False
         if BANNED_CLASSROOM_RE.search(txt):
             return False
+        if LIGHT_EXPLAIN_CUE_RE.search(txt):
+            explain_hits += 1
         # Zero Kanji immediately glued to Kana (guarantees clean multilingual G2P)
         if re.search(r"[\u4e00-\u9fff][\u3040-\u30ff]+|[\u3040-\u30ff]+[\u4e00-\u9fff]", txt):
             return False
@@ -130,6 +135,8 @@ def validate_generated_story(st: dict) -> bool:
                 zh_core = re.sub(r"[^\u4e00-\u9fff]", "", pt)
                 if 0 < len(zh_core) <= 1:
                     return False
+    if require_light_explain and explain_hits < 2:
+        return False
     return True
 
 
@@ -269,7 +276,7 @@ def maybe_generate_live_news_story(
     if os.path.exists(cache_path):
         try:
             cached = json.load(open(cache_path, encoding="utf-8"))
-            if validate_generated_story(cached):
+            if validate_generated_story(cached, require_light_explain=(imm_profile.get("ja_ratio", 0.14) < 0.45)):
                 return cached
         except Exception:
             pass
@@ -278,17 +285,17 @@ def maybe_generate_live_news_story(
     if not headlines:
         return None
 
-    ja_pct = int(round(float(imm_profile.get("ja_ratio", 0.10)) * 100))
+    ja_pct = int(round(float(imm_profile.get("ja_ratio", 0.14)) * 100))
     phase = imm_profile.get("phase", "n3_sprint")
     ramp_days = int(imm_profile.get("ramp_days", 700))
     day_num = imm_profile.get("day_of_365", 1)
 
     night_sig = load_last_night_signals()
-    night_missed = (night_sig.get("missed_or_unsure_points") or [])[:5]
-    night_vocab = (night_sig.get("missed_vocab_words") or [])[:4]
+    night_missed = (night_sig.get("missed_or_unsure_points") or [])[:4]
+    night_vocab = (night_sig.get("missed_vocab_words") or [])[:3]
     night_lookups = (night_sig.get("looked_up_expressions") or [
-        x.get("surface") for x in (night_sig.get("top_looked_up_words") or [])[:4] if isinstance(x, dict) and x.get("surface")
-    ])[:4]
+        x.get("surface") for x in (night_sig.get("top_looked_up_words") or [])[:3] if isinstance(x, dict) and x.get("surface")
+    ])[:3]
     combined_targets = []
     for x in night_missed + night_vocab + night_lookups + list(focus_points):
         if x and x not in combined_targets:
@@ -297,19 +304,17 @@ def maybe_generate_live_news_story(
     exemplars = load_qq_corpus_exemplars(today_str, count=2)
 
     sys_prompt = (
-        "你是凤凰卫视《锵锵三人行》原班总撰稿（已吃透全部 3,182 期完整实录与 421 期原声轻重缓急规律）。\n"
-        "三位老友：窦文涛(W，北方清亮活泛、俗人切口、爱搭茬重复对方尾词、高频用『我跟你说』『不是』『你看』)、"
-        "梁文道(D，温厚男中音、先短句『对』『没错』接话再拆成两三轮推进东亚历史与制度脉络，爱用『你想想看』『换句话说』『吊诡』)、"
-        "许子东(X，清瘦冷峻学者、短刀直入『不不不』『我的问题是』『你的意思是说』一针见血拆台)。\n"
-        "请根据今日真实日本与世界新闻，并自然揉入听众昨晚刚卡壳的日语表达，创作一段约 3.5 分钟（26 到 36 轮短促乒乓交锋）的开篇时局圆桌。\n"
+        "你是凤凰卫视《锵锵三人行》原班总撰稿（深谙 3,182 期实录里的『人味』与『把一件小事剥洋葱讲透』的叙事功力）。\n"
+        "三位老友：窦文涛(W，俗人真性情、爱自曝糗事认怂自嘲、好奇心重爱打听荒唐细节、绝不当报幕员)、"
+        "梁文道(D，温厚会讲故事、用具体人物物件和悬念剥笋推进，绝不堆砌白皮书统计数字)、"
+        "许子东(X，冷幽默学者、一句话拆穿体面背后的虚荣算计)。\n"
+        "请从今日真实日本新闻里【只挑一件最有戏剧冲突、最见人性的具体故事】彻底讲透（约 4.5 分钟，22 到 30 轮），严禁串烧多条新闻泛泛报菜名！\n"
         "核心铁律：\n"
-        "0. 【真实 3,182 期短句乒乓节奏】：严禁一人独白百字长段，严禁按 W->D->X 排排坐念稿！全章中位轮长控制在 18 到 26 字，至少 40% 的发言在 16 字以内（如『不不不，你反过来想。』『哪儿止啊！』『对，吊诡就在这儿。』），至少 28% 为 D 与 X 直接交锋过招。\n"
-        "1. 【零课堂说教感】：严禁出现任何老师讲课口吻！绝对禁用『汉字写』『训读』『音读』『自动词』『他动词』『句型』『接续』『词尾』『必用』等字眼，把日文原词原句当成三位老友引述日本政客、记者或小市民现场原话自然带出。\n"
-        "2. 【原版文涛冷开场】：第一轮 W 直接以『《锵锵三人行》，』连着今日最抓人的具体新闻单刀直入，严禁『大家好、文道好、子东好』模板客套。\n"
-        f"3. 当前处于 {ramp_days} 天双语演进计划第 {day_num} 天（阶段：{phase}），日语占比约 {ja_pct}%。\n"
-        "4. 【语音合成硬铁律】：对白文本中凡出现日文词句，必须 100% 写成纯平假名或纯片假名（前后留空格或中文标点），严禁汉字紧贴假名，严禁任何英文字母或阿拉伯数字（数字全写中文），严禁『哈哈』『噗』或考试倒计时。\n"
-        "5. 自然融入 2 到 4 个昨晚薄弱日语表达，结尾顺嘴拐弯引出后续专题。\n"
-        "输出严格为 JSON：{\"short_tab\": \"今日时局\", \"title\": \"...\", \"ja_focus\": \"...(此处可正常写日文汉字假名供屏幕显示)\", "
+        "1. 【有故事、有人味】：开篇第一轮 W 直接以『《锵锵三人行》，』连着这桩奇事或自己的亲身糗事切入，先抛悬念细节（如现场留下了什么怪东西、当事人干了什么反常举动），让三人猜错、吐槽、层层反转，绝不泛泛议论宏大概念。\n"
+        "2. 【黄金比例顺嘴点拨日文（约 74% 故事闲聊 + 26% 顺嘴点透提到的 N3 语法单字）】：自然揉入 2 到 3 个昨晚刚卡壳的目标 N3 表达；每当该表达在故事人物台词里出现时，由 D 或 X 顺嘴用一两句大白话点明它的意思、口语缩音或易混双胞胎词（例如『日语里表示……用……，注意别跟……弄混了』），W 活学活用接一句，恰到好处不过度说教，更绝不解释 N5/N4 初级简单词。\n"
+        f"3. 当前处于 {ramp_days} 天双语计划第 {day_num} 天（阶段：{phase}），日语假名占比约 {ja_pct}%。\n"
+        "4. 【语音合成硬铁律】：对白文本中凡出现日文词句，必须 100% 写成纯平假名或纯片假名（前后留空格或中文标点），严禁汉字紧贴假名，严禁夹杂单字中文孤岛，严禁任何英文字母或阿拉伯数字（数字全写中文），严禁『哈哈』『噗』或考试倒计时。\n"
+        "输出严格为 JSON：{\"short_tab\": \"今日奇闻\", \"title\": \"...\", \"ja_focus\": \"...(此处可正常写日文汉字假名供屏幕显示)\", "
         "\"turns\": [[\"W\", \"...\"], [\"X\", \"...\"], [\"D\", \"...\"], ...]}"
     )
     usr_prompt = json.dumps({
@@ -335,7 +340,7 @@ def maybe_generate_live_news_story(
             "ja_focus": str(parsed.get("ja_focus") or ""),
             "turns": [(str(s).strip(), str(t).strip()) for s, t in (parsed.get("turns") or [])],
         }
-        if validate_generated_story(story):
+        if validate_generated_story(story, require_light_explain=(imm_profile.get("ja_ratio", 0.14) < 0.45)):
             os.makedirs(AUDIO_DIR, exist_ok=True)
             with open(cache_path, "w", encoding="utf-8") as f:
                 json.dump(story, f, ensure_ascii=False, indent=2)
