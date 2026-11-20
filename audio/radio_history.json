@@ -67,7 +67,14 @@
       "uchi5_s2b_asama_sanso_part2",
       "uchi5_s3a_yamaichi_part1",
       "uchi5_s3b_yamaichi_part2"
+    ],
+    "2026-11-20": [
+      "uchi6_s1_news_fallback",
+      "uchi6_s2a_300million_part1",
+      "uchi6_s2b_300million_part2",
+      "uchi6_s3a_momoe_part1",
+      "uchi6_s3b_momoe_part2"
     ]
   },
-  "last_date": "2026-11-19"
+  "last_date": "2026-11-20"
 }
