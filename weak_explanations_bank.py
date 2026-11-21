@@ -572,3 +572,9 @@ try:
 except ImportError:
     pass
 
+try:
+    from weak_expansion_wave9 import WAVE9_CARDS_AUDIO
+    NEW_CARDS_AUDIO.update(WAVE9_CARDS_AUDIO)
+except ImportError:
+    pass
+

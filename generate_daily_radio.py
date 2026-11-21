@@ -271,7 +271,7 @@ def load_mastery_priority(state: dict, recent_wrong_keys: set, hot_wrong_keys: s
     return scores
 
 
-def load_recent_story_ages(today_str: str, max_days: int = 14) -> dict[str, int]:
+def load_recent_story_ages(today_str: str, max_days: int = 21) -> dict[str, int]:
     """Returns {story_id: days_ago (1 = most recent prior broadcast day)} across up to `max_days`."""
     if not os.path.exists(RADIO_HISTORY_PATH):
         return {}
@@ -304,7 +304,7 @@ def save_today_stories(today_str: str, story_ids: list) -> None:
             hist = {"recent_days": {}}
     hist["last_date"] = today_str
     hist["recent_days"][today_str] = list(story_ids)
-    keep_dates = sorted(hist["recent_days"].keys())[-14:]
+    keep_dates = sorted(hist["recent_days"].keys())[-21:]
     hist["recent_days"] = {k: hist["recent_days"][k] for k in keep_dates}
     with open(RADIO_HISTORY_PATH, "w", encoding="utf-8") as f:
         json.dump(hist, f, ensure_ascii=False, indent=2)
@@ -1093,9 +1093,15 @@ async def main():
     recent_wrong, hot_wrong = load_recent_mistakes()
     hot_wrong = hot_wrong | night_items
     scores = load_mastery_priority(state, recent_wrong, hot_wrong)
-    recent_ages = load_recent_story_ages(today_str, max_days=14)
+    recent_ages = load_recent_story_ages(today_str, max_days=21)
     rng = random.Random(today_str)
     pool_order = {st["id"]: idx for idx, st in enumerate(SALON_STORIES)}
+
+    def _uchi_vol_prefix(sid: str) -> str:
+        if sid.startswith(("uchi_night_focus_", "uchi_auto_", "world_auto_")):
+            return ""
+        m = re.match(r"^(uchi\d*_)", sid)
+        return m.group(1) if m else ""
 
     def story_rank(st: dict) -> float:
         pids = st.get("point_ids") or []
@@ -1103,8 +1109,8 @@ async def main():
         pt_vals = sorted((scores.get(pid, 2.2) for pid in pids), reverse=True)
         top_avg = sum(pt_vals[:3]) / max(1, len(pt_vals[:3])) if pt_vals else 2.2
         days_ago = recent_ages.get(st["id"], 0)
-        # Hard 14-day anti-repeat gate: any chapter played within 14 days gets -86..-98 so it NEVER beats unplayed chapters
-        repeat_penalty = (100.0 - min(14, days_ago) * 2.0) if days_ago > 0 else 0.0
+        # Hard 21-day anti-repeat gate: any chapter played within 21 days gets heavy penalty so it NEVER beats unplayed chapters
+        repeat_penalty = (100.0 - min(21, days_ago) * 2.0) if days_ago > 0 else 0.0
         memory_bonus = 0.0
         if st["id"] in _rp["avoid_story_ids"]:
             memory_bonus -= 50.0
@@ -1143,7 +1149,17 @@ async def main():
         if item and item not in top_focus_labels:
             top_focus_labels.append(item)
     top_focus_labels = top_focus_labels[:8]
-    uchi_companion_titles = [st["title"] for st in SALON_STORIES[:6]]
+    _preview_groups: dict[str, list[dict]] = {}
+    _preview_order: list[str] = []
+    for _pst in SALON_STORIES:
+        _pvp = _uchi_vol_prefix(_pst["id"])
+        if _pvp and recent_ages.get(_pst["id"], 0) == 0:
+            if _pvp not in _preview_groups:
+                _preview_groups[_pvp] = []
+                _preview_order.append(_pvp)
+            _preview_groups[_pvp].append(_pst)
+    _next_vp = next((vp for vp in _preview_order if len(_preview_groups[vp]) >= 5), "")
+    uchi_companion_titles = [st["title"] for st in (_preview_groups.get(_next_vp) or SALON_STORIES)[:6]]
     live_news_story = (
         None
         if has_today_dated_news
@@ -1179,12 +1195,6 @@ async def main():
         + base_pool
         + ([live_world_finale_story] if live_world_finale_story else [])
     )
-
-    def _uchi_vol_prefix(sid: str) -> str:
-        if sid.startswith(("uchi_night_focus_", "uchi_auto_", "world_auto_")):
-            return ""
-        m = re.match(r"^(uchi\d*_)", sid)
-        return m.group(1) if m else ""
 
     def _is_world_finale_story(st: dict) -> bool:
         sid = str(st.get("id") or "")

@@ -454,7 +454,7 @@ def run_morning_prepare() -> int:
 
     rhist_path = BASE_DIR / "audio" / "radio_history.json"
     rhist = (json.loads(rhist_path.read_text(encoding="utf-8")).get("recent_days") or {}) if rhist_path.exists() else {}
-    cutoff_dt = datetime.date.fromisoformat(study_today) - datetime.timedelta(days=14)
+    cutoff_dt = datetime.date.fromisoformat(study_today) - datetime.timedelta(days=21)
     recent_played = {
         sid
         for d, sids in rhist.items()

@@ -1,0 +1,325 @@
+name: Night-Owl N3 High-Lag Relay
+
+on:
+  schedule:
+    # 3rd independent GitHub Actions workflow shard (12 unique slots across 21:00-03:59 UTC).
+    # Engineered specifically to guarantee overnight bridge landing (00:05-03:59 AM PT -> 04:05 AM PT sharp)
+    # even if GitHub Actions global cron queue lags 9-14 hours AND drops half its ticks!
+    - cron: '19 21 * * *'
+    - cron: '7 22 * * *'
+    - cron: '33 22 * * *'
+    - cron: '13 23 * * *'
+    - cron: '47 23 * * *'
+    - cron: '27 0 * * *'
+    - cron: '53 0 * * *'
+    - cron: '39 1 * * *'
+    - cron: '9 2 * * *'
+    - cron: '47 2 * * *'
+    - cron: '11 3 * * *'
+    - cron: '51 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  relay-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 165
+    concurrency:
+      group: daily-n3-brain-active
+      cancel-in-progress: false
+    outputs:
+      chain_morning: ${{ steps.check.outputs.chain_morning }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Check Overnight Bridge or Morning Freshness
+        id: check
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+        run: |
+          DECISION=$(python - <<'PY'
+          import datetime, json, os, subprocess, time, urllib.request
+          from zoneinfo import ZoneInfo
+
+          PT = ZoneInfo("America/Los_Angeles")
+          now_pt = datetime.datetime.now(PT)
+          study_pt = (now_pt - datetime.timedelta(hours=4)).strftime("%Y-%m-%d")
+
+          def bridge_already_active() -> bool:
+              tok = os.environ.get("GITHUB_TOKEN", "")
+              repo = os.environ.get("GITHUB_REPOSITORY", "")
+              my_run = str(os.environ.get("GITHUB_RUN_ID", ""))
+              if not tok or not repo:
+                  return False
+              try:
+                  url = f"https://api.github.com/repos/{repo}/actions/runs?per_page=25"
+                  req = urllib.request.Request(url, headers={
+                      "Authorization": f"Bearer {tok}",
+                      "Accept": "application/vnd.github+json",
+                      "User-Agent": "n3-night-owl-relay",
+                  })
+                  with urllib.request.urlopen(req, timeout=8) as r:
+                      runs = json.loads(r.read().decode("utf-8")).get("workflow_runs") or []
+                  for run in runs:
+                      if run.get("status") not in ("queued", "in_progress", "waiting"):
+                          continue
+                      rid = str(run.get("id") or "")
+                      if not rid or rid == my_run:
+                          continue
+                      jurl = f"https://api.github.com/repos/{repo}/actions/runs/{rid}/jobs"
+                      jreq = urllib.request.Request(jurl, headers={
+                          "Authorization": f"Bearer {tok}",
+                          "Accept": "application/vnd.github+json",
+                          "User-Agent": "n3-night-owl-relay",
+                      })
+                      with urllib.request.urlopen(jreq, timeout=8) as jr:
+                          jobs = json.loads(jr.read().decode("utf-8")).get("jobs") or []
+                      for jb in jobs:
+                          if jb.get("name") == "morning-handoff" and jb.get("status") in ("queued", "in_progress", "waiting"):
+                              return True
+              except Exception:
+                  pass
+              return False
+
+          def read_night_closed() -> str:
+              if os.path.exists("night_summary.json"):
+                  try:
+                      return str(json.load(open("night_summary.json", encoding="utf-8")).get("closed_study_day") or "")
+                  except Exception:
+                      return ""
+              return ""
+
+          night_closed = read_night_closed()
+          meta_date = ""
+          radio_ver = ""
+          if os.path.exists("audio/daily_radio_meta.json"):
+              try:
+                  _rm = json.load(open("audio/daily_radio_meta.json", encoding="utf-8"))
+                  meta_date = str(_rm.get("date") or "")
+                  radio_ver = str(_rm.get("radio_ver") or "")
+              except Exception:
+                  meta_date = ""
+
+          in_overnight_bridge = (now_pt.hour == 0 and now_pt.minute >= 5) or (1 <= now_pt.hour < 4)
+          if in_overnight_bridge:
+              if now_pt.hour < 2:
+                  if bridge_already_active():
+                      print("noop|false")
+                      raise SystemExit(0)
+                  target_2am = now_pt.replace(hour=2, minute=2, second=0, microsecond=0)
+                  wait_s = int((target_2am - now_pt).total_seconds())
+                  if 0 < wait_s <= 7500:
+                      time.sleep(wait_s)
+                  subprocess.run(["git", "fetch", "origin", "main", "--quiet"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+                  subprocess.run(["git", "reset", "--hard", "origin/main", "--quiet"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+                  now_pt = datetime.datetime.now(PT)
+                  study_pt = (now_pt - datetime.timedelta(hours=4)).strftime("%Y-%m-%d")
+                  night_closed = read_night_closed()
+              need_bridge = not bridge_already_active()
+              if night_closed != study_pt:
+                  print(f"night_summary|{'true' if need_bridge else 'false'}")
+              elif need_bridge:
+                  print("noop|true")
+              else:
+                  print("noop|false")
+              raise SystemExit(0)
+
+          expected_ver = "v37_qq_world_finale_13x_n5inline" if study_pt >= "2026-11-22" else "v36_qq_real_public_memory"
+          if now_pt.hour >= 4 and (meta_date != study_pt or (study_pt >= "2026-11-19" and radio_ver != expected_ver)):
+              if bridge_already_active():
+                  print("noop|false")
+              else:
+                  print("full|false")
+              raise SystemExit(0)
+
+          print("noop|false")
+          PY
+          )
+          ACTION_MODE="${DECISION%%|*}"
+          CHAIN_MORNING="${DECISION##*|}"
+          echo "[night-owl] ACTION_MODE=$ACTION_MODE CHAIN_MORNING=$CHAIN_MORNING"
+          echo "action_mode=$ACTION_MODE" >> "$GITHUB_OUTPUT"
+          echo "chain_morning=$CHAIN_MORNING" >> "$GITHUB_OUTPUT"
+          if [ "$ACTION_MODE" = "noop" ]; then
+            exit 0
+          elif [ "$ACTION_MODE" = "night_summary" ]; then
+            python auto_author_daily_content.py --mode night-summary
+          elif [ "$ACTION_MODE" = "full" ]; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq --no-install-recommends ffmpeg
+            pip install --quiet -U numpy edge-tts certifi google-genai pykakasi
+            python auto_author_daily_content.py --mode morning-prepare
+            for try_i in 1 2; do
+              if python run_brain_algorithm.py; then
+                break
+              fi
+              echo "[retry] run_brain_algorithm attempt ${try_i} failed, retrying in 15s..."
+              sleep 15
+              [ "$try_i" -eq 2 ] && exit 1
+            done
+          fi
+
+      - name: Commit & Push If Updated
+        if: steps.check.outputs.action_mode != 'noop'
+        env:
+          ACTION_MODE: ${{ steps.check.outputs.action_mode }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          STAGE_DIR=$(mktemp -d)
+          cp -a audio "$STAGE_DIR/"
+          for f in n3_live_state.json practice_log.jsonl cloud_sync_config.json cloud_state_snapshot.json tutor_prefs.json night_summary.json lookup_weakness_ledger.md qq_corpus_knowledge.json grok_daily_brief.md grok_daily_brief.json brain_plan_*.json; do
+            [ -f "$f" ] && cp -a "$f" "$STAGE_DIR/" || true
+          done
+          for attempt in 1 2 3; do
+            git fetch origin main
+            git reset --hard origin/main
+            cp -a "$STAGE_DIR/audio/." audio/
+            for sf in "$STAGE_DIR"/*.json "$STAGE_DIR"/*.jsonl "$STAGE_DIR"/*.md; do
+              [ -f "$sf" ] && cp -a "$sf" ./ || true
+            done
+            if [ "$ACTION_MODE" = "full" ]; then
+              python build_html.py
+            fi
+            git add n3_live_state.json practice_log.jsonl cloud_sync_config.json cloud_state_snapshot.json tutor_prefs.json grok_daily_brief.md grok_daily_brief.json brain_plan_*.json index.html sw.js audio/
+            [ -f night_summary.json ] && git add night_summary.json || true
+            [ -f lookup_weakness_ledger.md ] && git add lookup_weakness_ledger.md || true
+            [ -f qq_corpus_knowledge.json ] && git add qq_corpus_knowledge.json || true
+            if git diff --cached --quiet; then
+              echo "No changes to commit."
+              break
+            fi
+            git commit -m "chore(relay): ${ACTION_MODE} N3 morning refresh"
+            if git push origin main; then
+              break
+            fi
+            sleep 2
+          done
+          rm -rf "$STAGE_DIR"
+
+  morning-handoff:
+    name: morning-handoff
+    needs: relay-check
+    if: needs.relay-check.outputs.chain_morning == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 210
+    concurrency:
+      group: daily-n3-morning-bridge
+      cancel-in-progress: false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Wait Precisely Until 04:05 AM PT Then Synthesize & Launch New Day
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          NEED_RUN=$(python - <<'PY'
+          import datetime, json, subprocess, sys, time
+          from zoneinfo import ZoneInfo
+
+          PT = ZoneInfo("America/Los_Angeles")
+          now_pt = datetime.datetime.now(PT)
+          target_pt = now_pt.replace(hour=4, minute=5, second=0, microsecond=0)
+          if now_pt.hour >= 4:
+              target_pt = now_pt
+          print(f"[relay-bridge] Armed at {now_pt.strftime('%Y-%m-%d %H:%M:%S %Z')}, launching at {target_pt.strftime('%Y-%m-%d %H:%M:%S %Z')}", file=sys.stderr, flush=True)
+          while True:
+              now_pt = datetime.datetime.now(PT)
+              rem = (target_pt - now_pt).total_seconds()
+              if rem <= 0:
+                  break
+              time.sleep(min(60, rem))
+              if int(rem) % 300 < 60:
+                  subprocess.run(["git", "fetch", "origin", "main", "--quiet"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+                  subprocess.run(["git", "reset", "--hard", "origin/main", "--quiet"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+                  study_target = target_pt.strftime("%Y-%m-%d")
+                  try:
+                      md = json.load(open("audio/daily_radio_meta.json", encoding="utf-8")).get("date", "")
+                      if md == study_target:
+                          print("already_done")
+                          raise SystemExit(0)
+                  except Exception:
+                      pass
+          subprocess.run(["git", "fetch", "origin", "main", "--quiet"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+          subprocess.run(["git", "reset", "--hard", "origin/main", "--quiet"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+          now_pt = datetime.datetime.now(PT)
+          study_pt = (now_pt - datetime.timedelta(hours=4)).strftime("%Y-%m-%d")
+          try:
+              md = json.load(open("audio/daily_radio_meta.json", encoding="utf-8")).get("date", "")
+              if md == study_pt:
+                  print("already_done")
+                  raise SystemExit(0)
+          except Exception:
+              pass
+          print("run_full")
+          PY
+          )
+          NEED_RUN=$(echo "$NEED_RUN" | tail -n 1)
+          echo "[relay-bridge] status=$NEED_RUN"
+          if [ "$NEED_RUN" != "run_full" ]; then
+            echo "[relay-bridge] Today's morning refresh is already live; exiting cleanly."
+            exit 0
+          fi
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends ffmpeg
+          pip install --quiet -U numpy edge-tts certifi google-genai pykakasi
+          python auto_author_daily_content.py --mode morning-prepare
+          for try_i in 1 2; do
+            if python run_brain_algorithm.py; then
+              break
+            fi
+            echo "[retry] run_brain_algorithm attempt ${try_i} failed, retrying in 15s..."
+            sleep 15
+            [ "$try_i" -eq 2 ] && exit 1
+          done
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          STAGE_DIR=$(mktemp -d)
+          cp -a audio "$STAGE_DIR/"
+          for f in n3_live_state.json practice_log.jsonl cloud_sync_config.json cloud_state_snapshot.json tutor_prefs.json night_summary.json lookup_weakness_ledger.md qq_corpus_knowledge.json grok_daily_brief.md grok_daily_brief.json brain_plan_*.json; do
+            [ -f "$f" ] && cp -a "$f" "$STAGE_DIR/" || true
+          done
+          for attempt in 1 2 3; do
+            git fetch origin main
+            git reset --hard origin/main
+            cp -a "$STAGE_DIR/audio/." audio/
+            for sf in "$STAGE_DIR"/*.json "$STAGE_DIR"/*.jsonl "$STAGE_DIR"/*.md; do
+              [ -f "$sf" ] && cp -a "$sf" ./ || true
+            done
+            python build_html.py
+            git add n3_live_state.json practice_log.jsonl cloud_sync_config.json cloud_state_snapshot.json tutor_prefs.json grok_daily_brief.md grok_daily_brief.json brain_plan_*.json index.html sw.js audio/
+            [ -f night_summary.json ] && git add night_summary.json || true
+            [ -f lookup_weakness_ledger.md ] && git add lookup_weakness_ledger.md || true
+            [ -f qq_corpus_knowledge.json ] && git add qq_corpus_knowledge.json || true
+            if git diff --cached --quiet; then
+              echo "No changes to commit."
+              break
+            fi
+            git commit -m "chore(relay): morning-bridge 04:05 PT N3 full refresh"
+            if git push origin main; then
+              break
+            fi
+            sleep 2
+          done
+          rm -rf "$STAGE_DIR"

@@ -260,6 +260,11 @@ try:
     LISTENING_OPT_NOTES.update(WAVE8_LISTENING_OPT_NOTES)
 except Exception:
     pass
+try:
+    from weak_expansion_wave9 import WAVE9_LISTENING_OPT_NOTES
+    LISTENING_OPT_NOTES.update(WAVE9_LISTENING_OPT_NOTES)
+except Exception:
+    pass
 
 
 def build_opt_notes(card_id: str, raw_notes: dict | None) -> dict:
@@ -3109,7 +3114,12 @@ if ("serviceWorker" in navigator) {
     if (swRefreshing) return;
     swRefreshing = true;
     const radioIdle = (typeof radioPlayer === "undefined") || radioPlayer.paused;
-    if (!activeKind && radioIdle) location.reload();
+    if (!activeKind && radioIdle) {
+      if (typeof reloadFreshEdition === "function") reloadFreshEdition();
+      else location.reload();
+    } else if (typeof pendingEditionReload !== "undefined") {
+      pendingEditionReload = true;
+    }
   });
 }
 
@@ -7194,15 +7204,39 @@ window.addEventListener("hashchange", () => {
 
 let editionCheckBusy = false;
 let pendingEditionReload = false;
+function reloadFreshEdition() {
+  let done = false;
+  const go = () => {
+    if (done) return;
+    done = true;
+    location.reload();
+  };
+  setTimeout(go, 600);
+  if (typeof caches !== "undefined" && caches.keys) {
+    caches.keys().then(keys =>
+      Promise.all(
+        keys.map(k =>
+          caches.open(k).then(c => Promise.all([c.delete("./"), c.delete("./index.html")])).catch(() => {})
+        )
+      )
+    ).finally(go);
+  } else {
+    go();
+  }
+}
 function flushPendingEditionReload() {
   if (!pendingEditionReload) return;
   if (!activeKind && radioPlayer.paused) {
     pendingEditionReload = false;
-    location.reload();
+    reloadFreshEdition();
   }
 }
 radioPlayer.addEventListener("pause", () => setTimeout(flushPendingEditionReload, 400));
 radioPlayer.addEventListener("ended", () => setTimeout(flushPendingEditionReload, 400));
+if (typeof player !== "undefined" && player && player.addEventListener) {
+  player.addEventListener("pause", () => setTimeout(flushPendingEditionReload, 450));
+  player.addEventListener("ended", () => setTimeout(flushPendingEditionReload, 450));
+}
 
 function checkNewDailyEdition() {
   if ("serviceWorker" in navigator) {
@@ -7227,7 +7261,7 @@ function checkNewDailyEdition() {
           sessionStorage.setItem("n3_edition_reload", `${targetKey}@${Date.now()}`);
         } catch (e) {}
         if (!activeKind && radioPlayer.paused) {
-          location.reload();
+          reloadFreshEdition();
         } else {
           pendingEditionReload = true;
         }

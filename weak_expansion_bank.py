@@ -844,3 +844,10 @@ try:
 except ImportError:
     pass
 
+try:
+    from weak_expansion_wave9 import WAVE9_EXTRA_WORDS, WAVE9_VARIANT_CARDS
+    NEW_VARIANT_CARDS.extend(WAVE9_VARIANT_CARDS)
+    NEW_EXTRA_WORDS.update(WAVE9_EXTRA_WORDS)
+except ImportError:
+    pass
+

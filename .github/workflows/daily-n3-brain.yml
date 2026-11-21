@@ -239,7 +239,8 @@ jobs:
               print("full|false")
               raise SystemExit(0)
           if need_new_cards or need_listen_parts:
-              print(f"{'prebake_cards' if (17 <= now_pt.hour or now_pt.hour < 4) else 'quiz_only'}|false")
+              # Today's edition is already live; quietly pre-bake new card MP3s & listen_parts without touching active HTML!
+              print("prebake_cards|false")
               raise SystemExit(0)
           if ev == "schedule":
               baked_epoch = 0
@@ -299,7 +300,14 @@ jobs:
             sudo apt-get install -y -qq --no-install-recommends ffmpeg
             pip install --quiet -U numpy edge-tts certifi google-genai pykakasi
             python auto_author_daily_content.py --mode morning-prepare
-            python run_brain_algorithm.py
+            for try_i in 1 2; do
+              if python run_brain_algorithm.py; then
+                break
+              fi
+              echo "[retry] run_brain_algorithm attempt ${try_i} failed, retrying in 15s..."
+              sleep 15
+              [ "$try_i" -eq 2 ] && exit 1
+            done
           else
             python run_brain_algorithm.py --sync-only
             if python - <<'PY'
@@ -433,7 +441,14 @@ jobs:
           sudo apt-get install -y -qq --no-install-recommends ffmpeg
           pip install --quiet -U numpy edge-tts certifi google-genai pykakasi
           python auto_author_daily_content.py --mode morning-prepare
-          python run_brain_algorithm.py
+          for try_i in 1 2; do
+            if python run_brain_algorithm.py; then
+              break
+            fi
+            echo "[retry] run_brain_algorithm attempt ${try_i} failed, retrying in 15s..."
+            sleep 15
+            [ "$try_i" -eq 2 ] && exit 1
+          done
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

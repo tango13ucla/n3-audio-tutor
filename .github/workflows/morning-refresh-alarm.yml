@@ -16,7 +16,7 @@ on:
     - cron: '11 9 * * *'   # 01:11 PT (catches 1-3h lag -> ~02:11-04:11 AM PT)
     - cron: '31 10 * * *'  # 02:31 PT (catches 0-2h lag -> ~02:31-04:31 AM PT)
     - cron: '23 11 * * *'  # 03:23 PT (catches 0-1h lag -> ~03:23-04:23 AM PT)
-    - cron: '7 12 * * *'   # 04:07 PT (0h lag direct morning launch)
+    - cron: '19 12 * * *'  # 04:19 PT (0h lag direct morning launch, unique from daily-n3-brain 12:07)
     - cron: '37 12 * * *'  # 04:37 PT (0h lag backup morning launch)
   workflow_dispatch:
 
@@ -106,9 +106,12 @@ jobs:
           night_closed = read_night_closed()
 
           meta_date = ""
+          radio_ver = ""
           if os.path.exists("audio/daily_radio_meta.json"):
               try:
-                  meta_date = str(json.load(open("audio/daily_radio_meta.json", encoding="utf-8")).get("date") or "")
+                  _rm = json.load(open("audio/daily_radio_meta.json", encoding="utf-8"))
+                  meta_date = str(_rm.get("date") or "")
+                  radio_ver = str(_rm.get("radio_ver") or "")
               except Exception:
                   meta_date = ""
 
@@ -139,7 +142,8 @@ jobs:
 
           # Morning/daytime (>=04:00 AM PT): if today's content is NOT live yet, launch full refresh immediately
           # unless the 04:05 AM PT morning-handoff bridge is already actively synthesizing today's edition!
-          if now_pt.hour >= 4 and meta_date != study_pt:
+          expected_ver = "v37_qq_world_finale_13x_n5inline" if study_pt >= "2026-11-22" else "v36_qq_real_public_memory"
+          if now_pt.hour >= 4 and (meta_date != study_pt or (study_pt >= "2026-11-19" and radio_ver != expected_ver)):
               if bridge_already_active():
                   print("noop|false")
               else:
@@ -163,7 +167,14 @@ jobs:
             sudo apt-get install -y -qq --no-install-recommends ffmpeg
             pip install --quiet -U numpy edge-tts certifi google-genai pykakasi
             python auto_author_daily_content.py --mode morning-prepare
-            python run_brain_algorithm.py
+            for try_i in 1 2; do
+              if python run_brain_algorithm.py; then
+                break
+              fi
+              echo "[retry] run_brain_algorithm attempt ${try_i} failed, retrying in 15s..."
+              sleep 15
+              [ "$try_i" -eq 2 ] && exit 1
+            done
           fi
 
       - name: Commit & Push If Updated
@@ -278,7 +289,14 @@ jobs:
           sudo apt-get install -y -qq --no-install-recommends ffmpeg
           pip install --quiet -U numpy edge-tts certifi google-genai pykakasi
           python auto_author_daily_content.py --mode morning-prepare
-          python run_brain_algorithm.py
+          for try_i in 1 2; do
+            if python run_brain_algorithm.py; then
+              break
+            fi
+            echo "[retry] run_brain_algorithm attempt ${try_i} failed, retrying in 15s..."
+            sleep 15
+            [ "$try_i" -eq 2 ] && exit 1
+          done
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
