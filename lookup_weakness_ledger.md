@@ -1,7 +1,7 @@
 # Cloud Lookup & Weakness Telemetry Ledger
 
-- Updated: `2026-11-21 02:56 PT`
-- Closed Study Day: `2026-11-20`
+- Updated: `2026-11-21 09:58 PT`
+- Study Date: `2026-11-21`
 - Total Looked-Up Words/Phrases: `9`
 
 | Word / Phrase | Lookups | Last Seen | Contexts |

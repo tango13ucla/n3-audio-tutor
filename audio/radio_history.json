@@ -74,7 +74,14 @@
       "uchi6_s2b_300million_part2",
       "uchi6_s3a_momoe_part1",
       "uchi6_s3b_momoe_part2"
+    ],
+    "2026-11-21": [
+      "uchi7_s1_news_fallback",
+      "uchi7_s2a_tokiwaso_part1",
+      "uchi7_s2b_tokiwaso_part2",
+      "uchi7_s3a_seven_eleven_part1",
+      "uchi7_s3b_seven_eleven_part2"
     ]
   },
-  "last_date": "2026-11-20"
+  "last_date": "2026-11-21"
 }

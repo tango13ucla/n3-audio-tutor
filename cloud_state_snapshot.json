@@ -2475,6 +2475,19 @@
         1795241356,
         1795241356
       ]
+    },
+    "2026-11-21": {
+      "resetAt": 0,
+      "radioMaxSec": 0,
+      "radioPos": [
+        0,
+        0
+      ],
+      "radioSig": "",
+      "greenAt": {},
+      "retestAt": {},
+      "learning": {},
+      "sched": {}
     }
   },
   "masteryOverrides": {
