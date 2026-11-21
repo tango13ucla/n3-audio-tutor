@@ -58,7 +58,7 @@ permissions:
 jobs:
   refresh-brain:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 165
     concurrency:
       group: daily-n3-brain-active
       cancel-in-progress: false
@@ -87,7 +87,7 @@ jobs:
           INPUT_MODE: ${{ inputs.mode }}
         run: |
           DECISION=$(python - <<'PY'
-          import datetime, json, os, time, urllib.request
+          import datetime, json, os, subprocess, time, urllib.request
           from zoneinfo import ZoneInfo
 
           PT = ZoneInfo("America/Los_Angeles")
@@ -103,7 +103,7 @@ jobs:
               if not tok or not repo:
                   return False
               try:
-                  url = f"https://api.github.com/repos/{repo}/actions/runs?status=in_progress&per_page=20"
+                  url = f"https://api.github.com/repos/{repo}/actions/runs?per_page=25"
                   req = urllib.request.Request(url, headers={
                       "Authorization": f"Bearer {tok}",
                       "Accept": "application/vnd.github+json",
@@ -112,6 +112,8 @@ jobs:
                   with urllib.request.urlopen(req, timeout=8) as r:
                       runs = json.loads(r.read().decode("utf-8")).get("workflow_runs") or []
                   for run in runs:
+                      if run.get("status") not in ("queued", "in_progress", "waiting"):
+                          continue
                       rid = str(run.get("id") or "")
                       if not rid or rid == my_run:
                           continue
@@ -124,7 +126,7 @@ jobs:
                       with urllib.request.urlopen(jreq, timeout=8) as jr:
                           jobs = json.loads(jr.read().decode("utf-8")).get("jobs") or []
                       for jb in jobs:
-                          if jb.get("name") == "morning-handoff" and jb.get("status") in ("queued", "in_progress"):
+                          if jb.get("name") == "morning-handoff" and jb.get("status") in ("queued", "in_progress", "waiting"):
                               return True
               except Exception:
                   pass
@@ -134,25 +136,35 @@ jobs:
               print(f"{inp}|false")
               raise SystemExit(0)
 
-          night_closed = ""
-          if os.path.exists("night_summary.json"):
-              try:
-                  night_closed = str(json.load(open("night_summary.json", encoding="utf-8")).get("closed_study_day") or "")
-              except Exception:
-                  night_closed = ""
+          def read_night_closed() -> str:
+              if os.path.exists("night_summary.json"):
+                  try:
+                      return str(json.load(open("night_summary.json", encoding="utf-8")).get("closed_study_day") or "")
+                  except Exception:
+                      return ""
+              return ""
 
-          # Stage 1 (01:00-03:59 AM PT): Overnight Precision Bridge!
-          # If a tick lands at 01:00-01:59 PT, hold cleanly until 02:02 PT before closing out the day.
+          night_closed = read_night_closed()
+
+          # Stage 1 (00:05-03:59 AM PT): Widened Overnight Precision Bridge (nearly 4h catch net)!
+          # If a tick lands at 00:05-01:59 PT, hold cleanly until 02:02 PT before closing out the day.
           # Once closed (or if already closed during 02:00-03:59 PT), arm the `morning-handoff` bridge
           # so today's new episode & 50 questions ALWAYS launch at 04:05 AM PT sharp regardless of cron lag!
-          if ev == "schedule" and 1 <= now_pt.hour < 4:
-              if now_pt.hour == 1:
+          in_overnight_bridge = (now_pt.hour == 0 and now_pt.minute >= 5) or (1 <= now_pt.hour < 4)
+          if ev == "schedule" and in_overnight_bridge:
+              if now_pt.hour < 2:
+                  if bridge_already_active():
+                      print("noop|false")
+                      raise SystemExit(0)
                   target_2am = now_pt.replace(hour=2, minute=2, second=0, microsecond=0)
                   wait_s = int((target_2am - now_pt).total_seconds())
-                  if 0 < wait_s <= 4000:
+                  if 0 < wait_s <= 7500:
                       time.sleep(wait_s)
+                  subprocess.run(["git", "fetch", "origin", "main", "--quiet"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+                  subprocess.run(["git", "reset", "--hard", "origin/main", "--quiet"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
                   now_pt = datetime.datetime.now(PT)
                   study_pt = (now_pt - datetime.timedelta(hours=4)).strftime("%Y-%m-%d")
+                  night_closed = read_night_closed()
               need_bridge = not bridge_already_active()
               if night_closed != study_pt:
                   print(f"night_summary|{'true' if need_bridge else 'false'}")
@@ -385,8 +397,8 @@ jobs:
                   break
               time.sleep(min(60, rem))
               if int(rem) % 300 < 60:
-                  subprocess.run(["git", "fetch", "origin", "main", "--quiet"], check=False)
-                  subprocess.run(["git", "reset", "--hard", "origin/main", "--quiet"], check=False)
+                  subprocess.run(["git", "fetch", "origin", "main", "--quiet"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+                  subprocess.run(["git", "reset", "--hard", "origin/main", "--quiet"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
                   study_target = target_pt.strftime("%Y-%m-%d")
                   try:
                       md = json.load(open("audio/daily_radio_meta.json", encoding="utf-8")).get("date", "")
@@ -395,8 +407,8 @@ jobs:
                           raise SystemExit(0)
                   except Exception:
                       pass
-          subprocess.run(["git", "fetch", "origin", "main", "--quiet"], check=False)
-          subprocess.run(["git", "reset", "--hard", "origin/main", "--quiet"], check=False)
+          subprocess.run(["git", "fetch", "origin", "main", "--quiet"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+          subprocess.run(["git", "reset", "--hard", "origin/main", "--quiet"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
           now_pt = datetime.datetime.now(PT)
           study_pt = (now_pt - datetime.timedelta(hours=4)).strftime("%Y-%m-%d")
           try:
