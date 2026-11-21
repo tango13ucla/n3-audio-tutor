@@ -75,7 +75,11 @@ def radio_prefs(prefs: dict | None = None) -> dict:
         "prefer_tags": [str(t) for t in (r.get("prefer_tags") or [])],
         "avoid_story_ids": {str(s) for s in (r.get("avoid_story_ids") or [])},
         "episode_minutes": ep_bounds,
-        "perspective": str(r.get("perspective", "uchi_intellectual_and_news")),
+        "perspective": str(r.get("perspective", "uchi_real_public_memory_and_world_from_japan")),
+        "story_structure": str(r.get("story_structure", "4_act_jp_news_2_real_stories_plus_final_fifth_world_from_japan")),
+        "world_finale_share": float(r.get("world_finale_share", 0.2)),
+        "grammar_frequency_multiplier": float(r.get("grammar_frequency_multiplier", 1.3)),
+        "direct_inline_ja_level": str(r.get("direct_inline_ja_level", "n5_and_easy_n4")),
         "immersion_365": dict(r.get("immersion_365") or {}),
     }
 

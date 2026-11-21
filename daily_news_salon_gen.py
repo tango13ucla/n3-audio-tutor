@@ -29,10 +29,20 @@ NIGHT_SUMMARY_PATH = os.path.join(BASE_DIR, "night_summary.json")
 
 NHK_FEEDS = [
     ("主要", "https://www.nhk.or.jp/rss/news/cat0.xml"),
-    ("政治", "https://www.nhk.or.jp/rss/news/cat6.xml"),
+    ("政治", "https://www.nhk.or.jp/rss/news/cat4.xml"),
     ("経済", "https://www.nhk.or.jp/rss/news/cat5.xml"),
-    ("科学文化", "https://www.nhk.or.jp/rss/news/cat2.xml"),
-    ("国際", "https://www.nhk.or.jp/rss/news/cat3.xml"),
+    ("科学文化", "https://www.nhk.or.jp/rss/news/cat3.xml"),
+    ("国際", "https://www.nhk.or.jp/rss/news/cat6.xml"),
+]
+
+WORLD_FROM_JAPAN_FEEDS = [
+    ("国際", "https://www.nhk.or.jp/rss/news/cat6.xml"),
+    ("科学", "https://news.google.com/rss/headlines/section/topic/SCIENCE?hl=ja&gl=JP&ceid=JP:ja"),
+    ("世界", "https://news.google.com/rss/headlines/section/topic/WORLD?hl=ja&gl=JP&ceid=JP:ja"),
+    ("科技", "https://news.google.com/rss/headlines/section/topic/TECHNOLOGY?hl=ja&gl=JP&ceid=JP:ja"),
+    ("医学健康", "https://news.google.com/rss/headlines/section/topic/HEALTH?hl=ja&gl=JP&ceid=JP:ja"),
+    ("全球财经", "https://news.google.com/rss/headlines/section/topic/BUSINESS?hl=ja&gl=JP&ceid=JP:ja"),
+    ("科学文化", "https://www.nhk.or.jp/rss/news/cat3.xml"),
 ]
 
 
@@ -101,6 +111,36 @@ def fetch_live_nhk_news(max_items: int = 8, timeout: float = 8.0) -> list[dict]:
                     break
         except Exception:
             pass
+    return items
+
+
+def fetch_live_world_from_japan_news(max_items: int = 10, timeout: float = 8.0) -> list[dict]:
+    """Fetches non-Japan world, science, tech, medicine & global economy headlines as reported by Japanese media."""
+    items: list[dict] = []
+    seen_titles: set[str] = set()
+    for cat, url in WORLD_FROM_JAPAN_FEEDS:
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 N3SalonBot/1.0"})
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                raw = resp.read()
+            root = ET.fromstring(raw)
+            count_cat = 0
+            for it in root.findall(".//item"):
+                title = (it.findtext("title") or "").strip()
+                desc = (it.findtext("description") or "").strip()
+                desc = re.sub(r"<[^>]+>", " ", desc)
+                desc = re.sub(r"\s+", " ", desc).strip()
+                if not title or title in seen_titles:
+                    continue
+                seen_titles.add(title)
+                items.append({"category": cat, "title": title, "summary": desc[:180]})
+                count_cat += 1
+                if count_cat >= 2 or len(items) >= max_items:
+                    break
+        except Exception:
+            continue
+        if len(items) >= max_items:
+            break
     return items
 
 
@@ -312,13 +352,14 @@ def maybe_generate_live_news_story(
         "三位老友：窦文涛(W，俗人真性情、爱自嘲好奇、绝不当报幕员)、"
         "梁文道(D，温厚会讲故事、把当日真实新闻放进日本社会背景与公共记忆里剥笋深聊)、"
         "许子东(X，冷幽默学者、一句话点破人情世故与社会真相)。\n"
-        "请从今日真实日本新闻里【只挑一两件最有冲突感、最反映日本当下世相的真新闻】彻底讲透（约 7 分钟，24 到 32 轮），绝不串烧报菜名！\n"
+        "请从今日真实日本新闻里【只挑一两件最有冲突感、最反映日本当下世相的真新闻】彻底讲透（约 6 分钟，20 到 26 轮），绝不串烧报菜名！\n"
         "核心铁律：\n"
         "1. 【100% 真实新闻，严禁编造人物】：只能聊输入里的真实新闻与真实日本历史背景，绝对不允许虚构任何假朋友、假同事、假邻居故事！\n"
         "2. 【开篇与收束自然衔接】：开篇第一轮 W 直接以『《锵锵三人行》，』切入今日最热日本新闻；最后两轮由 D/W 自然预告广告后要深聊的今日两段日本真实公共记忆大故事（参考 companion_titles）。\n"
-        "3. 【黄金比例顺嘴点拨日文（约 75% 真新闻深聊 + 25% 顺嘴点透 N3 语法单字）】：自然揉入 2 到 3 个昨晚刚卡壳的目标 N3 表达；每当该表达出现时，由 D 或 X 顺嘴用一两句大白话点明它的意思、接续或易混双胞胎词（例如『日语里表示……用……，注意别跟……弄混了』），W 活学活用接一句，恰到好处绝不背书说教。\n"
-        f"4. 当前处于 {ramp_days} 天双语计划第 {day_num} 天（阶段：{phase}），日语假名占比约 {ja_pct}%。\n"
-        "5. 【语音合成硬铁律】：对白文本中凡出现日文词句，必须 100% 写成纯平假名或纯片假名（前后留空格或中文标点），严禁汉字紧贴假名，严禁夹杂单字中文孤岛，严禁破折号（—/——），严禁任何英文字母或阿拉伯数字（数字全写中文），严禁『哈哈』『噗』或考试倒计时。\n"
+        "3. 【1.3 倍自然语法讲解频率（每章约 4 个 N3 语法点，绝不生硬说教）】：自然揉入 4 个目标 N3 语法/表达；其中 2 到 3 个由 D/X 用一两句大白话点透意思、接续或易混双胞胎词，W 顺手接一句；另外 1 到 2 个在聊天现场一两句话顺嘴点睛带过，像老友聊天一样自然流畅，绝不变成念教材！\n"
+        "4. 【中文为框架，直接自然夹入 N5 与简单 N4 日语熟词】：像 おにぎり、おでん、コンビニ、スーパー、でんしゃ、しんかんせん、えき、テレビ、ニュース、かいしゃ、しゃちょう、ねだん、おかね、こども、かぞく、びょういん、くすり 等 N5/简单 N4 日常词汇直接用纯假名夹进中文句子里，不用啰嗦翻译成『饭团日语叫…』，让听众在中文框架下顺耳熟悉；但任何日文词前后必须保证紧挨的中文片段至少有 2 个汉字以上，绝不留单字中文孤岛！\n"
+        f"5. 当前处于 {ramp_days} 天双语计划第 {day_num} 天（阶段：{phase}），日语假名占比约 {max(ja_pct, 16)}%。\n"
+        "6. 【语音合成硬铁律】：对白文本中凡出现日文词句，必须 100% 写成纯平假名或纯片假名（前后留空格或中文标点），严禁汉字紧贴假名，严禁夹杂单字中文孤岛，严禁破折号（—/——），严禁任何英文字母或阿拉伯数字（数字全写中文），严禁『哈哈』『噗』或考试倒计时。\n"
         "输出严格为 JSON：{\"short_tab\": \"今日时局\", \"title\": \"...\", \"ja_focus\": \"...(此处可正常写日文汉字假名供屏幕显示)\", "
         "\"turns\": [[\"W\", \"...\"], [\"X\", \"...\"], [\"D\", \"...\"], ...]}"
     )
@@ -338,10 +379,11 @@ def maybe_generate_live_news_story(
         story = {
             "id": f"live_nhk_news_{today_str}",
             "tier": "live_news",
+            "is_news_slot": True,
             "short_tab": str(parsed.get("short_tab") or "今日时局")[:6],
             "tags": ["今日日本时局", "真实日本公共记忆", "润物细无声N3"],
             "title": str(parsed.get("title") or "今日日本时局观察"),
-            "point_ids": ["N3-G13", "N3-G23"],
+            "point_ids": ["N3-G13", "N3-G23", "N3-G55", "N3-G68"],
             "ja_focus": str(parsed.get("ja_focus") or ""),
             "turns": _sanitize_generated_turns(parsed.get("turns") or []),
         }
@@ -354,4 +396,97 @@ def maybe_generate_live_news_story(
         print("[info] Generated live news story did not pass strict phonetic gate; using curated Uchi bank.")
     except Exception as e:
         print(f"[info] Failed to parse live news JSON: {e}")
+    return None
+
+
+def maybe_generate_live_world_finale_story(
+    today_str: str,
+    imm_profile: dict,
+    focus_points: list[str],
+    companion_titles: list[str],
+    dry_test: bool = False,
+) -> dict | None:
+    """
+    Generates the mandatory final-1/5 (~8 min) 'World From Japan's Perspective' finale segment:
+    covers non-Japan global news across science, AI, medicine, space, energy, global economy,
+    climate, tech & geopolitics through Japanese media/society's eyes, with 1.3x natural N3 grammar
+    density and direct N5/simple-N4 inline Japanese vocabulary.
+    """
+    if dry_test:
+        return None
+    cache_path = os.path.join(AUDIO_DIR, f"live_world_finale_{today_str}.json")
+    if os.path.exists(cache_path):
+        try:
+            cached = json.load(open(cache_path, encoding="utf-8"))
+            if validate_generated_story(cached, require_light_explain=(imm_profile.get("ja_ratio", 0.14) < 0.45)):
+                return cached
+        except Exception:
+            pass
+
+    world_headlines = fetch_live_world_from_japan_news(max_items=10)
+    if not world_headlines:
+        return None
+
+    ja_pct = int(round(float(imm_profile.get("ja_ratio", 0.14)) * 100))
+    phase = imm_profile.get("phase", "n3_sprint")
+    ramp_days = int(imm_profile.get("ramp_days", 700))
+    day_num = imm_profile.get("day_of_365", 1)
+
+    night_sig = load_last_night_signals()
+    night_missed = (night_sig.get("missed_or_unsure_points") or [])[:4]
+    combined_targets = []
+    for x in night_missed + list(focus_points):
+        if x and x not in combined_targets:
+            combined_targets.append(x)
+
+    exemplars = load_qq_corpus_exemplars(f"world:{today_str}", count=2)
+
+    sys_prompt = (
+        "你是凤凰卫视《锵锵三人行》原班总撰稿，现在负责每天压轴的【最后五分之一板块：从日本的角度看世界】（约 8 分钟，22 到 28 轮，约 2,200 到 2,450 字）。\n"
+        "核心定位：绝对不要锁死在日本本土，也绝对不要局限于文史哲！要让听众 365 天持续知道全世界正在发生什么重要大事——优先挑选【科学、前沿科技、人工智能、数学物理、国际医学、新能源材料、太空探索、全球财经、气候环境、国际地缘】等非文史哲广谱真新闻！\n"
+        "独特视角：必须讲清楚『日本媒体、日本科学家、企业界或日本普通老百姓怎么看待这件世界大事？为什么日本人的反应跟欧美或中国不一样？』\n"
+        "三位老友：窦文涛(W，好奇心强、爱把前沿科学或国际新闻拉回普通人生活直觉)、梁文道(D，视野开阔、从日本视角串联全球脉络)、许子东(X，犀利冷幽默、点破各国心态反差)。\n"
+        "硬性铁律：\n"
+        "1. 【100% 真实国际/科学新闻，严禁编造人物】：只聊输入里的真实世界/科学/科技/医疗/经济新闻，挑一到两件最重磅的彻底聊透，绝不走马观花报菜名。\n"
+        "2. 【自然衔接与全场唯一收尾】：开篇第一轮由 W 自然承接前面日本往事把镜头拉出日本看世界（不出现『《锵锵三人行》』开场）；最后一轮必须由 W 以温暖自然的『《锵锵三人行》，咱们明天见！』作为全期节目的唯一压轴收尾。\n"
+        "3. 【1.3 倍自然语法讲解频率（本章约 4 个 N3 语法点，自然不生硬）】：自然融入 4 个 N3 高频表达（优先参考目标清单）；2 到 3 个由 D/X 顺嘴用一两句大白话点破意思、接续或双胞胎辨析，另 1 到 2 个轻巧一句带过，保持聊天人味绝不变成枯燥上课。\n"
+        "4. 【中文为框架，直接自然夹入 N5 与简单 N4 日语熟词】：像 せかい、ニュース、かがく、うちゅう、ぎじゅつ、びょういん、くすり、おかね、ねだん、かいしゃ、しゃちょう、コンビニ、おにぎり、おでん、でんしゃ、テレビ、しんぶん、かぞく、こども 等 N5/简单 N4 日常词汇直接用纯假名自然夹入中文对话，不用刻意翻译，帮助听众自然熟悉；但日文词前后相邻的中文片段必须至少有 2 个汉字，绝不留单字中文孤岛！\n"
+        f"5. 当前处于 {ramp_days} 天双语计划第 {day_num} 天（阶段：{phase}），日语假名占比约 {max(ja_pct, 16)}%。\n"
+        "6. 【语音合成硬铁律】：对白文本中所有日文必须 100% 纯平假名或纯片假名（前后空格或标点隔开），严禁汉字紧贴假名，严禁单字中文孤岛，严禁破折号（—/——），严禁英文字母与阿拉伯数字（全写中文，如『人工智能』『量子』『百分之三十八』），严禁『哈哈』『噗』或考试倒计时。\n"
+        "输出严格为 JSON：{\"short_tab\": \"日本看世界\", \"title\": \"...\", \"ja_focus\": \"...(此处可正常写日文汉字假名供屏幕显示)\", "
+        "\"turns\": [[\"W\", \"...\"], [\"D\", \"...\"], [\"X\", \"...\"], ...]}"
+    )
+    usr_prompt = json.dumps({
+        "japan_reported_world_and_science_headlines": world_headlines,
+        "priority_n3_grammar_targets": combined_targets[:6],
+        "earlier_japan_stories_today": companion_titles[:4],
+        "authentic_qqsrx_style_reference": load_cloud_qq_style_exemplars(f"world:{today_str}"),
+        "authentic_qiangqiang_cadence_examples": exemplars,
+    }, ensure_ascii=False, indent=2)
+
+    raw = _call_chat_llm(sys_prompt, usr_prompt)
+    if not raw:
+        return None
+    try:
+        parsed = json.loads(raw)
+        story = {
+            "id": f"live_world_finale_{today_str}",
+            "tier": "world_from_japan",
+            "is_world_finale": True,
+            "short_tab": str(parsed.get("short_tab") or "日本看世界")[:6],
+            "tags": ["日本看世界", "科学科技国际", "润物细无声N3"],
+            "title": str(parsed.get("title") or "从日本看今天的世界科学和国际大事"),
+            "point_ids": ["N3-G69", "N3-G65", "N3-G19", "N3-G67"],
+            "ja_focus": str(parsed.get("ja_focus") or ""),
+            "turns": _sanitize_generated_turns(parsed.get("turns") or []),
+        }
+        if validate_generated_story(story, require_light_explain=(imm_profile.get("ja_ratio", 0.14) < 0.45)):
+            os.makedirs(AUDIO_DIR, exist_ok=True)
+            with open(cache_path, "w", encoding="utf-8") as f:
+                json.dump(story, f, ensure_ascii=False, indent=2)
+            print(f"[world-finale] Generated validated Japanese-angle world/science finale: {story['title']}")
+            return story
+        print("[info] Generated world finale did not pass strict phonetic gate; using curated World-from-Japan finale.")
+    except Exception as e:
+        print(f"[info] Failed to parse world finale JSON: {e}")
     return None

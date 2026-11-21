@@ -275,12 +275,13 @@ def _author_trio_chapter(
         "三位老友：窦文涛(W，俗人真性情、好奇心重爱追问荒唐细节、绝不当报幕员)、"
         "梁文道(D，温厚会讲真实历史故事、用真实年份地点人物原话和命运反转层层推进，绝不堆砌白皮书统计数字)、"
         "许子东(X，冷幽默学者、一句话拆穿时代体面背后的人性与社会结构)。\n"
-        f"请围绕主题「{theme_desc}」【只讲透这一个 100% 真实发生过的日本历史事件或国民公共记忆】（约 7.5 分钟，24 到 34 轮，日语假名占比约 {ja_pct}%），严禁泛泛议论、严禁虚构不存在的虚构人物或编造故事！\n"
+        f"请围绕主题「{theme_desc}」【只讲透这一个 100% 真实发生过的日本历史事件或国民公共记忆】（约 6.5 分钟，20 到 28 轮，日语假名占比约 {max(ja_pct, 16)}%），严禁泛泛议论、严禁虚构不存在的虚构人物或编造故事！\n"
         "硬性铁律：\n"
         "1. 【100% 真实公共记忆、绝对不要编】：所有人物、年份、地名、事件、公司与名言必须是真实日本公共记忆（日本人聊天一提就懂的文化暗号），让听众每天听，听满三年能像本地通一样无缝融入日本社会。\n"
-        "2. 【黄金比例顺嘴点拨日文（约 75% 讲真实故事闲聊 + 25% 顺嘴点透提到的 N3 语法单字）】：自然融入给定的 2 到 3 个目标 N3 表达；每当该表达在真实历史场景或人物原话里出现时，由 D 或 X 顺嘴用一两句大白话点明意思、口语缩音或易混双胞胎词（例如『日语里表示……用……，注意别跟……弄混了』），W 活学活用接一句，恰到好处不过度说教，绝不解释初级简单词。\n"
-        "3. 对白内所有日文词句必须 100% 用纯平假名或纯片假名书写，前后用空格或中文标点与汉字隔开，严禁汉字紧贴假名，严禁夹杂单字中文孤岛！\n"
-        "4. 严禁任何英文字母、阿拉伯数字（数字全写中文）、破折号、『哈哈』『噗』、日期或考试倒计时。\n"
+        "2. 【1.3 倍自然语法讲解频率（每章约 4 个 N3 语法点，绝不生硬说教）】：自然融入 4 个 N3 表达（优先用给定目标）；2 到 3 个由 D/X 顺嘴用一两句大白话点明意思、接续或易混双胞胎词，W 顺手接一句；另 1 到 2 个在聊天现场一两句话自然点睛带过，像老友聊天一样顺畅，绝不变成背教科书。\n"
+        "3. 【中文为框架，直接自然夹入 N5 与简单 N4 日语熟词】：像 おにぎり、おでん、コンビニ、スーパー、でんしゃ、しんかんせん、えき、テレビ、ニュース、かいしゃ、しゃちょう、ねだん、おかね、こども、かぞく、びょういん、くすり 等日常词直接用纯假名夹进中文句子，不用啰嗦翻译；但任何日文词前后紧挨的中文片段必须至少有 2 个汉字以上，严禁单字中文孤岛！\n"
+        "4. 对白内所有日文词句必须 100% 用纯平假名或纯片假名书写，前后用空格或中文标点与汉字隔开，严禁汉字紧贴假名！\n"
+        "5. 严禁任何英文字母、阿拉伯数字（数字全写中文）、破折号、『哈哈』『噗』、日期或考试倒计时。\n"
         "输出 JSON：{\"short_tab\": \"四字标签\", \"title\": \"章节标题\", \"ja_focus\": \"日文原句(此处可写汉字假名供屏幕显示)\", "
         "\"turns\": [[\"W\", \"...\"], [\"X\", \"...\"], [\"D\", \"...\"], ...]}"
     )
@@ -305,7 +306,7 @@ def _author_trio_chapter(
             "short_tab": str(parsed.get("short_tab") or tab_label)[:5],
             "tags": ["真实日本公共记忆", "少而透深故事", "润物细无声N3"],
             "title": str(parsed.get("title") or theme_desc),
-            "point_ids": ["N3-G13", "G-20261114-10"],
+            "point_ids": ["N3-G13", "G-20261114-10", "N3-G55", "N3-G63"],
             "ja_focus": str(parsed.get("ja_focus") or ""),
             "turns": [[str(s).strip(), str(t).strip()] for s, t in (parsed.get("turns") or [])],
         }
@@ -338,6 +339,79 @@ def _load_unused_public_memory_topics(used_ids: set[str], existing_titles: set[s
         return out
     except Exception:
         return []
+
+
+def _load_unused_world_topics(used_ids: set[str], existing_titles: set[str]) -> list[tuple[str, str, list[str]]]:
+    cat_path = BASE_DIR / "world_perspective_catalog.json"
+    if not cat_path.exists():
+        return []
+    try:
+        raw_cat = json.loads(cat_path.read_text(encoding="utf-8"))
+        topics = raw_cat.get("topics") if isinstance(raw_cat, dict) else raw_cat
+        out = []
+        for tp in (topics or []):
+            tid = str(tp.get("id") or "")
+            tab = str(tp.get("short_tab") or "日本看世界")[:5]
+            title = str(tp.get("title") or "")
+            angle = str(tp.get("japan_angle") or "")
+            targets = list(tp.get("n3_targets") or [])
+            if not title or any(tid and tid in uid for uid in used_ids) or title in existing_titles:
+                continue
+            out.append((tab, f"{title}（日本视角：{angle}）", targets))
+        return out
+    except Exception:
+        return []
+
+
+def _author_world_finale_chapter(
+    cid: str,
+    tab_label: str,
+    theme_desc: str,
+    target_items: list[str],
+    ja_pct: int,
+    exemplars: list[dict],
+    seed_key: str = "",
+) -> dict | None:
+    sys_p = (
+        "你是凤凰卫视《锵锵三人行》原班总撰稿，负责每天最后五分之一压轴板块【日本看世界】（约 8 分钟，22 到 28 轮，不局限文史哲，主打科学/科技/医学/能源/全球财经/太空/国际新闻）。\n"
+        f"请围绕主题「{theme_desc}」从日本媒体与日本社会的视角，把这件世界大事讲透（日语假名占比约 {max(ja_pct, 16)}%）。\n"
+        "硬性铁律：\n"
+        "1. 【1.3 倍自然语法频率】：自然融入 4 个 N3 语法表达（2 到 3 个顺嘴两句大白话点破意思与易混词，1 到 2 个自然一句带过），绝不生硬。\n"
+        "2. 【直接夹入 N5 与简单 N4 日语词】：中文框架下直接用纯假名夹入 せかい、かがく、ニュース、びょういん、くすり、かいしゃ、おかね、ねだん、でんしゃ、コンビニ、おにぎり、おでん 等熟词，不用翻译；日文词前后相邻中文片段至少 2 个汉字，绝不留单字孤岛。\n"
+        "3. 最后一轮由 W 以温暖自然的『《锵锵三人行》，咱们明天见！』作为全期唯一压轴收尾。\n"
+        "4. 对白内所有日文纯假名、严禁汉字紧贴假名、严禁英文字母/阿拉伯数字/破折号/哈哈/噗/倒计时。\n"
+        "输出 JSON：{\"short_tab\": \"五字标签\", \"title\": \"章节标题\", \"ja_focus\": \"日文原句\", \"turns\": [[\"W\", \"...\"], ...]}"
+    )
+    usr_p = json.dumps(
+        {
+            "theme": theme_desc,
+            "must_weave_targets": target_items,
+            "authentic_qqsrx_style_reference": load_cloud_qq_style_exemplars(seed_key or cid),
+            "authentic_qiangqiang_examples": exemplars,
+        },
+        ensure_ascii=False,
+    )
+    raw = _call_chat_llm(sys_p, usr_p)
+    if not raw:
+        return None
+    try:
+        parsed = json.loads(raw)
+        st_obj = {
+            "id": cid,
+            "tier": "world_from_japan",
+            "is_world_finale": True,
+            "short_tab": str(parsed.get("short_tab") or tab_label)[:5],
+            "tags": ["日本看世界", "科学科技国际", "润物细无声N3"],
+            "title": str(parsed.get("title") or theme_desc),
+            "point_ids": ["N3-G69", "N3-G65", "N3-G19", "N3-G67"],
+            "ja_focus": str(parsed.get("ja_focus") or ""),
+            "turns": [[str(s).strip(), str(t).strip()] for s, t in (parsed.get("turns") or [])],
+        }
+        if validate_generated_story(st_obj, require_light_explain=(ja_pct < 45)) and not contains_pii(json.dumps(st_obj, ensure_ascii=False)):
+            return st_obj
+    except Exception:
+        return None
+    return None
 
 
 def run_morning_prepare() -> int:
@@ -461,10 +535,35 @@ def run_morning_prepare() -> int:
         if newly_built:
             existing_auto = newly_built + existing_auto
 
+    unplayed_world = [
+        st for st in SALON_STORIES
+        if (st.get("is_world_finale") or st.get("tier") == "world_from_japan")
+        and st["id"] not in recent_played
+    ]
+    if len(unplayed_world) < 1:
+        w_topics = _load_unused_world_topics(existing_ids | recent_played, existing_titles)
+        if w_topics:
+            w_tab, w_desc, w_targets = w_topics[0]
+            w_cid = f"world_auto_{study_today.replace('-', '')}"
+            if w_cid not in existing_ids:
+                w_obj = _author_world_finale_chapter(
+                    cid=w_cid,
+                    tab_label=w_tab,
+                    theme_desc=w_desc,
+                    target_items=(w_targets + combined_last_night[:2])[:4],
+                    ja_pct=ja_pct,
+                    exemplars=exemplars,
+                    seed_key=f"world:{study_today}",
+                )
+                if w_obj:
+                    existing_auto = [w_obj] + existing_auto
+                    existing_ids.add(w_cid)
+                    added_chapters += 1
+
     if added_chapters > 0:
         AUTO_SALON_JSON.parent.mkdir(parents=True, exist_ok=True)
         AUTO_SALON_JSON.write_text(json.dumps(existing_auto, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        print(f"[morning-prepare] Auto-authored {added_chapters} validated Uchi chapters into {AUTO_SALON_JSON.name}")
+        print(f"[morning-prepare] Auto-authored {added_chapters} validated Uchi/World chapters into {AUTO_SALON_JSON.name}")
 
     # 2. Check unseen quiz variants for active points
     from adaptive_bank import EXTRA_PRIMARY_CARDS, VARIANT_CARDS

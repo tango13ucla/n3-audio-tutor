@@ -59,7 +59,7 @@ except Exception:
 
 from adaptive_bank import EXTRA_PRIMARY_CARDS, POINT_META
 from compose_qq_music import ensure_qq_music_assets
-from daily_news_salon_gen import maybe_generate_live_news_story
+from daily_news_salon_gen import maybe_generate_live_news_story, maybe_generate_live_world_finale_story
 from radio_dialogue_bank import MODALITY_MAP, SALON_STORIES
 import tutor_prefs
 from tutor_data import TUTOR_ITEMS
@@ -1050,6 +1050,12 @@ async def main():
 
     now_pt = datetime.datetime.now(PT_TZ)
     study_dt = (now_pt - datetime.timedelta(hours=4)).date()
+    if dry_test and "--dry-date" in sys.argv:
+        try:
+            _di = sys.argv.index("--dry-date")
+            study_dt = datetime.date.fromisoformat(sys.argv[_di + 1])
+        except Exception:
+            pass
     today_str = study_dt.strftime("%Y-%m-%d")
     days_left = max(0, (EXAM_DATE - study_dt).days)
     day_ord = study_dt.toordinal()
@@ -1137,7 +1143,7 @@ async def main():
         if item and item not in top_focus_labels:
             top_focus_labels.append(item)
     top_focus_labels = top_focus_labels[:8]
-    uchi_companion_titles = [st["title"] for st in SALON_STORIES[:5]]
+    uchi_companion_titles = [st["title"] for st in SALON_STORIES[:6]]
     live_news_story = (
         None
         if has_today_dated_news
@@ -1149,6 +1155,17 @@ async def main():
             dry_test=dry_test,
         )
     )
+    live_world_finale_story = (
+        maybe_generate_live_world_finale_story(
+            today_str=today_str,
+            imm_profile=imm_profile,
+            focus_points=top_focus_labels,
+            companion_titles=uchi_companion_titles,
+            dry_test=dry_test,
+        )
+        if today_str >= "2026-11-22"
+        else None
+    )
     base_pool = []
     for st in SALON_STORIES:
         if live_news_story and st.get("short_tab") == "今日时局":
@@ -1157,15 +1174,25 @@ async def main():
             base_pool.append(st_copy)
         else:
             base_pool.append(st)
-    candidate_pool = ([live_news_story] if live_news_story else []) + base_pool
+    candidate_pool = (
+        ([live_news_story] if live_news_story else [])
+        + base_pool
+        + ([live_world_finale_story] if live_world_finale_story else [])
+    )
 
     def _uchi_vol_prefix(sid: str) -> str:
-        if sid.startswith(("uchi_night_focus_", "uchi_auto_")):
+        if sid.startswith(("uchi_night_focus_", "uchi_auto_", "world_auto_")):
             return ""
         m = re.match(r"^(uchi\d*_)", sid)
         return m.group(1) if m else ""
 
+    def _is_world_finale_story(st: dict) -> bool:
+        sid = str(st.get("id") or "")
+        return bool(st.get("is_world_finale")) or st.get("tier") == "world_from_japan" or "_world_" in sid or sid.startswith(("live_world_finale_", "world_auto_"))
+
     def _is_epilogue_story(st: dict) -> bool:
+        if _is_world_finale_story(st):
+            return True
         sid = str(st.get("id") or "")
         if sid.endswith("_epilogue") or "_epilogue" in sid:
             return True
@@ -1192,10 +1219,10 @@ async def main():
                     _vpref = _dom_prefixes[0]
                     _full_vol_objs = [st for st in candidate_pool if _uchi_vol_prefix(st["id"]) == _vpref]
                     if live_news_story and live_news_story["id"] not in [st["id"] for st in _full_vol_objs]:
-                        _non_news_vol = [st["id"] for st in _full_vol_objs if not st.get("is_news_slot")]
-                        pinned_today_ids = [live_news_story["id"]] + _non_news_vol
-                    else:
-                        pinned_today_ids = [st["id"] for st in _full_vol_objs]
+                        _full_vol_objs = [live_news_story] + [st for st in _full_vol_objs if not st.get("is_news_slot")]
+                    if live_world_finale_story and live_world_finale_story["id"] not in [st["id"] for st in _full_vol_objs]:
+                        _full_vol_objs = [st for st in _full_vol_objs if not _is_world_finale_story(st)] + [live_world_finale_story]
+                    pinned_today_ids = [st["id"] for st in _full_vol_objs]
                 else:
                     pinned_today_ids = _clean_tids
         except Exception:
@@ -1222,10 +1249,18 @@ async def main():
             for st in candidate_pool:
                 if str(st.get("id") or "").startswith(f"uchi_night_focus_{today_str.replace('-', '')}") and st not in picked_list:
                     picked_list.append(st)
-            _vol_chapters = vol_groups[cohesive_vp]
+            _vol_chapters = list(vol_groups[cohesive_vp])
             if live_news_story and any(st.get("is_news_slot") for st in _vol_chapters):
-                # Cleanly replace fallback Act-1 news slot with today's fresh live NHK news (keeps 3-Act 5-scene cadence)
+                # Cleanly replace fallback Act-1 news slot with today's fresh live NHK news
                 _vol_chapters = [st for st in _vol_chapters if not st.get("is_news_slot")]
+            if live_world_finale_story:
+                # Cleanly replace fallback final-1/5 world slot with today's fresh live World-from-Japan finale
+                _vol_chapters = [st for st in _vol_chapters if not _is_world_finale_story(st)]
+                _vol_chapters.append(live_world_finale_story)
+            elif today_str >= "2026-11-22" and not any(_is_world_finale_story(st) for st in _vol_chapters):
+                _unplayed_wf = [st for st in candidate_pool if _is_world_finale_story(st) and recent_ages.get(st["id"], 0) == 0]
+                if _unplayed_wf:
+                    _vol_chapters.append(_unplayed_wf[0])
             picked_list.extend(_vol_chapters)
             selected_stories = picked_list
         else:
@@ -1235,9 +1270,18 @@ async def main():
             est_sec = 72.0  # Opening theme + greeting + 2 ad bumpers + closing & outro
             picked_ids: set[str] = set()
             has_epilogue = False
+            world_pick = None
+            if today_str >= "2026-11-22":
+                world_cands = [st for st in candidate_pool if _is_world_finale_story(st)]
+                world_cands.sort(key=story_rank)
+                if world_cands:
+                    world_pick = world_cands[0]
+                    est_sec += estimate_story_seconds(world_pick)
             for st in sorted(candidate_pool, key=story_rank):
+                if _is_world_finale_story(st):
+                    continue
                 is_ep = _is_epilogue_story(st)
-                if is_ep and has_epilogue:
+                if is_ep and (has_epilogue or world_pick is not None):
                     continue
                 if len(picked_ids) >= 5 and str(st.get("id") or "").startswith("story_") and any(x.startswith("uchi") for x in picked_ids):
                     continue
@@ -1248,15 +1292,22 @@ async def main():
                 if is_ep:
                     has_epilogue = True
                 est_sec += s_dur
-                if len(picked_ids) >= 12:
+                if len(picked_ids) >= 11:
                     break
             # Preserve candidate_pool narrative order so cross-chapter callbacks ("前后照应") stay sequential!
             selected_stories = [st for st in candidate_pool if st["id"] in picked_ids]
+            if world_pick is not None:
+                selected_stories.append(world_pick)
 
-    # Hard guarantee: epilogue chapter ALWAYS sits at the very end, NEVER mid-episode!
-    _non_ep = [st for st in selected_stories if not _is_epilogue_story(st)]
-    _eps = [st for st in selected_stories if _is_epilogue_story(st)]
-    selected_stories = _non_ep + (_eps[-1:] if _eps else [])
+    # Hard guarantee: World-from-Japan final-1/5 (or epilogue) ALWAYS sits at the very end, NEVER mid-episode!
+    _worlds = [st for st in selected_stories if _is_world_finale_story(st)]
+    if _worlds:
+        _non_w = [st for st in selected_stories if not _is_world_finale_story(st)]
+        selected_stories = _non_w + [_worlds[-1]]
+    else:
+        _non_ep = [st for st in selected_stories if not _is_epilogue_story(st)]
+        _eps = [st for st in selected_stories if _is_epilogue_story(st)]
+        selected_stories = _non_ep + (_eps[-1:] if _eps else [])
 
     if imm_profile["ja_ratio"] >= 0.65:
         opening_turns = POST_N3_NATIVE_OPENING
@@ -1296,24 +1347,41 @@ async def main():
             "title": st["title"],
             "ja_focus": st["ja_focus"],
             "pair_part": int(st.get("pair_part") or 0),
+            "is_world_finale": _is_world_finale_story(st),
             "raw_turns": st_turns,
             "events": turns_to_expanded_events(st_turns),
         })
 
-    # Compute exact 3-Act ad-break positions upfront (never splitting pair_part=1 from pair_part=2)
+    # Compute exact ad-break positions upfront (never splitting pair_part=1 from pair_part=2;
+    # for 6-scene v37 [News, S1a, S1b, S2a, S2b, WorldFinale], breaks cleanly land after ch 0 and ch 2!)
     total_stories = len(story_blocks)
-    act1_cnt = max(2, (total_stories + 2) // 3)
-    act2_cnt = max(2, (total_stories - act1_cnt + 1) // 2)
-    raw_ad1 = act1_cnt - 1
-    raw_ad2 = min(total_stories - 2, act1_cnt + act2_cnt - 1)
-    valid_breaks = [i for i in range(total_stories - 1) if story_blocks[i].get("pair_part") != 1]
-    if len(valid_breaks) >= 2:
-        ad1_after = min(valid_breaks[:-1], key=lambda x: abs(x - raw_ad1))
-        rem_breaks = [x for x in valid_breaks if x > ad1_after]
-        ad2_after = min(rem_breaks, key=lambda x: abs(x - raw_ad2))
+    if (
+        total_stories == 6
+        and story_blocks[-1].get("is_world_finale")
+        and story_blocks[1].get("pair_part") == 1
+        and story_blocks[3].get("pair_part") == 1
+    ):
+        ad1_after = 0
+        ad2_after = 2
     else:
-        ad1_after = raw_ad1
-        ad2_after = raw_ad2
+        act1_cnt = max(2, (total_stories + 2) // 3)
+        act2_cnt = max(2, (total_stories - act1_cnt + 1) // 2)
+        raw_ad1 = act1_cnt - 1
+        raw_ad2 = min(total_stories - 2, act1_cnt + act2_cnt - 1)
+        valid_breaks = [
+            i for i in range(total_stories - 1)
+            if story_blocks[i].get("pair_part") != 1
+            and not (i == total_stories - 2 and story_blocks[-1].get("is_world_finale"))
+        ]
+        if len(valid_breaks) < 2:
+            valid_breaks = [i for i in range(total_stories - 1) if story_blocks[i].get("pair_part") != 1]
+        if len(valid_breaks) >= 2:
+            ad1_after = min(valid_breaks[:-1], key=lambda x: abs(x - raw_ad1))
+            rem_breaks = [x for x in valid_breaks if x > ad1_after]
+            ad2_after = min(rem_breaks, key=lambda x: abs(x - raw_ad2))
+        else:
+            ad1_after = raw_ad1
+            ad2_after = raw_ad2
 
     # Deduplicate ad-break transitions when authored scenes already cue "进广告 / 广告回来" naturally
     if imm_profile["ja_ratio"] < 0.65:
@@ -1345,7 +1413,12 @@ async def main():
     ad2_in_evs = turns_to_expanded_events(ad2_in_turns) if ad2_in_turns else []
     closing_evs = turns_to_expanded_events(closing_turns) if closing_turns else []
 
-    radio_ver_tag = "v36_qq_real_public_memory" if today_str >= "2026-11-19" else "v34_3182_short_banter_latch"
+    if today_str >= "2026-11-22":
+        radio_ver_tag = "v37_qq_world_finale_13x_n5inline"
+    elif today_str >= "2026-11-19":
+        radio_ver_tag = "v36_qq_real_public_memory"
+    else:
+        radio_ver_tag = "v34_3182_short_banter_latch"
     sig_obj = {
         "ver": radio_ver_tag,
         "engine": engine_tag,
@@ -1354,7 +1427,7 @@ async def main():
         "ad1": [ad1_out_evs, ad1_in_evs],
         "ad2": [ad2_out_evs, ad2_in_evs],
         "closing": closing_evs,
-        "stories": [{k: v for k, v in b.items() if k not in ("raw_turns", "pair_part")} for b in story_blocks],
+        "stories": [{k: v for k, v in b.items() if k not in ("raw_turns", "pair_part", "is_world_finale")} for b in story_blocks],
     }
     script_sig = hashlib.sha256(json.dumps(sig_obj, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()[:14]
 

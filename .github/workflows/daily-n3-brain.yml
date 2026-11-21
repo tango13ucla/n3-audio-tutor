@@ -17,6 +17,7 @@ on:
       - 'daily_news_salon_gen.py'
       - 'auto_author_daily_content.py'
       - 'public_memory_catalog.json'
+      - 'world_perspective_catalog.json'
       - 'qq_corpus_knowledge.json'
       - 'generate_neural_audio.py'
       - 'build_html.py'
@@ -190,7 +191,8 @@ jobs:
 
           # Stage 2 (>=04:00 AM PT): study_pt has flipped to the new day; flip immediately in pure cloud mode
           # unless the 04:05 AM PT morning-handoff bridge is already actively synthesizing today's edition.
-          if meta_date != study_pt or (study_pt >= "2026-11-19" and radio_ver != "v36_qq_real_public_memory"):
+          expected_ver = "v37_qq_world_finale_13x_n5inline" if study_pt >= "2026-11-22" else "v36_qq_real_public_memory"
+          if meta_date != study_pt or (study_pt >= "2026-11-19" and radio_ver != expected_ver):
               if ev == "schedule" and bridge_already_active():
                   print("noop|false")
               else:
