@@ -229,7 +229,7 @@ jobs:
                       break
               for cid, cobj in CARDS_75.items():
                   qt = cobj.get("q_turns") or []
-                  if any(s in ("JF", "JM") and re.match(r"^(?:いち|に|さん)[。、\s]", str(t)) for s, t in qt):
+                  if len(cobj.get("choices") or []) == 3 and sum(1 for s, t in qt if s in ("JF", "JM") and re.match(r"^(?:いち|に|さん)[。、\s]", str(t))) == 3:
                       if not (mf.get(f"meta:{cid}") or {}).get("listen_parts"):
                           need_listen_parts = True
                           break

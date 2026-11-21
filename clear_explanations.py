@@ -1101,7 +1101,7 @@ def _clean_listen_ordinal(txt: str) -> str:
 
 for _qid, _c in CARDS_75.items():
     _qt = _c.get("q_turns") or []
-    if any(_spk in ("JF", "JM") and _re.match(r"^(?:いち|に|さん)[。、\s]", str(_t)) for _spk, _t in _qt):
+    if sum(1 for _spk, _t in _qt if _spk in ("JF", "JM") and _re.match(r"^(?:いち|に|さん)[。、\s]", str(_t))) == 3:
         if "form_line" in _c:
             _c["form_line"] = _re.sub(r"第\s*[123一二三]\s*[句项]\s*", "", str(_c["form_line"])).strip()
         if "exp_turns" in _c:
