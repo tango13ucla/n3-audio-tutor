@@ -240,50 +240,8 @@ def _call_chat_llm(system_prompt: str, user_prompt: str) -> str | None:
             except Exception as e:
                 print(f"[info] Gemini live news generation ({g_model}) skipped: {e}")
 
-    if gh_models_token:
-        endpoints = [
-            ("https://models.github.ai/inference/chat/completions", ("openai/gpt-4.1", "openai/gpt-4o", "openai/gpt-4o-mini")),
-        ]
-        for url, models in endpoints:
-            for model in models:
-                payload = json.dumps({
-                    "model": model,
-                    "temperature": 0.62,
-                    "response_format": {"type": "json_object"},
-                    "messages": [
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_prompt},
-                    ],
-                }).encode("utf-8")
-                headers = {
-                    "Authorization": f"Bearer {gh_models_token}",
-                    "Content-Type": "application/json",
-                    "Accept": "application/json",
-                    "User-Agent": "n3-audio-tutor-cloud/2.0",
-                    "X-GitHub-Api-Version": "2022-11-28",
-                }
-                try:
-                    req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
-                    with urllib.request.urlopen(req, timeout=45.0) as resp:
-                        ctype = (resp.headers.get("Content-Type") or "").lower()
-                        raw_body = resp.read().decode("utf-8", errors="replace").strip()
-                    if not raw_body or ("json" not in ctype and not raw_body.startswith("{")):
-                        print(f"[info] GitHub Models ({model}) returned non-JSON ({ctype}): {raw_body[:140]}")
-                        continue
-                    data = json.loads(raw_body)
-                    content = _strip_json_fence((data.get("choices") or [{}])[0].get("message", {}).get("content") or "")
-                    if content:
-                        json.loads(content)
-                        return content
-                except urllib.error.HTTPError as he:
-                    err_body = ""
-                    try:
-                        err_body = he.read().decode("utf-8", errors="replace")[:180]
-                    except Exception:
-                        pass
-                    print(f"[info] GitHub Models ({model}) HTTP {he.code}: {err_body}")
-                except Exception as e:
-                    print(f"[info] GitHub Models endpoint ({url.split('/')[2]} | {model}) skipped: {e}")
+    # Note: GitHub Models inference API (models.github.ai) was permanently retired on 2026-07-30
+    # and now returns HTTP 200 text/plain "OK". Only invoke configured live LLM keys above.
     return None
 
 

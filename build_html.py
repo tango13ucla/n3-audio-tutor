@@ -7193,6 +7193,17 @@ window.addEventListener("hashchange", () => {
 });
 
 let editionCheckBusy = false;
+let pendingEditionReload = false;
+function flushPendingEditionReload() {
+  if (!pendingEditionReload) return;
+  if (!activeKind && radioPlayer.paused) {
+    pendingEditionReload = false;
+    location.reload();
+  }
+}
+radioPlayer.addEventListener("pause", () => setTimeout(flushPendingEditionReload, 400));
+radioPlayer.addEventListener("ended", () => setTimeout(flushPendingEditionReload, 400));
+
 function checkNewDailyEdition() {
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.getRegistration().then(reg => { if (reg) reg.update().catch(() => {}); }).catch(() => {});
@@ -7207,7 +7218,7 @@ function checkNewDailyEdition() {
       const curSig = (DATA.radio && DATA.radio.script_sig) || "";
       const isNewerDay = DATA.plan_date && rm.date > DATA.plan_date;
       const isNewerAudio = curRadioDate && rm.date >= curRadioDate && rm.script_sig && curSig && rm.script_sig !== curSig;
-      if ((isNewerDay || isNewerAudio) && !activeKind && radioPlayer.paused) {
+      if (isNewerDay || isNewerAudio) {
         const targetKey = `${rm.date}_${rm.script_sig || ""}`;
         try {
           const prev = sessionStorage.getItem("n3_edition_reload") || "";
@@ -7215,12 +7226,20 @@ function checkNewDailyEdition() {
           if (parts[0] === targetKey && (Date.now() - Number(parts[1] || 0)) < 20000) return;
           sessionStorage.setItem("n3_edition_reload", `${targetKey}@${Date.now()}`);
         } catch (e) {}
-        location.reload();
+        if (!activeKind && radioPlayer.paused) {
+          location.reload();
+        } else {
+          pendingEditionReload = true;
+        }
       }
     })
     .catch(() => {})
     .finally(() => { editionCheckBusy = false; });
 }
+
+setInterval(() => {
+  if (document.visibilityState === "visible") checkNewDailyEdition();
+}, 10 * 60 * 1000);
 
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") {
