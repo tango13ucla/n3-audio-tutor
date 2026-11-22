@@ -8146,9 +8146,9 @@ window.ZB = (function() {
 
   function puStage() {
     const b = ST.pu_best || 1;
-    if (b <= 1) return { idx: 0, name: "阶段一 · 唤醒起步", title: "每轮 1 个标准 + 2 次慢放", sub: "只在家门框单杠完成。每轮总数不超过 3 下，一天最多 2 轮，两轮隔 2 小时以上，绝不甩腿。", defStrict: 1, neg: 2 };
-    if (b === 2) return { idx: 1, name: "阶段二 · 神经夯实", title: "每轮 2 个标准 + 1 次慢放", sub: "连续一周每轮稳做 2 个直上直下不晃动，自然进入阶段三。依旧一天最多 2 轮。", defStrict: 2, neg: 1 };
-    if (b <= 4) return { idx: 2, name: "阶段三 · 连做突破", title: `每轮 ${Math.min(3, b)} 个标准直上直下`, sub: "完全不靠慢放补量，每轮 3 下干净利落，隔周周末偶尔测一次连续极限。", defStrict: Math.min(3, b), neg: 0 };
+    if (b <= 1) return { idx: 0, name: "阶段一 · 唤醒起步", title: "每轮 1 个徒手 + 2 个黑带慢放", sub: "微仰身偏开阔侧拉（护头顶），后 2 下单膝挂黑带拉上后 4 秒慢放，切勿跳上杠。每轮 ≤ 3 下、每天 ≤ 2 轮。", defStrict: 1, neg: 2 };
+    if (b === 2) return { idx: 1, name: "阶段二 · 神经夯实", title: "每轮 2 个徒手 + 1 个黑带慢放", sub: "先纯徒手稳拉 2 个直上直下不晃动，最后 1 下单膝挂黑带 4 秒慢放补质，每天依旧 ≤ 2 轮。", defStrict: 2, neg: 1 };
+    if (b <= 4) return { idx: 2, name: "阶段三 · 连做突破", title: `每轮 ${Math.min(3, b)} 个纯徒手不甩`, sub: "完全脱带直上直下，每轮 3 下干净利落，隔周周末偶尔测一次连续极限。", defStrict: Math.min(3, b), neg: 0 };
     return { idx: 3, name: "阶段四 · 5+ 目标达成", title: `轻松连做 ${b} 个标准引体`, sub: "2027 年底 5 个不甩目标已达成，保持每天 2 轮轻松维稳即可。", defStrict: Math.min(5, b), neg: 0 };
   }
   function puCooldown(day, target) {
@@ -8470,7 +8470,7 @@ window.ZB = (function() {
     if (ge("zb-pu-sub")) ge("zb-pu-sub").textContent = stg.sub;
     if (ge("zb-pu-val")) ge("zb-pu-val").textContent = String(PU_IN);
     const negN = Math.max(0, 3 - PU_IN);
-    if (ge("zb-pu-neg")) ge("zb-pu-neg").textContent = negN > 0 ? `再补 ${negN} 次 4 秒匀速慢放（本轮共 3 下）` : `纯标准动作，稳住直上直下`;
+    if (ge("zb-pu-neg")) ge("zb-pu-neg").textContent = negN > 0 ? `再补 ${negN} 次单膝挂黑带 4 秒慢放（本轮共 3 下）` : `纯徒手标准动作，直上直下不甩腿`;
     const plb = ge("zb-pu-log"), pub = ge("zb-pu-undo");
     if (plb && pub) {
       pub.style.display = puDone > 0 ? "inline-flex" : "none";
