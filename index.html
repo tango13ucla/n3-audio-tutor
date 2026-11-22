@@ -7102,15 +7102,15 @@ window.ZB = (function() {
       tier: "red", tierText: `恢复提醒 · 静息心率 ${rhr}`, eyebrow: "身体正在恢复期",
       title: "今晚优先早睡，或 15 分钟极轻踩踏",
       sub: `静息心率较平日偏高（基线 39–41），先让心肺完全回血再上强度。`,
-      peloPick: { tag: "恢复期选课 · Peloton 直达", course: "Classes → Cycling → 筛选 15 min + Recovery Ride", alt: "教练选 Sam Yo 或 Matt Wilpers" },
+      peloPick: { tag: "恢复期选课 · Peloton 直达", course: "底栏 Classes → Cycling（先清右侧 FILTER）→ 筛 15 min + Recovery Ride", alt: "教练选 Sam Yo 或 Matt Wilpers" },
       cardioDone: !!pelo, puTarget: 1, defMin: 15, bb, pelo, wk, tired, isTravel: false
     };
     if (tired) {
       return {
-        tier: "yellow", tierText: "今日偏累 · 20 分钟轻启", eyebrow: "精力有限 · 骑完 20 分钟就算赢",
-        title: "Peloton 20 分钟轻启顺腿骑",
+        tier: "yellow", tierText: "今日偏累 · 15–20 分钟轻启", eyebrow: "精力有限 · 骑完这节就算赢",
+        title: "Peloton 15–20 分钟轻启顺腿骑",
         sub: "全程坐姿轻阻力，不拼高出力，先把重启的节奏稳稳踩出来。",
-        peloPick: { tag: "今晚直接去 Peloton 找这节", course: "Programs → Discover Your Power Zones → Week 1: 20 min Power Zone Beginner Ride (Matt Wilpers)", alt: "若特别困改选：Classes → 20 min Low Impact Ride (Sam Yo 或 Matt Wilpers)" },
+        peloPick: { tag: "今晚直接去 Peloton 找这节", course: "底栏点 Programs（勿进教练页）→ Discover Your Power Zones → Week 1 Day 1：15 min Intro to Power Zone Ride 或下节 20 min Power Zone Beginner Ride (Matt Wilpers)", alt: "若单选轻松课：底栏 Classes → Cycling（先点右侧 FILTER → Clear 清筛选）→ 筛 20 min + Low Impact (Sam Yo 或 Matt Wilpers)" },
         cardioDone: !!pelo, puTarget: 1, defMin: 20, bb, pelo, wk, tired, isTravel: false
       };
     }
@@ -7120,7 +7120,7 @@ window.ZB = (function() {
         eyebrow: (bb && bb.level === "light") ? "今天已有轻投篮热身" : "连续两天高强度打球后",
         title: "Peloton 20 分钟低阻排酸骑",
         sub: "配着《锵锵三人行》轻松转腿就行，把膝盖和跟腱养顺，明天更有劲。",
-        peloPick: { tag: "今日黄档 · Peloton 直达选课", course: "Classes → Cycling → 筛选 20 min + Low Impact Ride", alt: "教练首选 Sam Yo / Matt Wilpers / Denis Morton（全程坐姿）" },
+        peloPick: { tag: "今日黄档 · Peloton 直达选课", course: "底栏 Classes → Cycling（先清右侧 FILTER）→ 筛 20 min + Low Impact Ride", alt: "教练首选 Sam Yo / Matt Wilpers / Denis Morton（全程坐姿）" },
         cardioDone: !!pelo, puTarget: 2, defMin: 20, bb, pelo, wk, tired, isTravel: false
       };
     }
@@ -7128,21 +7128,21 @@ window.ZB = (function() {
       tier: "yellow", tierText: `本周硬核心肺已满 ${wk.hard} 场`, eyebrow: "本周心肺已达标",
       title: "今晚彻底休息，或 15 分钟舒展骑",
       sub: `本周已完成 ${wk.bbH} 场篮球与 ${wk.pM} 场 Peloton，多留一天让肌肉和体脂悄悄变好。`,
-      peloPick: { tag: "若想活动腿 · Peloton 直达", course: "Classes → Cycling → 筛选 15 min + Recovery Ride (Sam Yo / Denis Morton)", alt: "本周额度已满，早睡同样涨体能" },
+      peloPick: { tag: "若想活动腿 · Peloton 直达", course: "底栏 Classes → Cycling（先清右侧 FILTER）→ 筛 15 min + Recovery Ride (Sam Yo / Denis Morton)", alt: "本周额度已满，早睡同样涨体能" },
       cardioDone: true, puTarget: 2, defMin: 15, bb, pelo, wk, tired, isTravel: false
     };
     if (bbY && bbY.level === "high") return {
       tier: "green", tierText: "今日绿档 · 燃脂黄金窗", eyebrow: "昨天刚打完球 · 今天稳态燃脂",
       title: "Peloton 30–35 分钟 Zone 2 稳态骑",
       sub: "心率稳在 125–140，刚好听完一整期《锵锵三人行》，不伤膝盖最掉脂。",
-      peloPick: { tag: "今日主线 · Peloton 直达项目", course: "Programs → Discover Your Power Zones（5 周后转 Boost Your Base: Power Zones）", alt: "按课表推进一节，或单选 Classes → 30 min Power Zone Endurance (Matt Wilpers / Sam Yo / Denis Morton)" },
+      peloPick: { tag: "今日主线 · Peloton 直达项目", course: "底栏 Programs（勿进教练页）→ Discover Your Power Zones（5 周后转 Boost Your Base: Power Zones）", alt: "按课表推进一节，或单选 Classes → Cycling（清筛选）→ 30 min Power Zone Endurance (Matt Wilpers / Sam Yo / Denis Morton)" },
       cardioDone: !!pelo, puTarget: 2, defMin: 30, bb, pelo, wk, tired, isTravel: false
     };
     return {
       tier: "green", tierText: "今日绿档 · 最佳燃脂窗口", eyebrow: "今日未打篮球 · Peloton 主场",
       title: "Peloton 30–45 分钟功率区燃脂骑",
       sub: "边听今日《锵锵三人行》边稳住 Zone 2–3，正是去年 8 月两周稳掉 2 公斤的节奏。",
-      peloPick: { tag: "长期主线 · Peloton 直达项目", course: "Programs → Discover Your Power Zones（前 5 周）→ Boost Your Base: Power Zones（第 6 周起）", alt: "或单选 Classes → 30/45 min Power Zone Endurance (Matt Wilpers / Denis Morton / Sam Yo) · 注：FTP 测试留给不打球且睡饱那天" },
+      peloPick: { tag: "长期主线 · Peloton 直达项目", course: "底栏 Programs（勿进教练页）→ Discover Your Power Zones（前 5 周）→ Boost Your Base: Power Zones（第 6 周起）", alt: "或单选 Classes → Cycling（清筛选）→ 30/45 min Power Zone Endurance (Matt Wilpers / Denis Morton / Sam Yo) · 注：FTP 测试留给不打球且睡饱那天" },
       cardioDone: !!pelo, puTarget: 2, defMin: 40, bb, pelo, wk, tired, isTravel: false
     };
   }
