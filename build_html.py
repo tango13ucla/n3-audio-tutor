@@ -1099,8 +1099,10 @@ html = r"""<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <meta name="screen-orientation" content="portrait" />
 <meta name="x5-orientation" content="portrait" />
-<meta name="description" content="JLPT N3 · 做题 · 随身听 · 单手记词" />
-<meta name="theme-color" content="#F5F2EB" />
+<meta name="description" content="JLPT N3 · 做题 · 随身听 · 单手记词 · 体律" />
+<meta name="color-scheme" content="light dark" />
+<meta name="theme-color" content="#F5F2EB" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#171614" media="(prefers-color-scheme: dark)" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -1109,7 +1111,7 @@ html = r"""<!DOCTYPE html>
 <link rel="apple-touch-icon" href="./icon-192.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600&family=Noto+Serif+JP:wght@500;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600&family=Noto+Serif+JP:wght@500;600&display=optional" rel="stylesheet" />
 <title>N3</title>
 <style>
   :root {
@@ -1123,12 +1125,37 @@ html = r"""<!DOCTYPE html>
     --hairline-strong: rgba(28, 27, 24, 0.18);
     --track: #E5E0D5;
     --moss: #2B5F49;
+    --moss-solid: #2D7A56;
     --moss-soft: rgba(43, 95, 73, 0.10);
     --ochre: #B07D3A;
     --bengara: #9E3E36;
+    --tap-bg: #EDEAE1;
+    --hover-bg: #FFFFFF;
+    --soft-bg: #F4F1E8;
     /* Editorial Bilingual Pairing: Japanese Literary Mincho + Clean Chinese Humanist Sans */
-    --sans: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", -apple-system, BlinkMacSystemFont, sans-serif;
-    --serif-jp: "Hiragino Mincho ProN", "YuMincho", "Noto Serif JP", serif;
+    --sans: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Noto Sans CJK SC", -apple-system, BlinkMacSystemFont, sans-serif;
+    --serif-jp: "Hiragino Mincho ProN", "YuMincho", "Noto Serif JP", "Noto Serif CJK SC", "Songti SC", serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --washi: #171614;
+      --sheet: #201F1C;
+      --sumi: #EAE5DA;
+      --ink-2: #B9B2A5;
+      --ink-3: #868074;
+      --hairline: rgba(234, 229, 218, 0.09);
+      --hairline-strong: rgba(234, 229, 218, 0.21);
+      --track: #2F2D28;
+      --moss: #62AD89;
+      --moss-solid: #3F8B66;
+      --moss-soft: rgba(98, 173, 137, 0.14);
+      --ochre: #D2A35C;
+      --bengara: #D46F66;
+      --tap-bg: #2B2925;
+      --hover-bg: #272521;
+      --soft-bg: #22201D;
+    }
   }
 
   * {
@@ -1523,6 +1550,18 @@ html = r"""<!DOCTYPE html>
       display: flex;
       align-items: stretch;
       margin-right: -10px;
+      position: relative;
+    }
+    .thumb-ink-bar {
+      position: absolute;
+      top: -1px;
+      left: 0;
+      width: 18px;
+      height: 1.8px;
+      background: var(--sumi);
+      border-radius: 2px;
+      pointer-events: none;
+      transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1), width 0.26s cubic-bezier(0.22, 1, 0.36, 1);
     }
     .thumb-link {
       position: relative;
@@ -1539,19 +1578,15 @@ html = r"""<!DOCTYPE html>
       color: var(--sumi);
       font-weight: 600;
     }
-    /* Ink stroke resting on the hairline (mirror of the old header underline) */
-    .thumb-link.active::before {
-      content: "";
-      position: absolute;
-      top: -1px;
-      left: 50%;
-      width: 18px;
-      margin-left: -9px;
-      height: 1.5px;
-      background: var(--sumi);
-    }
     .thumb-link.is-playing { color: var(--moss); }
     .thumb-link:active { opacity: 0.6; }
+    .zen-panel:not(.hidden) {
+      animation: zenModeIn 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    @keyframes zenModeIn {
+      from { opacity: 0.35; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
     .ledger-back-fab { display: none !important; }
     .ledger-scroll { padding-bottom: 24px; }
@@ -1762,7 +1797,7 @@ html = r"""<!DOCTYPE html>
     align-items: center;
     transition: border-color 0.16s ease, background 0.16s ease;
   }
-  .zen-choice:active { background: #EDEAE1; }
+  .zen-choice:active { background: var(--tap-bg); }
 
   .listen-num-grid {
     display: grid;
@@ -1784,7 +1819,7 @@ html = r"""<!DOCTYPE html>
     justify-content: center;
     transition: border-color 0.16s ease, background 0.16s ease;
   }
-  .listen-num-btn:active { background: #EDEAE1; }
+  .listen-num-btn:active { background: var(--tap-bg); }
 
   .unsure-btn {
     margin-top: 12px;
@@ -1803,7 +1838,7 @@ html = r"""<!DOCTYPE html>
     gap: 10px;
     transition: border-color 0.16s ease, color 0.16s ease, background 0.16s ease;
   }
-  .unsure-btn:active { background: #EDEAE1; }
+  .unsure-btn:active { background: var(--tap-bg); }
 
   /* Quiz aux row (簡素 · Kanso): two quiet ink words, no boxes.
      The option cards stay the ONLY objects on the page; 读题 rests on the right edge under the thumb. */
@@ -1859,7 +1894,7 @@ html = r"""<!DOCTYPE html>
   }
   .unsure-btn .kbd-tag { display: none; }
   @media (min-width: 860px) and (min-height: 521px) {
-    .zen-choice:hover, .listen-num-btn:hover { border-color: var(--sumi); background: #FFFFFF; }
+    .zen-choice:hover, .listen-num-btn:hover { border-color: var(--sumi); background: var(--hover-bg); }
     .unsure-btn:hover { border-color: var(--sumi); color: var(--sumi); background: rgba(252, 251, 248, 0.72); }
     .kbd-tag { opacity: 1; }
     .unsure-btn .kbd-tag { display: inline-block; }
@@ -2113,7 +2148,7 @@ html = r"""<!DOCTYPE html>
     cursor: pointer;
   }
   .inline-lex:active {
-    background: #F4F1E8;
+    background: var(--soft-bg);
   }
   #radio-inline-lex {
     bottom: 12px;
@@ -2269,7 +2304,7 @@ html = r"""<!DOCTYPE html>
     letter-spacing: 0.03em;
     flex-shrink: 0;
   }
-  .ghost-btn:active, .dock-replay-btn:active { background: #EDEAE1; }
+  .ghost-btn:active, .dock-replay-btn:active { background: var(--tap-bg); }
 
   /* ================= 4. THREE-HOST PODCAST SANCTUARY ("随身听") ================= */
   .radio-center {
@@ -2372,7 +2407,7 @@ html = r"""<!DOCTYPE html>
     font-variant-numeric: tabular-nums;
     flex-shrink: 0;
   }
-  .step-time-btn:active, .radio-spd-pill:active { background: #EDEAE1; }
+  .step-time-btn:active, .radio-spd-pill:active { background: var(--tap-bg); }
   .play-toggle-btn {
     flex: 1;
     max-width: 168px;
@@ -2912,8 +2947,8 @@ html = r"""<!DOCTYPE html>
     font-weight: 600;
   }
 
-  /* ================= 6. NATIVE ZEN BODY MODULE ("体律") ================= */
-  #green-board.hidden { display: none !important; }
+  /* ================= 6. NATIVE ZEN BODY MODULE ("体律" · v2 Native-App Polish) ================= */
+  #green-board.hidden, #body-view.hidden, .zen-panel.hidden { display: none !important; }
   #body-view {
     flex: 1;
     min-height: 0;
@@ -2929,31 +2964,14 @@ html = r"""<!DOCTYPE html>
     padding: 4px 0 10px;
     border-bottom: 1px solid var(--hairline);
   }
-  .zb-enso-trio {
-    display: flex;
-    align-items: center;
-    gap: 11px;
-  }
-  .zb-enso-item {
-    width: 28px;
-    height: 28px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .zb-enso-svg {
-    width: 24px;
-    height: 24px;
-    display: block;
-    overflow: visible;
-  }
-  .zb-horizon-metric {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--ink-3);
-    font-variant-numeric: tabular-nums;
-    letter-spacing: 0.02em;
-  }
+  .zb-enso-trio { display: flex; align-items: center; gap: 11px; }
+  .zb-enso-item { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; }
+  .zb-enso-svg { width: 24px; height: 24px; display: block; overflow: visible; }
+  .zb-enso-item.just-done .zb-enso-fill { animation: zbPop 0.4s cubic-bezier(0.22, 1, 0.36, 1); transform-origin: 14px 14px; }
+  .zb-enso-item.just-done .zb-enso-chk { stroke-dasharray: 24; stroke-dashoffset: 24; animation: zbChk 0.34s 0.08s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+  @keyframes zbPop { 0% { transform: scale(0.76); opacity: 0.55; } 62% { transform: scale(1.08); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+  @keyframes zbChk { to { stroke-dashoffset: 0; } }
+  .zb-horizon-metric { font-size: 13px; font-weight: 500; color: var(--ink-3); font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
   .zb-horizon-metric b { color: var(--sumi); font-weight: 600; }
 
   .zb-subnav {
@@ -2964,42 +2982,44 @@ html = r"""<!DOCTYPE html>
     padding: 10px 0 8px;
     gap: 8px;
   }
-  .zb-subtabs {
-    display: flex;
-    align-items: center;
-    gap: 18px;
-  }
-  .zb-subtab {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--ink-3);
-    padding: 4px 0;
-    position: relative;
-    transition: color 0.18s ease;
-  }
-  .zb-subtab.active {
-    color: var(--sumi);
-    font-weight: 600;
-  }
-  .zb-subtab.active::after {
-    content: "";
+  .zb-subtabs { display: flex; align-items: center; gap: 18px; position: relative; }
+  .zb-sub-bar {
     position: absolute;
     left: 0;
-    right: 0;
     bottom: -1px;
-    height: 1.5px;
+    height: 1.8px;
+    width: 28px;
     background: var(--sumi);
+    border-radius: 2px;
+    pointer-events: none;
+    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), width 0.25s cubic-bezier(0.22, 1, 0.36, 1);
   }
-  .zb-date-tag {
-    font-size: 12px;
-    color: var(--ink-3);
-    font-variant-numeric: tabular-nums;
+  .zb-subtab { font-size: 14px; font-weight: 500; color: var(--ink-3); padding: 4px 0; position: relative; transition: color 0.18s ease; }
+  .zb-subtab.active { color: var(--sumi); font-weight: 600; }
+  .zb-date-tag { font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+
+  .zb-ptr {
+    flex-shrink: 0;
+    height: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    opacity: 0;
+    transition: height 0.24s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease;
   }
+  .zb-ptr.dragging { transition: none; }
+  .zb-ptr-svg { width: 18px; height: 18px; display: block; }
+  .zb-ptr.syncing .zb-ptr-svg { animation: zbSpin 0.85s linear infinite; }
+  @keyframes zbSpin { to { transform: rotate(360deg); } }
+  .zb-ptr-lbl { font-size: 12px; color: var(--ink-3); letter-spacing: 0.04em; }
 
   .zb-stage {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+    overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     display: flex;
@@ -3007,25 +3027,15 @@ html = r"""<!DOCTYPE html>
     padding: 4px 0 18px;
   }
   .zb-stage::-webkit-scrollbar { display: none; }
-  .zb-panel {
-    display: none;
-    flex-direction: column;
-    flex: 1;
-    min-height: 100%;
-  }
+  .zb-panel { display: none; flex-direction: column; flex: 1; min-height: 100%; will-change: transform, opacity; }
   .zb-panel.active { display: flex; }
+  .zb-panel.zb-slide-r { animation: zbSlideR 0.23s cubic-bezier(0.22, 1, 0.36, 1); }
+  .zb-panel.zb-slide-l { animation: zbSlideL 0.23s cubic-bezier(0.22, 1, 0.36, 1); }
+  @keyframes zbSlideR { from { opacity: 0.28; transform: translateX(16px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes zbSlideL { from { opacity: 0.28; transform: translateX(-16px); } to { opacity: 1; transform: translateX(0); } }
   .zb-spacer { flex: 1 1 12px; min-height: 8px; }
 
-  .zb-context {
-    font-size: 12.5px;
-    color: var(--ink-3);
-    letter-spacing: 0.03em;
-    margin-bottom: 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 10px;
-  }
+  .zb-context { font-size: 12.5px; color: var(--ink-3); letter-spacing: 0.03em; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
   .zb-tier { font-weight: 500; }
   .zb-tier.green { color: var(--moss); }
   .zb-tier.yellow { color: var(--ochre); }
@@ -3034,120 +3044,55 @@ html = r"""<!DOCTYPE html>
   .zb-sheet {
     background: var(--sheet);
     border: 1px solid var(--hairline);
-    border-radius: 12px;
-    padding: 20px 18px 18px;
-    box-shadow: 0 1px 2px rgba(28, 27, 24, 0.02);
+    border-radius: 14px;
+    padding: 21px 19px 19px;
+    transition: border-color 0.24s ease;
   }
   .zb-sheet.tier-red { border-left: 3px solid var(--bengara); }
   .zb-sheet.tier-yellow { border-left: 3px solid var(--ochre); }
   .zb-sheet.tier-green { border-left: 3px solid var(--moss); }
 
-  .zb-eyebrow {
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: 0.06em;
-    color: var(--ink-3);
-    margin-bottom: 8px;
-  }
-  .zb-title {
-    font-family: var(--serif-jp);
-    font-size: 21px;
-    font-weight: 600;
-    line-height: 1.38;
-    color: var(--sumi);
-    margin: 0 0 8px;
-  }
-  .zb-sub {
-    font-size: 13.5px;
-    line-height: 1.62;
-    color: var(--ink-2);
-    margin: 0;
-  }
-  .zb-min-pills {
-    display: flex;
-    gap: 8px;
-    margin-top: 14px;
-    flex-wrap: wrap;
-  }
-  .zb-pill {
-    height: 30px;
-    padding: 0 12px;
-    border-radius: 999px;
-    font-size: 12.5px;
-    font-weight: 500;
-    color: var(--ink-2);
-    border: 1px solid var(--hairline-strong);
-    background: transparent;
-    font-variant-numeric: tabular-nums;
-  }
-  .zb-pill.active {
-    background: var(--sumi);
-    color: var(--sheet);
-    border-color: var(--sumi);
-  }
-  .zb-actions {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 18px;
-  }
+  .zb-eyebrow { font-size: 12px; font-weight: 500; letter-spacing: 0.05em; color: var(--ink-3); margin-bottom: 8px; }
+  .zb-title { font-family: var(--serif-jp); font-size: clamp(19.5px, 5.2vw, 22px); font-weight: 600; line-height: 1.38; color: var(--sumi); margin: 0 0 8px; }
+  .zb-sub { font-size: 13.5px; line-height: 1.62; color: var(--ink-2); margin: 0; }
+
+  .zb-min-pills { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .zb-pill { height: 30px; padding: 0 12px; border-radius: 999px; font-size: 12.5px; font-weight: 500; color: var(--ink-2); border: 1px solid var(--hairline-strong); background: transparent; font-variant-numeric: tabular-nums; transition: background-color 0.16s ease, color 0.16s ease; }
+  .zb-pill.active { background: var(--sumi); color: var(--washi); border-color: var(--sumi); }
+
+  .zb-actions { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 18px; }
   .zb-btn-primary {
     height: 44px;
     padding: 0 22px;
     border-radius: 999px;
     background: var(--sumi);
-    color: var(--sheet);
+    color: var(--washi);
     font-size: 14.5px;
     font-weight: 500;
     letter-spacing: 0.04em;
+    transition: transform 0.14s ease, background-color 0.22s ease;
   }
-  .zb-btn-primary.is-done { background: var(--moss); }
-  .zb-btn-primary:active { opacity: 0.82; }
+  .zb-btn-primary.is-done { background: var(--moss-solid); color: #FCFBF8; }
+  .zb-btn-primary:active { transform: scale(0.96); }
   .zb-btn-quiet {
-    height: 36px;
-    padding: 0 12px;
-    border-radius: 999px;
-    font-size: 12.5px;
+    font-size: 13px;
     font-weight: 500;
-    color: var(--ink-2);
-    border: 1px solid var(--hairline-strong);
-    background: transparent;
+    color: var(--ink-3);
+    padding: 8px 4px;
+    letter-spacing: 0.02em;
+    transition: color 0.18s ease;
   }
-  .zb-btn-quiet.active {
-    border-color: var(--sumi);
-    color: var(--sumi);
-    background: rgba(28, 27, 24, 0.04);
-  }
-  .zb-btn-quiet.is-red {
-    border-color: var(--bengara);
-    color: var(--bengara);
-    background: rgba(158, 62, 54, 0.06);
-  }
-  .zb-overrides {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 8px;
-    margin-top: 12px;
-    flex-wrap: wrap;
-  }
-  .zb-ritual-list {
-    margin-top: 16px;
-    border-top: 1px solid var(--hairline);
-  }
-  .zb-ritual-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 13px 2px;
-    border-bottom: 1px solid var(--hairline);
-    gap: 12px;
-  }
+  .zb-btn-quiet:active { color: var(--sumi); }
+  .zb-btn-quiet.active { color: var(--moss); font-weight: 600; }
+  .zb-btn-quiet.is-red { color: var(--bengara); font-weight: 600; }
+  .zb-overrides { display: flex; align-items: center; justify-content: flex-end; gap: 14px; margin-top: 10px; padding: 0 2px; }
+
+  .zb-ritual-list { margin-top: 16px; border-top: 1px solid var(--hairline); }
+  .zb-ritual-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 2px; border-bottom: 1px solid var(--hairline); gap: 12px; }
   .zb-ritual-left { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
   .zb-ritual-name { font-size: 14.5px; font-weight: 500; color: var(--sumi); }
-  .zb-ritual-hint { font-size: 12px; color: var(--ink-3); }
-  .zb-ritual-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .zb-ritual-hint { font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .zb-ritual-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
   .zb-round-dot {
     width: 34px;
     height: 34px;
@@ -3160,230 +3105,102 @@ html = r"""<!DOCTYPE html>
     align-items: center;
     justify-content: center;
     font-variant-numeric: tabular-nums;
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.14s ease;
   }
-  .zb-round-dot.done {
-    background: var(--moss);
-    border-color: var(--moss);
-    color: var(--sheet);
-  }
-  .zb-tap-check {
-    height: 34px;
-    padding: 0 13px;
-    border-radius: 999px;
-    border: 1px solid var(--hairline-strong);
-    font-size: 12.5px;
-    font-weight: 500;
-    color: var(--ink-2);
-  }
-  .zb-tap-check.done {
-    background: var(--moss-soft);
-    border-color: rgba(43, 95, 73, 0.35);
-    color: var(--moss);
-  }
+  .zb-round-dot:active { transform: scale(0.93); }
+  .zb-round-dot.done { background: var(--moss-solid); border-color: var(--moss-solid); color: #FCFBF8; }
+  .zb-tap-check { font-size: 13.5px; font-weight: 500; color: var(--ink-2); padding: 7px 2px; transition: color 0.18s ease; }
+  .zb-tap-check.done { color: var(--moss); font-weight: 600; }
 
-  .zb-rep-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 16px;
-    padding-top: 14px;
-    border-top: 1px solid var(--hairline);
-  }
+  .zb-rep-row { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--hairline); }
   .zb-stepper { display: inline-flex; align-items: center; gap: 12px; }
-  .zb-step-btn {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    border: 1px solid var(--hairline-strong);
-    font-size: 17px;
-    color: var(--sumi);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .zb-step-val {
-    min-width: 22px;
-    text-align: center;
-    font-size: 19px;
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-  }
-  .zb-ladder {
-    margin-top: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .zb-ladder-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    font-size: 12.5px;
-    color: var(--ink-3);
-    padding: 5px 2px;
-    border-bottom: 1px solid var(--hairline);
-  }
-  .zb-ladder-item.cur { color: var(--sumi); font-weight: 500; }
-  .zb-ladder-item.cur span:first-child::before { content: "● "; color: var(--moss); font-size: 9px; }
+  .zb-step-btn { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--hairline-strong); font-size: 16px; color: var(--sumi); display: inline-flex; align-items: center; justify-content: center; transition: background-color 0.14s ease, transform 0.12s ease; }
+  .zb-step-btn:active { background: var(--hairline); transform: scale(0.93); }
+  .zb-step-val { min-width: 22px; text-align: center; font-family: var(--serif-jp); font-size: 19px; font-weight: 600; font-variant-numeric: tabular-nums; }
 
-  .zb-stat-pair {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 12px;
-  }
-  .zb-stat-big {
-    font-family: var(--serif-jp);
-    font-size: 32px;
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    color: var(--sumi);
-    font-variant-numeric: tabular-nums;
-    line-height: 1.1;
-  }
-  .zb-stat-unit {
-    font-family: var(--sans);
-    font-size: 13px;
-    font-weight: 400;
-    color: var(--ink-3);
-    margin-left: 3px;
-  }
-  .zb-stat-sub { font-size: 12px; color: var(--ink-3); margin-top: 4px; }
-  .zb-chart-wrap { width: 100%; height: 152px; margin: 4px 0 8px; }
-  .zb-chart-sw {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-    margin-top: 4px;
-  }
-  .zb-sw-grp { display: flex; gap: 6px; }
-  .zb-weigh-form {
-    display: none;
-    margin-top: 14px;
-    padding-top: 14px;
-    border-top: 1px solid var(--hairline);
-    gap: 8px;
-    align-items: flex-end;
-  }
-  .zb-weigh-form.open { display: flex; }
-  .zb-field { flex: 1; display: flex; flex-direction: column; gap: 4px; }
-  .zb-field label { font-size: 11.5px; color: var(--ink-3); }
-  .zb-field input {
-    width: 100%;
-    height: 36px;
-    padding: 0 10px;
-    border: 1px solid var(--hairline-strong);
-    border-radius: 8px;
-    background: var(--washi);
-    color: var(--sumi);
-    font-size: 14.5px;
-    font-variant-numeric: tabular-nums;
-    -webkit-user-select: text;
-    user-select: text;
-  }
-  .zb-kpis {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-    margin-bottom: 14px;
-  }
-  .zb-kpi {
-    background: var(--sheet);
-    border: 1px solid var(--hairline);
-    border-radius: 10px;
-    padding: 11px 10px;
-  }
-  .zb-kpi-v { font-size: 18px; font-weight: 600; color: var(--sumi); font-variant-numeric: tabular-nums; }
+  .zb-pacer { display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--hairline); flex-direction: column; align-items: center; gap: 9px; animation: zenModeIn 0.2s ease; }
+  .zb-pacer.open { display: flex; }
+  .zb-pacer-ring { position: relative; width: 104px; height: 104px; display: flex; align-items: center; justify-content: center; }
+  .zb-pacer-svg { width: 104px; height: 104px; display: block; overflow: visible; }
+  .zb-pacer-num { position: absolute; font-family: var(--serif-jp); font-size: 30px; font-weight: 600; color: var(--sumi); font-variant-numeric: tabular-nums; }
+  .zb-pacer-phase { font-size: 13px; font-weight: 500; color: var(--ink-2); letter-spacing: 0.04em; }
+  .zb-pacer-ctrls { display: flex; align-items: center; gap: 18px; }
+
+  .zb-ladder { margin-top: 16px; display: flex; justify-content: space-between; gap: 8px; padding-top: 14px; border-top: 1px solid var(--hairline); }
+  .zb-ladder-step { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+  .zb-ladder-bar { height: 2px; background: var(--track); border-radius: 2px; }
+  .zb-ladder-step.past .zb-ladder-bar, .zb-ladder-step.cur .zb-ladder-bar { background: var(--moss); }
+  .zb-ladder-lbl { font-size: 11px; color: var(--ink-3); }
+  .zb-ladder-step.cur .zb-ladder-lbl { color: var(--sumi); font-weight: 600; }
+
+  .zb-stat-pair { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+  .zb-stat-big { font-family: var(--serif-jp); font-size: 32px; font-weight: 600; letter-spacing: -0.02em; color: var(--sumi); font-variant-numeric: tabular-nums; line-height: 1.1; transition: color 0.16s ease; }
+  .zb-stat-big.scrub { color: var(--moss); }
+  .zb-stat-unit { font-family: var(--sans); font-size: 13px; font-weight: 400; color: var(--ink-3); margin-left: 3px; }
+  .zb-stat-sub { font-size: 12px; color: var(--ink-3); margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .zb-chart-wrap { width: 100%; margin: 4px 0 4px; touch-action: pan-y; cursor: crosshair; }
+  .zb-chart-svg { width: 100%; height: auto; aspect-ratio: 360 / 156; display: block; overflow: visible; }
+  .zb-chart-sw { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--hairline); }
+  .zb-sw-grp { display: flex; gap: 12px; }
+
+  .zb-weigh-drawer { display: none; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--hairline); flex-direction: column; gap: 13px; animation: zenModeIn 0.2s ease; }
+  .zb-weigh-drawer.open { display: flex; }
+  .zb-dial-row { display: flex; flex-direction: column; gap: 6px; }
+  .zb-dial-head { display: flex; justify-content: space-between; align-items: center; }
+  .zb-dial-lbl { font-size: 12.5px; color: var(--ink-3); }
+  .zb-dial-ctrl { display: inline-flex; align-items: center; gap: 10px; }
+  .zb-dial-val { font-family: var(--serif-jp); font-size: 19px; font-weight: 600; color: var(--sumi); font-variant-numeric: tabular-nums; min-width: 64px; text-align: center; border-bottom: 1px dashed var(--hairline-strong); padding-bottom: 1px; }
+  .zb-dial-in { width: 64px; font-family: var(--serif-jp); font-size: 18px; font-weight: 600; text-align: center; color: var(--sumi); background: transparent; border: none; border-bottom: 1.5px solid var(--moss); outline: none; font-variant-numeric: tabular-nums; -webkit-user-select: text; user-select: text; }
+  .zb-dial-track { position: relative; height: 28px; border-radius: 8px; background: var(--washi); border: 1px solid var(--hairline); overflow: hidden; touch-action: none; cursor: ew-resize; }
+  .zb-dial-ticks { position: absolute; inset: 0; background-image: repeating-linear-gradient(90deg, transparent 0, transparent 9px, var(--hairline-strong) 9px, var(--hairline-strong) 10px); background-size: 50px 100%; opacity: 0.85; }
+  .zb-dial-needle { position: absolute; left: 50%; top: 4px; bottom: 4px; width: 2px; margin-left: -1px; background: var(--moss); border-radius: 2px; pointer-events: none; }
+  .zb-dial-foot { display: flex; justify-content: space-between; align-items: center; }
+
+  .zb-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--hairline); margin-bottom: 6px; }
+  .zb-kpi-v { font-family: var(--serif-jp); font-size: 20px; font-weight: 600; color: var(--sumi); font-variant-numeric: tabular-nums; }
   .zb-kpi-l { font-size: 11.5px; color: var(--ink-3); margin-top: 3px; }
-  .zb-ledger-list { border-top: 1px solid var(--hairline); }
-  .zb-ledger-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 2px;
-    border-bottom: 1px solid var(--hairline);
-    font-size: 13px;
-    gap: 10px;
-  }
-  .zb-ledger-date { color: var(--ink-3); font-variant-numeric: tabular-nums; min-width: 56px; }
+  .zb-ledger-list { margin-top: 4px; }
+  .zb-ledger-item { border-bottom: 1px solid var(--hairline); }
+  .zb-ledger-row { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 11px 2px; font-size: 13px; gap: 10px; text-align: left; }
+  .zb-ledger-row:active { background: var(--hairline); }
+  .zb-ledger-date { color: var(--ink-3); font-variant-numeric: tabular-nums; min-width: 52px; }
   .zb-ledger-main { flex: 1; color: var(--sumi); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .zb-ledger-dots { display: inline-flex; gap: 5px; flex-shrink: 0; }
   .zb-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--track); }
   .zb-dot.ok { background: var(--moss); }
   .zb-dot.bb { background: var(--bengara); }
-  .zb-sync-foot {
-    margin-top: 14px;
-    padding-top: 10px;
-    border-top: 1px solid var(--hairline);
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    font-size: 12px;
-    color: var(--ink-3);
-  }
+  .zb-ed { padding: 4px 2px 13px; display: flex; flex-direction: column; gap: 9px; animation: zenModeIn 0.18s ease; }
+  .zb-ed-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 12.5px; }
+  .zb-ed-lbl { color: var(--ink-3); min-width: 30px; font-size: 12px; }
+  .zb-ed-chip { font-size: 12.5px; color: var(--ink-2); padding: 4px 2px; border-bottom: 1px solid transparent; }
+  .zb-ed-chip.on { color: var(--moss); font-weight: 600; border-bottom-color: var(--moss); }
+  .zb-ed-chip.on-red { color: var(--bengara); font-weight: 600; border-bottom-color: var(--bengara); }
+
+  .zb-sync-foot { margin-top: 14px; padding-top: 10px; display: flex; flex-direction: column; gap: 8px; font-size: 12px; color: var(--ink-3); }
   .zb-sync-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-  .zb-gap-note {
-    font-size: 12px;
-    color: var(--ochre);
-    line-height: 1.5;
-    padding: 8px 10px;
-    border-radius: 8px;
-    background: rgba(176, 125, 58, 0.08);
-  }
-  .zb-locked {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-start;
-    padding: 16px 2px;
-  }
-  .zb-locked-title {
-    font-family: var(--serif-jp);
-    font-size: 22px;
-    font-weight: 600;
-    margin: 14px 0 8px;
-  }
-  .zb-locked-sub {
-    font-size: 13.5px;
-    line-height: 1.65;
-    color: var(--ink-3);
-    margin: 0;
-  }
-  .zb-pass-row {
-    width: 100%;
-    margin-top: 18px;
-    display: flex;
-    gap: 8px;
-  }
-  .zb-pass-in {
-    flex: 1;
-    height: 42px;
-    padding: 0 12px;
-    border: 1px solid var(--hairline-strong);
-    border-radius: 10px;
-    background: var(--sheet);
-    color: var(--sumi);
-    font-size: 15px;
-    -webkit-user-select: text;
-    user-select: text;
-  }
+  .zb-gap-note { font-size: 12px; color: var(--ink-3); line-height: 1.6; }
+
+  .zb-locked { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; padding: 16px 2px; }
+  .zb-locked-title { font-family: var(--serif-jp); font-size: 22px; font-weight: 600; margin: 14px 0 8px; }
+  .zb-locked-sub { font-size: 13.5px; line-height: 1.65; color: var(--ink-3); margin: 0; }
+  .zb-pass-row { width: 100%; margin-top: 18px; display: flex; gap: 8px; }
+  .zb-pass-in { flex: 1; height: 42px; padding: 0 12px; border: 1px solid var(--hairline-strong); border-radius: 10px; background: var(--sheet); color: var(--sumi); font-size: 15px; -webkit-user-select: text; user-select: text; }
+
   .zb-toast {
     position: fixed;
     left: 50%;
-    bottom: 78px;
-    transform: translateX(-50%) translateY(8px);
+    top: calc(96px + env(safe-area-inset-top));
+    transform: translateX(-50%) translateY(-6px);
     background: var(--sumi);
-    color: var(--sheet);
-    font-size: 13px;
-    padding: 9px 18px;
+    color: var(--washi);
+    font-size: 12.5px;
+    padding: 8px 16px;
     border-radius: 999px;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.2s ease, transform 0.2s ease;
+    transition: opacity 0.2s ease, transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
     z-index: 60;
+    white-space: nowrap;
   }
   .zb-toast.show { opacity: 0.94; transform: translateX(-50%) translateY(0); }
 </style>
@@ -3488,7 +3305,7 @@ html = r"""<!DOCTYPE html>
   <section class="zen-panel hidden" id="body-view">
     <div class="zb-locked" id="zb-locked" style="display:none;">
       <svg width="38" height="38" viewBox="0 0 28 28" aria-hidden="true">
-        <circle cx="14" cy="14" r="10.2" fill="none" stroke="#2B5F49" stroke-width="2.1" stroke-dasharray="55 10" stroke-linecap="round"/>
+        <circle cx="14" cy="14" r="10.2" fill="none" stroke="var(--moss)" stroke-width="2.1" stroke-dasharray="55 10" stroke-linecap="round"/>
       </svg>
       <div class="zb-locked-title">体律</div>
       <p class="zb-locked-sub">体重、体脂与运动数据已加密锁存，不对外公开。<br />首次输入你的短口令即可解锁，本机以后自动记住，不再重复询问。</p>
@@ -3506,16 +3323,25 @@ html = r"""<!DOCTYPE html>
       </div>
 
       <div class="zb-subnav">
-        <div class="zb-subtabs">
+        <div class="zb-subtabs" id="zb-subtabs">
           <button class="zb-subtab active" data-zbt="today" onclick="ZB.setTab('today')">今日</button>
           <button class="zb-subtab" data-zbt="pullup" onclick="ZB.setTab('pullup')">引体</button>
           <button class="zb-subtab" data-zbt="body" onclick="ZB.setTab('body')">体脂</button>
           <button class="zb-subtab" data-zbt="ledger" onclick="ZB.setTab('ledger')">总账</button>
+          <span class="zb-sub-bar" id="zb-sub-bar"></span>
         </div>
         <span class="zb-date-tag" id="zb-date-lbl"></span>
       </div>
 
-      <div class="zb-stage">
+      <div class="zb-ptr" id="zb-ptr" aria-hidden="true">
+        <svg class="zb-ptr-svg" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="8.5" fill="none" stroke="var(--hairline-strong)" stroke-width="1.6"/>
+          <circle id="zb-ptr-arc" cx="12" cy="12" r="8.5" pathLength="100" fill="none" stroke="var(--moss)" stroke-width="2" stroke-linecap="round" stroke-dasharray="0 100" transform="rotate(-90 12 12)"/>
+        </svg>
+        <span class="zb-ptr-lbl" id="zb-ptr-lbl">下拉同步</span>
+      </div>
+
+      <div class="zb-stage" id="zb-stage">
         <div class="zb-panel active" id="zb-p-today">
           <div class="zb-spacer"></div>
           <div class="zb-context">
@@ -3533,6 +3359,7 @@ html = r"""<!DOCTYPE html>
             </div>
           </div>
           <div class="zb-overrides">
+            <button class="zb-btn-quiet" style="margin-right:auto;" onclick="switchMode('radio', true)">听《锵锵》↗</button>
             <button class="zb-btn-quiet" id="zb-bb-high" onclick="ZB.toggleBB('high')">刚打完高强度篮球</button>
             <button class="zb-btn-quiet" id="zb-bb-light" onclick="ZB.toggleBB('light')">轻投篮</button>
           </div>
@@ -3577,8 +3404,23 @@ html = r"""<!DOCTYPE html>
                 <button class="zb-step-btn" onclick="ZB.adjStrict(1)">+</button>
               </div>
             </div>
+            <div class="zb-pacer" id="zb-pacer">
+              <div class="zb-pacer-ring">
+                <svg class="zb-pacer-svg" viewBox="0 0 100 100" aria-hidden="true">
+                  <circle cx="50" cy="50" r="42" fill="none" stroke="var(--track)" stroke-width="2.6"/>
+                  <circle id="zb-pacer-arc" cx="50" cy="50" r="42" pathLength="100" fill="none" stroke="var(--moss)" stroke-width="3.2" stroke-linecap="round" stroke-dasharray="100 100" transform="rotate(-90 50 50)"/>
+                </svg>
+                <div class="zb-pacer-num" id="zb-pacer-num">4</div>
+              </div>
+              <div class="zb-pacer-phase" id="zb-pacer-phase">准备抓稳单杠</div>
+              <div class="zb-pacer-ctrls">
+                <button class="zb-btn-quiet" id="zb-pacer-snd" onclick="ZB.togglePacerSound()">轻音：关</button>
+                <button class="zb-btn-quiet" onclick="ZB.stopPacer(true)">停止</button>
+              </div>
+            </div>
             <div class="zb-actions">
-              <button class="zb-btn-quiet" id="zb-pu-undo" style="display:none;" onclick="ZB.undoPU()">撤销上轮</button>
+              <button class="zb-btn-quiet" id="zb-pu-undo" style="display:none; margin-right:auto;" onclick="ZB.undoPU()">撤销上轮</button>
+              <button class="zb-btn-quiet" id="zb-pacer-btn" onclick="ZB.togglePacer()">4 秒慢放节拍</button>
               <button class="zb-btn-primary" id="zb-pu-log" onclick="ZB.logPU()"></button>
             </div>
           </div>
@@ -3588,7 +3430,7 @@ html = r"""<!DOCTYPE html>
         <div class="zb-panel" id="zb-p-body">
           <div class="zb-spacer"></div>
           <div class="zb-context">
-            <span>GE 智能秤趋势</span>
+            <span id="zb-bctx">GE 智能秤趋势</span>
             <span id="zb-pace"></span>
           </div>
           <div class="zb-sheet">
@@ -3602,7 +3444,7 @@ html = r"""<!DOCTYPE html>
                 <div class="zb-stat-sub" id="zb-wt-sub"></div>
               </div>
             </div>
-            <div class="zb-chart-wrap" id="zb-chart"></div>
+            <div class="zb-chart-wrap" id="zb-chart" data-zb-noswipe="1"></div>
             <div class="zb-chart-sw">
               <div class="zb-sw-grp">
                 <button class="zb-btn-quiet" id="zb-m-bf" onclick="ZB.setMetric('bf')">GE 体脂</button>
@@ -3613,16 +3455,33 @@ html = r"""<!DOCTYPE html>
                 <button class="zb-btn-quiet" id="zb-r-all" onclick="ZB.setRange('all')">两年全程</button>
               </div>
             </div>
-            <div class="zb-weigh-form" id="zb-wform">
-              <div class="zb-field">
-                <label for="zb-in-wt">体重 (kg)</label>
-                <input id="zb-in-wt" type="number" step="0.05" inputmode="decimal" placeholder="81.5" />
+            <div class="zb-weigh-drawer" id="zb-wform" data-zb-noswipe="1">
+              <div class="zb-dial-row">
+                <div class="zb-dial-head">
+                  <span class="zb-dial-lbl">体重 (kg)</span>
+                  <div class="zb-dial-ctrl">
+                    <button class="zb-step-btn" style="width:28px;height:28px;font-size:14px;" onclick="ZB.nudgeDial('wt',-0.1)">−</button>
+                    <span id="zb-dwt-slot"><button class="zb-dial-val" id="zb-dwt-val" onclick="ZB.editDial('wt')">81.5</button></span>
+                    <button class="zb-step-btn" style="width:28px;height:28px;font-size:14px;" onclick="ZB.nudgeDial('wt',0.1)">+</button>
+                  </div>
+                </div>
+                <div class="zb-dial-track" id="zb-dwt-track" data-zb-noswipe="1"><div class="zb-dial-ticks" id="zb-dwt-ticks"></div><div class="zb-dial-needle"></div></div>
               </div>
-              <div class="zb-field">
-                <label for="zb-in-bf">GE 体脂 (%)</label>
-                <input id="zb-in-bf" type="number" step="0.1" inputmode="decimal" placeholder="17.8" />
+              <div class="zb-dial-row">
+                <div class="zb-dial-head">
+                  <span class="zb-dial-lbl">GE 体脂 (%)</span>
+                  <div class="zb-dial-ctrl">
+                    <button class="zb-step-btn" style="width:28px;height:28px;font-size:14px;" onclick="ZB.nudgeDial('bf',-0.1)">−</button>
+                    <span id="zb-dbf-slot"><button class="zb-dial-val" id="zb-dbf-val" onclick="ZB.editDial('bf')">18.0</button></span>
+                    <button class="zb-step-btn" style="width:28px;height:28px;font-size:14px;" onclick="ZB.nudgeDial('bf',0.1)">+</button>
+                  </div>
+                </div>
+                <div class="zb-dial-track" id="zb-dbf-track" data-zb-noswipe="1"><div class="zb-dial-ticks" id="zb-dbf-ticks"></div><div class="zb-dial-needle"></div></div>
               </div>
-              <button class="zb-btn-primary" style="height:36px; padding:0 16px; font-size:13px;" onclick="ZB.saveWeigh()">记下</button>
+              <div class="zb-dial-foot">
+                <button class="zb-btn-quiet" id="zb-dskip-btn" onclick="ZB.toggleSkipBf()">仅记体重</button>
+                <button class="zb-btn-primary" style="height:38px; padding:0 18px; font-size:13.5px;" onclick="ZB.saveWeigh()">记下</button>
+              </div>
             </div>
           </div>
           <div class="zb-overrides">
@@ -3649,7 +3508,8 @@ html = r"""<!DOCTYPE html>
 
   <!-- 4. RIGHT-THUMB NAV (phone only · 上看下点: top is for reading, bottom-right is for touching; mirrors the old top header, no ornament) -->
   <nav class="thumb-nav" aria-label="切换">
-    <div class="thumb-tabs">
+    <div class="thumb-tabs" id="main-thumb-tabs">
+      <span class="thumb-ink-bar" id="main-thumb-bar"></span>
       <button class="thumb-link active" id="btab-tutor" onclick="switchMode('tutor')">做题</button>
       <button class="thumb-link" id="btab-radio" onclick="switchMode('radio', true)">随身听</button>
       <button class="thumb-link" id="btab-vocab" onclick="switchMode('vocab')">记词</button>
@@ -5951,19 +5811,19 @@ let prevEnsoDoneKey = "";
 function renderEnsoRingSVG(idx, ratio, isDone) {
   if (isDone) {
     return `<svg class="enso-svg" viewBox="0 0 28 28" aria-hidden="true">
-      <circle cx="14" cy="14" r="10.2" fill="#2D7A56"/>
+      <circle cx="14" cy="14" r="10.2" fill="var(--moss-solid)"/>
       <path d="M 9.6 14.3 L 12.6 17.2 L 18.7 10.9" fill="none" stroke="#FCFBF8" stroke-width="2.15" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>`;
   }
   if (ratio > 0.005) {
     const pct = Math.max(8, Math.min(97, Math.round(ratio * 100)));
     return `<svg class="enso-svg" viewBox="0 0 28 28" aria-hidden="true">
-      <circle cx="14" cy="14" r="9.8" fill="none" stroke="rgba(28, 27, 24, 0.13)" stroke-width="1.85"/>
-      <circle cx="14" cy="14" r="9.8" pathLength="100" fill="none" stroke="#2D7A56" stroke-width="2.35" stroke-linecap="round" stroke-dasharray="${pct} 105" transform="rotate(-90 14 14)"/>
+      <circle cx="14" cy="14" r="9.8" fill="none" stroke="var(--hairline-strong)" stroke-width="1.85"/>
+      <circle cx="14" cy="14" r="9.8" pathLength="100" fill="none" stroke="var(--moss-solid)" stroke-width="2.35" stroke-linecap="round" stroke-dasharray="${pct} 105" transform="rotate(-90 14 14)"/>
     </svg>`;
   }
   return `<svg class="enso-svg" viewBox="0 0 28 28" aria-hidden="true">
-    <circle cx="14" cy="14" r="9.8" fill="none" stroke="rgba(28, 27, 24, 0.20)" stroke-width="1.6" stroke-dasharray="3.6 3.2"/>
+    <circle cx="14" cy="14" r="9.8" fill="none" stroke="var(--hairline-strong)" stroke-width="1.6" stroke-dasharray="3.6 3.2"/>
   </svg>`;
 }
 
@@ -6704,12 +6564,27 @@ let dashMod = "grammar";
 let dashTier = "todo";
 let expandedPt = null;
 
+function positionMainThumbBar(immediate) {
+  const wrap = document.getElementById("main-thumb-tabs");
+  const bar = document.getElementById("main-thumb-bar");
+  const btn = document.getElementById("btab-" + activeMode);
+  if (!wrap || !bar || !btn || !wrap.offsetWidth) return;
+  const w = Math.max(18, (btn.offsetWidth || 50) - 24);
+  const left = (btn.offsetLeft || 0) + ((btn.offsetWidth || 50) - w) / 2;
+  if (immediate) bar.style.transition = "none";
+  bar.style.width = w + "px";
+  bar.style.transform = `translateX(${left}px)`;
+  if (immediate) { void bar.offsetWidth; bar.style.transition = ""; }
+}
+window.addEventListener("resize", () => positionMainThumbBar(true));
+
 function switchMode(m, autoPlayRadio) {
   if (m !== "dash") prevNonDashMode = m;
   activeMode = m;
   clearActiveWordToken();
   if (m !== "tutor") stopQuizAudio();
   if (m !== "vocab") stopVocabAudioAndTimers();
+  if (m !== "body" && window.ZB && typeof window.ZB.stopPacer === "function") window.ZB.stopPacer(false);
 
   document.getElementById("app-shell").classList.toggle("wide-mode", m === "dash");
   document.getElementById("tab-tutor").classList.toggle("active", m === "tutor");
@@ -6721,6 +6596,7 @@ function switchMode(m, autoPlayRadio) {
     const b = document.getElementById("btab-" + k);
     if (b) b.classList.toggle("active", m === k);
   });
+  positionMainThumbBar(false);
 
   document.getElementById("tutor-view").classList.toggle("hidden", m !== "tutor");
   document.getElementById("radio-view").classList.toggle("hidden", m !== "radio");
@@ -7954,14 +7830,16 @@ window.addEventListener("pagehide", () => {
   }
 });
 
-// ================= NATIVE ZEN BODY ENGINE ("体律" · 零明文隐私) =================
+// ================= NATIVE ZEN BODY ENGINE ("体律" · v2 Native-App Polish · 零明文隐私) =================
 window.ZB = (function() {
   const VAULT_KEY = "zenbody_vault_v1";
   const STATE_KEY = "zenbody_state_v1";
   const PEND_KEY = "zenbody_pending_push_v1";
+  const SUB_ORDER = ["today", "pullup", "body", "ledger"];
   let VAULT = null;
   let CKEY = null;
   let INITED = false;
+  let GESTURES_BOUND = false;
   let SUBTAB = "today";
   let METRIC = "bf";
   let RANGE = "90";
@@ -7971,6 +7849,13 @@ window.ZB = (function() {
   let PUSH_T = null;
   let TOAST_T = null;
   let LAST_DAY = "";
+  let PREV_ENSO = null;
+  let EXP_DAY = null;
+
+  let CHART_PTS = [];
+  let SCRUB_IDX = -1;
+  let D_WT = 81.5, D_BF = 18.0, D_SKIP_BF = false, D_WT_OFF = 0, D_BF_OFF = 0;
+  let PACER_ON = false, PACER_RAF = null, PACER_SND = false, PACER_WL = null, ACTX = null;
 
   function defState() {
     return {
@@ -8009,6 +7894,14 @@ window.ZB = (function() {
     }
     const iso = now.toISOString();
     return { ymd: iso.slice(0, 10), hour: Number(iso.slice(11, 13)), minute: Number(iso.slice(14, 16)) };
+  }
+  function fmtEpochPT(sec) {
+    if (!sec) return "";
+    try {
+      const parts = new Intl.DateTimeFormat("en-GB", { timeZone: "America/Los_Angeles", hour: "2-digit", minute: "2-digit", hour12: false }).formatToParts(new Date(sec * 1000));
+      const m = {}; for (const p of parts) m[p.type] = p.value;
+      return `${m.hour}:${m.minute}`;
+    } catch (e) { return ""; }
   }
   function todayYmd() { return ptNow(-4).ymd; }
   function shiftD(ymd, dd) {
@@ -8258,6 +8151,24 @@ window.ZB = (function() {
     if (b <= 4) return { idx: 2, name: "阶段三 · 连做突破", title: `每轮 ${Math.min(3, b)} 个标准直上直下`, sub: "完全不靠慢放补量，每轮 3 下干净利落，隔周周末偶尔测一次连续极限。", defStrict: Math.min(3, b), neg: 0 };
     return { idx: 3, name: "阶段四 · 5+ 目标达成", title: `轻松连做 ${b} 个标准引体`, sub: "2027 年底 5 个不甩目标已达成，保持每天 2 轮轻松维稳即可。", defStrict: Math.min(5, b), neg: 0 };
   }
+  function puCooldown(day, target) {
+    const rs = (day && day.pu) || [];
+    if (rs.length === 1 && target >= 2) {
+      const ts1 = rs[0] && rs[0][2];
+      if (ts1) {
+        const t1 = fmtEpochPT(ts1), t2 = fmtEpochPT(ts1 + 7200);
+        return (Math.floor(Date.now() / 1000) < ts1 + 7200)
+          ? `第 1 轮 ${t1} 已拉 · ${t2} 后可拉第 2 轮`
+          : `第 1 轮 ${t1} 已拉 · 现在可拉第 2 轮`;
+      }
+      return "第 1 轮已拉 · 隔 2 小时后拉第 2 轮";
+    }
+    if (rs.length >= 2) {
+      const ts2 = rs[1] && rs[1][2];
+      return ts2 ? `今日 2 轮已于 ${fmtEpochPT(ts2)} 满额收工` : "今日 2 轮已满额收工";
+    }
+    return "";
+  }
   function syncPUDefault() { PU_IN = puStage().defStrict; }
 
   function latestWB() {
@@ -8267,52 +8178,205 @@ window.ZB = (function() {
       if (r[1]) lwt = r;
       if (r[2] && r[2] > 5) { lbf = r; if (!bbf || r[2] < bbf[2]) bbf = r; }
     }
-    return { lbf, lwt, bbf };
+    const wts = arr.filter(r => r[1]).slice(-5);
+    const avgWt = wts.length ? +(wts.reduce((s, r) => s + r[1], 0) / wts.length).toFixed(1) : null;
+    return { lbf, lwt, bbf, avgWt };
   }
 
   function ensoSvg(ratio, done) {
-    const r = 9.8, C = 2 * Math.PI * r, gap = 7.2, max = C - gap;
-    const fill = done ? max : Math.max(0, Math.min(1, ratio)) * max;
-    const col = done ? "#2B5F49" : "#1C1B18";
-    return `<svg class="zb-enso-svg" viewBox="0 0 28 28"><circle cx="14" cy="14" r="${r}" fill="none" stroke="#E5E0D5" stroke-width="2.1" stroke-dasharray="${max.toFixed(1)} ${gap}" stroke-linecap="round" transform="rotate(-118 14 14)"/>${fill > 0.5 ? `<circle cx="14" cy="14" r="${r}" fill="none" stroke="${col}" stroke-width="${done ? "2.4" : "2.1"}" stroke-dasharray="${fill.toFixed(1)} ${C.toFixed(1)}" stroke-linecap="round" transform="rotate(-118 14 14)"/>` : ""}</svg>`;
+    if (done) {
+      return `<svg class="zb-enso-svg" viewBox="0 0 28 28"><circle class="zb-enso-fill" cx="14" cy="14" r="10.2" fill="var(--moss-solid)"/><path class="zb-enso-chk" d="M 9.6 14.3 L 12.6 17.2 L 18.7 10.9" fill="none" stroke="#FCFBF8" stroke-width="2.15" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    }
+    if (ratio > 0.01) {
+      const pct = Math.max(10, Math.min(95, Math.round(ratio * 100)));
+      return `<svg class="zb-enso-svg" viewBox="0 0 28 28"><circle cx="14" cy="14" r="9.8" fill="none" stroke="var(--hairline-strong)" stroke-width="1.8"/><circle cx="14" cy="14" r="9.8" pathLength="100" fill="none" stroke="var(--moss-solid)" stroke-width="2.3" stroke-linecap="round" stroke-dasharray="${pct} 100" transform="rotate(-90 14 14)"/></svg>`;
+    }
+    return `<svg class="zb-enso-svg" viewBox="0 0 28 28"><circle cx="14" cy="14" r="9.8" fill="none" stroke="var(--hairline-strong)" stroke-width="1.75" stroke-dasharray="54 7" stroke-linecap="round" transform="rotate(-40 14 14)"/></svg>`;
+  }
+
+  function positionSubBar(immediate) {
+    const wrap = ge("zb-subtabs"), bar = ge("zb-sub-bar");
+    if (!wrap || !bar || !wrap.offsetWidth) return;
+    const btn = wrap.querySelector ? wrap.querySelector(`.zb-subtab[data-zbt="${SUBTAB}"]`) : null;
+    if (!btn || !btn.offsetWidth) return;
+    if (immediate) bar.style.transition = "none";
+    bar.style.width = btn.offsetWidth + "px";
+    bar.style.transform = `translateX(${btn.offsetLeft || 0}px)`;
+    if (immediate) { void bar.offsetWidth; bar.style.transition = ""; }
+  }
+
+  function applyBodyHead(today, wb, pt) {
+    const bfEl = ge("zb-bf-big"), wtEl = ge("zb-wt-big"), ctxEl = ge("zb-bctx");
+    if (pt) {
+      if (bfEl) { bfEl.classList.add("scrub"); bfEl.innerHTML = `${pt.bf !== null ? pt.bf.toFixed(1) : "--"}<span class="zb-stat-unit">%</span>`; }
+      if (wtEl) { wtEl.classList.add("scrub"); wtEl.innerHTML = `${pt.wt !== null ? pt.wt.toFixed(1) : "--"}<span class="zb-stat-unit">kg</span>`; }
+      if (ctxEl) ctxEl.textContent = `查看 ${pt.d} 实测`;
+      if (ge("zb-bf-sub")) ge("zb-bf-sub").textContent = fmtCn(pt.d);
+      if (ge("zb-wt-sub")) ge("zb-wt-sub").textContent = pt.ma !== null ? `平滑走势 ${pt.ma.toFixed(1)}${METRIC === "bf" ? "%" : " kg"}` : "松手恢复最新";
+      return;
+    }
+    if (bfEl) bfEl.classList.remove("scrub");
+    if (wtEl) wtEl.classList.remove("scrub");
+    if (ctxEl) ctxEl.textContent = "GE 智能秤趋势";
+    const monthsLeft = Math.max(1, (2027 - Number(today.slice(0, 4))) * 12 + (12 - Number(today.slice(5, 7))));
+    const curBf = wb.lbf ? wb.lbf[2] : null;
+    const curWt = wb.lwt ? wb.lwt[1] : null;
+    const targetBf = (ST.targets && ST.targets.bf_ge) || 14.0;
+    const estWt = (curWt && curBf) ? +((curWt * (1 - curBf / 100)) / (1 - targetBf / 100)).toFixed(1) : 77.5;
+    if (wb.lbf) {
+      if (bfEl) bfEl.innerHTML = `${wb.lbf[2].toFixed(1)}<span class="zb-stat-unit">%</span>`;
+      if (ge("zb-bf-sub")) ge("zb-bf-sub").textContent = `两年最低 ${wb.bbf ? wb.bbf[2].toFixed(1) : wb.lbf[2].toFixed(1)}%`;
+      const rem = Math.max(0, wb.lbf[2] - targetBf);
+      if (ge("zb-pace")) ge("zb-pace").textContent = rem > 0 ? `距 14% 剩 ${rem.toFixed(1)}% · 均月 ${(rem / monthsLeft).toFixed(2)}%` : "已达 14% 目标";
+    }
+    if (wb.lwt) {
+      if (wtEl) wtEl.innerHTML = `${wb.lwt[1].toFixed(1)}<span class="zb-stat-unit">kg</span>`;
+      if (ge("zb-wt-sub")) ge("zb-wt-sub").textContent = wb.avgWt ? `均 ${wb.avgWt} · 估标 ${estWt} kg` : `估标 ${estWt} kg`;
+    }
   }
 
   function renderChart() {
     const wrap = ge("zb-chart");
     if (!wrap) return;
-    const today = todayYmd(), cut = shiftD(today, -90);
+    const today = todayYmd(), cut = shiftD(today, -95);
     const isBF = METRIC === "bf";
-    let pts = (ST.wb || []).filter(r => isBF ? (r[2] && r[2] > 5) : !!r[1]);
+    let raw = (ST.wb || []).map(r => ({ d: r[0], wt: r[1] || null, bf: (r[2] && r[2] > 5) ? r[2] : null, v: isBF ? r[2] : r[1] })).filter(p => p.v && p.v > 5);
     if (RANGE === "90") {
-      const p90 = pts.filter(r => r[0] >= cut);
-      if (p90.length >= 2) pts = p90;
+      const p90 = raw.filter(p => p.d >= cut);
+      if (p90.length >= 2) raw = p90;
     }
-    if (pts.length < 2) { wrap.innerHTML = `<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--ink-3);font-size:12.5px;">多记两次 GE 秤就会绘出趋势线</div>`; return; }
-    const vals = pts.map(r => isBF ? r[2] : r[1]);
-    const target = isBF ? (ST.targets.bf_ge || 14.0) : 77.5;
-    let mn = Math.min(...vals, target) - (isBF ? 0.6 : 0.8);
-    let mx = Math.max(...vals, target) + (isBF ? 0.6 : 0.8);
-    if (mx - mn < 2) mx = mn + 2;
-    const W = 320, H = 148, pL = 30, pR = 14, pT = 14, pB = 22, pw = W - pL - pR, ph = H - pT - pB;
-    const t0 = Date.parse(pts[0][0] + "T12:00:00Z"), t1 = Date.parse(pts[pts.length - 1][0] + "T12:00:00Z"), span = Math.max(86400000, t1 - t0);
-    const X = d => pL + ((Date.parse(d + "T12:00:00Z") - t0) / span) * pw;
-    const Y = v => pT + ((mx - v) / (mx - mn)) * ph;
-    const ty = Y(target);
-    const pathD = pts.map((r, i) => `${i ? "L" : "M"}${X(r[0]).toFixed(1)},${Y(isBF ? r[2] : r[1]).toFixed(1)}`).join(" ");
-    const dots = pts.map((r, i) => {
-      const last = i === pts.length - 1;
-      return `<circle cx="${X(r[0]).toFixed(1)}" cy="${Y(isBF ? r[2] : r[1]).toFixed(1)}" r="${last ? 3.8 : 2.1}" fill="${last ? "#2B5F49" : "#1C1B18"}" opacity="${last ? 1 : 0.6}"/>`;
-    }).join("");
-    wrap.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="100%">
-      <line x1="${pL}" y1="${ty.toFixed(1)}" x2="${W - pR}" y2="${ty.toFixed(1)}" stroke="#2B5F49" stroke-width="1" stroke-dasharray="4 4" opacity="0.55"/>
-      <text x="${W - pR}" y="${(ty - 4).toFixed(1)}" text-anchor="end" font-size="10" fill="#2B5F49">目标 ${target}${isBF ? "%" : "kg"}</text>
-      <text x="${pL - 5}" y="${pT + 4}" text-anchor="end" font-size="9.5" fill="#847E72">${mx.toFixed(isBF ? 0 : 1)}</text>
-      <text x="${pL - 5}" y="${H - pB}" text-anchor="end" font-size="9.5" fill="#847E72">${mn.toFixed(isBF ? 0 : 1)}</text>
-      <path d="${pathD}" fill="none" stroke="#1C1B18" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-      ${dots}
-      <text x="${pL}" y="${H - 4}" text-anchor="start" font-size="9.5" fill="#847E72">${pts[0][0].slice(2, 7)}</text>
-      <text x="${W - pR}" y="${H - 4}" text-anchor="end" font-size="9.5" fill="#847E72">${pts[pts.length - 1][0].slice(5)}</text>
+    if (raw.length < 2) {
+      CHART_PTS = [];
+      wrap.innerHTML = `<div style="height:140px;display:flex;align-items:center;justify-content:center;color:var(--ink-3);font-size:12.5px;">多记两次 GE 秤就会绘出趋势线</div>`;
+      return;
+    }
+    for (let i = 0; i < raw.length; i++) {
+      const ti = Date.parse(raw[i].d + "T12:00:00Z");
+      const win = [];
+      for (let j = i; j >= 0; j--) {
+        if ((ti - Date.parse(raw[j].d + "T12:00:00Z")) / 86400000 <= 14 || win.length < 2) win.push(raw[j].v);
+        if (win.length >= 4) break;
+      }
+      raw[i].ma = +(win.reduce((a, b) => a + b, 0) / win.length).toFixed(2);
+    }
+    const vals = raw.map(p => p.v);
+    const wb = latestWB();
+    const targetBf = (ST.targets && ST.targets.bf_ge) || 14.0;
+    const estWt = (wb.lwt && wb.lbf) ? +((wb.lwt[1] * (1 - wb.lbf[2] / 100)) / (1 - targetBf / 100)).toFixed(1) : 77.5;
+    const target = isBF ? targetBf : estWt;
+    const mn = Math.min(...vals, target) - (isBF ? 0.8 : 1.0);
+    const mx = Math.max(...vals, target) + (isBF ? 0.8 : 1.0);
+    const spanV = Math.max(1, mx - mn);
+    const W = 360, H = 156, pL = 6, pR = 38, pT = 16, pB = 22;
+    const t0 = Date.parse(raw[0].d + "T12:00:00Z"), t1 = Date.parse(raw[raw.length - 1].d + "T12:00:00Z"), spanT = Math.max(86400000, t1 - t0);
+    const xy = raw.map(p => ({
+      x: +(pL + ((Date.parse(p.d + "T12:00:00Z") - t0) / spanT) * (W - pL - pR)).toFixed(1),
+      y: +(pT + (1 - (p.v - mn) / spanV) * (H - pT - pB)).toFixed(1),
+      yMa: +(pT + (1 - (p.ma - mn) / spanV) * (H - pT - pB)).toFixed(1),
+      d: p.d, v: p.v, wt: p.wt, bf: p.bf, ma: p.ma
+    }));
+    CHART_PTS = xy;
+    const ty = +(pT + (1 - (target - mn) / spanV) * (H - pT - pB)).toFixed(1);
+    const pathD = xy.map((p, i) => `${i ? "L" : "M"} ${p.x} ${p.y}`).join(" ");
+    const maD = xy.map((p, i) => `${i ? "L" : "M"} ${p.x} ${p.yMa}`).join(" ");
+    const first = xy[0], last = xy[xy.length - 1];
+    wrap.innerHTML = `<svg class="zb-chart-svg" id="zb-chart-svg" viewBox="0 0 ${W} ${H}">
+      <line x1="${pL}" y1="${ty}" x2="${W - pR}" y2="${ty}" stroke="var(--moss)" stroke-opacity="0.42" stroke-width="1" stroke-dasharray="3 4"/>
+      <text x="${W - pR + 5}" y="${ty + 3.5}" fill="var(--moss)" font-size="10.5" font-family="sans-serif">${target}${isBF ? "%" : ""}</text>
+      <path d="${maD}" fill="none" stroke="var(--moss)" stroke-opacity="0.45" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="${pathD}" fill="none" stroke="var(--sumi)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+      ${xy.map(p => `<circle cx="${p.x}" cy="${p.y}" r="2.2" fill="var(--sheet)" stroke="var(--sumi)" stroke-width="1.25"/>`).join("")}
+      <circle cx="${last.x}" cy="${last.y}" r="3.6" fill="var(--moss)"/>
+      <line id="zb-c-cur" x1="0" y1="${pT - 4}" x2="0" y2="${H - pB + 2}" stroke="var(--moss)" stroke-opacity="0.55" stroke-width="1" stroke-dasharray="2 3" style="display:none;"/>
+      <circle id="zb-c-halo" cx="0" cy="0" r="6" fill="var(--moss)" fill-opacity="0.18" style="display:none;"/>
+      <circle id="zb-c-foc" cx="0" cy="0" r="3.6" fill="var(--moss)" stroke="var(--sheet)" stroke-width="1.5" style="display:none;"/>
+      <text x="${pL}" y="${H - 4}" fill="var(--ink-3)" font-size="10" font-family="sans-serif">${first.d.slice(2, 10)}</text>
+      <text x="${(W - pR + pL) / 2}" y="${H - 4}" text-anchor="middle" fill="var(--ink-3)" font-size="9.5" font-family="sans-serif" opacity="0.8">按住曲线左右划查看 · 淡绿为平滑走势</text>
+      <text x="${W - pR}" y="${H - 4}" text-anchor="end" fill="var(--ink-3)" font-size="10" font-family="sans-serif">${last.d.slice(2, 10)}</text>
     </svg>`;
+  }
+
+  function renderDial() {
+    const ws = ge("zb-dwt-slot"), bs = ge("zb-dbf-slot");
+    if (ws && (!ws.querySelector || !ws.querySelector("input"))) ws.innerHTML = `<button class="zb-dial-val" id="zb-dwt-val" onclick="ZB.editDial('wt')">${D_WT.toFixed(1)}</button>`;
+    if (bs && (!bs.querySelector || !bs.querySelector("input"))) bs.innerHTML = `<button class="zb-dial-val" id="zb-dbf-val" onclick="ZB.editDial('bf')" style="${D_SKIP_BF ? "opacity:0.35;" : ""}">${D_SKIP_BF ? "--" : D_BF.toFixed(1)}</button>`;
+    const tw = ge("zb-dwt-ticks"), tb = ge("zb-dbf-ticks");
+    if (tw) tw.style.backgroundPosition = `${D_WT_OFF.toFixed(1)}px 0`;
+    if (tb) tb.style.backgroundPosition = `${D_BF_OFF.toFixed(1)}px 0`;
+    const sb = ge("zb-dskip-btn");
+    if (sb) { sb.textContent = D_SKIP_BF ? "改为同时记体脂" : "仅记体重"; sb.className = "zb-btn-quiet" + (D_SKIP_BF ? " active" : ""); }
+  }
+
+  function playChime(freq) {
+    if (!PACER_SND) return;
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      if (!ACTX) ACTX = new Ctx();
+      if (ACTX.state === "suspended") ACTX.resume();
+      const now = ACTX.currentTime, o = ACTX.createOscillator(), g = ACTX.createGain();
+      o.type = "sine"; o.frequency.setValueAtTime(freq || 528, now);
+      g.gain.setValueAtTime(0.001, now);
+      g.gain.exponentialRampToValueAtTime(0.08, now + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+      o.connect(g); g.connect(ACTX.destination);
+      o.start(now); o.stop(now + 0.38);
+    } catch (e) {}
+  }
+  async function grabWL() { try { if (navigator && "wakeLock" in navigator && !PACER_WL) PACER_WL = await navigator.wakeLock.request("screen"); } catch (e) {} }
+  function dropWL() { try { if (PACER_WL) { PACER_WL.release().catch(() => {}); PACER_WL = null; } } catch (e) {} }
+
+  function stopPacer(withToast) {
+    PACER_ON = false;
+    if (PACER_RAF) { cancelAnimationFrame(PACER_RAF); PACER_RAF = null; }
+    dropWL();
+    const box = ge("zb-pacer"); if (box) box.classList.remove("open");
+    const btn = ge("zb-pacer-btn"); if (btn) { btn.textContent = "4 秒慢放节拍"; btn.className = "zb-btn-quiet"; }
+    if (withToast) toast("已停止慢放节拍");
+  }
+
+  function startPacer() {
+    PACER_ON = true;
+    const box = ge("zb-pacer"); if (box) box.classList.add("open");
+    const btn = ge("zb-pacer-btn"); if (btn) { btn.textContent = "节拍进行中"; btn.className = "zb-btn-quiet active"; }
+    grabWL();
+    const reps = Math.max(1, 3 - PU_IN);
+    const steps = [{ kind: "prep", dur: 3000, label: "准备抓杠 · 顶住下巴" }];
+    for (let i = 1; i <= reps; i++) {
+      steps.push({ kind: "down", dur: 4000, label: `匀速慢放 · 第 ${i} / ${reps} 次` });
+      if (i < reps) steps.push({ kind: "rest", dur: 4000, label: "轻落换气 · 准备下一次" });
+    }
+    let idx = 0, t0 = performance.now(), lastC = -1;
+    const arc = ge("zb-pacer-arc"), num = ge("zb-pacer-num"), ph = ge("zb-pacer-phase");
+    function tick(now) {
+      if (!PACER_ON) return;
+      const cur = steps[idx];
+      if (lastC !== idx) { lastC = idx; playChime(cur.kind === "down" ? 440 : 528); }
+      const el = now - t0, rat = Math.min(1, el / cur.dur), rem = Math.max(0, (cur.dur - el) / 1000);
+      if (ph) ph.textContent = cur.label;
+      if (arc) {
+        const pct = cur.kind === "down" ? Math.max(0, (1 - rat) * 100) : rat * 100;
+        arc.setAttribute("stroke", cur.kind === "down" ? "var(--moss)" : (cur.kind === "prep" ? "var(--ochre)" : "var(--ink-3)"));
+        arc.setAttribute("stroke-dasharray", `${pct.toFixed(1)} 100`);
+      }
+      if (num) num.textContent = String(Math.max(1, Math.ceil(rem)));
+      if (el >= cur.dur) {
+        idx++;
+        if (idx >= steps.length) {
+          playChime(660);
+          if (arc) { arc.setAttribute("stroke", "var(--moss)"); arc.setAttribute("stroke-dasharray", "100 100"); }
+          if (num) num.textContent = "✓";
+          if (ph) ph.textContent = "慢放完成，已记入本轮";
+          PACER_ON = false; dropWL();
+          window.ZB.logPU();
+          setTimeout(() => { const b = ge("zb-pacer"); if (b && !PACER_ON) b.classList.remove("open"); }, 1100);
+          return;
+        }
+        t0 = now;
+      }
+      PACER_RAF = requestAnimationFrame(tick);
+    }
+    PACER_RAF = requestAnimationFrame(tick);
   }
 
   function render() {
@@ -8321,11 +8385,24 @@ window.ZB = (function() {
     const plan = planFor(today), day = dayE(today), stg = puStage(), wb = latestWB();
     const puDone = (day.pu || []).length;
     const puRatio = plan.puTarget === 0 ? 1 : Math.min(1, puDone / plan.puTarget);
+    const puComplete = plan.puTarget === 0 ? true : puDone >= plan.puTarget;
     const dietDone = !!day.diet;
 
     const dl = ge("zb-date-lbl"); if (dl) dl.textContent = fmtCn(today);
     const et = ge("zb-enso-trio");
-    if (et) et.innerHTML = `<span class="zb-enso-item" title="今日心肺">${ensoSvg(plan.cardioDone ? 1 : 0, plan.cardioDone)}</span><span class="zb-enso-item" title="家里引体">${ensoSvg(puRatio, puDone >= plan.puTarget)}</span><span class="zb-enso-item" title="饮食节律">${ensoSvg(dietDone ? 1 : 0, dietDone)}</span>`;
+    const states = [
+      { done: plan.cardioDone, ratio: plan.cardioDone ? 1 : 0, title: "今日心肺" },
+      { done: puComplete, ratio: puRatio, title: "家里引体" },
+      { done: dietDone, ratio: dietDone ? 1 : 0, title: "饮食节律" }
+    ];
+    if (et) {
+      et.innerHTML = states.map((c, i) => {
+        const jd = PREV_ENSO !== null && c.done && !PREV_ENSO[i];
+        return `<span class="zb-enso-item ${jd ? "just-done" : ""}" title="${c.title}">${ensoSvg(c.ratio, c.done)}</span>`;
+      }).join("");
+    }
+    PREV_ENSO = states.map(c => c.done);
+
     const hm = ge("zb-horizon-metric");
     if (hm) hm.innerHTML = wb.lbf ? `GE <b>${wb.lbf[2].toFixed(1)}%</b> → ${ST.targets.bf_ge || 14}%` : `目标 <b>${ST.targets.bf_ge || 14}%</b>`;
 
@@ -8367,11 +8444,12 @@ window.ZB = (function() {
     const bh = ge("zb-bb-high"), bl = ge("zb-bb-light");
     if (bh && bl) {
       const hi = plan.bb && plan.bb.level === "high", lo = plan.bb && plan.bb.level === "light";
-      bh.className = "zb-btn-quiet" + (hi ? " is-red" : ""); bh.textContent = hi ? "已标高强度篮球 ✓" : "刚打完高强度篮球";
-      bl.className = "zb-btn-quiet" + (lo ? " active" : ""); bl.textContent = lo ? "已标轻投篮 ✓" : "轻投篮";
+      bh.className = "zb-btn-quiet" + (hi ? " is-red" : ""); bh.textContent = hi ? "取消高强度篮球" : "刚打完高强度篮球";
+      bl.className = "zb-btn-quiet" + (lo ? " active" : ""); bl.textContent = lo ? "取消轻投篮" : "轻投篮";
     }
 
-    if (ge("zb-pu-hint")) ge("zb-pu-hint").textContent = plan.puTarget === 0 ? "旅途期免练，轻松就好" : `${stg.title} · 今日 ${puDone}/${plan.puTarget} 轮`;
+    const cd = puCooldown(day, plan.puTarget);
+    if (ge("zb-pu-hint")) ge("zb-pu-hint").textContent = plan.puTarget === 0 ? "旅途期免练，轻松就好" : (cd || `${stg.title} · 今日 ${puDone}/${plan.puTarget} 轮`);
     const pd = ge("zb-pu-dots");
     if (pd) {
       if (plan.puTarget === 0) pd.innerHTML = `<span style="font-size:12.5px;color:var(--ink-3);">休</span>`;
@@ -8383,16 +8461,16 @@ window.ZB = (function() {
     }
     if (ge("zb-diet-hint")) ge("zb-diet-hint").textContent = dietDone ? "今日缺口节奏已稳住" : "练后吃够蛋白，晚上不碰宵夜甜饮";
     const db = ge("zb-diet-btn");
-    if (db) { db.className = "zb-tap-check" + (dietDone ? " done" : ""); db.textContent = dietDone ? "已做到 ✓" : "打卡"; }
+    if (db) { db.className = "zb-tap-check" + (dietDone ? " done" : ""); db.textContent = dietDone ? "已达标 ✓" : "记达标"; }
 
     // Tab 2: Pullup
     if (ge("zb-pu-pr")) ge("zb-pu-pr").textContent = `最高连做 ${ST.pu_best || 1} / 目标 5 个`;
-    if (ge("zb-pu-eyebrow")) ge("zb-pu-eyebrow").textContent = `${stg.name} · 今日已做 ${puDone}/2 轮`;
+    if (ge("zb-pu-eyebrow")) ge("zb-pu-eyebrow").textContent = cd ? `${stg.name} · ${cd}` : `${stg.name} · 今日已做 ${puDone}/2 轮`;
     if (ge("zb-pu-title")) ge("zb-pu-title").textContent = stg.title;
     if (ge("zb-pu-sub")) ge("zb-pu-sub").textContent = stg.sub;
     if (ge("zb-pu-val")) ge("zb-pu-val").textContent = String(PU_IN);
     const negN = Math.max(0, 3 - PU_IN);
-    if (ge("zb-pu-neg")) ge("zb-pu-neg").textContent = negN > 0 ? `再补 ${negN} 次 4 秒匀速慢放（本轮共 3 下封顶）` : `纯标准动作，稳住直上直下`;
+    if (ge("zb-pu-neg")) ge("zb-pu-neg").textContent = negN > 0 ? `再补 ${negN} 次 4 秒匀速慢放（本轮共 3 下）` : `纯标准动作，稳住直上直下`;
     const plb = ge("zb-pu-log"), pub = ge("zb-pu-undo");
     if (plb && pub) {
       pub.style.display = puDone > 0 ? "inline-flex" : "none";
@@ -8401,40 +8479,26 @@ window.ZB = (function() {
     }
     const lad = ge("zb-pu-ladder");
     if (lad) {
-      const steps = [
-        ["阶段一 · 唤醒起步", "1 标准 + 2 慢放 · 每天 ≤ 2 轮"],
-        ["阶段二 · 神经夯实", "2 标准 + 1 慢放 · 每天 ≤ 2 轮"],
-        ["阶段三 · 连做突破", "3 标准不甩 · 隔周测极限"],
-        ["阶段四 · 2027 达标", "轻松连做 5+ 个标准引体"]
-      ];
-      lad.innerHTML = steps.map((s, i) => `<div class="zb-ladder-item ${i === stg.idx ? "cur" : ""}"><span>${s[0]}</span><span>${s[1]}</span></div>`).join("");
+      const stages = ["1 严格+慢放", "2 连拉", "3 至 4 连", "轻松 5 连"];
+      lad.innerHTML = stages.map((lbl, i) => `<div class="zb-ladder-step ${i < stg.idx ? "past" : (i === stg.idx ? "cur" : "")}"><div class="zb-ladder-bar"></div><div class="zb-ladder-lbl">${lbl}</div></div>`).join("");
     }
 
     // Tab 3: Body Fat
-    const monthsLeft = Math.max(1, (2027 - Number(today.slice(0, 4))) * 12 + (12 - Number(today.slice(5, 7))));
-    if (wb.lbf) {
-      if (ge("zb-bf-big")) ge("zb-bf-big").innerHTML = `${wb.lbf[2].toFixed(1)}<span class="zb-stat-unit">%</span>`;
-      if (ge("zb-bf-sub")) ge("zb-bf-sub").textContent = `${wb.lbf[0].slice(5)} · 历史最佳 ${wb.bbf ? wb.bbf[2].toFixed(1) : wb.lbf[2].toFixed(1)}%`;
-      const rem = Math.max(0, wb.lbf[2] - (ST.targets.bf_ge || 14.0));
-      if (ge("zb-pace")) ge("zb-pace").textContent = rem > 0 ? `距 14% 剩 ${rem.toFixed(1)}% · 均月 ${(rem / monthsLeft).toFixed(2)}%` : "已达 14% 目标";
-    }
-    if (wb.lwt) {
-      if (ge("zb-wt-big")) ge("zb-wt-big").innerHTML = `${wb.lwt[1].toFixed(1)}<span class="zb-stat-unit">kg</span>`;
-      if (ge("zb-wt-sub")) ge("zb-wt-sub").textContent = `${wb.lwt[0].slice(5)} · 14% 预估 ~77.5 kg`;
-    }
+    SCRUB_IDX = -1;
+    applyBodyHead(today, wb, null);
     if (ge("zb-m-bf")) ge("zb-m-bf").className = "zb-btn-quiet" + (METRIC === "bf" ? " active" : "");
     if (ge("zb-m-wt")) ge("zb-m-wt").className = "zb-btn-quiet" + (METRIC === "wt" ? " active" : "");
     if (ge("zb-r-90")) ge("zb-r-90").className = "zb-btn-quiet" + (RANGE === "90" ? " active" : "");
     if (ge("zb-r-all")) ge("zb-r-all").className = "zb-btn-quiet" + (RANGE === "all" ? " active" : "");
     if (ge("zb-wrem")) {
       const gap = wb.lbf ? Math.round((Date.parse(today + "T12:00:00Z") - Date.parse(wb.lbf[0] + "T12:00:00Z")) / 86400000) : 99;
-      ge("zb-wrem").textContent = gap >= 4 ? `已 ${gap} 天未测体脂，明早空腹光脚踩一次` : `每周空腹测 2 次即可，看趋势不看单日`;
+      ge("zb-wrem").textContent = gap >= 4 ? `上次 GE 体脂 ${wb.lbf ? wb.lbf[0].slice(5) : "无"} · 记得光脚称一次` : `最近称重 ${wb.lbf[0].slice(5)}`;
     }
     renderChart();
 
-    // Tab 4: Ledger
+    // Tab 4: Ledger (Interactive Editable 10-Day Ledger)
     const kp = ge("zb-kpis");
-    if (kp) kp.innerHTML = `<div class="zb-kpi"><div class="zb-kpi-v">${ST.vitals && ST.vitals.rhr ? ST.vitals.rhr : "--"}</div><div class="zb-kpi-l">静息心率</div></div><div class="zb-kpi"><div class="zb-kpi-v">${ST.vitals && ST.vitals.vo2 ? ST.vitals.vo2 : "--"}</div><div class="zb-kpi-l">最大摄氧量</div></div><div class="zb-kpi"><div class="zb-kpi-v">${ST.pu_best || 1}<span style="font-size:12px;color:var(--ink-3);font-weight:400;"> / 5</span></div><div class="zb-kpi-l">标准引体</div></div>`;
+    if (kp) kp.innerHTML = `<div><div class="zb-kpi-v">${ST.vitals && ST.vitals.rhr ? ST.vitals.rhr : "--"}</div><div class="zb-kpi-l">静息心率</div></div><div><div class="zb-kpi-v">${ST.vitals && ST.vitals.vo2 ? ST.vitals.vo2 : "--"}</div><div class="zb-kpi-l">最大摄氧量</div></div><div><div class="zb-kpi-v">${ST.pu_best || 1}<span style="font-size:12px;color:var(--ink-3);font-weight:400;"> / 5</span></div><div class="zb-kpi-l">标准引体</div></div>`;
     const lr = ge("zb-lrows");
     if (lr) {
       let rh = "";
@@ -8446,28 +8510,181 @@ window.ZB = (function() {
         if (pr > 0) ps.push(`引体 ${pr}轮`);
         const wf = (ST.wb || []).find(r => r[0] === d);
         if (wf && wf[2]) ps.push(`${wf[2]}%`);
-        rh += `<div class="zb-ledger-row"><span class="zb-ledger-date">${d.slice(5)}</span><span class="zb-ledger-main">${ps.length ? ps.join(" · ") : "静休"}</span><span class="zb-ledger-dots"><span class="zb-dot ${b ? "bb" : (p ? "ok" : "")}"></span><span class="zb-dot ${pr > 0 ? "ok" : ""}"></span><span class="zb-dot ${de.diet ? "ok" : ""}"></span></span></div>`;
+        let ed = "";
+        if (EXP_DAY === d) {
+          const bLock = b && b.src === "drive";
+          ed = `<div class="zb-ed" data-zb-noswipe="1">
+            <div class="zb-ed-row">
+              <span class="zb-ed-lbl">心肺</span>
+              <button class="zb-ed-chip ${de.pelo === "done" ? "on" : ""}" onclick="ZB.edCardio('${d}','pelo','done')">Peloton</button>
+              <button class="zb-ed-chip ${de.pelo === "recovery" ? "on" : ""}" onclick="ZB.edCardio('${d}','pelo','recovery')">恢复骑</button>
+              <button class="zb-ed-chip ${de.pelo === "rest" ? "on" : ""}" onclick="ZB.edCardio('${d}','pelo','rest')">休整</button>
+              ${bLock ? `<span style="font-size:12px;color:var(--ink-3);">云盘已记篮球</span>` : `<button class="zb-ed-chip ${de.bb === "high" ? "on-red" : ""}" onclick="ZB.edCardio('${d}','bb','high')">篮球</button><button class="zb-ed-chip ${de.bb === "light" ? "on" : ""}" onclick="ZB.edCardio('${d}','bb','light')">轻投</button>`}
+              ${(de.pelo || de.bb) ? `<button class="zb-ed-chip" style="color:var(--ink-3);" onclick="ZB.edCardio('${d}','clear','')">清空</button>` : ""}
+            </div>
+            <div class="zb-ed-row">
+              <span class="zb-ed-lbl">引体</span>
+              <button class="zb-ed-chip ${pr === 0 ? "on" : ""}" onclick="ZB.edPU('${d}',0)">0 轮</button>
+              <button class="zb-ed-chip ${pr === 1 ? "on" : ""}" onclick="ZB.edPU('${d}',1)">1 轮</button>
+              <button class="zb-ed-chip ${pr >= 2 ? "on" : ""}" onclick="ZB.edPU('${d}',2)">2 轮</button>
+              <span style="margin-left:auto;"></span>
+              <button class="zb-ed-chip ${de.diet ? "on" : ""}" onclick="ZB.edDiet('${d}')">${de.diet ? "饮食达标 ✓" : "补记饮食达标"}</button>
+            </div>
+          </div>`;
+        }
+        rh += `<div class="zb-ledger-item"><button class="zb-ledger-row" onclick="ZB.toggleDay('${d}')"><span class="zb-ledger-date">${d.slice(5)}</span><span class="zb-ledger-main" style="${ps.length ? "" : "color:var(--ink-3);"}">${ps.length ? ps.join(" · ") : "静休"}</span><span class="zb-ledger-dots"><span class="zb-dot ${b ? "bb" : (p ? "ok" : "")}"></span><span class="zb-dot ${pr > 0 ? "ok" : ""}"></span><span class="zb-dot ${de.diet ? "ok" : ""}"></span></span></button>${ed}</div>`;
       }
       lr.innerHTML = rh;
     }
     const gp = ge("zb-gaps");
     if (gp) {
       const gs = (ST.vitals && ST.vitals.gaps) || [];
-      gp.innerHTML = gs.length ? `<div class="zb-gap-note">待补小开关：${gs.join("；")}</div>` : "";
+      gp.innerHTML = gs.length ? `<div class="zb-gap-note">待补通：${gs.join("；")}</div>` : `<div class="zb-gap-note">轻点任意日期可补记或修改</div>`;
     }
     if (ge("zb-sync-txt")) ge("zb-sync-txt").textContent = SYNC_NOTE || (ST.vitals && ST.vitals.last_drive_sync ? `已对接健康同步 · ${ST.vitals.last_drive_sync}` : "加密同步就绪");
   }
 
-  function ensureDay() {
-    const t = todayYmd();
+  function bindGesturesOnce() {
+    if (GESTURES_BOUND) return;
+    GESTURES_BOUND = true;
+    const stage = ge("zb-stage"), ptr = ge("zb-ptr"), ptrArc = ge("zb-ptr-arc"), ptrLbl = ge("zb-ptr-lbl");
+    if (stage && stage.addEventListener) {
+      let trk = false, mode = "", sx = 0, sy = 0, t0 = 0, ldx = 0, ldy = 0, busy = false;
+      const toLocal = (dx, dy) => (typeof FP_ANGLE !== "undefined" && FP_ANGLE === 90) ? { dx: -dy, dy: dx } : ((typeof FP_ANGLE !== "undefined" && FP_ANGLE === 270) ? { dx: dy, dy: -dx } : { dx, dy });
+      stage.addEventListener("touchstart", e => {
+        if (!e.touches || e.touches.length !== 1 || busy) return;
+        if (e.target && e.target.closest && e.target.closest("[data-zb-noswipe], input, textarea")) return;
+        trk = true; mode = ""; sx = e.touches[0].clientX; sy = e.touches[0].clientY; t0 = Date.now(); ldx = 0; ldy = 0;
+      }, { passive: true });
+      stage.addEventListener("touchmove", e => {
+        if (!trk || !e.touches || e.touches.length !== 1) return;
+        const d = toLocal(e.touches[0].clientX - sx, e.touches[0].clientY - sy);
+        ldx = d.dx; ldy = d.dy;
+        if (!mode) {
+          if (Math.hypot(ldx, ldy) < 10) return;
+          if (Math.abs(ldx) > Math.abs(ldy) * 1.25) mode = "h";
+          else if (ldy > 0 && stage.scrollTop <= 0) { mode = "ptr"; if (ptr) ptr.classList.add("dragging"); }
+          else { mode = "v"; return; }
+        }
+        if (mode === "h") {
+          e.preventDefault();
+          const idx = SUB_ORDER.indexOf(SUBTAB);
+          const edge = (idx === 0 && ldx > 0) || (idx === SUB_ORDER.length - 1 && ldx < 0);
+          const dm = edge ? ldx * 0.16 : Math.max(-68, Math.min(68, ldx * 0.42));
+          const ap = ge("zb-p-" + SUBTAB);
+          if (ap) { ap.style.transition = "none"; ap.style.transform = `translateX(${dm.toFixed(1)}px)`; }
+        } else if (mode === "ptr" && ldy > 0) {
+          e.preventDefault();
+          const pull = Math.min(56, ldy * 0.48), pct = Math.min(100, Math.round((pull / 46) * 100));
+          if (ptr) { ptr.style.height = `${pull.toFixed(0)}px`; ptr.style.opacity = `${Math.min(1, pull / 30).toFixed(2)}`; }
+          if (ptrArc) ptrArc.setAttribute("stroke-dasharray", `${pct} 100`);
+          if (ptrLbl) ptrLbl.textContent = pull >= 46 ? "松手立即同步" : "下拉同步";
+        }
+      }, { passive: false });
+      const endG = async () => {
+        if (!trk) return;
+        trk = false;
+        if (mode === "h") {
+          const dt = Date.now() - t0, idx = SUB_ORDER.indexOf(SUBTAB);
+          const sr = ldx > 52 || (ldx > 26 && dt < 220), sl = ldx < -52 || (ldx < -26 && dt < 220);
+          if (sl && idx < SUB_ORDER.length - 1) window.ZB.setTab(SUB_ORDER[idx + 1], 1);
+          else if (sr && idx > 0) window.ZB.setTab(SUB_ORDER[idx - 1], -1);
+          else {
+            const ap = ge("zb-p-" + SUBTAB);
+            if (ap) { ap.style.transition = "transform 0.22s cubic-bezier(0.22, 1, 0.36, 1)"; ap.style.transform = "translateX(0)"; setTimeout(() => { ap.style.transition = ""; ap.style.transform = ""; }, 230); }
+          }
+        } else if (mode === "ptr") {
+          if (ptr) ptr.classList.remove("dragging");
+          if (Math.min(56, Math.max(0, ldy * 0.48)) >= 46 && !busy) {
+            busy = true;
+            if (ptr) { ptr.classList.add("syncing"); ptr.style.height = "38px"; ptr.style.opacity = "1"; }
+            if (ptrArc) ptrArc.setAttribute("stroke-dasharray", "68 100");
+            if (ptrLbl) ptrLbl.textContent = "同步中…";
+            await pullCloud(false);
+            setTimeout(() => { if (ptr) { ptr.classList.remove("syncing"); ptr.style.height = "0px"; ptr.style.opacity = "0"; } busy = false; }, 260);
+          } else if (ptr) { ptr.style.height = "0px"; ptr.style.opacity = "0"; }
+        }
+        mode = "";
+      };
+      stage.addEventListener("touchend", endG, { passive: true });
+      stage.addEventListener("touchcancel", endG, { passive: true });
+    }
+
+    // Interactive Body Chart Scrubbing
+    const cw = ge("zb-chart");
+    if (cw && cw.addEventListener) {
+      let scOn = false;
+      const scrub = (cx, cy) => {
+        if (!CHART_PTS.length) return;
+        const svg = ge("zb-chart-svg");
+        if (!svg || !svg.getBoundingClientRect) return;
+        const rect = svg.getBoundingClientRect();
+        if (!rect.width) return;
+        const ang = typeof FP_ANGLE !== "undefined" ? FP_ANGLE : 0;
+        const ratio = ang === 90 ? (rect.bottom - cy) / rect.height : (ang === 270 ? (cy - rect.top) / rect.height : (cx - rect.left) / rect.width);
+        const sx = Math.max(0, Math.min(360, ratio * 360));
+        let bi = 0, bd = Infinity;
+        for (let i = 0; i < CHART_PTS.length; i++) { const dd = Math.abs(CHART_PTS[i].x - sx); if (dd < bd) { bd = dd; bi = i; } }
+        if (bi === SCRUB_IDX) return;
+        SCRUB_IDX = bi;
+        const pt = CHART_PTS[bi];
+        const cur = ge("zb-c-cur"), halo = ge("zb-c-halo"), foc = ge("zb-c-foc");
+        if (cur && halo && foc) {
+          cur.setAttribute("x1", pt.x); cur.setAttribute("x2", pt.x); cur.style.display = "";
+          halo.setAttribute("cx", pt.x); halo.setAttribute("cy", pt.y); halo.style.display = "";
+          foc.setAttribute("cx", pt.x); foc.setAttribute("cy", pt.y); foc.style.display = "";
+        }
+        applyBodyHead(todayYmd(), latestWB(), pt);
+      };
+      const endS = () => {
+        if (!scOn && SCRUB_IDX === -1) return;
+        scOn = false; SCRUB_IDX = -1;
+        ["zb-c-cur", "zb-c-halo", "zb-c-foc"].forEach(id => { const el = ge(id); if (el) el.style.display = "none"; });
+        applyBodyHead(todayYmd(), latestWB(), null);
+      };
+      cw.addEventListener("pointerdown", e => { if (!CHART_PTS.length) return; scOn = true; try { cw.setPointerCapture(e.pointerId); } catch (err) {} scrub(e.clientX, e.clientY); });
+      cw.addEventListener("pointermove", e => { if (!scOn && (e.pointerType !== "mouse" || e.buttons === 0)) return; scrub(e.clientX, e.clientY); });
+      cw.addEventListener("pointerup", endS);
+      cw.addEventListener("pointercancel", endS);
+      cw.addEventListener("pointerleave", () => { if (!scOn) endS(); });
+    }
+
+    // Zero-Keyboard Tactile Weigh-In Dial Tracks
+    [
+      { id: "zb-dwt-track", key: "wt", min: 45, max: 120, px: 11 },
+      { id: "zb-dbf-track", key: "bf", min: 6, max: 40, px: 13 }
+    ].forEach(cfg => {
+      const el = ge(cfg.id);
+      if (!el || !el.addEventListener) return;
+      let dg = false, sp = 0, sv = 0, so = 0;
+      const getPos = e => (typeof FP_ANGLE !== "undefined" && FP_ANGLE === 90) ? -e.clientY : ((typeof FP_ANGLE !== "undefined" && FP_ANGLE === 270) ? e.clientY : e.clientX);
+      el.addEventListener("pointerdown", e => {
+        dg = true; sp = getPos(e); sv = cfg.key === "wt" ? D_WT : D_BF; so = cfg.key === "wt" ? D_WT_OFF : D_BF_OFF;
+        if (cfg.key === "bf") D_SKIP_BF = false;
+        try { el.setPointerCapture(e.pointerId); } catch (err) {}
+      });
+      el.addEventListener("pointermove", e => {
+        if (!dg) return;
+        const dx = getPos(e) - sp;
+        const nv = Math.max(cfg.min, Math.min(cfg.max, +(sv + Math.round(-dx / cfg.px) * 0.1).toFixed(1)));
+        if (cfg.key === "wt") { D_WT = nv; D_WT_OFF = so + dx; } else { D_BF = nv; D_BF_OFF = so + dx; }
+        renderDial();
+      });
+      const stp = () => { dg = false; };
+      el.addEventListener("pointerup", stp);
+      el.addEventListener("pointercancel", stp);
+    });
+  }
+
+  function ensureDay(ymd) {
+    const t = ymd || todayYmd();
     if (!ST.days) ST.days = {};
-    if (!ST.days[t]) ST.days[t] = { ts: 0 };
+    if (!ST.days[t]) ST.days[t] = { ts: 0, pu: [], diet: 0 };
     ST.days[t].ts = Math.floor(Date.now() / 1000);
     return ST.days[t];
   }
 
   async function tryRestoreVault() {
-    // Check optional #bt=...&bk=... hash
     try {
       const h = (location.hash || "").replace(/^#/, "");
       if (h) {
@@ -8518,6 +8735,7 @@ window.ZB = (function() {
       const dec = await decWithKey(CKEY, env.d);
       if (dec && dec.v === 1) { ST = mergeS(ST, dec); saveLocal(); syncPUDefault(); }
       render();
+      positionSubBar(true);
       await pullCloud(true);
       toast("已解锁并记住本设备");
     } catch (e) {
@@ -8530,6 +8748,8 @@ window.ZB = (function() {
     const lk = ge("zb-locked"), ap = ge("zb-app");
     if (lk) lk.style.display = "none";
     if (ap) ap.style.display = "flex";
+    bindGesturesOnce();
+    setTimeout(() => positionSubBar(true), 20);
   }
 
   async function onEnter() {
@@ -8546,10 +8766,12 @@ window.ZB = (function() {
       loadLocal();
       syncPUDefault();
       render();
+      positionSubBar(true);
       await pullCloud(true);
       try { if (localStorage.getItem(PEND_KEY)) await pushNow(); } catch (e) {}
     } else if (CKEY) {
       render();
+      positionSubBar(true);
       pullCloud(true);
     }
   }
@@ -8561,12 +8783,26 @@ window.ZB = (function() {
   }
 
   return {
-    onEnter, onResume, unlockPass,
-    setTab(t) {
+    onEnter, onResume, unlockPass, stopPacer,
+    setTab(t, dirHint) {
+      if (!SUB_ORDER.includes(t)) return;
+      if (t === SUBTAB) { positionSubBar(false); return; }
+      if (PACER_ON) stopPacer(false);
+      const prev = SUB_ORDER.indexOf(SUBTAB), next = SUB_ORDER.indexOf(t);
+      const dir = dirHint || (next > prev ? 1 : -1);
       SUBTAB = t;
       document.querySelectorAll(".zb-subtab").forEach(b => b.classList.toggle("active", b.dataset.zbt === t));
-      ["today", "pullup", "body", "ledger"].forEach(k => { const el = ge("zb-p-" + k); if (el) el.classList.toggle("active", k === t); });
+      SUB_ORDER.forEach(k => {
+        const el = ge("zb-p-" + k);
+        if (!el) return;
+        el.classList.remove("zb-slide-r", "zb-slide-l");
+        el.style.transform = ""; el.style.transition = "";
+        el.classList.toggle("active", k === t);
+        if (k === t) { void el.offsetWidth; el.classList.add(dir > 0 ? "zb-slide-r" : "zb-slide-l"); }
+      });
+      const st = ge("zb-stage"); if (st) st.scrollTop = 0;
       if (t === "body") renderChart();
+      positionSubBar(false);
     },
     setMin(m) { PELO_MIN = m; render(); },
     logCardio(kind) {
@@ -8584,20 +8820,31 @@ window.ZB = (function() {
       schedPush(); render();
     },
     quickPU(n) {
-      const d = ensureDay(), stg = puStage();
+      const d = ensureDay(), stg = puStage(), nowS = Math.floor(Date.now() / 1000);
       if (!Array.isArray(d.pu)) d.pu = [];
       if (d.pu.length >= n) { d.pu = d.pu.slice(0, n - 1); toast(`已撤销第 ${n} 轮`); }
-      else { while (d.pu.length < n) d.pu.push([stg.defStrict, stg.neg]); toast(`第 ${n} 轮引体已记`); }
+      else { while (d.pu.length < n) d.pu.push([stg.defStrict, stg.neg, nowS]); toast(n === 1 ? "第 1 轮已记 · 2 小时后再拉第 2 轮" : "第 2 轮已记 · 今日引体收工"); }
       schedPush(); render();
     },
     adjStrict(delta) { PU_IN = Math.max(0, Math.min(10, PU_IN + delta)); render(); },
+    togglePacer() {
+      if (PACER_ON) { stopPacer(true); return; }
+      if ((dayE(todayYmd()).pu || []).length >= 2) { toast("今天 2 轮已满额，明天继续"); return; }
+      startPacer();
+    },
+    togglePacerSound() {
+      PACER_SND = !PACER_SND;
+      const b = ge("zb-pacer-snd");
+      if (b) { b.textContent = PACER_SND ? "轻音：开" : "轻音：关"; b.className = "zb-btn-quiet" + (PACER_SND ? " active" : ""); }
+      if (PACER_SND) playChime(528);
+    },
     logPU() {
       const d = ensureDay();
       if (!Array.isArray(d.pu)) d.pu = [];
       if (d.pu.length >= 2) { toast("今天 2 轮已满额，明天继续"); return; }
-      d.pu.push([PU_IN, Math.max(0, 3 - PU_IN)]);
+      d.pu.push([PU_IN, Math.max(0, 3 - PU_IN), Math.floor(Date.now() / 1000)]);
       if (PU_IN > (ST.pu_best || 1)) { ST.pu_best = PU_IN; toast(`新纪录！标准不甩 ${PU_IN} 个`); }
-      else toast(`第 ${d.pu.length} 轮引体已记`);
+      else toast(d.pu.length === 1 ? "第 1 轮已记 · 2 小时后再拉第 2 轮" : "第 2 轮已记 · 今日引体收工");
       schedPush(); render();
     },
     undoPU() {
@@ -8610,35 +8857,82 @@ window.ZB = (function() {
     },
     setMetric(m) { METRIC = m; render(); },
     setRange(r) { RANGE = r; render(); },
-    toggleWForm() {
+    toggleWForm(force) {
       const f = ge("zb-wform"), b = ge("zb-wbtn");
       if (!f || !b) return;
-      const open = !f.classList.contains("open");
+      const open = typeof force === "boolean" ? force : !f.classList.contains("open");
+      if (open) {
+        const wb = latestWB();
+        D_WT = wb.lwt ? +wb.lwt[1].toFixed(1) : 81.5;
+        D_BF = wb.lbf ? +wb.lbf[2].toFixed(1) : 18.0;
+        D_SKIP_BF = false;
+        renderDial();
+      }
       f.classList.toggle("open", open);
       b.textContent = open ? "收起" : "记一次 GE 秤";
     },
+    nudgeDial(which, delta) {
+      if (which === "wt") { D_WT = Math.max(45, Math.min(120, +(D_WT + delta).toFixed(1))); D_WT_OFF -= delta * 100; }
+      else { D_SKIP_BF = false; D_BF = Math.max(6, Math.min(40, +(D_BF + delta).toFixed(1))); D_BF_OFF -= delta * 100; }
+      renderDial();
+    },
+    toggleSkipBf() { D_SKIP_BF = !D_SKIP_BF; renderDial(); },
+    editDial(which) {
+      const slot = ge(which === "wt" ? "zb-dwt-slot" : "zb-dbf-slot");
+      if (!slot) return;
+      const cur = which === "wt" ? D_WT.toFixed(1) : D_BF.toFixed(1);
+      slot.innerHTML = `<input class="zb-dial-in" type="number" step="0.1" inputmode="decimal" value="${cur}" />`;
+      const inp = slot.querySelector ? slot.querySelector("input") : null;
+      if (!inp) return;
+      inp.focus(); if (inp.select) inp.select();
+      const done = () => {
+        const v = parseFloat(inp.value);
+        if (!isNaN(v)) {
+          if (which === "wt" && v >= 45 && v <= 120) D_WT = +v.toFixed(1);
+          if (which === "bf" && v >= 6 && v <= 40) { D_BF = +v.toFixed(1); D_SKIP_BF = false; }
+        }
+        slot.innerHTML = "";
+        renderDial();
+      };
+      inp.addEventListener("blur", done);
+      inp.addEventListener("keydown", e => { if (e.key === "Enter") inp.blur(); });
+    },
     saveWeigh() {
-      const wv = parseFloat((ge("zb-in-wt") && ge("zb-in-wt").value) || "");
-      const bv = parseFloat((ge("zb-in-bf") && ge("zb-in-bf").value) || "");
-      if (isNaN(wv) || wv < 40 || wv > 160) { toast("请输入有效体重 (kg)"); return; }
-      const bf = (!isNaN(bv) && bv >= 5 && bv <= 45) ? +bv.toFixed(1) : null;
-      const t = todayYmd(), d = ensureDay();
-      d.wt = +wv.toFixed(2); if (bf !== null) d.bf = bf;
+      const wv = +D_WT.toFixed(1), bf = D_SKIP_BF ? null : +D_BF.toFixed(1);
+      const t = todayYmd(), d = ensureDay(t);
+      d.wt = wv; if (bf !== null) d.bf = bf;
       if (!Array.isArray(ST.wb)) ST.wb = [];
       const ix = ST.wb.findIndex(r => r[0] === t);
-      const row = [t, +wv.toFixed(2), bf, "phone"];
+      const row = [t, wv, bf, "phone"];
       if (ix >= 0) ST.wb[ix] = row; else ST.wb.push(row);
       ST.wb.sort((a, b) => a[0].localeCompare(b[0]));
-      if (ge("zb-in-wt")) ge("zb-in-wt").value = "";
-      if (ge("zb-in-bf")) ge("zb-in-bf").value = "";
-      this.toggleWForm(); schedPush(); render();
-      toast(bf !== null ? `已记 ${wv.toFixed(1)} kg · GE ${bf}%` : `已记体重 ${wv.toFixed(1)} kg`);
+      this.toggleWForm(false); schedPush(); render();
+      toast(bf !== null ? `已记 ${wv.toFixed(1)} kg · GE ${bf.toFixed(1)}%` : `已记体重 ${wv.toFixed(1)} kg`);
+    },
+    toggleDay(ymd) { EXP_DAY = EXP_DAY === ymd ? null : ymd; render(); },
+    edCardio(ymd, field, val) {
+      const d = ensureDay(ymd);
+      if (field === "clear") { d.pelo = null; d.pelo_min = 0; d.bb = null; toast(`${ymd.slice(5)} 已清空`); }
+      else if (field === "pelo") { d.pelo = d.pelo === val ? null : val; d.pelo_min = d.pelo === "done" ? 40 : (d.pelo === "recovery" ? 20 : 0); toast(`${ymd.slice(5)} 已更新`); }
+      else if (field === "bb") { d.bb = d.bb === val ? null : val; toast(`${ymd.slice(5)} 已更新`); }
+      schedPush(); render();
+    },
+    edPU(ymd, n) {
+      const d = ensureDay(ymd), stg = puStage();
+      d.pu = [];
+      for (let i = 0; i < n; i++) d.pu.push([stg.defStrict, stg.neg]);
+      schedPush(); render(); toast(`${ymd.slice(5)} 引体已改为 ${n} 轮`);
+    },
+    edDiet(ymd) {
+      const d = ensureDay(ymd); d.diet = d.diet ? 0 : 1;
+      schedPush(); render(); toast(d.diet ? `${ymd.slice(5)} 饮食达标已补记` : `${ymd.slice(5)} 已取消`);
     },
     syncNow() { pullCloud(false); }
   };
 })();
 
 function initApp() {
+  positionMainThumbBar(true);
   // When running on local tutor_server.py, also union-merge local server state if present
   if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
     fetch("./api/state").then(r => r.ok ? r.json() : null).then(st => {
