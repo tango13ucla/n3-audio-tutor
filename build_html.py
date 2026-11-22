@@ -2652,12 +2652,15 @@ html = r"""<!DOCTYPE html>
   .modal-mask {
     position: fixed;
     inset: 0;
-    background: rgba(28, 27, 24, 0.28);
+    background: rgba(28, 27, 24, 0.32);
     display: none;
     align-items: center;
     justify-content: center;
     padding: 28px;
     z-index: 100;
+  }
+  @media (prefers-color-scheme: dark) {
+    .modal-mask { background: rgba(10, 9, 8, 0.66); }
   }
   @media (max-width: 859px), (max-height: 520px) {
     .modal-mask {
@@ -2681,7 +2684,7 @@ html = r"""<!DOCTYPE html>
     margin: 0 0 18px;
     padding: 12px 14px;
     border-radius: 8px;
-    background: rgba(245, 242, 235, 0.7);
+    background: var(--soft-bg);
     border: 1px solid var(--hairline);
   }
   .sync-note {
@@ -2954,7 +2957,7 @@ html = r"""<!DOCTYPE html>
     font-weight: 600;
   }
 
-  /* ================= 6. NATIVE ZEN BODY MODULE ("体律" · v2 Native-App Polish) ================= */
+  /* ================= 6. NATIVE ZEN BODY MODULE ("体律" · Open-Washi Zen Ma & Kanso) ================= */
   #green-board.hidden, #body-view.hidden, .zen-panel.hidden { display: none !important; }
   #body-view {
     flex: 1;
@@ -2963,47 +2966,30 @@ html = r"""<!DOCTYPE html>
     flex-direction: column;
     position: relative;
   }
-  .zb-horizon {
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 4px 0 10px;
-    border-bottom: 1px solid var(--hairline);
-  }
-  .zb-enso-trio { display: flex; align-items: center; gap: 11px; }
-  .zb-enso-item { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; }
-  .zb-enso-svg { width: 24px; height: 24px; display: block; overflow: visible; }
-  .zb-enso-item.just-done .zb-enso-fill { animation: zbPop 0.4s cubic-bezier(0.22, 1, 0.36, 1); transform-origin: 14px 14px; }
-  .zb-enso-item.just-done .zb-enso-chk { stroke-dasharray: 24; stroke-dashoffset: 24; animation: zbChk 0.34s 0.08s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
-  @keyframes zbPop { 0% { transform: scale(0.76); opacity: 0.55; } 62% { transform: scale(1.08); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
-  @keyframes zbChk { to { stroke-dashoffset: 0; } }
-  .zb-horizon-metric { font-size: 13px; font-weight: 500; color: var(--ink-3); font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
-  .zb-horizon-metric b { color: var(--sumi); font-weight: 600; }
 
   .zb-subnav {
     flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 0 8px;
+    padding: 12px 0 8px;
     gap: 8px;
   }
-  .zb-subtabs { display: flex; align-items: center; gap: 18px; position: relative; }
+  .zb-subtabs { display: flex; align-items: center; gap: 20px; position: relative; }
   .zb-sub-bar {
     position: absolute;
     left: 0;
     bottom: -1px;
-    height: 1.8px;
+    height: 1.5px;
     width: 28px;
     background: var(--sumi);
     border-radius: 2px;
     pointer-events: none;
     transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), width 0.25s cubic-bezier(0.22, 1, 0.36, 1);
   }
-  .zb-subtab { font-size: 14px; font-weight: 500; color: var(--ink-3); padding: 4px 0; position: relative; transition: color 0.18s ease; }
+  .zb-subtab { font-size: 14.5px; font-weight: 500; color: var(--ink-3); padding: 4px 0; position: relative; letter-spacing: 0.04em; transition: color 0.18s ease; }
   .zb-subtab.active { color: var(--sumi); font-weight: 600; }
-  .zb-date-tag { font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .zb-date-tag { font-size: 12.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; letter-spacing: 0.03em; }
 
   .zb-ptr {
     flex-shrink: 0;
@@ -3031,7 +3017,7 @@ html = r"""<!DOCTYPE html>
     scrollbar-width: none;
     display: flex;
     flex-direction: column;
-    padding: 4px 0 18px;
+    padding: 0 0 18px;
   }
   .zb-stage::-webkit-scrollbar { display: none; }
   .zb-panel { display: none; flex-direction: column; flex: 1; min-height: 100%; will-change: transform, opacity; }
@@ -3040,71 +3026,171 @@ html = r"""<!DOCTYPE html>
   .zb-panel.zb-slide-l { animation: zbSlideL 0.23s cubic-bezier(0.22, 1, 0.36, 1); }
   @keyframes zbSlideR { from { opacity: 0.28; transform: translateX(16px); } to { opacity: 1; transform: translateX(0); } }
   @keyframes zbSlideL { from { opacity: 0.28; transform: translateX(-16px); } to { opacity: 1; transform: translateX(0); } }
-  .zb-spacer { flex: 1 1 12px; min-height: 8px; }
 
-  .zb-context { font-size: 12.5px; color: var(--ink-3); letter-spacing: 0.03em; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  /* Generous Zen Ma (余白) pushing interactive focal zone into effortless right-thumb reach */
+  .zb-ma { flex: 1 1 32px; min-height: 18px; }
+  .zb-ma-tail { flex: 0.22 1 8px; min-height: 6px; }
+
+  .zb-context {
+    font-size: 13px;
+    color: var(--ink-3);
+    letter-spacing: 0.05em;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    font-variant-numeric: tabular-nums;
+  }
   .zb-tier { font-weight: 500; }
   .zb-tier.green { color: var(--moss); }
   .zb-tier.yellow { color: var(--ochre); }
   .zb-tier.red { color: var(--bengara); }
 
-  .zb-sheet {
-    background: var(--sheet);
-    border: 1px solid var(--hairline);
-    border-radius: 14px;
-    padding: 21px 19px 19px;
-    transition: border-color 0.24s ease;
+  .zb-title {
+    font-family: var(--serif-jp);
+    font-size: clamp(24px, 6.4vw, 27px);
+    font-weight: 600;
+    line-height: 1.38;
+    letter-spacing: 0.025em;
+    color: var(--sumi);
+    margin: 12px 0 10px;
   }
-  .zb-sheet.tier-red { border-left: 3px solid var(--bengara); }
-  .zb-sheet.tier-yellow { border-left: 3px solid var(--ochre); }
-  .zb-sheet.tier-green { border-left: 3px solid var(--moss); }
 
-  .zb-eyebrow { font-size: 12px; font-weight: 500; letter-spacing: 0.05em; color: var(--ink-3); margin-bottom: 8px; }
-  .zb-title { font-family: var(--serif-jp); font-size: clamp(19.5px, 5.2vw, 22px); font-weight: 600; line-height: 1.38; color: var(--sumi); margin: 0 0 8px; }
-  .zb-sub { font-size: 13.5px; line-height: 1.62; color: var(--ink-2); margin: 0; }
+  .zb-guide-row {
+    width: 100%;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    text-align: left;
+    padding: 2px 0;
+    white-space: normal;
+  }
+  .zb-guide-txt {
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--ink-2);
+    letter-spacing: 0.015em;
+  }
+  .zb-guide-link {
+    flex-shrink: 0;
+    font-size: 13px;
+    color: var(--ink-3);
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    transition: color 0.16s ease;
+  }
+  .zb-guide-row:active .zb-guide-link { color: var(--sumi); }
 
-  .zb-min-pills { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
-  .zb-pill { height: 30px; padding: 0 12px; border-radius: 999px; font-size: 12.5px; font-weight: 500; color: var(--ink-2); border: 1px solid var(--hairline-strong); background: transparent; font-variant-numeric: tabular-nums; transition: background-color 0.16s ease, color 0.16s ease; }
-  .zb-pill.active { background: var(--sumi); color: var(--washi); border-color: var(--sumi); }
-
-  .zb-actions { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 18px; }
-  .zb-btn-primary {
-    height: 44px;
-    padding: 0 22px;
-    border-radius: 999px;
-    background: var(--sumi);
-    color: var(--washi);
+  .zb-min-bar {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 26px;
+    padding-bottom: 12px;
+  }
+  .zb-min-opts { display: flex; align-items: baseline; gap: 18px; }
+  .zb-min-opt {
     font-size: 14.5px;
     font-weight: 500;
-    letter-spacing: 0.04em;
-    transition: transform 0.14s ease, background-color 0.22s ease;
+    color: var(--ink-3);
+    padding: 4px 0 5px;
+    border-bottom: 1.5px solid transparent;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+    transition: color 0.16s ease, border-color 0.16s ease;
+  }
+  .zb-min-opt.active {
+    color: var(--sumi);
+    font-weight: 600;
+    border-bottom-color: var(--sumi);
+  }
+
+  .zb-cta-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 6px;
+  }
+  .zb-btn-primary {
+    flex: 1;
+    height: 48px;
+    padding: 0 20px;
+    border-radius: 8px;
+    background: var(--sumi);
+    color: var(--sheet);
+    font-size: 15.5px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.15s ease, background-color 0.22s ease;
   }
   .zb-btn-primary.is-done { background: var(--moss-solid); color: #FCFBF8; }
-  .zb-btn-primary:active { transform: scale(0.96); }
+  .zb-btn-primary:active { opacity: 0.86; }
+  .zb-btn-ghost {
+    height: 48px;
+    padding: 0 15px;
+    border: 1px solid var(--hairline-strong);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink-2);
+    letter-spacing: 0.03em;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .zb-btn-ghost:active { background: var(--tap-bg); }
+
   .zb-btn-quiet {
-    font-size: 13px;
+    font-size: 13.5px;
     font-weight: 500;
     color: var(--ink-3);
-    padding: 8px 4px;
-    letter-spacing: 0.02em;
+    padding: 8px 2px;
+    letter-spacing: 0.03em;
     transition: color 0.18s ease;
   }
   .zb-btn-quiet:active { color: var(--sumi); }
   .zb-btn-quiet.active { color: var(--moss); font-weight: 600; }
+  .zb-btn-quiet.is-ochre { color: var(--ochre); font-weight: 600; }
   .zb-btn-quiet.is-red { color: var(--bengara); font-weight: 600; }
-  .zb-overrides { display: flex; align-items: center; justify-content: flex-end; gap: 14px; margin-top: 10px; padding: 0 2px; }
 
-  .zb-ritual-list { margin-top: 16px; border-top: 1px solid var(--hairline); }
-  .zb-ritual-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 2px; border-bottom: 1px solid var(--hairline); gap: 12px; }
-  .zb-ritual-left { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-  .zb-ritual-name { font-size: 14.5px; font-weight: 500; color: var(--sumi); }
-  .zb-ritual-hint { font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .zb-aux-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-top: 8px;
+  }
+  .zb-aux-grp {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-left: auto;
+  }
+
+  .zb-ritual-list { margin-top: 26px; border-top: 1px solid var(--hairline); }
+  .zb-ritual-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 0;
+    border-bottom: 1px solid var(--hairline);
+    gap: 12px;
+  }
+  .zb-ritual-left { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+  .zb-ritual-name { font-size: 15px; font-weight: 500; color: var(--sumi); letter-spacing: 0.03em; white-space: nowrap; }
+  .zb-ritual-hint { font-size: 12.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .zb-ritual-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
   .zb-round-dot {
-    width: 34px;
-    height: 34px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
-    border: 1.5px solid var(--hairline-strong);
+    border: 1.4px solid var(--hairline-strong);
     color: var(--ink-2);
     font-size: 13px;
     font-weight: 500;
@@ -3116,128 +3202,97 @@ html = r"""<!DOCTYPE html>
   }
   .zb-round-dot:active { transform: scale(0.93); }
   .zb-round-dot.done { background: var(--moss-solid); border-color: var(--moss-solid); color: #FCFBF8; }
-  .zb-tap-check { font-size: 13.5px; font-weight: 500; color: var(--ink-2); padding: 7px 2px; transition: color 0.18s ease; }
+  .zb-tap-check { font-size: 14px; font-weight: 500; color: var(--ink-2); padding: 6px 0; letter-spacing: 0.03em; transition: color 0.18s ease; }
   .zb-tap-check.done { color: var(--moss); font-weight: 600; }
 
-  .zb-rep-row { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--hairline); }
-  .zb-stepper { display: inline-flex; align-items: center; gap: 12px; }
+  .zb-rep-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 26px;
+    padding: 16px 0;
+    border-top: 1px solid var(--hairline);
+    border-bottom: 1px solid var(--hairline);
+    gap: 12px;
+  }
+  .zb-stepper { display: inline-flex; align-items: center; gap: 14px; }
   .zb-step-btn { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--hairline-strong); font-size: 16px; color: var(--sumi); display: inline-flex; align-items: center; justify-content: center; transition: background-color 0.14s ease, transform 0.12s ease; }
   .zb-step-btn:active { background: var(--hairline); transform: scale(0.93); }
-  .zb-step-val { min-width: 22px; text-align: center; font-family: var(--serif-jp); font-size: 19px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .zb-step-val { min-width: 24px; text-align: center; font-family: var(--serif-jp); font-size: 21px; font-weight: 600; font-variant-numeric: tabular-nums; }
 
-  .zb-pacer { display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--hairline); flex-direction: column; align-items: center; gap: 9px; animation: zenModeIn 0.2s ease; }
+  .zb-pacer { display: none; margin-top: 18px; padding: 14px 0 6px; flex-direction: column; align-items: center; gap: 9px; animation: zenModeIn 0.2s ease; }
   .zb-pacer.open { display: flex; }
-  .zb-pacer-ring { position: relative; width: 104px; height: 104px; display: flex; align-items: center; justify-content: center; }
-  .zb-pacer-svg { width: 104px; height: 104px; display: block; overflow: visible; }
+  .zb-pacer-ring { position: relative; width: 102px; height: 102px; display: flex; align-items: center; justify-content: center; }
+  .zb-pacer-svg { width: 102px; height: 102px; display: block; overflow: visible; }
   .zb-pacer-num { position: absolute; font-family: var(--serif-jp); font-size: 30px; font-weight: 600; color: var(--sumi); font-variant-numeric: tabular-nums; }
   .zb-pacer-phase { font-size: 13px; font-weight: 500; color: var(--ink-2); letter-spacing: 0.04em; }
-  .zb-pacer-ctrls { display: flex; align-items: center; gap: 18px; }
+  .zb-pacer-ctrls { display: flex; align-items: center; gap: 20px; }
 
-  .zb-ladder { margin-top: 16px; display: flex; justify-content: space-between; gap: 8px; padding-top: 14px; border-top: 1px solid var(--hairline); }
-  .zb-ladder-step { flex: 1; display: flex; flex-direction: column; gap: 5px; }
-  .zb-ladder-bar { height: 2px; background: var(--track); border-radius: 2px; }
+  .zb-ladder { margin-top: 28px; display: flex; justify-content: space-between; gap: 10px; }
+  .zb-ladder-step { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+  .zb-ladder-bar { height: 1.8px; background: var(--track); border-radius: 2px; }
   .zb-ladder-step.past .zb-ladder-bar, .zb-ladder-step.cur .zb-ladder-bar { background: var(--moss); }
-  .zb-ladder-lbl { font-size: 11px; color: var(--ink-3); }
+  .zb-ladder-lbl { font-size: 11.5px; color: var(--ink-3); letter-spacing: 0.04em; }
   .zb-ladder-step.cur .zb-ladder-lbl { color: var(--sumi); font-weight: 600; }
-  .zb-pelo-box {
-    margin-top: 12px;
-    padding: 10px 12px;
-    border-radius: 9px;
-    background: var(--washi);
-    border: 1px solid var(--hairline);
-    font-size: 12.5px;
-    line-height: 1.58;
-    color: var(--ink-2);
-  }
-  .zb-pelo-tag {
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    color: var(--moss);
-    margin-bottom: 3px;
-  }
-  .zb-pelo-course {
-    color: var(--sumi);
-    font-weight: 500;
-    word-break: break-word;
-  }
-  .zb-pelo-alt {
-    font-size: 11.5px;
-    color: var(--ink-3);
-    margin-top: 3px;
-  }
-  .zb-band-plan {
-    margin-top: 12px;
-    padding-top: 10px;
-    border-top: 1px solid var(--hairline);
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .zb-band-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 10px;
-    font-size: 12px;
-    color: var(--ink-3);
-  }
-  .zb-band-row.cur { color: var(--sumi); font-weight: 500; }
-  .zb-band-row.cur .zb-band-l::before { content: "● "; color: var(--moss); font-size: 9px; }
-  .zb-band-r { font-variant-numeric: tabular-nums; white-space: nowrap; }
 
-  .zb-stat-pair { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
-  .zb-stat-big { font-family: var(--serif-jp); font-size: 32px; font-weight: 600; letter-spacing: -0.02em; color: var(--sumi); font-variant-numeric: tabular-nums; line-height: 1.1; transition: color 0.16s ease; }
+  .zb-stat-pair { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 14px 0 18px; }
+  .zb-stat-big { font-family: var(--serif-jp); font-size: 38px; font-weight: 600; letter-spacing: -0.02em; color: var(--sumi); font-variant-numeric: tabular-nums; line-height: 1.08; transition: color 0.16s ease; }
   .zb-stat-big.scrub { color: var(--moss); }
-  .zb-stat-unit { font-family: var(--sans); font-size: 13px; font-weight: 400; color: var(--ink-3); margin-left: 3px; }
-  .zb-stat-sub { font-size: 12px; color: var(--ink-3); margin-top: 4px; font-variant-numeric: tabular-nums; }
-  .zb-chart-wrap { width: 100%; margin: 4px 0 4px; touch-action: pan-y; cursor: crosshair; }
-  .zb-chart-svg { width: 100%; height: auto; aspect-ratio: 360 / 156; display: block; overflow: visible; }
-  .zb-chart-sw { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--hairline); }
-  .zb-sw-grp { display: flex; gap: 12px; }
+  .zb-stat-unit { font-family: var(--sans); font-size: 13.5px; font-weight: 400; color: var(--ink-3); margin-left: 3px; }
+  .zb-stat-sub { font-size: 12.5px; color: var(--ink-3); margin-top: 6px; font-variant-numeric: tabular-nums; }
+  .zb-chart-wrap { width: 100%; margin: 2px 0 6px; touch-action: pan-y; cursor: crosshair; }
+  .zb-chart-svg { width: 100%; height: auto; aspect-ratio: 360 / 168; display: block; overflow: visible; }
+  .zb-chart-sw { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--hairline); }
+  .zb-sw-grp { display: flex; gap: 16px; }
 
-  .zb-weigh-drawer { display: none; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--hairline); flex-direction: column; gap: 13px; animation: zenModeIn 0.2s ease; }
+  .zb-weigh-drawer { display: none; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--hairline); flex-direction: column; gap: 14px; animation: zenModeIn 0.2s ease; }
   .zb-weigh-drawer.open { display: flex; }
-  .zb-dial-row { display: flex; flex-direction: column; gap: 6px; }
+  .zb-dial-row { display: flex; flex-direction: column; gap: 7px; }
   .zb-dial-head { display: flex; justify-content: space-between; align-items: center; }
-  .zb-dial-lbl { font-size: 12.5px; color: var(--ink-3); }
+  .zb-dial-lbl { font-size: 13px; color: var(--ink-3); }
   .zb-dial-ctrl { display: inline-flex; align-items: center; gap: 10px; }
   .zb-dial-val { font-family: var(--serif-jp); font-size: 19px; font-weight: 600; color: var(--sumi); font-variant-numeric: tabular-nums; min-width: 64px; text-align: center; border-bottom: 1px dashed var(--hairline-strong); padding-bottom: 1px; }
   .zb-dial-in { width: 64px; font-family: var(--serif-jp); font-size: 18px; font-weight: 600; text-align: center; color: var(--sumi); background: transparent; border: none; border-bottom: 1.5px solid var(--moss); outline: none; font-variant-numeric: tabular-nums; -webkit-user-select: text; user-select: text; }
-  .zb-dial-track { position: relative; height: 28px; border-radius: 8px; background: var(--washi); border: 1px solid var(--hairline); overflow: hidden; touch-action: none; cursor: ew-resize; }
+  .zb-dial-track { position: relative; height: 28px; border-radius: 6px; background: var(--sheet); border: 1px solid var(--hairline); overflow: hidden; touch-action: none; cursor: ew-resize; }
   .zb-dial-ticks { position: absolute; inset: 0; background-image: repeating-linear-gradient(90deg, transparent 0, transparent 9px, var(--hairline-strong) 9px, var(--hairline-strong) 10px); background-size: 50px 100%; opacity: 0.85; }
   .zb-dial-needle { position: absolute; left: 50%; top: 4px; bottom: 4px; width: 2px; margin-left: -1px; background: var(--moss); border-radius: 2px; pointer-events: none; }
   .zb-dial-foot { display: flex; justify-content: space-between; align-items: center; }
 
-  .zb-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--hairline); margin-bottom: 6px; }
-  .zb-kpi-v { font-family: var(--serif-jp); font-size: 20px; font-weight: 600; color: var(--sumi); font-variant-numeric: tabular-nums; }
-  .zb-kpi-l { font-size: 11.5px; color: var(--ink-3); margin-top: 3px; }
-  .zb-ledger-list { margin-top: 4px; }
+  .zb-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 14px 0 18px; border-bottom: 1px solid var(--hairline); margin-bottom: 4px; }
+  .zb-kpi-v { font-family: var(--serif-jp); font-size: 22px; font-weight: 600; color: var(--sumi); font-variant-numeric: tabular-nums; }
+  .zb-kpi-l { font-size: 12px; color: var(--ink-3); margin-top: 4px; letter-spacing: 0.03em; }
+  .zb-ledger-list { margin-top: 2px; }
   .zb-ledger-item { border-bottom: 1px solid var(--hairline); }
-  .zb-ledger-row { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 11px 2px; font-size: 13px; gap: 10px; text-align: left; }
-  .zb-ledger-row:active { background: var(--hairline); }
-  .zb-ledger-date { color: var(--ink-3); font-variant-numeric: tabular-nums; min-width: 52px; }
+  .zb-ledger-row { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 12.5px 0; font-size: 13.5px; gap: 10px; text-align: left; }
+  .zb-ledger-row:active { opacity: 0.65; }
+  .zb-ledger-date { color: var(--ink-3); font-variant-numeric: tabular-nums; min-width: 48px; }
   .zb-ledger-main { flex: 1; color: var(--sumi); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .zb-ledger-dots { display: inline-flex; gap: 5px; flex-shrink: 0; }
-  .zb-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--track); }
+  .zb-dot { width: 6.5px; height: 6.5px; border-radius: 50%; background: var(--track); }
   .zb-dot.ok { background: var(--moss); }
   .zb-dot.bb { background: var(--bengara); }
-  .zb-ed { padding: 4px 2px 13px; display: flex; flex-direction: column; gap: 9px; animation: zenModeIn 0.18s ease; }
+  .zb-ed { padding: 4px 0 14px; display: flex; flex-direction: column; gap: 9px; animation: zenModeIn 0.18s ease; }
   .zb-ed-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 12.5px; }
   .zb-ed-lbl { color: var(--ink-3); min-width: 30px; font-size: 12px; }
   .zb-ed-chip { font-size: 12.5px; color: var(--ink-2); padding: 4px 2px; border-bottom: 1px solid transparent; }
   .zb-ed-chip.on { color: var(--moss); font-weight: 600; border-bottom-color: var(--moss); }
   .zb-ed-chip.on-red { color: var(--bengara); font-weight: 600; border-bottom-color: var(--bengara); }
 
-  .zb-sync-foot { margin-top: 14px; padding-top: 10px; display: flex; flex-direction: column; gap: 8px; font-size: 12px; color: var(--ink-3); }
-  .zb-sync-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-  .zb-gap-note { font-size: 12px; color: var(--ink-3); line-height: 1.6; }
+  .zb-sync-foot { margin-top: 16px; display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 12.5px; color: var(--ink-3); }
+  .zb-sync-left { display: flex; align-items: center; gap: 10px; min-width: 0; flex-wrap: wrap; }
+
+  .zb-guide-list { display: flex; flex-direction: column; margin: 4px 0 18px; border-top: 1px solid var(--hairline); }
+  .zb-guide-item { padding: 13px 0; border-bottom: 1px solid var(--hairline); }
+  .zb-guide-k { font-size: 12px; font-weight: 600; color: var(--moss); letter-spacing: 0.05em; margin-bottom: 5px; }
+  .zb-guide-v { font-size: 14.5px; line-height: 1.62; color: var(--sumi); }
+  .zb-guide-sub { font-size: 13px; line-height: 1.55; color: var(--ink-3); margin-top: 4px; }
+  .zb-guide-item.cur .zb-guide-k::before { content: "● "; font-size: 9px; }
 
   .zb-locked { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; padding: 16px 2px; }
-  .zb-locked-title { font-family: var(--serif-jp); font-size: 22px; font-weight: 600; margin: 14px 0 8px; }
-  .zb-locked-sub { font-size: 13.5px; line-height: 1.65; color: var(--ink-3); margin: 0; }
-  .zb-pass-row { width: 100%; margin-top: 18px; display: flex; gap: 8px; }
-  .zb-pass-in { flex: 1; height: 42px; padding: 0 12px; border: 1px solid var(--hairline-strong); border-radius: 10px; background: var(--sheet); color: var(--sumi); font-size: 15px; -webkit-user-select: text; user-select: text; }
+  .zb-locked-title { font-family: var(--serif-jp); font-size: 24px; font-weight: 600; margin: 14px 0 8px; }
+  .zb-locked-sub { font-size: 14px; line-height: 1.68; color: var(--ink-3); margin: 0; }
+  .zb-pass-row { width: 100%; margin-top: 20px; display: flex; gap: 10px; }
+  .zb-pass-in { flex: 1; height: 46px; padding: 0 14px; border: 1px solid var(--hairline-strong); border-radius: 8px; background: var(--sheet); color: var(--sumi); font-size: 15px; -webkit-user-select: text; user-select: text; }
 
   .zb-toast {
     position: fixed;
@@ -3248,7 +3303,7 @@ html = r"""<!DOCTYPE html>
     color: var(--washi);
     font-size: 12.5px;
     padding: 8px 16px;
-    border-radius: 999px;
+    border-radius: 8px;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.2s ease, transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
@@ -3272,7 +3327,7 @@ html = r"""<!DOCTYPE html>
     </nav>
   </header>
 
-  <!-- 2. THREE ZEN ENSO DAILY RITUALS (円相 · 无字打卡) -->
+  <!-- 2. FOUR ZEN ENSO DAILY RITUALS (円相 · 无字打卡 · 贯穿全站) -->
   <div class="zen-horizon" id="green-board" onclick="openSessionModal()">
     <div class="horizon-meta">
       <div class="enso-trio" id="enso-trio"></div>
@@ -3354,27 +3409,22 @@ html = r"""<!DOCTYPE html>
     <button type="button" class="ledger-back-fab" onclick="toggleDashLedger(event)">← 返回</button>
   </section>
 
-  <!-- 3E. NATIVE ZEN BODY MODULE ("体律" · 零明文隐私 · 一体化不切 App) -->
+  <!-- 3E. NATIVE ZEN BODY MODULE ("体律" · Open-Washi Zen · 零明文隐私) -->
   <section class="zen-panel hidden" id="body-view">
     <div class="zb-locked" id="zb-locked" style="display:none;">
       <svg width="38" height="38" viewBox="0 0 28 28" aria-hidden="true">
         <circle cx="14" cy="14" r="10.2" fill="none" stroke="var(--moss)" stroke-width="2.1" stroke-dasharray="55 10" stroke-linecap="round"/>
       </svg>
       <div class="zb-locked-title">体律</div>
-      <p class="zb-locked-sub">体重、体脂与运动数据已加密锁存，不对外公开。<br />首次输入你的短口令即可解锁，本机以后自动记住，不再重复询问。</p>
+      <p class="zb-locked-sub">体重、体脂与运动数据加密锁存。<br />首次输入短口令解锁，本机以后自动记住。</p>
       <div class="zb-pass-row">
         <input class="zb-pass-in" id="zb-pass-in" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="输入短口令" onkeydown="if(event.key==='Enter')ZB.unlockPass()" />
-        <button class="zb-btn-primary" id="zb-unlock-btn" style="height:42px; padding:0 20px; border-radius:10px;" onclick="ZB.unlockPass()">解锁</button>
+        <button class="zb-btn-primary" id="zb-unlock-btn" style="flex:0 0 auto; height:46px; padding:0 22px;" onclick="ZB.unlockPass()">解锁</button>
       </div>
       <div id="zb-lock-err" style="font-size:12.5px; color:var(--bengara); margin-top:10px; min-height:18px;"></div>
     </div>
 
     <div id="zb-app" style="display:none; flex:1; min-height:0; flex-direction:column;">
-      <div class="zb-horizon">
-        <div class="zb-enso-trio" id="zb-enso-trio"></div>
-        <div class="zb-horizon-metric" id="zb-horizon-metric"></div>
-      </div>
-
       <div class="zb-subnav">
         <div class="zb-subtabs" id="zb-subtabs">
           <button class="zb-subtab active" data-zbt="today" onclick="ZB.setTab('today')">今日</button>
@@ -3396,28 +3446,36 @@ html = r"""<!DOCTYPE html>
 
       <div class="zb-stage" id="zb-stage">
         <div class="zb-panel active" id="zb-p-today">
-          <div class="zb-spacer"></div>
+          <div class="zb-ma"></div>
           <div class="zb-context">
             <span class="zb-tier" id="zb-tier-txt"></span>
             <span id="zb-week-txt"></span>
           </div>
-          <div class="zb-sheet" id="zb-cardio-card">
-            <div class="zb-eyebrow" id="zb-eyebrow"></div>
-            <h2 class="zb-title" id="zb-title"></h2>
-            <p class="zb-sub" id="zb-sub"></p>
-            <div class="zb-pelo-box" id="zb-pelo-pick"></div>
-            <div class="zb-min-pills" id="zb-min-pills"></div>
-            <div class="zb-actions">
-              <button class="zb-btn-quiet" id="zb-rec-btn" style="display:none;" onclick="ZB.logCardio('recovery')">轻骑恢复</button>
-              <button class="zb-btn-primary" id="zb-main-btn" onclick="ZB.logCardio('main')"></button>
+          <h2 class="zb-title" id="zb-title"></h2>
+          <button type="button" class="zb-guide-row" id="zb-pelo-row" onclick="ZB.openPeloGuide()">
+            <span class="zb-guide-txt" id="zb-pelo-short"></span>
+            <span class="zb-guide-link" id="zb-pelo-link">找课 ›</span>
+          </button>
+
+          <div class="zb-min-bar" id="zb-min-bar">
+            <div class="zb-min-opts" id="zb-min-pills"></div>
+            <button type="button" class="zb-btn-quiet" onclick="switchMode('radio', true)">听《锵锵》↗</button>
+          </div>
+
+          <div class="zb-cta-row">
+            <button type="button" class="zb-btn-ghost" id="zb-rec-btn" style="display:none;" onclick="ZB.logCardio('recovery')">轻踩 15 分</button>
+            <button type="button" class="zb-btn-primary" id="zb-main-btn" onclick="ZB.logCardio('main')"></button>
+          </div>
+
+          <div class="zb-aux-row">
+            <button type="button" class="zb-btn-quiet" id="zb-radio-alt" style="display:none;" onclick="switchMode('radio', true)">听《锵锵》↗</button>
+            <div class="zb-aux-grp">
+              <button type="button" class="zb-btn-quiet" id="zb-tired-btn" onclick="ZB.toggleTired()">偏累</button>
+              <button type="button" class="zb-btn-quiet" id="zb-bb-high" onclick="ZB.toggleBB('high')">高强篮球</button>
+              <button type="button" class="zb-btn-quiet" id="zb-bb-light" onclick="ZB.toggleBB('light')">轻投篮</button>
             </div>
           </div>
-          <div class="zb-overrides">
-            <button class="zb-btn-quiet" style="margin-right:auto;" onclick="switchMode('radio', true)">听《锵锵》↗</button>
-            <button class="zb-btn-quiet" id="zb-tired-btn" onclick="ZB.toggleTired()">偏累 20分</button>
-            <button class="zb-btn-quiet" id="zb-bb-high" onclick="ZB.toggleBB('high')">高强度篮球</button>
-            <button class="zb-btn-quiet" id="zb-bb-light" onclick="ZB.toggleBB('light')">轻投篮</button>
-          </div>
+
           <div class="zb-ritual-list">
             <div class="zb-ritual-row">
               <div class="zb-ritual-left">
@@ -3428,133 +3486,141 @@ html = r"""<!DOCTYPE html>
             </div>
             <div class="zb-ritual-row">
               <div class="zb-ritual-left">
-                <span class="zb-ritual-name">蛋白够 · 晚餐未爆碳</span>
-                <span class="zb-ritual-hint" id="zb-diet-hint"></span>
+                <span class="zb-ritual-name">饮食节律</span>
+                <span class="zb-ritual-hint" id="zb-diet-hint">蛋白够 · 晚未爆碳</span>
               </div>
               <div class="zb-ritual-right">
-                <button class="zb-tap-check" id="zb-diet-btn" onclick="ZB.toggleDiet()"></button>
+                <button type="button" class="zb-tap-check" id="zb-diet-btn" onclick="ZB.toggleDiet()"></button>
               </div>
             </div>
           </div>
+          <div class="zb-ma-tail"></div>
         </div>
 
         <div class="zb-panel" id="zb-p-pullup">
-          <div class="zb-spacer"></div>
+          <div class="zb-ma"></div>
           <div class="zb-context">
-            <span>家里门框单杠 · 严格不甩腿</span>
+            <span id="zb-pu-eyebrow"></span>
             <span id="zb-pu-pr"></span>
           </div>
-          <div class="zb-sheet">
-            <div class="zb-eyebrow" id="zb-pu-eyebrow"></div>
-            <h2 class="zb-title" id="zb-pu-title"></h2>
-            <p class="zb-sub" id="zb-pu-sub"></p>
-            <div class="zb-rep-row">
-              <div>
-                <div style="font-size:13.5px; color:var(--sumi); font-weight:500;">本轮标准引体</div>
-                <div style="font-size:12px; color:var(--ink-3); margin-top:2px;" id="zb-pu-neg"></div>
-              </div>
-              <div class="zb-stepper">
-                <button class="zb-step-btn" onclick="ZB.adjStrict(-1)">−</button>
-                <span class="zb-step-val" id="zb-pu-val">1</span>
-                <button class="zb-step-btn" onclick="ZB.adjStrict(1)">+</button>
-              </div>
+          <h2 class="zb-title" id="zb-pu-title"></h2>
+          <div class="zb-guide-txt" id="zb-pu-sub"></div>
+
+          <div class="zb-rep-row">
+            <div>
+              <div style="font-size:15px; color:var(--sumi); font-weight:500;">本轮徒手</div>
+              <div style="font-size:12.5px; color:var(--ink-3); margin-top:3px;" id="zb-pu-neg"></div>
             </div>
-            <div class="zb-pacer" id="zb-pacer">
-              <div class="zb-pacer-ring">
-                <svg class="zb-pacer-svg" viewBox="0 0 100 100" aria-hidden="true">
-                  <circle cx="50" cy="50" r="42" fill="none" stroke="var(--track)" stroke-width="2.6"/>
-                  <circle id="zb-pacer-arc" cx="50" cy="50" r="42" pathLength="100" fill="none" stroke="var(--moss)" stroke-width="3.2" stroke-linecap="round" stroke-dasharray="100 100" transform="rotate(-90 50 50)"/>
-                </svg>
-                <div class="zb-pacer-num" id="zb-pacer-num">4</div>
-              </div>
-              <div class="zb-pacer-phase" id="zb-pacer-phase">准备抓稳单杠</div>
-              <div class="zb-pacer-ctrls">
-                <button class="zb-btn-quiet" id="zb-pacer-snd" onclick="ZB.togglePacerSound()">轻音：关</button>
-                <button class="zb-btn-quiet" onclick="ZB.stopPacer(true)">停止</button>
-              </div>
-            </div>
-            <div class="zb-actions">
-              <button class="zb-btn-quiet" id="zb-pu-undo" style="display:none; margin-right:auto;" onclick="ZB.undoPU()">撤销上轮</button>
-              <button class="zb-btn-quiet" id="zb-pacer-btn" onclick="ZB.togglePacer()">4 秒慢放节拍</button>
-              <button class="zb-btn-primary" id="zb-pu-log" onclick="ZB.logPU()"></button>
+            <div class="zb-stepper">
+              <button type="button" class="zb-step-btn" onclick="ZB.adjStrict(-1)">−</button>
+              <span class="zb-step-val" id="zb-pu-val">1</span>
+              <button type="button" class="zb-step-btn" onclick="ZB.adjStrict(1)">+</button>
             </div>
           </div>
+
+          <div class="zb-pacer" id="zb-pacer">
+            <div class="zb-pacer-ring">
+              <svg class="zb-pacer-svg" viewBox="0 0 100 100" aria-hidden="true">
+                <circle cx="50" cy="50" r="42" fill="none" stroke="var(--track)" stroke-width="2.6"/>
+                <circle id="zb-pacer-arc" cx="50" cy="50" r="42" pathLength="100" fill="none" stroke="var(--moss)" stroke-width="3.2" stroke-linecap="round" stroke-dasharray="100 100" transform="rotate(-90 50 50)"/>
+              </svg>
+              <div class="zb-pacer-num" id="zb-pacer-num">4</div>
+            </div>
+            <div class="zb-pacer-phase" id="zb-pacer-phase">准备抓稳单杠</div>
+            <div class="zb-pacer-ctrls">
+              <button type="button" class="zb-btn-quiet" id="zb-pacer-snd" onclick="ZB.togglePacerSound()">轻音：关</button>
+              <button type="button" class="zb-btn-quiet" onclick="ZB.stopPacer(true)">停止</button>
+            </div>
+          </div>
+
+          <div class="zb-cta-row" style="margin-top:20px;">
+            <button type="button" class="zb-btn-primary" id="zb-pu-log" onclick="ZB.logPU()"></button>
+          </div>
+          <div class="zb-aux-row">
+            <div style="display:flex; align-items:center; gap:16px;">
+              <button type="button" class="zb-btn-quiet" id="zb-pacer-btn" onclick="ZB.togglePacer()">4 秒慢放节拍</button>
+              <button type="button" class="zb-btn-quiet" id="zb-pu-undo" style="display:none;" onclick="ZB.undoPU()">撤销</button>
+            </div>
+            <button type="button" class="zb-btn-quiet" onclick="ZB.openBandGuide()">换绳路线 ›</button>
+          </div>
+
           <div class="zb-ladder" id="zb-pu-ladder"></div>
-          <div class="zb-band-plan" id="zb-band-plan"></div>
+          <div class="zb-ma-tail"></div>
         </div>
 
         <div class="zb-panel" id="zb-p-body">
-          <div class="zb-spacer"></div>
+          <div class="zb-ma"></div>
           <div class="zb-context">
-            <span id="zb-bctx">GE 智能秤趋势</span>
+            <span id="zb-bctx">GE 体脂</span>
             <span id="zb-pace"></span>
           </div>
-          <div class="zb-sheet">
-            <div class="zb-stat-pair">
-              <div>
-                <div class="zb-stat-big" id="zb-bf-big">--<span class="zb-stat-unit">%</span></div>
-                <div class="zb-stat-sub" id="zb-bf-sub"></div>
-              </div>
-              <div style="text-align:right;">
-                <div class="zb-stat-big" style="font-size:23px; color:var(--ink-2);" id="zb-wt-big">--<span class="zb-stat-unit">kg</span></div>
-                <div class="zb-stat-sub" id="zb-wt-sub"></div>
-              </div>
+          <div class="zb-stat-pair">
+            <div>
+              <div class="zb-stat-big" id="zb-bf-big">--<span class="zb-stat-unit">%</span></div>
+              <div class="zb-stat-sub" id="zb-bf-sub"></div>
             </div>
-            <div class="zb-chart-wrap" id="zb-chart" data-zb-noswipe="1"></div>
-            <div class="zb-chart-sw">
-              <div class="zb-sw-grp">
-                <button class="zb-btn-quiet" id="zb-m-bf" onclick="ZB.setMetric('bf')">GE 体脂</button>
-                <button class="zb-btn-quiet" id="zb-m-wt" onclick="ZB.setMetric('wt')">体重</button>
-              </div>
-              <div class="zb-sw-grp">
-                <button class="zb-btn-quiet" id="zb-r-90" onclick="ZB.setRange('90')">近 90 天</button>
-                <button class="zb-btn-quiet" id="zb-r-all" onclick="ZB.setRange('all')">两年全程</button>
-              </div>
-            </div>
-            <div class="zb-weigh-drawer" id="zb-wform" data-zb-noswipe="1">
-              <div class="zb-dial-row">
-                <div class="zb-dial-head">
-                  <span class="zb-dial-lbl">体重 (kg)</span>
-                  <div class="zb-dial-ctrl">
-                    <button class="zb-step-btn" style="width:28px;height:28px;font-size:14px;" onclick="ZB.nudgeDial('wt',-0.1)">−</button>
-                    <span id="zb-dwt-slot"><button class="zb-dial-val" id="zb-dwt-val" onclick="ZB.editDial('wt')">81.5</button></span>
-                    <button class="zb-step-btn" style="width:28px;height:28px;font-size:14px;" onclick="ZB.nudgeDial('wt',0.1)">+</button>
-                  </div>
-                </div>
-                <div class="zb-dial-track" id="zb-dwt-track" data-zb-noswipe="1"><div class="zb-dial-ticks" id="zb-dwt-ticks"></div><div class="zb-dial-needle"></div></div>
-              </div>
-              <div class="zb-dial-row">
-                <div class="zb-dial-head">
-                  <span class="zb-dial-lbl">GE 体脂 (%)</span>
-                  <div class="zb-dial-ctrl">
-                    <button class="zb-step-btn" style="width:28px;height:28px;font-size:14px;" onclick="ZB.nudgeDial('bf',-0.1)">−</button>
-                    <span id="zb-dbf-slot"><button class="zb-dial-val" id="zb-dbf-val" onclick="ZB.editDial('bf')">18.0</button></span>
-                    <button class="zb-step-btn" style="width:28px;height:28px;font-size:14px;" onclick="ZB.nudgeDial('bf',0.1)">+</button>
-                  </div>
-                </div>
-                <div class="zb-dial-track" id="zb-dbf-track" data-zb-noswipe="1"><div class="zb-dial-ticks" id="zb-dbf-ticks"></div><div class="zb-dial-needle"></div></div>
-              </div>
-              <div class="zb-dial-foot">
-                <button class="zb-btn-quiet" id="zb-dskip-btn" onclick="ZB.toggleSkipBf()">仅记体重</button>
-                <button class="zb-btn-primary" style="height:38px; padding:0 18px; font-size:13.5px;" onclick="ZB.saveWeigh()">记下</button>
-              </div>
+            <div style="text-align:right;">
+              <div class="zb-stat-big" style="font-size:24px; color:var(--ink-2);" id="zb-wt-big">--<span class="zb-stat-unit">kg</span></div>
+              <div class="zb-stat-sub" id="zb-wt-sub"></div>
             </div>
           </div>
-          <div class="zb-overrides">
-            <span style="font-size:12px; color:var(--ink-3); margin-right:auto;" id="zb-wrem"></span>
-            <button class="zb-btn-quiet" id="zb-wbtn" onclick="ZB.toggleWForm()">记一次 GE 秤</button>
+          <div class="zb-chart-wrap" id="zb-chart" data-zb-noswipe="1"></div>
+          <div class="zb-chart-sw">
+            <div class="zb-sw-grp">
+              <button type="button" class="zb-btn-quiet" id="zb-m-bf" onclick="ZB.setMetric('bf')">体脂</button>
+              <button type="button" class="zb-btn-quiet" id="zb-m-wt" onclick="ZB.setMetric('wt')">体重</button>
+            </div>
+            <div class="zb-sw-grp">
+              <button type="button" class="zb-btn-quiet" id="zb-r-90" onclick="ZB.setRange('90')">90天</button>
+              <button type="button" class="zb-btn-quiet" id="zb-r-all" onclick="ZB.setRange('all')">两年</button>
+            </div>
           </div>
+
+          <div class="zb-weigh-drawer" id="zb-wform" data-zb-noswipe="1">
+            <div class="zb-dial-row">
+              <div class="zb-dial-head">
+                <span class="zb-dial-lbl">体重 (kg)</span>
+                <div class="zb-dial-ctrl">
+                  <button type="button" class="zb-step-btn" style="width:28px;height:28px;font-size:14px;" onclick="ZB.nudgeDial('wt',-0.1)">−</button>
+                  <span id="zb-dwt-slot"><button type="button" class="zb-dial-val" id="zb-dwt-val" onclick="ZB.editDial('wt')">81.5</button></span>
+                  <button type="button" class="zb-step-btn" style="width:28px;height:28px;font-size:14px;" onclick="ZB.nudgeDial('wt',0.1)">+</button>
+                </div>
+              </div>
+              <div class="zb-dial-track" id="zb-dwt-track" data-zb-noswipe="1"><div class="zb-dial-ticks" id="zb-dwt-ticks"></div><div class="zb-dial-needle"></div></div>
+            </div>
+            <div class="zb-dial-row">
+              <div class="zb-dial-head">
+                <span class="zb-dial-lbl">GE 体脂 (%)</span>
+                <div class="zb-dial-ctrl">
+                  <button type="button" class="zb-step-btn" style="width:28px;height:28px;font-size:14px;" onclick="ZB.nudgeDial('bf',-0.1)">−</button>
+                  <span id="zb-dbf-slot"><button type="button" class="zb-dial-val" id="zb-dbf-val" onclick="ZB.editDial('bf')">18.0</button></span>
+                  <button type="button" class="zb-step-btn" style="width:28px;height:28px;font-size:14px;" onclick="ZB.nudgeDial('bf',0.1)">+</button>
+                </div>
+              </div>
+              <div class="zb-dial-track" id="zb-dbf-track" data-zb-noswipe="1"><div class="zb-dial-ticks" id="zb-dbf-ticks"></div><div class="zb-dial-needle"></div></div>
+            </div>
+            <div class="zb-dial-foot">
+              <button type="button" class="zb-btn-quiet" id="zb-dskip-btn" onclick="ZB.toggleSkipBf()">仅记体重</button>
+              <button type="button" class="zb-btn-primary" style="flex:0 0 auto; height:40px; padding:0 22px; font-size:14px;" onclick="ZB.saveWeigh()">记下</button>
+            </div>
+          </div>
+
+          <div class="zb-aux-row" style="margin-top:14px;">
+            <span style="font-size:12.5px; color:var(--ink-3);" id="zb-wrem"></span>
+            <button type="button" class="zb-btn-quiet" id="zb-wbtn" onclick="ZB.toggleWForm()">记一次称重</button>
+          </div>
+          <div class="zb-ma-tail"></div>
         </div>
 
         <div class="zb-panel" id="zb-p-ledger">
           <div class="zb-kpis" id="zb-kpis"></div>
           <div class="zb-ledger-list" id="zb-lrows"></div>
           <div class="zb-sync-foot">
-            <div id="zb-gaps"></div>
-            <div class="zb-sync-row">
-              <span id="zb-sync-txt">云端加密同步中</span>
-              <button class="zb-btn-quiet" onclick="ZB.syncNow()">立即同步</button>
+            <div class="zb-sync-left">
+              <span id="zb-sync-txt">加密同步就绪</span>
+              <button type="button" class="zb-btn-quiet" id="zb-gaps-btn" style="display:none; padding:4px 0; font-size:12.5px;" onclick="ZB.openGapsGuide()"></button>
             </div>
+            <button type="button" class="zb-btn-quiet" onclick="ZB.syncNow()">同步</button>
           </div>
         </div>
       </div>
@@ -5902,6 +5968,10 @@ function onEnsoTap(idx, ev) {
 
 function toggleDashLedger(ev) {
   if (ev) ev.stopPropagation();
+  if (activeMode === "body") {
+    if (window.ZB && typeof window.ZB.onHorizonRightTap === "function") window.ZB.onHorizonRightTap();
+    return;
+  }
   if (activeMode === "dash") {
     switchMode(prevNonDashMode || "tutor");
   } else {
@@ -5939,12 +6009,17 @@ function renderGreenBoard() {
 
   const rightEl = document.getElementById("gm-right-txt");
   if (rightEl) {
-    const ledgerTxt = activeMode === "dash" ? "收起总表" : "总表";
-    rightEl.classList.toggle("active-ledger", activeMode === "dash");
-    if (m.projScore >= 120) {
-      rightEl.innerHTML = `预计 <b class="moss">${m.projScore}分</b><span class="ledger-sep"> · </span><span class="ledger-tag">${ledgerTxt}</span>`;
+    if (activeMode === "body" && window.ZB && typeof window.ZB.getHorizonHTML === "function") {
+      rightEl.classList.remove("active-ledger");
+      rightEl.innerHTML = window.ZB.getHorizonHTML();
     } else {
-      rightEl.innerHTML = `预计 <b>${m.projScore}分</b><span class="ledger-sep"> · </span><span class="ledger-tag">${ledgerTxt}</span>`;
+      const ledgerTxt = activeMode === "dash" ? "收起总表" : "总表";
+      rightEl.classList.toggle("active-ledger", activeMode === "dash");
+      if (m.projScore >= 120) {
+        rightEl.innerHTML = `预计 <b class="moss">${m.projScore}分</b><span class="ledger-sep"> · </span><span class="ledger-tag">${ledgerTxt}</span>`;
+      } else {
+        rightEl.innerHTML = `预计 <b>${m.projScore}分</b><span class="ledger-sep"> · </span><span class="ledger-tag">${ledgerTxt}</span>`;
+      }
     }
   }
   document.getElementById("gm-fill").style.width = `${m.dailyLockPct}%`;
@@ -6669,9 +6744,9 @@ function switchMode(m, autoPlayRadio) {
   if (bodyView) bodyView.classList.toggle("hidden", m !== "body");
   document.getElementById("dash-view").classList.toggle("hidden", m !== "dash");
   const gb = document.getElementById("green-board");
-  if (gb) gb.classList.toggle("hidden", m === "body");
+  if (gb) gb.classList.remove("hidden");
 
-  if (m !== "body") renderGreenBoard();
+  renderGreenBoard();
 
   if (m === "radio") {
     ensureRadioReady();
@@ -7929,7 +8004,7 @@ window.ZB = (function() {
     return {
       v: 1, ts: 0,
       targets: { bf_ge: 14.0, pullups: 5, deadline: "2027-12-31", pu_max_reps: 3, pu_max_rounds: 2 },
-      pu_best: 1,
+      pu_best: 1, pu_best_ts: 0,
       vitals: { vo2: null, rhr: null, last_drive_sync: "", gaps: [] },
       trips: [], wb: [], acts: [], days: {}
     };
@@ -8036,11 +8111,17 @@ window.ZB = (function() {
     if (!b || typeof b !== "object") return a;
     const nw = (b.ts || 0) >= (a.ts || 0) ? b : a;
     const od = nw === b ? a : b;
+    const ta = Number(a.pu_best_ts || 0), tb = Number(b.pu_best_ts || 0);
+    let puBest, puBestTs;
+    if (ta > tb) { puBest = Number(a.pu_best || 1); puBestTs = ta; }
+    else if (tb > ta) { puBest = Number(b.pu_best || 1); puBestTs = tb; }
+    else { puBest = Math.max(Number(a.pu_best || 1), Number(b.pu_best || 1)); puBestTs = ta; }
     const out = {
       v: 1,
       ts: Math.max(a.ts || 0, b.ts || 0),
       targets: Object.assign({}, od.targets || {}, nw.targets || {}),
-      pu_best: Math.max(a.pu_best || 1, b.pu_best || 1),
+      pu_best: puBest,
+      pu_best_ts: puBestTs,
       vitals: Object.assign({}, od.vitals || {}, nw.vitals || {}),
       trips: (nw.trips && nw.trips.length) ? nw.trips : (od.trips || []),
       wb: [], acts: [], days: {}
@@ -8087,7 +8168,7 @@ window.ZB = (function() {
       for (const r of wb) if (!rset.has(r[0])) byM.set(r[0].slice(0, 7), r);
       wb = [...Array.from(byM.values()).slice(-16), ...rec];
     }
-    return { v: 1, ts: st.ts || Math.floor(Date.now() / 1000), targets: st.targets, pu_best: st.pu_best, vitals: st.vitals, trips: st.trips || [], wb, acts: (st.acts || []).slice(-18), days: cd };
+    return { v: 1, ts: st.ts || Math.floor(Date.now() / 1000), targets: st.targets, pu_best: st.pu_best, pu_best_ts: st.pu_best_ts || 0, vitals: st.vitals, trips: st.trips || [], wb, acts: (st.acts || []).slice(-18), days: cd };
   }
 
   async function pullCloud(silent) {
@@ -8196,76 +8277,122 @@ window.ZB = (function() {
     const pelo = peloOn(ymd), wk = weekStats(ymd), dObj = dayE(ymd);
     const tired = !!dObj.tired;
     const rhr = (ST.vitals && ST.vitals.rhr) || 40;
-    if (trip) return { tier: "cap", tierText: `旅途中 · ${trip.name}`, eyebrow: "旅途维持模式", title: "轻松步行观光，回来再接力", sub: "旅途每天自然暴走就是最好的有氧，无需强求器械与骑车。", peloPick: null, cardioDone: !!(pelo || bb), puTarget: 0, defMin: 0, bb, pelo, wk, tired, isTravel: true };
+    if (trip) return {
+      tier: "cap", tierText: `旅途中 · ${trip.name}`,
+      titleFmt: () => "轻松步行",
+      peloShort: "旅途自然步行就是有氧",
+      guide: null,
+      cardioDone: !!(pelo || bb), puTarget: 0, defMin: 0, bb, pelo, wk, tired, isTravel: true
+    };
     if (bb && bb.level === "high") {
-      const bits = [];
-      if (bb.dur) bits.push(`${bb.dur} 分钟`);
-      if (bb.kcal) bits.push(`消耗 ${bb.kcal} 大卡`);
-      if (bb.maxHr) bits.push(`最高心率 ${bb.maxHr}`);
+      const bbNote = bb.dur ? `今日篮球 ${bb.dur} 分 · 额度已满` : "今日高强度篮球已满额";
       return {
-        tier: "red", tierText: "今日红档 · 篮球已满额",
-        eyebrow: bits.length ? `已同步高强度篮球 · ${bits.join(" · ")}` : "已标记高强度篮球",
-        title: "今晚 Peloton 取消，直接休养",
-        sub: "剧烈对抗已经把有氧额度拉满。今晚只需补足蛋白、早睡恢复，若腿僵可随手轻踩 15 分钟排酸。",
-        peloPick: { tag: "若腿僵想轻踩 · Peloton 直达", course: "Classes → Cycling → 筛选 15 min + Recovery Ride", alt: "教练选 Sam Yo 或 Denis Morton（纯轻转排酸，不拼阻力）" },
+        tier: "red", tierText: "红档 · 休养",
+        titleFmt: () => "今晚休养",
+        peloShort: bbNote,
+        guide: {
+          title: "篮球日 · 排酸选课",
+          items: [
+            { k: "今晚原则", v: "有氧已拉满，直接早睡恢复", sub: "若双腿发僵，可轻踩 15 分钟排酸，不拼阻力。" },
+            { k: "Peloton 排酸课", v: "底栏 Classes → Cycling → 15 min Recovery Ride", sub: "若列表为空，先点右侧 FILTER → Clear；教练选 Sam Yo 或 Denis Morton。" }
+          ]
+        },
         cardioDone: true, puTarget: 1, defMin: 15, bb, pelo, wk, tired, isTravel: false
       };
     }
     if (rhr >= 46) return {
-      tier: "red", tierText: `恢复提醒 · 静息心率 ${rhr}`, eyebrow: "身体正在恢复期",
-      title: "今晚优先早睡，或 15 分钟极轻踩踏",
-      sub: `静息心率较平日偏高（基线 39–41），先让心肺完全回血再上强度。`,
-      peloPick: { tag: "恢复期选课 · Peloton 直达", course: "底栏 Classes → Cycling（先清右侧 FILTER）→ 筛 15 min + Recovery Ride", alt: "教练选 Sam Yo 或 Matt Wilpers" },
+      tier: "red", tierText: `恢复期 · 心率 ${rhr}`,
+      titleFmt: () => "今晚早睡休养",
+      peloShort: "静息心率偏高 · 优先回血",
+      guide: {
+        title: "恢复期 · 轻踩参考",
+        items: [
+          { k: "身体信号", v: `静息心率 ${rhr}（平日基线 39–41）`, sub: "先让心肺完全恢复，再上强度。" },
+          { k: "可选 15 分轻踩", v: "底栏 Classes → Cycling → 15 min Recovery Ride", sub: "先清右侧 FILTER；教练选 Sam Yo 或 Matt Wilpers。" }
+        ]
+      },
       cardioDone: !!pelo, puTarget: 1, defMin: 15, bb, pelo, wk, tired, isTravel: false
     };
     if (tired) {
       return {
-        tier: "yellow", tierText: "今日偏累 · 15–20 分钟轻启", eyebrow: "精力有限 · 骑完这节就算赢",
-        title: "Peloton 15–20 分钟轻启顺腿骑",
-        sub: "全程坐姿轻阻力，不拼高出力，先把重启的节奏稳稳踩出来。",
-        peloPick: { tag: "今晚直接去 Peloton 找这节", course: "底栏点 Programs（勿进教练页）→ Discover Your Power Zones → Week 1 Day 1：15 min Intro to Power Zone Ride 或下节 20 min Power Zone Beginner Ride (Matt Wilpers)", alt: "若单选轻松课：底栏 Classes → Cycling（先点右侧 FILTER → Clear 清筛选）→ 筛 20 min + Low Impact (Sam Yo 或 Matt Wilpers)" },
+        tier: "yellow", tierText: "今日偏累",
+        titleFmt: m => `Peloton 轻启 ${m} 分`,
+        peloShort: "Discover Your Power Zones · 轻启",
+        guide: {
+          title: "今晚 Peloton 找课路径",
+          items: [
+            { k: "主线入口（勿进教练页）", v: "底栏 Programs → 英文原版 Discover Your Power Zones", sub: "避开德语 (DE) 版。若搜不到英文版：左下角头像 → Preferences → Class Languages 开启 English。" },
+            { k: "今晚这节", v: "Week 1 Day 1：15 min Intro to Power Zone Ride", sub: "或下节 20 min Power Zone Beginner Ride (Matt Wilpers)，全程坐姿轻阻力。" },
+            { k: "单课备选", v: "底栏 Classes → Cycling → 20 min Low Impact", sub: "若列表为空，先点右侧 FILTER → Clear；教练选 Sam Yo 或 Matt Wilpers。" }
+          ]
+        },
         cardioDone: !!pelo, puTarget: 1, defMin: 20, bb, pelo, wk, tired, isTravel: false
       };
     }
     if ((bb && bb.level === "light") || (bbY && bbY.level === "high" && bb2 && bb2.level === "high")) {
       return {
-        tier: "yellow", tierText: "今日黄档 · 保护双腿",
-        eyebrow: (bb && bb.level === "light") ? "今天已有轻投篮热身" : "连续两天高强度打球后",
-        title: "Peloton 20 分钟低阻排酸骑",
-        sub: "配着《锵锵三人行》轻松转腿就行，把膝盖和跟腱养顺，明天更有劲。",
-        peloPick: { tag: "今日黄档 · Peloton 直达选课", course: "底栏 Classes → Cycling（先清右侧 FILTER）→ 筛 20 min + Low Impact Ride", alt: "教练首选 Sam Yo / Matt Wilpers / Denis Morton（全程坐姿）" },
+        tier: "yellow", tierText: "黄档 · 护腿",
+        titleFmt: m => `Peloton 排酸 ${m} 分`,
+        peloShort: "Classes · 20 min Low Impact",
+        guide: {
+          title: "黄档 · 低阻排酸课",
+          items: [
+            { k: "今日节奏", v: "全程坐姿轻转腿，配《锵锵三人行》养顺膝盖", sub: "不站姿冲刺，为下一场打球留足弹性。" },
+            { k: "Peloton 路径", v: "底栏 Classes → Cycling → 20 min Low Impact Ride", sub: "先点右侧 FILTER → Clear；教练首选 Sam Yo / Matt Wilpers / Denis Morton。" }
+          ]
+        },
         cardioDone: !!pelo, puTarget: 2, defMin: 20, bb, pelo, wk, tired, isTravel: false
       };
     }
     if (wk.hard >= 5) return {
-      tier: "yellow", tierText: `本周硬核心肺已满 ${wk.hard} 场`, eyebrow: "本周心肺已达标",
-      title: "今晚彻底休息，或 15 分钟舒展骑",
-      sub: `本周已完成 ${wk.bbH} 场篮球与 ${wk.pM} 场 Peloton，多留一天让肌肉和体脂悄悄变好。`,
-      peloPick: { tag: "若想活动腿 · Peloton 直达", course: "底栏 Classes → Cycling（先清右侧 FILTER）→ 筛 15 min + Recovery Ride (Sam Yo / Denis Morton)", alt: "本周额度已满，早睡同样涨体能" },
+      tier: "yellow", tierText: `本周已满 ${wk.hard} 场`,
+      titleFmt: m => `舒展轻骑 ${m} 分`,
+      peloShort: "本周心肺已达标 · 早睡亦可",
+      guide: {
+        title: "舒展排酸参考",
+        items: [
+          { k: "本周进度", v: `已完成 ${wk.bbH} 场篮球与 ${wk.pM} 场 Peloton`, sub: "彻底休息或轻踩 15 分钟都可以。" },
+          { k: "若想活动腿", v: "底栏 Classes → Cycling → 15 min Recovery Ride", sub: "教练选 Sam Yo 或 Denis Morton。" }
+        ]
+      },
       cardioDone: true, puTarget: 2, defMin: 15, bb, pelo, wk, tired, isTravel: false
     };
     if (bbY && bbY.level === "high") return {
-      tier: "green", tierText: "今日绿档 · 燃脂黄金窗", eyebrow: "昨天刚打完球 · 今天稳态燃脂",
-      title: "Peloton 30–35 分钟 Zone 2 稳态骑",
-      sub: "心率稳在 125–140，刚好听完一整期《锵锵三人行》，不伤膝盖最掉脂。",
-      peloPick: { tag: "今日主线 · Peloton 直达项目", course: "底栏 Programs（勿进教练页）→ Discover Your Power Zones（5 周后转 Boost Your Base: Power Zones）", alt: "按课表推进一节，或单选 Classes → Cycling（清筛选）→ 30 min Power Zone Endurance (Matt Wilpers / Sam Yo / Denis Morton)" },
+      tier: "green", tierText: "绿档 · 稳态燃脂",
+      titleFmt: m => `Peloton 稳态 ${m} 分`,
+      peloShort: "Discover Your Power Zones · 主线",
+      guide: {
+        title: "绿档 · 主线找课路径",
+        items: [
+          { k: "前 5 周主线", v: "底栏 Programs → 英文原版 Discover Your Power Zones", sub: "勿进教练页、避开德语 (DE) 版；按课表推进一节。" },
+          { k: "第 6 周起接力", v: "Programs → Boost Your Base: Power Zones", sub: "8 周 Zone 2 有氧底盘，边听《锵锵》最掉脂不伤腿。" },
+          { k: "单课备选", v: "Classes → Cycling → 30 min Power Zone Endurance", sub: "先清右侧 FILTER；教练首选 Matt Wilpers / Sam Yo / Denis Morton。" }
+        ]
+      },
       cardioDone: !!pelo, puTarget: 2, defMin: 30, bb, pelo, wk, tired, isTravel: false
     };
     return {
-      tier: "green", tierText: "今日绿档 · 最佳燃脂窗口", eyebrow: "今日未打篮球 · Peloton 主场",
-      title: "Peloton 30–45 分钟功率区燃脂骑",
-      sub: "边听今日《锵锵三人行》边稳住 Zone 2–3，正是去年 8 月两周稳掉 2 公斤的节奏。",
-      peloPick: { tag: "长期主线 · Peloton 直达项目", course: "底栏 Programs（勿进教练页）→ Discover Your Power Zones（前 5 周）→ Boost Your Base: Power Zones（第 6 周起）", alt: "或单选 Classes → Cycling（清筛选）→ 30/45 min Power Zone Endurance (Matt Wilpers / Denis Morton / Sam Yo) · 注：FTP 测试留给不打球且睡饱那天" },
+      tier: "green", tierText: "绿档 · 燃脂",
+      titleFmt: m => `Peloton 燃脂 ${m} 分`,
+      peloShort: "Discover Your Power Zones · 主线",
+      guide: {
+        title: "绿档 · 长期主线找课",
+        items: [
+          { k: "前 5 周主线", v: "底栏 Programs → 英文原版 Discover Your Power Zones", sub: "勿进教练页、避开德语 (DE) 版；FTP 测试留给不打球且睡饱的一天。若看不到英文版：头像 → Preferences → Class Languages 开启 English。" },
+          { k: "第 6 周起接力", v: "Programs → Boost Your Base: Power Zones", sub: "8 周稳态 Zone 2–3，边听《锵锵三人行》稳定掉脂。" },
+          { k: "单课备选", v: "Classes → Cycling → 30/45 min Power Zone Endurance", sub: "先清右侧 FILTER；教练首选 Matt Wilpers / Denis Morton / Sam Yo。" }
+        ]
+      },
       cardioDone: !!pelo, puTarget: 2, defMin: 40, bb, pelo, wk, tired, isTravel: false
     };
   }
 
   function puStage() {
     const b = ST.pu_best || 1;
-    if (b <= 1) return { idx: 0, name: "阶段一 · 唤醒起步", title: "每轮 1 个徒手 + 2 个黑带慢放", sub: "微仰身偏开阔侧拉（护头顶），后 2 下单膝挂黑带拉上后 4 秒慢放，切勿跳上杠。每轮 ≤ 3 下、每天 ≤ 2 轮。", defStrict: 1, neg: 2 };
-    if (b === 2) return { idx: 1, name: "阶段二 · 神经夯实", title: "每轮 2 个徒手 + 1 个黑带慢放", sub: "先纯徒手稳拉 2 个直上直下不晃动，最后 1 下单膝挂黑带 4 秒慢放补质，每天依旧 ≤ 2 轮。", defStrict: 2, neg: 1 };
-    if (b <= 4) return { idx: 2, name: "阶段三 · 连做突破", title: `每轮 ${Math.min(3, b)} 个纯徒手不甩`, sub: "完全脱带直上直下，每轮 3 下干净利落，隔周周末偶尔测一次连续极限。", defStrict: Math.min(3, b), neg: 0 };
-    return { idx: 3, name: "阶段四 · 5+ 目标达成", title: `轻松连做 ${b} 个标准引体`, sub: "2027 年底 5 个不甩目标已达成，保持每天 2 轮轻松维稳即可。", defStrict: Math.min(5, b), neg: 0 };
+    if (b <= 1) return { idx: 0, name: "阶段一 · 门框单杠", title: "1 徒手 · 2 黑带慢放", sub: "微仰防碰头 · 单膝挂黑带 4 秒慢放", short: "1 徒手+黑带", defStrict: 1, neg: 2 };
+    if (b === 2) return { idx: 1, name: "阶段二 · 门框单杠", title: "2 徒手 · 1 红带慢放", sub: "前 2 下直上不晃 · 末下红带 4 秒慢放", short: "2 徒手+红带", defStrict: 2, neg: 1 };
+    if (b <= 4) return { idx: 2, name: "阶段三 · 连做突破", title: `${Math.min(3, b)} 个纯徒手`, sub: "完全脱带直上直下 · 每日 2 轮", short: `${Math.min(3, b)} 个纯拉`, defStrict: Math.min(3, b), neg: 0 };
+    return { idx: 3, name: "阶段四 · 目标达成", title: `轻松 ${b} 连`, sub: "每日 2 轮从容维稳", short: `轻松 ${b} 连`, defStrict: Math.min(5, b), neg: 0 };
   }
   function puCooldown(day, target) {
     const rs = (day && day.pu) || [];
@@ -8274,14 +8401,14 @@ window.ZB = (function() {
       if (ts1) {
         const t1 = fmtEpochPT(ts1), t2 = fmtEpochPT(ts1 + 7200);
         return (Math.floor(Date.now() / 1000) < ts1 + 7200)
-          ? `第 1 轮 ${t1} 已拉 · ${t2} 后可拉第 2 轮`
-          : `第 1 轮 ${t1} 已拉 · 现在可拉第 2 轮`;
+          ? `第 1 轮 ${t1} 已拉 · ${t2} 后第 2 轮`
+          : `第 1 轮 ${t1} 已拉 · 可拉第 2 轮`;
       }
-      return "第 1 轮已拉 · 隔 2 小时后拉第 2 轮";
+      return "第 1 轮已拉 · 隔 2 小时第 2 轮";
     }
     if (rs.length >= 2) {
       const ts2 = rs[1] && rs[1][2];
-      return ts2 ? `今日 2 轮已于 ${fmtEpochPT(ts2)} 满额收工` : "今日 2 轮已满额收工";
+      return ts2 ? `今日 2 轮已于 ${fmtEpochPT(ts2)} 收工` : "今日 2 轮已收工";
     }
     return "";
   }
@@ -8297,17 +8424,6 @@ window.ZB = (function() {
     const wts = arr.filter(r => r[1]).slice(-5);
     const avgWt = wts.length ? +(wts.reduce((s, r) => s + r[1], 0) / wts.length).toFixed(1) : null;
     return { lbf, lwt, bbf, avgWt };
-  }
-
-  function ensoSvg(ratio, done) {
-    if (done) {
-      return `<svg class="zb-enso-svg" viewBox="0 0 28 28"><circle class="zb-enso-fill" cx="14" cy="14" r="10.2" fill="var(--moss-solid)"/><path class="zb-enso-chk" d="M 9.6 14.3 L 12.6 17.2 L 18.7 10.9" fill="none" stroke="#FCFBF8" stroke-width="2.15" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-    }
-    if (ratio > 0.01) {
-      const pct = Math.max(10, Math.min(95, Math.round(ratio * 100)));
-      return `<svg class="zb-enso-svg" viewBox="0 0 28 28"><circle cx="14" cy="14" r="9.8" fill="none" stroke="var(--hairline-strong)" stroke-width="1.8"/><circle cx="14" cy="14" r="9.8" pathLength="100" fill="none" stroke="var(--moss-solid)" stroke-width="2.3" stroke-linecap="round" stroke-dasharray="${pct} 100" transform="rotate(-90 14 14)"/></svg>`;
-    }
-    return `<svg class="zb-enso-svg" viewBox="0 0 28 28"><circle cx="14" cy="14" r="9.8" fill="none" stroke="var(--hairline-strong)" stroke-width="1.75" stroke-dasharray="54 7" stroke-linecap="round" transform="rotate(-40 14 14)"/></svg>`;
   }
 
   function positionSubBar(immediate) {
@@ -8326,28 +8442,24 @@ window.ZB = (function() {
     if (pt) {
       if (bfEl) { bfEl.classList.add("scrub"); bfEl.innerHTML = `${pt.bf !== null ? pt.bf.toFixed(1) : "--"}<span class="zb-stat-unit">%</span>`; }
       if (wtEl) { wtEl.classList.add("scrub"); wtEl.innerHTML = `${pt.wt !== null ? pt.wt.toFixed(1) : "--"}<span class="zb-stat-unit">kg</span>`; }
-      if (ctxEl) ctxEl.textContent = `查看 ${pt.d} 实测`;
+      if (ctxEl) ctxEl.textContent = pt.d;
       if (ge("zb-bf-sub")) ge("zb-bf-sub").textContent = fmtCn(pt.d);
-      if (ge("zb-wt-sub")) ge("zb-wt-sub").textContent = pt.ma !== null ? `平滑走势 ${pt.ma.toFixed(1)}${METRIC === "bf" ? "%" : " kg"}` : "松手恢复最新";
+      if (ge("zb-wt-sub")) ge("zb-wt-sub").textContent = pt.ma !== null ? `均线 ${pt.ma.toFixed(1)}${METRIC === "bf" ? "%" : " kg"}` : "";
       return;
     }
     if (bfEl) bfEl.classList.remove("scrub");
     if (wtEl) wtEl.classList.remove("scrub");
-    if (ctxEl) ctxEl.textContent = "GE 智能秤趋势";
-    const monthsLeft = Math.max(1, (2027 - Number(today.slice(0, 4))) * 12 + (12 - Number(today.slice(5, 7))));
-    const curBf = wb.lbf ? wb.lbf[2] : null;
-    const curWt = wb.lwt ? wb.lwt[1] : null;
+    if (ctxEl) ctxEl.textContent = "GE 体脂";
     const targetBf = (ST.targets && ST.targets.bf_ge) || 14.0;
-    const estWt = (curWt && curBf) ? +((curWt * (1 - curBf / 100)) / (1 - targetBf / 100)).toFixed(1) : 77.5;
     if (wb.lbf) {
       if (bfEl) bfEl.innerHTML = `${wb.lbf[2].toFixed(1)}<span class="zb-stat-unit">%</span>`;
       if (ge("zb-bf-sub")) ge("zb-bf-sub").textContent = `两年最低 ${wb.bbf ? wb.bbf[2].toFixed(1) : wb.lbf[2].toFixed(1)}%`;
       const rem = Math.max(0, wb.lbf[2] - targetBf);
-      if (ge("zb-pace")) ge("zb-pace").textContent = rem > 0 ? `距 14% 剩 ${rem.toFixed(1)}% · 均月 ${(rem / monthsLeft).toFixed(2)}%` : "已达 14% 目标";
+      if (ge("zb-pace")) ge("zb-pace").textContent = rem > 0 ? `距 14% 剩 ${rem.toFixed(1)}%` : "已达 14% 目标";
     }
     if (wb.lwt) {
       if (wtEl) wtEl.innerHTML = `${wb.lwt[1].toFixed(1)}<span class="zb-stat-unit">kg</span>`;
-      if (ge("zb-wt-sub")) ge("zb-wt-sub").textContent = wb.avgWt ? `均 ${wb.avgWt} · 估标 ${estWt} kg` : `估标 ${estWt} kg`;
+      if (ge("zb-wt-sub")) ge("zb-wt-sub").textContent = wb.avgWt ? `近均 ${wb.avgWt}` : "";
     }
   }
 
@@ -8363,7 +8475,7 @@ window.ZB = (function() {
     }
     if (raw.length < 2) {
       CHART_PTS = [];
-      wrap.innerHTML = `<div style="height:140px;display:flex;align-items:center;justify-content:center;color:var(--ink-3);font-size:12.5px;">多记两次 GE 秤就会绘出趋势线</div>`;
+      wrap.innerHTML = `<div style="height:150px;display:flex;align-items:center;justify-content:center;color:var(--ink-3);font-size:13px;">多记两次即绘出曲线</div>`;
       return;
     }
     for (let i = 0; i < raw.length; i++) {
@@ -8383,7 +8495,7 @@ window.ZB = (function() {
     const mn = Math.min(...vals, target) - (isBF ? 0.8 : 1.0);
     const mx = Math.max(...vals, target) + (isBF ? 0.8 : 1.0);
     const spanV = Math.max(1, mx - mn);
-    const W = 360, H = 156, pL = 6, pR = 38, pT = 16, pB = 22;
+    const W = 360, H = 168, pL = 4, pR = 36, pT = 16, pB = 22;
     const t0 = Date.parse(raw[0].d + "T12:00:00Z"), t1 = Date.parse(raw[raw.length - 1].d + "T12:00:00Z"), spanT = Math.max(86400000, t1 - t0);
     const xy = raw.map(p => ({
       x: +(pL + ((Date.parse(p.d + "T12:00:00Z") - t0) / spanT) * (W - pL - pR)).toFixed(1),
@@ -8397,18 +8509,17 @@ window.ZB = (function() {
     const maD = xy.map((p, i) => `${i ? "L" : "M"} ${p.x} ${p.yMa}`).join(" ");
     const first = xy[0], last = xy[xy.length - 1];
     wrap.innerHTML = `<svg class="zb-chart-svg" id="zb-chart-svg" viewBox="0 0 ${W} ${H}">
-      <line x1="${pL}" y1="${ty}" x2="${W - pR}" y2="${ty}" stroke="var(--moss)" stroke-opacity="0.42" stroke-width="1" stroke-dasharray="3 4"/>
+      <line x1="${pL}" y1="${ty}" x2="${W - pR}" y2="${ty}" stroke="var(--moss)" stroke-opacity="0.4" stroke-width="1" stroke-dasharray="3 4"/>
       <text x="${W - pR + 5}" y="${ty + 3.5}" fill="var(--moss)" font-size="10.5" font-family="sans-serif">${target}${isBF ? "%" : ""}</text>
-      <path d="${maD}" fill="none" stroke="var(--moss)" stroke-opacity="0.45" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="${pathD}" fill="none" stroke="var(--sumi)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
-      ${xy.map(p => `<circle cx="${p.x}" cy="${p.y}" r="2.2" fill="var(--sheet)" stroke="var(--sumi)" stroke-width="1.25"/>`).join("")}
+      <path d="${maD}" fill="none" stroke="var(--moss)" stroke-opacity="0.42" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="${pathD}" fill="none" stroke="var(--sumi)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+      ${xy.map(p => `<circle cx="${p.x}" cy="${p.y}" r="2.1" fill="var(--washi)" stroke="var(--sumi)" stroke-width="1.2"/>`).join("")}
       <circle cx="${last.x}" cy="${last.y}" r="3.6" fill="var(--moss)"/>
       <line id="zb-c-cur" x1="0" y1="${pT - 4}" x2="0" y2="${H - pB + 2}" stroke="var(--moss)" stroke-opacity="0.55" stroke-width="1" stroke-dasharray="2 3" style="display:none;"/>
       <circle id="zb-c-halo" cx="0" cy="0" r="6" fill="var(--moss)" fill-opacity="0.18" style="display:none;"/>
-      <circle id="zb-c-foc" cx="0" cy="0" r="3.6" fill="var(--moss)" stroke="var(--sheet)" stroke-width="1.5" style="display:none;"/>
-      <text x="${pL}" y="${H - 4}" fill="var(--ink-3)" font-size="10" font-family="sans-serif">${first.d.slice(2, 10)}</text>
-      <text x="${(W - pR + pL) / 2}" y="${H - 4}" text-anchor="middle" fill="var(--ink-3)" font-size="9.5" font-family="sans-serif" opacity="0.8">按住曲线左右划查看 · 淡绿为平滑走势</text>
-      <text x="${W - pR}" y="${H - 4}" text-anchor="end" fill="var(--ink-3)" font-size="10" font-family="sans-serif">${last.d.slice(2, 10)}</text>
+      <circle id="zb-c-foc" cx="0" cy="0" r="3.6" fill="var(--moss)" stroke="var(--washi)" stroke-width="1.5" style="display:none;"/>
+      <text x="${pL}" y="${H - 4}" fill="var(--ink-3)" font-size="10.5" font-family="sans-serif">${first.d.slice(2, 10)}</text>
+      <text x="${W - pR}" y="${H - 4}" text-anchor="end" fill="var(--ink-3)" font-size="10.5" font-family="sans-serif">${last.d.slice(2, 10)}</text>
     </svg>`;
   }
 
@@ -8500,124 +8611,95 @@ window.ZB = (function() {
     LAST_DAY = today;
     const plan = planFor(today), day = dayE(today), stg = puStage(), wb = latestWB();
     const puDone = (day.pu || []).length;
-    const puRatio = plan.puTarget === 0 ? 1 : Math.min(1, puDone / plan.puTarget);
-    const puComplete = plan.puTarget === 0 ? true : puDone >= plan.puTarget;
     const dietDone = !!day.diet;
 
     const dl = ge("zb-date-lbl"); if (dl) dl.textContent = fmtCn(today);
-    const et = ge("zb-enso-trio");
-    const states = [
-      { done: plan.cardioDone, ratio: plan.cardioDone ? 1 : 0, title: "今日心肺" },
-      { done: puComplete, ratio: puRatio, title: "家里引体" },
-      { done: dietDone, ratio: dietDone ? 1 : 0, title: "饮食节律" }
-    ];
-    if (et) {
-      et.innerHTML = states.map((c, i) => {
-        const jd = PREV_ENSO !== null && c.done && !PREV_ENSO[i];
-        return `<span class="zb-enso-item ${jd ? "just-done" : ""}" title="${c.title}">${ensoSvg(c.ratio, c.done)}</span>`;
-      }).join("");
-    }
-    PREV_ENSO = states.map(c => c.done);
-
-    const hm = ge("zb-horizon-metric");
-    if (hm) hm.innerHTML = wb.lbf ? `GE <b>${wb.lbf[2].toFixed(1)}%</b> → ${ST.targets.bf_ge || 14}%` : `目标 <b>${ST.targets.bf_ge || 14}%</b>`;
 
     const tt = ge("zb-tier-txt");
     if (tt) { tt.textContent = plan.tierText; tt.className = "zb-tier " + (plan.tier === "red" ? "red" : plan.tier === "yellow" ? "yellow" : "green"); }
-    const wt = ge("zb-week-txt"); if (wt) wt.textContent = `本周 球 ${plan.wk.bbH} · 骑 ${plan.wk.pM} · 引体 ${plan.wk.puR} 轮`;
+    const wt = ge("zb-week-txt"); if (wt) wt.textContent = `本周 球${plan.wk.bbH} · 骑${plan.wk.pM} · 引体${plan.wk.puR}`;
 
-    const cc = ge("zb-cardio-card");
-    if (cc) cc.className = "zb-sheet " + (plan.tier === "red" ? "tier-red" : plan.tier === "yellow" ? "tier-yellow" : "tier-green");
-    if (ge("zb-eyebrow")) ge("zb-eyebrow").textContent = plan.eyebrow;
-    if (ge("zb-title")) ge("zb-title").textContent = plan.title;
-    if (ge("zb-sub")) ge("zb-sub").textContent = plan.sub;
-    const pk = ge("zb-pelo-pick");
-    if (pk) {
-      if (plan.peloPick) {
-        pk.style.display = "block";
-        pk.innerHTML = `<div class="zb-pelo-tag">${plan.peloPick.tag}</div><div class="zb-pelo-course">${plan.peloPick.course}</div>${plan.peloPick.alt ? `<div class="zb-pelo-alt">${plan.peloPick.alt}</div>` : ""}`;
-      } else { pk.style.display = "none"; }
+    const showMin = (plan.tier === "green" || plan.tier === "yellow");
+    if (showMin) {
+      const opts = plan.tier === "yellow" ? [15, 20, 30] : [20, 30, 40, 45];
+      if (!opts.includes(PELO_MIN)) PELO_MIN = plan.defMin;
+      const mp = ge("zb-min-pills");
+      if (mp) mp.innerHTML = opts.map(m => `<button type="button" class="zb-min-opt ${PELO_MIN === m ? "active" : ""}" onclick="ZB.setMin(${m})">${m}分</button>`).join("");
     }
+    if (ge("zb-min-bar")) ge("zb-min-bar").style.display = showMin ? "flex" : "none";
+    if (ge("zb-radio-alt")) ge("zb-radio-alt").style.display = showMin ? "none" : "inline-flex";
 
-    const mp = ge("zb-min-pills");
-    if (mp) {
-      if (plan.tier === "green" || plan.tier === "yellow") {
-        const opts = plan.tier === "yellow" ? [15, 20, 30] : [20, 30, 40, 45];
-        if (!opts.includes(PELO_MIN)) PELO_MIN = plan.defMin;
-        mp.style.display = "flex";
-        mp.innerHTML = opts.map(m => `<button class="zb-pill ${PELO_MIN === m ? "active" : ""}" onclick="ZB.setMin(${m})">${m} 分</button>`).join("");
-      } else { mp.style.display = "none"; }
-    }
+    if (ge("zb-title")) ge("zb-title").textContent = plan.titleFmt(PELO_MIN);
+    if (ge("zb-pelo-short")) ge("zb-pelo-short").textContent = plan.peloShort || "";
+    const plk = ge("zb-pelo-link"), prw = ge("zb-pelo-row");
+    if (plk) plk.style.display = plan.guide ? "inline" : "none";
+    if (prw) prw.style.pointerEvents = plan.guide ? "auto" : "none";
 
     const mb = ge("zb-main-btn"), rb = ge("zb-rec-btn");
     if (mb && rb) {
-      if (plan.isTravel) { mb.textContent = plan.cardioDone ? "今日步行已记 ✓" : "记下今日步行"; mb.className = "zb-btn-primary" + (plan.cardioDone ? " is-done" : ""); rb.style.display = "none"; }
-      else if (plan.tier === "red") {
-        rb.style.display = "inline-flex"; rb.textContent = (plan.pelo && plan.pelo.status === "recovery") ? "已轻踩 15 分 ✓" : "轻踩 15 分排酸";
-        mb.textContent = (plan.pelo && plan.pelo.status === "rest") ? "已确认今晚休养 ✓" : "好，今晚休养";
+      if (plan.isTravel) {
+        mb.textContent = plan.cardioDone ? "今日步行已记 ✓" : "记下今日步行";
+        mb.className = "zb-btn-primary" + (plan.cardioDone ? " is-done" : "");
+        rb.style.display = "none";
+      } else if (plan.tier === "red") {
+        rb.style.display = "inline-flex";
+        rb.textContent = (plan.pelo && plan.pelo.status === "recovery") ? "已轻踩 15 分 ✓" : "轻踩 15 分";
+        mb.textContent = (plan.pelo && plan.pelo.status === "rest") ? "已确认休养 ✓" : "好，今晚休养";
         mb.className = "zb-btn-primary is-done";
       } else {
         rb.style.display = "none";
         if (plan.pelo && (plan.pelo.status === "done" || plan.pelo.status === "recovery")) {
           mb.textContent = `已骑 ${plan.pelo.min || PELO_MIN} 分钟 ✓`; mb.className = "zb-btn-primary is-done";
-        } else { mb.textContent = `记下 Peloton ${PELO_MIN} 分钟`; mb.className = "zb-btn-primary"; }
+        } else {
+          mb.textContent = `记下 ${PELO_MIN} 分钟`; mb.className = "zb-btn-primary";
+        }
       }
     }
 
     const bh = ge("zb-bb-high"), bl = ge("zb-bb-light"), tb = ge("zb-tired-btn");
     if (bh && bl) {
       const hi = plan.bb && plan.bb.level === "high", lo = plan.bb && plan.bb.level === "light";
-      bh.className = "zb-btn-quiet" + (hi ? " is-red" : ""); bh.textContent = hi ? "取消高强度篮球" : "高强度篮球";
-      bl.className = "zb-btn-quiet" + (lo ? " active" : ""); bl.textContent = lo ? "取消轻投篮" : "轻投篮";
+      bh.className = "zb-btn-quiet" + (hi ? " is-red" : ""); bh.textContent = "高强篮球";
+      bl.className = "zb-btn-quiet" + (lo ? " active" : ""); bl.textContent = "轻投篮";
     }
     if (tb) {
-      tb.className = "zb-btn-quiet" + (plan.tired ? " active" : "");
-      tb.textContent = plan.tired ? "取消偏累 20分" : "偏累 20分";
+      tb.className = "zb-btn-quiet" + (plan.tired ? " is-ochre" : "");
+      tb.textContent = "偏累";
     }
 
     const cd = puCooldown(day, plan.puTarget);
-    if (ge("zb-pu-hint")) ge("zb-pu-hint").textContent = plan.puTarget === 0 ? "旅途期免练，轻松就好" : (cd || `${stg.title} · 今日 ${puDone}/${plan.puTarget} 轮`);
+    if (ge("zb-pu-hint")) ge("zb-pu-hint").textContent = plan.puTarget === 0 ? "旅途免练" : `${stg.short} · ${puDone}/${plan.puTarget} 轮`;
     const pd = ge("zb-pu-dots");
     if (pd) {
       if (plan.puTarget === 0) pd.innerHTML = `<span style="font-size:12.5px;color:var(--ink-3);">休</span>`;
       else {
         let h = "";
-        for (let i = 1; i <= plan.puTarget; i++) h += `<button class="zb-round-dot ${puDone >= i ? "done" : ""}" onclick="ZB.quickPU(${i})">${puDone >= i ? "✓" : i}</button>`;
+        for (let i = 1; i <= plan.puTarget; i++) h += `<button type="button" class="zb-round-dot ${puDone >= i ? "done" : ""}" onclick="ZB.quickPU(${i})">${puDone >= i ? "✓" : i}</button>`;
         pd.innerHTML = h;
       }
     }
-    if (ge("zb-diet-hint")) ge("zb-diet-hint").textContent = dietDone ? "今日缺口节奏已稳住" : "练后吃够蛋白，晚上不碰宵夜甜饮";
+    if (ge("zb-diet-hint")) ge("zb-diet-hint").textContent = dietDone ? "今日已稳住" : "蛋白够 · 晚未爆碳";
     const db = ge("zb-diet-btn");
     if (db) { db.className = "zb-tap-check" + (dietDone ? " done" : ""); db.textContent = dietDone ? "已达标 ✓" : "记达标"; }
 
     // Tab 2: Pullup
-    if (ge("zb-pu-pr")) ge("zb-pu-pr").textContent = `最高连做 ${ST.pu_best || 1} / 目标 5 个`;
-    if (ge("zb-pu-eyebrow")) ge("zb-pu-eyebrow").textContent = cd ? `${stg.name} · ${cd}` : `${stg.name} · 今日已做 ${puDone}/2 轮`;
+    if (ge("zb-pu-pr")) ge("zb-pu-pr").textContent = `最高 ${ST.pu_best || 1} / 5`;
+    if (ge("zb-pu-eyebrow")) ge("zb-pu-eyebrow").textContent = `${stg.name} · ${puDone}/2 轮`;
     if (ge("zb-pu-title")) ge("zb-pu-title").textContent = stg.title;
-    if (ge("zb-pu-sub")) ge("zb-pu-sub").textContent = stg.sub;
+    if (ge("zb-pu-sub")) ge("zb-pu-sub").textContent = cd || stg.sub;
     if (ge("zb-pu-val")) ge("zb-pu-val").textContent = String(PU_IN);
     const negN = Math.max(0, 3 - PU_IN);
-    if (ge("zb-pu-neg")) ge("zb-pu-neg").textContent = negN > 0 ? `再补 ${negN} 次单膝挂黑带 4 秒慢放（本轮共 3 下）` : `纯徒手标准动作，直上直下不甩腿`;
+    if (ge("zb-pu-neg")) ge("zb-pu-neg").textContent = negN > 0 ? `补 ${negN} 次单膝黑带 4 秒慢放` : "纯徒手 · 直上直下不甩腿";
     const plb = ge("zb-pu-log"), pub = ge("zb-pu-undo");
     if (plb && pub) {
       pub.style.display = puDone > 0 ? "inline-flex" : "none";
-      if (puDone >= 2) { plb.textContent = "今日 2 轮已满额 ✓"; plb.className = "zb-btn-primary is-done"; }
+      if (puDone >= 2) { plb.textContent = "今日 2 轮已满 ✓"; plb.className = "zb-btn-primary is-done"; }
       else { plb.textContent = `记下第 ${puDone + 1} 轮`; plb.className = "zb-btn-primary"; }
     }
     const lad = ge("zb-pu-ladder");
     if (lad) {
-      const stages = ["1 徒手+黑带", "2 徒手+红带", "3 至 4 纯拉", "轻松 5 连"];
+      const stages = ["黑带", "红带", "纯拉", "5连"];
       lad.innerHTML = stages.map((lbl, i) => `<div class="zb-ladder-step ${i < stg.idx ? "past" : (i === stg.idx ? "cur" : "")}"><div class="zb-ladder-bar"></div><div class="zb-ladder-lbl">${lbl}</div></div>`).join("");
-    }
-    const bp = ge("zb-band-plan");
-    if (bp) {
-      const bIdx = stg.idx === 0 ? 0 : (stg.idx === 1 ? 1 : 2);
-      const rows = [
-        ["现有黑带 25–65 lb（单膝约 10–15 kg）", "2026.11–2027.02"],
-        ["换红细带 15–35 lb（单膝约 5–8 kg）", "2027.03–2027.05"],
-        ["彻底拆绳 0 lb（纯徒手 3→5+ 连拉）", "2027.06–2027.12"]
-      ];
-      bp.innerHTML = rows.map((r, i) => `<div class="zb-band-row ${i === bIdx ? "cur" : ""}"><span class="zb-band-l">${r[0]}</span><span class="zb-band-r">${r[1]}</span></div>`).join("");
     }
 
     // Tab 3: Body Fat
@@ -8628,22 +8710,21 @@ window.ZB = (function() {
     if (ge("zb-r-90")) ge("zb-r-90").className = "zb-btn-quiet" + (RANGE === "90" ? " active" : "");
     if (ge("zb-r-all")) ge("zb-r-all").className = "zb-btn-quiet" + (RANGE === "all" ? " active" : "");
     if (ge("zb-wrem")) {
-      const gap = wb.lbf ? Math.round((Date.parse(today + "T12:00:00Z") - Date.parse(wb.lbf[0] + "T12:00:00Z")) / 86400000) : 99;
-      ge("zb-wrem").textContent = gap >= 4 ? `上次 GE 体脂 ${wb.lbf ? wb.lbf[0].slice(5) : "无"} · 记得光脚称一次` : `最近称重 ${wb.lbf[0].slice(5)}`;
+      ge("zb-wrem").textContent = wb.lbf ? `上次 ${wb.lbf[0].slice(5)}` : "尚未记录";
     }
     renderChart();
 
-    // Tab 4: Ledger (Interactive Editable 10-Day Ledger)
+    // Tab 4: Ledger
     const kp = ge("zb-kpis");
-    if (kp) kp.innerHTML = `<div><div class="zb-kpi-v">${ST.vitals && ST.vitals.rhr ? ST.vitals.rhr : "--"}</div><div class="zb-kpi-l">静息心率</div></div><div><div class="zb-kpi-v">${ST.vitals && ST.vitals.vo2 ? ST.vitals.vo2 : "--"}</div><div class="zb-kpi-l">最大摄氧量</div></div><div><div class="zb-kpi-v">${ST.pu_best || 1}<span style="font-size:12px;color:var(--ink-3);font-weight:400;"> / 5</span></div><div class="zb-kpi-l">标准引体</div></div>`;
+    if (kp) kp.innerHTML = `<div><div class="zb-kpi-v">${ST.vitals && ST.vitals.rhr ? ST.vitals.rhr : "--"}</div><div class="zb-kpi-l">静息心率</div></div><div><div class="zb-kpi-v">${ST.vitals && ST.vitals.vo2 ? ST.vitals.vo2 : "--"}</div><div class="zb-kpi-l">摄氧量</div></div><div><div class="zb-kpi-v">${ST.pu_best || 1}<span style="font-size:13px;color:var(--ink-3);font-weight:400;"> / 5</span></div><div class="zb-kpi-l">标准引体</div></div>`;
     const lr = ge("zb-lrows");
     if (lr) {
       let rh = "";
       for (let i = 0; i < 10; i++) {
         const d = shiftD(today, -i), b = bbOn(d), p = peloOn(d), de = dayE(d), pr = (de.pu || []).length;
         const ps = [];
-        if (b) ps.push(b.dur ? `篮球 ${b.dur}分` : (b.level === "high" ? "高强度篮球" : "轻投篮"));
-        if (p) { if (p.status === "done") ps.push(`Peloton ${p.min || ""}分`); else if (p.status === "recovery") ps.push("恢复骑 15分"); else if (p.status === "rest") ps.push("休养"); }
+        if (b) ps.push(b.dur ? `篮球 ${b.dur}分` : (b.level === "high" ? "篮球" : "轻投"));
+        if (p) { if (p.status === "done") ps.push(`骑行 ${p.min || ""}分`); else if (p.status === "recovery") ps.push("排酸 15分"); else if (p.status === "rest") ps.push("休养"); }
         if (pr > 0) ps.push(`引体 ${pr}轮`);
         const wf = (ST.wb || []).find(r => r[0] === d);
         if (wf && wf[2]) ps.push(`${wf[2]}%`);
@@ -8653,32 +8734,33 @@ window.ZB = (function() {
           ed = `<div class="zb-ed" data-zb-noswipe="1">
             <div class="zb-ed-row">
               <span class="zb-ed-lbl">心肺</span>
-              <button class="zb-ed-chip ${de.pelo === "done" ? "on" : ""}" onclick="ZB.edCardio('${d}','pelo','done')">Peloton</button>
-              <button class="zb-ed-chip ${de.pelo === "recovery" ? "on" : ""}" onclick="ZB.edCardio('${d}','pelo','recovery')">恢复骑</button>
-              <button class="zb-ed-chip ${de.pelo === "rest" ? "on" : ""}" onclick="ZB.edCardio('${d}','pelo','rest')">休整</button>
-              ${bLock ? `<span style="font-size:12px;color:var(--ink-3);">云盘已记篮球</span>` : `<button class="zb-ed-chip ${de.bb === "high" ? "on-red" : ""}" onclick="ZB.edCardio('${d}','bb','high')">篮球</button><button class="zb-ed-chip ${de.bb === "light" ? "on" : ""}" onclick="ZB.edCardio('${d}','bb','light')">轻投</button>`}
-              ${(de.pelo || de.bb) ? `<button class="zb-ed-chip" style="color:var(--ink-3);" onclick="ZB.edCardio('${d}','clear','')">清空</button>` : ""}
+              <button type="button" class="zb-ed-chip ${de.pelo === "done" ? "on" : ""}" onclick="ZB.edCardio('${d}','pelo','done')">Peloton</button>
+              <button type="button" class="zb-ed-chip ${de.pelo === "recovery" ? "on" : ""}" onclick="ZB.edCardio('${d}','pelo','recovery')">排酸</button>
+              <button type="button" class="zb-ed-chip ${de.pelo === "rest" ? "on" : ""}" onclick="ZB.edCardio('${d}','pelo','rest')">休整</button>
+              ${bLock ? `<span style="font-size:12px;color:var(--ink-3);">云盘已记篮球</span>` : `<button type="button" class="zb-ed-chip ${de.bb === "high" ? "on-red" : ""}" onclick="ZB.edCardio('${d}','bb','high')">篮球</button><button type="button" class="zb-ed-chip ${de.bb === "light" ? "on" : ""}" onclick="ZB.edCardio('${d}','bb','light')">轻投</button>`}
+              ${(de.pelo || de.bb) ? `<button type="button" class="zb-ed-chip" style="color:var(--ink-3);" onclick="ZB.edCardio('${d}','clear','')">清空</button>` : ""}
             </div>
             <div class="zb-ed-row">
               <span class="zb-ed-lbl">引体</span>
-              <button class="zb-ed-chip ${pr === 0 ? "on" : ""}" onclick="ZB.edPU('${d}',0)">0 轮</button>
-              <button class="zb-ed-chip ${pr === 1 ? "on" : ""}" onclick="ZB.edPU('${d}',1)">1 轮</button>
-              <button class="zb-ed-chip ${pr >= 2 ? "on" : ""}" onclick="ZB.edPU('${d}',2)">2 轮</button>
+              <button type="button" class="zb-ed-chip ${pr === 0 ? "on" : ""}" onclick="ZB.edPU('${d}',0)">0 轮</button>
+              <button type="button" class="zb-ed-chip ${pr === 1 ? "on" : ""}" onclick="ZB.edPU('${d}',1)">1 轮</button>
+              <button type="button" class="zb-ed-chip ${pr >= 2 ? "on" : ""}" onclick="ZB.edPU('${d}',2)">2 轮</button>
               <span style="margin-left:auto;"></span>
-              <button class="zb-ed-chip ${de.diet ? "on" : ""}" onclick="ZB.edDiet('${d}')">${de.diet ? "饮食达标 ✓" : "补记饮食达标"}</button>
+              <button type="button" class="zb-ed-chip ${de.diet ? "on" : ""}" onclick="ZB.edDiet('${d}')">${de.diet ? "饮食 ✓" : "补记饮食"}</button>
             </div>
           </div>`;
         }
-        rh += `<div class="zb-ledger-item"><button class="zb-ledger-row" onclick="ZB.toggleDay('${d}')"><span class="zb-ledger-date">${d.slice(5)}</span><span class="zb-ledger-main" style="${ps.length ? "" : "color:var(--ink-3);"}">${ps.length ? ps.join(" · ") : "静休"}</span><span class="zb-ledger-dots"><span class="zb-dot ${b ? "bb" : (p ? "ok" : "")}"></span><span class="zb-dot ${pr > 0 ? "ok" : ""}"></span><span class="zb-dot ${de.diet ? "ok" : ""}"></span></span></button>${ed}</div>`;
+        rh += `<div class="zb-ledger-item"><button type="button" class="zb-ledger-row" onclick="ZB.toggleDay('${d}')"><span class="zb-ledger-date">${d.slice(5)}</span><span class="zb-ledger-main" style="${ps.length ? "" : "color:var(--ink-3);"}">${ps.length ? ps.join(" · ") : "静休"}</span><span class="zb-ledger-dots"><span class="zb-dot ${b ? "bb" : (p ? "ok" : "")}"></span><span class="zb-dot ${pr > 0 ? "ok" : ""}"></span><span class="zb-dot ${de.diet ? "ok" : ""}"></span></span></button>${ed}</div>`;
       }
       lr.innerHTML = rh;
     }
-    const gp = ge("zb-gaps");
-    if (gp) {
-      const gs = (ST.vitals && ST.vitals.gaps) || [];
-      gp.innerHTML = gs.length ? `<div class="zb-gap-note">待补通：${gs.join("；")}</div>` : `<div class="zb-gap-note">轻点任意日期可补记或修改</div>`;
+    const gb = ge("zb-gaps-btn");
+    const gs = (ST.vitals && ST.vitals.gaps) || [];
+    if (gb) {
+      if (gs.length) { gb.style.display = "inline-flex"; gb.textContent = `待补通 ${gs.length} 项 ›`; }
+      else { gb.style.display = "none"; }
     }
-    if (ge("zb-sync-txt")) ge("zb-sync-txt").textContent = SYNC_NOTE || (ST.vitals && ST.vitals.last_drive_sync ? `已对接健康同步 · ${ST.vitals.last_drive_sync}` : "加密同步就绪");
+    if (ge("zb-sync-txt")) ge("zb-sync-txt").textContent = SYNC_NOTE || (ST.vitals && ST.vitals.last_drive_sync ? `已同步 ${ST.vitals.last_drive_sync}` : "加密同步就绪");
     if (typeof renderGreenBoard === "function") renderGreenBoard();
   }
 
@@ -8957,8 +9039,57 @@ window.ZB = (function() {
     } catch (e) {}
   }
 
+  function getHorizonHTML() {
+    if (!INITED && !LOCAL_PEEKED) { LOCAL_PEEKED = true; loadLocal(); }
+    const wb = latestWB();
+    const tgt = (ST.targets && ST.targets.bf_ge) || 14;
+    return wb.lbf ? `GE <b>${wb.lbf[2].toFixed(1)}%</b> → ${tgt}%` : `目标 <b>${tgt}%</b>`;
+  }
+
+  function showGuideModal(title, items) {
+    const mc = ge("modal-content"), mm = ge("app-modal");
+    if (!mc || !mm) return;
+    mc.innerHTML = `
+      <h3 class="modal-h">${escapeHtml(title)}</h3>
+      <div class="zb-guide-list">
+        ${items.map(it => `<div class="zb-guide-item${it.cur ? " cur" : ""}"><div class="zb-guide-k">${escapeHtml(it.k)}</div><div class="zb-guide-v">${escapeHtml(it.v)}</div>${it.sub ? `<div class="zb-guide-sub">${escapeHtml(it.sub)}</div>` : ""}</div>`).join("")}
+      </div>
+      <div class="dock-row">
+        <button type="button" class="sumi-btn" onclick="closeModal()">知道了</button>
+      </div>`;
+    mm.classList.add("open");
+  }
+
+  function openPeloGuide() {
+    const p = planFor(todayYmd());
+    if (!p || !p.guide) return;
+    showGuideModal(p.guide.title, p.guide.items);
+  }
+
+  function openBandGuide() {
+    const stg = puStage();
+    const bIdx = stg.idx === 0 ? 0 : (stg.idx === 1 ? 1 : 2);
+    showGuideModal("弹力带换绳路线", [
+      { k: "阶段一 · 2026.11–2027.02", v: "现有黑带 25–65 lb（单膝约 10–15 kg）", sub: "每轮 1 个徒手 + 2 个单膝挂黑带 4 秒慢放。", cur: bIdx === 0 },
+      { k: "阶段二 · 2027.03–2027.05", v: "换红细带 15–35 lb（单膝约 5–8 kg）", sub: "稳拉 2 个纯徒手后降档，每轮 2 徒手 + 1 红带慢放。", cur: bIdx === 1 },
+      { k: "阶段三 · 2027.06–2027.12", v: "彻底拆绳 0 lb（纯徒手 3 → 5+ 连拉）", sub: "门框杠严禁跳上杠，偏客厅侧微仰防碰头；每轮 ≤3 下、每日 ≤2 轮。", cur: bIdx === 2 }
+    ]);
+  }
+
+  function openGapsGuide() {
+    const gs = (ST.vitals && ST.vitals.gaps) || [];
+    if (!gs.length) return;
+    showGuideModal("健康数据待补通", gs.map((g, i) => ({ k: `项目 ${i + 1}`, v: g })));
+  }
+
   return {
-    onEnter, onResume, unlockPass, stopPacer, getSummary, syncCircle,
+    onEnter, onResume, unlockPass, stopPacer, getSummary, syncCircle, getHorizonHTML,
+    openPeloGuide, openBandGuide, openGapsGuide,
+    onHorizonRightTap() {
+      if (!CKEY) { if (typeof openSessionModal === "function") openSessionModal(); return; }
+      if (SUBTAB !== "body") this.setTab("body");
+      else if (typeof openSessionModal === "function") openSessionModal();
+    },
     setTab(t, dirHint) {
       if (!SUB_ORDER.includes(t)) return;
       if (t === SUBTAB) { positionSubBar(false); return; }
@@ -8991,14 +9122,14 @@ window.ZB = (function() {
     toggleBB(lvl) {
       const d = ensureDay();
       if (d.bb === lvl) { d.bb = null; toast("已取消篮球标记"); }
-      else { d.bb = lvl; toast(lvl === "high" ? "已切红档 · 今晚 Peloton 取消" : "已切黄档 · 今晚轻骑恢复"); }
+      else { d.bb = lvl; toast(lvl === "high" ? "已切红档 · 今晚休养" : "已切黄档 · 轻骑排酸"); }
       schedPush(); render();
     },
     toggleTired() {
       const d = ensureDay();
       d.tired = d.tired ? 0 : 1;
       if (d.tired) PELO_MIN = 20;
-      toast(d.tired ? "已切偏累 20 分轻启骑" : "已恢复常规计划");
+      toast(d.tired ? "已切偏累 · 20 分轻启" : "已恢复常规计划");
       schedPush(); render();
     },
     quickPU(n) {
@@ -9024,8 +9155,9 @@ window.ZB = (function() {
       const d = ensureDay();
       if (!Array.isArray(d.pu)) d.pu = [];
       if (d.pu.length >= 2) { toast("今天 2 轮已满额，明天继续"); return; }
-      d.pu.push([PU_IN, Math.max(0, 3 - PU_IN), Math.floor(Date.now() / 1000)]);
-      if (PU_IN > (ST.pu_best || 1)) { ST.pu_best = PU_IN; toast(`新纪录！标准不甩 ${PU_IN} 个`); }
+      const nowS = Math.floor(Date.now() / 1000);
+      d.pu.push([PU_IN, Math.max(0, 3 - PU_IN), nowS]);
+      if (PU_IN > (ST.pu_best || 1)) { ST.pu_best = PU_IN; ST.pu_best_ts = nowS; toast(`新纪录！标准不甩 ${PU_IN} 个`); }
       else toast(d.pu.length === 1 ? "第 1 轮已记 · 2 小时后再拉第 2 轮" : "第 2 轮已记 · 今日引体收工");
       schedPush(); render();
     },
@@ -9051,7 +9183,7 @@ window.ZB = (function() {
         renderDial();
       }
       f.classList.toggle("open", open);
-      b.textContent = open ? "收起" : "记一次 GE 秤";
+      b.textContent = open ? "收起" : "记一次称重";
     },
     nudgeDial(which, delta) {
       if (which === "wt") { D_WT = Math.max(45, Math.min(120, +(D_WT + delta).toFixed(1))); D_WT_OFF -= delta * 100; }
