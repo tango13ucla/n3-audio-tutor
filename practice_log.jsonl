@@ -1022,3 +1022,14 @@
 {"id": "VC-こっそり", "point": "こっそり", "choice": "记词:没记住", "correct": "false", "ask_again": "false", "ts": "2026-11-22T02:20:04.000Z"}
 {"id": "VC-こっそり", "point": "こっそり", "choice": "记词:记住", "correct": "true", "ask_again": "false", "ts": "2026-11-22T02:20:05.000Z"}
 {"id": "VAR8-07", "point": "〜ながらも", "choice": "不确定", "correct": "false", "ask_again": "false", "ts": "2026-11-22T02:20:25.000Z"}
+{"id": "N3-G63", "point": "〜にもかかわらず", "choice": "にもかかわらず", "correct": "true", "ask_again": "false", "ts": "2026-11-22T07:06:36.000Z"}
+{"id": "N3-G63", "point": "〜にもかかわらず", "choice": "にもかかわらず", "correct": "false", "ask_again": "false", "ts": "2026-11-22T07:06:49.000Z"}
+{"id": "N3-V34", "point": "そっくり", "choice": "そっくり", "correct": "true", "ask_again": "false", "ts": "2026-11-22T07:06:57.000Z"}
+{"id": "N3-V11", "point": "こっそり", "choice": "こっそり", "correct": "true", "ask_again": "false", "ts": "2026-11-22T07:07:06.000Z"}
+{"id": "LK:こっそり", "point": "N3-V11", "choice": "こっそり", "correct": "true", "ask_again": "false", "ts": "2026-11-22T07:07:09.000Z"}
+{"id": "N3-V11", "point": "こっそり", "choice": "こっそり", "correct": "false", "ask_again": "false", "ts": "2026-11-22T07:07:11.000Z"}
+{"id": "VAR8-07", "point": "〜ながらも", "choice": "ながらも", "correct": "true", "ask_again": "false", "ts": "2026-11-22T07:07:16.000Z"}
+{"id": "N3-G63", "point": "〜にもかかわらず", "choice": "にもかかわらず", "correct": "true", "ask_again": "false", "ts": "2026-11-22T07:07:23.000Z"}
+{"id": "VAR9-38", "point": "T-021", "choice": "上げて", "correct": "true", "ask_again": "false", "ts": "2026-11-22T07:07:34.000Z"}
+{"id": "VAR-V11", "point": "こっそり", "choice": "ばったり", "correct": "true", "ask_again": "false", "ts": "2026-11-22T07:07:42.000Z"}
+{"id": "VAR8-13", "point": "〜っぽい", "choice": "らしい", "correct": "false", "ask_again": "false", "ts": "2026-11-22T07:09:10.000Z"}
