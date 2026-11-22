@@ -2598,7 +2598,54 @@
     "大国": "./audio/words/w_faa9afeda0.mp3",
     "感染": "./audio/words/w_a7b3fd7507.mp3",
     "磨く": "./audio/words/w_b55da9d3e7.mp3",
-    "宇宙開発": "./audio/words/w_48d3aff1c3.mp3"
+    "宇宙開発": "./audio/words/w_48d3aff1c3.mp3",
+    "欧州": "./audio/words/w_0e2c89da8a.mp3",
+    "財政": "./audio/words/w_bfb5254573.mp3",
+    "半導体": "./audio/words/w_1e8fa52111.mp3",
+    "方針": "./audio/words/w_facaa0365f.mp3",
+    "統計": "./audio/words/w_beb8f56ae0.mp3",
+    "国際情勢": "./audio/words/w_a12b03d050.mp3",
+    "日本企業": "./audio/words/w_8d658d728d.mp3",
+    "安全保障": "./audio/words/w_d71e2b4e68.mp3",
+    "危険": "./audio/words/w_8643e2cd1b.mp3",
+    "通信": "./audio/words/w_8ca77eba32.mp3",
+    "海底ケーブル": "./audio/words/w_ef7acaa814.mp3",
+    "対策": "./audio/words/w_1f7c4cbcff.mp3",
+    "北極": "./audio/words/w_51aecc5bc4.mp3",
+    "命綱": "./audio/words/w_7b5de0d048.mp3",
+    "踏まえた": "./audio/words/w_8ec1c08a5d.mp3",
+    "紛争": "./audio/words/w_341a23d5b6.mp3",
+    "関心": "./audio/words/w_956e08613c.mp3",
+    "航路": "./audio/words/w_abf79c546f.mp3",
+    "距離": "./audio/words/w_1e1e4ec83b.mp3",
+    "迂回": "./audio/words/w_4f9f2df5a5.mp3",
+    "精密": "./audio/words/w_6ec01c425b.mp3",
+    "量産": "./audio/words/w_cfe384cc72.mp3",
+    "人工知能": "./audio/words/w_d6bc0a3e4d.mp3",
+    "停滞": "./audio/words/w_97daa1e188.mp3",
+    "武器": "./audio/words/w_4fe131173e.mp3",
+    "核融合": "./audio/words/w_75c0eaeee0.mp3",
+    "加速": "./audio/words/w_1a96b6acad.mp3",
+    "実用化": "./audio/words/w_89ea80dfdf.mp3",
+    "電力需要": "./audio/words/w_9c2da57745.mp3",
+    "巻き返す": "./audio/words/w_03e12a4d9b.mp3",
+    "暗号": "./audio/words/w_561749c6bc.mp3",
+    "放置": "./audio/words/w_901d1623fc.mp3",
+    "量子計算機": "./audio/words/w_8666a67eb1.mp3",
+    "国際基準": "./audio/words/w_4eeb8d3363.mp3",
+    "書き換える": "./audio/words/w_33964b156e.mp3",
+    "減量薬": "./audio/words/w_ac806fed57.mp3",
+    "新薬": "./audio/words/w_fd9a857b75.mp3",
+    "乱用": "./audio/words/w_3cd83605bc.mp3",
+    "基礎研究": "./audio/words/w_edabc271cb.mp3",
+    "個別": "./audio/words/w_ae20146a23.mp3",
+    "治療": "./audio/words/w_fbdf92016f.mp3",
+    "コロナ禍": "./audio/words/w_b1058fced1.mp3",
+    "保険適用": "./audio/words/w_c486c310cf.mp3",
+    "電気自動車": "./audio/words/w_d878cb3680.mp3",
+    "逆転": "./audio/words/w_6b522a2ef0.mp3",
+    "全固体電池": "./audio/words/w_94221bbd62.mp3",
+    "価格競争": "./audio/words/w_75249eeaed.mp3"
   },
   "vocab_cards": {
     "書類": {
@@ -3015,6 +3062,26 @@
       "front": "./audio/words/vc_9550dc5f28_front.mp3?v=dd949783",
       "rev": "./audio/words/vc_9550dc5f28_rev.mp3?v=320a20dc",
       "full": "./audio/words/vc_9550dc5f28_full.mp3?v=c3f04c5d"
+    },
+    "でしょう": {
+      "front": "./audio/words/vc_fb31c8c0a0_front.mp3?v=4471c0ba",
+      "rev": "./audio/words/vc_fb31c8c0a0_rev.mp3?v=2e77756a",
+      "full": "./audio/words/vc_fb31c8c0a0_full.mp3?v=fe401784"
+    },
+    "について": {
+      "front": "./audio/words/vc_5d8618e957_front.mp3?v=c0d3579b",
+      "rev": "./audio/words/vc_5d8618e957_rev.mp3?v=aa1c6438",
+      "full": "./audio/words/vc_5d8618e957_full.mp3?v=34078668"
+    },
+    "よろしい": {
+      "front": "./audio/words/vc_a129bd226f_front.mp3?v=f58dfd89",
+      "rev": "./audio/words/vc_a129bd226f_rev.mp3?v=faeb7ad7",
+      "full": "./audio/words/vc_a129bd226f_full.mp3?v=44f92f47"
+    },
+    "少し": {
+      "front": "",
+      "rev": "./audio/words/vc_7b6eba65f9_rev.mp3?v=81fd1a82",
+      "full": "./audio/words/vc_7b6eba65f9_rev.mp3?v=81fd1a82"
     }
   },
   "vocab_card_hashes": {
@@ -3184,7 +3251,17 @@
     "vc_55bd630b22_full.mp3": "da5c111247",
     "vc_9550dc5f28_front.mp3": "dd9497837c",
     "vc_9550dc5f28_rev.mp3": "320a20dc71",
-    "vc_9550dc5f28_full.mp3": "c3f04c5dda"
+    "vc_9550dc5f28_full.mp3": "c3f04c5dda",
+    "vc_fb31c8c0a0_front.mp3": "4471c0ba73",
+    "vc_fb31c8c0a0_rev.mp3": "2e77756a6a",
+    "vc_fb31c8c0a0_full.mp3": "fe4017846a",
+    "vc_5d8618e957_front.mp3": "c0d3579bb2",
+    "vc_5d8618e957_rev.mp3": "aa1c643830",
+    "vc_5d8618e957_full.mp3": "34078668fa",
+    "vc_a129bd226f_front.mp3": "f58dfd89a5",
+    "vc_a129bd226f_rev.mp3": "faeb7ad7d7",
+    "vc_a129bd226f_full.mp3": "44f92f4717",
+    "vc_7b6eba65f9_rev.mp3": "81fd1a8243"
   },
   "num_JF_1.mp3": "b67108e5b8a0",
   "num_JF_2.mp3": "faee77d48904",
