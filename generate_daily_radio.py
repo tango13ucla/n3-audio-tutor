@@ -79,7 +79,7 @@ PT_TZ = ZoneInfo("America/Los_Angeles")
 EXAM_DATE = datetime.date(2026, 12, 6)
 PROXY_URL = os.environ.get("HTTPS_PROXY") or os.environ.get("HTTP_PROXY") or None
 COMM_KWARGS = {"proxy": PROXY_URL} if PROXY_URL else {}
-MAX_TRIES = 6 if os.environ.get("GITHUB_ACTIONS") == "true" else 1
+MAX_TRIES = int(os.environ.get("RADIO_MAX_TRIES", "6"))
 GEMINI_API_KEY = (os.environ.get("GEMINI_API_KEY") or "").strip()
 GEMINI_TTS_MODEL = os.environ.get("GEMINI_TTS_MODEL", "gemini-2.5-flash-preview-tts")
 
@@ -91,6 +91,123 @@ SENTENCE_CHUNK_RE = re.compile(r"[^。！？]+[。！？]+[”』」）]*|[^。�
 SLIP_SPLIT_RE = re.compile(
     r"…+(?=(?:呸|不对|哦不对|哎不对|害，哪有|哦日本哪儿|哦不用两大碗|哦三分钟|哦四回|哦一千|少说了俩零|哪有扫码枪))"
 )
+
+# ==============================================================================
+# Mandarin Word-Boundary Protection (ZWNJ `\u200c`) for Edge/Azure Neural TTS
+# Prevents Azure's Chinese frontend from mis-splitting Japanese eras/names/terms
+# (e.g. `怀念昭和时代` -> `怀念昭 | 和 | 时代`, `闹起令和米骚动` -> `闹起令 | 和 | 米骚动`,
+# `十河信二少报` -> `十河信 | 二少`, `井深大一戴上` -> `井深 | 大一`) with ZERO added pause!
+# ==============================================================================
+MANDARIN_SPECIAL_SPLITS = {
+    "十河信二": "十河\u200c信二",
+    "岛秀雄": "岛\u200c秀雄",
+    "岛安次郎": "岛\u200c安次郎",
+    "大曾根幸三": "大曾根\u200c幸三",
+    "角田博": "角田\u200c博",
+    "木原信敏": "木原\u200c信敏",
+    "鸠山一郎": "鸠山\u200c一郎",
+    "三木忠直": "三木\u200c忠直",
+    "新丹那": "新\u200c丹那",
+    "山村新治郎": "山村\u200c新治郎",
+    "白石义明": "白石\u200c义明",
+    "本田宗一郎": "本田\u200c宗一郎",
+    "藤泽武夫": "藤泽\u200c武夫",
+    "福武总一郎": "福武\u200c总一郎",
+    "石之森章太郎": "石之森\u200c章太郎",
+    "赤冢不二夫": "赤冢\u200c不二夫",
+    "小津安二郎": "小津\u200c安二郎",
+    "大河原毅": "大河原\u200c毅",
+    "野泽正平": "野泽\u200c正平",
+    "小渊惠三": "小渊\u200c惠三",
+    "涩泽荣一": "涩泽\u200c荣一",
+    "稻盛和夫": "稻盛\u200c和夫",
+    "大野耐一": "大野\u200c耐一",
+    "池田菊苗": "池田\u200c菊苗",
+    "池田勇人": "池田\u200c勇人",
+    "安藤百福": "安藤\u200c百福",
+    "安藤忠雄": "安藤\u200c忠雄",
+    "松坂大辅": "松坂\u200c大辅",
+    "铃木一朗": "铃木\u200c一朗",
+    "铃木敏文": "铃木\u200c敏文",
+    "大谷翔平": "大谷\u200c翔平",
+    "坂本九": "坂本\u200c九",
+    "永六辅": "永\u200c六辅",
+    "中村八大": "中村\u200c八大",
+    "户川纯": "户川\u200c纯",
+    "柳井正": "柳井\u200c正",
+    "堤清二": "堤\u200c清二",
+    "田中一光": "田中\u200c一光",
+    "小池一子": "小池\u200c一子",
+    "冈本太郎": "冈本\u200c太郎",
+    "丹下健三": "丹下\u200c健三",
+    "黑川纪章": "黑川\u200c纪章",
+    "草间弥生": "草间\u200c弥生",
+    "财前五郎": "财前\u200c五郎",
+    "半泽直树": "半泽\u200c直树",
+}
+
+MANDARIN_BOUNDARY_WORDS = sorted(
+    set(
+        list(MANDARIN_SPECIAL_SPLITS.keys())
+        + [
+            # Japanese eras & "和/平/令/昭/大/明" compounds prone to particle mis-splitting
+            "昭和", "平成", "令和", "大正", "明治", "江户", "幕府",
+            "大和号", "大和运输", "大和", "平安时代", "镰仓", "室町", "战国",
+            "和食", "和牛", "和纸", "和室", "和服", "和式", "和果子",
+            # Japanese public-memory people
+            "盛田昭夫", "井深大", "大曾根", "山口百惠", "手冢治虫", "藤子不二雄",
+            "三岛由纪夫", "夏目漱石", "太宰治", "谷崎润一郎", "松本清张", "村上春树",
+            "宫崎骏", "黑泽明", "北野武", "坂本龙一", "久石让", "小八", "怪人二十一面相",
+            # Japanese geography, rail, landmarks & institutions
+            "东海道", "新干线", "山手线", "青函海底隧道", "青函隧道", "津轻海峡", "阪神高速",
+            "代代木公园", "代代木", "秋叶原", "白木屋", "日本桥", "樱木町", "神保町", "道顿堀",
+            "濑户内海", "轻井泽", "浅间山庄", "常盘庄", "伊势神宫", "伊势湾", "直岛", "甲子园",
+            "丹那", "日本坂", "箱根", "鸭宫", "关原", "筑地", "丰洲", "羽田", "成田", "芝公园",
+            "东京塔", "晴空塔", "东京站", "武道馆", "品川", "涩谷", "涉谷", "新宿", "原宿",
+            "银座", "池袋", "浅草", "上野", "六本木", "青山", "府中", "东大阪", "北九州",
+            "新潟", "秋田", "函馆", "神户", "大阪", "京都", "横滨", "名古屋", "熊本", "北海道",
+            "冲绳", "千叶", "山口县", "爱知县", "丰田市", "静冈", "关西", "关东",
+            "农林水产省", "大藏省", "厚生劳动省", "运输省", "防卫省", "金融厅", "气象厅",
+            "日本银行", "国铁", "日航", "全日空", "索尼", "丰田", "本田", "松下", "东芝", "日立",
+            "东丽", "东陶", "任天堂", "无印良品", "优衣库", "吉野家", "西友", "金刚组",
+            "朝日新闻", "读卖新闻", "日本经济新闻", "每日新闻", "东京大学", "京都大学", "早稻田",
+            "日内瓦", "克雷数学研究所", "牛津英语词典", "牛津词典", "理研", "东大",
+            # High-frequency Mandarin compounds audited as prone to cross-word gluing
+            "越光米", "储备米", "米骚动", "减产补贴", "立体声", "随身听", "单声道", "金属样机",
+            "地下水", "站台", "群嘲", "回转寿司", "卫洗丽", "摇粒绒", "发热内衣", "超级幼兽",
+            "看板方式", "脱印章", "志愿元年", "红白歌合战", "式年迁宫", "地方创生", "冰河期世代",
+            "人形机器人", "杀人机器人", "黎曼猜想", "四色问题", "四色定理", "钙钛矿", "全固态电池",
+            "海底光缆", "自主武器", "债务刹车", "核聚变", "超导线圈", "后量子", "减重神药",
+            "核酸新疫苗", "超级马里奥", "红白机", "广播体操", "除夜钟声", "蓝鳍金枪鱼", "味之素", "第五味",
+        ]
+    ),
+    key=len,
+    reverse=True,
+)
+MANDARIN_BOUNDARY_RE = re.compile("|".join(re.escape(w) for w in MANDARIN_BOUNDARY_WORDS))
+
+
+def protect_mandarin_word_boundaries(text: str) -> str:
+    """
+    Normalizes stray intra-Chinese spaces and wraps known proper nouns / era names /
+    splice-prone compounds with Zero-Width Non-Joiner (`\u200c`) so Azure/Edge Neural TTS
+    respects true Chinese word boundaries without inserting artificial silence pauses.
+    """
+    if not text:
+        return text
+    # Strip stray ASCII spaces between CJK ideographs (which otherwise trigger ~0.5s pauses in Edge TTS)
+    s = re.sub(r"([\u4e00-\u9fff])[ \t]+([\u4e00-\u9fff])", r"\1\2", text)
+    def _wrap(m: re.Match) -> str:
+        w = m.group(0)
+        inner = MANDARIN_SPECIAL_SPLITS.get(w, w)
+        return f"\u200c{inner}\u200c"
+    s = MANDARIN_BOUNDARY_RE.sub(_wrap, s)
+    s = re.sub(r"\u200c{2,}", "\u200c", s)
+    # Remove redundant ZWNJ right next to punctuation or string edges
+    s = re.sub(r"(^|[，、；：。！？「」『』《》“”（）\s])\u200c+", r"\1", s)
+    s = re.sub(r"\u200c+([，、；：。！？「」『』《》“”（）\s]|$)", r"\1", s)
+    return s
+
 
 EXCITED_TURN_RE = re.compile(
     r"^(?:《锵锵三人行》|欢迎继续|欢迎回到|好家伙|神了|哎哟|等会儿|学会了|妙啊|太有画面|真是服了|这下记得|"
@@ -134,30 +251,30 @@ GEAR_GAIN_DB = {
 # ==============================================================================
 AD_BREAK_1_POOL = [
     (
-        [("W", "咱们先去一下广告，《锵锵三人行》，广告之后见。")],
+        [("W", "咱们先去一下广告，《锵锵三人行》，广告之后见！")],
         [("W", "《锵锵三人行》，咱们接着刚才的话茬儿往下说。")],
     ),
     (
-        [("W", "得，咱们先去下广告，《锵锵三人行》，广告之后见。")],
+        [("W", "得，咱们先去下广告，《锵锵三人行》，广告之后见！")],
         [("W", "接着刚才那笔账往下算啊。")],
     ),
     (
-        [("W", "《锵锵三人行》，广告之后见。")],
+        [("W", "咱们先去段广告，《锵锵三人行》，广告之后见！")],
         [("W", "所以你看文道，顺着刚才这个往下看啊。")],
     ),
 ]
 
 AD_BREAK_2_POOL = [
     (
-        [("W", "咱们再去一下广告，《锵锵三人行》，广告之后见。")],
+        [("W", "咱们再去一下广告，《锵锵三人行》，广告之后见！")],
         [("W", "《锵锵三人行》，咱们接着往下聊。")],
     ),
     (
-        [("W", "先去一下广告，《锵锵三人行》，广告之后见。")],
+        [("W", "先去一下广告，《锵锵三人行》，广告之后见！")],
         [("W", "刚才聊了外头的制度，咱们再推门看看普通人家里头。")],
     ),
     (
-        [("W", "《锵锵三人行》，广告之后见。")],
+        [("W", "咱们再去下广告，《锵锵三人行》，广告之后见！")],
         [("W", "接着刚才说的往下走啊。")],
     ),
 ]
@@ -515,8 +632,11 @@ def split_mandarin_natural(
                 events.append(("PAUSE", 0.17))
 
         for sub_idx, sub in enumerate(slip_parts):
-            clean = re.sub(r"…+", "，", sub).strip()
-            clean = re.sub(r"，([，。！？；：])", r"\1", clean)
+            # Avoid turning quoted grammar templates like 『明明……却……』 into 『明明，却，』 (which causes 0.6s TTS stalls)
+            clean = re.sub(r"…+([』」”])", r"\1", sub)
+            clean = re.sub(r"([『「“][^』」”]{1,6})…+([^』」”]{1,6}[』」”])", r"\1、\2", clean)
+            clean = re.sub(r"…+", "，", clean).strip()
+            clean = re.sub(r"，([，。！？；：』」”])", r"\1", clean)
             clean = re.sub(r"^[,，、；：]+", "", clean).strip()
             if not clean or not re.search(r"[\w\u3040-\u9fff]", clean):
                 continue
@@ -724,13 +844,16 @@ async def synth_turn(spk: str, voice_cfg: tuple, text: str, out_path: str, sem: 
         speak_txt = text.rstrip("，、：:； ")
         if not speak_txt:
             speak_txt = text.strip()
-        if not spk.endswith("_JA_INLINE") and len(speak_txt) <= 2 and speak_txt and speak_txt[-1] not in "。！？":
+        is_ja_clip = spk.endswith(("_JA", "_JA_INLINE"))
+        if not is_ja_clip:
+            speak_txt = protect_mandarin_word_boundaries(speak_txt)
+        if not spk.endswith("_JA_INLINE") and len(speak_txt.replace("\u200c", "")) <= 2 and speak_txt and speak_txt[-1] not in "。！？":
             speak_txt = speak_txt + "。"
         punct_stripped = speak_txt.rstrip("，、：:； ")
         with_period = (punct_stripped + "。") if (punct_stripped and punct_stripped[-1] not in "。！？") else speak_txt
         no_quotes = re.sub(r'[“”‘’「」『』"]', "", punct_stripped).strip()
         no_quotes_period = (no_quotes + "。") if (no_quotes and no_quotes[-1] not in "。！？") else with_period
-        bare_no_punct = no_quotes.rstrip("。！？、 ") or no_quotes_period
+        bare_no_punct = (no_quotes.replace("\u200c", "").rstrip("。！？、 ") or no_quotes_period.replace("\u200c", ""))
         base_spk = spk.split("_")[0]
         # Never let D (Liang Wendao baritone) fall back to W's en-US-BrianMultilingualNeural!
         alt_voice = (
@@ -849,11 +972,77 @@ def apply_host_vocal_timbre(arr: np.ndarray, spk_key: str) -> np.ndarray:
     return shaped
 
 
+def compress_internal_silences(
+    arr: np.ndarray,
+    max_pause_sec: float = 0.31,
+    keep_head_sec: float = 0.11,
+    keep_tail_sec: float = 0.12,
+    rms_thresh: float = 0.0042,
+) -> np.ndarray:
+    """
+    Smoothly caps abnormal mid-sentence TTS dead-air stalls (e.g. 0.55s-2.0s pauses that
+    neural voices occasionally insert at commas or rare words) down to a natural ~0.23s breath
+    using a click-free 12ms raised-cosine crossfade. Never touches natural short pauses <=0.31s.
+    """
+    if np is None or len(arr) < int(SR * 0.5):
+        return arr
+    fl = 240  # 10ms @ 24kHz
+    nf = len(arr) // fl
+    if nf < 40:
+        return arr
+    fmat = arr[: nf * fl].reshape(nf, fl)
+    frms = np.sqrt(np.mean(fmat * fmat, axis=1) + 1e-12)
+    is_sil = frms < rms_thresh
+
+    min_frames = int(round(max_pause_sec * 100))
+    head_n = int(round(keep_head_sec * SR))
+    tail_n = int(round(keep_tail_sec * SR))
+    xf_n = int(round(0.012 * SR))  # 12ms cosine crossfade
+
+    # Collect cut ranges [cut_start, cut_end) inside interior silence runs
+    cuts: list[tuple[int, int]] = []
+    i = 0
+    while i < nf:
+        if not is_sil[i]:
+            i += 1
+            continue
+        j = i
+        while j < nf and is_sil[j]:
+            j += 1
+        # Only compress interior silences (never leading/trailing edge)
+        if i > 0 and j < nf and (j - i) > min_frames:
+            s0 = i * fl
+            s1 = j * fl
+            c0 = s0 + head_n
+            c1 = s1 - tail_n
+            if c1 - c0 > xf_n * 2:
+                cuts.append((c0, c1))
+        i = j
+
+    if not cuts:
+        return arr
+
+    pieces: list[np.ndarray] = []
+    cursor = 0
+    fade_dn = 0.5 + 0.5 * np.cos(np.linspace(0.0, np.pi, xf_n, dtype=np.float32))
+    fade_up = 1.0 - fade_dn
+    for c0, c1 in cuts:
+        # Keep [cursor .. c0) and crossfade [c0 .. c0+xf_n) with [c1-xf_n .. c1)
+        if c0 > cursor:
+            pieces.append(arr[cursor:c0])
+        xf = arr[c0 : c0 + xf_n] * fade_dn + arr[c1 - xf_n : c1] * fade_up
+        pieces.append(xf)
+        cursor = c1
+    if cursor < len(arr):
+        pieces.append(arr[cursor:])
+    return np.concatenate(pieces).astype(np.float32)
+
+
 def decode_to_pcm_f32(audio_path: str, trim_speech: bool = True, spk_key: str = "") -> np.ndarray:
     """
     Decodes an audio file directly to 24kHz mono float32 [-1.0, 1.0] PCM.
     Supports native 24kHz mono WAV loading without ffmpeg when trim_speech=False,
-    plus full ffmpeg speech trimming, 3-host zero-phase vocal timbre shaping & click-free micro-fades.
+    plus full ffmpeg speech trimming, internal dead-air capping, 3-host zero-phase vocal timbre shaping & micro-fades.
     """
     if not trim_speech and audio_path.lower().endswith(".wav") and os.path.exists(audio_path):
         try:
@@ -866,8 +1055,8 @@ def decode_to_pcm_f32(audio_path: str, trim_speech: bool = True, spk_key: str = 
     cmd = ["ffmpeg", "-v", "error", "-i", audio_path]
     if trim_speech:
         af = (
-            "silenceremove=start_periods=1:start_duration=0.0:start_threshold=-54dB:start_silence=0.018,"
-            "areverse,silenceremove=start_periods=1:start_duration=0.0:start_threshold=-54dB:start_silence=0.024,areverse"
+            "silenceremove=start_periods=1:start_duration=0.0:start_threshold=-48dB:start_silence=0.015,"
+            "areverse,silenceremove=start_periods=1:start_duration=0.0:start_threshold=-48dB:start_silence=0.020,areverse"
         )
         cmd.extend(["-af", af])
     cmd.extend(["-f", "s16le", "-acodec", "pcm_s16le", "-ar", str(SR), "-ac", "1", "pipe:1"])
@@ -882,6 +1071,8 @@ def decode_to_pcm_f32(audio_path: str, trim_speech: bool = True, spk_key: str = 
         raw_bytes = res2.stdout
 
     arr = np.frombuffer(raw_bytes, dtype=np.int16).astype(np.float32) / 32768.0
+    if trim_speech:
+        arr = compress_internal_silences(arr)
     if trim_speech and spk_key:
         arr = apply_host_vocal_timbre(arr, spk_key)
     if trim_speech and len(arr) > 64:
@@ -1393,18 +1584,27 @@ async def main():
             ad1_after = raw_ad1
             ad2_after = raw_ad2
 
-    # Deduplicate ad-break transitions when authored scenes already cue "进广告 / 广告回来" naturally
+    # Guarantee BOTH ad breaks always sign off with Wentao's authentic "《锵锵三人行》，广告之后见！"
+    # Only suppress ad_out_turns if the authored tail ALREADY contains BOTH "锵锵三人行" AND "广告之后见".
+    # If an authored tail mentions "广告" without the signature phrase (e.g. live-generated news),
+    # append just ("W", "《锵锵三人行》，广告之后见！") so we never double-say "进广告" and NEVER drop the signature.
     if imm_profile["ja_ratio"] < 0.65:
         if 0 <= ad1_after < total_stories and story_blocks[ad1_after]["raw_turns"]:
-            if "广告" in str(story_blocks[ad1_after]["raw_turns"][-1][1])[-70:]:
+            _tail1 = str(story_blocks[ad1_after]["raw_turns"][-1][1])[-90:]
+            if "锵锵三人行" in _tail1 and "广告之后见" in _tail1:
                 ad1_out_turns = []
+            elif "广告" in _tail1:
+                ad1_out_turns = [("W", "《锵锵三人行》，广告之后见！")]
         if 0 <= ad1_after + 1 < total_stories and story_blocks[ad1_after + 1]["raw_turns"]:
             _head1 = str(story_blocks[ad1_after + 1]["raw_turns"][0][1])[:12]
             if "广告" in _head1 or "回来" in _head1:
                 ad1_in_turns = []
         if 0 <= ad2_after < total_stories and story_blocks[ad2_after]["raw_turns"]:
-            if "广告" in str(story_blocks[ad2_after]["raw_turns"][-1][1])[-70:]:
+            _tail2 = str(story_blocks[ad2_after]["raw_turns"][-1][1])[-90:]
+            if "锵锵三人行" in _tail2 and "广告之后见" in _tail2:
                 ad2_out_turns = []
+            elif "广告" in _tail2:
+                ad2_out_turns = [("W", "《锵锵三人行》，广告之后见！")]
         if 0 <= ad2_after + 1 < total_stories and story_blocks[ad2_after + 1]["raw_turns"]:
             _head2 = str(story_blocks[ad2_after + 1]["raw_turns"][0][1])[:12]
             if "广告" in _head2 or "回来" in _head2:
@@ -1424,7 +1624,7 @@ async def main():
     closing_evs = turns_to_expanded_events(closing_turns) if closing_turns else []
 
     if today_str >= "2026-11-22":
-        radio_ver_tag = "v38_qq_60m_deep_story_135x"
+        radio_ver_tag = "v39_qq_60m_zwnj_adbreak_smooth"
     elif today_str >= "2026-11-19":
         radio_ver_tag = "v36_qq_real_public_memory"
     else:
