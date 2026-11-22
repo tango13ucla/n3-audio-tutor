@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-21 18:40 PT",
+  "updated_at": "2026-11-21 21:11 PT",
   "exam_date": "2026-12-06",
   "days_left": 15,
   "target_score": "120+ / 180",
@@ -12398,7 +12398,7 @@
     "flash_done": true
   },
   "study_date": "2026-11-21",
-  "_baked_epoch": 1795315252,
+  "_baked_epoch": 1795324308,
   "word_lookups": {
     "おく": {
       "count": 1,
