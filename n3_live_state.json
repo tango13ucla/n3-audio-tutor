@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-11-22 02:02 PT",
+  "updated_at": "2026-11-22 04:05 PT",
   "exam_date": "2026-12-06",
-  "days_left": 15,
+  "days_left": 14,
   "target_score": "120+ / 180",
   "mocks": [
     {
@@ -13027,15 +13027,15 @@
     "がらがら": 1795336763
   },
   "daily_rituals": {
-    "date": "2026-11-21",
-    "quiz_green": 50,
-    "radio_max_sec": 1981,
-    "flash_seen": 18,
-    "flash_target": 18,
-    "flash_done": true
+    "date": "2026-11-22",
+    "quiz_green": 0,
+    "radio_max_sec": 0,
+    "flash_seen": 0,
+    "flash_target": 0,
+    "flash_done": false
   },
-  "study_date": "2026-11-21",
-  "_baked_epoch": 1795341746,
+  "study_date": "2026-11-22",
+  "_baked_epoch": 1795349124,
   "word_lookups": {
     "おく": {
       "count": 1,

@@ -81,7 +81,15 @@
       "uchi7_s2b_tokiwaso_part2",
       "uchi7_s3a_seven_eleven_part1",
       "uchi7_s3b_seven_eleven_part2"
+    ],
+    "2026-11-22": [
+      "uchi8_s1_news_fallback",
+      "uchi8_s2a_shinkansen_part1",
+      "uchi8_s2b_shinkansen_part2",
+      "uchi8_s3a_walkman_part1",
+      "uchi8_s3b_walkman_part2",
+      "uchi8_s4_world_ai_math"
     ]
   },
-  "last_date": "2026-11-21"
+  "last_date": "2026-11-22"
 }
