@@ -18,6 +18,8 @@ Daily Intake Budget (90-Day Window -> 2,600-2,800 words):
   - Normal Day (Home):  30 new words (12 hard_bone + 10 reading_trap + 8 fast_screen) + 35-45 reviews
   - Travel Floor Mode:  20 new words ( 8 hard_bone +  7 reading_trap + 5 fast_screen) + 25-30 reviews
   - Home Catch-up Days: 34 new words (14 hard_bone + 12 reading_trap + 8 fast_screen) + 40-45 reviews
+  - Pronunciation Mnemonic Rule (Locked 2026-11-22): Every card MUST carry a crisp bilingual (CN+EN)
+    pronunciation mnemonic focusing strictly on Japanese sound recall (not kanji meaning).
 100% Zero-PII public study module.
 """
 

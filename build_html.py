@@ -34,6 +34,7 @@ from vocab_cards import (
     VOCAB_CARDS,
     analyze_kanji_reading_trap,
     build_dynamic_vocab_card,
+    get_pronunciation_mnemonic,
 )
 import tutor_prefs
 
@@ -148,6 +149,9 @@ for surf, info in merged_raw_words.items():
         entry["trap_hl"] = thl
         entry["trap_tag"] = ttag
         entry["zh_opaque"] = opq
+    mn = get_pronunciation_mnemonic(surf, str(entry.get("head") or ""))
+    if mn:
+        entry["mnemonic"] = mn
     rich_words[surf] = entry
 
 
@@ -982,6 +986,9 @@ for p in live_state.get("vocab_tracked", []):
     tier, mstate, streak = norm_tier_meta(p)
     w_info = rich_words.get(w, {})
     vc_spec = VOCAB_CARDS.get(w, {})
+    mn_txt = clean_zen_text(vc_spec.get("mnemonic") or get_pronunciation_mnemonic(w, str(w_info.get("head") or "")))
+    base_note = clean_zen_text(vc_spec.get("twin") or w_info.get("tip") or p.get("classroom_note") or "")
+    combined_note = " · ".join(x for x in ([f"记音：{mn_txt}"] if mn_txt else []) + ([base_note] if base_note else []))
     meaning_short = w_info.get("zh") or (vc_spec.get("zh", "").split(" · ")[0]) or re.sub(r"^\d+\.\s*", "", p.get("category", ""))
     vocab_items.append({
         "key": w,
@@ -993,7 +1000,7 @@ for p in live_state.get("vocab_tracked", []):
         "streak": streak,
         "point_id": point_id_by_key.get(w, ""),
         "audio": resolve_word_audio(w),
-        "note": clean_zen_text(vc_spec.get("twin") or w_info.get("tip") or p.get("classroom_note") or ""),
+        "note": combined_note,
     })
 
 for kw, pitch, desc in CORE_N3_KANA_VOCAB:
@@ -1001,6 +1008,9 @@ for kw, pitch, desc in CORE_N3_KANA_VOCAB:
         continue
     seen_vocab_words.add(kw)
     vc_spec = VOCAB_CARDS.get(kw, {})
+    mn_txt = clean_zen_text(vc_spec.get("mnemonic") or get_pronunciation_mnemonic(kw))
+    base_note = clean_zen_text(vc_spec.get("twin") or f"声调 {pitch} · {desc}")
+    combined_note = " · ".join(x for x in ([f"记音：{mn_txt}"] if mn_txt else []) + ([base_note] if base_note else []))
     vocab_items.append({
         "key": kw,
         "name": kw,
@@ -1011,7 +1021,7 @@ for kw, pitch, desc in CORE_N3_KANA_VOCAB:
         "streak": 0,
         "point_id": point_id_by_key.get(kw, ""),
         "audio": resolve_word_audio(kw),
-        "note": clean_zen_text(vc_spec.get("twin") or f"声调 {pitch} · {desc}"),
+        "note": combined_note,
     })
 
 vocab_cards_payload = {}
@@ -1034,6 +1044,7 @@ for vw in all_vc_keys:
         "pitch": spec["pitch"],
         "zh": spec["zh"],
         "twin": spec["twin"],
+        "mnemonic": spec.get("mnemonic") or get_pronunciation_mnemonic(vw, str((rich_words.get(vw) or {}).get("head") or "")),
         "zh_speak": spec.get("zh_speak", ""),
         "front_audio": front_aud,
         "rev_audio": rev_aud,
@@ -2786,12 +2797,12 @@ html = r"""<!DOCTYPE html>
     position: relative;
     width: 100%;
     flex: 1;
-    max-height: 448px;
+    max-height: 488px;
     min-height: 264px;
     background: var(--sheet);
     border: 1px solid var(--hairline-strong);
     border-radius: 12px;
-    padding: 28px 22px 24px;
+    padding: 24px 22px 22px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -2859,7 +2870,7 @@ html = r"""<!DOCTYPE html>
     font-size: 12.5px;
     color: var(--ink-3);
     letter-spacing: 0.06em;
-    margin-bottom: 18px;
+    margin-bottom: 16px;
     min-height: 18px;
   }
   .vc-cue.ng {
@@ -2880,8 +2891,8 @@ html = r"""<!DOCTYPE html>
     padding-bottom: 2px;
   }
   .vc-reveal {
-    margin-top: 22px;
-    min-height: 118px;
+    margin-top: 20px;
+    min-height: 136px;
     width: 100%;
     max-width: 390px;
     opacity: 0;
@@ -2899,7 +2910,7 @@ html = r"""<!DOCTYPE html>
     font-weight: 500;
     color: var(--ink-2);
     letter-spacing: 0.04em;
-    margin-bottom: 8px;
+    margin-bottom: 7px;
   }
   .vc-zh {
     font-size: 20.5px;
@@ -2912,6 +2923,24 @@ html = r"""<!DOCTYPE html>
     font-weight: 400;
     color: var(--ink-2);
   }
+  .vc-hook {
+    margin-top: 12px;
+    padding-top: 11px;
+    border-top: 1px solid var(--hairline);
+    font-size: 14.5px;
+    color: var(--sumi);
+    line-height: 1.6;
+    letter-spacing: 0.01em;
+  }
+  .vc-hook-tag {
+    display: inline-block;
+    margin-right: 6px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--ochre);
+    letter-spacing: 0.08em;
+    vertical-align: 1px;
+  }
   .vc-twin {
     margin-top: 10px;
     padding-top: 9px;
@@ -2919,6 +2948,22 @@ html = r"""<!DOCTYPE html>
     font-size: 14px;
     color: var(--ink-2);
     line-height: 1.56;
+  }
+  .vc-twin.sub {
+    margin-top: 7px;
+    padding-top: 0;
+    border-top: none;
+    font-size: 12.8px;
+    color: var(--ink-3);
+    line-height: 1.5;
+  }
+  @media (max-height: 700px) {
+    .vc-card { padding: 18px 18px 16px; }
+    .vc-cue { margin-bottom: 10px; }
+    .vc-chunk { font-size: 26px; }
+    .vc-reveal { margin-top: 14px; min-height: 118px; }
+    .vc-hook { margin-top: 9px; padding-top: 8px; font-size: 13.8px; line-height: 1.52; }
+    .vc-twin.sub { margin-top: 5px; font-size: 12.2px; }
   }
 
   .vc-dock {
@@ -6432,8 +6477,9 @@ function showInlineWordMeaning(surface, tokEl) {
   }
 
   const headDiff = info.head && info.head !== surface ? `原形 ${info.head}` : "";
+  const mnLine = info.mnemonic ? `记音：${info.mnemonic}` : "";
   const subBreak = buildSubwordBreakdown(surface);
-  const metaLine = [headDiff, info.pos, info.tip, subBreak].filter(Boolean).join(" · ");
+  const metaLine = [headDiff, mnLine, info.pos, info.tip, subBreak].filter(Boolean).join(" · ");
   const kanaHtml = renderTrapKanaHTML(surface, info.kana || "", info.trap_hl, info.trap_tag);
 
   box.dataset.surface = surface;
@@ -6842,6 +6888,7 @@ function getVocabCardSpec(surface) {
       pitch: pre.pitch || w.pitch || "",
       zh: pre.zh || w.zh || (vItem && vItem.sub) || "",
       twin: pre.twin || "",
+      mnemonic: pre.mnemonic || w.mnemonic || "",
       zh_speak: typeof pre.zh_speak === "string" ? pre.zh_speak : cleanSpeakZh(pre.zh || w.zh || ""),
       front_audio: pre.front_audio || "",
       rev_audio: pre.rev_audio || "",
@@ -6876,6 +6923,7 @@ function getVocabCardSpec(surface) {
     pitch: w.pitch || "",
     zh: zh,
     twin: tipParts.join(" · "),
+    mnemonic: w.mnemonic || "",
     zh_speak: (!hasKanji || zhOpaque) ? cleanSpeakZh(zh) : "",
     front_audio: "",
     rev_audio: "",
@@ -7690,7 +7738,8 @@ function renderVocabStage() {
         <div class="vc-reveal${vcRevealed ? " shown" : ""}" id="vc-reveal-box">
           ${kanaHtml ? `<div class="vc-kana">${kanaHtml}</div>` : ""}
           <div class="vc-zh${quietZh ? " quiet" : ""}">${escapeHtml(card.zh)}</div>
-          ${card.twin ? `<div class="vc-twin">${escapeHtml(card.twin)}</div>` : ""}
+          ${card.mnemonic ? `<div class="vc-hook"><span class="vc-hook-tag">记音</span>${escapeHtml(card.mnemonic)}</div>` : ""}
+          ${card.twin ? `<div class="vc-twin${card.mnemonic ? " sub" : ""}">${escapeHtml(card.twin)}</div>` : ""}
         </div>
       </div>
     </div>
@@ -9400,6 +9449,20 @@ const qLenAfter = vm.runInNewContext('A.vocabSess ? A.vocabSess.queue.length : -
 const lkRec = vm.runInNewContext('A.wordLookups["予約しとこう"]', sb);
 if (qLenBefore !== qLenAfter || !Array.isArray(lkRec) || lkRec[0] < 1) {
   throw new Error('Self-test failed: recordTappedWord either mutated vocabSess or missed wordLookups!');
+}
+// Self-test 4: Every vocab card has a non-empty bilingual pronunciation mnemonic and zero em dashes
+const vcObj = vm.runInNewContext('DATA.vocab_cards || {}', sb);
+const vcKeys = Object.keys(vcObj);
+if (vcKeys.length < 120) throw new Error('Self-test failed: vocab_cards unexpectedly small: ' + vcKeys.length);
+for (const k of vcKeys) {
+  const mn = String((vcObj[k] && vcObj[k].mnemonic) || '').trim();
+  if (!mn) throw new Error('Self-test failed: missing mnemonic for vocab card ' + k);
+  if (mn.includes('—')) throw new Error('Self-test failed: em dash in mnemonic for ' + k);
+}
+sb.switchMode('vocab');
+const vcStageHtml = (els['vocab-stage-box'] && els['vocab-stage-box'].innerHTML) || '';
+if (!vcStageHtml.includes('vc-hook')) {
+  throw new Error('Self-test failed: vocab card did not render .vc-hook pronunciation mnemonic!');
 }
 """
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
