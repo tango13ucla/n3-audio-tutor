@@ -1163,12 +1163,22 @@ html = r"""<!DOCTYPE html>
     -webkit-tap-highlight-color: transparent;
   }
 
-  html, body {
+  html {
     margin: 0;
     padding: 0;
     width: 100%;
     height: 100%;
-    height: 100dvh;
+    overflow: hidden;
+    overscroll-behavior: none;
+    background: var(--washi);
+  }
+
+  body {
+    margin: 0;
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
     overflow: hidden;
     overscroll-behavior: none;
     background: var(--washi);
@@ -1180,13 +1190,10 @@ html = r"""<!DOCTYPE html>
     -webkit-user-select: none;
     user-select: none;
     -webkit-touch-callout: none;
-  }
-
-  body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: calc(14px + env(safe-area-inset-top)) 26px calc(16px + env(safe-area-inset-bottom));
+    padding: calc(14px + env(safe-area-inset-top)) 26px max(16px, env(safe-area-inset-bottom));
   }
 
   .zen-shell {
@@ -1532,7 +1539,7 @@ html = r"""<!DOCTYPE html>
   .thumb-nav { display: none; }
   @media (max-width: 859px), (max-height: 520px) {
     body {
-      padding-bottom: calc(4px + env(safe-area-inset-bottom));
+      padding-bottom: max(14px, env(safe-area-inset-bottom));
     }
     .zen-header { display: none; }
     .zen-horizon { padding-top: 4px; }
@@ -5884,8 +5891,11 @@ function onEnsoTap(idx, ev) {
   } else if (idx === 1) {
     if (activeMode !== "radio") switchMode("radio", false);
     else openSessionModal();
-  } else {
+  } else if (idx === 2) {
     if (activeMode !== "vocab") switchMode("vocab");
+    else openSessionModal();
+  } else {
+    if (activeMode !== "body") switchMode("body");
     else openSessionModal();
   }
 }
@@ -5901,14 +5911,18 @@ function toggleDashLedger(ev) {
 
 function renderGreenBoard() {
   const m = computeDaily120Metrics();
+  const bm = (window.ZB && typeof window.ZB.getSummary === "function")
+    ? window.ZB.getSummary()
+    : { ratio: 0, done: false, label: "体律 0/3", text: "0 / 3 项" };
 
   const trioEl = document.getElementById("enso-trio");
   if (trioEl) {
-    const doneKey = `${m.quizDone ? 1 : 0}${m.radioDone ? 1 : 0}${m.flashDone ? 1 : 0}`;
+    const doneKey = `${m.quizDone ? 1 : 0}${m.radioDone ? 1 : 0}${m.flashDone ? 1 : 0}${bm.done ? 1 : 0}`;
     const rings = [
       { ratio: m.quizRatio, done: m.quizDone, label: `做题 ${m.greenCnt}/${m.totalCards}` },
       { ratio: m.radioRatio, done: m.radioDone, label: `随身听 ${m.listenedMins}/${m.targetMins}分` },
-      { ratio: m.flashRatio, done: m.flashDone, label: `记词 ${m.flashDone ? "已完成" : m.flashSeen + "/" + m.flashTarget}` }
+      { ratio: m.flashRatio, done: m.flashDone, label: `记词 ${m.flashDone ? "已完成" : m.flashSeen + "/" + m.flashTarget}` },
+      { ratio: bm.ratio, done: bm.done, label: bm.label }
     ];
     trioEl.innerHTML = rings.map((r, idx) => {
       const newlyDone = r.done && prevEnsoDoneKey && prevEnsoDoneKey[idx] === "0";
@@ -5920,7 +5934,8 @@ function renderGreenBoard() {
   const quizPart = m.quizDone ? `做题 ✓` : `做题 ${m.greenCnt}/${m.totalCards}`;
   const radioPart = m.radioDone ? `随身听 ✓` : `听 ${m.listenedMins}/${m.targetMins}分`;
   const flashPart = m.flashDone ? `记词 ✓` : `记词 ${m.flashSeen}/${m.flashTarget}`;
-  document.getElementById("gm-left-txt").textContent = `${quizPart} · ${radioPart} · ${flashPart}`;
+  const bodyPart = bm.done ? `体律 ✓` : bm.label;
+  document.getElementById("gm-left-txt").textContent = `${quizPart} · ${radioPart} · ${flashPart} · ${bodyPart}`;
 
   const rightEl = document.getElementById("gm-right-txt");
   if (rightEl) {
@@ -7737,22 +7752,26 @@ function manualCloudSync(btnEl) {
 
 function openSessionModal() {
   const m = computeDaily120Metrics();
+  const bm = (window.ZB && typeof window.ZB.getSummary === "function")
+    ? window.ZB.getSummary()
+    : { done: false, text: "0 / 3 项" };
   document.getElementById("modal-content").innerHTML = `
-    <h3 class="modal-h">今日三修 · 120+ 进度</h3>
+    <h3 class="modal-h">今日四修 · 日语与体律</h3>
     <p class="modal-body">
       ① 做题　　　<strong id="modal-green-cnt">${m.greenCnt} / ${m.totalCards} 题</strong><br/>
       ② 随身听　　<strong id="modal-radio-min">${m.listenedMins} / ${m.targetMins} 分钟</strong><br/>
       ③ 单手记词　<strong id="modal-flash-cnt">${m.flashDone ? "今日已完成" : `${m.flashSeen} / ${m.flashTarget} 词`}</strong><br/>
+      ④ 体律　　　<strong id="modal-body-cnt">${bm.done ? "今日已完成" : bm.text}</strong><br/>
       当前预计分　<strong id="modal-proj-score">${m.projScore} / 180 分</strong>
     </p>
-    <p class="modal-promise">圆印代表今日三件事打卡；总表里每个词与考点需跨 3 天答对满 3/3 才算真正掌握。</p>
+    <p class="modal-promise">四枚圆印依次对应做题、随身听、记词与体律；总表里每个词与考点需跨 3 天答对满 3/3 才算真正掌握。</p>
     <div class="sync-box">
       <p class="sync-note" id="cloud-sync-status-line">正在对齐云端进度…</p>
       <button class="sync-btn" onclick="manualCloudSync(this)">立即对齐多端进度</button>
     </div>
     <div class="dock-row">
       <button class="ghost-btn" onclick="resetTodayMission()">重做题</button>
-      <button class="ghost-btn" onclick="closeModal();switchMode('dash')">总表</button>
+      <button class="ghost-btn" onclick="closeModal();switchMode('body')">体律</button>
       <button class="sumi-btn" onclick="closeModal()">继续</button>
     </div>
   `;
@@ -8660,6 +8679,7 @@ window.ZB = (function() {
       gp.innerHTML = gs.length ? `<div class="zb-gap-note">待补通：${gs.join("；")}</div>` : `<div class="zb-gap-note">轻点任意日期可补记或修改</div>`;
     }
     if (ge("zb-sync-txt")) ge("zb-sync-txt").textContent = SYNC_NOTE || (ST.vitals && ST.vitals.last_drive_sync ? `已对接健康同步 · ${ST.vitals.last_drive_sync}` : "加密同步就绪");
+    if (typeof renderGreenBoard === "function") renderGreenBoard();
   }
 
   function bindGesturesOnce() {
@@ -8900,8 +8920,45 @@ window.ZB = (function() {
     pullCloud(true);
   }
 
+  let LOCAL_PEEKED = false;
+  function getSummary() {
+    if (!INITED && !LOCAL_PEEKED) {
+      LOCAL_PEEKED = true;
+      loadLocal();
+    }
+    const today = todayYmd(), plan = planFor(today), day = dayE(today);
+    const cOk = !!plan.cardioDone;
+    const puDone = (day.pu || []).length;
+    const pOk = plan.puTarget === 0 || puDone >= plan.puTarget;
+    const dOk = !!day.diet;
+    const cnt = (cOk ? 1 : 0) + (pOk ? 1 : 0) + (dOk ? 1 : 0);
+    const bits = [];
+    if (cOk) bits.push("心肺✓");
+    if (pOk) bits.push("引体✓");
+    if (dOk) bits.push("饮食✓");
+    return {
+      ratio: cnt / 3,
+      done: cnt === 3,
+      label: cnt === 3 ? "体律 已完成" : `体律 ${cnt}/3`,
+      text: bits.length ? `${cnt} / 3 项（${bits.join(" · ")}）` : "0 / 3 项"
+    };
+  }
+
+  async function syncCircle() {
+    if (CKEY) { await pullCloud(true); return; }
+    try {
+      if (!localStorage.getItem(VAULT_KEY)) return;
+      const ok = await tryRestoreVault();
+      if (ok) {
+        loadLocal();
+        if (typeof renderGreenBoard === "function") renderGreenBoard();
+        await pullCloud(true);
+      }
+    } catch (e) {}
+  }
+
   return {
-    onEnter, onResume, unlockPass, stopPacer,
+    onEnter, onResume, unlockPass, stopPacer, getSummary, syncCircle,
     setTab(t, dirHint) {
       if (!SUB_ORDER.includes(t)) return;
       if (t === SUBTAB) { positionSubBar(false); return; }
@@ -9092,6 +9149,7 @@ function initApp() {
   else renderTutor();
 
   checkNewDailyEdition();
+  if (window.ZB && typeof window.ZB.syncCircle === "function") window.ZB.syncCircle();
   // Pull latest multi-platform cloud snapshot & auto-upload any local-only answers, then keep SSE live
   pullCloudSync(true).then(() => {
     connectCloudSSE();
