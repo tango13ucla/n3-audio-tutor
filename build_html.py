@@ -2685,11 +2685,16 @@ html = r"""<!DOCTYPE html>
   .modal-card {
     width: 100%;
     max-width: 396px;
+    max-height: 82vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
     background: var(--sheet);
     border: 1px solid var(--hairline-strong);
     border-radius: 12px;
     padding: 24px 22px;
   }
+  .modal-card::-webkit-scrollbar { display: none; }
   .modal-h { margin: 0 0 12px; font-size: 18px; font-weight: 600; letter-spacing: 0.04em; }
   .modal-body { margin: 0 0 14px; font-size: 16px; color: var(--ink-2); line-height: 1.85; font-variant-numeric: tabular-nums; }
   .modal-promise { margin: 0 0 16px; padding-top: 12px; border-top: 1px solid var(--hairline); font-size: 14.5px; color: var(--moss); line-height: 1.65; font-weight: 500; }
@@ -3093,14 +3098,46 @@ html = r"""<!DOCTYPE html>
   .zb-tier.yellow { color: var(--ochre); }
   .zb-tier.red { color: var(--bengara); }
 
+  .zb-pz-btn {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--ink-3);
+    letter-spacing: 0.03em;
+    font-variant-numeric: tabular-nums;
+    padding: 2px 0;
+    white-space: nowrap;
+    transition: color 0.16s ease;
+  }
+  .zb-pz-btn:active { color: var(--sumi); }
+  .zb-pz-btn.warn { color: var(--ochre); }
+  .zb-pz-btn.urgent { color: var(--bengara); }
+
+  .zb-pz-track {
+    width: 100%;
+    height: 1.5px;
+    background: var(--hairline);
+    border-radius: 2px;
+    margin: 9px 0 4px;
+    overflow: hidden;
+  }
+  .zb-pz-fill {
+    height: 100%;
+    width: 4%;
+    background: var(--moss);
+    border-radius: 2px;
+    transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.25s ease;
+  }
+  .zb-pz-fill.warn { background: var(--ochre); }
+  .zb-pz-fill.urgent { background: var(--bengara); }
+
   .zb-title {
     font-family: var(--serif-jp);
-    font-size: clamp(24px, 6.4vw, 27px);
+    font-size: clamp(22px, 6vw, 26px);
     font-weight: 600;
-    line-height: 1.38;
-    letter-spacing: 0.025em;
+    line-height: 1.35;
+    letter-spacing: 0.02em;
     color: var(--sumi);
-    margin: 12px 0 10px;
+    margin: 12px 0 8px;
   }
 
   .zb-guide-row {
@@ -3114,8 +3151,8 @@ html = r"""<!DOCTYPE html>
     white-space: normal;
   }
   .zb-guide-txt {
-    font-size: 14px;
-    line-height: 1.55;
+    font-size: 13.5px;
+    line-height: 1.58;
     color: var(--ink-2);
     letter-spacing: 0.015em;
   }
@@ -3129,36 +3166,64 @@ html = r"""<!DOCTYPE html>
   }
   .zb-guide-row:active .zb-guide-link { color: var(--sumi); }
 
-  .zb-min-bar {
+  /* Dynamic 2-level state selector (pure borderless Zen typography, zero pill clutter) */
+  .zb-state-block {
+    margin-top: 22px;
+    margin-bottom: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .zb-state-bar {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    gap: 12px;
-    margin-top: 26px;
-    padding-bottom: 12px;
+    gap: 8px;
+    padding-bottom: 2px;
   }
-  .zb-min-opts { display: flex; align-items: baseline; gap: 18px; }
-  .zb-min-opt {
-    font-size: 14.5px;
+  .zb-state-btn {
+    font-size: 14px;
     font-weight: 500;
     color: var(--ink-3);
-    padding: 4px 0 5px;
+    padding: 5px 0 6px;
     border-bottom: 1.5px solid transparent;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: 0.02em;
-    transition: color 0.16s ease, border-color 0.16s ease;
+    letter-spacing: 0.04em;
+    transition: color 0.18s ease, border-color 0.18s ease;
   }
-  .zb-min-opt.active {
-    color: var(--sumi);
-    font-weight: 600;
-    border-bottom-color: var(--sumi);
+  .zb-state-btn.active { color: var(--sumi); font-weight: 600; border-bottom-color: var(--sumi); }
+  .zb-state-btn.active.is-bb { color: var(--bengara); border-bottom-color: var(--bengara); }
+  .zb-state-btn.active.is-tired { color: var(--ochre); border-bottom-color: var(--ochre); }
+  .zb-state-btn.active.is-rest { color: var(--moss); border-bottom-color: var(--moss); }
+
+  .zb-substate-bar {
+    display: none;
+    align-items: center;
+    gap: 18px;
+    padding: 2px 0 2px 11px;
+    border-left: 1.5px solid var(--hairline-strong);
+    animation: zenModeIn 0.2s ease;
   }
+  .zb-substate-bar.open { display: flex; }
+  .zb-substate-bar.is-bb { border-left-color: var(--bengara); }
+  .zb-substate-bar.is-tired { border-left-color: var(--ochre); }
+  .zb-substate-btn {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--ink-3);
+    padding: 4px 0;
+    letter-spacing: 0.03em;
+    transition: color 0.16s ease;
+  }
+  .zb-substate-btn.active { color: var(--sumi); font-weight: 600; }
+  .zb-substate-btn.active.is-red { color: var(--bengara); }
+  .zb-substate-btn.active.is-ochre { color: var(--ochre); }
+  .zb-substate-btn.active.is-green { color: var(--moss); }
 
   .zb-cta-row {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-top: 6px;
+    margin-top: 2px;
   }
   .zb-btn-primary {
     flex: 1;
@@ -3169,7 +3234,7 @@ html = r"""<!DOCTYPE html>
     color: var(--sheet);
     font-size: 15.5px;
     font-weight: 500;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.05em;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -3216,8 +3281,14 @@ html = r"""<!DOCTYPE html>
   .zb-aux-grp {
     display: flex;
     align-items: center;
-    gap: 18px;
+    gap: 16px;
     margin-left: auto;
+  }
+  .zb-week-quiet {
+    font-size: 12.5px;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
   }
 
   .zb-ritual-list { margin-top: 26px; border-top: 1px solid var(--hairline); }
@@ -3328,12 +3399,35 @@ html = r"""<!DOCTYPE html>
   .zb-sync-foot { margin-top: 16px; display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 12.5px; color: var(--ink-3); }
   .zb-sync-left { display: flex; align-items: center; gap: 10px; min-width: 0; flex-wrap: wrap; }
 
-  .zb-guide-list { display: flex; flex-direction: column; margin: 4px 0 18px; border-top: 1px solid var(--hairline); }
+  .zb-guide-list { display: flex; flex-direction: column; margin: 4px 0 16px; border-top: 1px solid var(--hairline); }
   .zb-guide-item { padding: 13px 0; border-bottom: 1px solid var(--hairline); }
   .zb-guide-k { font-size: 12px; font-weight: 600; color: var(--moss); letter-spacing: 0.05em; margin-bottom: 5px; }
   .zb-guide-v { font-size: 14.5px; line-height: 1.62; color: var(--sumi); }
   .zb-guide-sub { font-size: 13px; line-height: 1.55; color: var(--ink-3); margin-top: 4px; }
   .zb-guide-item.cur .zb-guide-k::before { content: "● "; font-size: 9px; }
+
+  .zb-modal-links { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: -4px 0 14px; flex-wrap: wrap; }
+  .zb-pz-tabs { display: flex; gap: 18px; margin: 2px 0 12px; border-bottom: 1px solid var(--hairline); }
+  .zb-pz-tab { font-size: 13.5px; font-weight: 500; color: var(--ink-3); padding: 6px 0 8px; border-bottom: 1.5px solid transparent; }
+  .zb-pz-tab.active { color: var(--sumi); font-weight: 600; border-bottom-color: var(--sumi); }
+  .zb-pz-note { font-size: 12.5px; color: var(--ink-3); line-height: 1.55; margin: 0 0 12px; }
+  .zb-pz-list { display: flex; flex-direction: column; margin-bottom: 16px; max-height: 46vh; overflow-y: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .zb-pz-list::-webkit-scrollbar { display: none; }
+  .zb-pz-wk { font-size: 11.5px; font-weight: 600; color: var(--ink-3); letter-spacing: 0.06em; padding: 12px 0 6px; border-bottom: 1px solid var(--hairline); }
+  .zb-pz-row { width: 100%; display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--hairline); text-align: left; }
+  .zb-pz-row:active { opacity: 0.7; }
+  .zb-pz-mark { width: 16px; flex-shrink: 0; font-size: 12.5px; color: var(--ink-3); text-align: center; padding-top: 2px; }
+  .zb-pz-row.done .zb-pz-mark { color: var(--moss); font-weight: 600; }
+  .zb-pz-row.cur .zb-pz-mark { color: var(--moss); }
+  .zb-pz-info { flex: 1; min-width: 0; }
+  .zb-pz-name { font-size: 13.5px; line-height: 1.45; color: var(--sumi); }
+  .zb-pz-row.done .zb-pz-name { color: var(--ink-3); }
+  .zb-pz-row.cur .zb-pz-name { color: var(--sumi); font-weight: 600; }
+  .zb-pz-meta { font-size: 12px; color: var(--ink-3); margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .zb-pz-min { flex-shrink: 0; font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums; padding-top: 2px; }
+
+  .zb-ledger-pz { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--hairline); font-size: 13.5px; text-align: left; }
+  .zb-ledger-pz:active { opacity: 0.7; }
 
   .zb-locked { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; padding: 16px 2px; }
   .zb-locked-title { font-family: var(--serif-jp); font-size: 24px; font-weight: 600; margin: 14px 0 8px; }
@@ -3496,30 +3590,34 @@ html = r"""<!DOCTYPE html>
           <div class="zb-ma"></div>
           <div class="zb-context">
             <span class="zb-tier" id="zb-tier-txt"></span>
-            <span id="zb-week-txt"></span>
+            <button type="button" class="zb-pz-btn" id="zb-pz-btn" onclick="ZB.openPZList()"></button>
           </div>
+          <div class="zb-pz-track"><div class="zb-pz-fill" id="zb-pz-fill"></div></div>
           <h2 class="zb-title" id="zb-title"></h2>
           <button type="button" class="zb-guide-row" id="zb-pelo-row" onclick="ZB.openPeloGuide()">
             <span class="zb-guide-txt" id="zb-pelo-short"></span>
             <span class="zb-guide-link" id="zb-pelo-link">找课 ›</span>
           </button>
 
-          <div class="zb-min-bar" id="zb-min-bar">
-            <div class="zb-min-opts" id="zb-min-pills"></div>
-            <button type="button" class="zb-btn-quiet" onclick="switchMode('radio', true)">听《锵锵》↗</button>
+          <div class="zb-state-block" id="zb-state-block">
+            <div class="zb-state-bar" id="zb-state-bar">
+              <button type="button" class="zb-state-btn" id="zb-st-normal" onclick="ZB.setState('normal')">常规</button>
+              <button type="button" class="zb-state-btn" id="zb-st-bb" onclick="ZB.setState('bb')">打了篮球</button>
+              <button type="button" class="zb-state-btn" id="zb-st-tired" onclick="ZB.setState('tired')">偏累</button>
+              <button type="button" class="zb-state-btn" id="zb-st-rest" onclick="ZB.setState('rest')">休息日</button>
+            </div>
+            <div class="zb-substate-bar" id="zb-substate-bar"></div>
           </div>
 
           <div class="zb-cta-row">
-            <button type="button" class="zb-btn-ghost" id="zb-rec-btn" style="display:none;" onclick="ZB.logCardio('recovery')">轻踩 15 分</button>
             <button type="button" class="zb-btn-primary" id="zb-main-btn" onclick="ZB.logCardio('main')"></button>
           </div>
 
           <div class="zb-aux-row">
-            <button type="button" class="zb-btn-quiet" id="zb-radio-alt" style="display:none;" onclick="switchMode('radio', true)">听《锵锵》↗</button>
+            <button type="button" class="zb-btn-quiet" onclick="switchMode('radio', true)">听《锵锵》↗</button>
             <div class="zb-aux-grp">
-              <button type="button" class="zb-btn-quiet" id="zb-tired-btn" onclick="ZB.toggleTired()">偏累</button>
-              <button type="button" class="zb-btn-quiet" id="zb-bb-high" onclick="ZB.toggleBB('high')">高强篮球</button>
-              <button type="button" class="zb-btn-quiet" id="zb-bb-light" onclick="ZB.toggleBB('light')">轻投篮</button>
+              <button type="button" class="zb-btn-quiet" id="zb-alt-btn" style="display:none;" onclick="ZB.logCardio('recovery')"></button>
+              <span class="zb-week-quiet" id="zb-week-txt"></span>
             </div>
           </div>
 
@@ -3661,6 +3759,7 @@ html = r"""<!DOCTYPE html>
 
         <div class="zb-panel" id="zb-p-ledger">
           <div class="zb-kpis" id="zb-kpis"></div>
+          <button type="button" class="zb-ledger-pz" id="zb-ledger-pz" onclick="ZB.openPZList()"></button>
           <div class="zb-ledger-list" id="zb-lrows"></div>
           <div class="zb-sync-foot">
             <div class="zb-sync-left">
@@ -8044,6 +8143,59 @@ window.ZB = (function() {
   const STATE_KEY = "zenbody_state_v1";
   const PEND_KEY = "zenbody_pending_push_v1";
   const SUB_ORDER = ["today", "pullup", "body", "ledger"];
+  const PZ_PROGS = [
+    { id: "dypz", name: "Discover Your Power Zones", short: "Discover PZ", total: 23, offset: 0, entry: "底栏 Programs → 英文原版 Discover Your Power Zones" },
+    { id: "byb", name: "Boost Your Base: Power Zones", short: "Boost Base", total: 24, offset: 23, entry: "底栏 Programs（或 Collections）→ Boost Your Base: Power Zones" }
+  ];
+  const PZ_LIST = [
+    [0, 1, 1, "15 min Intro to Power Zone Ride", "Matt Wilpers", 15, "easy", "入门认识 7 个功率区，全程坐姿无压力"],
+    [0, 1, 2, "20 min Power Zone Beginner Ride", "Matt Wilpers", 20, "easy", "坐姿感受各档发力，为第 3 节 FTP 测试热身"],
+    [0, 1, 3, "FTP 基线测试（10分热身 + 20分测试）", "Denis Morton", 30, "test", "先 10 min FTP Warm Up，紧接 20 min FTP Test；全力稳推测出 7 档功率区，结束点 Yes 保存"],
+    [0, 1, 4, "30 min Power Zone Endurance Ride", "Christine D'Ercole", 30, "pze", "首节 Zone 2–3 稳态燃脂，配《锵锵三人行》最舒服"],
+    [0, 1, 5, "20 min Low Impact Ride", "Matt Wilpers", 20, "easy", "全程坐姿低冲击，练踩踏顺滑度顺便松腿"],
+    [0, 1, 6, "30 min Power Zone Endurance Ride", "Olivia Amato", 30, "pze", "Zone 2–3 稳态耐力，第 1 周顺利收尾"],
+    [0, 2, 1, "30 min Power Zone Hip Hop Ride", "Matt Wilpers", 30, "hard", "首次触碰 Zone 4 节奏段，比耐力课更有挑战"],
+    [0, 2, 2, "45 min Power Zone Endurance Ride", "Denis Morton", 45, "pze_long", "45 分钟 Zone 2–3 黄金燃脂，刚好听大半期《锵锵》"],
+    [0, 2, 3, "30 min Power Zone Endurance Ride", "Olivia Amato", 30, "pze", "中段 Zone 2–3 稳态过渡，护腿稳掉脂"],
+    [0, 2, 4, "45 min Power Zone Endurance Ride", "Matt Wilpers", 45, "pze_long", "45 分钟稳态耐力，第 2 周达标收官"],
+    [0, 3, 1, "30 min Power Zone Ride", "Christine D'Ercole", 30, "hard", "Zone 3–4 进阶间歇，稳步拉高阈值"],
+    [0, 3, 2, "45 min Power Zone Ride", "Matt Wilpers", 45, "hard", "Zone 3–5 主力强课，挑不打球、双腿轻松的日子骑"],
+    [0, 3, 3, "30 min Power Zone Endurance 80s Ride", "Denis Morton", 30, "pze", "80 年代老歌 Zone 2–3 稳态，让双腿喘口气"],
+    [0, 3, 4, "45 min Power Zone Endurance Ride", "Olivia Amato", 45, "pze_long", "45 分钟稳态燃脂，第 3 周收官"],
+    [0, 4, 1, "45 min Power Zone Ride", "Denis Morton", 45, "hard", "巅峰周第 1 场：Zone 3–5 阈值强课"],
+    [0, 4, 2, "45 min Power Zone Ride", "Olivia Amato / Sam Yo", 45, "hard", "巅峰周第 2 场：Zone 3–5 强课（按项目 W4 第 2 节骑）"],
+    [0, 4, 3, "30 min Power Zone Endurance Ride", "Christine D'Ercole", 30, "pze", "两场强课后回落 Zone 2–3 恢复打底"],
+    [0, 4, 4, "60 min Power Zone Endurance Ride", "Matt Wilpers", 60, "pze_long", "60 分钟 Zone 2–3 燃脂大课，正好听完整期《锵锵三人行》"],
+    [0, 5, 1, "45 min Power Zone Endurance Ride", "Denis Morton", 45, "pze_long", "进入结业减量周，保持 Zone 2–3 踩踏手感"],
+    [0, 5, 2, "20 min Low Impact Ride", "Matt Wilpers", 20, "easy", "20 分钟极轻坐姿松腿，为结业复测蓄力"],
+    [0, 5, 3, "30 min Power Zone Endurance Rock Ride", "Christine D'Ercole", 30, "pze", "摇滚稳态 Zone 2–3，轻推保持状态"],
+    [0, 5, 4, "30 min Power Zone Endurance Pop Ride", "Olivia Amato", 30, "pze", "测前最后一节轻耐力，保留腿力给结业复测"],
+    [0, 5, 5, "结业 FTP 复测（15分热身 + 20分测试）", "Matt Wilpers", 35, "test", "先 15 min FTP Warm Up，紧接 20 min FTP Test；刷新 7 档功率区、正式拿下 5 周结业！"],
+    [1, 1, 1, "30 min Power Zone Endurance Ride", "Matt Wilpers", 30, "pze", "8 周燃脂底盘启动：全 Zone 2–3 不伤打球双腿"],
+    [1, 1, 2, "30 min Power Zone Endurance Ride", "Sam Yo", 30, "pze", "Sam Yo 沉稳节奏，全程坐姿稳态燃脂"],
+    [1, 1, 3, "45 min Power Zone Endurance Ride", "Matt Wilpers", 45, "pze_long", "第 1 周长骑：45 分钟 Zone 2–3 稳态"],
+    [1, 2, 1, "30 min Power Zone Endurance Ride", "Denis Morton", 30, "pze", "第 2 周起跑：30 分钟 Zone 2–3 稳态"],
+    [1, 2, 2, "45 min Power Zone Endurance Ride", "Hannah Frankson", 45, "pze_long", "45 分钟节奏流畅 Zone 2–3 耐力"],
+    [1, 2, 3, "60 min Power Zone Endurance Ride", "Matt Wilpers", 60, "pze_long", "60 分钟稳态掉脂，完美配一期《锵锵》"],
+    [1, 3, 1, "45 min Power Zone Endurance Ride", "Olivia Amato", 45, "pze_long", "第 3 周加量：45 分钟 Zone 2–3 稳态"],
+    [1, 3, 2, "45 min Power Zone Endurance Ride", "Christian Vande Velde", 45, "pze_long", "前环法职业车手带队，踩踏效率极高"],
+    [1, 3, 3, "60 min Power Zone Endurance Ride", "Matt Wilpers", 60, "pze_long", "60 分钟稳态耐力，打牢有氧底盘"],
+    [1, 4, 1, "30 min Power Zone Endurance Ride", "Sam Yo", 30, "pze", "第 4 周恢复减量周：轻快 30 分钟稳态"],
+    [1, 4, 2, "30 min Power Zone Endurance Ride", "Tunde Oyeneyin", 30, "pze", "30 分钟减量维持，让身体吸收前 3 周红利"],
+    [1, 4, 3, "45 min Power Zone Endurance Ride", "Matt Wilpers", 45, "pze_long", "减量周收官，下周体能上一个台阶"],
+    [1, 5, 1, "45 min Power Zone Endurance Ride", "Christine D'Ercole", 45, "pze_long", "下半程启动：45 分钟沉稳 Zone 2–3"],
+    [1, 5, 2, "45 min Power Zone Endurance Ride", "Matt Wilpers", 45, "pze_long", "45 分钟核心有氧耐力"],
+    [1, 5, 3, "60 min Power Zone Endurance Ride", "Hannah Frankson", 60, "pze_long", "60 分钟长耐力，配《锵锵》一气呵成"],
+    [1, 6, 1, "45 min Power Zone Endurance Ride", "Charlotte Weidenbach", 45, "pze_long", "第 6 周：45 分钟稳态燃脂"],
+    [1, 6, 2, "45 min Power Zone Endurance Ride", "Ben Alldis", 45, "pze_long", "Ben Alldis 干脆利落少废话，最适合配播客"],
+    [1, 6, 3, "75 min Power Zone Endurance Ride", "Matt Wilpers", 75, "pze_long", "75 分钟长耐力突破，选周末不打球日骑"],
+    [1, 7, 1, "45 min Power Zone Endurance Ride", "Olivia Amato", 45, "pze_long", "第 7 周稳态维持"],
+    [1, 7, 2, "45 min Power Zone Endurance Ride", "Erik Jäger", 45, "pze_long", "45 分钟稳态过渡"],
+    [1, 7, 3, "90 min Power Zone Endurance Ride", "Matt Wilpers & Denis Morton", 90, "pze_long", "双教练 90 分钟耐力巅峰课，安排在周末满血日"],
+    [1, 8, 1, "45 min Power Zone Endurance Ride", "Ben Alldis", 45, "pze_long", "结业减量周第 1 节：45 分钟稳态"],
+    [1, 8, 2, "45 min Power Zone Endurance Ride", "Denis Morton", 45, "pze_long", "结业周第 2 节：45 分钟流畅稳态"],
+    [1, 8, 3, "60 min Power Zone Endurance Ride", "Matt Wilpers", 60, "pze_long", "8 周 Boost Your Base 正式毕业收官！"]
+  ];
   let VAULT = null;
   let CKEY = null;
   let INITED = false;
@@ -8051,7 +8203,7 @@ window.ZB = (function() {
   let SUBTAB = "today";
   let METRIC = "bf";
   let RANGE = "90";
-  let PELO_MIN = 40;
+  let PZ_VIEW_PROG = 0;
   let PU_IN = 1;
   let SYNC_NOTE = "";
   let PUSH_T = null;
@@ -8070,6 +8222,7 @@ window.ZB = (function() {
       v: 1, ts: 0,
       targets: { bf_ge: 14.0, pullups: 5, deadline: "2027-12-31", pu_max_reps: 3, pu_max_rounds: 2 },
       pu_best: 1, pu_best_ts: 0,
+      pz: { idx: 1, ts: 0, last: "2026-11-21" },
       vitals: { vo2: null, rhr: null, last_drive_sync: "", gaps: [] },
       trips: [], wb: [], acts: [], days: {}
     };
@@ -8181,12 +8334,24 @@ window.ZB = (function() {
     if (ta > tb) { puBest = Number(a.pu_best || 1); puBestTs = ta; }
     else if (tb > ta) { puBest = Number(b.pu_best || 1); puBestTs = tb; }
     else { puBest = Math.max(Number(a.pu_best || 1), Number(b.pu_best || 1)); puBestTs = ta; }
+    const pza = (a.pz && typeof a.pz === "object") ? a.pz : {};
+    const pzb = (b.pz && typeof b.pz === "object") ? b.pz : {};
+    const pzaTs = Number(pza.ts || 0), pzbTs = Number(pzb.ts || 0);
+    let pzOut;
+    if (pzaTs > pzbTs) pzOut = { idx: Math.max(0, Number(pza.idx != null ? pza.idx : 1)), ts: pzaTs, last: String(pza.last || "") };
+    else if (pzbTs > pzaTs) pzOut = { idx: Math.max(0, Number(pzb.idx != null ? pzb.idx : 1)), ts: pzbTs, last: String(pzb.last || "") };
+    else {
+      const ia = pza.idx != null ? Number(pza.idx) : 0, ib = pzb.idx != null ? Number(pzb.idx) : 0;
+      const la = String(pza.last || ""), lb = String(pzb.last || "");
+      pzOut = { idx: Math.max(ia, ib), ts: pzaTs, last: la >= lb ? la : lb };
+    }
     const out = {
       v: 1,
       ts: Math.max(a.ts || 0, b.ts || 0),
       targets: Object.assign({}, od.targets || {}, nw.targets || {}),
       pu_best: puBest,
       pu_best_ts: puBestTs,
+      pz: pzOut,
       vitals: Object.assign({}, od.vitals || {}, nw.vitals || {}),
       trips: (nw.trips && nw.trips.length) ? nw.trips : (od.trips || []),
       wb: [], acts: [], days: {}
@@ -8233,7 +8398,7 @@ window.ZB = (function() {
       for (const r of wb) if (!rset.has(r[0])) byM.set(r[0].slice(0, 7), r);
       wb = [...Array.from(byM.values()).slice(-16), ...rec];
     }
-    return { v: 1, ts: st.ts || Math.floor(Date.now() / 1000), targets: st.targets, pu_best: st.pu_best, pu_best_ts: st.pu_best_ts || 0, vitals: st.vitals, trips: st.trips || [], wb, acts: (st.acts || []).slice(-18), days: cd };
+    return { v: 1, ts: st.ts || Math.floor(Date.now() / 1000), targets: st.targets, pu_best: st.pu_best, pu_best_ts: st.pu_best_ts || 0, pz: st.pz || { idx: 1, ts: 0, last: "2026-11-21" }, vitals: st.vitals, trips: st.trips || [], wb, acts: (st.acts || []).slice(-18), days: cd };
   }
 
   async function pullCloud(silent) {
@@ -8300,18 +8465,62 @@ window.ZB = (function() {
 
   function dayE(ymd) { return (ST.days && ST.days[ymd]) || {}; }
   function actsOn(ymd) { return (ST.acts || []).filter(a => a[0] === ymd); }
+  function daysDiff(ymdA, ymdB) {
+    if (!ymdA || !ymdB) return 0;
+    const tA = Date.parse(ymdA + "T12:00:00Z"), tB = Date.parse(ymdB + "T12:00:00Z");
+    if (isNaN(tA) || isNaN(tB)) return 0;
+    return Math.max(0, Math.round((tB - tA) / 86400000));
+  }
+  function getPZIdx() {
+    const raw = (ST.pz && ST.pz.idx != null) ? Number(ST.pz.idx) : 1;
+    return Math.max(0, Math.min(PZ_LIST.length, isNaN(raw) ? 1 : raw));
+  }
+  function getPZMeta(idx) {
+    if (idx >= PZ_LIST.length) {
+      return {
+        idx: PZ_LIST.length, allDone: true, pIdx: 1, progName: "Power Zone 全线通关", progShort: "PZ 已通关",
+        progTotal: 47, doneInProg: 47, numInProg: 47, remInProg: 0, pct: 100,
+        wk: 8, seq: 3, code: "维稳燃脂", shortCode: "PZE",
+        title: "45 min Power Zone Endurance Ride", coach: "Matt Wilpers", min: 45, kind: "pze_long",
+        cue: "已完成 Discover + Boost Your Base 共 47 节！保持每周 2–3 节 Zone 2–3 稳态燃脂。",
+        entry: "底栏 Classes → Cycling → 清空 FILTER → 45 min Power Zone Endurance"
+      };
+    }
+    const r = PZ_LIST[idx];
+    const prog = PZ_PROGS[r[0]];
+    const doneInProg = idx - prog.offset;
+    const numInProg = doneInProg + 1;
+    const pct = Math.max(3, Math.round((doneInProg / prog.total) * 100));
+    return {
+      idx, allDone: false, pIdx: r[0], progName: prog.name, progShort: prog.short,
+      progTotal: prog.total, doneInProg, numInProg, remInProg: prog.total - doneInProg, pct,
+      wk: r[1], seq: r[2], code: `W${r[1]} 第 ${r[2]} 节`, shortCode: `W${r[1]}·${r[2]}`,
+      title: r[3], coach: r[4], min: r[5], kind: r[6], cue: r[7],
+      entry: `${prog.entry} → Week ${r[1]} → 第 ${r[2]} 节`
+    };
+  }
   function bbOn(ymd) {
+    const d = dayE(ymd);
+    if (d.bb === "none") return null;
     const dr = actsOn(ymd).filter(a => a[1] === "bb");
     if (dr.length) {
       const dur = dr.reduce((s, r) => s + (r[2] || 0), 0);
       const kcal = dr.reduce((s, r) => s + (r[3] || 0), 0);
       const ahr = Math.max(...dr.map(r => r[4] || 0));
       const mhr = Math.max(...dr.map(r => r[5] || 0));
-      return { level: (dur >= 40 || kcal >= 700 || ahr >= 125) ? "high" : "light", dur: Math.round(dur), kcal: Math.round(kcal), maxHr: mhr, src: "drive" };
+      const autoLvl = (kcal >= 1350 || dur >= 85 || mhr >= 172) ? "max" : ((dur >= 40 || kcal >= 700 || ahr >= 125) ? "high" : "light");
+      const lvl = (d.bb === "light" || d.bb === "high" || d.bb === "max") ? d.bb : autoLvl;
+      return { level: lvl, dur: Math.round(dur), kcal: Math.round(kcal), maxHr: mhr, src: "drive" };
     }
-    const d = dayE(ymd);
-    if (d.bb === "high" || d.bb === "light") return { level: d.bb, dur: 0, kcal: 0, maxHr: 0, src: "tap" };
+    if (d.bb === "light" || d.bb === "high" || d.bb === "max") return { level: d.bb, dur: 0, kcal: 0, maxHr: 0, src: "tap" };
     return null;
+  }
+  function getDayState(ymd) {
+    const bb = bbOn(ymd), d = dayE(ymd);
+    if (bb) return { mode: "bb", sub: bb.level, bb };
+    if (d.tired) return { mode: "tired", sub: d.tired === "sore" ? "sore" : "sleep", bb: null };
+    if (d.rest_day) return { mode: "rest", sub: "", bb: null };
+    return { mode: "normal", sub: "", bb: null };
   }
   function peloOn(ymd) {
     const dr = actsOn(ymd).filter(a => a[1] === "pelo");
@@ -8330,126 +8539,398 @@ window.ZB = (function() {
     for (let i = 0; i < 7; i++) {
       const d = shiftD(mon, i);
       if (d > ymd) break;
-      const b = bbOn(d); if (b && b.level === "high") bbH++;
+      const b = bbOn(d); if (b && (b.level === "high" || b.level === "max")) bbH++;
       const p = peloOn(d); if (p && p.status === "done") pM++;
       puR += (dayE(d).pu || []).length;
     }
     return { bbH, pM, hard: bbH + pM, puR };
   }
 
-  function planFor(ymd) {
-    const trip = tripOn(ymd), bb = bbOn(ymd), bbY = bbOn(shiftD(ymd, -1)), bb2 = bbOn(shiftD(ymd, -2));
-    const pelo = peloOn(ymd), wk = weekStats(ymd), dObj = dayE(ymd);
-    const tired = !!dObj.tired;
-    const rhr = (ST.vitals && ST.vitals.rhr) || 40;
-    if (trip) return {
-      tier: "cap", tierText: `旅途中 · ${trip.name}`,
-      titleFmt: () => "轻松步行",
-      peloShort: "旅途自然步行就是有氧",
-      guide: null,
-      cardioDone: !!(pelo || bb), puTarget: 0, defMin: 0, bb, pelo, wk, tired, isTravel: true
-    };
-    if (bb && bb.level === "high") {
-      const bbNote = bb.dur ? `今日篮球 ${bb.dur} 分 · 额度已满` : "今日高强度篮球已满额";
-      return {
-        tier: "red", tierText: "红档 · 休养",
-        titleFmt: () => "今晚休养",
-        peloShort: bbNote,
-        guide: {
-          title: "篮球日 · 排酸选课",
-          items: [
-            { k: "今晚原则", v: "有氧已拉满，直接早睡恢复", sub: "若双腿发僵，可轻踩 15 分钟排酸，不拼阻力。" },
-            { k: "Peloton 排酸课", v: "底栏 Classes → Cycling → 15 min Recovery Ride", sub: "若列表为空，先点右侧 FILTER → Clear；教练选 Sam Yo 或 Denis Morton。" }
-          ]
-        },
-        cardioDone: true, puTarget: 1, defMin: 15, bb, pelo, wk, tired, isTravel: false
-      };
-    }
-    if (rhr >= 46) return {
-      tier: "red", tierText: `恢复期 · 心率 ${rhr}`,
-      titleFmt: () => "今晚早睡休养",
-      peloShort: "静息心率偏高 · 优先回血",
-      guide: {
-        title: "恢复期 · 轻踩参考",
-        items: [
-          { k: "身体信号", v: `静息心率 ${rhr}（平日基线 39–41）`, sub: "先让心肺完全恢复，再上强度。" },
-          { k: "可选 15 分轻踩", v: "底栏 Classes → Cycling → 15 min Recovery Ride", sub: "先清右侧 FILTER；教练选 Sam Yo 或 Matt Wilpers。" }
-        ]
-      },
-      cardioDone: !!pelo, puTarget: 1, defMin: 15, bb, pelo, wk, tired, isTravel: false
-    };
-    if (tired) {
-      return {
-        tier: "yellow", tierText: "今日偏累",
-        titleFmt: m => `Peloton 轻启 ${m} 分`,
-        peloShort: "Discover Your Power Zones · 轻启",
-        guide: {
-          title: "今晚 Peloton 找课路径",
-          items: [
-            { k: "主线入口（勿进教练页）", v: "底栏 Programs → 英文原版 Discover Your Power Zones", sub: "避开德语 (DE) 版。若搜不到英文版：左下角头像 → Preferences → Class Languages 开启 English。" },
-            { k: "今晚这节", v: "Week 1 Day 1：15 min Intro to Power Zone Ride", sub: "或下节 20 min Power Zone Beginner Ride (Matt Wilpers)，全程坐姿轻阻力。" },
-            { k: "单课备选", v: "底栏 Classes → Cycling → 20 min Low Impact", sub: "若列表为空，先点右侧 FILTER → Clear；教练选 Sam Yo 或 Matt Wilpers。" }
-          ]
-        },
-        cardioDone: !!pelo, puTarget: 1, defMin: 20, bb, pelo, wk, tired, isTravel: false
-      };
-    }
-    if ((bb && bb.level === "light") || (bbY && bbY.level === "high" && bb2 && bb2.level === "high")) {
-      return {
-        tier: "yellow", tierText: "黄档 · 护腿",
-        titleFmt: m => `Peloton 排酸 ${m} 分`,
-        peloShort: "Classes · 20 min Low Impact",
-        guide: {
-          title: "黄档 · 低阻排酸课",
-          items: [
-            { k: "今日节奏", v: "全程坐姿轻转腿，配《锵锵三人行》养顺膝盖", sub: "不站姿冲刺，为下一场打球留足弹性。" },
-            { k: "Peloton 路径", v: "底栏 Classes → Cycling → 20 min Low Impact Ride", sub: "先点右侧 FILTER → Clear；教练首选 Sam Yo / Matt Wilpers / Denis Morton。" }
-          ]
-        },
-        cardioDone: !!pelo, puTarget: 2, defMin: 20, bb, pelo, wk, tired, isTravel: false
-      };
-    }
-    if (wk.hard >= 5) return {
-      tier: "yellow", tierText: `本周已满 ${wk.hard} 场`,
-      titleFmt: m => `舒展轻骑 ${m} 分`,
-      peloShort: "本周心肺已达标 · 早睡亦可",
-      guide: {
-        title: "舒展排酸参考",
-        items: [
-          { k: "本周进度", v: `已完成 ${wk.bbH} 场篮球与 ${wk.pM} 场 Peloton`, sub: "彻底休息或轻踩 15 分钟都可以。" },
-          { k: "若想活动腿", v: "底栏 Classes → Cycling → 15 min Recovery Ride", sub: "教练选 Sam Yo 或 Denis Morton。" }
-        ]
-      },
-      cardioDone: true, puTarget: 2, defMin: 15, bb, pelo, wk, tired, isTravel: false
-    };
-    if (bbY && bbY.level === "high") return {
-      tier: "green", tierText: "绿档 · 稳态燃脂",
-      titleFmt: m => `Peloton 稳态 ${m} 分`,
-      peloShort: "Discover Your Power Zones · 主线",
-      guide: {
-        title: "绿档 · 主线找课路径",
-        items: [
-          { k: "前 5 周主线", v: "底栏 Programs → 英文原版 Discover Your Power Zones", sub: "勿进教练页、避开德语 (DE) 版；按课表推进一节。" },
-          { k: "第 6 周起接力", v: "Programs → Boost Your Base: Power Zones", sub: "8 周 Zone 2 有氧底盘，边听《锵锵》最掉脂不伤腿。" },
-          { k: "单课备选", v: "Classes → Cycling → 30 min Power Zone Endurance", sub: "先清右侧 FILTER；教练首选 Matt Wilpers / Sam Yo / Denis Morton。" }
-        ]
-      },
-      cardioDone: !!pelo, puTarget: 2, defMin: 30, bb, pelo, wk, tired, isTravel: false
-    };
+  function makePZPlan(opts) {
+    const cur = opts.cur, next = getPZMeta(Math.min(PZ_LIST.length, cur.idx + 1));
+    const langTip = cur.pIdx === 0 ? "（勿进教练页、避开德语 DE 版；看不到英文版点左下角头像 → Preferences → Class Languages 开启 English）" : "";
+    const progSub = cur.allDone
+      ? "两套官方 Power Zone 项目已全部通关，继续稳态燃脂即可。"
+      : `当前进度 ${cur.doneInProg} / ${cur.progTotal} 节；骑完这节还剩 ${Math.max(0, cur.remInProg - 1)} 节完结 ${cur.progName}。Peloton 新版支持按自己节奏推进，打球或休息不会锁课。`;
     return {
-      tier: "green", tierText: "绿档 · 燃脂",
-      titleFmt: m => `Peloton 燃脂 ${m} 分`,
-      peloShort: "Discover Your Power Zones · 主线",
+      tier: opts.tier || "green",
+      tierText: opts.tierText,
+      title: cur.title,
+      shortLine: opts.shortLine || `${cur.code} · ${cur.coach} · ${cur.min} 分`,
+      linkText: "找课 ›",
+      ctaText: cur.allDone ? `记下 ${cur.min} 分钟` : `骑完这节 · 推进到 ${cur.numInProg}/${cur.progTotal}`,
+      ctaDone: false,
+      altAction: null,
+      actionType: "pz_main",
+      isPZMain: true,
+      pzCls: cur,
+      rideMin: cur.min,
       guide: {
-        title: "绿档 · 长期主线找课",
+        title: `今日唯一课程 · ${cur.code}`,
         items: [
-          { k: "前 5 周主线", v: "底栏 Programs → 英文原版 Discover Your Power Zones", sub: "勿进教练页、避开德语 (DE) 版；FTP 测试留给不打球且睡饱的一天。若看不到英文版：头像 → Preferences → Class Languages 开启 English。" },
-          { k: "第 6 周起接力", v: "Programs → Boost Your Base: Power Zones", sub: "8 周稳态 Zone 2–3，边听《锵锵三人行》稳定掉脂。" },
-          { k: "单课备选", v: "Classes → Cycling → 30/45 min Power Zone Endurance", sub: "先清右侧 FILTER；教练首选 Matt Wilpers / Denis Morton / Sam Yo。" }
-        ]
+          { k: "今天骑这节", v: `${cur.title}（${cur.coach} · ${cur.min} 分钟）`, sub: cur.cue, cur: true },
+          { k: "Bike+ 一步找到", v: cur.entry, sub: (opts.extraNote || "直接照着这节骑，不用再去挑别的课。") + langTip },
+          { k: "Power Zone 进度督促", v: `${cur.progName}（${cur.doneInProg}/${cur.progTotal}）`, sub: progSub }
+        ],
+        showSyllabus: true,
+        canOverridePZ: false
       },
-      cardioDone: !!pelo, puTarget: 2, defMin: 40, bb, pelo, wk, tired, isTravel: false
+      cardioDone: false,
+      puTarget: opts.puTarget != null ? opts.puTarget : 2,
+      state: opts.state, sub: opts.sub, bb: opts.bb, pelo: opts.pelo, wk: opts.wk,
+      cur, next, daysGap: opts.daysGap, isTravel: false
     };
+  }
+
+  function planFor(ymd) {
+    const trip = tripOn(ymd), st = getDayState(ymd), bb = st.bb;
+    const bbY = bbOn(shiftD(ymd, -1)), bb2 = bbOn(shiftD(ymd, -2));
+    const pelo = peloOn(ymd), wk = weekStats(ymd), dObj = dayE(ymd);
+    const rhr = (ST.vitals && ST.vitals.rhr) || 40;
+    const curIdx = getPZIdx();
+    const cur = getPZMeta(curIdx);
+    const lastPZ = (ST.pz && ST.pz.last) || "";
+    const daysGap = lastPZ ? daysDiff(lastPZ, ymd) : 0;
+    const forcePZ = !!dObj.force_pz;
+    const yestHeavyBB = !!(bbY && (bbY.level === "high" || bbY.level === "max"));
+    const twoHeavyBB = yestHeavyBB && !!(bb2 && (bb2.level === "high" || bb2.level === "max"));
+
+    // 0. If today's Power Zone main-line class was ALREADY completed, show serene green confirmation!
+    if (dObj.pz_done != null && dObj.pelo === "done") {
+      const doneCls = getPZMeta(Number(dObj.pz_done));
+      const nextCls = getPZMeta(Math.min(PZ_LIST.length, Number(dObj.pz_done) + 1));
+      const nextHint = nextCls.allDone
+        ? "全部 47 节 Power Zone 项目已通关！"
+        : `下节预告：${nextCls.code} · ${nextCls.title}${nextCls.kind === "test" ? "（留给不打球且睡饱日）" : ""}`;
+      return {
+        tier: "green",
+        tierText: `今日已推主线 · ${doneCls.progShort} ${doneCls.numInProg}/${doneCls.progTotal}`,
+        title: doneCls.title,
+        shortLine: `${doneCls.code} · ${doneCls.coach} · ${nextHint}`,
+        linkText: "课表 ›",
+        ctaText: `已完成 ${doneCls.code} ✓`,
+        ctaDone: true,
+        altAction: null,
+        actionType: "pz_main",
+        isPZMain: true,
+        pzCls: doneCls,
+        rideMin: doneCls.min,
+        guide: {
+          title: `今日主线已完成 · ${doneCls.code}`,
+          items: [
+            { k: "今日已拿下", v: `${doneCls.title}（${doneCls.coach} · ${doneCls.min} 分）`, sub: "再次点击主按钮可撤销本节打卡。", cur: true },
+            { k: "下一节安排", v: nextCls.allDone ? "自由稳态燃脂" : `${nextCls.code} · ${nextCls.title}（${nextCls.coach} · ${nextCls.min} 分）`, sub: nextCls.cue }
+          ],
+          showSyllabus: true,
+          canOverridePZ: false
+        },
+        cardioDone: true, puTarget: (bb && (bb.level === "high" || bb.level === "max")) ? 1 : 2,
+        state: st.mode, sub: st.sub, bb, pelo, wk, cur, next: nextCls, daysGap: 0, isTravel: false
+      };
+    }
+
+    // 1. Travel mode
+    if (trip) {
+      return {
+        tier: "green", tierText: `旅途中 · ${trip.name}`,
+        title: "旅途轻松步行",
+        shortLine: `主线暂停在 ${cur.code} · 回来无缝接着骑`,
+        linkText: "课表 ›",
+        ctaText: pelo ? "今日步行已记 ✓" : "记下今日步行",
+        ctaDone: !!pelo,
+        altAction: null,
+        actionType: "travel",
+        isPZMain: false, pzCls: cur, rideMin: 30,
+        guide: {
+          title: `旅途维持 · ${trip.name}`,
+          items: [
+            { k: "旅途安排", v: "每天自然步行即算心肺达标，不碰单车不焦虑", cur: true },
+            { k: "回来后继续", v: `${cur.progName} · ${cur.code}（${cur.title}）`, sub: "Peloton 新版项目支持暂停顺延，回来直接接上。" }
+          ],
+          showSyllabus: true, canOverridePZ: false
+        },
+        cardioDone: !!(pelo || bb), puTarget: 0,
+        state: st.mode, sub: st.sub, bb, pelo, wk, cur, next: cur, daysGap: 0, isTravel: true
+      };
+    }
+
+    // 2. High RHR protection
+    if (rhr >= 46 && !forcePZ) {
+      const doneRest = !!(pelo && (pelo.status === "rest" || pelo.status === "recovery"));
+      return {
+        tier: "red", tierText: `红档 · 静息心率 ${rhr} 偏高`,
+        title: "今晚早睡休养，不上车",
+        shortLine: `心率回到 41 以下立刻续上 ${cur.code} · 可做 10 min 拉伸`,
+        linkText: "安排 ›",
+        ctaText: doneRest ? "已确认休养 ✓" : "好，今晚休养",
+        ctaDone: doneRest,
+        altAction: { label: (pelo && pelo.status === "recovery") ? "已轻踩 15 分 ✓" : "若想松腿 · 记 15 分排酸" },
+        actionType: "rest",
+        isPZMain: false, pzCls: cur, rideMin: 0,
+        guide: {
+          title: "身体恢复优先 · 今晚安排",
+          items: [
+            { k: "为什么今天不骑", v: `静息心率 ${rhr}（平日基线 39–41）`, sub: "心肺还在恢复期，早睡比硬骑更能保状态。", cur: true },
+            { k: "若想放松身体", v: "Classes → Stretching → 10 min Lower Body Stretch", sub: "先点右侧 FILTER → Clear；教练选 Hannah Corbin 或 Ben Alldis。" },
+            { k: "主线不掉队", v: `恢复后立刻接回 ${cur.code}：${cur.title}`, sub: `当前 ${cur.doneInProg}/${cur.progTotal} 节。` }
+          ],
+          showSyllabus: true, canOverridePZ: true
+        },
+        cardioDone: doneRest, puTarget: 1,
+        state: st.mode, sub: st.sub, bb, pelo, wk, cur, next: cur, daysGap, isTravel: false
+      };
+    }
+
+    // 3. Basketball dynamic branches!
+    if (st.mode === "bb") {
+      const bbStat = (bb && bb.dur) ? `已同步篮球 ${bb.dur} 分${bb.kcal ? ` · ${bb.kcal} 大卡` : ""}` : "";
+      if (st.sub === "max") {
+        const restDone = !!(pelo && pelo.status === "rest");
+        return {
+          tier: "red", tierText: "红档 · 篮球透支 · 强制休养",
+          title: "禁上单车 · 拉伸早睡",
+          shortLine: `10 min Lower Body Stretch (Hannah Corbin) · ${cur.code} 顺延`,
+          linkText: "安排 ›",
+          ctaText: restDone ? "已确认完全休养 ✓" : "好，今晚完全休养",
+          ctaDone: restDone || true,
+          altAction: null,
+          actionType: "rest",
+          isPZMain: false, pzCls: cur, rideMin: 0,
+          guide: {
+            title: "篮球拼透支 · 今晚强制休养",
+            items: [
+              { k: "今晚铁律", v: "彻底不上单车，补水补蛋白早睡", sub: bbStat || "高强度对抗已拉爆腿部与神经负荷，再骑只会增加膝踝受伤风险。", cur: true },
+              { k: "唯一推荐放松课（10 分钟）", v: "Classes → Stretching → 10 min Lower Body Stretch", sub: "先点右侧 FILTER → Clear；教练首选 Hannah Corbin（也可搜 10 min Foam Rolling: Lower Body）。" },
+              { k: "主线督促", v: `下节主线：${cur.code} · ${cur.title}`, sub: `等腿缓过来再推进，目前 ${cur.doneInProg}/${cur.progTotal} 节，距离完结还剩 ${cur.remInProg} 节。` }
+            ],
+            showSyllabus: true, canOverridePZ: false
+          },
+          cardioDone: true, puTarget: 1,
+          state: st.mode, sub: st.sub, bb, pelo, wk, cur, next: cur, daysGap, isTravel: false
+        };
+      }
+      if (st.sub === "high") {
+        const recDone = !!(pelo && pelo.status === "recovery");
+        const restDone = !!(pelo && pelo.status === "rest");
+        return {
+          tier: "red", tierText: "红档 · 正常全场已满额",
+          title: recDone ? "15 min Recovery Ride" : "今晚休养，不上主线",
+          shortLine: `${bbStat ? bbStat + " · " : ""}腿紧做 10 分拉伸或排酸 · ${cur.shortCode} 顺延`,
+          linkText: "安排 ›",
+          ctaText: restDone ? "已确认休养 ✓" : (recDone ? "已轻踩 15 分排酸 ✓" : "好，今晚休养"),
+          ctaDone: true,
+          altAction: { label: recDone ? "取消 15 分排酸" : "腿僵想动 · 记 15 分排酸" },
+          actionType: "rest",
+          isPZMain: false, pzCls: cur, rideMin: 15,
+          guide: {
+            title: "全场篮球日 · 休息与排酸方案",
+            items: [
+              { k: "默认唯一决定", v: "今天心肺已达标，直接休养早睡最掉脂", sub: bbStat || "不要再叠 Power Zone 主线课，保住双腿弹性。", cur: true },
+              { k: "若双腿发紧（二选一）", v: "拉伸：10 min Lower Body Stretch（Ben Alldis / Hannah Corbin）", sub: "或极轻排酸骑：Classes → Cycling → 清空 FILTER → 15 min Recovery Ride（Sam Yo，坐姿阻力 ≤35）。" },
+              { k: "主线排期", v: `${cur.code} · ${cur.title}（${cur.coach} · ${cur.min} 分）`, sub: `顺延到下一个不打球日推进（当前 ${cur.doneInProg}/${cur.progTotal}）。` }
+            ],
+            showSyllabus: true, canOverridePZ: false
+          },
+          cardioDone: true, puTarget: 1,
+          state: st.mode, sub: st.sub, bb, pelo, wk, cur, next: cur, daysGap, isTravel: false
+        };
+      }
+      // st.sub === "light" (轻投/半场): SMART check against next PZ class!
+      if (cur.kind === "easy" || cur.kind === "pze" || forcePZ) {
+        return makePZPlan({
+          tier: "green",
+          tierText: "绿档 · 轻投后顺手推主线",
+          cur,
+          shortLine: `${cur.code} · ${cur.coach} · ${cur.min} 分坐姿稳骑`,
+          extraNote: "今天只轻投/半场耗腿不多，这节全程坐姿稳踩 Zone 2，正好把主线往前推一格！",
+          puTarget: 2, state: st.mode, sub: st.sub, bb, pelo, wk, daysGap
+        });
+      }
+      const lightDone = !!(pelo && (pelo.status === "recovery" || pelo.status === "done"));
+      return {
+        tier: "yellow", tierText: "黄档 · 轻投护腿日",
+        title: "20 min Low Impact Ride",
+        shortLine: `Sam Yo · 主线 ${cur.code}（${cur.kind === "test" ? "FTP测试" : cur.min + "分强课"}）留给满血日`,
+        linkText: "找课 ›",
+        ctaText: lightDone ? "已轻骑 20 分钟 ✓" : "记下轻骑 20 分",
+        ctaDone: lightDone,
+        altAction: null,
+        actionType: "light_ride",
+        isPZMain: false, pzCls: cur, rideMin: 20,
+        guide: {
+          title: "轻投半场 · 护腿选课",
+          items: [
+            { k: "今晚唯一课程", v: "20 min Low Impact Ride（Sam Yo 或 Matt Wilpers）", sub: "全程坐姿轻转腿配《锵锵三人行》，顺膝盖又保节奏。", cur: true },
+            { k: "Bike+ 一步找到", v: "底栏 Classes → Cycling → 清空右侧 FILTER → 20 min · Low Impact", sub: "不站姿、不拉高阻力，骑完双腿反而更轻。" },
+            { k: "为什么顺延主线", v: `下节主线是 ${cur.code}：${cur.title}（${cur.min} 分）`, sub: `${cur.kind === "test" ? "FTP 测试必须满血做才准" : "这节偏长/偏强，留给不打球日一次拿下"}；当前 ${cur.doneInProg}/${cur.progTotal}。` }
+          ],
+          showSyllabus: true, canOverridePZ: true
+        },
+        cardioDone: lightDone, puTarget: 2,
+        state: st.mode, sub: st.sub, bb, pelo, wk, cur, next: cur, daysGap, isTravel: false
+      };
+    }
+
+    // 4. Tired dynamic branches!
+    if (st.mode === "tired") {
+      if (st.sub === "sore") {
+        const restDone = !!(pelo && pelo.status === "rest");
+        return {
+          tier: "red", tierText: "红档 · 腿酸发沉 · 停骑休整",
+          title: "今晚停骑 · 拉伸 10 分钟",
+          shortLine: `10 min Lower Body Stretch (Ben Alldis) · ${cur.code} 明天接回`,
+          linkText: "安排 ›",
+          ctaText: restDone ? "已确认拉伸休养 ✓" : "好，今晚拉伸休养",
+          ctaDone: restDone,
+          altAction: null,
+          actionType: "rest",
+          isPZMain: false, pzCls: cur, rideMin: 0,
+          guide: {
+            title: "腿酸发沉 · 主动回血方案",
+            items: [
+              { k: "今晚唯一决定", v: "彻底停骑，给股四头肌和膝关节回血", sub: "腿沉硬顶容易代偿伤膝，今晚养好明天输出翻倍。", cur: true },
+              { k: "推荐拉伸课（10 分钟）", v: "Classes → Stretching → 清空 FILTER → 10 min · Lower Body Stretch", sub: "教练首选 Ben Alldis 或 Hannah Corbin，拉完早睡。" },
+              { k: "主线督促", v: `下节主线：${cur.code} · ${cur.title}`, sub: `当前 ${cur.doneInProg}/${cur.progTotal}，明天腿松快了立刻接上！` }
+            ],
+            showSyllabus: true, canOverridePZ: false
+          },
+          cardioDone: restDone, puTarget: 1,
+          state: st.mode, sub: st.sub, bb, pelo, wk, cur, next: cur, daysGap, isTravel: false
+        };
+      }
+      // st.sub === "sleep" (没睡好/只是困)
+      if (cur.kind === "easy" || forcePZ) {
+        return makePZPlan({
+          tier: "yellow",
+          tierText: "黄档 · 没睡好 · 轻启推主线",
+          cur,
+          shortLine: `${cur.code} · ${cur.coach} · 仅 ${cur.min} 分坐姿轻松完赛`,
+          extraNote: `刚好轮到 ${cur.min} 分钟入门/低冲击轻课，全程坐姿不用拼力气，正好推进一节主线早点睡！`,
+          puTarget: 1, state: st.mode, sub: st.sub, bb, pelo, wk, daysGap
+        });
+      }
+      const lightDone = !!(pelo && (pelo.status === "recovery" || pelo.status === "done"));
+      return {
+        tier: "yellow", tierText: "黄档 · 没睡好 · 降档保节奏",
+        title: "20 min Low Impact Ride",
+        shortLine: `Sam Yo · 主线 ${cur.code}（${cur.min} 分）留给睡饱日`,
+        linkText: "找课 ›",
+        ctaText: lightDone ? "已轻骑 20 分钟 ✓" : "记下轻骑 20 分",
+        ctaDone: lightDone,
+        altAction: { label: (pelo && pelo.status === "rest") ? "已改彻底早睡 ✓" : "实在太困 · 今晚早睡" },
+        actionType: "light_ride",
+        isPZMain: false, pzCls: cur, rideMin: 20,
+        guide: {
+          title: "没睡好 · 轻骑保节奏方案",
+          items: [
+            { k: "今晚唯一课程", v: "20 min Low Impact Ride（Sam Yo 或 Matt Wilpers）", sub: "全程坐姿轻踩 20 分钟出微汗即可，配《锵锵三人行》很助眠。", cur: true },
+            { k: "Bike+ 一步找到", v: "底栏 Classes → Cycling → 清空右侧 FILTER → 20 min · Low Impact", sub: "若困到眼皮打架，直接点下方「今晚早睡」不硬撑。" },
+            { k: "主线督促", v: `睡饱后接回 ${cur.code}：${cur.title}（${cur.min} 分）`, sub: `当前 ${cur.doneInProg}/${cur.progTotal}，还剩 ${cur.remInProg} 节完结。` }
+          ],
+          showSyllabus: true, canOverridePZ: true
+        },
+        cardioDone: !!(pelo && (pelo.status === "recovery" || pelo.status === "done" || pelo.status === "rest")),
+        puTarget: 1,
+        state: st.mode, sub: st.sub, bb, pelo, wk, cur, next: cur, daysGap, isTravel: false
+      };
+    }
+
+    // 5. Explicit Rest Day
+    if (st.mode === "rest") {
+      const restDone = !!(pelo && pelo.status === "rest");
+      const warnStall = daysGap >= 3;
+      return {
+        tier: warnStall ? "yellow" : "green",
+        tierText: warnStall ? `休息日 · 注意主线已停 ${daysGap} 天` : "休息日 · 主动休整",
+        title: "今日正式休息，不上车",
+        shortLine: warnStall ? `别断档！明天务必接回 ${cur.code}（${cur.title}）` : `守住饮食早睡即可 · 下次接回 ${cur.code}`,
+        linkText: "安排 ›",
+        ctaText: restDone ? "已确认今日休息 ✓" : "确认今日休息",
+        ctaDone: restDone,
+        altAction: null,
+        actionType: "rest",
+        isPZMain: false, pzCls: cur, rideMin: 0,
+        guide: {
+          title: "正式休息日 · 恢复与接续",
+          items: [
+            { k: "今日安排", v: "完全不上单车，把饮食节律和睡眠守住就是进步", sub: "若久坐腰腿僵，可选做 Classes → Stretching → 10 min Full Body Stretch（Ben Alldis）。", cur: true },
+            { k: "Power Zone 主线督促", v: `${cur.progName}（已完成 ${cur.doneInProg}/${cur.progTotal}）`, sub: warnStall ? `主线已停 ${daysGap} 天，明天一定把 ${cur.code}（${cur.title}）骑上，千万别烂尾！` : `休息是为了更好推进，下个运动日直接骑 ${cur.code}：${cur.title}。` }
+          ],
+          showSyllabus: true, canOverridePZ: false
+        },
+        cardioDone: restDone, puTarget: 2,
+        state: st.mode, sub: st.sub, bb, pelo, wk, cur, next: cur, daysGap, isTravel: false
+      };
+    }
+
+    // 6. Normal day: smart auto-protection ONLY when back-to-back heavy basketball or yesterday heavy BB before FTP/hard class!
+    if ((twoHeavyBB || (yestHeavyBB && (cur.kind === "test" || cur.kind === "hard"))) && !forcePZ) {
+      const lightDone = !!(pelo && (pelo.status === "recovery" || pelo.status === "done"));
+      const why = twoHeavyBB ? "前两天连打高强度篮球" : "昨天刚打完全场篮球";
+      return {
+        tier: "yellow", tierText: "黄档 · 球后护腿",
+        title: "20 min Low Impact Ride",
+        shortLine: `${why} · ${cur.code}（${cur.kind === "test" ? "FTP测试" : "高强课"}）留给明天满血做`,
+        linkText: "找课 ›",
+        ctaText: lightDone ? "已轻骑 20 分钟 ✓" : "记下轻骑 20 分",
+        ctaDone: lightDone,
+        altAction: null,
+        actionType: "light_ride",
+        isPZMain: false, pzCls: cur, rideMin: 20,
+        guide: {
+          title: "球后次日 · 保护性轻骑",
+          items: [
+            { k: "今日唯一课程", v: "20 min Low Impact Ride（Sam Yo 或 Matt Wilpers）", sub: `${why}，今天坐姿轻踩排酸最护膝。`, cur: true },
+            { k: "Bike+ 一步找到", v: "底栏 Classes → Cycling → 清空右侧 FILTER → 20 min · Low Impact", sub: "配《锵锵三人行》轻松转腿 20 分钟。" },
+            { k: "主线不掉队", v: `明天满血推进 ${cur.code}：${cur.title}`, sub: cur.kind === "test" ? "FTP 测试在满血日测出的 7 档功率区才最准确。" : `当前 ${cur.doneInProg}/${cur.progTotal}，腿完全不酸也可点下方直接骑主线。` }
+          ],
+          showSyllabus: true, canOverridePZ: true
+        },
+        cardioDone: lightDone, puTarget: 2,
+        state: st.mode, sub: st.sub, bb, pelo, wk, cur, next: cur, daysGap, isTravel: false
+      };
+    }
+
+    if (wk.hard >= 5 && (cur.kind === "hard" || cur.kind === "test") && !forcePZ) {
+      const recDone = !!(pelo && (pelo.status === "recovery" || pelo.status === "rest" || pelo.status === "done"));
+      return {
+        tier: "yellow", tierText: `本周已满 ${wk.hard} 场 · 护腿`,
+        title: "15 min Recovery Ride",
+        shortLine: `Sam Yo · 本周强度已足，${cur.code} 留给下周初`,
+        linkText: "找课 ›",
+        ctaText: recDone ? "已轻踩 15 分钟 ✓" : "记下排酸 15 分",
+        ctaDone: recDone,
+        altAction: null,
+        actionType: "light_ride",
+        isPZMain: false, pzCls: cur, rideMin: 15,
+        guide: {
+          title: "本周满额 · 轻松排酸方案",
+          items: [
+            { k: "今日唯一课程", v: "15 min Recovery Ride（Sam Yo 或 Denis Morton）", sub: `本周已完成 ${wk.bbH} 场篮球 + ${wk.pM} 场主线骑行，今天轻踩排酸不透支。`, cur: true },
+            { k: "Bike+ 一步找到", v: "底栏 Classes → Cycling → 清空右侧 FILTER → 15 min · Recovery", sub: "也可以直接切到「休息日」早睡。" },
+            { k: "主线衔接", v: `下周首日立刻骑 ${cur.code}：${cur.title}`, sub: `当前 ${cur.doneInProg}/${cur.progTotal}。` }
+          ],
+          showSyllabus: true, canOverridePZ: true
+        },
+        cardioDone: true, puTarget: 2,
+        state: st.mode, sub: st.sub, bb, pelo, wk, cur, next: cur, daysGap, isTravel: false
+      };
+    }
+
+    // Default Normal Day: DIRECTLY ADVANCE THE EXACT NEXT POWER ZONE CLASS!
+    const tier = daysGap >= 5 ? "red" : (daysGap >= 3 ? "yellow" : "green");
+    const tierText = daysGap >= 5
+      ? `主线停了 ${daysGap} 天 · 今晚务必接回`
+      : (daysGap >= 3
+        ? `主线已停 ${daysGap} 天 · 今晚接回`
+        : (cur.kind === "test" ? "绿档 · 满血测 FTP" : (yestHeavyBB ? "绿档 · 球后稳态推主线" : "绿档 · 推进主线")));
+    return makePZPlan({
+      tier, tierText, cur,
+      extraNote: cur.kind === "test"
+        ? "今天没打球且状态正常，正好一口气完成 10 分热身 + 20 分 FTP 测试，锁死你的 7 档专属功率区！"
+        : (yestHeavyBB ? "昨天打完球但今天这节是稳态/轻课，正好坐姿 Zone 2 排酸顺便推进主线。" : "直接照这节骑完打卡，自动推进到下一节，不用自己做选择。"),
+      puTarget: 2, state: st.mode, sub: st.sub, bb, pelo, wk, daysGap
+    });
   }
 
   function puStage() {
@@ -8682,54 +9163,78 @@ window.ZB = (function() {
 
     const tt = ge("zb-tier-txt");
     if (tt) { tt.textContent = plan.tierText; tt.className = "zb-tier " + (plan.tier === "red" ? "red" : plan.tier === "yellow" ? "yellow" : "green"); }
-    const wt = ge("zb-week-txt"); if (wt) wt.textContent = `本周 球${plan.wk.bbH} · 骑${plan.wk.pM} · 引体${plan.wk.puR}`;
 
-    const showMin = (plan.tier === "green" || plan.tier === "yellow");
-    if (showMin) {
-      const opts = plan.tier === "yellow" ? [15, 20, 30] : [20, 30, 40, 45];
-      if (!opts.includes(PELO_MIN)) PELO_MIN = plan.defMin;
-      const mp = ge("zb-min-pills");
-      if (mp) mp.innerHTML = opts.map(m => `<button type="button" class="zb-min-opt ${PELO_MIN === m ? "active" : ""}" onclick="ZB.setMin(${m})">${m}分</button>`).join("");
+    const cur = plan.cur;
+    const pzb = ge("zb-pz-btn");
+    if (pzb && cur) {
+      pzb.textContent = cur.allDone ? "PZ 47/47 通关 ›" : `${cur.progShort} ${cur.doneInProg}/${cur.progTotal} ›`;
+      pzb.className = "zb-pz-btn" + (plan.daysGap >= 5 ? " urgent" : (plan.daysGap >= 3 ? " warn" : ""));
     }
-    if (ge("zb-min-bar")) ge("zb-min-bar").style.display = showMin ? "flex" : "none";
-    if (ge("zb-radio-alt")) ge("zb-radio-alt").style.display = showMin ? "none" : "inline-flex";
+    const pzf = ge("zb-pz-fill");
+    if (pzf && cur) {
+      pzf.style.width = `${cur.pct}%`;
+      pzf.className = "zb-pz-fill" + (plan.daysGap >= 5 ? " urgent" : (plan.daysGap >= 3 ? " warn" : ""));
+    }
 
-    if (ge("zb-title")) ge("zb-title").textContent = plan.titleFmt(PELO_MIN);
-    if (ge("zb-pelo-short")) ge("zb-pelo-short").textContent = plan.peloShort || "";
+    if (ge("zb-title")) ge("zb-title").textContent = plan.title;
+    if (ge("zb-pelo-short")) ge("zb-pelo-short").textContent = plan.shortLine || "";
     const plk = ge("zb-pelo-link"), prw = ge("zb-pelo-row");
-    if (plk) plk.style.display = plan.guide ? "inline" : "none";
+    if (plk) { plk.style.display = plan.guide ? "inline" : "none"; plk.textContent = plan.linkText || "找课 ›"; }
     if (prw) prw.style.pointerEvents = plan.guide ? "auto" : "none";
 
-    const mb = ge("zb-main-btn"), rb = ge("zb-rec-btn");
-    if (mb && rb) {
-      if (plan.isTravel) {
-        mb.textContent = plan.cardioDone ? "今日步行已记 ✓" : "记下今日步行";
-        mb.className = "zb-btn-primary" + (plan.cardioDone ? " is-done" : "");
-        rb.style.display = "none";
-      } else if (plan.tier === "red") {
-        rb.style.display = "inline-flex";
-        rb.textContent = (plan.pelo && plan.pelo.status === "recovery") ? "已轻踩 15 分 ✓" : "轻踩 15 分";
-        mb.textContent = (plan.pelo && plan.pelo.status === "rest") ? "已确认休养 ✓" : "好，今晚休养";
-        mb.className = "zb-btn-primary is-done";
+    // Dynamic 2-level state bar (hide during active travel)
+    const stb = ge("zb-state-block");
+    if (stb) stb.style.display = plan.isTravel ? "none" : "flex";
+    const stMap = [
+      ["zb-st-normal", "normal", ""],
+      ["zb-st-bb", "bb", " is-bb"],
+      ["zb-st-tired", "tired", " is-tired"],
+      ["zb-st-rest", "rest", " is-rest"]
+    ];
+    for (const [id, k, cls] of stMap) {
+      const el = ge(id);
+      if (el) el.className = "zb-state-btn" + (plan.state === k ? (" active" + cls) : "");
+    }
+    const subBar = ge("zb-substate-bar");
+    if (subBar) {
+      if (plan.state === "bb") {
+        const opts = [
+          ["light", "轻投半场", "is-green"],
+          ["high", "正常全场", "is-red"],
+          ["max", "拼到透支", "is-red"]
+        ];
+        subBar.className = "zb-substate-bar open is-bb";
+        subBar.innerHTML = opts.map(([k, lbl, c]) => `<button type="button" class="zb-substate-btn${plan.sub === k ? " active " + c : ""}" onclick="ZB.setState('bb','${k}')">${lbl}</button>`).join("");
+      } else if (plan.state === "tired") {
+        const opts = [
+          ["sleep", "没睡好", "is-ochre"],
+          ["sore", "腿酸发沉", "is-red"]
+        ];
+        subBar.className = "zb-substate-bar open is-tired";
+        subBar.innerHTML = opts.map(([k, lbl, c]) => `<button type="button" class="zb-substate-btn${plan.sub === k ? " active " + c : ""}" onclick="ZB.setState('tired','${k}')">${lbl}</button>`).join("");
       } else {
-        rb.style.display = "none";
-        if (plan.pelo && (plan.pelo.status === "done" || plan.pelo.status === "recovery")) {
-          mb.textContent = `已骑 ${plan.pelo.min || PELO_MIN} 分钟 ✓`; mb.className = "zb-btn-primary is-done";
-        } else {
-          mb.textContent = `记下 ${PELO_MIN} 分钟`; mb.className = "zb-btn-primary";
-        }
+        subBar.className = "zb-substate-bar";
+        subBar.innerHTML = "";
       }
     }
 
-    const bh = ge("zb-bb-high"), bl = ge("zb-bb-light"), tb = ge("zb-tired-btn");
-    if (bh && bl) {
-      const hi = plan.bb && plan.bb.level === "high", lo = plan.bb && plan.bb.level === "light";
-      bh.className = "zb-btn-quiet" + (hi ? " is-red" : ""); bh.textContent = "高强篮球";
-      bl.className = "zb-btn-quiet" + (lo ? " active" : ""); bl.textContent = "轻投篮";
+    const mb = ge("zb-main-btn");
+    if (mb) {
+      mb.textContent = plan.ctaText;
+      mb.className = "zb-btn-primary" + (plan.ctaDone ? " is-done" : "");
     }
-    if (tb) {
-      tb.className = "zb-btn-quiet" + (plan.tired ? " is-ochre" : "");
-      tb.textContent = "偏累";
+    const ab = ge("zb-alt-btn"), wt = ge("zb-week-txt");
+    if (ab && wt) {
+      if (plan.altAction && plan.altAction.label) {
+        ab.style.display = "inline-flex";
+        ab.textContent = plan.altAction.label;
+        ab.className = "zb-btn-quiet" + (plan.pelo && (plan.pelo.status === "recovery" || plan.pelo.status === "rest") ? " active" : "");
+        wt.style.display = "none";
+      } else {
+        ab.style.display = "none";
+        wt.style.display = "inline";
+        wt.textContent = `本周 球${plan.wk.bbH} · 骑${plan.wk.pM} · 引体${plan.wk.puR}`;
+      }
     }
 
     const cd = puCooldown(day, plan.puTarget);
@@ -8782,14 +9287,25 @@ window.ZB = (function() {
     // Tab 4: Ledger
     const kp = ge("zb-kpis");
     if (kp) kp.innerHTML = `<div><div class="zb-kpi-v">${ST.vitals && ST.vitals.rhr ? ST.vitals.rhr : "--"}</div><div class="zb-kpi-l">静息心率</div></div><div><div class="zb-kpi-v">${ST.vitals && ST.vitals.vo2 ? ST.vitals.vo2 : "--"}</div><div class="zb-kpi-l">摄氧量</div></div><div><div class="zb-kpi-v">${ST.pu_best || 1}<span style="font-size:13px;color:var(--ink-3);font-weight:400;"> / 5</span></div><div class="zb-kpi-l">标准引体</div></div>`;
+    const lpz = ge("zb-ledger-pz");
+    if (lpz && cur) {
+      lpz.innerHTML = `<span style="color:var(--sumi);font-weight:500;">${escapeHtml(cur.progShort)} · ${cur.doneInProg}/${cur.progTotal} 节</span><span style="color:var(--ink-3);font-size:12.5px;">下节 ${escapeHtml(cur.code)} ›</span>`;
+    }
     const lr = ge("zb-lrows");
     if (lr) {
       let rh = "";
       for (let i = 0; i < 10; i++) {
         const d = shiftD(today, -i), b = bbOn(d), p = peloOn(d), de = dayE(d), pr = (de.pu || []).length;
         const ps = [];
-        if (b) ps.push(b.dur ? `篮球 ${b.dur}分` : (b.level === "high" ? "篮球" : "轻投"));
-        if (p) { if (p.status === "done") ps.push(`骑行 ${p.min || ""}分`); else if (p.status === "recovery") ps.push("排酸 15分"); else if (p.status === "rest") ps.push("休养"); }
+        if (b) ps.push(b.dur ? `篮球 ${b.dur}分` : (b.level === "max" ? "篮球(透支)" : (b.level === "high" ? "篮球" : "轻投")));
+        if (p) {
+          if (de.pz_done != null && p.status === "done") {
+            const c = getPZMeta(Number(de.pz_done));
+            ps.push(`PZ ${c.shortCode} · ${p.min || c.min}分`);
+          } else if (p.status === "done") ps.push(`骑行 ${p.min || ""}分`);
+          else if (p.status === "recovery") ps.push(`轻骑 ${p.min || 15}分`);
+          else if (p.status === "rest") ps.push("休养");
+        }
         if (pr > 0) ps.push(`引体 ${pr}轮`);
         const wf = (ST.wb || []).find(r => r[0] === d);
         if (wf && wf[2]) ps.push(`${wf[2]}%`);
@@ -8802,7 +9318,7 @@ window.ZB = (function() {
               <button type="button" class="zb-ed-chip ${de.pelo === "done" ? "on" : ""}" onclick="ZB.edCardio('${d}','pelo','done')">Peloton</button>
               <button type="button" class="zb-ed-chip ${de.pelo === "recovery" ? "on" : ""}" onclick="ZB.edCardio('${d}','pelo','recovery')">排酸</button>
               <button type="button" class="zb-ed-chip ${de.pelo === "rest" ? "on" : ""}" onclick="ZB.edCardio('${d}','pelo','rest')">休整</button>
-              ${bLock ? `<span style="font-size:12px;color:var(--ink-3);">云盘已记篮球</span>` : `<button type="button" class="zb-ed-chip ${de.bb === "high" ? "on-red" : ""}" onclick="ZB.edCardio('${d}','bb','high')">篮球</button><button type="button" class="zb-ed-chip ${de.bb === "light" ? "on" : ""}" onclick="ZB.edCardio('${d}','bb','light')">轻投</button>`}
+              ${bLock ? `<span style="font-size:12px;color:var(--ink-3);">云盘已记篮球</span>` : `<button type="button" class="zb-ed-chip ${de.bb === "light" ? "on" : ""}" onclick="ZB.edCardio('${d}','bb','light')">轻投</button><button type="button" class="zb-ed-chip ${de.bb === "high" ? "on-red" : ""}" onclick="ZB.edCardio('${d}','bb','high')">全场</button><button type="button" class="zb-ed-chip ${de.bb === "max" ? "on-red" : ""}" onclick="ZB.edCardio('${d}','bb','max')">透支</button>`}
               ${(de.pelo || de.bb) ? `<button type="button" class="zb-ed-chip" style="color:var(--ink-3);" onclick="ZB.edCardio('${d}','clear','')">清空</button>` : ""}
             </div>
             <div class="zb-ed-row">
@@ -9111,7 +9627,7 @@ window.ZB = (function() {
     return wb.lbf ? `GE <b>${wb.lbf[2].toFixed(1)}%</b> → ${tgt}%` : `目标 <b>${tgt}%</b>`;
   }
 
-  function showGuideModal(title, items) {
+  function showGuideModal(title, items, extraLinksHtml) {
     const mc = ge("modal-content"), mm = ge("app-modal");
     if (!mc || !mm) return;
     mc.innerHTML = `
@@ -9119,6 +9635,7 @@ window.ZB = (function() {
       <div class="zb-guide-list">
         ${items.map(it => `<div class="zb-guide-item${it.cur ? " cur" : ""}"><div class="zb-guide-k">${escapeHtml(it.k)}</div><div class="zb-guide-v">${escapeHtml(it.v)}</div>${it.sub ? `<div class="zb-guide-sub">${escapeHtml(it.sub)}</div>` : ""}</div>`).join("")}
       </div>
+      ${extraLinksHtml ? `<div class="zb-modal-links">${extraLinksHtml}</div>` : ""}
       <div class="dock-row">
         <button type="button" class="sumi-btn" onclick="closeModal()">知道了</button>
       </div>`;
@@ -9128,7 +9645,53 @@ window.ZB = (function() {
   function openPeloGuide() {
     const p = planFor(todayYmd());
     if (!p || !p.guide) return;
-    showGuideModal(p.guide.title, p.guide.items);
+    const links = [];
+    if (p.guide.canOverridePZ && p.cur && !p.cur.allDone) {
+      links.push(`<button type="button" class="zb-btn-quiet active" onclick="ZB.overrideToPZ()">腿没事，今天照常骑 ${escapeHtml(p.cur.code)} ›</button>`);
+    }
+    if (p.guide.showSyllabus) {
+      links.push(`<button type="button" class="zb-btn-quiet" onclick="ZB.openPZList()">完整主线课表 ›</button>`);
+    }
+    showGuideModal(p.guide.title, p.guide.items, links.join(""));
+  }
+
+  function openPZList(progHint) {
+    const mc = ge("modal-content"), mm = ge("app-modal");
+    if (!mc || !mm) return;
+    const curIdx = getPZIdx();
+    const curMeta = getPZMeta(curIdx);
+    const pIdx = (progHint === 0 || progHint === 1) ? progHint : curMeta.pIdx;
+    PZ_VIEW_PROG = pIdx;
+    const prog = PZ_PROGS[pIdx];
+    let rowsHtml = "", lastWk = 0;
+    for (let i = 0; i < PZ_LIST.length; i++) {
+      const r = PZ_LIST[i];
+      if (r[0] !== pIdx) continue;
+      if (r[1] !== lastWk) {
+        lastWk = r[1];
+        rowsHtml += `<div class="zb-pz-wk">Week ${r[1]}</div>`;
+      }
+      const isDone = i < curIdx, isCur = i === curIdx;
+      const mark = isDone ? "✓" : (isCur ? "●" : "○");
+      const kindLbl = r[6] === "test" ? " · FTP测试" : (r[6] === "hard" ? " · 强课" : (r[6] === "easy" ? " · 轻课" : ""));
+      rowsHtml += `<button type="button" class="zb-pz-row ${isDone ? "done" : (isCur ? "cur" : "")}" onclick="ZB.setPZIdx(${i})">
+        <span class="zb-pz-mark">${mark}</span>
+        <span class="zb-pz-info"><div class="zb-pz-name">${escapeHtml(r[3])}</div><div class="zb-pz-meta">第 ${r[2]} 节 · ${escapeHtml(r[4])}${kindLbl}</div></span>
+        <span class="zb-pz-min">${r[5]}分</span>
+      </button>`;
+    }
+    mc.innerHTML = `
+      <h3 class="modal-h">Power Zone 完整主线课表</h3>
+      <div class="zb-pz-tabs">
+        <button type="button" class="zb-pz-tab ${pIdx === 0 ? "active" : ""}" onclick="ZB.openPZList(0)">Discover (23节)</button>
+        <button type="button" class="zb-pz-tab ${pIdx === 1 ? "active" : ""}" onclick="ZB.openPZList(1)">Boost Base (24节)</button>
+      </div>
+      <p class="zb-pz-note">${escapeHtml(prog.entry)}。点任意一节可把下一节校准到那里；Peloton 新版支持按自己节奏推进，打球休息不会锁课。</p>
+      <div class="zb-pz-list">${rowsHtml}</div>
+      <div class="dock-row">
+        <button type="button" class="sumi-btn" onclick="closeModal()">返回</button>
+      </div>`;
+    mm.classList.add("open");
   }
 
   function openBandGuide() {
@@ -9149,7 +9712,8 @@ window.ZB = (function() {
 
   return {
     onEnter, onResume, unlockPass, stopPacer, getSummary, syncCircle, getHorizonHTML,
-    openPeloGuide, openBandGuide, openGapsGuide,
+    openPeloGuide, openPZList, openBandGuide, openGapsGuide,
+    _planToday() { return planFor(todayYmd()); },
     onHorizonRightTap() {
       if (!CKEY) { if (typeof openSessionModal === "function") openSessionModal(); return; }
       if (SUBTAB !== "body") this.setTab("body");
@@ -9175,26 +9739,88 @@ window.ZB = (function() {
       if (t === "body") renderChart();
       positionSubBar(false);
     },
-    setMin(m) { PELO_MIN = m; render(); },
+    setState(mode, sub) {
+      const today = todayYmd(), d = ensureDay(today);
+      const hasDriveBB = actsOn(today).some(a => a[1] === "bb");
+      d.force_pz = 0;
+      if (mode === "normal") {
+        d.bb = hasDriveBB ? "none" : null;
+        d.tired = 0;
+        d.rest_day = 0;
+      } else if (mode === "bb") {
+        d.tired = 0;
+        d.rest_day = 0;
+        if (sub === "light" || sub === "high" || sub === "max") d.bb = sub;
+        else if (d.bb !== "light" && d.bb !== "high" && d.bb !== "max") {
+          const autoB = hasDriveBB ? bbOn(today) : null;
+          d.bb = (autoB && autoB.level) ? autoB.level : "high";
+        }
+      } else if (mode === "tired") {
+        d.bb = hasDriveBB ? "none" : null;
+        d.rest_day = 0;
+        d.tired = (sub === "sore" || sub === "sleep") ? sub : (d.tired === "sore" ? "sore" : "sleep");
+      } else if (mode === "rest") {
+        d.bb = hasDriveBB ? "none" : null;
+        d.tired = 0;
+        d.rest_day = 1;
+      }
+      schedPush(); render();
+    },
+    setPZIdx(idx) {
+      const n = Math.max(0, Math.min(PZ_LIST.length, Number(idx) || 0));
+      const nowS = Math.floor(Date.now() / 1000);
+      ST.pz = { idx: n, ts: nowS, last: (ST.pz && ST.pz.last) || "" };
+      if (typeof closeModal === "function") closeModal();
+      const m = getPZMeta(n);
+      toast(m.allDone ? "已标记两套主线全部通关" : `已校准：下节 ${m.progShort} ${m.code}`);
+      schedPush(); render();
+    },
+    overrideToPZ() {
+      const d = ensureDay();
+      d.force_pz = 1;
+      if (typeof closeModal === "function") closeModal();
+      toast("已切回今日主线课程");
+      schedPush(); render();
+    },
     logCardio(kind) {
-      const p = planFor(todayYmd()), d = ensureDay();
-      if (p.isTravel) { d.pelo = d.pelo ? null : "done"; d.pelo_min = 30; toast(d.pelo ? "旅途步行已记" : "已撤销"); }
-      else if (kind === "recovery") { d.pelo = d.pelo === "recovery" ? null : "recovery"; d.pelo_min = 15; toast(d.pelo ? "轻踩 15 分排酸已记" : "已撤销"); }
-      else if (p.tier === "red") { d.pelo = d.pelo === "rest" ? null : "rest"; d.pelo_min = 0; toast(d.pelo ? "好，今晚安心休养" : "已撤销"); }
-      else { d.pelo = d.pelo === "done" ? null : "done"; d.pelo_min = PELO_MIN; toast(d.pelo ? `Peloton ${PELO_MIN} 分钟已记` : "已撤销"); }
-      schedPush(); render();
-    },
-    toggleBB(lvl) {
-      const d = ensureDay();
-      if (d.bb === lvl) { d.bb = null; toast("已取消篮球标记"); }
-      else { d.bb = lvl; toast(lvl === "high" ? "已切红档 · 今晚休养" : "已切黄档 · 轻骑排酸"); }
-      schedPush(); render();
-    },
-    toggleTired() {
-      const d = ensureDay();
-      d.tired = d.tired ? 0 : 1;
-      if (d.tired) PELO_MIN = 20;
-      toast(d.tired ? "已切偏累 · 20 分轻启" : "已恢复常规计划");
+      const today = todayYmd(), p = planFor(today), d = ensureDay(today), nowS = Math.floor(Date.now() / 1000);
+      if (p.isTravel) {
+        d.pelo = d.pelo ? null : "done"; d.pelo_min = 30;
+        toast(d.pelo ? "旅途步行已记" : "已撤销");
+      } else if (kind === "recovery") {
+        if (p.state === "tired" && p.sub === "sleep") {
+          d.pelo = d.pelo === "rest" ? null : "rest"; d.pelo_min = 0;
+          toast(d.pelo ? "好，今晚早睡恢复" : "已撤销");
+        } else {
+          d.pelo = d.pelo === "recovery" ? null : "recovery"; d.pelo_min = 15;
+          toast(d.pelo ? "已记 15 分排酸骑" : "已撤销");
+        }
+      } else if (p.actionType === "pz_main") {
+        if (d.pz_done != null && d.pelo === "done") {
+          const prevIdx = Number(d.pz_done);
+          ST.pz = { idx: Math.max(0, prevIdx), ts: nowS, last: (ST.pz && ST.pz.last === today) ? shiftD(today, -1) : ((ST.pz && ST.pz.last) || "") };
+          d.pz_done = null; d.pelo = null; d.pelo_min = 0;
+          toast("已撤销本节主线打卡");
+        } else {
+          const curIdx = getPZIdx(), cls = getPZMeta(curIdx);
+          d.pz_done = curIdx; d.pelo = "done"; d.pelo_min = cls.min;
+          const nextIdx = Math.min(PZ_LIST.length, curIdx + 1);
+          ST.pz = { idx: nextIdx, ts: nowS, last: today };
+          if (curIdx === 22) toast("恭喜完成 Discover 全部 23 节！已接力 Boost Your Base");
+          else if (curIdx === PZ_LIST.length - 1) toast("恭喜完成全部 47 节 Power Zone 主线！");
+          else {
+            const nxt = getPZMeta(nextIdx);
+            toast(`已拿下 ${cls.code} · 下节 ${nxt.code}`);
+          }
+        }
+      } else if (p.actionType === "light_ride") {
+        const mins = p.rideMin || 20;
+        d.pelo = d.pelo === "recovery" ? null : "recovery"; d.pelo_min = d.pelo ? mins : 0;
+        toast(d.pelo ? `已记轻骑 ${mins} 分钟` : "已撤销");
+      } else {
+        d.pelo = d.pelo === "rest" ? null : "rest"; d.pelo_min = 0;
+        toast(d.pelo ? "好，今晚安心休养" : "已撤销");
+      }
       schedPush(); render();
     },
     quickPU(n) {
@@ -9464,6 +10090,52 @@ const vcStageHtml = (els['vocab-stage-box'] && els['vocab-stage-box'].innerHTML)
 if (!vcStageHtml.includes('vc-hook')) {
   throw new Error('Self-test failed: vocab card did not render .vc-hook pronunciation mnemonic!');
 }
+// Self-test 5: Zen Body Dynamic State Coach & 47-Session Power Zone Engine
+const pNorm = sb.ZB._planToday();
+if (!pNorm || !pNorm.isPZMain || !pNorm.title.includes('Power Zone Beginner')) {
+  throw new Error('Self-test 5 failed: normal day did not recommend W1D2 Power Zone Beginner: ' + JSON.stringify(pNorm));
+}
+sb.ZB.setState('bb');
+const pBBHigh = sb.ZB._planToday();
+if (pBBHigh.state !== 'bb' || pBBHigh.sub !== 'high' || pBBHigh.tier !== 'red' || pBBHigh.puTarget !== 1) {
+  throw new Error('Self-test 5 failed: bb default high failed: ' + JSON.stringify(pBBHigh));
+}
+sb.ZB.setState('bb', 'max');
+const pBBMax = sb.ZB._planToday();
+if (pBBMax.sub !== 'max' || !pBBMax.title.includes('禁上单车')) {
+  throw new Error('Self-test 5 failed: bb max failed: ' + JSON.stringify(pBBMax));
+}
+sb.ZB.setState('bb', 'light');
+const pBBLight = sb.ZB._planToday();
+if (!pBBLight.isPZMain || pBBLight.sub !== 'light') {
+  throw new Error('Self-test 5 failed: bb light on easy PZ class should advance PZ: ' + JSON.stringify(pBBLight));
+}
+sb.ZB.setPZIdx(2); // FTP Test
+const pBBLightFtp = sb.ZB._planToday();
+if (pBBLightFtp.isPZMain || !pBBLightFtp.title.includes('Low Impact')) {
+  throw new Error('Self-test 5 failed: bb light on FTP test should protect with Low Impact: ' + JSON.stringify(pBBLightFtp));
+}
+sb.ZB.setState('tired', 'sore');
+const pSore = sb.ZB._planToday();
+if (pSore.tier !== 'red' || !pSore.title.includes('拉伸')) {
+  throw new Error('Self-test 5 failed: tired sore should recommend stretch rest: ' + JSON.stringify(pSore));
+}
+sb.ZB.setState('normal');
+sb.ZB.setPZIdx(1);
+sb.ZB.logCardio('main');
+const pDone = sb.ZB._planToday();
+if (!pDone.ctaDone || !pDone.cardioDone) {
+  throw new Error('Self-test 5 failed: completing PZ main did not mark done');
+}
+sb.ZB.logCardio('main'); // undo
+const pUndone = sb.ZB._planToday();
+if (pUndone.ctaDone || pUndone.cur.idx !== 1) {
+  throw new Error('Self-test 5 failed: undo did not restore pz idx=1: ' + JSON.stringify(pUndone));
+}
+sb.ZB.openPeloGuide();
+sb.ZB.openPZList(0);
+sb.ZB.openPZList(1);
+sb.closeModal();
 """
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
 
