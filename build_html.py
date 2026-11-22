@@ -1527,9 +1527,9 @@ html = r"""<!DOCTYPE html>
     .thumb-link {
       position: relative;
       height: 54px;
-      min-width: 60px;
-      padding: 0 11px;
-      font-size: 16px;
+      min-width: 50px;
+      padding: 0 9px;
+      font-size: 15px;
       font-weight: 500;
       color: var(--ink-3);
       letter-spacing: 0.04em;
@@ -2911,6 +2911,481 @@ html = r"""<!DOCTYPE html>
     color: var(--sheet);
     font-weight: 600;
   }
+
+  /* ================= 6. NATIVE ZEN BODY MODULE ("体律") ================= */
+  #green-board.hidden { display: none !important; }
+  #body-view {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  .zb-horizon {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 0 10px;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .zb-enso-trio {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+  }
+  .zb-enso-item {
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .zb-enso-svg {
+    width: 24px;
+    height: 24px;
+    display: block;
+    overflow: visible;
+  }
+  .zb-horizon-metric {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+  }
+  .zb-horizon-metric b { color: var(--sumi); font-weight: 600; }
+
+  .zb-subnav {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0 8px;
+    gap: 8px;
+  }
+  .zb-subtabs {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+  .zb-subtab {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink-3);
+    padding: 4px 0;
+    position: relative;
+    transition: color 0.18s ease;
+  }
+  .zb-subtab.active {
+    color: var(--sumi);
+    font-weight: 600;
+  }
+  .zb-subtab.active::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 1.5px;
+    background: var(--sumi);
+  }
+  .zb-date-tag {
+    font-size: 12px;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .zb-stage {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    display: flex;
+    flex-direction: column;
+    padding: 4px 0 18px;
+  }
+  .zb-stage::-webkit-scrollbar { display: none; }
+  .zb-panel {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    min-height: 100%;
+  }
+  .zb-panel.active { display: flex; }
+  .zb-spacer { flex: 1 1 12px; min-height: 8px; }
+
+  .zb-context {
+    font-size: 12.5px;
+    color: var(--ink-3);
+    letter-spacing: 0.03em;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .zb-tier { font-weight: 500; }
+  .zb-tier.green { color: var(--moss); }
+  .zb-tier.yellow { color: var(--ochre); }
+  .zb-tier.red { color: var(--bengara); }
+
+  .zb-sheet {
+    background: var(--sheet);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    padding: 20px 18px 18px;
+    box-shadow: 0 1px 2px rgba(28, 27, 24, 0.02);
+  }
+  .zb-sheet.tier-red { border-left: 3px solid var(--bengara); }
+  .zb-sheet.tier-yellow { border-left: 3px solid var(--ochre); }
+  .zb-sheet.tier-green { border-left: 3px solid var(--moss); }
+
+  .zb-eyebrow {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: var(--ink-3);
+    margin-bottom: 8px;
+  }
+  .zb-title {
+    font-family: var(--serif-jp);
+    font-size: 21px;
+    font-weight: 600;
+    line-height: 1.38;
+    color: var(--sumi);
+    margin: 0 0 8px;
+  }
+  .zb-sub {
+    font-size: 13.5px;
+    line-height: 1.62;
+    color: var(--ink-2);
+    margin: 0;
+  }
+  .zb-min-pills {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+  .zb-pill {
+    height: 30px;
+    padding: 0 12px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--ink-2);
+    border: 1px solid var(--hairline-strong);
+    background: transparent;
+    font-variant-numeric: tabular-nums;
+  }
+  .zb-pill.active {
+    background: var(--sumi);
+    color: var(--sheet);
+    border-color: var(--sumi);
+  }
+  .zb-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 18px;
+  }
+  .zb-btn-primary {
+    height: 44px;
+    padding: 0 22px;
+    border-radius: 999px;
+    background: var(--sumi);
+    color: var(--sheet);
+    font-size: 14.5px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+  .zb-btn-primary.is-done { background: var(--moss); }
+  .zb-btn-primary:active { opacity: 0.82; }
+  .zb-btn-quiet {
+    height: 36px;
+    padding: 0 12px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--ink-2);
+    border: 1px solid var(--hairline-strong);
+    background: transparent;
+  }
+  .zb-btn-quiet.active {
+    border-color: var(--sumi);
+    color: var(--sumi);
+    background: rgba(28, 27, 24, 0.04);
+  }
+  .zb-btn-quiet.is-red {
+    border-color: var(--bengara);
+    color: var(--bengara);
+    background: rgba(158, 62, 54, 0.06);
+  }
+  .zb-overrides {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .zb-ritual-list {
+    margin-top: 16px;
+    border-top: 1px solid var(--hairline);
+  }
+  .zb-ritual-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 13px 2px;
+    border-bottom: 1px solid var(--hairline);
+    gap: 12px;
+  }
+  .zb-ritual-left { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .zb-ritual-name { font-size: 14.5px; font-weight: 500; color: var(--sumi); }
+  .zb-ritual-hint { font-size: 12px; color: var(--ink-3); }
+  .zb-ritual-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .zb-round-dot {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1.5px solid var(--hairline-strong);
+    color: var(--ink-2);
+    font-size: 13px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .zb-round-dot.done {
+    background: var(--moss);
+    border-color: var(--moss);
+    color: var(--sheet);
+  }
+  .zb-tap-check {
+    height: 34px;
+    padding: 0 13px;
+    border-radius: 999px;
+    border: 1px solid var(--hairline-strong);
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--ink-2);
+  }
+  .zb-tap-check.done {
+    background: var(--moss-soft);
+    border-color: rgba(43, 95, 73, 0.35);
+    color: var(--moss);
+  }
+
+  .zb-rep-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--hairline);
+  }
+  .zb-stepper { display: inline-flex; align-items: center; gap: 12px; }
+  .zb-step-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid var(--hairline-strong);
+    font-size: 17px;
+    color: var(--sumi);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .zb-step-val {
+    min-width: 22px;
+    text-align: center;
+    font-size: 19px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .zb-ladder {
+    margin-top: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .zb-ladder-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 12.5px;
+    color: var(--ink-3);
+    padding: 5px 2px;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .zb-ladder-item.cur { color: var(--sumi); font-weight: 500; }
+  .zb-ladder-item.cur span:first-child::before { content: "● "; color: var(--moss); font-size: 9px; }
+
+  .zb-stat-pair {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .zb-stat-big {
+    font-family: var(--serif-jp);
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--sumi);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+  .zb-stat-unit {
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--ink-3);
+    margin-left: 3px;
+  }
+  .zb-stat-sub { font-size: 12px; color: var(--ink-3); margin-top: 4px; }
+  .zb-chart-wrap { width: 100%; height: 152px; margin: 4px 0 8px; }
+  .zb-chart-sw {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .zb-sw-grp { display: flex; gap: 6px; }
+  .zb-weigh-form {
+    display: none;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--hairline);
+    gap: 8px;
+    align-items: flex-end;
+  }
+  .zb-weigh-form.open { display: flex; }
+  .zb-field { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+  .zb-field label { font-size: 11.5px; color: var(--ink-3); }
+  .zb-field input {
+    width: 100%;
+    height: 36px;
+    padding: 0 10px;
+    border: 1px solid var(--hairline-strong);
+    border-radius: 8px;
+    background: var(--washi);
+    color: var(--sumi);
+    font-size: 14.5px;
+    font-variant-numeric: tabular-nums;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+  .zb-kpis {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .zb-kpi {
+    background: var(--sheet);
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    padding: 11px 10px;
+  }
+  .zb-kpi-v { font-size: 18px; font-weight: 600; color: var(--sumi); font-variant-numeric: tabular-nums; }
+  .zb-kpi-l { font-size: 11.5px; color: var(--ink-3); margin-top: 3px; }
+  .zb-ledger-list { border-top: 1px solid var(--hairline); }
+  .zb-ledger-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 2px;
+    border-bottom: 1px solid var(--hairline);
+    font-size: 13px;
+    gap: 10px;
+  }
+  .zb-ledger-date { color: var(--ink-3); font-variant-numeric: tabular-nums; min-width: 56px; }
+  .zb-ledger-main { flex: 1; color: var(--sumi); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .zb-ledger-dots { display: inline-flex; gap: 5px; flex-shrink: 0; }
+  .zb-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--track); }
+  .zb-dot.ok { background: var(--moss); }
+  .zb-dot.bb { background: var(--bengara); }
+  .zb-sync-foot {
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1px solid var(--hairline);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--ink-3);
+  }
+  .zb-sync-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .zb-gap-note {
+    font-size: 12px;
+    color: var(--ochre);
+    line-height: 1.5;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: rgba(176, 125, 58, 0.08);
+  }
+  .zb-locked {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 16px 2px;
+  }
+  .zb-locked-title {
+    font-family: var(--serif-jp);
+    font-size: 22px;
+    font-weight: 600;
+    margin: 14px 0 8px;
+  }
+  .zb-locked-sub {
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--ink-3);
+    margin: 0;
+  }
+  .zb-pass-row {
+    width: 100%;
+    margin-top: 18px;
+    display: flex;
+    gap: 8px;
+  }
+  .zb-pass-in {
+    flex: 1;
+    height: 42px;
+    padding: 0 12px;
+    border: 1px solid var(--hairline-strong);
+    border-radius: 10px;
+    background: var(--sheet);
+    color: var(--sumi);
+    font-size: 15px;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+  .zb-toast {
+    position: fixed;
+    left: 50%;
+    bottom: 78px;
+    transform: translateX(-50%) translateY(8px);
+    background: var(--sumi);
+    color: var(--sheet);
+    font-size: 13px;
+    padding: 9px 18px;
+    border-radius: 999px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 60;
+  }
+  .zb-toast.show { opacity: 0.94; transform: translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
@@ -2923,6 +3398,7 @@ html = r"""<!DOCTYPE html>
       <button class="nav-link active" id="tab-tutor" onclick="switchMode('tutor')">做题</button>
       <button class="nav-link" id="tab-radio" onclick="switchMode('radio', true)">随身听</button>
       <button class="nav-link" id="tab-vocab" onclick="switchMode('vocab')">记词</button>
+      <button class="nav-link" id="tab-body" onclick="switchMode('body')">体律</button>
     </nav>
   </header>
 
@@ -3008,12 +3484,176 @@ html = r"""<!DOCTYPE html>
     <button type="button" class="ledger-back-fab" onclick="toggleDashLedger(event)">← 返回</button>
   </section>
 
+  <!-- 3E. NATIVE ZEN BODY MODULE ("体律" · 零明文隐私 · 一体化不切 App) -->
+  <section class="zen-panel hidden" id="body-view">
+    <div class="zb-locked" id="zb-locked" style="display:none;">
+      <svg width="38" height="38" viewBox="0 0 28 28" aria-hidden="true">
+        <circle cx="14" cy="14" r="10.2" fill="none" stroke="#2B5F49" stroke-width="2.1" stroke-dasharray="55 10" stroke-linecap="round"/>
+      </svg>
+      <div class="zb-locked-title">体律</div>
+      <p class="zb-locked-sub">体重、体脂与运动数据已加密锁存，不对外公开。<br />首次输入你的短口令即可解锁，本机以后自动记住，不再重复询问。</p>
+      <div class="zb-pass-row">
+        <input class="zb-pass-in" id="zb-pass-in" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="输入短口令" onkeydown="if(event.key==='Enter')ZB.unlockPass()" />
+        <button class="zb-btn-primary" id="zb-unlock-btn" style="height:42px; padding:0 20px; border-radius:10px;" onclick="ZB.unlockPass()">解锁</button>
+      </div>
+      <div id="zb-lock-err" style="font-size:12.5px; color:var(--bengara); margin-top:10px; min-height:18px;"></div>
+    </div>
+
+    <div id="zb-app" style="display:none; flex:1; min-height:0; flex-direction:column;">
+      <div class="zb-horizon">
+        <div class="zb-enso-trio" id="zb-enso-trio"></div>
+        <div class="zb-horizon-metric" id="zb-horizon-metric"></div>
+      </div>
+
+      <div class="zb-subnav">
+        <div class="zb-subtabs">
+          <button class="zb-subtab active" data-zbt="today" onclick="ZB.setTab('today')">今日</button>
+          <button class="zb-subtab" data-zbt="pullup" onclick="ZB.setTab('pullup')">引体</button>
+          <button class="zb-subtab" data-zbt="body" onclick="ZB.setTab('body')">体脂</button>
+          <button class="zb-subtab" data-zbt="ledger" onclick="ZB.setTab('ledger')">总账</button>
+        </div>
+        <span class="zb-date-tag" id="zb-date-lbl"></span>
+      </div>
+
+      <div class="zb-stage">
+        <div class="zb-panel active" id="zb-p-today">
+          <div class="zb-spacer"></div>
+          <div class="zb-context">
+            <span class="zb-tier" id="zb-tier-txt"></span>
+            <span id="zb-week-txt"></span>
+          </div>
+          <div class="zb-sheet" id="zb-cardio-card">
+            <div class="zb-eyebrow" id="zb-eyebrow"></div>
+            <h2 class="zb-title" id="zb-title"></h2>
+            <p class="zb-sub" id="zb-sub"></p>
+            <div class="zb-min-pills" id="zb-min-pills"></div>
+            <div class="zb-actions">
+              <button class="zb-btn-quiet" id="zb-rec-btn" style="display:none;" onclick="ZB.logCardio('recovery')">轻骑恢复</button>
+              <button class="zb-btn-primary" id="zb-main-btn" onclick="ZB.logCardio('main')"></button>
+            </div>
+          </div>
+          <div class="zb-overrides">
+            <button class="zb-btn-quiet" id="zb-bb-high" onclick="ZB.toggleBB('high')">刚打完高强度篮球</button>
+            <button class="zb-btn-quiet" id="zb-bb-light" onclick="ZB.toggleBB('light')">轻投篮</button>
+          </div>
+          <div class="zb-ritual-list">
+            <div class="zb-ritual-row">
+              <div class="zb-ritual-left">
+                <span class="zb-ritual-name">家里引体</span>
+                <span class="zb-ritual-hint" id="zb-pu-hint"></span>
+              </div>
+              <div class="zb-ritual-right" id="zb-pu-dots"></div>
+            </div>
+            <div class="zb-ritual-row">
+              <div class="zb-ritual-left">
+                <span class="zb-ritual-name">蛋白够 · 晚餐未爆碳</span>
+                <span class="zb-ritual-hint" id="zb-diet-hint"></span>
+              </div>
+              <div class="zb-ritual-right">
+                <button class="zb-tap-check" id="zb-diet-btn" onclick="ZB.toggleDiet()"></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="zb-panel" id="zb-p-pullup">
+          <div class="zb-spacer"></div>
+          <div class="zb-context">
+            <span>家里门框单杠 · 严格不甩腿</span>
+            <span id="zb-pu-pr"></span>
+          </div>
+          <div class="zb-sheet">
+            <div class="zb-eyebrow" id="zb-pu-eyebrow"></div>
+            <h2 class="zb-title" id="zb-pu-title"></h2>
+            <p class="zb-sub" id="zb-pu-sub"></p>
+            <div class="zb-rep-row">
+              <div>
+                <div style="font-size:13.5px; color:var(--sumi); font-weight:500;">本轮标准引体</div>
+                <div style="font-size:12px; color:var(--ink-3); margin-top:2px;" id="zb-pu-neg"></div>
+              </div>
+              <div class="zb-stepper">
+                <button class="zb-step-btn" onclick="ZB.adjStrict(-1)">−</button>
+                <span class="zb-step-val" id="zb-pu-val">1</span>
+                <button class="zb-step-btn" onclick="ZB.adjStrict(1)">+</button>
+              </div>
+            </div>
+            <div class="zb-actions">
+              <button class="zb-btn-quiet" id="zb-pu-undo" style="display:none;" onclick="ZB.undoPU()">撤销上轮</button>
+              <button class="zb-btn-primary" id="zb-pu-log" onclick="ZB.logPU()"></button>
+            </div>
+          </div>
+          <div class="zb-ladder" id="zb-pu-ladder"></div>
+        </div>
+
+        <div class="zb-panel" id="zb-p-body">
+          <div class="zb-spacer"></div>
+          <div class="zb-context">
+            <span>GE 智能秤趋势</span>
+            <span id="zb-pace"></span>
+          </div>
+          <div class="zb-sheet">
+            <div class="zb-stat-pair">
+              <div>
+                <div class="zb-stat-big" id="zb-bf-big">--<span class="zb-stat-unit">%</span></div>
+                <div class="zb-stat-sub" id="zb-bf-sub"></div>
+              </div>
+              <div style="text-align:right;">
+                <div class="zb-stat-big" style="font-size:23px; color:var(--ink-2);" id="zb-wt-big">--<span class="zb-stat-unit">kg</span></div>
+                <div class="zb-stat-sub" id="zb-wt-sub"></div>
+              </div>
+            </div>
+            <div class="zb-chart-wrap" id="zb-chart"></div>
+            <div class="zb-chart-sw">
+              <div class="zb-sw-grp">
+                <button class="zb-btn-quiet" id="zb-m-bf" onclick="ZB.setMetric('bf')">GE 体脂</button>
+                <button class="zb-btn-quiet" id="zb-m-wt" onclick="ZB.setMetric('wt')">体重</button>
+              </div>
+              <div class="zb-sw-grp">
+                <button class="zb-btn-quiet" id="zb-r-90" onclick="ZB.setRange('90')">近 90 天</button>
+                <button class="zb-btn-quiet" id="zb-r-all" onclick="ZB.setRange('all')">两年全程</button>
+              </div>
+            </div>
+            <div class="zb-weigh-form" id="zb-wform">
+              <div class="zb-field">
+                <label for="zb-in-wt">体重 (kg)</label>
+                <input id="zb-in-wt" type="number" step="0.05" inputmode="decimal" placeholder="81.5" />
+              </div>
+              <div class="zb-field">
+                <label for="zb-in-bf">GE 体脂 (%)</label>
+                <input id="zb-in-bf" type="number" step="0.1" inputmode="decimal" placeholder="17.8" />
+              </div>
+              <button class="zb-btn-primary" style="height:36px; padding:0 16px; font-size:13px;" onclick="ZB.saveWeigh()">记下</button>
+            </div>
+          </div>
+          <div class="zb-overrides">
+            <span style="font-size:12px; color:var(--ink-3); margin-right:auto;" id="zb-wrem"></span>
+            <button class="zb-btn-quiet" id="zb-wbtn" onclick="ZB.toggleWForm()">记一次 GE 秤</button>
+          </div>
+        </div>
+
+        <div class="zb-panel" id="zb-p-ledger">
+          <div class="zb-kpis" id="zb-kpis"></div>
+          <div class="zb-ledger-list" id="zb-lrows"></div>
+          <div class="zb-sync-foot">
+            <div id="zb-gaps"></div>
+            <div class="zb-sync-row">
+              <span id="zb-sync-txt">云端加密同步中</span>
+              <button class="zb-btn-quiet" onclick="ZB.syncNow()">立即同步</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="zb-toast" id="zb-toast"></div>
+  </section>
+
   <!-- 4. RIGHT-THUMB NAV (phone only · 上看下点: top is for reading, bottom-right is for touching; mirrors the old top header, no ornament) -->
   <nav class="thumb-nav" aria-label="切换">
     <div class="thumb-tabs">
       <button class="thumb-link active" id="btab-tutor" onclick="switchMode('tutor')">做题</button>
       <button class="thumb-link" id="btab-radio" onclick="switchMode('radio', true)">随身听</button>
       <button class="thumb-link" id="btab-vocab" onclick="switchMode('vocab')">记词</button>
+      <button class="thumb-link" id="btab-body" onclick="switchMode('body')">体律</button>
       <button class="thumb-link" id="btab-dash" onclick="switchMode('dash')">总表</button>
     </div>
   </nav>
@@ -6075,7 +6715,9 @@ function switchMode(m, autoPlayRadio) {
   document.getElementById("tab-tutor").classList.toggle("active", m === "tutor");
   document.getElementById("tab-radio").classList.toggle("active", m === "radio");
   document.getElementById("tab-vocab").classList.toggle("active", m === "vocab");
-  ["tutor", "radio", "vocab", "dash"].forEach(k => {
+  const tabBody = document.getElementById("tab-body");
+  if (tabBody) tabBody.classList.toggle("active", m === "body");
+  ["tutor", "radio", "vocab", "body", "dash"].forEach(k => {
     const b = document.getElementById("btab-" + k);
     if (b) b.classList.toggle("active", m === k);
   });
@@ -6083,9 +6725,13 @@ function switchMode(m, autoPlayRadio) {
   document.getElementById("tutor-view").classList.toggle("hidden", m !== "tutor");
   document.getElementById("radio-view").classList.toggle("hidden", m !== "radio");
   document.getElementById("vocab-view").classList.toggle("hidden", m !== "vocab");
+  const bodyView = document.getElementById("body-view");
+  if (bodyView) bodyView.classList.toggle("hidden", m !== "body");
   document.getElementById("dash-view").classList.toggle("hidden", m !== "dash");
+  const gb = document.getElementById("green-board");
+  if (gb) gb.classList.toggle("hidden", m === "body");
 
-  renderGreenBoard();
+  if (m !== "body") renderGreenBoard();
 
   if (m === "radio") {
     ensureRadioReady();
@@ -6100,6 +6746,8 @@ function switchMode(m, autoPlayRadio) {
       syncRadioUI();
     }
     enterVocabMode();
+  } else if (m === "body") {
+    if (window.ZB && typeof window.ZB.onEnter === "function") window.ZB.onEnter();
   } else if (m === "dash") {
     renderDashboard();
   } else {
@@ -7281,6 +7929,7 @@ document.addEventListener("visibilitychange", () => {
     checkNewDailyEdition();
     pullCloudSync(true);
     connectCloudSSE();
+    if (activeMode === "body" && window.ZB) window.ZB.onResume();
   } else {
     if (cloudPushTimer) {
       clearTimeout(cloudPushTimer);
@@ -7294,6 +7943,7 @@ window.addEventListener("online", () => {
   checkNewDailyEdition();
   pullCloudSync(true);
   connectCloudSSE();
+  if (activeMode === "body" && window.ZB) window.ZB.onResume();
 });
 
 window.addEventListener("pagehide", () => {
@@ -7303,6 +7953,690 @@ window.addEventListener("pagehide", () => {
     pushCloudSync(true);
   }
 });
+
+// ================= NATIVE ZEN BODY ENGINE ("体律" · 零明文隐私) =================
+window.ZB = (function() {
+  const VAULT_KEY = "zenbody_vault_v1";
+  const STATE_KEY = "zenbody_state_v1";
+  const PEND_KEY = "zenbody_pending_push_v1";
+  let VAULT = null;
+  let CKEY = null;
+  let INITED = false;
+  let SUBTAB = "today";
+  let METRIC = "bf";
+  let RANGE = "90";
+  let PELO_MIN = 40;
+  let PU_IN = 1;
+  let SYNC_NOTE = "";
+  let PUSH_T = null;
+  let TOAST_T = null;
+  let LAST_DAY = "";
+
+  function defState() {
+    return {
+      v: 1, ts: 0,
+      targets: { bf_ge: 14.0, pullups: 5, deadline: "2027-12-31", pu_max_reps: 3, pu_max_rounds: 2 },
+      pu_best: 1,
+      vitals: { vo2: null, rhr: null, last_drive_sync: "", gaps: [] },
+      trips: [], wb: [], acts: [], days: {}
+    };
+  }
+  let ST = defState();
+
+  function ge(id) { return document.getElementById(id); }
+  function toast(msg) {
+    const el = ge("zb-toast");
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add("show");
+    clearTimeout(TOAST_T);
+    TOAST_T = setTimeout(() => el.classList.remove("show"), 2200);
+  }
+
+  function ptNow(offH) {
+    const now = new Date(Date.now() + (offH || 0) * 3600000);
+    if (typeof Intl !== "undefined" && Intl.DateTimeFormat) {
+      try {
+        const parts = new Intl.DateTimeFormat("en-CA", {
+          timeZone: "America/Los_Angeles",
+          year: "numeric", month: "2-digit", day: "2-digit",
+          hour: "2-digit", minute: "2-digit", hour12: false
+        }).formatToParts(now);
+        const m = {};
+        for (const p of parts) m[p.type] = p.value;
+        return { ymd: `${m.year}-${m.month}-${m.day}`, hour: Number(m.hour), minute: Number(m.minute) };
+      } catch (e) {}
+    }
+    const iso = now.toISOString();
+    return { ymd: iso.slice(0, 10), hour: Number(iso.slice(11, 13)), minute: Number(iso.slice(14, 16)) };
+  }
+  function todayYmd() { return ptNow(-4).ymd; }
+  function shiftD(ymd, dd) {
+    const a = ymd.split("-").map(Number);
+    return new Date(Date.UTC(a[0], a[1] - 1, a[2] + dd)).toISOString().slice(0, 10);
+  }
+  function fmtCn(ymd) {
+    const a = ymd.split("-").map(Number);
+    const wd = ["周日","周一","周二","周三","周四","周五","周六"][new Date(Date.UTC(a[0], a[1] - 1, a[2], 12)).getUTCDay()];
+    return `${a[1]}月${a[2]}日 ${wd}`;
+  }
+  function mondayOf(ymd) {
+    const a = ymd.split("-").map(Number);
+    const dow = new Date(Date.UTC(a[0], a[1] - 1, a[2], 12)).getUTCDay();
+    return shiftD(ymd, dow === 0 ? -6 : 1 - dow);
+  }
+
+  function b64uToBytes(s) {
+    const pad = "=".repeat((4 - (s.length % 4)) % 4);
+    const bin = atob((s + pad).replace(/-/g, "+").replace(/_/g, "/"));
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+  function bytesToB64u(bytes) {
+    let bin = "";
+    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+
+  async function importRawKey(kB64u) {
+    if (typeof crypto === "undefined" || !crypto.subtle) return null;
+    return crypto.subtle.importKey("raw", b64uToBytes(kB64u), { name: "AES-GCM" }, false, ["encrypt", "decrypt"]);
+  }
+  async function decWithKey(key, str) {
+    if (!key || !str || !str.startsWith("z1.")) return null;
+    try {
+      const raw = b64uToBytes(str.slice(3));
+      if (raw.length < 29) return null;
+      const buf = await crypto.subtle.decrypt({ name: "AES-GCM", iv: raw.slice(0, 12) }, key, raw.slice(12));
+      return JSON.parse(new TextDecoder().decode(buf));
+    } catch (e) { return null; }
+  }
+  async function encWithKey(key, obj) {
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, new TextEncoder().encode(JSON.stringify(obj))));
+    const comb = new Uint8Array(iv.length + ct.length);
+    comb.set(iv, 0); comb.set(ct, iv.length);
+    return "z1." + bytesToB64u(comb);
+  }
+
+  function saveLocal() { try { localStorage.setItem(STATE_KEY, JSON.stringify(ST)); } catch (e) {} }
+  function loadLocal() {
+    try {
+      const r = localStorage.getItem(STATE_KEY);
+      if (r) {
+        const p = JSON.parse(r);
+        if (p && p.v === 1) ST = mergeS(defState(), p);
+      }
+    } catch (e) {}
+  }
+
+  function mergeS(a, b) {
+    if (!b || typeof b !== "object") return a;
+    const nw = (b.ts || 0) >= (a.ts || 0) ? b : a;
+    const od = nw === b ? a : b;
+    const out = {
+      v: 1,
+      ts: Math.max(a.ts || 0, b.ts || 0),
+      targets: Object.assign({}, od.targets || {}, nw.targets || {}),
+      pu_best: Math.max(a.pu_best || 1, b.pu_best || 1),
+      vitals: Object.assign({}, od.vitals || {}, nw.vitals || {}),
+      trips: (nw.trips && nw.trips.length) ? nw.trips : (od.trips || []),
+      wb: [], acts: [], days: {}
+    };
+    if (((a.vitals && a.vitals.last_drive_sync) || "") > ((out.vitals && out.vitals.last_drive_sync) || "")) out.vitals = Object.assign({}, out.vitals, a.vitals);
+    if (((b.vitals && b.vitals.last_drive_sync) || "") > ((out.vitals && out.vitals.last_drive_sync) || "")) out.vitals = Object.assign({}, out.vitals, b.vitals);
+    const wm = new Map();
+    for (const lst of [od.wb || [], nw.wb || []]) {
+      for (const r of lst) {
+        if (!r || !r[0]) continue;
+        const p = wm.get(r[0]);
+        if (!p) wm.set(r[0], r.slice());
+        else wm.set(r[0], [r[0], r[1] || p[1], (r[2] && r[2] > 5) ? r[2] : p[2], (r[2] && r[2] > 5) ? (r[3] || p[3]) : (p[3] || r[3])]);
+      }
+    }
+    out.wb = Array.from(wm.values()).sort((x, y) => x[0].localeCompare(y[0]));
+    const am = new Map();
+    for (const lst of [od.acts || [], nw.acts || []]) {
+      for (const r of lst) {
+        if (!r || !r[0]) continue;
+        am.set(`${r[0]}|${r[1]}|${Math.round((r[2] || 0) / 5)}`, r.slice());
+      }
+    }
+    out.acts = Array.from(am.values()).sort((x, y) => x[0].localeCompare(y[0]));
+    const ks = new Set([...Object.keys(a.days || {}), ...Object.keys(b.days || {})]);
+    for (const k of ks) {
+      const da = (a.days && a.days[k]) || null, db = (b.days && b.days[k]) || null;
+      if (!da) out.days[k] = Object.assign({}, db);
+      else if (!db) out.days[k] = Object.assign({}, da);
+      else out.days[k] = (db.ts || 0) >= (da.ts || 0) ? Object.assign({}, da, db) : Object.assign({}, db, da);
+    }
+    return out;
+  }
+
+  function compactS(st) {
+    const cut = shiftD(todayYmd(), -21);
+    const cd = {};
+    for (const [k, v] of Object.entries(st.days || {})) if (k >= cut) cd[k] = v;
+    let wb = st.wb || [];
+    if (wb.length > 36) {
+      const rec = wb.slice(-20);
+      const rset = new Set(rec.map(r => r[0]));
+      const byM = new Map();
+      for (const r of wb) if (!rset.has(r[0])) byM.set(r[0].slice(0, 7), r);
+      wb = [...Array.from(byM.values()).slice(-16), ...rec];
+    }
+    return { v: 1, ts: st.ts || Math.floor(Date.now() / 1000), targets: st.targets, pu_best: st.pu_best, vitals: st.vitals, trips: st.trips || [], wb, acts: (st.acts || []).slice(-18), days: cd };
+  }
+
+  async function pullCloud(silent) {
+    if (!VAULT || !CKEY) return;
+    let n = 0;
+    try {
+      const r = await fetch("./body_vault.enc?t=" + Date.now(), { cache: "no-store" });
+      if (r.ok) {
+        const env = await r.json();
+        if (env && env.d) {
+          const dec = await decWithKey(CKEY, env.d);
+          if (dec && dec.v === 1) { ST = mergeS(ST, dec); n++; }
+        }
+      }
+    } catch (e) {}
+    try {
+      const r2 = await fetch(`https://ntfy.sh/${encodeURIComponent(VAULT.t)}/json?poll=1&since=all`, { cache: "no-store" });
+      if (r2.ok) {
+        const lines = (await r2.text()).trim().split("\n").filter(Boolean);
+        for (const ln of lines) {
+          try {
+            const ev = JSON.parse(ln);
+            if (ev.event !== "message" || !ev.message) continue;
+            const dec = await decWithKey(CKEY, ev.message.trim());
+            if (dec && dec.v === 1) { ST = mergeS(ST, dec); n++; }
+          } catch (e) {}
+        }
+      }
+      if (n > 0) { saveLocal(); syncPUDefault(); }
+      const p = ptNow(0);
+      SYNC_NOTE = `云端已同步 · ${String(p.hour).padStart(2, "0")}:${String(p.minute).padStart(2, "0")}`;
+      render();
+      if (!silent) toast("体律已同步最新数据");
+    } catch (e) {
+      if (n > 0) saveLocal();
+      SYNC_NOTE = "离线可用 · 联网后自动同步";
+      render();
+    }
+  }
+
+  async function pushNow() {
+    if (!VAULT || !CKEY) return;
+    try {
+      const pl = compactS(ST);
+      let enc = await encWithKey(CKEY, pl);
+      if (enc.length > 3850) { pl.wb = pl.wb.slice(-24); pl.acts = pl.acts.slice(-12); enc = await encWithKey(CKEY, pl); }
+      const res = await fetch(`https://ntfy.sh/${encodeURIComponent(VAULT.t)}`, { method: "POST", body: enc });
+      if (res.ok) {
+        try { localStorage.removeItem(PEND_KEY); } catch (e) {}
+        const p = ptNow(0);
+        SYNC_NOTE = `已加密同步 · ${String(p.hour).padStart(2, "0")}:${String(p.minute).padStart(2, "0")}`;
+        const el = ge("zb-sync-txt");
+        if (el) el.textContent = SYNC_NOTE;
+      } else { try { localStorage.setItem(PEND_KEY, "1"); } catch (e) {} }
+    } catch (e) { try { localStorage.setItem(PEND_KEY, "1"); } catch (err) {} }
+  }
+  function schedPush() {
+    ST.ts = Math.floor(Date.now() / 1000);
+    saveLocal();
+    try { localStorage.setItem(PEND_KEY, "1"); } catch (e) {}
+    clearTimeout(PUSH_T);
+    PUSH_T = setTimeout(pushNow, 320);
+  }
+
+  function dayE(ymd) { return (ST.days && ST.days[ymd]) || {}; }
+  function actsOn(ymd) { return (ST.acts || []).filter(a => a[0] === ymd); }
+  function bbOn(ymd) {
+    const dr = actsOn(ymd).filter(a => a[1] === "bb");
+    if (dr.length) {
+      const dur = dr.reduce((s, r) => s + (r[2] || 0), 0);
+      const kcal = dr.reduce((s, r) => s + (r[3] || 0), 0);
+      const ahr = Math.max(...dr.map(r => r[4] || 0));
+      const mhr = Math.max(...dr.map(r => r[5] || 0));
+      return { level: (dur >= 40 || kcal >= 700 || ahr >= 125) ? "high" : "light", dur: Math.round(dur), kcal: Math.round(kcal), maxHr: mhr, src: "drive" };
+    }
+    const d = dayE(ymd);
+    if (d.bb === "high" || d.bb === "light") return { level: d.bb, dur: 0, kcal: 0, maxHr: 0, src: "tap" };
+    return null;
+  }
+  function peloOn(ymd) {
+    const dr = actsOn(ymd).filter(a => a[1] === "pelo");
+    if (dr.length) return { status: "done", min: Math.round(dr.reduce((s, r) => s + (r[2] || 0), 0)), src: "drive" };
+    const d = dayE(ymd);
+    if (d.pelo) return { status: d.pelo, min: d.pelo_min || 0, src: "tap" };
+    return null;
+  }
+  function tripOn(ymd) {
+    for (const t of (ST.trips || [])) if (ymd >= t.start && ymd <= t.end) return t;
+    return null;
+  }
+  function weekStats(ymd) {
+    const mon = mondayOf(ymd);
+    let bbH = 0, pM = 0, puR = 0;
+    for (let i = 0; i < 7; i++) {
+      const d = shiftD(mon, i);
+      if (d > ymd) break;
+      const b = bbOn(d); if (b && b.level === "high") bbH++;
+      const p = peloOn(d); if (p && p.status === "done") pM++;
+      puR += (dayE(d).pu || []).length;
+    }
+    return { bbH, pM, hard: bbH + pM, puR };
+  }
+
+  function planFor(ymd) {
+    const trip = tripOn(ymd), bb = bbOn(ymd), bbY = bbOn(shiftD(ymd, -1)), bb2 = bbOn(shiftD(ymd, -2));
+    const pelo = peloOn(ymd), wk = weekStats(ymd);
+    const rhr = (ST.vitals && ST.vitals.rhr) || 40;
+    if (trip) return { tier: "cap", tierText: `旅途中 · ${trip.name}`, eyebrow: "旅途维持模式", title: "轻松步行观光，回来再接力", sub: "旅途每天自然暴走就是最好的有氧，无需强求器械与骑车。", cardioDone: !!(pelo || bb), puTarget: 0, defMin: 0, bb, pelo, wk, isTravel: true };
+    if (bb && bb.level === "high") {
+      const bits = [];
+      if (bb.dur) bits.push(`${bb.dur} 分钟`);
+      if (bb.kcal) bits.push(`消耗 ${bb.kcal} 大卡`);
+      if (bb.maxHr) bits.push(`最高心率 ${bb.maxHr}`);
+      return { tier: "red", tierText: "今日红档 · 篮球已满额", eyebrow: bits.length ? `已同步高强度篮球 · ${bits.join(" · ")}` : "已标记高强度篮球", title: "今晚 Peloton 取消，直接休养", sub: "剧烈对抗已经把有氧额度拉满。今晚只需补足蛋白、早睡恢复，若腿僵可随手轻踩 15 分钟排酸。", cardioDone: true, puTarget: 1, defMin: 15, bb, pelo, wk, isTravel: false };
+    }
+    if (rhr >= 46) return { tier: "red", tierText: `恢复提醒 · 静息心率 ${rhr}`, eyebrow: "身体正在恢复期", title: "今晚优先早睡，或 15 分钟极轻踩踏", sub: `静息心率较平日偏高（基线 39–41），先让心肺完全回血再上强度。`, cardioDone: !!pelo, puTarget: 1, defMin: 15, bb, pelo, wk, isTravel: false };
+    if ((bb && bb.level === "light") || (bbY && bbY.level === "high" && bb2 && bb2.level === "high")) {
+      return { tier: "yellow", tierText: "今日黄档 · 保护双腿", eyebrow: (bb && bb.level === "light") ? "今天已有轻投篮热身" : "连续两天高强度打球后", title: "Peloton 20 分钟低阻排酸骑", sub: "配着《锵锵三人行》轻松转腿就行，把膝盖和跟腱养顺，明天更有劲。", cardioDone: !!pelo, puTarget: 2, defMin: 20, bb, pelo, wk, isTravel: false };
+    }
+    if (wk.hard >= 5) return { tier: "yellow", tierText: `本周硬核心肺已满 ${wk.hard} 场`, eyebrow: "本周心肺已达标", title: "今晚彻底休息，或 15 分钟舒展骑", sub: `本周已完成 ${wk.bbH} 场篮球与 ${wk.pM} 场 Peloton，多留一天让肌肉和体脂悄悄变好。`, cardioDone: true, puTarget: 2, defMin: 15, bb, pelo, wk, isTravel: false };
+    if (bbY && bbY.level === "high") return { tier: "green", tierText: "今日绿档 · 燃脂黄金窗", eyebrow: "昨天刚打完球 · 今天稳态燃脂", title: "Peloton 35 分钟 Zone 2 稳态骑", sub: "心率稳在 125–140，刚好听完一整期《锵锵三人行》，不伤膝盖最掉脂。", cardioDone: !!pelo, puTarget: 2, defMin: 35, bb, pelo, wk, isTravel: false };
+    return { tier: "green", tierText: "今日绿档 · 最佳燃脂窗口", eyebrow: "今日未打篮球 · Peloton 主场", title: "Peloton 40 分钟燃脂骑", sub: "边听今日《锵锵三人行》边把心率稳在 130–145，正是去年 8 月两周稳掉 2 公斤的节奏。", cardioDone: !!pelo, puTarget: 2, defMin: 40, bb, pelo, wk, isTravel: false };
+  }
+
+  function puStage() {
+    const b = ST.pu_best || 1;
+    if (b <= 1) return { idx: 0, name: "阶段一 · 唤醒起步", title: "每轮 1 个标准 + 2 次慢放", sub: "只在家门框单杠完成。每轮总数不超过 3 下，一天最多 2 轮，两轮隔 2 小时以上，绝不甩腿。", defStrict: 1, neg: 2 };
+    if (b === 2) return { idx: 1, name: "阶段二 · 神经夯实", title: "每轮 2 个标准 + 1 次慢放", sub: "连续一周每轮稳做 2 个直上直下不晃动，自然进入阶段三。依旧一天最多 2 轮。", defStrict: 2, neg: 1 };
+    if (b <= 4) return { idx: 2, name: "阶段三 · 连做突破", title: `每轮 ${Math.min(3, b)} 个标准直上直下`, sub: "完全不靠慢放补量，每轮 3 下干净利落，隔周周末偶尔测一次连续极限。", defStrict: Math.min(3, b), neg: 0 };
+    return { idx: 3, name: "阶段四 · 5+ 目标达成", title: `轻松连做 ${b} 个标准引体`, sub: "2027 年底 5 个不甩目标已达成，保持每天 2 轮轻松维稳即可。", defStrict: Math.min(5, b), neg: 0 };
+  }
+  function syncPUDefault() { PU_IN = puStage().defStrict; }
+
+  function latestWB() {
+    const arr = ST.wb || [];
+    let lbf = null, lwt = null, bbf = null;
+    for (const r of arr) {
+      if (r[1]) lwt = r;
+      if (r[2] && r[2] > 5) { lbf = r; if (!bbf || r[2] < bbf[2]) bbf = r; }
+    }
+    return { lbf, lwt, bbf };
+  }
+
+  function ensoSvg(ratio, done) {
+    const r = 9.8, C = 2 * Math.PI * r, gap = 7.2, max = C - gap;
+    const fill = done ? max : Math.max(0, Math.min(1, ratio)) * max;
+    const col = done ? "#2B5F49" : "#1C1B18";
+    return `<svg class="zb-enso-svg" viewBox="0 0 28 28"><circle cx="14" cy="14" r="${r}" fill="none" stroke="#E5E0D5" stroke-width="2.1" stroke-dasharray="${max.toFixed(1)} ${gap}" stroke-linecap="round" transform="rotate(-118 14 14)"/>${fill > 0.5 ? `<circle cx="14" cy="14" r="${r}" fill="none" stroke="${col}" stroke-width="${done ? "2.4" : "2.1"}" stroke-dasharray="${fill.toFixed(1)} ${C.toFixed(1)}" stroke-linecap="round" transform="rotate(-118 14 14)"/>` : ""}</svg>`;
+  }
+
+  function renderChart() {
+    const wrap = ge("zb-chart");
+    if (!wrap) return;
+    const today = todayYmd(), cut = shiftD(today, -90);
+    const isBF = METRIC === "bf";
+    let pts = (ST.wb || []).filter(r => isBF ? (r[2] && r[2] > 5) : !!r[1]);
+    if (RANGE === "90") {
+      const p90 = pts.filter(r => r[0] >= cut);
+      if (p90.length >= 2) pts = p90;
+    }
+    if (pts.length < 2) { wrap.innerHTML = `<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--ink-3);font-size:12.5px;">多记两次 GE 秤就会绘出趋势线</div>`; return; }
+    const vals = pts.map(r => isBF ? r[2] : r[1]);
+    const target = isBF ? (ST.targets.bf_ge || 14.0) : 77.5;
+    let mn = Math.min(...vals, target) - (isBF ? 0.6 : 0.8);
+    let mx = Math.max(...vals, target) + (isBF ? 0.6 : 0.8);
+    if (mx - mn < 2) mx = mn + 2;
+    const W = 320, H = 148, pL = 30, pR = 14, pT = 14, pB = 22, pw = W - pL - pR, ph = H - pT - pB;
+    const t0 = Date.parse(pts[0][0] + "T12:00:00Z"), t1 = Date.parse(pts[pts.length - 1][0] + "T12:00:00Z"), span = Math.max(86400000, t1 - t0);
+    const X = d => pL + ((Date.parse(d + "T12:00:00Z") - t0) / span) * pw;
+    const Y = v => pT + ((mx - v) / (mx - mn)) * ph;
+    const ty = Y(target);
+    const pathD = pts.map((r, i) => `${i ? "L" : "M"}${X(r[0]).toFixed(1)},${Y(isBF ? r[2] : r[1]).toFixed(1)}`).join(" ");
+    const dots = pts.map((r, i) => {
+      const last = i === pts.length - 1;
+      return `<circle cx="${X(r[0]).toFixed(1)}" cy="${Y(isBF ? r[2] : r[1]).toFixed(1)}" r="${last ? 3.8 : 2.1}" fill="${last ? "#2B5F49" : "#1C1B18"}" opacity="${last ? 1 : 0.6}"/>`;
+    }).join("");
+    wrap.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="100%">
+      <line x1="${pL}" y1="${ty.toFixed(1)}" x2="${W - pR}" y2="${ty.toFixed(1)}" stroke="#2B5F49" stroke-width="1" stroke-dasharray="4 4" opacity="0.55"/>
+      <text x="${W - pR}" y="${(ty - 4).toFixed(1)}" text-anchor="end" font-size="10" fill="#2B5F49">目标 ${target}${isBF ? "%" : "kg"}</text>
+      <text x="${pL - 5}" y="${pT + 4}" text-anchor="end" font-size="9.5" fill="#847E72">${mx.toFixed(isBF ? 0 : 1)}</text>
+      <text x="${pL - 5}" y="${H - pB}" text-anchor="end" font-size="9.5" fill="#847E72">${mn.toFixed(isBF ? 0 : 1)}</text>
+      <path d="${pathD}" fill="none" stroke="#1C1B18" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      ${dots}
+      <text x="${pL}" y="${H - 4}" text-anchor="start" font-size="9.5" fill="#847E72">${pts[0][0].slice(2, 7)}</text>
+      <text x="${W - pR}" y="${H - 4}" text-anchor="end" font-size="9.5" fill="#847E72">${pts[pts.length - 1][0].slice(5)}</text>
+    </svg>`;
+  }
+
+  function render() {
+    const today = todayYmd();
+    LAST_DAY = today;
+    const plan = planFor(today), day = dayE(today), stg = puStage(), wb = latestWB();
+    const puDone = (day.pu || []).length;
+    const puRatio = plan.puTarget === 0 ? 1 : Math.min(1, puDone / plan.puTarget);
+    const dietDone = !!day.diet;
+
+    const dl = ge("zb-date-lbl"); if (dl) dl.textContent = fmtCn(today);
+    const et = ge("zb-enso-trio");
+    if (et) et.innerHTML = `<span class="zb-enso-item" title="今日心肺">${ensoSvg(plan.cardioDone ? 1 : 0, plan.cardioDone)}</span><span class="zb-enso-item" title="家里引体">${ensoSvg(puRatio, puDone >= plan.puTarget)}</span><span class="zb-enso-item" title="饮食节律">${ensoSvg(dietDone ? 1 : 0, dietDone)}</span>`;
+    const hm = ge("zb-horizon-metric");
+    if (hm) hm.innerHTML = wb.lbf ? `GE <b>${wb.lbf[2].toFixed(1)}%</b> → ${ST.targets.bf_ge || 14}%` : `目标 <b>${ST.targets.bf_ge || 14}%</b>`;
+
+    const tt = ge("zb-tier-txt");
+    if (tt) { tt.textContent = plan.tierText; tt.className = "zb-tier " + (plan.tier === "red" ? "red" : plan.tier === "yellow" ? "yellow" : "green"); }
+    const wt = ge("zb-week-txt"); if (wt) wt.textContent = `本周 球 ${plan.wk.bbH} · 骑 ${plan.wk.pM} · 引体 ${plan.wk.puR} 轮`;
+
+    const cc = ge("zb-cardio-card");
+    if (cc) cc.className = "zb-sheet " + (plan.tier === "red" ? "tier-red" : plan.tier === "yellow" ? "tier-yellow" : "tier-green");
+    if (ge("zb-eyebrow")) ge("zb-eyebrow").textContent = plan.eyebrow;
+    if (ge("zb-title")) ge("zb-title").textContent = plan.title;
+    if (ge("zb-sub")) ge("zb-sub").textContent = plan.sub;
+
+    const mp = ge("zb-min-pills");
+    if (mp) {
+      if (plan.tier === "green" || plan.tier === "yellow") {
+        const opts = plan.tier === "yellow" ? [15, 20, 30] : [20, 30, 40, 45];
+        if (!opts.includes(PELO_MIN)) PELO_MIN = plan.defMin;
+        mp.style.display = "flex";
+        mp.innerHTML = opts.map(m => `<button class="zb-pill ${PELO_MIN === m ? "active" : ""}" onclick="ZB.setMin(${m})">${m} 分</button>`).join("");
+      } else { mp.style.display = "none"; }
+    }
+
+    const mb = ge("zb-main-btn"), rb = ge("zb-rec-btn");
+    if (mb && rb) {
+      if (plan.isTravel) { mb.textContent = plan.cardioDone ? "今日步行已记 ✓" : "记下今日步行"; mb.className = "zb-btn-primary" + (plan.cardioDone ? " is-done" : ""); rb.style.display = "none"; }
+      else if (plan.tier === "red") {
+        rb.style.display = "inline-flex"; rb.textContent = (plan.pelo && plan.pelo.status === "recovery") ? "已轻踩 15 分 ✓" : "轻踩 15 分排酸";
+        mb.textContent = (plan.pelo && plan.pelo.status === "rest") ? "已确认今晚休养 ✓" : "好，今晚休养";
+        mb.className = "zb-btn-primary is-done";
+      } else {
+        rb.style.display = "none";
+        if (plan.pelo && (plan.pelo.status === "done" || plan.pelo.status === "recovery")) {
+          mb.textContent = `已骑 ${plan.pelo.min || PELO_MIN} 分钟 ✓`; mb.className = "zb-btn-primary is-done";
+        } else { mb.textContent = `记下 Peloton ${PELO_MIN} 分钟`; mb.className = "zb-btn-primary"; }
+      }
+    }
+
+    const bh = ge("zb-bb-high"), bl = ge("zb-bb-light");
+    if (bh && bl) {
+      const hi = plan.bb && plan.bb.level === "high", lo = plan.bb && plan.bb.level === "light";
+      bh.className = "zb-btn-quiet" + (hi ? " is-red" : ""); bh.textContent = hi ? "已标高强度篮球 ✓" : "刚打完高强度篮球";
+      bl.className = "zb-btn-quiet" + (lo ? " active" : ""); bl.textContent = lo ? "已标轻投篮 ✓" : "轻投篮";
+    }
+
+    if (ge("zb-pu-hint")) ge("zb-pu-hint").textContent = plan.puTarget === 0 ? "旅途期免练，轻松就好" : `${stg.title} · 今日 ${puDone}/${plan.puTarget} 轮`;
+    const pd = ge("zb-pu-dots");
+    if (pd) {
+      if (plan.puTarget === 0) pd.innerHTML = `<span style="font-size:12.5px;color:var(--ink-3);">休</span>`;
+      else {
+        let h = "";
+        for (let i = 1; i <= plan.puTarget; i++) h += `<button class="zb-round-dot ${puDone >= i ? "done" : ""}" onclick="ZB.quickPU(${i})">${puDone >= i ? "✓" : i}</button>`;
+        pd.innerHTML = h;
+      }
+    }
+    if (ge("zb-diet-hint")) ge("zb-diet-hint").textContent = dietDone ? "今日缺口节奏已稳住" : "练后吃够蛋白，晚上不碰宵夜甜饮";
+    const db = ge("zb-diet-btn");
+    if (db) { db.className = "zb-tap-check" + (dietDone ? " done" : ""); db.textContent = dietDone ? "已做到 ✓" : "打卡"; }
+
+    // Tab 2: Pullup
+    if (ge("zb-pu-pr")) ge("zb-pu-pr").textContent = `最高连做 ${ST.pu_best || 1} / 目标 5 个`;
+    if (ge("zb-pu-eyebrow")) ge("zb-pu-eyebrow").textContent = `${stg.name} · 今日已做 ${puDone}/2 轮`;
+    if (ge("zb-pu-title")) ge("zb-pu-title").textContent = stg.title;
+    if (ge("zb-pu-sub")) ge("zb-pu-sub").textContent = stg.sub;
+    if (ge("zb-pu-val")) ge("zb-pu-val").textContent = String(PU_IN);
+    const negN = Math.max(0, 3 - PU_IN);
+    if (ge("zb-pu-neg")) ge("zb-pu-neg").textContent = negN > 0 ? `再补 ${negN} 次 4 秒匀速慢放（本轮共 3 下封顶）` : `纯标准动作，稳住直上直下`;
+    const plb = ge("zb-pu-log"), pub = ge("zb-pu-undo");
+    if (plb && pub) {
+      pub.style.display = puDone > 0 ? "inline-flex" : "none";
+      if (puDone >= 2) { plb.textContent = "今日 2 轮已满额 ✓"; plb.className = "zb-btn-primary is-done"; }
+      else { plb.textContent = `记下第 ${puDone + 1} 轮`; plb.className = "zb-btn-primary"; }
+    }
+    const lad = ge("zb-pu-ladder");
+    if (lad) {
+      const steps = [
+        ["阶段一 · 唤醒起步", "1 标准 + 2 慢放 · 每天 ≤ 2 轮"],
+        ["阶段二 · 神经夯实", "2 标准 + 1 慢放 · 每天 ≤ 2 轮"],
+        ["阶段三 · 连做突破", "3 标准不甩 · 隔周测极限"],
+        ["阶段四 · 2027 达标", "轻松连做 5+ 个标准引体"]
+      ];
+      lad.innerHTML = steps.map((s, i) => `<div class="zb-ladder-item ${i === stg.idx ? "cur" : ""}"><span>${s[0]}</span><span>${s[1]}</span></div>`).join("");
+    }
+
+    // Tab 3: Body Fat
+    const monthsLeft = Math.max(1, (2027 - Number(today.slice(0, 4))) * 12 + (12 - Number(today.slice(5, 7))));
+    if (wb.lbf) {
+      if (ge("zb-bf-big")) ge("zb-bf-big").innerHTML = `${wb.lbf[2].toFixed(1)}<span class="zb-stat-unit">%</span>`;
+      if (ge("zb-bf-sub")) ge("zb-bf-sub").textContent = `${wb.lbf[0].slice(5)} · 历史最佳 ${wb.bbf ? wb.bbf[2].toFixed(1) : wb.lbf[2].toFixed(1)}%`;
+      const rem = Math.max(0, wb.lbf[2] - (ST.targets.bf_ge || 14.0));
+      if (ge("zb-pace")) ge("zb-pace").textContent = rem > 0 ? `距 14% 剩 ${rem.toFixed(1)}% · 均月 ${(rem / monthsLeft).toFixed(2)}%` : "已达 14% 目标";
+    }
+    if (wb.lwt) {
+      if (ge("zb-wt-big")) ge("zb-wt-big").innerHTML = `${wb.lwt[1].toFixed(1)}<span class="zb-stat-unit">kg</span>`;
+      if (ge("zb-wt-sub")) ge("zb-wt-sub").textContent = `${wb.lwt[0].slice(5)} · 14% 预估 ~77.5 kg`;
+    }
+    if (ge("zb-m-bf")) ge("zb-m-bf").className = "zb-btn-quiet" + (METRIC === "bf" ? " active" : "");
+    if (ge("zb-m-wt")) ge("zb-m-wt").className = "zb-btn-quiet" + (METRIC === "wt" ? " active" : "");
+    if (ge("zb-r-90")) ge("zb-r-90").className = "zb-btn-quiet" + (RANGE === "90" ? " active" : "");
+    if (ge("zb-r-all")) ge("zb-r-all").className = "zb-btn-quiet" + (RANGE === "all" ? " active" : "");
+    if (ge("zb-wrem")) {
+      const gap = wb.lbf ? Math.round((Date.parse(today + "T12:00:00Z") - Date.parse(wb.lbf[0] + "T12:00:00Z")) / 86400000) : 99;
+      ge("zb-wrem").textContent = gap >= 4 ? `已 ${gap} 天未测体脂，明早空腹光脚踩一次` : `每周空腹测 2 次即可，看趋势不看单日`;
+    }
+    renderChart();
+
+    // Tab 4: Ledger
+    const kp = ge("zb-kpis");
+    if (kp) kp.innerHTML = `<div class="zb-kpi"><div class="zb-kpi-v">${ST.vitals && ST.vitals.rhr ? ST.vitals.rhr : "--"}</div><div class="zb-kpi-l">静息心率</div></div><div class="zb-kpi"><div class="zb-kpi-v">${ST.vitals && ST.vitals.vo2 ? ST.vitals.vo2 : "--"}</div><div class="zb-kpi-l">最大摄氧量</div></div><div class="zb-kpi"><div class="zb-kpi-v">${ST.pu_best || 1}<span style="font-size:12px;color:var(--ink-3);font-weight:400;"> / 5</span></div><div class="zb-kpi-l">标准引体</div></div>`;
+    const lr = ge("zb-lrows");
+    if (lr) {
+      let rh = "";
+      for (let i = 0; i < 10; i++) {
+        const d = shiftD(today, -i), b = bbOn(d), p = peloOn(d), de = dayE(d), pr = (de.pu || []).length;
+        const ps = [];
+        if (b) ps.push(b.dur ? `篮球 ${b.dur}分` : (b.level === "high" ? "高强度篮球" : "轻投篮"));
+        if (p) { if (p.status === "done") ps.push(`Peloton ${p.min || ""}分`); else if (p.status === "recovery") ps.push("恢复骑 15分"); else if (p.status === "rest") ps.push("休养"); }
+        if (pr > 0) ps.push(`引体 ${pr}轮`);
+        const wf = (ST.wb || []).find(r => r[0] === d);
+        if (wf && wf[2]) ps.push(`${wf[2]}%`);
+        rh += `<div class="zb-ledger-row"><span class="zb-ledger-date">${d.slice(5)}</span><span class="zb-ledger-main">${ps.length ? ps.join(" · ") : "静休"}</span><span class="zb-ledger-dots"><span class="zb-dot ${b ? "bb" : (p ? "ok" : "")}"></span><span class="zb-dot ${pr > 0 ? "ok" : ""}"></span><span class="zb-dot ${de.diet ? "ok" : ""}"></span></span></div>`;
+      }
+      lr.innerHTML = rh;
+    }
+    const gp = ge("zb-gaps");
+    if (gp) {
+      const gs = (ST.vitals && ST.vitals.gaps) || [];
+      gp.innerHTML = gs.length ? `<div class="zb-gap-note">待补小开关：${gs.join("；")}</div>` : "";
+    }
+    if (ge("zb-sync-txt")) ge("zb-sync-txt").textContent = SYNC_NOTE || (ST.vitals && ST.vitals.last_drive_sync ? `已对接健康同步 · ${ST.vitals.last_drive_sync}` : "加密同步就绪");
+  }
+
+  function ensureDay() {
+    const t = todayYmd();
+    if (!ST.days) ST.days = {};
+    if (!ST.days[t]) ST.days[t] = { ts: 0 };
+    ST.days[t].ts = Math.floor(Date.now() / 1000);
+    return ST.days[t];
+  }
+
+  async function tryRestoreVault() {
+    // Check optional #bt=...&bk=... hash
+    try {
+      const h = (location.hash || "").replace(/^#/, "");
+      if (h) {
+        const p = new URLSearchParams(h);
+        const bt = p.get("bt"), bk = p.get("bk");
+        if (bt && bk && bt.length >= 16 && bk.length >= 40) {
+          VAULT = { t: bt, k: bk };
+          localStorage.setItem(VAULT_KEY, JSON.stringify(VAULT));
+        }
+      }
+    } catch (e) {}
+    if (!VAULT) {
+      try { const s = localStorage.getItem(VAULT_KEY); if (s) VAULT = JSON.parse(s); } catch (e) {}
+    }
+    if (!VAULT || !VAULT.t || !VAULT.k) return false;
+    CKEY = await importRawKey(VAULT.k);
+    return !!CKEY;
+  }
+
+  async function unlockPass() {
+    const inp = ge("zb-pass-in"), err = ge("zb-lock-err"), btn = ge("zb-unlock-btn");
+    const pass = (inp && inp.value || "").trim().toLowerCase();
+    if (!pass) { if (err) err.textContent = "请先输入口令"; return; }
+    if (typeof crypto === "undefined" || !crypto.subtle) { if (err) err.textContent = "请用 HTTPS 打开本页"; return; }
+    if (btn) btn.textContent = "解锁中…";
+    if (err) err.textContent = "";
+    try {
+      const r = await fetch("./body_vault.enc?t=" + Date.now(), { cache: "no-store" });
+      if (!r.ok) throw new Error("fetch");
+      const env = await r.json();
+      const baseKey = await crypto.subtle.importKey("raw", new TextEncoder().encode(pass), "PBKDF2", false, ["deriveKey"]);
+      const dKey = await crypto.subtle.deriveKey(
+        { name: "PBKDF2", salt: b64uToBytes(env.salt), iterations: env.iter || 310000, hash: "SHA-256" },
+        baseKey, { name: "AES-GCM", length: 256 }, false, ["decrypt"]
+      );
+      const unwrapped = await decWithKey(dKey, env.w);
+      if (!unwrapped || !unwrapped.t || !unwrapped.k) {
+        if (err) err.textContent = "口令不太对，再试一次";
+        if (btn) btn.textContent = "解锁";
+        return;
+      }
+      VAULT = { t: unwrapped.t, k: unwrapped.k };
+      CKEY = await importRawKey(VAULT.k);
+      try { localStorage.setItem(VAULT_KEY, JSON.stringify(VAULT)); } catch (e) {}
+      if (inp) inp.value = "";
+      if (btn) btn.textContent = "解锁";
+      showApp();
+      const dec = await decWithKey(CKEY, env.d);
+      if (dec && dec.v === 1) { ST = mergeS(ST, dec); saveLocal(); syncPUDefault(); }
+      render();
+      await pullCloud(true);
+      toast("已解锁并记住本设备");
+    } catch (e) {
+      if (err) err.textContent = "网络或口令异常，请重试";
+      if (btn) btn.textContent = "解锁";
+    }
+  }
+
+  function showApp() {
+    const lk = ge("zb-locked"), ap = ge("zb-app");
+    if (lk) lk.style.display = "none";
+    if (ap) ap.style.display = "flex";
+  }
+
+  async function onEnter() {
+    if (!INITED) {
+      INITED = true;
+      const ok = await tryRestoreVault();
+      if (!ok) {
+        const lk = ge("zb-locked"), ap = ge("zb-app");
+        if (lk) lk.style.display = "flex";
+        if (ap) ap.style.display = "none";
+        return;
+      }
+      showApp();
+      loadLocal();
+      syncPUDefault();
+      render();
+      await pullCloud(true);
+      try { if (localStorage.getItem(PEND_KEY)) await pushNow(); } catch (e) {}
+    } else if (CKEY) {
+      render();
+      pullCloud(true);
+    }
+  }
+
+  function onResume() {
+    if (!CKEY) return;
+    if (todayYmd() !== LAST_DAY) render();
+    pullCloud(true);
+  }
+
+  return {
+    onEnter, onResume, unlockPass,
+    setTab(t) {
+      SUBTAB = t;
+      document.querySelectorAll(".zb-subtab").forEach(b => b.classList.toggle("active", b.dataset.zbt === t));
+      ["today", "pullup", "body", "ledger"].forEach(k => { const el = ge("zb-p-" + k); if (el) el.classList.toggle("active", k === t); });
+      if (t === "body") renderChart();
+    },
+    setMin(m) { PELO_MIN = m; render(); },
+    logCardio(kind) {
+      const p = planFor(todayYmd()), d = ensureDay();
+      if (p.isTravel) { d.pelo = d.pelo ? null : "done"; d.pelo_min = 30; toast(d.pelo ? "旅途步行已记" : "已撤销"); }
+      else if (kind === "recovery") { d.pelo = d.pelo === "recovery" ? null : "recovery"; d.pelo_min = 15; toast(d.pelo ? "轻踩 15 分排酸已记" : "已撤销"); }
+      else if (p.tier === "red") { d.pelo = d.pelo === "rest" ? null : "rest"; d.pelo_min = 0; toast(d.pelo ? "好，今晚安心休养" : "已撤销"); }
+      else { d.pelo = d.pelo === "done" ? null : "done"; d.pelo_min = PELO_MIN; toast(d.pelo ? `Peloton ${PELO_MIN} 分钟已记` : "已撤销"); }
+      schedPush(); render();
+    },
+    toggleBB(lvl) {
+      const d = ensureDay();
+      if (d.bb === lvl) { d.bb = null; toast("已取消篮球标记"); }
+      else { d.bb = lvl; toast(lvl === "high" ? "已切红档 · 今晚 Peloton 取消" : "已切黄档 · 今晚轻骑恢复"); }
+      schedPush(); render();
+    },
+    quickPU(n) {
+      const d = ensureDay(), stg = puStage();
+      if (!Array.isArray(d.pu)) d.pu = [];
+      if (d.pu.length >= n) { d.pu = d.pu.slice(0, n - 1); toast(`已撤销第 ${n} 轮`); }
+      else { while (d.pu.length < n) d.pu.push([stg.defStrict, stg.neg]); toast(`第 ${n} 轮引体已记`); }
+      schedPush(); render();
+    },
+    adjStrict(delta) { PU_IN = Math.max(0, Math.min(10, PU_IN + delta)); render(); },
+    logPU() {
+      const d = ensureDay();
+      if (!Array.isArray(d.pu)) d.pu = [];
+      if (d.pu.length >= 2) { toast("今天 2 轮已满额，明天继续"); return; }
+      d.pu.push([PU_IN, Math.max(0, 3 - PU_IN)]);
+      if (PU_IN > (ST.pu_best || 1)) { ST.pu_best = PU_IN; toast(`新纪录！标准不甩 ${PU_IN} 个`); }
+      else toast(`第 ${d.pu.length} 轮引体已记`);
+      schedPush(); render();
+    },
+    undoPU() {
+      const d = ensureDay();
+      if (Array.isArray(d.pu) && d.pu.length) { d.pu.pop(); schedPush(); render(); toast("已撤销上一轮"); }
+    },
+    toggleDiet() {
+      const d = ensureDay(); d.diet = d.diet ? 0 : 1;
+      schedPush(); render(); toast(d.diet ? "今日饮食节律已打卡" : "已取消");
+    },
+    setMetric(m) { METRIC = m; render(); },
+    setRange(r) { RANGE = r; render(); },
+    toggleWForm() {
+      const f = ge("zb-wform"), b = ge("zb-wbtn");
+      if (!f || !b) return;
+      const open = !f.classList.contains("open");
+      f.classList.toggle("open", open);
+      b.textContent = open ? "收起" : "记一次 GE 秤";
+    },
+    saveWeigh() {
+      const wv = parseFloat((ge("zb-in-wt") && ge("zb-in-wt").value) || "");
+      const bv = parseFloat((ge("zb-in-bf") && ge("zb-in-bf").value) || "");
+      if (isNaN(wv) || wv < 40 || wv > 160) { toast("请输入有效体重 (kg)"); return; }
+      const bf = (!isNaN(bv) && bv >= 5 && bv <= 45) ? +bv.toFixed(1) : null;
+      const t = todayYmd(), d = ensureDay();
+      d.wt = +wv.toFixed(2); if (bf !== null) d.bf = bf;
+      if (!Array.isArray(ST.wb)) ST.wb = [];
+      const ix = ST.wb.findIndex(r => r[0] === t);
+      const row = [t, +wv.toFixed(2), bf, "phone"];
+      if (ix >= 0) ST.wb[ix] = row; else ST.wb.push(row);
+      ST.wb.sort((a, b) => a[0].localeCompare(b[0]));
+      if (ge("zb-in-wt")) ge("zb-in-wt").value = "";
+      if (ge("zb-in-bf")) ge("zb-in-bf").value = "";
+      this.toggleWForm(); schedPush(); render();
+      toast(bf !== null ? `已记 ${wv.toFixed(1)} kg · GE ${bf}%` : `已记体重 ${wv.toFixed(1)} kg`);
+    },
+    syncNow() { pullCloud(false); }
+  };
+})();
 
 function initApp() {
   // When running on local tutor_server.py, also union-merge local server state if present
@@ -7333,6 +8667,7 @@ function initApp() {
   const params = new URLSearchParams(location.search);
   const m = params.get("mode");
   if (m === "dash") switchMode("dash");
+  else if (m === "body") switchMode("body");
   else if (m === "vocab" || m === "flash") switchMode("vocab");
   else if (m === "radio" || m === "walk") switchMode("radio", false);
   else renderTutor();
@@ -7398,6 +8733,7 @@ sb.switchMode('radio', false);
 sb.switchMode('vocab');
 sb.onVocabCardTapOrReplay();
 sb.triggerVocabAction('right');
+sb.switchMode('body');
 sb.switchMode('dash');
 sb.openSessionModal();
 sb.closeModal();
