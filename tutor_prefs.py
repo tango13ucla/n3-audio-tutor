@@ -58,6 +58,22 @@ def deck_cap(prefs: dict | None = None, day: str | None = None) -> int:
     return caps[lv]
 
 
+def vocab_daily_count(prefs: dict | None = None, day: str | None = None) -> int:
+    prefs = load_prefs() if prefs is None else prefs
+    cur_day = day or study_date()
+    if cur_day <= "2026-11-21":
+        return 18
+    lv, _ = today_load(prefs, cur_day)
+    if lv == "off":
+        return 12
+    if lv == "light":
+        return 18
+    try:
+        return max(12, min(40, int(prefs.get("vocab_daily_count", 24))))
+    except Exception:
+        return 24
+
+
 def focus_set(prefs: dict | None = None) -> set:
     prefs = load_prefs() if prefs is None else prefs
     return {str(x).strip() for x in (prefs.get("focus_points") or []) if str(x).strip()}
@@ -70,7 +86,7 @@ def radio_prefs(prefs: dict | None = None) -> dict:
     if isinstance(ep, list) and len(ep) >= 2:
         ep_bounds = (max(20, int(ep[0])), max(25, int(ep[1])))
     else:
-        ep_bounds = (39, 43)
+        ep_bounds = (57, 63)
     return {
         "prefer_tags": [str(t) for t in (r.get("prefer_tags") or [])],
         "avoid_story_ids": {str(s) for s in (r.get("avoid_story_ids") or [])},
@@ -78,7 +94,7 @@ def radio_prefs(prefs: dict | None = None) -> dict:
         "perspective": str(r.get("perspective", "uchi_real_public_memory_and_world_from_japan")),
         "story_structure": str(r.get("story_structure", "4_act_jp_news_2_real_stories_plus_final_fifth_world_from_japan")),
         "world_finale_share": float(r.get("world_finale_share", 0.2)),
-        "grammar_frequency_multiplier": float(r.get("grammar_frequency_multiplier", 1.3)),
+        "grammar_frequency_multiplier": float(r.get("grammar_frequency_multiplier", 1.35)),
         "direct_inline_ja_level": str(r.get("direct_inline_ja_level", "n5_and_easy_n4")),
         "immersion_365": dict(r.get("immersion_365") or {}),
     }

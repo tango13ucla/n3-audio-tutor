@@ -11028,6 +11028,519 @@
       "streak": 3,
       "classroom_note": "一点点，稍微",
       "last_ok_date": "20261121"
+    },
+    {
+      "word": "封筒",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "两拍长音 ふう・とう"
+    },
+    {
+      "word": "終電",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "しゅう 有长音 ↔ 始発（しはつ 首班车）"
+    },
+    {
+      "word": "一日中",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "表「整个期间」读浊音 じゅう（今週中 こんしゅうじゅう）"
+    },
+    {
+      "word": "前もって",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "常与 〜ておく（提前做好准备）呼应"
+    },
+    {
+      "word": "後にして",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "听力先后顺序题头号反转词（先别做这件！）"
+    },
+    {
+      "word": "暖簾",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "特殊熟字训 のれん"
+    },
+    {
+      "word": "すっかり",
+      "category": "高频假名与副词",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "也用于季节彻底变化：すっかり春になった"
+    },
+    {
+      "word": "ぎっしり",
+      "category": "高频假名与副词",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "反义：がらがら（空空荡荡）"
+    },
+    {
+      "word": "ばらばら",
+      "category": "高频假名与副词",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "ばらばらに座る（分散开坐）"
+    },
+    {
+      "word": "丁寧",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "假朋友：不是中文的叮咛，指待人礼貌或做事精细"
+    },
+    {
+      "word": "迷惑",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "假朋友：不是困惑迷茫，高频搭配 迷惑をかける"
+    },
+    {
+      "word": "遠慮",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "尾音短音 りょ 无长音；喫煙はご遠慮ください（请勿吸烟）"
+    },
+    {
+      "word": "自慢",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "假朋友：可褒可贬，店の自慢のラーメン（本店招牌拉面）"
+    },
+    {
+      "word": "油断",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "惯用：油断大敵（大意是最大的敌人）· ゆ 无长音"
+    },
+    {
+      "word": "都合",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "假朋友：ご都合はいかがですか（您哪天方便？）"
+    },
+    {
+      "word": "工夫",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "假朋友：不是武术功夫，指花心思琢磨窍门"
+    },
+    {
+      "word": "納得",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "中间必带促音 っ：納得がいかない（怎么想都不服气）"
+    },
+    {
+      "word": "世間",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "对比：世界 せかい（世界）· 世間 偏指周遭社会与人言"
+    },
+    {
+      "word": "様子",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "高频搭配：様子を見る（观望情况）· よう 长音"
+    },
+    {
+      "word": "表情",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "前后都是长音 ひょう＋じょう，极易少写一个 う"
+    },
+    {
+      "word": "印象",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "固定搭配：印象に残る（留下印象）· しょう 长音"
+    },
+    {
+      "word": "現象",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "同音词：減少 げんしょう（减少），按语境区分"
+    },
+    {
+      "word": "絶対",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "浊音 ぜ 接促音 っ，常配否定 絶対に〜ない"
+    },
+    {
+      "word": "発達",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "对比：発展 はってん（发展繁荣）· 均为促音 っ"
+    },
+    {
+      "word": "発見",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "注意促音 っ（对比：発言 はつげん 发言，无促音）"
+    },
+    {
+      "word": "実施",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "中间必带促音 っ（对比：事実 じじつ 事实）"
+    },
+    {
+      "word": "実際",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "副词常用 実際に（实际上、亲自），带促音 っ"
+    },
+    {
+      "word": "欠席",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "反义：出席 しゅっせき（出席）· 都有促音 っ"
+    },
+    {
+      "word": "結果",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "中间必带促音 っ：その結果（结果、因此）"
+    },
+    {
+      "word": "苦労",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "尾音长音 ろう：ご苦労様（辛苦了，上级对下级用）"
+    },
+    {
+      "word": "常識",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "首音长音 じょう，对比：知識 ちしき（知识）"
+    },
+    {
+      "word": "順番",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "高频搭配：順番に（按顺序）、順番が回る（轮到次序）"
+    },
+    {
+      "word": "話題",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "高频搭配：話題になる（成为热门话题）"
+    },
+    {
+      "word": "頼る",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "对比：頼む たのむ（拜托请求）· 頼る 配助词 に"
+    },
+    {
+      "word": "届ける",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "自动词：届く とどく（寄到、够得着）"
+    },
+    {
+      "word": "断る",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "假朋友：不是断绝，最常考的意思是拒绝或事先说明"
+    },
+    {
+      "word": "諦める",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "听力高频词：もう諦めた（已经死心放弃了）"
+    },
+    {
+      "word": "譲る",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "浊音 ず：席を譲る（让座）、道を譲る（让路）"
+    },
+    {
+      "word": "省く",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "高频搭配：手間を省く（省事）、説明を省く（省略说明）"
+    },
+    {
+      "word": "奪う",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "常考被动形 奪われる，或 目を奪う（夺人眼球）"
+    },
+    {
+      "word": "疑う",
+      "category": "汉字读音与训读",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "对比：疑問 ぎもん（疑问，名词）· 疑う 是动词"
+    },
+    {
+      "word": "あわてる",
+      "category": "高频假名与副词",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "汉字写「慌てる」· 搭配：あわてて飛び出す（慌忙冲出去）"
+    },
+    {
+      "word": "なまける",
+      "category": "高频假名与副词",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "汉字写「怠ける」· 搭配：練習をなまける（偷懒不练）"
+    },
+    {
+      "word": "ふざける",
+      "category": "高频假名与副词",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "口语发火常说 ふざけるな！（别开玩笑了！）"
+    },
+    {
+      "word": "うなずく",
+      "category": "高频假名与副词",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "阅读高频动作词：深くうなずく（深深点头）"
+    },
+    {
+      "word": "つぶやく",
+      "category": "高频假名与副词",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "在社交平台发短推文也叫 つぶやく"
+    },
+    {
+      "word": "ほっとする",
+      "category": "高频假名与副词",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "反义：どきどきする（心怦怦跳紧张）"
+    },
+    {
+      "word": "いらいら",
+      "category": "高频假名与副词",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "对比：はらはら（替人捏把汗担心）"
+    },
+    {
+      "word": "どきどき",
+      "category": "高频假名与副词",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "对比：わくわく（满心期待兴奋）"
+    },
+    {
+      "word": "わくわく",
+      "category": "高频假名与副词",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "全正面情绪，常与 楽しみ 搭配"
+    },
+    {
+      "word": "にこにこ",
+      "category": "高频假名与副词",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "对比：にやにや（偷笑、不怀好意地笑）"
+    },
+    {
+      "word": "ざっと",
+      "category": "高频假名与副词",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "高频搭配：ざっと見る／ざっと計算する（粗算一下）"
+    },
+    {
+      "word": "そっと",
+      "category": "高频假名与副词",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "对比：こっそり（背着人偷偷摸摸地）· そっと 强调动作轻柔"
+    },
+    {
+      "word": "じっと",
+      "category": "高频假名与副词",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "搭配：じっと我慢する（咬牙硬忍）、じっと待つ（静静等）"
+    },
+    {
+      "word": "ぐっと",
+      "category": "高频假名与副词",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "常修饰大幅变化：ぐっと良くなる（一下子好很多）"
+    },
+    {
+      "word": "さっと",
+      "category": "高频假名与副词",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "强调动作干脆不拖泥带水：さっと拭く（顺手一擦）"
+    },
+    {
+      "word": "ふと",
+      "category": "高频假名与副词",
+      "status": "red",
+      "seen": 0,
+      "wrong": 0,
+      "streak": 0,
+      "classroom_note": "高频搭配：ふと思い出す（冷不丁想起）、ふと気づく（猛然发觉）"
     }
   ],
   "_processed_log_ts": [

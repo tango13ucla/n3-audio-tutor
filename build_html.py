@@ -1070,6 +1070,7 @@ recent_weak_words = [
 ]
 
 vocab_base_done = sum(1 for it in vocab_items if it["tier"] == "done")
+vocab_daily_count = tutor_prefs.vocab_daily_count(MEMORY_PREFS, day=plan_date_str)
 
 payload = json.dumps({
     "plan_date": plan_date_str,
@@ -1082,6 +1083,7 @@ payload = json.dumps({
     "vocab_cards": vocab_cards_payload,
     "mastery": mastery_data,
     "vocab_base_done": vocab_base_done,
+    "vocab_daily_count": vocab_daily_count,
     "true_green_epoch": TRUE_GREEN_EPOCH,
     "baked_epoch": baked_epoch,
     "recent_weak_words": recent_weak_words,
@@ -3657,7 +3659,7 @@ const TODAY_TAG = String(DATA.plan_date || "").replace(/-/g, "");
 const TRUE_GREEN_EPOCH = Number(DATA.true_green_epoch || 1794761500);
 const BAKED_EPOCH = Number(DATA.baked_epoch || 0);
 const MIN_REAL_TS = 1700000000;
-const VOCAB_BATCH_SIZE = 18;
+const VOCAB_BATCH_SIZE = Number(DATA.vocab_daily_count || 24);
 
 function tryLockPortrait() {
   try {
@@ -6919,24 +6921,38 @@ function curateVocabBatch(limitCnt) {
 
   // 1) Recently missed words (from tutor or Grok practice)
   const recentWeak = Array.isArray(DATA.recent_weak_words) ? DATA.recent_weak_words : [];
-  recentWeak.forEach(sw => tryAdd(sw));
+  recentWeak.slice(0, Math.min(8, maxN)).forEach(sw => tryAdd(sw));
 
-  // 3) Remaining 0/3 待攻克 words
+  // 2) Cross-day due 2/3 & 1/3 reviews (lastDate !== TODAY_TAG) so words graduate to true green steadily,
+  //    while always reserving room for fresh 0/3 words each day
+  const dueWip2 = [];
+  const dueWip1 = [];
+  const todoPool = [];
   vItems.forEach(it => {
     const eff = getEffectiveMastery(it.key, it.name);
-    if (eff.tier === "todo") tryAdd(it.name);
-  });
-
-  // 4) 1/3 & 2/3 巩固中 words due for cross-day progression (lastDate !== TODAY_TAG), rotated by date
-  const dueWip = [];
-  vItems.forEach(it => {
-    const eff = getEffectiveMastery(it.key, it.name);
-    if (eff.tier === "wip" && eff.lastDate !== TODAY_TAG) dueWip.push(it.name);
+    if (eff.tier === "todo") {
+      todoPool.push(it.name);
+    } else if (eff.tier === "wip" && eff.lastDate !== TODAY_TAG) {
+      if ((eff.streak || 0) >= 2) dueWip2.push(it.name);
+      else dueWip1.push(it.name);
+    }
   });
   const rot = (parseInt(TODAY_TAG.slice(-2), 10) || 0) * 5;
-  for (let i = 0; i < dueWip.length; i++) {
-    tryAdd(dueWip[(i + rot) % dueWip.length]);
+  const dueWip = [];
+  for (let i = 0; i < dueWip2.length; i++) dueWip.push(dueWip2[(i + rot) % dueWip2.length]);
+  for (let i = 0; i < dueWip1.length; i++) dueWip.push(dueWip1[(i + rot) % dueWip1.length]);
+
+  const freshReserve = Math.min(Math.max(8, Math.floor(maxN * 0.42)), todoPool.length);
+  const reviewTarget = Math.max(0, maxN - freshReserve);
+  for (let i = 0; i < dueWip.length && out.length < reviewTarget; i++) {
+    tryAdd(dueWip[i]);
   }
+
+  // 3) Remaining 0/3 待攻克 words (fresh high-yield exam traps & kana verbs/adverbs)
+  todoPool.forEach(nm => tryAdd(nm));
+
+  // 4) Any leftover due cross-day reviews
+  dueWip.forEach(nm => tryAdd(nm));
 
   // 5) Any remaining wip words if needed to fill the batch
   vItems.forEach(it => {

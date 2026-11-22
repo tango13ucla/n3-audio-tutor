@@ -311,9 +311,9 @@ def save_today_stories(today_str: str, story_ids: list) -> None:
 
 
 def estimate_story_seconds(st: dict) -> float:
-    """Empirical v28/v29 studio timing: ~0.206s per spoken char + 2.5s transition sting."""
+    """Empirical v36-v38 studio timing: ~0.209s per spoken char + 2.5s transition."""
     chars = sum(len(str(t)) for _, t in (st.get("turns") or []))
-    return chars * 0.206 + 2.5
+    return chars * 0.209 + 2.5
 
 
 def load_corpus_kb() -> dict:
@@ -1424,7 +1424,7 @@ async def main():
     closing_evs = turns_to_expanded_events(closing_turns) if closing_turns else []
 
     if today_str >= "2026-11-22":
-        radio_ver_tag = "v37_qq_world_finale_13x_n5inline"
+        radio_ver_tag = "v38_qq_60m_deep_story_135x"
     elif today_str >= "2026-11-19":
         radio_ver_tag = "v36_qq_real_public_memory"
     else:
@@ -1492,7 +1492,7 @@ async def main():
                 *(synth_turn(k, voice_map[k], txt, raw_p, sem) for (k, txt), raw_p in unique_turns.items())
             )
             ok_count = sum(1 for x in ok_results if x)
-            print(f"Synthesized {ok_count} / {len(unique_turns)} unique Qiang-Qiang v34 short-banter latch clips.")
+            print(f"Synthesized {ok_count} / {len(unique_turns)} unique Qiang-Qiang v38 60m short-banter latch clips.")
             min_required = max(1, int(len(unique_turns) * 0.98))
             if ok_count < min_required:
                 raise RuntimeError(
@@ -1517,7 +1517,7 @@ async def main():
         pcm_bumper = decode_to_pcm_f32(music_paths["bumper"], trim_speech=False)
         pcm_outro = decode_to_pcm_f32(music_paths["outro"], trim_speech=False)
 
-        mixer = StudioTimelineMixer(est_minutes=52.0)
+        mixer = StudioTimelineMixer(est_minutes=68.0)
 
         def _append_events(ev_list: list[tuple[str, object]]) -> None:
             pending_latch = 0.0

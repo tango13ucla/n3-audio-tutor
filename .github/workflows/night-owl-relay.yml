@@ -137,7 +137,7 @@ jobs:
                   print("noop|false")
               raise SystemExit(0)
 
-          expected_ver = "v37_qq_world_finale_13x_n5inline" if study_pt >= "2026-11-22" else "v36_qq_real_public_memory"
+          expected_ver = "v38_qq_60m_deep_story_135x" if study_pt >= "2026-11-22" else "v36_qq_real_public_memory"
           if now_pt.hour >= 4 and (meta_date != study_pt or (study_pt >= "2026-11-19" and radio_ver != expected_ver)):
               if bridge_already_active():
                   print("noop|false")

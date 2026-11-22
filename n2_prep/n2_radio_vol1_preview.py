@@ -10,7 +10,7 @@ Demonstrates the upgraded N2 "Zero-to-120 Story-Anchored Deep Teach" format:
     + Live contrast vs N3 〜なければならない!
 - Primary New N2 Hard-Bone Words (6):
     見直す (みなおす), 引き受ける (ひきうける), 割り切る (わりきる), ひたすら, かえって, 油断 (ゆだん · 假朋友)
-- Structure (6 Acts, ~40 min target):
+- Structure (6 Acts, ~60 min deep-story target from 2026-11-22 spec):
     - Act 1 (`n2_v1_s1_news_fallback`, is_news_slot=True): 日本零售业转型与百年百货十字路口
     - Act 2 (`n2_v1_s2a` + `n2_v1_s2b`, Cross-Border Japan Mirror #1):
       《同一家伊藤洋华堂，为什么在成都封神、在北京改名「华堂商场」却步步退场？》
