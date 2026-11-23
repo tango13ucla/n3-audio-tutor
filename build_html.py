@@ -3383,9 +3383,9 @@ html = r"""<!DOCTYPE html>
   .zb-dial-needle { position: absolute; left: 50%; top: 4px; bottom: 4px; width: 2px; margin-left: -1px; background: var(--moss); border-radius: 2px; pointer-events: none; }
   .zb-dial-foot { display: flex; justify-content: space-between; align-items: center; }
 
-  .zb-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 14px 0 18px; border-bottom: 1px solid var(--hairline); margin-bottom: 4px; }
-  .zb-kpi-v { font-family: var(--serif-jp); font-size: 22px; font-weight: 600; color: var(--sumi); font-variant-numeric: tabular-nums; }
-  .zb-kpi-l { font-size: 12px; color: var(--ink-3); margin-top: 4px; letter-spacing: 0.03em; }
+  .zb-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 14px 0 18px; border-bottom: 1px solid var(--hairline); margin-bottom: 4px; }
+  .zb-kpi-v { font-family: var(--serif-jp); font-size: 20px; font-weight: 600; color: var(--sumi); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .zb-kpi-l { font-size: 11.5px; color: var(--ink-3); margin-top: 4px; letter-spacing: 0.03em; }
   .zb-ledger-list { margin-top: 2px; }
   .zb-ledger-item { border-bottom: 1px solid var(--hairline); }
   .zb-ledger-row { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 12.5px 0; font-size: 13.5px; gap: 10px; text-align: left; }
@@ -8915,12 +8915,44 @@ window.ZB = (function() {
     return "none";
   }
 
+  function watchReadiness(ymd) {
+    const v = ST.vitals || {};
+    const rhr = v.rhr || null;
+    const rhrBase = v.rhr_base || 40;
+    const rhrFresh = !!(rhr && (!v.rhr_date || daysDiff(v.rhr_date, ymd) <= 1));
+    const hrv = v.hrv || null;
+    const hrvBase = v.hrv_base || 0;
+    const hrvFresh = !!(hrv && hrvBase >= 30 && v.hrv_date && daysDiff(v.hrv_date, ymd) <= 1);
+    const sleepH = v.sleep_h || null;
+    const slFresh = !!(sleepH && v.sleep_date && v.sleep_date === ymd);
+    const parts = [];
+    if (rhr) parts.push(`静息 ${rhr}`);
+    if (hrv) parts.push(`HRV ${hrv}${hrvBase ? `（平日 ${hrvBase}）` : ""}`);
+    if (sleepH) parts.push(`睡眠 ${sleepH}h`);
+    return {
+      rhr, rhrBase, rhrFresh, hrv, hrvBase, hrvFresh, sleepH, slFresh,
+      summary: parts.join(" · "),
+      redRHR: rhrFresh && rhr >= 46,
+      redHRV: hrvFresh && hrv <= hrvBase * 0.75,
+      lowSleep: slFresh && sleepH < 5.8,
+      lowHRV: hrvFresh && hrv < hrvBase * 0.84
+    };
+  }
+
   function makePZPlan(opts) {
     const cur = opts.cur, next = getPZMeta(Math.min(PZ_LIST.length, cur.idx + 1));
     const langTip = cur.pIdx === 0 ? "（勿进教练页、避开德语 DE 版；看不到英文版点左下角头像 → Preferences → Class Languages 开启 English）" : "";
     const progSub = cur.allDone
       ? "两套官方 Power Zone 项目已全部通关，按自己节奏保持稳态燃脂即可。"
       : `当前进度 ${cur.doneInProg} / ${cur.progTotal} 节（每周稳推 2–3 节，打球多的周 1–2 节就很好，约 8–10 周从容通关，绝不照官方 5 周硬追）。`;
+    const items = [
+      { k: "今天骑这节", v: `${cur.title}（${cur.coach} · ${cur.min} 分钟）`, sub: cur.cue, cur: true },
+      { k: "Bike+ 一步找到", v: cur.entry, sub: (opts.extraNote || "状态好就照这节骑；如果今天累了随时点「偏累」或「休息日」，不勉强。") + langTip }
+    ];
+    if (opts.vitalsLine) {
+      items.push({ k: "手表与秤实时状态", v: opts.vitalsLine, sub: "已结合你最新的静息心率、HRV、睡眠和运动负荷排课。" });
+    }
+    items.push({ k: "慢节奏推进", v: `${cur.progName}（${cur.doneInProg}/${cur.progTotal}）`, sub: progSub });
     return {
       tier: opts.tier || "green",
       tierText: opts.tierText,
@@ -8936,11 +8968,7 @@ window.ZB = (function() {
       rideMin: cur.min,
       guide: {
         title: `今日推荐课程 · ${cur.code}`,
-        items: [
-          { k: "今天骑这节", v: `${cur.title}（${cur.coach} · ${cur.min} 分钟）`, sub: cur.cue, cur: true },
-          { k: "Bike+ 一步找到", v: cur.entry, sub: (opts.extraNote || "状态好就照这节骑；如果今天累了随时点「偏累」或「休息日」，不勉强。") + langTip },
-          { k: "慢节奏推进", v: `${cur.progName}（${cur.doneInProg}/${cur.progTotal}）`, sub: progSub }
-        ],
+        items,
         showSyllabus: true,
         canOverridePZ: false
       },
@@ -8957,7 +8985,8 @@ window.ZB = (function() {
     const bbY = bbOn(yestYmd), bb2 = bbOn(prev2Ymd);
     const peloY = peloOn(yestYmd), dY = dayE(yestYmd);
     const pelo = peloOn(ymd), wk = weekStats(ymd), dObj = dayE(ymd);
-    const rhr = (ST.vitals && ST.vitals.rhr) || 40;
+    const wr = watchReadiness(ymd);
+    const rhr = wr.rhr || 40;
     const curIdx = getPZIdx();
     const cur = getPZMeta(curIdx);
     const lastPZ = (ST.pz && ST.pz.last) || "";
@@ -9039,14 +9068,15 @@ window.ZB = (function() {
       };
     }
 
-    // 2. High RHR protection
-    if (rhr >= 46 && !forcePZ) {
+    // 2. Watch Red Auto-Protection (High RHR >= 46 OR severe HRV drop <= 75% of baseline)
+    if ((wr.redRHR || wr.redHRV) && !forcePZ && st.mode !== "bb" && st.mode !== "rest") {
       const restDone = !!(pelo && pelo.status === "rest");
       const recDone = !!(pelo && pelo.status === "recovery");
+      const redWhy = wr.redRHR ? `静息心率 ${rhr} 偏高` : `HRV 骤降至 ${wr.hrv}（平日 ${wr.hrvBase}）`;
       return {
-        tier: "red", tierText: `红档 · 静息心率 ${rhr} 偏高`,
+        tier: "red", tierText: `红档 · ${redWhy}`,
         title: "今晚早睡休养，不上车",
-        shortLine: `心率回到 41 以下再续 ${cur.code} · 引体免练`,
+        shortLine: `手表检测到身体恢复压力大 · ${cur.code} 顺延 · 引体免练`,
         linkText: "安排 ›",
         ctaText: restDone ? "已确认休养 ✓" : (recDone ? "已轻踩 15 分 ✓" : "好，今晚休养"),
         ctaDone: restDone || recDone,
@@ -9054,9 +9084,9 @@ window.ZB = (function() {
         actionType: "rest",
         isPZMain: false, pzCls: cur, rideMin: 0,
         guide: {
-          title: "身体恢复优先 · 今晚安排",
+          title: "手表自动护体 · 恢复优先",
           items: [
-            { k: "为什么今天不骑", v: `静息心率 ${rhr}（平日基线 39–41）`, sub: "心肺还在恢复期，早睡比硬骑更能保状态，引体今天也免练。", cur: true },
+            { k: "为什么自动停骑", v: wr.summary || redWhy, sub: "静息心率偏高或 HRV 明显下滑说明神经与心肺正在恢复期，早睡比硬骑更能保状态，引体今天也免练。", cur: true },
             { k: "若想放松身体", v: "Classes → Stretching → 10 min Lower Body Stretch", sub: "先点右侧 FILTER → Clear；教练选 Hannah Corbin 或 Ben Alldis。" },
             { k: "主线慢慢来", v: `恢复后再接回 ${cur.code}：${cur.title}`, sub: `当前 ${cur.doneInProg}/${cur.progTotal} 节，不赶进度。` }
           ],
@@ -9250,10 +9280,37 @@ window.ZB = (function() {
       };
     }
 
-    // 6. Normal Day: Smart Automatic Fatigue & Basketball-Load Protection (when !forcePZ)
+    // 6. Normal Day: Smart Automatic Watch-Readiness, Fatigue & Basketball-Load Protection (when !forcePZ)
     if (!forcePZ) {
       const restDone = !!(pelo && pelo.status === "rest");
       const recDone = !!(pelo && pelo.status === "recovery");
+
+      // 6-watch. Automatic Watch Fatigue Detection (short sleep < 5.8h or dipped HRV < 84% baseline)
+      if (wr.lowSleep || wr.lowHRV) {
+        const why = wr.lowSleep ? `手表记昨晚仅睡 ${wr.sleepH}h` : `手表 HRV 偏低（${wr.hrv} vs 平日 ${wr.hrvBase}）`;
+        return {
+          tier: "yellow", tierText: `手表护体 · ${why}`,
+          title: recDone ? "15 min Low Impact Ride" : "今晚优先早睡，不上主线",
+          shortLine: `${wr.summary} · ${cur.code} 留给睡饱日`,
+          linkText: "安排 ›",
+          ctaText: restDone ? "已确认早睡 ✓" : (recDone ? "已轻骑 15 分 ✓" : "好，今晚早睡"),
+          ctaDone: restDone || recDone,
+          altAction: { label: "精力足 · 照常推主线", type: "override_pz", active: false },
+          actionType: "rest",
+          isPZMain: false, pzCls: cur, rideMin: 15,
+          guide: {
+            title: "手表自动感应 · 优先恢复",
+            items: [
+              { k: "数据依据", v: wr.summary, sub: `${why}，系统已自动为你减负，今天早睡恢复比硬骑更有用。`, cur: true },
+              { k: "如果实际精力很足", v: `点「精力足 · 照常推主线」即可切回 ${cur.code}：${cur.title}`, sub: "手表只是参考，最终听你自己的真实体感。" },
+              { k: "下节主线", v: `${cur.code} · ${cur.title}（${cur.min} 分）`, sub: `当前 ${cur.doneInProg}/${cur.progTotal} 节。` }
+            ],
+            showSyllabus: true, canOverridePZ: true
+          },
+          cardioDone: restDone || recDone, puTarget: wr.lowSleep ? 0 : 1,
+          state: st.mode, sub: st.sub, bb, pelo, wk, cur, next: cur, daysGap, stale: "none", isTravel: false
+        };
+      }
 
       // 6a. Yesterday max basketball OR 2 heavy basketball days in a row -> Automatic recovery day
       if (yestMaxBB || twoHeavyBB) {
@@ -9403,6 +9460,7 @@ window.ZB = (function() {
             : `绿档 · 本周主线 ${wk.pM}/${wk.pzGoal} 节`)));
     return makePZPlan({
       tier, tierText, cur,
+      vitalsLine: wr.summary,
       extraNote: cur.kind === "test"
         ? "今天没打球且状态正常，正好一口气完成 10 分热身 + 20 分 FTP 测试，锁死你的 7 档专属功率区。"
         : (yestHeavyBB
@@ -9773,7 +9831,14 @@ window.ZB = (function() {
 
     // Tab 4: Ledger
     const kp = ge("zb-kpis");
-    if (kp) kp.innerHTML = `<div><div class="zb-kpi-v">${ST.vitals && ST.vitals.rhr ? ST.vitals.rhr : "--"}</div><div class="zb-kpi-l">静息心率</div></div><div><div class="zb-kpi-v">${ST.vitals && ST.vitals.vo2 ? ST.vitals.vo2 : "--"}</div><div class="zb-kpi-l">摄氧量</div></div><div><div class="zb-kpi-v">${ST.pu_best || 1}<span style="font-size:13px;color:var(--ink-3);font-weight:400;"> / 5</span></div><div class="zb-kpi-l">标准引体</div></div>`;
+    const vt = ST.vitals || {};
+    if (kp) {
+      kp.innerHTML =
+        `<div><div class="zb-kpi-v">${vt.rhr || "--"}</div><div class="zb-kpi-l">静息心率</div></div>` +
+        `<div><div class="zb-kpi-v">${vt.hrv || "--"}</div><div class="zb-kpi-l">HRV</div></div>` +
+        `<div><div class="zb-kpi-v">${vt.sleep_h ? Number(vt.sleep_h).toFixed(1) + "h" : "--"}</div><div class="zb-kpi-l">睡眠</div></div>` +
+        `<div><div class="zb-kpi-v">${ST.pu_best || 1}<span style="font-size:12px;color:var(--ink-3);font-weight:400;">/5</span></div><div class="zb-kpi-l">标准引体</div></div>`;
+    }
     const lpz = ge("zb-ledger-pz");
     if (lpz && cur) {
       lpz.innerHTML = `<span style="color:var(--sumi);font-weight:500;">${escapeHtml(cur.progShort)} · ${cur.doneInProg}/${cur.progTotal} 节</span><span style="color:var(--ink-3);font-size:12.5px;">下节 ${escapeHtml(cur.code)} ›</span>`;
@@ -9828,7 +9893,8 @@ window.ZB = (function() {
       if (gs.length) { gb.style.display = "inline-flex"; gb.textContent = `待补通 ${gs.length} 项 ›`; }
       else { gb.style.display = "none"; }
     }
-    if (ge("zb-sync-txt")) ge("zb-sync-txt").textContent = SYNC_NOTE || (ST.vitals && ST.vitals.last_drive_sync ? `已同步 ${ST.vitals.last_drive_sync}` : "加密同步就绪");
+    const vo2Tag = vt.vo2 ? ` · 摄氧量 ${vt.vo2}` : "";
+    if (ge("zb-sync-txt")) ge("zb-sync-txt").textContent = (SYNC_NOTE || (vt.last_drive_sync ? `已同步 ${vt.last_drive_sync}` : "加密同步就绪")) + vo2Tag;
     if (typeof renderGreenBoard === "function") renderGreenBoard();
   }
 
@@ -10672,6 +10738,18 @@ const pGap8Idle = sb.ZB._planOn('2026-11-18');
 if (pGap8Idle.stale !== 'remind') {
   throw new Error('Self-test 5 failed: 17-day idle gap should gently remind: ' + JSON.stringify(pGap8Idle));
 }
+// Watch auto-readiness: short sleep (<5.8h) -> Yellow early-sleep protection; severe HRV crash -> Red recovery
+zst.vitals = { rhr: 38, rhr_date: '2026-12-10', hrv: 124, hrv_base: 102, hrv_date: '2026-12-10', sleep_h: 5.1, sleep_date: '2026-12-10' };
+const pShortSleep = sb.ZB._planOn('2026-12-10');
+if (pShortSleep.isPZMain || pShortSleep.tier !== 'yellow' || pShortSleep.puTarget !== 0) {
+  throw new Error('Self-test 5 failed: watch short sleep <5.8h should auto-protect: ' + JSON.stringify(pShortSleep));
+}
+zst.vitals = { rhr: 38, rhr_date: '2026-12-11', hrv: 70, hrv_base: 102, hrv_date: '2026-12-11', sleep_h: 7.5, sleep_date: '2026-12-11' };
+const pCrashHRV = sb.ZB._planOn('2026-12-11');
+if (pCrashHRV.isPZMain || pCrashHRV.tier !== 'red' || pCrashHRV.puTarget !== 0) {
+  throw new Error('Self-test 5 failed: severe watch HRV crash should trigger red recovery: ' + JSON.stringify(pCrashHRV));
+}
+zst.vitals = { rhr: 38, rhr_date: '2026-11-22', hrv: 124, hrv_base: 102, hrv_date: '2026-11-21', sleep_h: 7.5, sleep_date: '2026-11-21', vo2: 52.0 };
 // Restore clean today state and test main CTA + undo + modals
 sb.ZB.setState('normal');
 sb.ZB.setPZIdx(1);
