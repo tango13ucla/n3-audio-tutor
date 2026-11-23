@@ -350,6 +350,11 @@ def maybe_generate_live_news_story(
             combined_targets.append(x)
 
     exemplars = load_qq_corpus_exemplars(today_str, count=2)
+    try:
+        import immersion_vocab_engine as _ive
+        vocab_brief = _ive.get_prompt_vocab_brief(today_str=today_str)
+    except Exception:
+        vocab_brief = {}
 
     sys_prompt = (
         "你是凤凰卫视《锵锵三人行》原班总撰稿（深谙 3,182 期实录里的『人味』与『把一件真实新闻剥洋葱讲透』的叙事功力）。\n"
@@ -361,7 +366,7 @@ def maybe_generate_live_news_story(
         "1. 【100% 真实新闻，严禁编造人物】：只能聊输入里的真实新闻与真实日本历史社会脉络，绝对不允许虚构任何假朋友、假同事、假邻居故事！\n"
         "2. 【开篇与收束自然衔接】：开篇第一轮 W 直接以『《锵锵三人行》，』切入今日最热日本新闻；最后两轮由 D/W 自然预告待会儿回来要深聊的今日两段日本真实公共记忆大故事（参考 companion_titles），以『待会儿回来，马上……！』收住悬念即可，不要自己抢说『先进广告』，把原版进广告口播留给系统由文涛统一喊出『咱们先去一下广告，《锵锵三人行》，广告之后见！』。\n"
         "3. 【约 1.35 倍自然语法讲解频率（本章约 5 个 N3 语法/词汇点，自然流畅绝不生硬说教）】：自然揉入 5 个目标 N3 表达；其中 3 个由 D/X 用一两句大白话点透意思、接续或易混双胞胎词，W 顺手接一句；另外 2 个在聊天现场一两句话顺嘴点睛带过，像老友聊天一样自然流畅，绝不变成念教材！\n"
-        "4. 【中文为框架，直接自然夹入 N5 与简单 N4 日语熟词】：像 おにぎり、おでん、コンビニ、スーパー、でんしゃ、しんかんせん、えき、テレビ、ニュース、かいしゃ、しゃちょう、ねだん、おかね、こども、かぞく、びょういん、くすり 等 N5/简单 N4 日常词汇在自然顺口处直接用纯假名夹进中文句子里，不用啰嗦翻译，让听众在中文框架下顺耳熟悉；但任何日文词前后必须保证紧挨的中文片段至少有 2 个汉字以上，绝不留单字中文孤岛！\n"
+        "4. 【365 天 5 次累计毕业制 · 中日无缝融合】：参考输入里的 `immersion_vocab_ledger`：`locked_ja_words`（已累计听满 5 次毕业词）在顺口名词位直接用纯假名说出；新引入的 N3/N2 实用难读词（优先挑 `learning_in_progress` 与 `priority_to_introduce`）上段先『中文也就是纯假名』自然带出一次，下段起直接改用纯假名，绝不堆砌过简单的基础词！\n"
         f"5. 当前处于 {ramp_days} 天双语计划第 {day_num} 天（阶段：{phase}），日语假名占比约 {max(ja_pct, 12)}%。\n"
         "6. 【语音合成硬铁律】：对白文本中凡出现日文词句，必须 100% 写成纯平假名或纯片假名（前后留空格或中文标点），严禁汉字紧贴假名，严禁夹杂单字中文孤岛，严禁破折号（—/——），严禁任何英文字母或阿拉伯数字（数字全写中文），严禁『哈哈』『噗』或考试倒计时。\n"
         "输出严格为 JSON：{\"short_tab\": \"今日时局\", \"title\": \"...\", \"ja_focus\": \"...(此处可正常写日文汉字假名供屏幕显示)\", "
@@ -370,6 +375,7 @@ def maybe_generate_live_news_story(
     usr_prompt = json.dumps({
         "nhk_live_headlines": headlines,
         "last_night_priority_targets": combined_targets[:6],
+        "immersion_vocab_ledger": vocab_brief,
         "later_chapters_for_callbacks": companion_titles[:4],
         "authentic_qqsrx_style_reference": load_cloud_qq_style_exemplars(today_str),
         "authentic_qiangqiang_cadence_examples": exemplars,
@@ -444,6 +450,11 @@ def maybe_generate_live_world_finale_story(
             combined_targets.append(x)
 
     exemplars = load_qq_corpus_exemplars(f"world:{today_str}", count=2)
+    try:
+        import immersion_vocab_engine as _ive
+        vocab_brief = _ive.get_prompt_vocab_brief(today_str=today_str)
+    except Exception:
+        vocab_brief = {}
 
     sys_prompt = (
         "你是凤凰卫视《锵锵三人行》原班总撰稿，现在负责每天 60 分钟节目压轴的【最后五分之一板块：从日本的角度看世界】（约 12 分钟，30 到 42 轮，约 3,350 到 3,650 字）。\n"
@@ -454,7 +465,7 @@ def maybe_generate_live_world_finale_story(
         "1. 【100% 真实国际/科学新闻，严禁编造人物】：只聊输入里的真实世界/科学/科技/医疗/经济新闻，挑一到两件最重磅的彻底聊透，绝不泛泛而谈。\n"
         "2. 【自然衔接与全场唯一收尾】：开篇第一轮由 W 自然承接前面日本往事把镜头拉出日本看世界（不出现『《锵锵三人行》』开场）；最后一轮必须由 W 以温暖自然的『《锵锵三人行》，咱们明天见！』作为全期节目的唯一压轴收尾。\n"
         "3. 【约 1.35 倍自然语法讲解频率（本章约 6 个 N3 语法点，自然流畅绝不生硬）】：自然融入 6 个 N3 高频表达（优先参考目标清单）；3 到 4 个由 D/X 顺嘴用一两句大白话点破意思、接续或双胞胎辨析，另 2 到 3 个轻巧一句带过，保持聊天人味绝不变成枯燥上课。\n"
-        "4. 【中文为框架，直接自然夹入 N5 与简单 N4 日语熟词】：像 せかい、ニュース、かがく、うちゅう、ぎじゅつ、びょういん、くすり、おかね、ねだん、かいしゃ、しゃちょう、コンビニ、おにぎり、おでん、でんしゃ、テレビ、しんぶん、かぞく、こども 等 N5/简单 N4 日常词汇在自然顺口处直接用纯假名夹入中文对话，不用刻意翻译；但日文词前后相邻的中文片段必须至少有 2 个汉字，绝不留单字中文孤岛！\n"
+        "4. 【365 天 5 次累计毕业制 · 中日无缝融合】：参考输入里的 `immersion_vocab_ledger`：`locked_ja_words`（已听满 5 次毕业词）在顺口名词位直接用纯假名说出；新引入的 N3/N2 实用难读词（优先挑 `learning_in_progress` 与 `priority_to_introduce`）上段先『中文也就是纯假名』带出一次，下段起直接改用纯假名，绝不堆砌过简单的基础词！\n"
         f"5. 当前处于 {ramp_days} 天双语计划第 {day_num} 天（阶段：{phase}），日语假名占比约 {max(ja_pct, 12)}%。\n"
         "6. 【语音合成硬铁律】：对白文本中所有日文必须 100% 纯平假名或纯片假名（前后空格或标点隔开），严禁汉字紧贴假名，严禁单字中文孤岛，严禁破折号（—/——），严禁英文字母与阿拉伯数字（全写中文，如『人工智能』『量子』『百分之三十八』），严禁『哈哈』『噗』或考试倒计时。\n"
         "输出严格为 JSON：{\"short_tab\": \"日本看世界\", \"title\": \"...\", \"ja_focus\": \"...(此处可正常写日文汉字假名供屏幕显示)\", "
@@ -463,6 +474,7 @@ def maybe_generate_live_world_finale_story(
     usr_prompt = json.dumps({
         "japan_reported_world_and_science_headlines": world_headlines,
         "priority_n3_grammar_targets": combined_targets[:6],
+        "immersion_vocab_ledger": vocab_brief,
         "earlier_japan_stories_today": companion_titles[:4],
         "authentic_qqsrx_style_reference": load_cloud_qq_style_exemplars(f"world:{today_str}"),
         "authentic_qiangqiang_cadence_examples": exemplars,

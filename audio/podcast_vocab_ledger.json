@@ -1,0 +1,756 @@
+{
+  "schema": "podcast-immersion-ledger/1",
+  "graduation_threshold": 5,
+  "daily_new_budget": 12,
+  "user_priority_words": [
+    "じしょ",
+    "としょかん",
+    "はくぶつかん",
+    "しょるい",
+    "しゅっちょう"
+  ],
+  "daily_counts": {
+    "2026-11-14": {
+      "きょうじゅ": 1
+    },
+    "2026-11-15": {
+      "きょうじゅ": 5
+    },
+    "2026-11-16": {
+      "しゅっちょう": 2,
+      "きょうじゅ": 3
+    },
+    "2026-11-17": {
+      "きょうじゅ": 4
+    },
+    "2026-11-18": {
+      "スーパー": 1,
+      "かいしゃ": 4,
+      "しゃちょう": 4,
+      "めいわく": 4
+    },
+    "2026-11-22": {
+      "あんぜん": 3,
+      "うちゅう": 1,
+      "えいが": 2,
+      "おでん": 1,
+      "おにぎり": 2,
+      "おんがく": 7,
+      "かいしゃ": 3,
+      "かがく": 5,
+      "かぞく": 4,
+      "かんりょう": 3,
+      "がくせい": 3,
+      "きしゃ": 6,
+      "ぎじゅつ": 3,
+      "ぎんこう": 3,
+      "くるま": 1,
+      "げんだい": 2,
+      "こうじょう": 1,
+      "こうぞう": 1,
+      "こっかい": 9,
+      "ざっし": 2,
+      "しじょう": 3,
+      "しゃいん": 5,
+      "しゃちょう": 6,
+      "しゅうかん": 4,
+      "しゅっちょう": 2,
+      "しんかんせん": 5,
+      "しんぶん": 9,
+      "じかん": 6,
+      "せかい": 14,
+      "せっけい": 3,
+      "ちかてつ": 2,
+      "でんしゃ": 10,
+      "とし": 1,
+      "ともだち": 1,
+      "ねだん": 3,
+      "ひこうき": 4,
+      "びょういん": 3,
+      "ぶんか": 1,
+      "べんとう": 2,
+      "めいわく": 1,
+      "よさん": 4,
+      "りょうり": 1,
+      "りょこう": 1,
+      "れきし": 2,
+      "コンビニ": 3,
+      "コーヒー": 4,
+      "スマホ": 2,
+      "スーパー": 4,
+      "テレビ": 5,
+      "ニュース": 6,
+      "バス": 1,
+      "パン": 2,
+      "ラジオ": 1,
+      "ラーメン": 2
+    }
+  },
+  "words": {
+    "きょうじゅ": {
+      "kanji": "教授",
+      "zh": [
+        "教授"
+      ],
+      "tier": "n3_core",
+      "exposures": 13,
+      "status": "locked_ja",
+      "first_date": "2026-11-14",
+      "graduated_date": "2026-11-15",
+      "last_date": "2026-11-17"
+    },
+    "しゅっちょう": {
+      "kanji": "出張",
+      "zh": [
+        "出差"
+      ],
+      "tier": "user_priority",
+      "exposures": 4,
+      "status": "learning",
+      "first_date": "2026-11-16",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "スーパー": {
+      "kanji": "スーパー",
+      "zh": [
+        "超市"
+      ],
+      "tier": "n4_existing",
+      "exposures": 5,
+      "status": "locked_ja",
+      "first_date": "2026-11-18",
+      "graduated_date": "2026-11-22",
+      "last_date": "2026-11-22"
+    },
+    "かいしゃ": {
+      "kanji": "会社",
+      "zh": [
+        "公司"
+      ],
+      "tier": "n4_existing",
+      "exposures": 7,
+      "status": "locked_ja",
+      "first_date": "2026-11-18",
+      "graduated_date": "2026-11-22",
+      "last_date": "2026-11-22"
+    },
+    "しゃちょう": {
+      "kanji": "社長",
+      "zh": [
+        "社长"
+      ],
+      "tier": "n4_existing",
+      "exposures": 10,
+      "status": "locked_ja",
+      "first_date": "2026-11-18",
+      "graduated_date": "2026-11-22",
+      "last_date": "2026-11-22"
+    },
+    "めいわく": {
+      "kanji": "迷惑",
+      "zh": [
+        "添麻烦",
+        "困扰"
+      ],
+      "tier": "n3_core",
+      "exposures": 5,
+      "status": "locked_ja",
+      "first_date": "2026-11-18",
+      "graduated_date": "2026-11-22",
+      "last_date": "2026-11-22"
+    },
+    "あんぜん": {
+      "kanji": "安全",
+      "zh": [
+        "安全"
+      ],
+      "tier": "n3_core",
+      "exposures": 3,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "うちゅう": {
+      "kanji": "宇宙",
+      "zh": [
+        "太空",
+        "宇宙"
+      ],
+      "tier": "n4_existing",
+      "exposures": 1,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "えいが": {
+      "kanji": "映画",
+      "zh": [
+        "电影"
+      ],
+      "tier": "n4_existing",
+      "exposures": 2,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "おでん": {
+      "kanji": "おでん",
+      "zh": [
+        "关东煮"
+      ],
+      "tier": "n4_existing",
+      "exposures": 1,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "おにぎり": {
+      "kanji": "おにぎり",
+      "zh": [
+        "饭团"
+      ],
+      "tier": "n4_existing",
+      "exposures": 2,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "おんがく": {
+      "kanji": "音楽",
+      "zh": [
+        "音乐"
+      ],
+      "tier": "n4_existing",
+      "exposures": 7,
+      "status": "locked_ja",
+      "first_date": "2026-11-22",
+      "graduated_date": "2026-11-22",
+      "last_date": "2026-11-22"
+    },
+    "かがく": {
+      "kanji": "科学",
+      "zh": [
+        "科学"
+      ],
+      "tier": "n4_existing",
+      "exposures": 5,
+      "status": "locked_ja",
+      "first_date": "2026-11-22",
+      "graduated_date": "2026-11-22",
+      "last_date": "2026-11-22"
+    },
+    "かぞく": {
+      "kanji": "家族",
+      "zh": [
+        "家人",
+        "家庭"
+      ],
+      "tier": "n4_existing",
+      "exposures": 4,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "かんりょう": {
+      "kanji": "官僚",
+      "zh": [
+        "官僚"
+      ],
+      "tier": "n2_core",
+      "exposures": 3,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "がくせい": {
+      "kanji": "学生",
+      "zh": [
+        "学生"
+      ],
+      "tier": "n4_existing",
+      "exposures": 3,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "きしゃ": {
+      "kanji": "記者",
+      "zh": [
+        "记者"
+      ],
+      "tier": "n3_core",
+      "exposures": 6,
+      "status": "locked_ja",
+      "first_date": "2026-11-22",
+      "graduated_date": "2026-11-22",
+      "last_date": "2026-11-22"
+    },
+    "ぎじゅつ": {
+      "kanji": "技術",
+      "zh": [
+        "技术"
+      ],
+      "tier": "n4_existing",
+      "exposures": 3,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "ぎんこう": {
+      "kanji": "銀行",
+      "zh": [
+        "银行"
+      ],
+      "tier": "n4_existing",
+      "exposures": 3,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "くるま": {
+      "kanji": "車",
+      "zh": [
+        "汽车"
+      ],
+      "tier": "n4_existing",
+      "exposures": 1,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "げんだい": {
+      "kanji": "現代",
+      "zh": [
+        "现代"
+      ],
+      "tier": "n3_core",
+      "exposures": 2,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "こうじょう": {
+      "kanji": "工場",
+      "zh": [
+        "工厂"
+      ],
+      "tier": "n4_existing",
+      "exposures": 1,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "こうぞう": {
+      "kanji": "構造",
+      "zh": [
+        "结构"
+      ],
+      "tier": "n2_core",
+      "exposures": 1,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "こっかい": {
+      "kanji": "国会",
+      "zh": [
+        "国会"
+      ],
+      "tier": "n3_core",
+      "exposures": 9,
+      "status": "locked_ja",
+      "first_date": "2026-11-22",
+      "graduated_date": "2026-11-22",
+      "last_date": "2026-11-22"
+    },
+    "ざっし": {
+      "kanji": "雑誌",
+      "zh": [
+        "杂志"
+      ],
+      "tier": "n3_core",
+      "exposures": 2,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "しじょう": {
+      "kanji": "市場",
+      "zh": [
+        "市场"
+      ],
+      "tier": "n3_core",
+      "exposures": 3,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "しゃいん": {
+      "kanji": "社員",
+      "zh": [
+        "员工"
+      ],
+      "tier": "n4_existing",
+      "exposures": 5,
+      "status": "locked_ja",
+      "first_date": "2026-11-22",
+      "graduated_date": "2026-11-22",
+      "last_date": "2026-11-22"
+    },
+    "しゅうかん": {
+      "kanji": "習慣",
+      "zh": [
+        "习惯"
+      ],
+      "tier": "n3_core",
+      "exposures": 4,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "しんかんせん": {
+      "kanji": "新幹線",
+      "zh": [
+        "新干线"
+      ],
+      "tier": "n4_existing",
+      "exposures": 5,
+      "status": "locked_ja",
+      "first_date": "2026-11-22",
+      "graduated_date": "2026-11-22",
+      "last_date": "2026-11-22"
+    },
+    "しんぶん": {
+      "kanji": "新聞",
+      "zh": [
+        "报纸"
+      ],
+      "tier": "n4_existing",
+      "exposures": 9,
+      "status": "locked_ja",
+      "first_date": "2026-11-22",
+      "graduated_date": "2026-11-22",
+      "last_date": "2026-11-22"
+    },
+    "じかん": {
+      "kanji": "時間",
+      "zh": [
+        "时间"
+      ],
+      "tier": "n4_existing",
+      "exposures": 6,
+      "status": "locked_ja",
+      "first_date": "2026-11-22",
+      "graduated_date": "2026-11-22",
+      "last_date": "2026-11-22"
+    },
+    "せかい": {
+      "kanji": "世界",
+      "zh": [
+        "世界"
+      ],
+      "tier": "n4_existing",
+      "exposures": 14,
+      "status": "locked_ja",
+      "first_date": "2026-11-22",
+      "graduated_date": "2026-11-22",
+      "last_date": "2026-11-22"
+    },
+    "せっけい": {
+      "kanji": "設計",
+      "zh": [
+        "设计"
+      ],
+      "tier": "n3_core",
+      "exposures": 3,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "ちかてつ": {
+      "kanji": "地下鉄",
+      "zh": [
+        "地铁"
+      ],
+      "tier": "n4_existing",
+      "exposures": 2,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "でんしゃ": {
+      "kanji": "電車",
+      "zh": [
+        "电车"
+      ],
+      "tier": "n4_existing",
+      "exposures": 10,
+      "status": "locked_ja",
+      "first_date": "2026-11-22",
+      "graduated_date": "2026-11-22",
+      "last_date": "2026-11-22"
+    },
+    "とし": {
+      "kanji": "都市",
+      "zh": [
+        "城市",
+        "都市"
+      ],
+      "tier": "n3_core",
+      "exposures": 1,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "ともだち": {
+      "kanji": "友達",
+      "zh": [
+        "朋友"
+      ],
+      "tier": "n4_existing",
+      "exposures": 1,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "ねだん": {
+      "kanji": "値段",
+      "zh": [
+        "价格"
+      ],
+      "tier": "n4_existing",
+      "exposures": 3,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "ひこうき": {
+      "kanji": "飛行機",
+      "zh": [
+        "飞机"
+      ],
+      "tier": "n4_existing",
+      "exposures": 4,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "びょういん": {
+      "kanji": "病院",
+      "zh": [
+        "医院"
+      ],
+      "tier": "n4_existing",
+      "exposures": 3,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "ぶんか": {
+      "kanji": "文化",
+      "zh": [
+        "文化"
+      ],
+      "tier": "n3_core",
+      "exposures": 1,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "べんとう": {
+      "kanji": "弁当",
+      "zh": [
+        "便当"
+      ],
+      "tier": "n4_existing",
+      "exposures": 2,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "よさん": {
+      "kanji": "予算",
+      "zh": [
+        "预算"
+      ],
+      "tier": "n3_core",
+      "exposures": 4,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "りょうり": {
+      "kanji": "料理",
+      "zh": [
+        "料理"
+      ],
+      "tier": "n4_existing",
+      "exposures": 1,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "りょこう": {
+      "kanji": "旅行",
+      "zh": [
+        "旅行"
+      ],
+      "tier": "n4_existing",
+      "exposures": 1,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "れきし": {
+      "kanji": "歴史",
+      "zh": [
+        "历史"
+      ],
+      "tier": "n3_core",
+      "exposures": 2,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "コンビニ": {
+      "kanji": "コンビニ",
+      "zh": [
+        "便利店"
+      ],
+      "tier": "n4_existing",
+      "exposures": 3,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "コーヒー": {
+      "kanji": "コーヒー",
+      "zh": [
+        "咖啡"
+      ],
+      "tier": "n4_existing",
+      "exposures": 4,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "スマホ": {
+      "kanji": "スマホ",
+      "zh": [
+        "手机"
+      ],
+      "tier": "n3_core",
+      "exposures": 2,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "テレビ": {
+      "kanji": "テレビ",
+      "zh": [
+        "电视"
+      ],
+      "tier": "n4_existing",
+      "exposures": 5,
+      "status": "locked_ja",
+      "first_date": "2026-11-22",
+      "graduated_date": "2026-11-22",
+      "last_date": "2026-11-22"
+    },
+    "ニュース": {
+      "kanji": "ニュース",
+      "zh": [
+        "新闻"
+      ],
+      "tier": "n4_existing",
+      "exposures": 6,
+      "status": "locked_ja",
+      "first_date": "2026-11-22",
+      "graduated_date": "2026-11-22",
+      "last_date": "2026-11-22"
+    },
+    "バス": {
+      "kanji": "バス",
+      "zh": [
+        "巴士"
+      ],
+      "tier": "n4_existing",
+      "exposures": 1,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "パン": {
+      "kanji": "パン",
+      "zh": [
+        "面包"
+      ],
+      "tier": "n4_existing",
+      "exposures": 2,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "ラジオ": {
+      "kanji": "ラジオ",
+      "zh": [
+        "收音机"
+      ],
+      "tier": "n4_existing",
+      "exposures": 1,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    },
+    "ラーメン": {
+      "kanji": "ラーメン",
+      "zh": [
+        "拉面"
+      ],
+      "tier": "n4_existing",
+      "exposures": 2,
+      "status": "learning",
+      "first_date": "2026-11-22",
+      "graduated_date": "",
+      "last_date": "2026-11-22"
+    }
+  },
+  "updated_date": "2026-11-22"
+}

@@ -60,6 +60,7 @@ except Exception:
 from adaptive_bank import EXTRA_PRIMARY_CARDS, POINT_META
 from compose_qq_music import ensure_qq_music_assets
 from daily_news_salon_gen import maybe_generate_live_news_story, maybe_generate_live_world_finale_story
+import immersion_vocab_engine as ive
 from radio_dialogue_bank import MODALITY_MAP, SALON_STORIES
 import tutor_prefs
 from tutor_data import TUTOR_ITEMS
@@ -83,8 +84,12 @@ MAX_TRIES = int(os.environ.get("RADIO_MAX_TRIES", "6"))
 GEMINI_API_KEY = (os.environ.get("GEMINI_API_KEY") or "").strip()
 GEMINI_TTS_MODEL = os.environ.get("GEMINI_TTS_MODEL", "gemini-2.5-flash-preview-tts")
 
-# Matches Japanese spans (inline words spoken smoothly in-flow; full sentences spoken clearly at -12%/-13%)
+# Matches Japanese spans or already-encoded `{{zh_carrier|ja_kana}}` inline swap tokens
 JA_SPAN_RE = re.compile(r"([\u3040-\u30ffー・]+(?:[、。！？\s]+[\u3040-\u30ffー・]+)*[。！？]?)")
+SWAP_TOKEN_RE = re.compile(r"\{\{([^|]+)\|([^}]+)\}\}")
+MIXED_OR_JA_RE = re.compile(
+    r"(\{\{[^|]+\|[^}]+\}\}|[\u3040-\u30ffー・]+(?:[、。！？\s]+[\u3040-\u30ffー・]+)*[。！？]?)"
+)
 
 # Split Mandarin ONLY at complete sentence endings (NEVER on commas `，` or `、`) or genuine comic self-corrections
 SENTENCE_CHUNK_RE = re.compile(r"[^。！？]+[。！？]+[”』」）]*|[^。！？]+$")
@@ -655,6 +660,16 @@ def split_mandarin_natural(
 
 
 def expand_turn_events(spk: str, val) -> list:
+    """
+    v40 Seamless Bilingual Co-Articulation Event Planner:
+    - Keeps every Mandarin sentence containing inline Japanese words (both pre-existing N5/N4
+      words and newly promoted N3/N2 words) 100% INTACT as ONE unbroken `{{carrier|kana}}`
+      sentence event so the Calibrated Carrier-Swap Synthesizer splices Japanese words seamlessly
+      inside a single human Mandarin breath with ZERO awkward gaps or prosody drops!
+    - Only splits out genuine standalone Full Japanese demonstration sentences (e.g. after `：`
+      or containing Japanese clause punctuation `、。？！`) into dedicated `_JA` study clips
+      with a brisk, natural 0.13s breath pause.
+    """
     if spk in ("PAUSE", "LATCH"):
         return [(spk, float(val))]
     txt = str(val).strip()
@@ -663,27 +678,47 @@ def expand_turn_events(spk: str, val) -> list:
 
     turn_gear = pick_turn_gear(spk, txt)
     ja_full_spk = f"{spk}_JA"
-    ja_inline_spk = f"{spk}_JA_INLINE"
 
-    if not JA_SPAN_RE.search(txt):
+    # Pure Japanese turn (zero Chinese ideographs, e.g., Post-N3 native podcast segments)
+    if not re.search(r"[\u4e00-\u9fff]", txt) and JA_SPAN_RE.search(txt) and not SWAP_TOKEN_RE.search(txt):
+        return [(ja_full_spk, clean_ja_sentence_commas(txt))]
+
+    if not MIXED_OR_JA_RE.search(txt):
         evs = split_mandarin_natural(spk, txt, turn_gear, is_turn_start=True, is_turn_end=True)
         return evs if evs else [(turn_gear, txt)]
 
-    parts = JA_SPAN_RE.split(txt)
-    out: list[tuple[str, object]] = []
-    pending_pause = 0.0
-    n_parts = len(parts)
+    # Reassemble text keeping all inline Japanese tokens as `{{carrier|kana}}` INSIDE Mandarin
+    # sentences, splitting ONLY around full standalone Japanese demonstration sentences!
+    parts = MIXED_OR_JA_RE.split(txt)
+    segments: list[tuple[str, str]] = []  # ("ZH_MIXED", text) or ("JA_FULL", kana_sentence)
+    buf: list[str] = []
+
+    def _flush_buf():
+        if not buf:
+            return
+        s = "".join(buf)
+        # Strip stray ASCII spaces hugging `{{carrier|kana}}` so zero fake pauses ever slip in
+        s = re.sub(r"[ \t]*(\{\{[^|]+\|[^}]+\}\})[ \t]*", r"\1", s)
+        s = s.strip()
+        buf.clear()
+        if s and re.search(r"[\w\u3040-\u9fff]", s):
+            segments.append(("ZH_MIXED", s))
 
     for idx, pt in enumerate(parts):
         if not pt:
             continue
         if idx % 2 == 1:
+            # Already an explicit `{{carrier|kana}}` swap token -> keep inline in Mandarin flow!
+            if pt.startswith("{{") and pt.endswith("}}"):
+                buf.append(pt)
+                continue
             ks = re.sub(r"\s+", "", pt.strip())
             if not ks:
                 continue
             ended_punct = ks[-1] in "。！？"
+            trail_p = ks[-1] if ended_punct else ""
             core_ks = ks[:-1] if ended_punct else ks
-            prev_zh = parts[idx - 1].rstrip() if idx >= 1 else ""
+            prev_zh = "".join(buf).rstrip()
             after_colon_or_stop = (not prev_zh) or (prev_zh[-1] in "：:。！？")
             is_full_sentence = (
                 after_colon_or_stop and len(core_ks) >= 7
@@ -695,55 +730,60 @@ def expand_turn_events(spk: str, val) -> list:
                 or (ended_punct and len(core_ks) >= 10)
             )
             if is_full_sentence:
+                _flush_buf()
                 ks_clean = clean_ja_sentence_commas(ks)
                 if ks_clean[-1] not in "。！？":
                     ks_clean = ks_clean + "。"
-                if out:
-                    out.append(("PAUSE", round(max(pending_pause, 0.20), 3)))
-                out.append((ja_full_spk, ks_clean))
-                pending_pause = 0.28 if ended_punct else 0.16
+                segments.append(("JA_FULL", ks_clean))
             else:
-                ks_inline = ks if ended_punct else ks
-                if out:
-                    out.append(("PAUSE", round(max(pending_pause, 0.02), 3)))
-                out.append((ja_inline_spk, ks_inline))
-                pending_pause = 0.18 if ended_punct else 0.02
+                # Inline Japanese word/phrase inside Mandarin flow -> encode for seamless Carrier-Swap!
+                carrier = ive.get_carrier_zh(core_ks)
+                buf.append(f"{{{{{carrier}|{core_ks}}}}}{trail_p}")
         else:
-            lead_m = re.match(r"^[\s』」）“”]*([。！？；，、：…]+)[\s『「（“”]*", pt)
+            buf.append(pt)
+    _flush_buf()
+
+    out: list[tuple[str, object]] = []
+    pending_pause = 0.0
+    n_segs = len(segments)
+    for s_idx, (kind, seg_txt) in enumerate(segments):
+        if kind == "JA_FULL":
+            if out:
+                out.append(("PAUSE", round(max(pending_pause, 0.13), 3)))
+            out.append((ja_full_spk, seg_txt))
+            pending_pause = 0.18 if seg_txt.endswith(("。", "！", "？")) else 0.12
+        else:
+            lead_m = re.match(r"^[\s』」）“”]*([。！？；，、：…]+)[\s『「（“”]*", seg_txt)
             if lead_m:
                 pchars = lead_m.group(1)
                 if any(c in pchars for c in "。！？；"):
-                    pending_pause = max(pending_pause, 0.22)
+                    pending_pause = max(pending_pause, 0.18)
                 elif "…" in pchars:
-                    pending_pause = max(pending_pause, 0.20)
+                    pending_pause = max(pending_pause, 0.16)
                 else:
                     pending_pause = max(pending_pause, 0.08)
-                pt = pt[lead_m.end():]
-            pt_s = pt.strip()
-            if not pt_s or not re.search(r"[\w\u3040-\u9fff]", pt_s):
+                seg_txt = seg_txt[lead_m.end():].strip()
+            if not seg_txt or not re.search(r"[\w\u3040-\u9fff]", seg_txt):
                 continue
-            has_later_content = any(bool(p.strip()) for p in parts[idx + 1 : n_parts])
             zh_evs = split_mandarin_natural(
                 spk,
-                pt_s,
+                seg_txt,
                 turn_gear,
                 is_turn_start=(not out),
-                is_turn_end=(not has_later_content),
+                is_turn_end=(s_idx == n_segs - 1),
             )
             if not zh_evs:
                 continue
             if out:
-                out.append(("PAUSE", round(max(pending_pause, 0.02), 3)))
+                out.append(("PAUSE", round(max(pending_pause, 0.12), 3)))
             out.extend(zh_evs)
             last_txt = str(zh_evs[-1][1]).rstrip("”』」） ")
             if last_txt and last_txt[-1] in "。！？；":
-                pending_pause = 0.22
-            elif last_txt and last_txt[-1] in "：:":
                 pending_pause = 0.18
-            elif last_txt and last_txt[-1] in "，、":
-                pending_pause = 0.08
+            elif last_txt and last_txt[-1] in "：:":
+                pending_pause = 0.13
             else:
-                pending_pause = 0.02
+                pending_pause = 0.10
     return out if out else [(turn_gear, txt)]
 
 
@@ -756,8 +796,8 @@ def turn_switch_transition(prev_spk: str, prev_txt: str, next_spk: str, next_txt
     """
     p = str(prev_txt).strip()
     s = str(next_txt).strip()
-    prev_ends_ja = bool(re.search(r"[\u3040-\u30ffー][。！？、”』」）\s]*$", p))
-    next_starts_ja = bool(re.match(r"^[\s“『「（]*[\u3040-\u30ffー]", s))
+    prev_ends_ja = bool(re.search(r"(?:[\u3040-\u30ffー]|\}\})[。！？、”』」）\s]*$", p))
+    next_starts_ja = bool(re.match(r"^[\s“『「（]*(?:[\u3040-\u30ffー]|\{\{)", s))
     if (
         prev_spk != next_spk
         and not prev_ends_ja
@@ -1082,6 +1122,335 @@ def decode_to_pcm_f32(audio_path: str, trim_speech: bool = True, spk_key: str = 
             arr[:fade_n] *= ramp
             arr[-fade_n:] *= ramp[::-1]
     return arr
+
+
+# ==============================================================================
+# v40 Calibrated Seamless Bilingual Carrier-Swap Co-Articulation Engine
+# Synthesizes Chinese sentences containing inline Japanese words in ONE unbroken
+# Mandarin breath with `WordBoundary` timestamps, then surgically swaps each
+# Chinese placeholder with tightly trimmed, loudness-matched Japanese PCM using
+# empirically calibrated Azure offset physics (+45..75ms start / +10..55ms end)
+# and 9ms raised-cosine crossfades -> ZERO awkward Chinese-Japanese gaps!
+# ==============================================================================
+_NORM_CHAR_RE = re.compile(r"[\u4e00-\u9fffA-Za-z0-9]")
+
+
+def inline_ja_voice_cfg(spk_key: str, voice_map: dict, ja_kana: str) -> tuple[str, str, str]:
+    voice, rate_s, pitch_s = voice_map[spk_key][0], voice_map[spk_key][1], (voice_map[spk_key][2] if len(voice_map[spk_key]) > 2 else "+0Hz")
+    try:
+        zh_pct = int(str(rate_s).replace("%", "").strip())
+    except Exception:
+        zh_pct = 8
+    if len(ja_kana) >= 9:
+        ja_pct = max(-4, min(0, zh_pct - 6))
+    else:
+        ja_pct = max(2, min(10, zh_pct))
+    return (voice, f"{ja_pct:+d}%", pitch_s)
+
+
+def tight_trim_pcm(arr: np.ndarray, thresh_db: float = -32.0, pad_head_ms: float = 4.0, pad_tail_ms: float = 6.0) -> np.ndarray:
+    if np is None or len(arr) < 192:
+        return arr
+    thresh = 10.0 ** (thresh_db / 20.0)
+    win = int(SR * 0.004)  # 4ms frame
+    nf = len(arr) // win
+    if nf < 2:
+        return arr
+    rms = np.sqrt(np.mean(arr[: nf * win].reshape(nf, win) ** 2, axis=1) + 1e-12)
+    act = np.where(rms > thresh)[0]
+    if len(act) == 0:
+        return arr
+    s0 = max(0, int(act[0] * win) - int(SR * pad_head_ms / 1000.0))
+    s1 = min(len(arr), int((act[-1] + 1) * win) + int(SR * pad_tail_ms / 1000.0))
+    out = arr[s0:s1].copy()
+    fn = min(int(SR * 0.005), len(out) // 4)
+    if fn > 2:
+        ramp = 0.5 - 0.5 * np.cos(np.linspace(0.0, np.pi, fn, dtype=np.float32))
+        out[:fn] *= ramp
+        out[-fn:] *= ramp[::-1]
+    return out
+
+
+def match_local_rms_pcm(clip: np.ndarray, ref_pcm: np.ndarray, center_idx: int) -> np.ndarray:
+    if np is None or len(clip) < 480 or len(ref_pcm) < 480:
+        return clip
+    lo = max(0, center_idx - int(SR * 1.2))
+    hi = min(len(ref_pcm), center_idx + int(SR * 1.2))
+    seg = ref_pcm[lo:hi]
+    fl = 240
+    nf = len(seg) // fl
+    cnf = len(clip) // fl
+    if nf < 2 or cnf < 2:
+        return clip
+    s_rms = np.sqrt(np.mean(seg[: nf * fl].reshape(nf, fl) ** 2, axis=1) + 1e-12)
+    c_rms = np.sqrt(np.mean(clip[: cnf * fl].reshape(cnf, fl) ** 2, axis=1) + 1e-12)
+    s_act = s_rms[s_rms > 0.015]
+    c_act = c_rms[c_rms > 0.015]
+    if len(s_act) == 0 or len(c_act) == 0:
+        return clip
+    mult = float(np.clip(float(np.median(s_act)) / max(float(np.median(c_act)), 1e-4), 0.82, 1.22))
+    return (clip * mult).astype(np.float32)
+
+
+def xfade_concat_pcm(clips: list[np.ndarray], xfade_ms: float = 9.0) -> np.ndarray:
+    valid = [c for c in clips if c is not None and len(c) > 0]
+    if not valid:
+        return np.zeros(0, dtype=np.float32)
+    out = valid[0].copy()
+    ov_target = int(SR * xfade_ms / 1000.0)
+    for nxt in valid[1:]:
+        ov = min(ov_target, len(out) // 4, len(nxt) // 4)
+        if ov > 4:
+            fade_out = 0.5 + 0.5 * np.cos(np.linspace(0.0, np.pi, ov, dtype=np.float32))
+            fade_in = 1.0 - fade_out
+            mid = out[-ov:] * fade_out + nxt[:ov] * fade_in
+            out = np.concatenate([out[:-ov], mid, nxt[ov:]])
+        else:
+            out = np.concatenate([out, nxt])
+    return out.astype(np.float32)
+
+
+def _find_min_energy_idx(pcm: np.ndarray, lo_i: int, hi_i: int, fallback_i: int) -> int:
+    lo = max(0, lo_i)
+    hi = min(len(pcm), hi_i)
+    if hi - lo < 48:
+        return max(0, min(len(pcm), fallback_i))
+    win = 48  # 2ms
+    best_i = max(lo, min(hi, fallback_i))
+    best_e = 1e9
+    for pos in range(lo, hi - win, 24):
+        e = float(np.mean(pcm[pos : pos + win] ** 2))
+        if e < best_e:
+            best_e = e
+            best_i = pos + win // 2
+    return best_i
+
+
+def build_carrier_and_spans(mixed_txt: str) -> tuple[str, list[tuple[int, int, str, str]]]:
+    """
+    Converts `mixed_txt` containing `{{zh_carrier|ja_kana}}` into:
+      - `carrier_zh`: pure Mandarin carrier sentence with ZWNJ word-boundary protection
+      - `target_spans`: list of `(raw_start, raw_end, zh_carrier, ja_kana)` exact indices
+    """
+    out_parts: list[str] = []
+    target_spans: list[tuple[int, int, str, str]] = []
+    last = 0
+    cur_len = 0
+    for m in SWAP_TOKEN_RE.finditer(mixed_txt):
+        pre = protect_mandarin_word_boundaries(mixed_txt[last : m.start()])
+        out_parts.append(pre)
+        cur_len += len(pre)
+        zh_w, ja_w = m.group(1).strip(), m.group(2).strip()
+        wrapped = f"\u200c{zh_w}\u200c"
+        out_parts.append(wrapped)
+        target_spans.append((cur_len + 1, cur_len + 1 + len(zh_w), zh_w, ja_w))
+        cur_len += len(wrapped)
+        last = m.end()
+    tail = protect_mandarin_word_boundaries(mixed_txt[last:])
+    out_parts.append(tail)
+    return "".join(out_parts), target_spans
+
+
+async def synth_edge_with_boundaries(
+    spk_key: str,
+    voice_cfg: tuple,
+    text: str,
+    out_path: str,
+    sem: asyncio.Semaphore,
+) -> list[dict] | None:
+    if edge_tts is None:
+        return None
+    voice, rate, pitch = voice_cfg[0], voice_cfg[1], (voice_cfg[2] if len(voice_cfg) > 2 else "+0Hz")
+    speak_txt = text.rstrip("，、：:； ") or text.strip()
+    punct_stripped = speak_txt.rstrip("，、：:； ")
+    with_period = (punct_stripped + "。") if (punct_stripped and punct_stripped[-1] not in "。！？") else speak_txt
+    base_spk = spk_key.split("_")[0]
+    alt_voice = "it-IT-GiuseppeMultilingualNeural" if base_spk == "D" else "en-AU-WilliamMultilingualNeural"
+    alt_pitch = "-3Hz" if base_spk == "D" else "+0Hz"
+
+    async with sem:
+        for attempt in range(MAX_TRIES):
+            if attempt == 0:
+                u_v, u_r, u_p, u_t = voice, rate, pitch, speak_txt
+            elif attempt == 1:
+                u_v, u_r, u_p, u_t = voice, rate, pitch, with_period
+            elif attempt == 2:
+                u_v, u_r, u_p, u_t = voice, rate, "+0Hz", with_period
+            elif attempt == 3:
+                u_v, u_r, u_p, u_t = voice, "+0%", "+0Hz", with_period
+            else:
+                u_v, u_r, u_p, u_t = alt_voice, rate, alt_pitch, with_period
+            try:
+                buf = bytearray()
+                bnds: list[dict] = []
+                try:
+                    comm = edge_tts.Communicate(u_t, u_v, rate=u_r, pitch=u_p, boundary="WordBoundary", **COMM_KWARGS)
+                except TypeError:
+                    comm = edge_tts.Communicate(u_t, u_v, rate=u_r, **COMM_KWARGS)
+
+                async def _pull():
+                    async for chunk in comm.stream():
+                        if chunk["type"] == "audio":
+                            buf.extend(chunk["data"])
+                        elif chunk["type"] == "WordBoundary":
+                            bnds.append({
+                                "text": chunk["text"],
+                                "offset_s": chunk["offset"] / 1e7,
+                                "dur_s": chunk["duration"] / 1e7,
+                            })
+
+                await asyncio.wait_for(_pull(), timeout=55.0)
+                if buf:
+                    with open(out_path, "wb") as f:
+                        f.write(buf)
+                    return bnds
+            except Exception as e:
+                if attempt + 1 < MAX_TRIES:
+                    await asyncio.sleep(0.45 * (attempt + 1))
+                elif MAX_TRIES > 1:
+                    print(f"[warn] carrier synth failed ({u_v} | {spk_key}): {e!r}")
+    return None
+
+
+def splice_mixed_swap_pcm(
+    spk_key: str,
+    carrier_zh: str,
+    target_spans: list[tuple[int, int, str, str]],
+    carrier_mp3: str,
+    bnds: list[dict],
+    ja_pcm_map: dict[tuple[str, str], np.ndarray],
+) -> np.ndarray | None:
+    if not bnds or not os.path.exists(carrier_mp3) or os.path.getsize(carrier_mp3) == 0:
+        return None
+    cpcm = apply_host_vocal_timbre(decode_to_pcm_f32(carrier_mp3, trim_speech=False), spk_key)
+    if len(cpcm) < 240:
+        return None
+
+    # Map normalized CJK/alnum character indices of `carrier_zh` onto WordBoundary spans
+    norm_chars: list[str] = []
+    raw_to_norm: dict[int, int] = {}
+    for raw_i, ch in enumerate(carrier_zh):
+        if _NORM_CHAR_RE.match(ch):
+            raw_to_norm[raw_i] = len(norm_chars)
+            norm_chars.append(ch)
+    norm_str = "".join(norm_chars)
+
+    b_spans: list[tuple[int, int, float, float, str]] = []
+    pos = 0
+    for b in bnds:
+        tok = "".join(c for c in str(b.get("text") or "") if _NORM_CHAR_RE.match(c))
+        if not tok:
+            continue
+        idx = norm_str.find(tok, pos)
+        if idx == -1:
+            idx = norm_str.find(tok, max(0, pos - 4))
+        if idx != -1:
+            t0 = float(b["offset_s"])
+            t1 = t0 + float(b["dur_s"])
+            b_spans.append((idx, idx + len(tok), t0, t1, tok))
+            pos = idx + len(tok)
+
+    if not b_spans:
+        return None
+
+    pieces: list[np.ndarray] = []
+    cur = 0
+    for raw_s, raw_e, zh_w, ja_w in target_spans:
+        jclip = ja_pcm_map.get((spk_key, ja_w))
+        if jclip is None or len(jclip) == 0:
+            return None
+        ns = [raw_to_norm[i] for i in range(raw_s, raw_e) if i in raw_to_norm]
+        if not ns:
+            return None
+        t_ns, t_ne = ns[0], ns[-1] + 1
+        hits = [bs for bs in b_spans if bs[1] > t_ns and bs[0] < t_ne]
+        if not hits:
+            return None
+        h0, h1 = hits[0], hits[-1]
+        if h0[0] != t_ns:
+            t0 = h0[2] + (h0[3] - h0[2]) * ((t_ns - h0[0]) / max(1, h0[1] - h0[0]))
+        else:
+            t0 = h0[2]
+        if h1[1] != t_ne:
+            t1 = h1[2] + (h1[3] - h1[2]) * ((t_ne - h1[0]) / max(1, h1[1] - h1[0]))
+        else:
+            t1 = h1[3]
+
+        prev_bs = [bs for bs in b_spans if bs[1] <= t_ns]
+        next_bs = [bs for bs in b_spans if bs[0] >= t_ne]
+        gap_before = (t0 - prev_bs[-1][3]) if prev_bs else 0.5
+        gap_after = (next_bs[0][2] - t1) if next_bs else 0.5
+
+        # Empirically calibrated Azure WordBoundary acoustic offset:
+        # After/before pauses (>=60ms): audio starts ~+75ms after wb_start and ends ~+10ms after wb_end.
+        # In continuous abutting speech (<60ms): audio runs ~+45ms..+55ms shifted relative to wb!
+        sh0 = 0.075 if gap_before >= 0.06 else 0.045
+        sh1 = 0.010 if gap_after >= 0.06 else 0.055
+
+        s0 = _find_min_energy_idx(
+            cpcm,
+            max(cur, int((t0 + sh0 - 0.015) * SR)),
+            int((t0 + sh0 + 0.015) * SR),
+            max(cur, int((t0 + sh0) * SR)),
+        )
+        s1 = _find_min_energy_idx(
+            cpcm,
+            max(s0, int((t1 + sh1 - 0.012) * SR)),
+            int((t1 + sh1 + 0.018) * SR),
+            max(s0, int((t1 + sh1) * SR)),
+        )
+        if s0 > cur:
+            pieces.append(cpcm[cur:s0])
+        matched_j = match_local_rms_pcm(jclip, cpcm, (s0 + s1) // 2)
+        pieces.append(matched_j)
+        cur = s1
+
+    if cur < len(cpcm):
+        pieces.append(cpcm[cur:])
+    out_arr = xfade_concat_pcm(pieces, xfade_ms=9.0)
+    out_arr = compress_internal_silences(out_arr)
+    out_arr = tight_trim_pcm(out_arr, thresh_db=-44.0, pad_head_ms=10.0, pad_tail_ms=15.0)
+    return out_arr
+
+
+async def fallback_tight_stitch_mixed(
+    spk_key: str,
+    voice_cfg: tuple,
+    mixed_txt: str,
+    tmpdir: str,
+    sem: asyncio.Semaphore,
+    ja_pcm_map: dict[tuple[str, str], np.ndarray],
+) -> np.ndarray | None:
+    """Zero-gap tight-trimmed fallback if WordBoundary ever misses on an edge-case sentence."""
+    parts = SWAP_TOKEN_RE.split(mixed_txt)
+    # split with 2 capturing groups -> [zh0, carrier0, ja0, zh1, carrier1, ja1, zh2, ...]
+    clips: list[np.ndarray] = []
+    idx = 0
+    piece_i = 0
+    while idx < len(parts):
+        zh_seg = parts[idx].strip()
+        if zh_seg and re.search(r"[\w\u4e00-\u9fff]", zh_seg):
+            clean_zh = zh_seg.lstrip("，、")
+            if zh_seg[0] in "，、":
+                clips.append(np.zeros(int(SR * 0.10), dtype=np.float32))
+            if clean_zh:
+                th = hashlib.sha256(f"fb:{spk_key}:{clean_zh}".encode("utf-8")).hexdigest()[:12]
+                fp = os.path.join(tmpdir, f"fb_{th}_{piece_i}.mp3")
+                ok = await synth_turn(spk_key, voice_cfg, clean_zh, fp, sem)
+                if ok and os.path.exists(fp):
+                    raw = apply_host_vocal_timbre(decode_to_pcm_f32(fp, trim_speech=False), spk_key)
+                    clips.append(tight_trim_pcm(raw, thresh_db=-28.0, pad_head_ms=4.0, pad_tail_ms=6.0))
+        if idx + 2 < len(parts):
+            ja_w = parts[idx + 2].strip()
+            jc = ja_pcm_map.get((spk_key, ja_w))
+            if jc is not None and len(jc) > 0:
+                clips.append(jc)
+        idx += 3
+        piece_i += 1
+    if not clips:
+        return None
+    out = xfade_concat_pcm(clips, xfade_ms=14.0)
+    return tight_trim_pcm(compress_internal_silences(out), thresh_db=-44.0, pad_head_ms=10.0, pad_tail_ms=15.0)
 
 
 class StudioTimelineMixer:
@@ -1550,8 +1919,21 @@ async def main():
             "pair_part": int(st.get("pair_part") or 0),
             "is_world_finale": _is_world_finale_story(st),
             "raw_turns": st_turns,
-            "events": turns_to_expanded_events(st_turns),
+            "events": [],
         })
+
+    # Apply 365-Day Cumulative 5-Hit Bilingual Vocabulary Graduation Engine (idempotent per study date)
+    imm_vocab_report: dict = {}
+    if today_str >= "2026-11-22" and imm_profile["ja_ratio"] < 0.72:
+        story_blocks, imm_vocab_report = ive.apply_immersion_to_stories(
+            story_blocks,
+            today_str=today_str,
+            salon_stories=SALON_STORIES,
+            mandarin_boundary_re=MANDARIN_BOUNDARY_RE,
+            commit_ledger=False,
+        )
+    for b in story_blocks:
+        b["events"] = turns_to_expanded_events(b["raw_turns"])
 
     # Compute exact ad-break positions upfront (never splitting pair_part=1 from pair_part=2;
     # for 6-scene v37 [News, S1a, S1b, S2a, S2b, WorldFinale], breaks cleanly land after ch 0 and ch 2!)
@@ -1624,7 +2006,7 @@ async def main():
     closing_evs = turns_to_expanded_events(closing_turns) if closing_turns else []
 
     if today_str >= "2026-11-22":
-        radio_ver_tag = "v39_qq_60m_zwnj_adbreak_smooth"
+        radio_ver_tag = "v40_qq_60m_seamless_codeswitch_5hit"
     elif today_str >= "2026-11-19":
         radio_ver_tag = "v36_qq_real_public_memory"
     else:
@@ -1650,6 +2032,8 @@ async def main():
             ) and os.path.getsize(RADIO_MP3_PATH) > 1_000_000:
                 if today_str > "2026-11-18":
                     save_today_stories(today_str, [st["id"] for st in selected_stories])
+                    if imm_vocab_report.get("_today_counts"):
+                        ive.commit_episode_counts(today_str, imm_vocab_report["_today_counts"], salon_stories=SALON_STORIES)
                 print(f"Daily Qiang-Qiang trio radio already up-to-date for {today_str} ({old_meta.get('duration_label')}).")
                 return
         except Exception:
@@ -1667,50 +2051,141 @@ async def main():
         *(b["events"] for b in story_blocks),
     ]
 
-    tmpdir = tempfile.mkdtemp(prefix="n3_radio_v34_")
+    tmpdir = tempfile.mkdtemp(prefix="n3_radio_v40_")
     try:
         unique_turns: dict[tuple[str, str], str] = {}
+        mixed_keys: set[tuple[str, str]] = set()
         for ev_list in all_event_lists:
             for k, val in ev_list:
                 if k not in ("PAUSE", "LATCH"):
-                    key = (k, str(val))
+                    txt_s = str(val)
+                    key = (k, txt_s)
                     if key not in unique_turns:
-                        thash = hashlib.sha256(f"{k}:{val}".encode("utf-8")).hexdigest()[:12]
+                        thash = hashlib.sha256(f"{k}:{txt_s}".encode("utf-8")).hexdigest()[:12]
                         unique_turns[key] = os.path.join(tmpdir, f"raw_{thash}.mp3")
+                        if SWAP_TOKEN_RE.search(txt_s):
+                            mixed_keys.add(key)
 
         if dry_test:
-            print(f"[dry-test] Stories={[b['short_tab'] for b in story_blocks]}, unique_clips={len(unique_turns)}, script_sig={script_sig}")
+            print(
+                f"[dry-test] Stories={[b['short_tab'] for b in story_blocks]}, "
+                f"unique_clips={len(unique_turns)} (mixed_carrier_swap={len(mixed_keys)}), "
+                f"vocab_locked={imm_vocab_report.get('locked_total', 0)}, "
+                f"vocab_new={imm_vocab_report.get('today_new_count', 0)}, script_sig={script_sig}"
+            )
             clip_pcm: dict[tuple[str, str], np.ndarray] = {}
             for key in unique_turns:
-                dur_s = max(0.32, len(key[1]) * 0.192)
+                plain_len = len(SWAP_TOKEN_RE.sub(lambda m: m.group(2), key[1]))
+                dur_s = max(0.32, plain_len * 0.192)
                 t = np.arange(int(SR * dur_s), dtype=np.float32) / SR
                 raw_tone = (0.11 * np.sin(2.0 * np.pi * 180.0 * t) + 0.05 * np.sin(2.0 * np.pi * 1650.0 * t)).astype(np.float32)
                 clip_pcm[key] = apply_host_vocal_timbre(raw_tone, key[0])
         else:
             sem = asyncio.Semaphore(16)
-            ok_results = await asyncio.gather(
-                *(synth_turn(k, voice_map[k], txt, raw_p, sem) for (k, txt), raw_p in unique_turns.items())
-            )
-            ok_count = sum(1 for x in ok_results if x)
-            print(f"Synthesized {ok_count} / {len(unique_turns)} unique Qiang-Qiang v38 60m short-banter latch clips.")
-            min_required = max(1, int(len(unique_turns) * 0.98))
-            if ok_count < min_required:
-                raise RuntimeError(
-                    f"TTS clip synthesis below safety threshold ({ok_count}/{len(unique_turns)} < {min_required}); refusing to overwrite daily_radio.mp3"
+
+            # Stage 1: Synthesize & tightly trim all unique inline Japanese words ONCE per (gear_spk, ja_kana)!
+            unique_inline_ja: dict[tuple[str, str], str] = {}
+            for k, txt_s in mixed_keys:
+                for m in SWAP_TOKEN_RE.finditer(txt_s):
+                    ja_w = m.group(2).strip()
+                    jkey = (k, ja_w)
+                    if ja_w and jkey not in unique_inline_ja:
+                        jhash = hashlib.sha256(f"ija:{k}:{ja_w}".encode("utf-8")).hexdigest()[:12]
+                        unique_inline_ja[jkey] = os.path.join(tmpdir, f"ija_{jhash}.mp3")
+
+            ja_pcm_map: dict[tuple[str, str], np.ndarray] = {}
+            if unique_inline_ja:
+                ja_ok = await asyncio.gather(
+                    *(
+                        synth_turn(f"{k.split('_')[0]}_JA_INLINE", inline_ja_voice_cfg(k, voice_map, ja_w), ja_w, jp, sem)
+                        for (k, ja_w), jp in unique_inline_ja.items()
+                    )
                 )
+                print(f"[v40-stage1] Synthesized {sum(1 for x in ja_ok if x)} / {len(unique_inline_ja)} unique inline Japanese word clips.")
+
+                def _decode_ja_inline(item):
+                    jkey, jp = item
+                    if os.path.exists(jp) and os.path.getsize(jp) > 0:
+                        raw = apply_host_vocal_timbre(decode_to_pcm_f32(jp, trim_speech=False), jkey[0])
+                        return jkey, tight_trim_pcm(raw, thresh_db=-32.0, pad_head_ms=4.0, pad_tail_ms=6.0)
+                    return jkey, None
+
+                with concurrent.futures.ThreadPoolExecutor(max_workers=12) as pool:
+                    for jkey, arr in pool.map(_decode_ja_inline, unique_inline_ja.items()):
+                        if arr is not None and len(arr) > 0:
+                            ja_pcm_map[jkey] = arr
+
+            # Stage 2: Synthesize plain sentences AND Carrier-Swap mixed sentences in parallel!
+            plain_items = [(key, raw_p) for key, raw_p in unique_turns.items() if key not in mixed_keys]
+            mixed_items = [(key, raw_p) for key, raw_p in unique_turns.items() if key in mixed_keys]
+
+            carrier_specs: dict[tuple[str, str], tuple[str, list]] = {}
+            for key, _ in mixed_items:
+                carrier_specs[key] = build_carrier_and_spans(key[1])
+
+            plain_tasks = [
+                synth_turn(k, voice_map[k], txt, raw_p, sem)
+                for (k, txt), raw_p in plain_items
+            ]
+            mixed_tasks = [
+                synth_edge_with_boundaries(k, voice_map[k], carrier_specs[(k, txt)][0], raw_p, sem)
+                for (k, txt), raw_p in mixed_items
+            ]
+            plain_results, mixed_bnds_list = await asyncio.gather(
+                asyncio.gather(*plain_tasks),
+                asyncio.gather(*mixed_tasks),
+            )
+            plain_ok = sum(1 for x in plain_results if x)
+            mixed_ok = sum(1 for b in mixed_bnds_list if b is not None)
+            print(
+                f"[v40-stage2] Synthesized {plain_ok}/{len(plain_items)} plain clips + "
+                f"{mixed_ok}/{len(mixed_items)} seamless Carrier-Swap bilingual sentences."
+            )
 
             clip_pcm = {}
 
-            def _decode_item(item):
+            def _decode_plain(item):
                 key, raw_p = item
                 if os.path.exists(raw_p) and os.path.getsize(raw_p) > 0:
                     return key, decode_to_pcm_f32(raw_p, trim_speech=True, spk_key=key[0])
                 return key, None
 
+            def _splice_mixed(args):
+                key, raw_p, bnds = args
+                carrier_zh, target_spans = carrier_specs[key]
+                arr = splice_mixed_swap_pcm(key[0], carrier_zh, target_spans, raw_p, bnds or [], ja_pcm_map)
+                return key, arr
+
             with concurrent.futures.ThreadPoolExecutor(max_workers=12) as pool:
-                for key, arr in pool.map(_decode_item, unique_turns.items()):
+                for key, arr in pool.map(_decode_plain, plain_items):
                     if arr is not None and len(arr) > 0:
                         clip_pcm[key] = arr
+                mixed_fallbacks: list[tuple[str, str]] = []
+                for key, arr in pool.map(
+                    _splice_mixed,
+                    [(key, raw_p, bnds) for (key, raw_p), bnds in zip(mixed_items, mixed_bnds_list)],
+                ):
+                    if arr is not None and len(arr) > 0:
+                        clip_pcm[key] = arr
+                    else:
+                        mixed_fallbacks.append(key)
+
+            if mixed_fallbacks:
+                print(f"[v40-fallback] Tight zero-gap stitching {len(mixed_fallbacks)} edge-case bilingual sentences...")
+                fb_arrs = await asyncio.gather(
+                    *(fallback_tight_stitch_mixed(k, voice_map[k], txt, tmpdir, sem, ja_pcm_map) for k, txt in mixed_fallbacks)
+                )
+                for key, arr in zip(mixed_fallbacks, fb_arrs):
+                    if arr is not None and len(arr) > 0:
+                        clip_pcm[key] = arr
+
+            ok_count = len(clip_pcm)
+            print(f"Ready {ok_count} / {len(unique_turns)} total Qiang-Qiang v40 studio PCM clips (fallback={len(mixed_fallbacks)}).")
+            min_required = max(1, int(len(unique_turns) * 0.98))
+            if ok_count < min_required:
+                raise RuntimeError(
+                    f"TTS clip synthesis below safety threshold ({ok_count}/{len(unique_turns)} < {min_required}); refusing to overwrite daily_radio.mp3"
+                )
 
         # Load authentic 《锵锵三人行》 original broadcast music (Intro, Ad-Break Bumper, Outro — ZERO inter-chapter sting!)
         pcm_intro = decode_to_pcm_f32(music_paths["intro"], trim_speech=False)
@@ -1847,6 +2322,7 @@ async def main():
             {"idx": b["chapter"], "title": b["short_tab"], "start": round(chapter_starts.get(b["chapter"], 0.0), 1)}
             for b in story_blocks
         ]
+        public_vocab_meta = {k: v for k, v in imm_vocab_report.items() if not k.startswith("_")}
         meta_obj = {
             "date": today_str,
             "radio_ver": radio_ver_tag,
@@ -1858,13 +2334,20 @@ async def main():
             "duration_label": f"{mins} 分钟",
             "hosts": "文涛 · 文道 · 子东",
             "immersion_365": imm_profile,
+            "immersion_vocab": public_vocab_meta,
             "chapters": chapters_meta,
             "segments": segments_meta,
         }
         with open(RADIO_META_PATH, "w", encoding="utf-8") as f:
             json.dump(meta_obj, f, ensure_ascii=False, indent=2)
         save_today_stories(today_str, [st["id"] for st in selected_stories])
-        print(f"Built Qiang-Qiang {radio_ver_tag} Uchi Episode: {final_dur:.1f}s ({mins} mins), stories={[s['short_tab'] for s in selected_stories]}")
+        if imm_vocab_report.get("_today_counts"):
+            ive.commit_episode_counts(today_str, imm_vocab_report["_today_counts"], salon_stories=SALON_STORIES)
+        print(
+            f"Built Qiang-Qiang {radio_ver_tag} Uchi Episode: {final_dur:.1f}s ({mins} mins), "
+            f"stories={[s['short_tab'] for s in selected_stories]}, "
+            f"locked_ja={public_vocab_meta.get('locked_total', 0)}, new_vocab={public_vocab_meta.get('today_new_count', 0)}"
+        )
     finally:
         shutil.rmtree(tmpdir, ignore_errors=True)
 

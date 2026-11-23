@@ -90,6 +90,16 @@ def plan_n2_episode_pedagogy(
             "delivery_rule": rule["style"],
         })
 
+    try:
+        import os as _os, sys as _sys
+        _root = _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
+        if _root not in _sys.path:
+            _sys.path.insert(0, _root)
+        import immersion_vocab_engine as _ive
+        _vocab_brief = _ive.get_prompt_vocab_brief()
+    except Exception:
+        _vocab_brief = {"graduation_threshold": 5}
+
     return {
         "day": day,
         "primary_new_grammar": [
@@ -106,6 +116,10 @@ def plan_n2_episode_pedagogy(
             for g in new_items
         ],
         "spaced_callbacks": selected_callbacks,
+        "cumulative_vocab_graduation": {
+            "rule": "5次累计播客毕业制：新词首次用「中文也就是日语」自然搭桥，同集下段直切无缝日语；跨集累计听满5次永久锁成日语词，用单气口载波无缝拼接确保中日混讲毫无卡顿。",
+            "ledger_brief": _vocab_brief,
+        },
         "flow_guardrail": "整期故事与世界视野占主体，回声点总数严控≤3个，单次回声不超过3-8秒，严禁打断叙事流畅性。",
     }
 

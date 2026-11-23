@@ -1,11 +1,11 @@
 {
   "date": "2026-11-22",
-  "radio_ver": "v39_qq_60m_zwnj_adbreak_smooth",
+  "radio_ver": "v40_qq_60m_seamless_codeswitch_5hit",
   "display_date": "锵锵三人",
   "days_left": 14,
-  "script_sig": "cd17d3c5024f56",
-  "audio_url": "./audio/daily_radio.mp3?v=2026-11-22_cd17d3",
-  "duration_sec": 3388.2,
+  "script_sig": "b1d81541b97722",
+  "audio_url": "./audio/daily_radio.mp3?v=2026-11-22_b1d815",
+  "duration_sec": 3330.7,
   "duration_label": "56 分钟",
   "hosts": "文涛 · 文道 · 子东",
   "immersion_365": {
@@ -17,6 +17,195 @@
     "ja_sentence_rate": "-12%",
     "bilingual_framing": false
   },
+  "immersion_vocab": {
+    "graduation_threshold": 5,
+    "locked_total": 17,
+    "learning_total": 38,
+    "today_new_count": 11,
+    "today_graduated": [
+      {
+        "kana": "せかい",
+        "kanji": "世界",
+        "zh": "世界",
+        "total": 14
+      },
+      {
+        "kana": "でんしゃ",
+        "kanji": "電車",
+        "zh": "电车",
+        "total": 10
+      },
+      {
+        "kana": "こっかい",
+        "kanji": "国会",
+        "zh": "国会",
+        "total": 9
+      },
+      {
+        "kana": "しんぶん",
+        "kanji": "新聞",
+        "zh": "报纸",
+        "total": 9
+      },
+      {
+        "kana": "おんがく",
+        "kanji": "音楽",
+        "zh": "音乐",
+        "total": 7
+      },
+      {
+        "kana": "きしゃ",
+        "kanji": "記者",
+        "zh": "记者",
+        "total": 6
+      },
+      {
+        "kana": "しゃちょう",
+        "kanji": "社長",
+        "zh": "社长",
+        "total": 10
+      },
+      {
+        "kana": "じかん",
+        "kanji": "時間",
+        "zh": "时间",
+        "total": 6
+      },
+      {
+        "kana": "ニュース",
+        "kanji": "ニュース",
+        "zh": "新闻",
+        "total": 6
+      },
+      {
+        "kana": "かがく",
+        "kanji": "科学",
+        "zh": "科学",
+        "total": 5
+      },
+      {
+        "kana": "しゃいん",
+        "kanji": "社員",
+        "zh": "员工",
+        "total": 5
+      },
+      {
+        "kana": "しんかんせん",
+        "kanji": "新幹線",
+        "zh": "新干线",
+        "total": 5
+      },
+      {
+        "kana": "テレビ",
+        "kanji": "テレビ",
+        "zh": "电视",
+        "total": 5
+      },
+      {
+        "kana": "スーパー",
+        "kanji": "スーパー",
+        "zh": "超市",
+        "total": 5
+      },
+      {
+        "kana": "かいしゃ",
+        "kanji": "会社",
+        "zh": "公司",
+        "total": 7
+      }
+    ],
+    "today_spotlight": [
+      {
+        "kana": "こっかい",
+        "kanji": "国会",
+        "zh": "国会",
+        "hits_today": 9,
+        "total": 9,
+        "status": "locked_ja"
+      },
+      {
+        "kana": "きしゃ",
+        "kanji": "記者",
+        "zh": "记者",
+        "hits_today": 6,
+        "total": 6,
+        "status": "locked_ja"
+      },
+      {
+        "kana": "しゅうかん",
+        "kanji": "習慣",
+        "zh": "习惯",
+        "hits_today": 4,
+        "total": 4,
+        "status": "learning"
+      },
+      {
+        "kana": "よさん",
+        "kanji": "予算",
+        "zh": "预算",
+        "hits_today": 4,
+        "total": 4,
+        "status": "learning"
+      },
+      {
+        "kana": "あんぜん",
+        "kanji": "安全",
+        "zh": "安全",
+        "hits_today": 3,
+        "total": 3,
+        "status": "learning"
+      },
+      {
+        "kana": "かんりょう",
+        "kanji": "官僚",
+        "zh": "官僚",
+        "hits_today": 3,
+        "total": 3,
+        "status": "learning"
+      },
+      {
+        "kana": "しじょう",
+        "kanji": "市場",
+        "zh": "市场",
+        "hits_today": 3,
+        "total": 3,
+        "status": "learning"
+      },
+      {
+        "kana": "せっけい",
+        "kanji": "設計",
+        "zh": "设计",
+        "hits_today": 3,
+        "total": 3,
+        "status": "learning"
+      },
+      {
+        "kana": "げんだい",
+        "kanji": "現代",
+        "zh": "现代",
+        "hits_today": 2,
+        "total": 2,
+        "status": "learning"
+      },
+      {
+        "kana": "こうぞう",
+        "kanji": "構造",
+        "zh": "结构",
+        "hits_today": 1,
+        "total": 1,
+        "status": "learning"
+      },
+      {
+        "kana": "とし",
+        "kanji": "都市",
+        "zh": "城市",
+        "hits_today": 1,
+        "total": 1,
+        "status": "learning"
+      }
+    ],
+    "today_total_inline_hits": 185
+  },
   "chapters": [
     {
       "idx": 0,
@@ -26,27 +215,27 @@
     {
       "idx": 1,
       "title": "新干线赌局",
-      "start": 517.4
+      "start": 506.2
     },
     {
       "idx": 2,
       "title": "十八号站台",
-      "start": 1065.4
+      "start": 1049.0
     },
     {
       "idx": 3,
       "title": "砍掉录音键",
-      "start": 1617.7
+      "start": 1593.7
     },
     {
       "idx": 4,
       "title": "山手线奇迹",
-      "start": 2168.8
+      "start": 2134.1
     },
     {
       "idx": 5,
       "title": "日本看世界",
-      "start": 2701.9
+      "start": 2654.0
     }
   ],
   "segments": [
@@ -64,7 +253,7 @@
       "title": "五公斤大米涨破四千日元：日本政府破天荒投放储备米，为什么超市里依然抢不到平价米",
       "ja_focus": "米の値段が上がるにつれて、外食を控える人が増えるようになった。理由をはっきり説明してほしい。",
       "start": 0.0,
-      "end": 517.4
+      "end": 506.2
     },
     {
       "chapter": 1,
@@ -78,8 +267,8 @@
       ],
       "title": "骂它是世界三大蠢工程：十河信二如何瞒天过海，在东京奥运前造出东海道新干线（上）",
       "ja_focus": "激しい反対にもかかわらず計画を進めた。まるで夢の超特急が走り出そうとしているところだった。",
-      "start": 517.4,
-      "end": 1065.4
+      "start": 506.2,
+      "end": 1049.0
     },
     {
       "chapter": 2,
@@ -93,8 +282,8 @@
       ],
       "title": "通车剪彩唯独没请两位功臣：东京站十八号站台那块铜牌背后的昭和风骨（下）",
       "ja_focus": "予算不足で批判されながらも、安全を最優先したうえで開業の日を迎えた。信念があったからこそ成し遂げた。",
-      "start": 1065.4,
-      "end": 1617.7
+      "start": 1049.0,
+      "end": 1593.7
     },
     {
       "chapter": 3,
@@ -108,8 +297,8 @@
       ],
       "title": "一台不能录音的磁带机谁会买：井深大与盛田昭夫如何力排众议造出随身听（上）",
       "ja_focus": "子供っぽい玩具に見えると言われたが、彼らにとってただの機械ではなく、若者向けの革命だった。",
-      "start": 1617.7,
-      "end": 2168.8
+      "start": 1593.7,
+      "end": 2134.1
     },
     {
       "chapter": 4,
@@ -124,8 +313,8 @@
       ],
       "title": "雇年轻人坐山手线发耳机：一台小蓝盒子如何重塑人类独处的方式（下）",
       "ja_focus": "実際に聴いてはじめてその魅力がわかった。音楽の聴き方ばかりでなく、街の風景まで変わった。",
-      "start": 2168.8,
-      "end": 2701.9
+      "start": 2134.1,
+      "end": 2654.0
     },
     {
       "chapter": 5,
@@ -140,8 +329,8 @@
       ],
       "title": "从日本看世界：AI 挑战百年黎曼猜想与日内瓦 AI 武器僵局，世界科技的冰与火",
       "ja_focus": "最先端の科学技術に関して、便利なものが必ずしも安全とは限らない。新しい発見と同時に課題も広がる。",
-      "start": 2701.9,
-      "end": 3388.2
+      "start": 2654.0,
+      "end": 3330.7
     }
   ]
 }

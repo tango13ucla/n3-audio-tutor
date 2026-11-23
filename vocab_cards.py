@@ -1819,10 +1819,12 @@ KANJI_TRAP_OVERRIDES: dict[str, tuple[list[str], str, bool]] = {
     "授業": (["じゅ", "ぎょう"], "短+长音", True),
     "試験": (["し"], "短音", False),
     "宿題": (["しゅく", "だい"], "短+浊音", True),
+    "辞書": (["じ", "しょ"], "浊+短音", False),
 }
 
 # Bilingual (CN+EN) pronunciation mnemonics for tracked words & high-frequency N3 reading traps outside VOCAB_CARDS:
 PRONUNCIATION_MNEMONICS: dict[str, str] = {
+    "辞書": "查字典想“寄(じ)书(しょ)”，两拍干脆短音绝不拉长（对比 辞典 じてん）",
     "ゆっくり": "英文 “You(ゆ) cool(っく)” 不急不躁放慢节奏 → ゆっくり",
     "高い": "仰头看高楼惊呼 “塔(た)开(かい)天了” 又高又贵 → たかい",
     "買い物": "“买(かい)”像中文“开买” + “物(もの)” → かいもの",
