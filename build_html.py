@@ -820,15 +820,16 @@ def select_balanced_spaced_deck(candidates: list[dict], cap: int) -> list[dict]:
     if len(chosen) >= cap:
         return chosen[:cap]
 
-    # Step B2 (Long-Horizon N2 Stability Decay Guard, FSRS DSR): when exam > 21 days away,
-    # reserve up to 3 silent maintenance slots for 3/3 true-green items unseen for >= 14 days
-    # so early-month grammar never silently fades over a 115-day N2 cycle.
-    if _days_to_exam > 21 and cap >= 25:
+    # Step B2 (Green Freshness Maintenance Guard, FSRS DSR / Bjork):
+    # Reserve up to 3 silent maintenance slots for 3/3 true-green items unseen for >= 8 days (sprint)
+    # or >= 14 days (long-horizon N2), preventing silent pre-exam decay without disturbing today's locked deck.
+    if cap >= 25:
+        _stale_gap = 8 if _days_to_exam <= 21 else 14
         stale_greens = [
             p for p in candidates
             if p["id"] not in chosen_ids
             and resolve_point_status(p["point_key"]) == "green"
-            and _days_since_last(p["id"]) >= 14
+            and _days_since_last(p["id"]) >= _stale_gap
         ]
         stale_greens.sort(key=lambda p: (-_days_since_last(p["id"]), -p["exam_weight"], p["id"]))
         for p in stale_greens[:3]:
@@ -1000,6 +1001,11 @@ def clean_grammar_family_cn(raw_fam: str) -> str:
     return mapping.get(s, s or "核心语法")
 
 
+def _norm_last_date(p_obj: dict, qid: str) -> str:
+    raw = str(p_obj.get("last_ok_date") or p_obj.get("last_ng_date") or last_practiced_day_by_base.get(qid, "") or "")
+    return raw.replace("-", "")[:8]
+
+
 grammar_items = []
 grammar_audit_items = []
 _ga_vmap = {"blank": 1, "weak": 1, "confuse": 2, "fuzzy": 2, "passive": 3, "instinct": 4, "solid": 4}
@@ -1023,6 +1029,7 @@ for g_idx, p in enumerate(live_state.get("grammar_points", [])):
     meaning_clean = clean_zen_text(p.get("meaning", ""))
     verdict_raw = str(p.get("audit_verdict") or "")
     verdict_code = _ga_vmap.get(verdict_raw, 0)
+    g_pid = point_id_by_key.get(nm, "")
 
     grammar_items.append({
         "gid": gid,
@@ -1033,9 +1040,11 @@ for g_idx, p in enumerate(live_state.get("grammar_points", [])):
         "tier": tier,
         "mstate": mstate,
         "streak": streak,
+        "last_date": _norm_last_date(p, g_pid),
+        "hesitant": bool(nm in _hesitant_points or g_pid in _hesitant_points),
         "nov_tested": nov_tested,
         "audit_code": verdict_code,
-        "point_id": point_id_by_key.get(nm, ""),
+        "point_id": g_pid,
         "note": clean_zen_text(p.get("exam_alert") or p.get("note", "")),
     })
 
@@ -1086,6 +1095,7 @@ for p in live_state.get("henkei_points", []):
         continue
     pid = p.get("id", "")
     tier, mstate, streak = norm_tier_meta(p)
+    h_pid = point_id_by_key.get(pid, "")
     henkei_items.append({
         "key": pid,
         "name": p.get("name", ""),
@@ -1094,7 +1104,9 @@ for p in live_state.get("henkei_points", []):
         "tier": tier,
         "mstate": mstate,
         "streak": streak,
-        "point_id": point_id_by_key.get(pid, ""),
+        "last_date": _norm_last_date(p, h_pid),
+        "hesitant": bool(pid in _hesitant_points or p.get("name", "") in _hesitant_points or h_pid in _hesitant_points),
+        "point_id": h_pid,
         "note": clean_zen_text(p.get("note", "")),
     })
 
@@ -1104,6 +1116,7 @@ for p in live_state.get("listening_points", []):
         continue
     pid = p.get("id", "")
     tier, mstate, streak = norm_tier_meta(p)
+    l_pid = point_id_by_key.get(pid, "")
     listening_items.append({
         "key": pid,
         "name": p.get("name", ""),
@@ -1112,7 +1125,9 @@ for p in live_state.get("listening_points", []):
         "tier": tier,
         "mstate": mstate,
         "streak": streak,
-        "point_id": point_id_by_key.get(pid, ""),
+        "last_date": _norm_last_date(p, l_pid),
+        "hesitant": bool(pid in _hesitant_points or p.get("name", "") in _hesitant_points or l_pid in _hesitant_points),
+        "point_id": l_pid,
         "note": clean_zen_text(p.get("trap", "") or p.get("note", "")),
     })
 
@@ -1133,6 +1148,7 @@ for p in live_state.get("vocab_tracked", []):
     base_note = clean_zen_text(vc_spec.get("twin") or w_info.get("tip") or p.get("classroom_note") or "")
     combined_note = " · ".join(x for x in ([f"记音：{mn_txt}"] if mn_txt else []) + ([base_note] if base_note else []))
     meaning_short = w_info.get("zh") or (vc_spec.get("zh", "").split(" · ")[0]) or re.sub(r"^\d+\.\s*", "", p.get("category", ""))
+    v_pid = point_id_by_key.get(w, "")
     vocab_items.append({
         "key": w,
         "name": w,
@@ -1141,7 +1157,9 @@ for p in live_state.get("vocab_tracked", []):
         "tier": tier,
         "mstate": mstate,
         "streak": streak,
-        "point_id": point_id_by_key.get(w, ""),
+        "last_date": _norm_last_date(p, v_pid),
+        "hesitant": bool(w in _hesitant_points or v_pid in _hesitant_points),
+        "point_id": v_pid,
         "audio": resolve_word_audio(w),
         "note": combined_note,
     })
@@ -1154,6 +1172,7 @@ for kw, pitch, desc in CORE_N3_KANA_VOCAB:
     mn_txt = clean_zen_text(vc_spec.get("mnemonic") or get_pronunciation_mnemonic(kw))
     base_note = clean_zen_text(vc_spec.get("twin") or f"声调 {pitch} · {desc}")
     combined_note = " · ".join(x for x in ([f"记音：{mn_txt}"] if mn_txt else []) + ([base_note] if base_note else []))
+    kw_pid = point_id_by_key.get(kw, "")
     vocab_items.append({
         "key": kw,
         "name": kw,
@@ -1162,7 +1181,9 @@ for kw, pitch, desc in CORE_N3_KANA_VOCAB:
         "tier": "wip",
         "mstate": "wip0",
         "streak": 0,
-        "point_id": point_id_by_key.get(kw, ""),
+        "last_date": _norm_last_date({}, kw_pid),
+        "hesitant": bool(kw in _hesitant_points or kw_pid in _hesitant_points),
+        "point_id": kw_pid,
         "audio": resolve_word_audio(kw),
         "note": combined_note,
     })
@@ -1177,6 +1198,7 @@ for vw in all_vc_keys:
     rev_aud = vc_aud.get("rev") or ""
     full_aud = vc_aud.get("full") or rev_aud or w_aud
     hook_aud = vc_aud.get("hook") or ""
+    clean_aud = vc_aud.get("clean") or ""
     aspec = build_vocab_audio_spec(spec)
     vocab_cards_payload[vw] = {
         "mode": spec["mode"],
@@ -1197,8 +1219,51 @@ for vw in all_vc_keys:
         "rev_audio": rev_aud,
         "full_audio": full_aud,
         "hook_audio": hook_aud,
+        "clean_audio": clean_aud,
         "word_audio": w_aud,
     }
+
+# Anti-Interference Confusable Twin Graph (Nation 2000; Tinkham 1997; Waring 1997)
+CONFUSABLE_VOCAB_GROUPS = [
+    ["書類", "種類"],
+    ["出張", "主張"],
+    ["ぐったり", "ぐっすり"],
+    ["だんだん", "どんどん"],
+    ["うっかり", "すっかり", "しっかり", "はっきり", "ばったり", "ぴったり", "びっくり", "がっかり", "そっくり"],
+    ["わざわざ", "わざと"],
+    ["めったに", "なかなか"],
+    ["ずいぶん", "だいぶ"],
+    ["そろそろ", "もうすぐ"],
+    ["あいにく", "せっかく"],
+    ["加える", "加わる"],
+    ["余る", "残る"],
+    ["減る", "増える"],
+    ["続く", "続ける"],
+    ["さっぱり", "すっきり"],
+    ["ほっと", "そっと", "ずっと", "もっと", "きっと", "ちょっと"],
+    ["偶然", "突然", "当然", "自然"],
+    ["経験", "体験", "実験"],
+    ["原因", "理由"],
+    ["予定", "予約", "予算", "予想"],
+    ["発見", "発明", "発表"],
+    ["注意", "注目", "注文"],
+]
+_twin_sets: dict[str, set[str]] = {}
+for _grp in CONFUSABLE_VOCAB_GROUPS:
+    for _a in _grp:
+        for _b in _grp:
+            if _a != _b:
+                _twin_sets.setdefault(_a, set()).add(_b)
+_known_vc_keys = [k for k in vocab_cards_payload.keys() if len(k) >= 2]
+for _vw, _vobj in vocab_cards_payload.items():
+    _tw_txt = str(_vobj.get("twin") or "")
+    if not _tw_txt:
+        continue
+    for _other in _known_vc_keys:
+        if _other != _vw and _other in _tw_txt:
+            _twin_sets.setdefault(_vw, set()).add(_other)
+            _twin_sets.setdefault(_other, set()).add(_vw)
+vocab_twins_map = {k: sorted(v) for k, v in _twin_sets.items() if v}
 
 
 def count_tiers(items):
@@ -1246,6 +1311,7 @@ payload = json.dumps({
     "points": ordered_points,
     "words": rich_words,
     "vocab_cards": vocab_cards_payload,
+    "vocab_twins": vocab_twins_map,
     "grammar_audit": {
         "active_from": "2026-11-23",
         "daily_target": ga_daily_target,
@@ -1952,10 +2018,30 @@ html = r"""<!DOCTYPE html>
     50% { height: 20px; opacity: 1; }
   }
 
+  .recall-veil-btn {
+    width: 100%;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--moss);
+    letter-spacing: 0.03em;
+    text-align: center;
+    border: 1px dashed rgba(43, 95, 73, 0.38);
+    border-radius: 8px;
+    background: var(--moss-soft);
+  }
   .choice-list {
     display: flex;
     flex-direction: column;
     gap: 12px;
+    transition: filter 0.24s ease, opacity 0.24s ease;
+  }
+  .choice-list.recall-veiled {
+    filter: blur(8px);
+    opacity: 0.22;
+    pointer-events: none;
+    user-select: none;
   }
   .zen-choice {
     width: 100%;
@@ -3319,6 +3405,19 @@ html = r"""<!DOCTYPE html>
     opacity: 0.34;
     user-select: none;
   }
+  .vc-kana-front {
+    font-size: 21px;
+    font-weight: 600;
+    color: var(--sumi);
+    line-height: 1.44;
+    margin-bottom: 10px;
+    transition: opacity 0.24s ease, font-size 0.24s ease;
+  }
+  .vc-kana-front.revealed {
+    opacity: 0.48;
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
   .vc-hl {
     font-weight: 600;
     border-bottom: 2px solid rgba(43, 95, 73, 0.48);
@@ -3764,6 +3863,52 @@ html = r"""<!DOCTYPE html>
   .li-ga-btn.s2.on { color: #C26735; border-bottom-color: #C26735; font-weight: 600; }
   .li-ga-btn.s3.on { color: var(--ochre); border-bottom-color: var(--ochre); font-weight: 600; }
   .li-ga-btn.s4.on { color: var(--moss); border-bottom-color: var(--moss); font-weight: 600; }
+  .dash-roi-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0 12px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .dash-roi-txt {
+    font-size: 13px;
+    color: var(--ink-2);
+    line-height: 1.5;
+    font-variant-numeric: tabular-nums;
+  }
+  .dash-roi-txt b {
+    color: var(--sumi);
+    font-weight: 600;
+  }
+  .dash-roi-btn {
+    flex-shrink: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--moss);
+    white-space: nowrap;
+    padding: 4px 0;
+  }
+  .li-hes {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--ochre);
+    background: rgba(176, 125, 58, 0.11);
+    padding: 1px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+  .li-stale {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--ink-3);
+    background: var(--soft-bg);
+    padding: 1px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
 
   /* ================= 6. NATIVE ZEN BODY MODULE ("体律" · Open-Washi Zen Ma & Kanso) ================= */
   #green-board.hidden, #body-view.hidden, .zen-panel.hidden { display: none !important; }
@@ -4131,6 +4276,11 @@ html = r"""<!DOCTYPE html>
   .zb-dial-ticks { position: absolute; inset: 0; background-image: repeating-linear-gradient(90deg, transparent 0, transparent 9px, var(--hairline-strong) 9px, var(--hairline-strong) 10px); background-size: 50px 100%; opacity: 0.85; }
   .zb-dial-needle { position: absolute; left: 50%; top: 4px; bottom: 4px; width: 2px; margin-left: -1px; background: var(--moss); border-radius: 2px; pointer-events: none; }
   .zb-dial-foot { display: flex; justify-content: space-between; align-items: center; }
+  .zb-res-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--hairline); }
+  .zb-waist-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 4px; }
+  .zb-waist-in { width: 108px; font-family: var(--serif-jp); font-size: 16px; font-weight: 500; text-align: right; color: var(--sumi); background: transparent; border: none; border-bottom: 1px dashed var(--hairline-strong); padding: 4px 2px; outline: none; font-variant-numeric: tabular-nums; -webkit-user-select: text; user-select: text; }
+  .zb-waist-in:focus { border-bottom-color: var(--moss); border-bottom-style: solid; }
+  .zb-waist-in::placeholder { font-family: var(--sans); font-size: 12.5px; font-weight: 400; color: var(--ink-3); }
 
   .zb-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 14px 0 18px; border-bottom: 1px solid var(--hairline); margin-bottom: 4px; }
   .zb-kpi-v { font-family: var(--serif-jp); font-size: 20px; font-weight: 600; color: var(--sumi); font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -4304,6 +4454,7 @@ html = r"""<!DOCTYPE html>
   <section class="zen-panel hidden" id="dash-view">
     <div class="ledger-scroll">
       <div id="night-flash-entry"></div>
+      <div id="dash-roi-focus"></div>
       <div class="ledger-layout">
         <div class="pillar-list" id="dash-summary"></div>
         <div>
@@ -4398,8 +4549,8 @@ html = r"""<!DOCTYPE html>
               <div class="zb-ritual-right" id="zb-pu-dots"></div>
             </div>
             <div class="zb-ritual-row">
-              <div class="zb-ritual-left">
-                <span class="zb-ritual-name">饮食节律</span>
+              <div class="zb-ritual-left" onclick="ZB.openProteinGuide()" style="cursor:pointer;">
+                <span class="zb-ritual-name">饮食节律 ›</span>
                 <span class="zb-ritual-hint" id="zb-diet-hint">蛋白够 · 晚未爆碳</span>
               </div>
               <div class="zb-ritual-right">
@@ -4457,6 +4608,14 @@ html = r"""<!DOCTYPE html>
             <button type="button" class="zb-btn-quiet" onclick="ZB.openBandGuide()">换绳路线 ›</button>
           </div>
 
+          <div class="zb-res-row">
+            <div class="zb-ritual-left">
+              <span class="zb-ritual-name" style="font-size:14px;">全身护肌（可选）</span>
+              <span class="zb-ritual-hint" id="zb-res-hint">本周 0/2 次 · 俯卧撑+自重深蹲</span>
+            </div>
+            <button type="button" class="zb-tap-check" id="zb-res-btn" onclick="ZB.toggleRes()">记 5 分钟</button>
+          </div>
+
           <div class="zb-ladder" id="zb-pu-ladder"></div>
           <div class="zb-ma-tail"></div>
         </div>
@@ -4512,6 +4671,10 @@ html = r"""<!DOCTYPE html>
               </div>
               <div class="zb-dial-track" id="zb-dbf-track" data-zb-noswipe="1"><div class="zb-dial-ticks" id="zb-dbf-ticks"></div><div class="zb-dial-needle"></div></div>
             </div>
+            <div class="zb-waist-row">
+              <span class="zb-dial-lbl">空腹腰围 (cm · 可选)</span>
+              <input id="zb-waist-in" class="zb-waist-in" type="number" step="0.1" inputmode="decimal" placeholder="两周记一次" />
+            </div>
             <div class="zb-dial-foot">
               <button type="button" class="zb-btn-quiet" id="zb-dskip-btn" onclick="ZB.toggleSkipBf()">仅记体重</button>
               <button type="button" class="zb-btn-primary" style="flex:0 0 auto; height:40px; padding:0 22px; font-size:14px;" onclick="ZB.saveWeigh()">记下</button>
@@ -4562,7 +4725,7 @@ html = r"""<!DOCTYPE html>
 <script>
 const DATA = __PAYLOAD__;
 const SPEEDS = [1.0, 1.15, 1.3, 1.5];
-const RADIO_SPEEDS = [1.0, 1.15, 1.3];
+const RADIO_SPEEDS = [0.85, 1.0, 1.15, 1.3];
 const ADAPTIVE_KEY = "n3_adaptive_v13_" + DATA.plan_date;
 const RADIO_SIG = String((DATA.radio && DATA.radio.script_sig) || "").slice(0, 8);
 const LEGACY_RADIO_POS_KEY = "n3_radio_pos_" + (DATA.radio.date || DATA.plan_date);
@@ -4709,6 +4872,8 @@ function createFreshAdaptiveState() {
     rs: 0,
     lastPointId: null,
     hotFamily: null,
+    hotFamilyDueStep: 0,
+    hesitantKeys: {},
     radioMaxSec: 0,
     radioPos: [0, 0],
     radioSig: RADIO_SIG,
@@ -6058,16 +6223,24 @@ function selectNextPointId(forcedId) {
     return dueQuizzes[0].id;
   }
 
-  if (A.hotFamily) {
+  if (A.hotFamily && A.step >= (A.hotFamilyDueStep || 0)) {
     const famSiblings = pool.filter(p => p.family === A.hotFamily && A.pts[p.id].dueStep <= A.step);
-    if (famSiblings.length) return famSiblings[0].id;
+    if (famSiblings.length) {
+      A.hotFamily = null;
+      A.hotFamilyDueStep = 0;
+      return famSiblings[0].id;
+    }
   }
 
   const ready = pool.filter(p => A.pts[p.id].dueStep <= A.step);
   if (ready.length) {
+    const lastPt = A.lastPointId ? getPointById(A.lastPointId) : null;
+    const lastFam = (lastPt && lastPt.family) || "";
     ready.sort((a, b) => {
-      const ma = (a.modality === "memorize" ? 0.25 : (a.modality === "both" ? 0.12 : 0)) + (A.pts[a.id].audioPrimed ? 0.10 : 0);
-      const mb = (b.modality === "memorize" ? 0.25 : (b.modality === "both" ? 0.12 : 0)) + (A.pts[b.id].audioPrimed ? 0.10 : 0);
+      const penA = (lastFam && a.family === lastFam) ? -0.4 : 0;
+      const penB = (lastFam && b.family === lastFam) ? -0.4 : 0;
+      const ma = (a.modality === "memorize" ? 0.25 : (a.modality === "both" ? 0.12 : 0)) + (A.pts[a.id].audioPrimed ? 0.10 : 0) + penA;
+      const mb = (b.modality === "memorize" ? 0.25 : (b.modality === "both" ? 0.12 : 0)) + (A.pts[b.id].audioPrimed ? 0.10 : 0) + penB;
       return (b.roi_score + mb) - (a.roi_score + ma);
     });
     return ready[0].id;
@@ -6082,6 +6255,24 @@ let viewStage = "quiz";
 let activeQuizObj = null;
 let currentChoices = [];
 let pickedVal = null;
+let quizRecallTimer = null;
+let quizChoicesRevealed = true;
+
+function clearQuizRecallTimer() {
+  if (quizRecallTimer) {
+    clearTimeout(quizRecallTimer);
+    quizRecallTimer = null;
+  }
+}
+
+function revealQuizChoicesNow() {
+  clearQuizRecallTimer();
+  quizChoicesRevealed = true;
+  const veil = document.getElementById("quiz-recall-veil");
+  if (veil) veil.style.display = "none";
+  const list = document.getElementById("quiz-choice-list");
+  if (list) list.classList.remove("recall-veiled");
+}
 
 function getPointById(pid) {
   return DATA.points.find(p => p.id === pid) || null;
@@ -6145,6 +6336,8 @@ function prepareChoices(qObj, salt, pState) {
 }
 
 function setupCurrentTurn(forcedId) {
+  clearQuizRecallTimer();
+  quizChoicesRevealed = true;
   curPointId = selectNextPointId(forcedId);
   pickedVal = null;
   if (!curPointId) {
@@ -6400,8 +6593,12 @@ function warmAudio(url) {
   return p;
 }
 
+let qPlaybackRate = 1.0;
+
 function applyPlaybackRate(kind) {
-  const rate = (kind === "exp" || kind === "teach" || kind === "done") ? expSpeed : 1.0;
+  const rate = (kind === "exp" || kind === "teach" || kind === "done")
+    ? expSpeed
+    : (kind === "q" ? (qPlaybackRate || 1.0) : 1.0);
   player.defaultPlaybackRate = rate;
   player.playbackRate = rate;
   if ("preservesPitch" in player) player.preservesPitch = true;
@@ -6430,6 +6627,8 @@ let listenSeqTimer = null;
 function stopQuizAudio() {
   playReqSeq += 1;
   listenSeqQueue = [];
+  qPlaybackRate = 1.0;
+  clearQuizRecallTimer();
   if (listenSeqTimer) {
     clearTimeout(listenSeqTimer);
     listenSeqTimer = null;
@@ -6488,12 +6687,15 @@ function stepListeningSequence(seq) {
   }
 }
 
-function playQuizQuestionAudio(qObj, toggleIfSame) {
+function playQuizQuestionAudio(qObj, toggleIfSame, rateOverride) {
   if (!qObj) return;
-  if (toggleIfSame && activeKind === "q" && (!player.paused || listenSeqQueue.length > 0 || listenSeqTimer)) {
+  const nextRate = (typeof rateOverride === "number" && rateOverride > 0) ? rateOverride : 1.0;
+  const isSameRate = Math.abs((qPlaybackRate || 1.0) - nextRate) < 0.02;
+  if (toggleIfSame && isSameRate && activeKind === "q" && (!player.paused || listenSeqQueue.length > 0 || listenSeqTimer)) {
     stopQuizAudio();
     return;
   }
+  qPlaybackRate = nextRate;
   if (canShuffleListeningCard(qObj) && qObj.is_listening && qObj.listen_parts && currentChoices.length === 3) {
     if (!radioPlayer.paused) radioPlayer.pause();
     if (listenSeqTimer) {
@@ -6518,7 +6720,7 @@ function playQuizQuestionAudio(qObj, toggleIfSame) {
     stepListeningSequence(seq);
     return;
   }
-  playMainClip(qObj.q_audio, "q", toggleIfSame);
+  playMainClip(qObj.q_audio, "q", false);
 }
 
 function playMainClip(url, kind, toggleIfSame) {
@@ -6567,6 +6769,11 @@ function syncAudioButtons() {
   if (qBtn) {
     qBtn.classList.toggle("playing", onQ);
     qBtn.textContent = onQ ? "暂停" : "读题";
+  }
+  const qSlowBtn = document.getElementById("q-slow-btn");
+  if (qSlowBtn) {
+    const onSlow = onQ && qPlaybackRate < 0.95;
+    qSlowBtn.textContent = onSlow ? "暂停 0.85x" : "0.85x 慢听";
   }
   const onExp = (activeKind === "exp" || activeKind === "teach") && !player.paused;
   const repBtn = document.getElementById("exp-replay-btn");
@@ -7098,6 +7305,7 @@ radioPlayer.addEventListener("timeupdate", () => {
 let radioReviewOpen = false;
 let rvMode = "triage"; // "triage" | "relearn" | "tail" | "done"
 let rvRevealed = false;
+let rvRevealedAt = 0;
 let rvActiveItemId = "";
 let rvReturnMode = "triage";
 let rvAnimating = false;
@@ -7292,6 +7500,47 @@ function playReviewDemoSentence(item) {
   }
 }
 
+function playReviewHookAudio(item) {
+  if (!item) return;
+  if (rvClipPlayingKey === "hook") {
+    stopRadioReviewAudio();
+    return;
+  }
+  stopRadioReviewAudio();
+  rvClipPlayingKey = "hook";
+  syncRvAudioButtons();
+  const hookUrl = item.hook_audio || "";
+  const speakText = item.mnemonic || "";
+  const doneCb = () => {
+    if (rvClipPlayingKey === "hook") {
+      rvClipPlayingKey = "";
+      syncRvAudioButtons();
+    }
+  };
+  if (hookUrl) {
+    warmAudio(hookUrl).then(resolved => {
+      if (rvClipPlayingKey !== "hook") return;
+      try {
+        wordPlayer.onended = doneCb;
+        wordPlayer.onerror = () => speakUtteranceLang(speakText, "zh-CN", 1.04, doneCb);
+        wordPlayer.src = resolved || hookUrl;
+        wordPlayer.currentTime = 0;
+        wordPlayer.playbackRate = 1.0;
+        const pr = wordPlayer.play();
+        if (pr && typeof pr.catch === "function") {
+          pr.catch(() => speakUtteranceLang(speakText, "zh-CN", 1.04, doneCb));
+        }
+      } catch (e) {
+        speakUtteranceLang(speakText, "zh-CN", 1.04, doneCb);
+      }
+    });
+  } else if (speakText) {
+    speakUtteranceLang(speakText, "zh-CN", 1.04, doneCb);
+  } else {
+    doneCb();
+  }
+}
+
 function pushRadioReviewRecord(item, actionLabel, isOk) {
   const tsSec = Math.max(TRUE_GREEN_EPOCH, nowUnixSec());
   const ptKey = item.key || item.title;
@@ -7320,14 +7569,17 @@ function advanceRadioReviewPointer() {
     rvMode = "triage";
     rvActiveItemId = items[st.triageIdx].id;
     rvRevealed = false;
+    rvRevealedAt = 0;
   } else if (st.tailQueue && st.tailQueue.length > 0) {
     rvMode = "tail";
     rvActiveItemId = st.tailQueue[0];
     rvRevealed = false;
+    rvRevealedAt = 0;
   } else {
     st.done = true;
     rvMode = "done";
     rvActiveItemId = "";
+    rvRevealedAt = 0;
     saveAdaptiveState();
   }
   updateRadioReviewEntryBadge();
@@ -7365,6 +7617,7 @@ function closeRadioReview() {
 function revealRadioReviewCard() {
   if (rvRevealed || rvMode === "relearn" || rvMode === "done") return;
   rvRevealed = true;
+  rvRevealedAt = performance.now();
   const el = document.getElementById("rv-reveal-area");
   if (el) el.classList.add("shown");
   const hint = document.getElementById("rv-tap-hint");
@@ -7393,13 +7646,15 @@ function handleRadioReviewPass() {
   const st = ensureRadioReviewState(false);
   const item = getReviewItemById(rvActiveItemId);
   if (!item) return;
+  // Dunlosky & Lipko (2007) JOL calibration: require reveal + >=800ms verification before marking as verified pass
+  const isVerified = !!(rvRevealed && rvRevealedAt > 0 && (performance.now() - rvRevealedAt) >= 800);
 
   animateRvCardAndRun("fly-right", () => {
     if (rvMode === "triage") {
       if (!st.passedIds.includes(item.id)) st.passedIds.push(item.id);
-      if (item.point_id && A.pts[item.point_id]) A.pts[item.point_id].audioPrimed = true;
+      if (isVerified && item.point_id && A.pts[item.point_id]) A.pts[item.point_id].audioPrimed = true;
       st.triageIdx += 1;
-      pushRadioReviewRecord(item, "听后复盘:过", true);
+      pushRadioReviewRecord(item, isVerified ? "听后复盘:过" : "听后复盘:快过存疑", true);
     } else if (rvMode === "tail") {
       st.tailQueue = (st.tailQueue || []).filter(id => id !== item.id);
       if (!st.tailDoneIds.includes(item.id)) st.tailDoneIds.push(item.id);
@@ -7450,7 +7705,7 @@ function bindRadioReviewSwipe(cardEl) {
   let sx = 0, sy = 0, stMs = 0, tracking = false, axis = null;
   cardEl.addEventListener("touchstart", e => {
     if (rvAnimating || !e.touches || e.touches.length !== 1) return;
-    if (e.target && e.target.closest && e.target.closest("button, .w-tok")) return;
+    if (e.target && e.target.closest && e.target.closest("button, .w-tok, .vc-hook")) return;
     tracking = true;
     axis = null;
     sx = fpX(e.touches[0]);
@@ -7580,7 +7835,7 @@ function renderRadioReviewStage() {
           </div>
 
           <p class="rv-quote"><span class="rv-quote-spk">${escapeHtml(item.speaker || "主持")}</span>${annotateJapanese(item.context_line || "")}</p>
-          ${item.mnemonic ? `<div class="vc-hook" style="margin-top:4px;"><span class="vc-hook-tag">记音</span>${escapeHtml(item.mnemonic)}</div>` : ""}
+          ${item.mnemonic ? `<div class="vc-hook" style="margin-top:4px;" title="轻点听记音联想" onclick="event.stopPropagation();playReviewHookAudio(getReviewItemById('${item.id}'))"><span class="vc-hook-tag">记音 ♪</span>${escapeHtml(item.mnemonic)}</div>` : ""}
           ${item.nuance ? `<p class="rv-note-line">${escapeHtml(item.nuance)}</p>` : ""}
           ${item.twin ? `<p class="rv-twin-line">${escapeHtml(item.twin)}</p>` : ""}
           ${item.ja_example && item.ja_example !== item.title ? `<div class="rv-ja-ex">${annotateJapanese(item.ja_example)}</div>` : ""}
@@ -7611,7 +7866,7 @@ function renderRadioReviewStage() {
       <button type="button" class="text-btn" onclick="closeRadioReview()">← 随身听</button>
       <span class="overline${isTail ? " warm" : ""}">${progressTxt}</span>
     </div>
-    <div class="rv-stage-card" id="rv-stage-card" onclick="if(!event.target.closest('button,.w-tok'))revealRadioReviewCard()">
+    <div class="rv-stage-card" id="rv-stage-card" onclick="if(!event.target.closest('button,.w-tok,.vc-hook'))revealRadioReviewCard()">
       <div class="tutor-stamp right" id="rv-st-right">懂了 · 过 →</div>
       <div class="tutor-stamp left" id="rv-st-left">← 重学这个</div>
 
@@ -7633,7 +7888,7 @@ function renderRadioReviewStage() {
         <div class="rv-reveal-area${rvRevealed ? " shown" : ""}" id="rv-reveal-area">
           ${kanaHTML ? `<div class="rv-kana-line">${kanaHTML}</div>` : ""}
           <div class="rv-zh-line">${escapeHtml(item.zh || "")}</div>
-          ${item.mnemonic ? `<div class="vc-hook" style="margin-bottom:8px;"><span class="vc-hook-tag">记音</span>${escapeHtml(item.mnemonic)}</div>` : ""}
+          ${item.mnemonic ? `<div class="vc-hook" style="margin-bottom:8px;" title="轻点听记音联想" onclick="event.stopPropagation();playReviewHookAudio(getReviewItemById('${item.id}'))"><span class="vc-hook-tag">记音 ♪</span>${escapeHtml(item.mnemonic)}</div>` : ""}
           <p class="rv-quote"><span class="rv-quote-spk">${escapeHtml(item.speaker || "主持")}</span>${annotateJapanese(item.context_line || "")}</p>
         </div>
       </div>
@@ -7695,7 +7950,10 @@ function completeTeachCard() {
     ps.dueStep = A.step + 4;
     A.step += 1;
     A.lastPointId = p.id;
-    A.hotFamily = null;
+    if (p.family === A.hotFamily) {
+      A.hotFamily = null;
+      A.hotFamilyDueStep = 0;
+    }
     saveAdaptiveState();
     scheduleCloudPush(120);
   }
@@ -7725,7 +7983,9 @@ function revealWithoutGuess() {
   ps.reqPasses = (activeQuizObj.is_listening && p.variants && p.variants.length > 0) ? 2 : 1;
   ps.retryCardId = activeQuizObj.id;
   ps.dueStep = A.step + 3;
+  // Rohrer & Taylor (2007) / Pan (2015): delay same-family contrast by 4 cards instead of immediate blocking!
   A.hotFamily = p.family;
+  A.hotFamilyDueStep = A.step + 4;
   A.step += 1;
   A.lastPointId = p.id;
   recomputeStatusesFromCRDT(A);
@@ -7755,10 +8015,16 @@ function submitAnswer(val) {
   lastAnswerHesitant = !!(isCorrect && !activeQuizObj.is_listening && thinkMs >= 14000 && thinkMs < 90000);
 
   if (isCorrect) {
+    if (!A.hesitantKeys || typeof A.hesitantKeys !== "object") A.hesitantKeys = {};
     if (lastAnswerHesitant) {
+      A.hesitantKeys[p.point_key] = 1;
+      A.hesitantKeys[p.point] = 1;
       const hOb = loadOutbox();
       hOb.push([`HES:${activeQuizObj.id}`, p.point_key || p.point, "犹豫过关", 1, new Date(stamp * 1000).toISOString()]);
       saveOutbox(hOb);
+    } else {
+      A.hesitantKeys[p.point_key] = 0;
+      A.hesitantKeys[p.point] = 0;
     }
     if (hadWrongToday) {
       ps.passStreak = (ps.passStreak || 0) + 1;
@@ -7772,7 +8038,7 @@ function submitAnswer(val) {
         }
         ps.status = "learning";
         ps.dueStep = A.step + 3;
-        A.hotFamily = null;
+        if (p.family === A.hotFamily) { A.hotFamily = null; A.hotFamilyDueStep = 0; }
         A.step += 1;
         A.lastPointId = p.id;
         recomputeStatusesFromCRDT(A);
@@ -7782,7 +8048,7 @@ function submitAnswer(val) {
         ps.retryCardId = "";
         ps.greenAt = Math.max(stamp, (ps.retestAt || 0) + 1, (A.resetAt || 0) + 1);
         ps.status = "green";
-        A.hotFamily = null;
+        if (p.family === A.hotFamily) { A.hotFamily = null; A.hotFamilyDueStep = 0; }
         A.step += 1;
         A.lastPointId = p.id;
         recomputeStatusesFromCRDT(A);
@@ -7793,7 +8059,7 @@ function submitAnswer(val) {
       ps.retryCardId = "";
       ps.greenAt = Math.max(stamp, (ps.retestAt || 0), (A.resetAt || 0) + 1);
       ps.status = "green";
-      A.hotFamily = null;
+      if (p.family === A.hotFamily) { A.hotFamily = null; A.hotFamilyDueStep = 0; }
       A.step += 1;
       A.lastPointId = p.id;
       recomputeStatusesFromCRDT(A);
@@ -7810,6 +8076,7 @@ function submitAnswer(val) {
     ps.retryCardId = activeQuizObj.id;
     ps.dueStep = A.step + 3;
     A.hotFamily = p.family;
+    A.hotFamilyDueStep = A.step + 4;
     A.step += 1;
     A.lastPointId = p.id;
     recomputeStatusesFromCRDT(A);
@@ -7885,6 +8152,7 @@ function resetTodayMission() {
   const keepGaProg = A.gaProg || [0, 0, 0, 0];
   const keepGaMap = A.gaMap || {};
   const keepGaSess = A.gaSess || null;
+  const keepHesitant = A.hesitantKeys || {};
   const keepSt = A.st || 0;
   A = createFreshAdaptiveState();
   A.resetAt = stamp;
@@ -7900,6 +8168,7 @@ function resetTodayMission() {
   A.gaProg = keepGaProg;
   A.gaMap = keepGaMap;
   A.gaSess = keepGaSess;
+  A.hesitantKeys = keepHesitant;
   A.es = expSpeed;
   A.rs = radioSpeed;
   A.st = keepSt;
@@ -8027,6 +8296,8 @@ function lexBoxHTML(id) {
 }
 
 function renderTutor() {
+  clearQuizRecallTimer();
+  quizChoicesRevealed = true;
   renderGreenBoard();
   clearActiveWordToken();
   const box = document.getElementById("voice-card");
@@ -8114,9 +8385,15 @@ function renderTutor() {
     warmAudio(activeQuizObj.exp_audio);
     const isVariant = activeQuizObj.id !== p.primary.id;
     const isRetrySame = (ps.wrongCount || 0) > 0 && !isVariant;
+    const effQ = getEffectiveMastery(p.point_key, p.point);
+    // Kang, McDermott & Roediger (2007): 2/3 final graduation cards pause 2.2s before revealing options (cued recall > recognition)
+    const useRecallVeil = !activeQuizObj.is_listening && (ps.wrongCount || 0) === 0 && (effQ.streak || 0) === 2;
+    quizChoicesRevealed = !useRecallVeil;
+
     let label = p.subject;
     if (isRetrySame) label += " · 乱序重考";
     else if (isVariant) label += " · 换题复考";
+    else if (useRecallVeil) label += " · 终审盲考";
     else if (ps.audioPrimed) label += " · 随身听已聊";
 
     const controlsHTML = activeQuizObj.is_listening
@@ -8125,7 +8402,7 @@ function renderTutor() {
             <button class="listen-num-btn" onclick="submitAnswer(currentChoices[${cIdx}])">${cIdx + 1}</button>
           `).join("")}
         </div>`
-      : `<div class="choice-list">
+      : `${useRecallVeil ? `<button type="button" class="recall-veil-btn" id="quiz-recall-veil" onclick="revealQuizChoicesNow()">终审回忆 · 先在心里想答案（轻点看选项）</button>` : ""}<div class="choice-list${useRecallVeil ? " recall-veiled" : ""}" id="quiz-choice-list">
           ${currentChoices.map((c, cIdx) => `
             <button class="zen-choice" onclick="submitAnswer(currentChoices[${cIdx}])">
               <span>${escapeHtml(c)}</span>
@@ -8162,6 +8439,9 @@ function renderTutor() {
         </div>
       </div>
     `;
+    if (useRecallVeil) {
+      quizRecallTimer = setTimeout(revealQuizChoicesNow, 2200);
+    }
     syncAudioButtons();
     return;
   }
@@ -8256,7 +8536,8 @@ function renderTutor() {
     <div class="meta-bar">
       <span class="${overCls}">${escapeHtml(overTxt)}</span>
       <div class="quiet-actions">
-        <button class="text-btn" onclick="playQuizQuestionAudio(activeQuizObj, true)">原题</button>
+        ${q.is_listening ? `<button class="text-btn" id="q-slow-btn" onclick="playQuizQuestionAudio(activeQuizObj, true, 0.85)">0.85x 慢听</button>` : ""}
+        <button class="text-btn" onclick="playQuizQuestionAudio(activeQuizObj, true, 1.0)">原题</button>
         <button class="text-btn" id="ans-spd-btn" onclick="cycleExpSpeed()">${expSpeed}x</button>
       </div>
     </div>
@@ -8722,10 +9003,11 @@ document.addEventListener("keydown", e => {
     return;
   }
   if (viewStage === "quiz" && activeQuizObj) {
-    if (e.key === " ") { e.preventDefault(); playMainClip(activeQuizObj.q_audio, "q", true); }
-    else if (e.key === "1" && currentChoices[0]) { e.preventDefault(); submitAnswer(currentChoices[0]); }
-    else if (e.key === "2" && currentChoices[1]) { e.preventDefault(); submitAnswer(currentChoices[1]); }
-    else if (e.key === "3" && currentChoices[2]) { e.preventDefault(); submitAnswer(currentChoices[2]); }
+    if (e.key === " ") { e.preventDefault(); playQuizQuestionAudio(activeQuizObj, true); }
+    else if (e.key === "Enter" && !quizChoicesRevealed) { e.preventDefault(); revealQuizChoicesNow(); }
+    else if (e.key === "1" && currentChoices[0]) { e.preventDefault(); if (!quizChoicesRevealed) { revealQuizChoicesNow(); return; } submitAnswer(currentChoices[0]); }
+    else if (e.key === "2" && currentChoices[1]) { e.preventDefault(); if (!quizChoicesRevealed) { revealQuizChoicesNow(); return; } submitAnswer(currentChoices[1]); }
+    else if (e.key === "3" && currentChoices[2]) { e.preventDefault(); if (!quizChoicesRevealed) { revealQuizChoicesNow(); return; } submitAnswer(currentChoices[2]); }
     else if (e.key === "0") { e.preventDefault(); revealWithoutGuess(); }
     return;
   }
@@ -8888,6 +9170,7 @@ function getVocabCardSpec(surface) {
       rev_audio: pre.rev_audio || "",
       full_audio: pre.full_audio || "",
       hook_audio: pre.hook_audio || "",
+      clean_audio: pre.clean_audio || "",
       word_audio: pre.word_audio || (vItem && vItem.audio) || w.audio || "",
       source: isTapped ? "今日查词" : ""
     };
@@ -8926,6 +9209,7 @@ function getVocabCardSpec(surface) {
     rev_audio: "",
     full_audio: "",
     hook_audio: "",
+    clean_audio: "",
     word_audio: (vItem && vItem.audio) || w.audio || "",
     source: isTapped ? "今日查词" : ""
   };
@@ -8942,32 +9226,53 @@ function curateVocabBatch(limitCnt) {
   const maxN = Math.max(1, limitCnt || VOCAB_BATCH_SIZE);
   const vItems = (DATA.mastery && DATA.mastery.vocab && DATA.mastery.vocab.items) ? DATA.mastery.vocab.items : [];
   const byKey = getVocabMasteryLookup();
+  const twinMap = (DATA && DATA.vocab_twins && typeof DATA.vocab_twins === "object") ? DATA.vocab_twins : {};
   const seen = new Set();
   const seenHead = new Set();
+  const blockedTwins = new Set(); // Tinkham (1997) / Waring (1997) / Webb & Kagimoto (2011) anti-interference
+  const refreshWords = [];
   const out = [];
 
-  function tryAdd(surface) {
-    if (!surface || out.length >= maxN || seen.has(surface)) return;
-    if (PARTICLE_FALLBACK[surface] || TRIVIAL_TAP_WORDS.has(surface)) return;
+  function tryAdd(surface, allowRefresh, ignoreTwins) {
+    if (!surface || out.length >= maxN || seen.has(surface)) return false;
+    if (PARTICLE_FALLBACK[surface] || TRIVIAL_TAP_WORDS.has(surface)) return false;
     const it = byKey[surface] || null;
     const eff = getEffectiveMastery((it && it.key) || surface, surface);
-    if (eff.tier === "done") return;
+    if (eff.tier === "done" && !allowRefresh) return false;
+    if (!ignoreTwins && !allowRefresh && blockedTwins.has(surface)) return false;
     const w = DATA.words[surface] || {};
     const head = w.head || surface;
-    if (seenHead.has(head)) return;
+    if (seenHead.has(head)) return false;
     const zh = (DATA.vocab_cards && DATA.vocab_cards[surface] && DATA.vocab_cards[surface].zh) || w.zh || (it && it.sub) || "";
-    if (!zh) return;
+    if (!zh) return false;
     seen.add(surface);
     seenHead.add(head);
+    if (!allowRefresh && Array.isArray(twinMap[surface])) {
+      twinMap[surface].forEach(tw => blockedTwins.add(tw));
+    }
+    if (allowRefresh) refreshWords.push(surface);
     out.push(surface);
+    return true;
   }
 
-  // Note: Tapped words/phrases (A.tappedWords / A.wordLookups) are recorded silently to the cloud brain
-  // without immediately altering active practice queues.
+  // 0) Post-3/3 Long-Lag Maintenance Refresher (Cepeda et al. 2008): reserve up to 2 slots for mastered words unseen >=10d!
+  if (maxN >= 16) {
+    const staleDone = [];
+    vItems.forEach(it => {
+      const eff = getEffectiveMastery(it.key, it.name);
+      if (eff.tier === "done") {
+        const ld = getEffectiveItemLastDate(it);
+        const ds = ld ? daysSinceTag(ld) : 0;
+        if (ds >= 10) staleDone.push({ name: it.name, ds });
+      }
+    });
+    staleDone.sort((a, b) => b.ds - a.ds || a.name.localeCompare(b.name));
+    staleDone.slice(0, 2).forEach(x => tryAdd(x.name, true, true));
+  }
 
   // 1) Recently missed words (from tutor or Grok practice)
   const recentWeak = Array.isArray(DATA.recent_weak_words) ? DATA.recent_weak_words : [];
-  recentWeak.slice(0, Math.min(8, maxN)).forEach(sw => tryAdd(sw));
+  recentWeak.slice(0, Math.min(8, maxN)).forEach(sw => tryAdd(sw, false, false));
 
   // 2) Cross-day due 2/3 & 1/3 reviews (lastDate !== TODAY_TAG) so words graduate to true green steadily,
   //    while always reserving room for fresh 0/3 words each day
@@ -8991,21 +9296,30 @@ function curateVocabBatch(limitCnt) {
   const freshReserve = Math.min(Math.max(8, Math.floor(maxN * 0.42)), todoPool.length);
   const reviewTarget = Math.max(0, maxN - freshReserve);
   for (let i = 0; i < dueWip.length && out.length < reviewTarget; i++) {
-    tryAdd(dueWip[i]);
+    tryAdd(dueWip[i], false, false);
   }
 
-  // 3) Remaining 0/3 待攻克 words (fresh high-yield exam traps & kana verbs/adverbs)
-  todoPool.forEach(nm => tryAdd(nm));
+  // 3) Remaining 0/3 待攻克 words (anti-interference enforced)
+  todoPool.forEach(nm => tryAdd(nm, false, false));
 
-  // 4) Any leftover due cross-day reviews
-  dueWip.forEach(nm => tryAdd(nm));
+  // 4) Any leftover due cross-day reviews (anti-interference enforced)
+  dueWip.forEach(nm => tryAdd(nm, false, false));
 
-  // 5) Any remaining wip words if needed to fill the batch
+  // 5) Any remaining wip words (anti-interference enforced, then relaxed fallback if pool tiny)
   vItems.forEach(it => {
     const eff = getEffectiveMastery(it.key, it.name);
-    if (eff.tier === "wip") tryAdd(it.name);
+    if (eff.tier === "wip") tryAdd(it.name, false, false);
   });
+  if (out.length < maxN) {
+    todoPool.forEach(nm => tryAdd(nm, false, true));
+    dueWip.forEach(nm => tryAdd(nm, false, true));
+    vItems.forEach(it => {
+      const eff = getEffectiveMastery(it.key, it.name);
+      if (eff.tier === "wip") tryAdd(it.name, false, true);
+    });
+  }
 
+  out._refreshWords = refreshWords;
   return out;
 }
 
@@ -9013,7 +9327,9 @@ function ensureVocabSession(forceNewBatch) {
   applyMasteryOverrides();
   if (!forceNewBatch && A.vocabSess && A.vocabSess.date === DATA.plan_date && Array.isArray(A.vocabSess.queue)) {
     const byKey = getVocabMasteryLookup();
+    const refSet = new Set(Array.isArray(A.vocabSess.refreshWords) ? A.vocabSess.refreshWords : []);
     const filtered = A.vocabSess.queue.filter(sw => {
+      if (refSet.has(sw)) return true;
       const it = byKey[sw] || null;
       return getEffectiveMastery((it && it.key) || sw, sw).tier !== "done";
     });
@@ -9044,13 +9360,15 @@ function ensureVocabSession(forceNewBatch) {
   }
 
   const queue = curateVocabBatch(VOCAB_BATCH_SIZE);
+  const refreshWords = Array.isArray(queue._refreshWords) ? queue._refreshWords.slice() : [];
   A.vocabSess = {
     date: DATA.plan_date,
-    queue: queue,
+    queue: queue.slice(),
     total: queue.length,
     cleared: 0,
     clearedWords: [],
     failedWords: [],
+    refreshWords: refreshWords,
     done: queue.length === 0,
     updatedAt: nowUnixSec()
   };
@@ -9245,6 +9563,7 @@ function warmUpcomingVocabCards() {
     if (c.rev_audio) warmAudio(c.rev_audio);
     if (c.full_audio) warmAudio(c.full_audio);
     if (c.hook_audio) warmAudio(c.hook_audio);
+    if (c.clean_audio) warmAudio(c.clean_audio);
     if (c.word_audio) warmAudio(c.word_audio);
   });
 }
@@ -9377,6 +9696,25 @@ function isEarFirstGradCard(card) {
   return !!(card.word_audio || card.front_audio || card.full_audio);
 }
 
+function isKanaRecallGradCard(card) {
+  // Mondria & Wiersma (2004) / Webb (2005, 2009): 2/3 pure-kana final pass tests L1->L2 productive recall!
+  if (!card || card.mode !== "kana_meaning") return false;
+  const eff = getEffectiveMastery(card.key, card.word);
+  if ((eff.streak || 0) !== 2) return false;
+  const sess = A.vocabSess;
+  if (sess && Array.isArray(sess.failedWords) && sess.failedWords.includes(card.word)) return false;
+  return !!String(card.zh || "").trim();
+}
+
+function shouldFadeVocabMnemonic(card) {
+  // Wang & Thomas (1995) / Crutcher (1990): fade spoken keyword crutch on 1/3 & 2/3 smooth passes (keep tappable!)
+  if (!card || vcPendingLeft) return false;
+  const sess = A.vocabSess;
+  if (sess && Array.isArray(sess.failedWords) && sess.failedWords.includes(card.word)) return false;
+  const eff = getEffectiveMastery(card.key, card.word);
+  return (eff.streak || 0) >= 1;
+}
+
 function dealCurrentVocabCard(autoStartAudio) {
   stopVocabAudioAndTimers();
   vcRevealed = false;
@@ -9400,7 +9738,9 @@ function dealCurrentVocabCard(autoStartAudio) {
   const card = getVocabCardSpec(sess.queue[0]);
   const myToken = ++vcToken;
   const earFirst = isEarFirstGradCard(card);
+  const kanaRecall = isKanaRecallGradCard(card);
 
+  // Pyc & Rawson (2009) Retrieval Effort Window: 2.4-2.8s retrieval space (tap card anytime for instant 0ms reveal!)
   if (earFirst) {
     // 2/3 Final Auditory Graduation (Tamaoka et al. 2012): play Japanese ear-first with Kanji veiled!
     const earUrl = card.word_audio || card.front_audio || card.full_audio;
@@ -9409,7 +9749,7 @@ function dealCurrentVocabCard(autoStartAudio) {
       vcTimer = setTimeout(() => {
         if (activeMode !== "vocab" || vcToken !== myToken || vcRevealed) return;
         revealVocabCard(true);
-      }, 1150);
+      }, 2600);
     };
     if (earUrl) {
       playUrlOnWordPlayer(
@@ -9421,21 +9761,27 @@ function dealCurrentVocabCard(autoStartAudio) {
     } else {
       speakUtteranceLang(card.kana || card.word, "ja-JP", 0.98, afterEar);
     }
-  } else if (card.mode === "kanji_read") {
-    // Silent Kanji micro-chunk front so audio never spoils the reading before retrieval!
+  } else if (kanaRecall) {
+    // 2/3 Pure Kana Productive Recall (L1->L2): silent Chinese cue on front, 2.8s to recall Japanese reading!
     vcTimer = setTimeout(() => {
       if (activeMode !== "vocab" || vcToken !== myToken || vcRevealed) return;
       revealVocabCard(true);
-    }, 1050);
+    }, 2800);
+  } else if (card.mode === "kanji_read") {
+    // Silent Kanji micro-chunk front: 2.6s retrieval window before auto-reveal (tap reveals instantly)
+    vcTimer = setTimeout(() => {
+      if (activeMode !== "vocab" || vcToken !== myToken || vcRevealed) return;
+      revealVocabCard(true);
+    }, 2600);
   } else {
-    // Kana / spoken word: play Japanese first, pause 0.9s for Chinese meaning recall, then reveal Mandarin
+    // Kana / spoken word: play Japanese first, pause 2.4s for genuine meaning retrieval, then reveal
     const frontUrl = card.front_audio || card.word_audio;
     const afterFront = () => {
       if (activeMode !== "vocab" || vcToken !== myToken || vcRevealed) return;
       vcTimer = setTimeout(() => {
         if (activeMode !== "vocab" || vcToken !== myToken || vcRevealed) return;
         revealVocabCard(true);
-      }, 900);
+      }, 2400);
     };
     if (frontUrl) {
       playUrlOnWordPlayer(
@@ -9455,22 +9801,29 @@ function revealVocabCard(playAudioNow, forceFullBilingual) {
   if (!sess || !sess.queue.length) return;
   const card = getVocabCardSpec(sess.queue[0]);
   const earFirst = isEarFirstGradCard(card);
+  const kanaRecall = isKanaRecallGradCard(card);
+  const fadeMn = !forceFullBilingual && shouldFadeVocabMnemonic(card);
   stopVocabAudioAndTimers();
   vcRevealed = true;
 
   const chunkEl = document.getElementById("vc-chunk-box");
   if (chunkEl) chunkEl.classList.remove("ear-veil");
+  const kFrontEl = document.getElementById("vc-kana-front");
+  if (kFrontEl) kFrontEl.classList.add("revealed");
   const revEl = document.getElementById("vc-reveal-box");
   if (revEl) revEl.classList.add("shown");
   const cueEl = document.getElementById("vc-cue-line");
   if (cueEl) {
     if (vcPendingLeft) {
       cueEl.textContent = card.mode === "kanji_read"
-        ? "已标待练读音 · 盯住红字听清再滑"
-        : "已记入没记住 · 听完滑一下继续";
+        ? "已标待练读音 · 顺口念一遍再滑"
+        : "已记入没记住 · 顺口念一遍再滑";
       cueEl.className = "vc-cue ng";
     } else if (earFirst) {
       cueEl.textContent = "耳听秒认右滑毕业 · 迟疑就左滑";
+      cueEl.className = "vc-cue";
+    } else if (kanaRecall) {
+      cueEl.textContent = "想出读音右滑毕业 · 卡壳就左滑";
       cueEl.className = "vc-cue";
     } else {
       cueEl.textContent = card.mode === "kanji_read"
@@ -9482,8 +9835,11 @@ function revealVocabCard(playAudioNow, forceFullBilingual) {
 
   if (!playAudioNow) return;
   const myToken = ++vcToken;
-  const needFull = !!forceFullBilingual || card.mode === "kanji_read";
-  const targetUrl = needFull ? (card.full_audio || card.rev_audio) : card.rev_audio;
+  const needFull = !!forceFullBilingual || card.mode === "kanji_read" || kanaRecall;
+  // Wang & Thomas (1995): On 1/3 & 2/3 smooth passes, fade spoken mnemonic -> pure native Japanese word+phrase (tap '记音 ♪' anytime!)
+  const targetUrl = (fadeMn && card.clean_audio)
+    ? card.clean_audio
+    : (needFull ? (card.full_audio || card.rev_audio) : card.rev_audio);
 
   if (targetUrl) {
     playUrlOnWordPlayer(
@@ -9635,6 +9991,7 @@ function triggerVocabAction(dir) {
   if (dir === "left") {
     if (!Array.isArray(sess.failedWords)) sess.failedWords = [];
     if (!sess.failedWords.includes(word)) sess.failedWords.push(word);
+    if (Array.isArray(sess.refreshWords)) sess.refreshWords = sess.refreshWords.filter(w => w !== word);
 
     applyMasteryAction(card.key, card.word, "fail", stamp);
     if (card.pointId && A.pts[card.pointId]) {
@@ -9677,6 +10034,7 @@ function triggerVocabAction(dir) {
   }
 
   if (dir === "up") {
+    if (Array.isArray(sess.refreshWords)) sess.refreshWords = sess.refreshWords.filter(w => w !== word);
     applyMasteryAction(card.key, card.word, "seal", stamp);
     if (card.pointId && A.pts[card.pointId]) {
       const ps = A.pts[card.pointId];
@@ -9703,8 +10061,15 @@ function triggerVocabAction(dir) {
   }
 
   // dir === "right" ("记住")
+  const isRefreshWord = Array.isArray(sess.refreshWords) && sess.refreshWords.includes(word);
   const hadFailToday = Array.isArray(sess.failedWords) && sess.failedWords.includes(word);
-  applyMasteryAction(card.key, card.word, hadFailToday ? "recover" : "pass", stamp);
+  if (isRefreshWord && !hadFailToday) {
+    setMasteryTier(card.key, "done", stamp);
+    setMasteryTier(card.word, "done", stamp);
+    sess.refreshWords = sess.refreshWords.filter(w => w !== word);
+  } else {
+    applyMasteryAction(card.key, card.word, hadFailToday ? "recover" : "pass", stamp);
+  }
   pushVocabRecord(card, "记词:记住", true, stamp);
   applyMasteryOverrides();
   refreshMarkedWordTokens();
@@ -9870,12 +10235,16 @@ function renderVocabStage() {
   const card = getVocabCardSpec(word);
   const eff = getEffectiveMastery(card.key, card.word);
   const isRequeued = Array.isArray(sess.failedWords) && sess.failedWords.includes(word);
+  const isRefresh = Array.isArray(sess.refreshWords) && sess.refreshWords.includes(word);
   const posNum = Math.min(Math.max(1, sess.total), (sess.cleared || 0) + 1);
   const leftLabel = isRequeued
-    ? `回炉巩固 · 余 ${sess.queue.length} 词`
-    : `今晚 ${posNum} / ${sess.total} 词${card.source ? " · " + card.source : ""}`;
+    ? `回炉巩固 · 顺口念一遍 · 余 ${sess.queue.length} 词`
+    : (isRefresh
+      ? `老词保鲜抽查 · ${posNum} / ${sess.total}`
+      : `今晚 ${posNum} / ${sess.total} 词${card.source ? " · " + card.source : ""}`);
   const isKanjiCard = card.mode === "kanji_read";
   const earFirst = isEarFirstGradCard(card);
+  const kanaRecall = isKanaRecallGradCard(card);
   const hasTargetKanji = /[\u4e00-\u9faf\u3400-\u4dbf]/.test(card.target || card.word);
   const kanaHtml = (hasTargetKanji && card.kana)
     ? renderTrapKanaHTML(card.target || card.word, card.kana, card.trap_hl, card.trap_tag)
@@ -9883,11 +10252,14 @@ function renderVocabStage() {
   const quietZh = isKanjiCard && !card.zh_opaque;
   const initCue = earFirst
     ? "终审盲听 · 凭耳认词，轻点看汉字"
-    : (isKanjiCard ? "默念读音 · 有一拍不准就左滑" : "听日文 · 想中文意思");
-  const rightStampTxt = earFirst ? "听懂毕业" : (isKanjiCard ? "读准了" : "记住");
+    : (kanaRecall
+      ? "终审反考 · 看中文想日文读音，轻点核对"
+      : (isKanjiCard ? "默念读音 · 有一拍不准就左滑" : "听日文 · 想中文意思"));
+  const rightStampTxt = earFirst ? "听懂毕业" : (kanaRecall ? "想起毕业" : (isKanjiCard ? "读准了" : "记住"));
   const leftStampTxt = isKanjiCard ? "读音待练" : "没记住";
   const leftBtnTxt = isKanjiCard ? "← 读音不准" : "← 没记住";
-  const rightBtnTxt = earFirst ? "听懂毕业 →" : (isKanjiCard ? "读准了 →" : "记住 →");
+  const rightBtnTxt = earFirst ? "听懂毕业 →" : (kanaRecall ? "想起毕业 →" : (isKanjiCard ? "读准了 →" : "记住 →"));
+  const kanaFrontTxt = kanaRecall ? (cleanSpeakZh(card.zh) || card.zh) : "";
 
   box.innerHTML = `
     <div class="meta-bar">
@@ -9905,7 +10277,8 @@ function renderVocabStage() {
         <div class="vc-stamp up" id="vc-st-up">太熟封存</div>
 
         <div class="vc-cue" id="vc-cue-line">${initCue}</div>
-        <div class="vc-chunk${earFirst && !vcRevealed ? " ear-veil" : ""}" id="vc-chunk-box">${renderChunkHighlightHTML(card.chunk_ja, card.target)}</div>
+        ${kanaRecall ? `<div class="vc-kana-front${vcRevealed ? " revealed" : ""}" id="vc-kana-front">${escapeHtml(kanaFrontTxt)}</div>` : ""}
+        <div class="vc-chunk${(earFirst || kanaRecall) && !vcRevealed ? " ear-veil" : ""}" id="vc-chunk-box">${renderChunkHighlightHTML(card.chunk_ja, card.target)}</div>
 
         <div class="vc-reveal${vcRevealed ? " shown" : ""}" id="vc-reveal-box">
           ${kanaHtml ? `<div class="vc-kana">${kanaHtml}</div>` : ""}
@@ -10428,12 +10801,88 @@ function setLedgerGrammarSpectrum(gid, code, ev) {
   renderDashboard();
 }
 
+function daysSinceTag(tag8) {
+  const s = String(tag8 || "").replace(/[^0-9]/g, "").slice(0, 8);
+  if (s.length !== 8 || TODAY_TAG.length !== 8) return 0;
+  const t1 = Date.UTC(Number(s.slice(0, 4)), Number(s.slice(4, 6)) - 1, Number(s.slice(6, 8)));
+  const t2 = Date.UTC(Number(TODAY_TAG.slice(0, 4)), Number(TODAY_TAG.slice(4, 6)) - 1, Number(TODAY_TAG.slice(6, 8)));
+  if (isNaN(t1) || isNaN(t2)) return 0;
+  return Math.max(0, Math.round((t2 - t1) / 86400000));
+}
+
+function getEffectiveItemLastDate(it) {
+  const ovTs = (A.masteryOverrideTs && (A.masteryOverrideTs[it.key] || A.masteryOverrideTs[it.name])) || 0;
+  if (ovTs >= TRUE_GREEN_EPOCH) {
+    try {
+      const dt = new Date((ovTs - 4 * 3600) * 1000);
+      const y = dt.getUTCFullYear();
+      const m = String(dt.getUTCMonth() + 1).padStart(2, "0");
+      const d = String(dt.getUTCDate()).padStart(2, "0");
+      const liveTag = `${y}${m}${d}`;
+      if (!it.last_date || liveTag > String(it.last_date)) return liveTag;
+    } catch (e) {}
+  }
+  return String(it.last_date || "");
+}
+
+function isItemHesitant(it) {
+  if (!it || it.tier === "todo") return false;
+  const hMap = (A && A.hesitantKeys && typeof A.hesitantKeys === "object") ? A.hesitantKeys : {};
+  const liveK = (it.key in hMap) ? hMap[it.key] : ((it.name in hMap) ? hMap[it.name] : undefined);
+  if (liveK !== undefined) return !!liveK;
+  return !!it.hesitant;
+}
+
+function jumpToRoiPillar(modKey) {
+  dashMod = modKey;
+  dashTier = "wip";
+  expandedPt = null;
+  renderDashboard();
+}
+
 function renderDashboard() {
   applyMasteryOverrides();
   const order = ["grammar", "henkei", "listening", "vocab"];
-  document.getElementById("dash-summary").innerHTML = order.map(k => {
+  const pillarMeta = order.map(k => {
     const m = DATA.mastery[k];
     const c = recalcCounts(k);
+    const wip2 = m.items.filter(it => it.tier === "wip" && Number(it.streak || 0) >= 2).length;
+    const staleDone = m.items.filter(it => {
+      if (it.tier !== "done") return false;
+      const ld = getEffectiveItemLastDate(it);
+      return !!ld && daysSinceTag(ld) >= 10;
+    }).length;
+    const hesCnt = m.items.filter(it => isItemHesitant(it)).length;
+    return { k, m, c, wip2, staleDone, hesCnt, roi: wip2 * (m.exam_pts || 25) };
+  });
+
+  // Metcalfe & Kornell (2005) Region of Proximal Learning: surface highest-ROI 2/3 near-graduation pillar!
+  const roiEl = document.getElementById("dash-roi-focus");
+  if (roiEl) {
+    const best = pillarMeta.slice().sort((a, b) => (b.roi - a.roi) || (b.wip2 - a.wip2))[0];
+    const totalWip2 = pillarMeta.reduce((s, x) => s + x.wip2, 0);
+    const totalStale = pillarMeta.reduce((s, x) => s + x.staleDone, 0);
+    const totalHes = pillarMeta.reduce((s, x) => s + x.hesCnt, 0);
+    const dLeft = Number(DATA.days_to_exam || 14);
+    const extras = [];
+    if (totalHes > 0) extras.push(`略生 ${totalHes} 项`);
+    if (totalStale > 0) extras.push(`待保鲜抽查 ${totalStale} 项`);
+    const extraStr = extras.length ? ` · ${extras.join(" · ")}` : "";
+    if (best && totalWip2 > 0) {
+      roiEl.innerHTML = `
+        <div class="dash-roi-bar">
+          <span class="dash-roi-txt">距考剩 <b>${dLeft} 天</b> · 临门 2/3 共 <b>${totalWip2} 项</b>（${best.m.label}最提分${extraStr}）</span>
+          <button type="button" class="dash-roi-btn" onclick="jumpToRoiPillar('${best.k}')">看 ${best.m.label} ›</button>
+        </div>`;
+    } else {
+      roiEl.innerHTML = `
+        <div class="dash-roi-bar">
+          <span class="dash-roi-txt">距考剩 <b>${dLeft} 天</b> · 临门 2/3 已清空${extraStr || " · 稳步攻克新点即可"}</span>
+        </div>`;
+    }
+  }
+
+  document.getElementById("dash-summary").innerHTML = pillarMeta.map(({ k, m, c }) => {
     const pDone = ((c.done / Math.max(1, c.total)) * 100).toFixed(1);
     const pWip = ((c.wip / Math.max(1, c.total)) * 100).toFixed(1);
     const pTodo = ((c.todo / Math.max(1, c.total)) * 100).toFixed(1);
@@ -10518,7 +10967,14 @@ function speakLedgerItem(name, audioUrl) {
 function renderMasteryList() {
   const q = (document.getElementById("pt-search").value || "").trim().toLowerCase();
   const items = DATA.mastery[dashMod].items.filter(it => {
-    if (q) return it.name.toLowerCase().includes(q) || (it.sub || "").toLowerCase().includes(q) || (it.family || "").toLowerCase().includes(q);
+    if (q) {
+      if (q === "略生" || q === "犹豫") return isItemHesitant(it);
+      if (q === "抽查" || q === "保鲜") {
+        const ld = getEffectiveItemLastDate(it);
+        return it.tier === "done" && !!ld && daysSinceTag(ld) >= 10;
+      }
+      return it.name.toLowerCase().includes(q) || (it.sub || "").toLowerCase().includes(q) || (it.family || "").toLowerCase().includes(q);
+    }
     return it.tier === dashTier;
   });
 
@@ -10535,6 +10991,10 @@ function renderMasteryList() {
     const gaEff = (dashMod === "grammar" && it.gid) ? getEffectiveGA(it.gid) : null;
     const gaSpec = (gaEff && gaEff.code >= 1 && gaEff.code <= 4) ? GA_SPECTRUM[gaEff.code] : null;
     const gaTagHTML = gaSpec ? `<span class="li-ga-tag ${gaSpec.cls}">${gaSpec.label}</span>` : "";
+    const hesHTML = isItemHesitant(it) ? `<span class="li-hes">略生</span>` : "";
+    const lastD = it.tier === "done" ? getEffectiveItemLastDate(it) : "";
+    const dStale = lastD ? daysSinceTag(lastD) : 0;
+    const staleHTML = (it.tier === "done" && dStale >= 10) ? `<span class="li-stale">${dStale}天前·抽查</span>` : "";
     const gaBarHTML = (expandedPt === i && dashMod === "grammar" && it.gid)
       ? `<div class="li-ga-bar">
           <span class="li-ga-lbl">自评光谱</span>
@@ -10550,10 +11010,11 @@ function renderMasteryList() {
         <div class="li-left">
           <span class="li-dot ${it.tier}"></span>
           <span class="li-name">${escapeHtml(it.name)}</span>
-          ${gaTagHTML}
+          ${gaTagHTML}${hesHTML}
         </div>
         <div class="li-right">
           <span class="li-sub">${escapeHtml(it.sub)}</span>
+          ${staleHTML}
           <span class="li-streak ${stCls}">${stNum}/3</span>
           ${canSpeak ? `<button class="li-act" onclick='event.stopPropagation();speakLedgerItem(${JSON.stringify(it.name)}, ${JSON.stringify(it.audio || "")})'>听音</button>` : ""}
           ${it.point_id ? `<button class="li-act" onclick="event.stopPropagation();jumpToPointById('${it.point_id}')">练习</button>` : ""}
@@ -11008,7 +11469,12 @@ window.ZB = (function() {
         if (!r || !r[0]) continue;
         const p = wm.get(r[0]);
         if (!p) wm.set(r[0], r.slice());
-        else wm.set(r[0], [r[0], r[1] || p[1], (r[2] && r[2] > 5) ? r[2] : p[2], (r[2] && r[2] > 5) ? (r[3] || p[3]) : (p[3] || r[3])]);
+        else {
+          const wVal = (r.length > 4 && r[4]) ? r[4] : ((p.length > 4 && p[4]) ? p[4] : null);
+          const merged = [r[0], r[1] || p[1], (r[2] && r[2] > 5) ? r[2] : p[2], (r[2] && r[2] > 5) ? (r[3] || p[3]) : (p[3] || r[3])];
+          if (wVal != null) merged.push(wVal);
+          wm.set(r[0], merged);
+        }
       }
     }
     out.wb = Array.from(wm.values()).sort((x, y) => x[0].localeCompare(y[0]));
@@ -11199,7 +11665,7 @@ window.ZB = (function() {
   }
   function weekStats(ymd) {
     const mon = mondayOf(ymd);
-    let bbH = 0, pM = 0, realPM = 0, puR = 0;
+    let bbH = 0, pM = 0, realPM = 0, puR = 0, res = 0;
     for (let i = 0; i < 7; i++) {
       const d = shiftD(mon, i);
       if (d > ymd) break;
@@ -11211,10 +11677,12 @@ window.ZB = (function() {
         const cls = de.pz_done != null ? getPZMeta(Number(de.pz_done)) : null;
         if ((cls && cls.kind !== "easy") || (!cls && (p.min || 0) >= 25)) realPM++;
       }
-      puR += (dayE(d).pu || []).length;
+      const deObj = dayE(d);
+      puR += (deObj.pu || []).length;
+      if (deObj.res) res++;
     }
     const pzGoal = bbH >= 3 ? 1 : (bbH >= 2 ? 2 : 3);
-    return { bbH, pM, realPM, hard: bbH + pM, realHard: bbH + realPM, pzGoal, puR };
+    return { bbH, pM, realPM, hard: bbH + pM, realHard: bbH + realPM, pzGoal, puR, res };
   }
   function streakBefore(ymd) {
     let active = 0, any = 0, activeOn = true, anyOn = true;
@@ -11252,20 +11720,36 @@ window.ZB = (function() {
     const rhrFresh = !!(rhr && (!v.rhr_date || daysDiff(v.rhr_date, ymd) <= 1));
     const hrv = v.hrv || null;
     const hrvBase = v.hrv_base || 0;
+    const hrv7d = v.hrv_7d || null;
+    const hrvSd = v.hrv_sd || (hrvBase ? Math.max(4, Math.round(hrvBase * 0.12)) : 0);
+    const hrvLowStreak = Number(v.hrv_low_streak || 0);
     const hrvFresh = !!(hrv && hrvBase >= 30 && v.hrv_date && daysDiff(v.hrv_date, ymd) <= 1);
     const sleepH = v.sleep_h || null;
     const slFresh = !!(sleepH && v.sleep_date && v.sleep_date === ymd);
+    // Kiviniemi (2007/2010) & Duking (2021): 7-day rolling mean vs personal SWC (±0.5 SD)
+    const swc = Math.max(4, Math.round(0.5 * hrvSd));
+    const swcLow = hrvBase - swc;
+    const has7d = !!(hrvFresh && hrv7d && hrvSd >= 4);
+    const redHRV = hrvFresh && hrv <= hrvBase * 0.75;
+    // Full rest lockout ONLY on sustained 2+ low nights or 7-day rolling mean below SWC (fallback to single-day <84% only if 7d unavailable)
+    const lowHRV = has7d
+      ? (hrv7d < swcLow || hrvLowStreak >= 2)
+      : (hrvFresh && hrv < hrvBase * 0.84);
+    // Single noisy night dip while 7-day trend stays healthy -> gentle intensity downshift to Zone 2 instead of full lockout!
+    const mildHRV = !!(has7d && !redHRV && !lowHRV && hrv < swcLow);
+
     const parts = [];
     if (rhr) parts.push(`静息 ${rhr}`);
-    if (hrv) parts.push(`HRV ${hrv}${hrvBase ? `（平日 ${hrvBase}）` : ""}`);
+    if (hrv) parts.push(hrv7d ? `HRV ${hrv}（7日 ${hrv7d} · 平日 ${hrvBase}）` : `HRV ${hrv}${hrvBase ? `（平日 ${hrvBase}）` : ""}`);
     if (sleepH) parts.push(`睡眠 ${sleepH}h`);
     return {
-      rhr, rhrBase, rhrFresh, hrv, hrvBase, hrvFresh, sleepH, slFresh,
+      rhr, rhrBase, rhrFresh, hrv, hrv7d, hrvBase, hrvSd, hrvLowStreak, swcLow, hrvFresh, sleepH, slFresh,
       summary: parts.join(" · "),
       redRHR: rhrFresh && rhr >= 46,
-      redHRV: hrvFresh && hrv <= hrvBase * 0.75,
+      redHRV,
       lowSleep: slFresh && sleepH < 5.8,
-      lowHRV: hrvFresh && hrv < hrvBase * 0.84
+      lowHRV,
+      mildHRV
     };
   }
 
@@ -11615,9 +12099,11 @@ window.ZB = (function() {
       const restDone = !!(pelo && pelo.status === "rest");
       const recDone = !!(pelo && pelo.status === "recovery");
 
-      // 6-watch. Automatic Watch Fatigue Detection (short sleep < 5.8h or dipped HRV < 84% baseline)
+      // 6-watch. Automatic Watch Fatigue Detection (short sleep < 5.8h or sustained 7d/2-night low HRV)
       if (wr.lowSleep || wr.lowHRV) {
-        const why = wr.lowSleep ? `手表记昨晚仅睡 ${wr.sleepH}h` : `手表 HRV 偏低（${wr.hrv} vs 平日 ${wr.hrvBase}）`;
+        const why = wr.lowSleep
+          ? `手表记昨晚仅睡 ${wr.sleepH}h`
+          : (wr.hrv7d ? `HRV 7日均值偏低（${wr.hrv7d} vs 平日 ${wr.hrvBase}）` : `手表 HRV 偏低（${wr.hrv} vs 平日 ${wr.hrvBase}）`);
         return {
           tier: "yellow", tierText: `手表护体 · ${why}`,
           title: recDone ? "15 min Low Impact Ride" : "今晚优先早睡，不上主线",
@@ -11775,6 +12261,60 @@ window.ZB = (function() {
           state: st.mode, sub: st.sub, bb, pelo, wk, cur, next: cur, daysGap, stale: "none", isTravel: false
         };
       }
+
+      // 6f. Seiler (2010) / Stoggl (2014) 80/20 Polarized Guard:
+      // 2+ intense basketball games this week already fill the 20% Zone 4-5 quota -> auto-swap hard/test PZ ride to steady Zone 2!
+      const z2Done = !!(pelo && pelo.status === "done");
+      if (wk.bbH >= 2 && (cur.kind === "hard" || cur.kind === "test")) {
+        return {
+          tier: "green", tierText: `80/20 极化 · 本周已打 ${wk.bbH} 场球换 Zone 2`,
+          title: "30 min Zone 2 Power Zone Endurance",
+          shortLine: `篮球已吃满高强度配额 · 今骑纯 Zone 2 稳态燃脂护睡眠`,
+          linkText: "安排 ›",
+          ctaText: z2Done ? "已骑 30 分 Zone 2 ✓" : "骑完 30 分 Zone 2",
+          ctaDone: z2Done,
+          altAction: { label: `精力极足 · 照常骑 ${cur.code}`, type: "override_pz", active: false },
+          actionType: "z2_swap",
+          isPZMain: false, pzCls: cur, rideMin: 30,
+          guide: {
+            title: "80/20 极化调度 · 稳态燃脂护睡眠",
+            items: [
+              { k: "为什么自动换 Zone 2", v: `本周已有 ${wk.bbH} 场高强度篮球，已吃满全周 20% 高强度配额`, sub: "Seiler 80/20 耐力研究证实：多球周再叠高强度间歇单车，掉脂变慢且容易诱发失眠；换成纯 Zone 2 稳态燃脂效率最高。", cur: true },
+              { k: "Bike+ 一步找到", v: "Classes → Cycling → 清空 FILTER → 30 min Power Zone Endurance（Sam Yo 或 Matt Wilpers）", sub: "全程只踩 Zone 2 轻松聊天心率，边听《锵锵》边稳掉体脂。" },
+              { k: "主线顺延", v: `${cur.code} · ${cur.title} 留给下周少打球日满血推`, sub: "如果今天特别想推主线，点下方随时一键切回。" }
+            ],
+            showSyllabus: true, canOverridePZ: true
+          },
+          cardioDone: z2Done, puTarget: puStage().targetRounds || 2,
+          state: st.mode, sub: st.sub, bb, pelo, wk, cur, next: cur, daysGap, stale: "none", isTravel: false
+        };
+      }
+
+      // 6g. Kiviniemi (2007/2010) Single-Night Mild HRV Dip (7-day mean still healthy!):
+      // Never lock out a full day over single-night noise; smoothly downshift hard/test ride to Zone 2!
+      if (wr.mildHRV && (cur.kind === "hard" || cur.kind === "test")) {
+        return {
+          tier: "yellow", tierText: `单晚 HRV 略低（7日均 ${wr.hrv7d} 正常）· 降档 Zone 2`,
+          title: "30 min Zone 2 Power Zone Endurance",
+          shortLine: `${wr.summary} · 单晚微跌不硬停，改轻松稳态燃脂`,
+          linkText: "安排 ›",
+          ctaText: z2Done ? "已骑 30 分 Zone 2 ✓" : "骑完 30 分 Zone 2",
+          ctaDone: z2Done,
+          altAction: { label: `体感极佳 · 照常骑 ${cur.code}`, type: "override_pz", active: false },
+          actionType: "z2_swap",
+          isPZMain: false, pzCls: cur, rideMin: 30,
+          guide: {
+            title: "7 日 HRV 趋势护航 · 温和降档",
+            items: [
+              { k: "为什么只降档不硬停", v: wr.summary, sub: "单晚 HRV 波动常受晚餐或睡姿影响，你近 7 天均值仍稳在正常带，所以把强课温柔换成纯 Zone 2 稳态，既不中断节奏也防过劳。", cur: true },
+              { k: "Bike+ 一步找到", v: "Classes → Cycling → 清空 FILTER → 30 min Power Zone Endurance（Sam Yo 或 Matt Wilpers）", sub: "全程轻松踩在 Zone 2，下节主线留给明天。" }
+            ],
+            showSyllabus: true, canOverridePZ: true
+          },
+          cardioDone: z2Done, puTarget: Math.min(2, puStage().targetRounds || 2),
+          state: st.mode, sub: st.sub, bb, pelo, wk, cur, next: cur, daysGap, stale: "none", isTravel: false
+        };
+      }
     }
 
     // Default Normal Day (Well-rested & under weekly cap): Smoothly advance next PZ class!
@@ -11797,32 +12337,35 @@ window.ZB = (function() {
           ? "昨天打完球但今天这节是轻/稳态课，腿轻松就顺手推一节；觉得累点下方直接改休整。"
           : `每周稳推 ${wk.pzGoal} 节左右就很够（结合你打篮球的量），今天精力正常就照这节骑。`),
       altAction: yestHeavyBB ? { label: "腿还有点累 · 改休整", type: "to_rest", active: false } : null,
-      puTarget: 2, state: st.mode, sub: st.sub, bb, pelo, wk, daysGap, stale
+      puTarget: puStage().targetRounds || 2, state: st.mode, sub: st.sub, bb, pelo, wk, daysGap, stale
     });
   }
 
   function puStage() {
     const b = ST.pu_best || 1;
-    if (b <= 1) return { idx: 0, name: "阶段一 · 门框单杠", title: "1 徒手 · 2 黑带慢放", sub: "微仰防碰头 · 单膝挂黑带 4 秒慢放", short: "1 徒手+黑带", defStrict: 1, neg: 2 };
-    if (b === 2) return { idx: 1, name: "阶段二 · 门框单杠", title: "2 徒手 · 1 红带慢放", sub: "前 2 下直上不晃 · 末下红带 4 秒慢放", short: "2 徒手+红带", defStrict: 2, neg: 1 };
-    if (b <= 4) return { idx: 2, name: "阶段三 · 连做突破", title: `${Math.min(3, b)} 个纯徒手`, sub: "完全脱带直上直下 · 每日 2 轮", short: `${Math.min(3, b)} 个纯拉`, defStrict: Math.min(3, b), neg: 0 };
-    return { idx: 3, name: "阶段四 · 目标达成", title: `轻松 ${b} 连`, sub: "每日 2 轮从容维稳", short: `轻松 ${b} 连`, defStrict: Math.min(5, b), neg: 0 };
+    if (b <= 1) return { idx: 0, name: "阶段一 · 门框单杠", title: "1 徒手 · 2 黑带慢放", sub: "微仰防碰头 · 单膝挂黑带 4 秒慢放", short: "1 徒手+黑带", defStrict: 1, neg: 2, targetRounds: 2 };
+    if (b === 2) return { idx: 1, name: "阶段二 · 门框单杠", title: "2 徒手 · 1 红带慢放", sub: "前 2 下直上不晃 · 末下红带 4 秒慢放", short: "2 徒手+红带", defStrict: 2, neg: 1, targetRounds: 2 };
+    if (b === 3) return { idx: 2, name: "阶段三 · 不力竭冲 5 连", title: "2 个留余力 · 每日 3 轮", sub: "每轮留 1 下余力不力竭 · 隔 2 小时拉 3 轮攒 6 下 · 每两周测 4 连", short: "2个×3轮", defStrict: 2, neg: 0, targetRounds: 3 };
+    if (b === 4) return { idx: 2, name: "阶段三 · 不力竭冲 5 连", title: "3 个留余力 · 每日 3 轮", sub: "每轮留 1 下余力不力竭 · 隔 2 小时拉 3 轮攒 9 下 · 每两周测 5 连", short: "3个×3轮", defStrict: 3, neg: 0, targetRounds: 3 };
+    return { idx: 3, name: "阶段四 · 目标达成", title: `轻松 ${b} 连`, sub: "每日 2 轮从容维稳", short: `轻松 ${b} 连`, defStrict: Math.min(5, b), neg: 0, targetRounds: 2 };
   }
   function puCooldown(day, target) {
     const rs = (day && day.pu) || [];
-    if (rs.length === 1 && target >= 2) {
-      const ts1 = rs[0] && rs[0][2];
-      if (ts1) {
-        const t1 = fmtEpochPT(ts1), t2 = fmtEpochPT(ts1 + 7200);
-        return (Math.floor(Date.now() / 1000) < ts1 + 7200)
-          ? `第 1 轮 ${t1} 已拉 · ${t2} 后第 2 轮`
-          : `第 1 轮 ${t1} 已拉 · 可拉第 2 轮`;
+    const tgt = Math.max(1, target || 2);
+    if (rs.length >= 1 && rs.length < tgt) {
+      const lastTs = rs[rs.length - 1] && rs[rs.length - 1][2];
+      const nextN = rs.length + 1;
+      if (lastTs) {
+        const t1 = fmtEpochPT(lastTs), t2 = fmtEpochPT(lastTs + 7200);
+        return (Math.floor(Date.now() / 1000) < lastTs + 7200)
+          ? `第 ${rs.length} 轮 ${t1} 已拉 · ${t2} 后第 ${nextN} 轮`
+          : `第 ${rs.length} 轮 ${t1} 已拉 · 可拉第 ${nextN} 轮`;
       }
-      return "第 1 轮已拉 · 隔 2 小时第 2 轮";
+      return `第 ${rs.length} 轮已拉 · 隔 2 小时第 ${nextN} 轮`;
     }
-    if (rs.length >= 2) {
-      const ts2 = rs[1] && rs[1][2];
-      return ts2 ? `今日 2 轮已于 ${fmtEpochPT(ts2)} 收工` : "今日 2 轮已收工";
+    if (rs.length >= tgt) {
+      const tsEnd = rs[rs.length - 1] && rs[rs.length - 1][2];
+      return tsEnd ? `今日 ${rs.length} 轮已于 ${fmtEpochPT(tsEnd)} 收工` : `今日 ${rs.length} 轮已收工`;
     }
     return "";
   }
@@ -11830,14 +12373,27 @@ window.ZB = (function() {
 
   function latestWB() {
     const arr = ST.wb || [];
-    let lbf = null, lwt = null, bbf = null;
+    let lbf = null, lwt = null, bbf = null, lWaist = null;
     for (const r of arr) {
       if (r[1]) lwt = r;
       if (r[2] && r[2] > 5) { lbf = r; if (!bbf || r[2] < bbf[2]) bbf = r; }
+      if (r.length > 4 && r[4] && r[4] >= 50 && r[4] <= 150) lWaist = r;
     }
     const wts = arr.filter(r => r[1]).slice(-5);
     const avgWt = wts.length ? +(wts.reduce((s, r) => s + r[1], 0) / wts.length).toFixed(1) : null;
-    return { lbf, lwt, bbf, avgWt };
+    const bfs = arr.filter(r => r[2] && r[2] > 5);
+    let avgBf = null;
+    if (bfs.length) {
+      const lastT = Date.parse(bfs[bfs.length - 1][0] + "T12:00:00Z");
+      const win = [];
+      for (let i = bfs.length - 1; i >= 0; i--) {
+        const dt = (lastT - Date.parse(bfs[i][0] + "T12:00:00Z")) / 86400000;
+        if (dt <= 14 || win.length < 2) win.push(bfs[i][2]);
+        if (win.length >= 4) break;
+      }
+      avgBf = +(win.reduce((s, v) => s + v, 0) / win.length).toFixed(1);
+    }
+    return { lbf, lwt, bbf, avgWt, avgBf, lWaist };
   }
 
   function positionSubBar(immediate) {
@@ -11863,17 +12419,19 @@ window.ZB = (function() {
     }
     if (bfEl) bfEl.classList.remove("scrub");
     if (wtEl) wtEl.classList.remove("scrub");
-    if (ctxEl) ctxEl.textContent = "GE 体脂";
+    if (ctxEl) ctxEl.textContent = "GE 体脂 · 近均趋势";
     const targetBf = (ST.targets && ST.targets.bf_ge) || 14.0;
     if (wb.lbf) {
-      if (bfEl) bfEl.innerHTML = `${wb.lbf[2].toFixed(1)}<span class="zb-stat-unit">%</span>`;
-      if (ge("zb-bf-sub")) ge("zb-bf-sub").textContent = `两年最低 ${wb.bbf ? wb.bbf[2].toFixed(1) : wb.lbf[2].toFixed(1)}%`;
-      const rem = Math.max(0, wb.lbf[2] - targetBf);
-      if (ge("zb-pace")) ge("zb-pace").textContent = rem > 0 ? `距 14% 剩 ${rem.toFixed(1)}%` : "已达 14% 目标";
+      const dispBf = wb.avgBf != null ? wb.avgBf : wb.lbf[2];
+      if (bfEl) bfEl.innerHTML = `${dispBf.toFixed(1)}<span class="zb-stat-unit">%</span>`;
+      const waistTag = wb.lWaist ? ` · 腰围 ${wb.lWaist[4].toFixed(1)}cm` : "";
+      if (ge("zb-bf-sub")) ge("zb-bf-sub").textContent = `单次 ${wb.lbf[2].toFixed(1)}% · 两年低 ${wb.bbf ? wb.bbf[2].toFixed(1) : wb.lbf[2].toFixed(1)}%${waistTag}`;
+      const rem = Math.max(0, dispBf - targetBf);
+      if (ge("zb-pace")) ge("zb-pace").textContent = rem > 0 ? `近均距 14% 剩 ${rem.toFixed(1)}%` : "已达 14% 目标";
     }
     if (wb.lwt) {
-      if (wtEl) wtEl.innerHTML = `${wb.lwt[1].toFixed(1)}<span class="zb-stat-unit">kg</span>`;
-      if (ge("zb-wt-sub")) ge("zb-wt-sub").textContent = wb.avgWt ? `近均 ${wb.avgWt}` : "";
+      if (wtEl) wtEl.innerHTML = `${(wb.avgWt || wb.lwt[1]).toFixed(1)}<span class="zb-stat-unit">kg</span>`;
+      if (ge("zb-wt-sub")) ge("zb-wt-sub").textContent = `单次 ${wb.lwt[1].toFixed(1)} kg`;
     }
   }
 
@@ -12025,7 +12583,9 @@ window.ZB = (function() {
     LAST_DAY = today;
     const plan = planFor(today), day = dayE(today), stg = puStage(), wb = latestWB();
     const puDone = (day.pu || []).length;
+    const maxR = stg.targetRounds || 2;
     const dietDone = !!day.diet;
+    const resDone = !!day.res;
 
     const dl = ge("zb-date-lbl"); if (dl) dl.textContent = fmtCn(today);
 
@@ -12123,27 +12683,31 @@ window.ZB = (function() {
         pd.innerHTML = h;
       }
     }
-    if (ge("zb-diet-hint")) ge("zb-diet-hint").textContent = dietDone ? "今日已稳住" : "蛋白够 · 晚未爆碳";
+    const pTargetG = Math.round(((wb.avgWt || (wb.lwt && wb.lwt[1]) || 81.0) * 1.8) / 5) * 5;
+    if (ge("zb-diet-hint")) ge("zb-diet-hint").textContent = dietDone ? `今日已稳住（~${pTargetG}g）›` : `蛋白 ~${pTargetG}g · 晚未爆碳 ›`;
     const db = ge("zb-diet-btn");
     if (db) { db.className = "zb-tap-check" + (dietDone ? " done" : ""); db.textContent = dietDone ? "已达标 ✓" : "记达标"; }
 
-    // Tab 2: Pullup
+    // Tab 2: Pullup + Optional 5-Min Full-Body Resistance Guard (Schoenfeld 2016 / Longland 2016)
     if (ge("zb-pu-pr")) ge("zb-pu-pr").textContent = `最高 ${ST.pu_best || 1} / 5`;
-    if (ge("zb-pu-eyebrow")) ge("zb-pu-eyebrow").textContent = `${stg.name} · ${puDone}/2 轮`;
+    if (ge("zb-pu-eyebrow")) ge("zb-pu-eyebrow").textContent = `${stg.name} · ${puDone}/${maxR} 轮`;
     if (ge("zb-pu-title")) ge("zb-pu-title").textContent = stg.title;
     if (ge("zb-pu-sub")) ge("zb-pu-sub").textContent = cd || stg.sub;
     if (ge("zb-pu-val")) ge("zb-pu-val").textContent = String(PU_IN);
-    const negN = Math.max(0, 3 - PU_IN);
-    if (ge("zb-pu-neg")) ge("zb-pu-neg").textContent = negN > 0 ? `补 ${negN} 次单膝黑带 4 秒慢放` : "纯徒手 · 直上直下不甩腿";
+    const negN = stg.neg > 0 ? Math.max(0, 3 - PU_IN) : 0;
+    if (ge("zb-pu-neg")) ge("zb-pu-neg").textContent = negN > 0 ? `补 ${negN} 次单膝黑带 4 秒慢放` : (maxR >= 3 ? "留 1 下余力不力竭 · 隔 2 小时分轮拉" : "纯徒手 · 直上直下不甩腿");
     const plb = ge("zb-pu-log"), pub = ge("zb-pu-undo");
     if (plb && pub) {
       pub.style.display = puDone > 0 ? "inline-flex" : "none";
-      if (puDone >= 2) { plb.textContent = "今日 2 轮已满 ✓"; plb.className = "zb-btn-primary is-done"; }
+      if (puDone >= maxR) { plb.textContent = `今日 ${maxR} 轮已满 ✓`; plb.className = "zb-btn-primary is-done"; }
       else { plb.textContent = `记下第 ${puDone + 1} 轮`; plb.className = "zb-btn-primary"; }
     }
+    if (ge("zb-res-hint")) ge("zb-res-hint").textContent = `本周 ${plan.wk.res || 0}/2 次 · 俯卧撑+自重深蹲`;
+    const rb = ge("zb-res-btn");
+    if (rb) { rb.className = "zb-tap-check" + (resDone ? " done" : ""); rb.textContent = resDone ? "今日已补 ✓" : "记 5 分钟"; }
     const lad = ge("zb-pu-ladder");
     if (lad) {
-      const stages = ["黑带", "红带", "纯拉", "5连"];
+      const stages = ["黑带", "红带", "多组冲5", "5连"];
       lad.innerHTML = stages.map((lbl, i) => `<div class="zb-ladder-step ${i < stg.idx ? "past" : (i === stg.idx ? "cur" : "")}"><div class="zb-ladder-bar"></div><div class="zb-ladder-lbl">${lbl}</div></div>`).join("");
     }
 
@@ -12155,17 +12719,19 @@ window.ZB = (function() {
     if (ge("zb-r-90")) ge("zb-r-90").className = "zb-btn-quiet" + (RANGE === "90" ? " active" : "");
     if (ge("zb-r-all")) ge("zb-r-all").className = "zb-btn-quiet" + (RANGE === "all" ? " active" : "");
     if (ge("zb-wrem")) {
-      ge("zb-wrem").textContent = wb.lbf ? `上次 ${wb.lbf[0].slice(5)}` : "尚未记录";
+      const wStr = wb.lWaist ? ` · 腰围 ${wb.lWaist[4].toFixed(1)}cm` : "";
+      ge("zb-wrem").textContent = (wb.lbf ? `上次 ${wb.lbf[0].slice(5)}` : "尚未记录") + wStr;
     }
     renderChart();
 
     // Tab 4: Ledger
     const kp = ge("zb-kpis");
     const vt = ST.vitals || {};
+    const hrvSub = vt.hrv_7d ? `HRV · 7日 ${vt.hrv_7d}` : "HRV";
     if (kp) {
       kp.innerHTML =
         `<div><div class="zb-kpi-v">${vt.rhr || "--"}</div><div class="zb-kpi-l">静息心率</div></div>` +
-        `<div><div class="zb-kpi-v">${vt.hrv || "--"}</div><div class="zb-kpi-l">HRV</div></div>` +
+        `<div><div class="zb-kpi-v">${vt.hrv || "--"}</div><div class="zb-kpi-l">${hrvSub}</div></div>` +
         `<div><div class="zb-kpi-v">${vt.sleep_h ? Number(vt.sleep_h).toFixed(1) + "h" : "--"}</div><div class="zb-kpi-l">睡眠</div></div>` +
         `<div><div class="zb-kpi-v">${ST.pu_best || 1}<span style="font-size:12px;color:var(--ink-3);font-weight:400;">/5</span></div><div class="zb-kpi-l">标准引体</div></div>`;
     }
@@ -12189,6 +12755,7 @@ window.ZB = (function() {
           else if (p.status === "rest") ps.push("休养");
         }
         if (pr > 0) ps.push(`引体 ${pr}轮`);
+        if (de.res) ps.push("护肌");
         const wf = (ST.wb || []).find(r => r[0] === d);
         if (wf && wf[2]) ps.push(`${wf[2]}%`);
         let ed = "";
@@ -12207,7 +12774,8 @@ window.ZB = (function() {
               <span class="zb-ed-lbl">引体</span>
               <button type="button" class="zb-ed-chip ${pr === 0 ? "on" : ""}" onclick="ZB.edPU('${d}',0)">0 轮</button>
               <button type="button" class="zb-ed-chip ${pr === 1 ? "on" : ""}" onclick="ZB.edPU('${d}',1)">1 轮</button>
-              <button type="button" class="zb-ed-chip ${pr >= 2 ? "on" : ""}" onclick="ZB.edPU('${d}',2)">2 轮</button>
+              <button type="button" class="zb-ed-chip ${pr === 2 ? "on" : ""}" onclick="ZB.edPU('${d}',2)">2 轮</button>
+              <button type="button" class="zb-ed-chip ${pr >= 3 ? "on" : ""}" onclick="ZB.edPU('${d}',3)">3 轮</button>
               <span style="margin-left:auto;"></span>
               <button type="button" class="zb-ed-chip ${de.diet ? "on" : ""}" onclick="ZB.edDiet('${d}')">${de.diet ? "饮食 ✓" : "补记饮食"}</button>
             </div>
@@ -12584,10 +13152,23 @@ window.ZB = (function() {
   function openBandGuide() {
     const stg = puStage();
     const bIdx = stg.idx === 0 ? 0 : (stg.idx === 1 ? 1 : 2);
-    showGuideModal("弹力带换绳路线", [
-      { k: "阶段一 · 2026.11–2027.02", v: "现有黑带 25–65 lb（单膝约 10–15 kg）", sub: "每轮 1 个徒手 + 2 个单膝挂黑带 4 秒慢放。", cur: bIdx === 0 },
-      { k: "阶段二 · 2027.03–2027.05", v: "换红细带 15–35 lb（单膝约 5–8 kg）", sub: "稳拉 2 个纯徒手后降档，每轮 2 徒手 + 1 红带慢放。", cur: bIdx === 1 },
-      { k: "阶段三 · 2027.06–2027.12", v: "彻底拆绳 0 lb（纯徒手 3 → 5+ 连拉）", sub: "门框杠严禁跳上杠，偏客厅侧微仰防碰头；每轮 ≤3 下、每日 ≤2 轮。", cur: bIdx === 2 }
+    showGuideModal("弹力带换绳与冲 5 连路线", [
+      { k: "阶段一 · 1 徒手起步", v: "黑带 25–65 lb（单膝约 10–15 kg）", sub: "每轮 1 个徒手 + 2 个单膝挂黑带 4 秒慢放，每日 2 轮。", cur: bIdx === 0 },
+      { k: "阶段二 · 2 徒手过渡", v: "红细带 15–35 lb（单膝约 5–8 kg）", sub: "稳拉 2 个纯徒手后降档，每轮 2 徒手 + 1 红带慢放，每日 2 轮。", cur: bIdx === 1 },
+      { k: "阶段三 · 3 连冲 5 连（不力竭多组法）", v: "彻底拆绳 0 lb · 留 1 下余力拉 3 轮", sub: "稳拉 3 个后不再每轮拉满力竭：平时每次轻松拉 2 个、隔 2 小时拉 3 轮（攒 6 下高质量纯拉），每两周满血测一次冲 4 连、5 连。", cur: bIdx === 2 }
+    ]);
+  }
+
+  function openProteinGuide() {
+    const wb = latestWB();
+    const wt = wb.avgWt || (wb.lwt && wb.lwt[1]) || 81.0;
+    const pLo = Math.round((wt * 1.6) / 5) * 5;
+    const pMid = Math.round((wt * 1.8) / 5) * 5;
+    const pHi = Math.round((wt * 2.0) / 5) * 5;
+    showGuideModal(`每日蛋白锚点 · 目标 ${pLo}–${pHi}g`, [
+      { k: "为什么必须吃够", v: `按你近期均重 ${wt.toFixed(1)} kg，减脂护肌甜点约 ${pMid}g / 天`, sub: "多项减脂随机试验（Longland 2016 / Morton 2018）证实：体脂往 14% 压时，每天吃够 1.6–2.0 g/kg 蛋白，掉的才主要是脂肪而不是肌肉。", cur: true },
+      { k: "日常顺手凑够 145g 参考", v: "乳清蛋白 1 勺 ≈ 25g · 鸡胸/三文鱼/瘦牛 200g ≈ 45g", sub: "3 个全蛋 ≈ 20g · 一杯希腊酸奶 ≈ 18g · 一盒嫩豆腐/毛豆 ≈ 15g。早晚各 1 份高蛋白 + 午晚正餐有肉鱼，轻松过线。" },
+      { k: "配合晚间节律", v: "晚餐先吃蛋白与青菜，睡前 3 小时不爆高糖高油碳水", sub: "蛋白本身饱腹感极强，不用饿肚子也能稳稳守住热量缺口。" }
     ]);
   }
 
@@ -12599,9 +13180,10 @@ window.ZB = (function() {
 
   return {
     onEnter, onResume, unlockPass, stopPacer, getSummary, syncCircle, getHorizonHTML,
-    openPeloGuide, openPZList, openBandGuide, openGapsGuide,
+    openPeloGuide, openPZList, openBandGuide, openProteinGuide, openGapsGuide,
     _planToday() { return planFor(todayYmd()); },
     _planOn(ymd) { return planFor(ymd); },
+    _puStage() { return puStage(); },
     _getState() { return ST; },
     onHorizonRightTap() {
       if (!CKEY) { if (typeof openSessionModal === "function") openSessionModal(); return; }
@@ -12710,6 +13292,10 @@ window.ZB = (function() {
             toast(`已拿下 ${cls.code} · 下节 ${nxt.code}`);
           }
         }
+      } else if (p.actionType === "z2_swap") {
+        const mins = p.rideMin || 30;
+        d.pelo = d.pelo === "done" ? null : "done"; d.pelo_min = d.pelo ? mins : 0;
+        toast(d.pelo ? `已记 ${mins} 分 Zone 2 稳态燃脂` : "已撤销");
       } else if (p.actionType === "light_ride") {
         const mins = p.rideMin || 20;
         d.pelo = d.pelo === "recovery" ? null : "recovery"; d.pelo_min = d.pelo ? mins : 0;
@@ -12722,15 +13308,20 @@ window.ZB = (function() {
     },
     quickPU(n) {
       const d = ensureDay(), stg = puStage(), nowS = Math.floor(Date.now() / 1000);
+      const maxR = stg.targetRounds || 2;
       if (!Array.isArray(d.pu)) d.pu = [];
       if (d.pu.length >= n) { d.pu = d.pu.slice(0, n - 1); toast(`已撤销第 ${n} 轮`); }
-      else { while (d.pu.length < n) d.pu.push([stg.defStrict, stg.neg, nowS]); toast(n === 1 ? "第 1 轮已记 · 2 小时后再拉第 2 轮" : "第 2 轮已记 · 今日引体收工"); }
+      else {
+        while (d.pu.length < n) d.pu.push([stg.defStrict, stg.neg, nowS]);
+        toast(n < maxR ? `第 ${n} 轮已记 · 隔 2 小时再拉第 ${n + 1} 轮` : `第 ${n} 轮已记 · 今日引体收工`);
+      }
       schedPush(); render();
     },
     adjStrict(delta) { PU_IN = Math.max(0, Math.min(10, PU_IN + delta)); render(); },
     togglePacer() {
       if (PACER_ON) { stopPacer(true); return; }
-      if ((dayE(todayYmd()).pu || []).length >= 2) { toast("今天 2 轮已满额，明天继续"); return; }
+      const maxR = puStage().targetRounds || 2;
+      if ((dayE(todayYmd()).pu || []).length >= maxR) { toast(`今天 ${maxR} 轮已满额，明天继续`); return; }
       startPacer();
     },
     togglePacerSound() {
@@ -12740,18 +13331,25 @@ window.ZB = (function() {
       if (PACER_SND) playChime(528);
     },
     logPU() {
-      const d = ensureDay();
+      const d = ensureDay(), stg = puStage(), maxR = stg.targetRounds || 2;
       if (!Array.isArray(d.pu)) d.pu = [];
-      if (d.pu.length >= 2) { toast("今天 2 轮已满额，明天继续"); return; }
+      if (d.pu.length >= maxR) { toast(`今天 ${maxR} 轮已满额，明天继续`); return; }
       const nowS = Math.floor(Date.now() / 1000);
-      d.pu.push([PU_IN, Math.max(0, 3 - PU_IN), nowS]);
+      const negAdd = stg.neg > 0 ? Math.max(0, 3 - PU_IN) : 0;
+      d.pu.push([PU_IN, negAdd, nowS]);
       if (PU_IN > (ST.pu_best || 1)) { ST.pu_best = PU_IN; ST.pu_best_ts = nowS; toast(`新纪录！标准不甩 ${PU_IN} 个`); }
-      else toast(d.pu.length === 1 ? "第 1 轮已记 · 2 小时后再拉第 2 轮" : "第 2 轮已记 · 今日引体收工");
+      else toast(d.pu.length < maxR ? `第 ${d.pu.length} 轮已记 · 隔 2 小时第 ${d.pu.length + 1} 轮` : `今日 ${maxR} 轮引体收工`);
       schedPush(); render();
     },
     undoPU() {
       const d = ensureDay();
       if (Array.isArray(d.pu) && d.pu.length) { d.pu.pop(); schedPush(); render(); toast("已撤销上一轮"); }
+    },
+    toggleRes() {
+      const d = ensureDay();
+      d.res = d.res ? 0 : 1;
+      schedPush(); render();
+      toast(d.res ? "已记 5 分钟居家护肌（俯卧撑+深蹲）" : "已取消今日护肌记录");
     },
     toggleDiet() {
       const d = ensureDay(); d.diet = d.diet ? 0 : 1;
@@ -12768,6 +13366,8 @@ window.ZB = (function() {
         D_WT = wb.lwt ? +wb.lwt[1].toFixed(1) : 81.5;
         D_BF = wb.lbf ? +wb.lbf[2].toFixed(1) : 18.0;
         D_SKIP_BF = false;
+        const winp = ge("zb-waist-in");
+        if (winp) winp.value = "";
         renderDial();
       }
       f.classList.toggle("open", open);
@@ -12801,15 +13401,22 @@ window.ZB = (function() {
     },
     saveWeigh() {
       const wv = +D_WT.toFixed(1), bf = D_SKIP_BF ? null : +D_BF.toFixed(1);
+      const winp = ge("zb-waist-in");
+      const rawW = winp ? parseFloat(winp.value) : NaN;
+      const waist = (!isNaN(rawW) && rawW >= 50 && rawW <= 150) ? +rawW.toFixed(1) : null;
       const t = todayYmd(), d = ensureDay(t);
       d.wt = wv; if (bf !== null) d.bf = bf;
+      if (waist !== null) d.waist = waist;
       if (!Array.isArray(ST.wb)) ST.wb = [];
       const ix = ST.wb.findIndex(r => r[0] === t);
-      const row = [t, wv, bf, "phone"];
+      const prevWaist = (ix >= 0 && ST.wb[ix].length > 4) ? ST.wb[ix][4] : null;
+      const finalWaist = waist !== null ? waist : prevWaist;
+      const row = finalWaist !== null ? [t, wv, bf, "phone", finalWaist] : [t, wv, bf, "phone"];
       if (ix >= 0) ST.wb[ix] = row; else ST.wb.push(row);
       ST.wb.sort((a, b) => a[0].localeCompare(b[0]));
       this.toggleWForm(false); schedPush(); render();
-      toast(bf !== null ? `已记 ${wv.toFixed(1)} kg · GE ${bf.toFixed(1)}%` : `已记体重 ${wv.toFixed(1)} kg`);
+      const wTag = waist !== null ? ` · 腰围 ${waist.toFixed(1)}cm` : "";
+      toast(bf !== null ? `已记 ${wv.toFixed(1)} kg · GE ${bf.toFixed(1)}%${wTag}` : `已记体重 ${wv.toFixed(1)} kg${wTag}`);
     },
     toggleDay(ymd) { EXP_DAY = EXP_DAY === ymd ? null : ymd; render(); },
     edCardio(ymd, field, val) {
@@ -13230,6 +13837,70 @@ sb.togglePtNote(0);
 const dashHtml = (els['point-list'] && els['point-list'].innerHTML) || '';
 if (!dashHtml.includes('setLedgerGrammarSpectrum') || !dashHtml.includes('li-ga-tag') || dashHtml.includes('—')) {
   throw new Error('Self-test 7 failed: dashboard grammar ledger missing inline spectrum controls or contains em dash!');
+}
+// Self-test 8: Peer-Reviewed Research Alignment Across All 5 Tabs (v46 Evidence-First Audit)
+// 8.1 Radio speeds include 0.85x slow decoding (Zhao 1997)
+const rSpeeds = vm.runInNewContext('RADIO_SPEEDS', sb);
+if (!Array.isArray(rSpeeds) || !rSpeeds.includes(0.85)) {
+  throw new Error('Self-test 8 failed: RADIO_SPEEDS must include 0.85x');
+}
+// 8.2 Vocab confusable-twin anti-interference + 2/3 Kana productive recall + Mnemonic fading + clean_audio
+const vcTwins = vm.runInNewContext('DATA.vocab_twins || {}', sb);
+if (!vcTwins['書類'] || !vcTwins['書類'].includes('種類')) {
+  throw new Error('Self-test 8 failed: DATA.vocab_twins missing 書類<->種類 confusable pair');
+}
+const sampleKana = 'めったに';
+const kSpec = sb.getVocabCardSpec(sampleKana);
+if (!kSpec || kSpec.mode !== 'kana_meaning' || !kSpec.clean_audio) {
+  throw new Error('Self-test 8 failed: めったに missing kana_meaning or clean_audio');
+}
+sb.setMasteryTier(sampleKana, 'wip2:20261120', Math.floor(Date.now() / 1000) + 30);
+if (!sb.isKanaRecallGradCard(kSpec)) {
+  throw new Error('Self-test 8 failed: streak=2 kana card must activate L1->L2 productive recall');
+}
+if (!sb.shouldFadeVocabMnemonic(kSpec)) {
+  throw new Error('Self-test 8 failed: streak>=1 non-failed vocab card should fade auto-played mnemonic');
+}
+sb.setMasteryTier(sampleKana, 'todo:20261122', Math.floor(Date.now() / 1000) + 40);
+if (sb.shouldFadeVocabMnemonic(kSpec)) {
+  throw new Error('Self-test 8 failed: streak=0 card must NOT fade spoken mnemonic');
+}
+// 8.3 Delayed hotFamily interleaving (Rohrer & Taylor 2007 / Pan 2015)
+const hotStepCheck = vm.runInNewContext('(() => { A.hotFamily = "DUMMY_FAM"; A.hotFamilyDueStep = A.step + 4; return A.hotFamilyDueStep > A.step; })()', sb);
+if (!hotStepCheck) {
+  throw new Error('Self-test 8 failed: delayed hotFamilyDueStep check failed');
+}
+// 8.4 Zen Body: 7-day rolling HRV SWC (single-night dip -> Zone 2, multi-night/7d low -> rest) + 80/20 BB->Zone 2 + RIR-1 3-round pullup
+zst.pu_best = 3;
+const pStg3 = sb.ZB._puStage();
+if (!pStg3 || pStg3.targetRounds !== 3 || pStg3.defStrict !== 2) {
+  throw new Error('Self-test 8 failed: pu_best=3 should switch to RIR-1 2x3 multi-set: ' + JSON.stringify(pStg3));
+}
+zst.pz = { idx: 6, ts: 1, last: '2026-12-15' }; // W2D1 hard PZ ride
+zst.days['2026-12-14'] = { ts: 1, bb: 'high' };
+zst.days['2026-12-16'] = { ts: 1, bb: 'high' };
+zst.vitals = { rhr: 38, rhr_date: '2026-12-18', hrv: 112, hrv_7d: 108, hrv_base: 104, hrv_sd: 12, hrv_low_streak: 0, hrv_date: '2026-12-18', sleep_h: 7.5, sleep_date: '2026-12-18' };
+const pPolar = sb.ZB._planOn('2026-12-18');
+if (!pPolar || !String(pPolar.tierText || '').includes('80/20') || pPolar.isPZMain) {
+  throw new Error('Self-test 8 failed: 2+ BB week on hard PZ class should auto-swap to 80/20 Zone 2 PZE: ' + JSON.stringify(pPolar));
+}
+// Single-night mild HRV dip with healthy 7d mean -> Zone 2 downshift (NOT full red/yellow sleep lockout)
+zst.vitals = { rhr: 39, rhr_date: '2026-12-22', hrv: 90, hrv_7d: 103, hrv_base: 104, hrv_sd: 12, hrv_low_streak: 1, hrv_date: '2026-12-22', sleep_h: 7.4, sleep_date: '2026-12-22' };
+const pMildHrv = sb.ZB._planOn('2026-12-22');
+if (!pMildHrv || pMildHrv.tier === 'red' || !String(pMildHrv.title || '').includes('Zone 2')) {
+  throw new Error('Self-test 8 failed: single-night mild HRV dip with normal 7d mean should downshift hard ride to Zone 2: ' + JSON.stringify(pMildHrv));
+}
+// 2 consecutive low HRV nights + dipped 7d mean -> full early-sleep protection
+zst.vitals = { rhr: 39, rhr_date: '2026-12-23', hrv: 88, hrv_7d: 92, hrv_base: 104, hrv_sd: 12, hrv_low_streak: 2, hrv_date: '2026-12-23', sleep_h: 7.4, sleep_date: '2026-12-23' };
+const pMultiHrv = sb.ZB._planOn('2026-12-23');
+if (!pMultiHrv || pMultiHrv.tier !== 'yellow' || pMultiHrv.isPZMain) {
+  throw new Error('Self-test 8 failed: 2-night / 7d-mean low HRV must trigger early-sleep protection: ' + JSON.stringify(pMultiHrv));
+}
+// 8.5 Dashboard ZPL ROI focus bar & zero em dashes
+sb.switchMode('dash');
+const roiEl = els['dash-roi-focus'];
+if (!roiEl || !roiEl.innerHTML.includes('临门') || roiEl.innerHTML.includes('—')) {
+  throw new Error('Self-test 8 failed: dashboard missing ZPL exam-ROI focus line or contains em dash');
 }
 """
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)

@@ -298,9 +298,12 @@ def apply_practice_logs(state: dict, fallback_day_tag: str = "") -> int:
                             _ive_rv.flag_relearn_words([pt], day_iso_rv or "2026-11-22")
                         except Exception:
                             pass
-                    elif pt:
+                    elif pt and choice == "听后复盘:过":
                         rv_ok = state.setdefault("radio_verified_points", {})
                         rv_ok[pt] = max(str(rv_ok.get(pt) or ""), day_tag_rv)
+                    elif pt and choice == "听后复盘:快过存疑":
+                        rv_fast = state.setdefault("radio_fast_skip_points", {})
+                        rv_fast[pt] = max(str(rv_fast.get(pt) or ""), day_tag_rv)
                     continue
 
                 # Never auto-promote passive timer events

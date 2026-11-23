@@ -35,8 +35,8 @@ LEDGER_PATH = os.path.join(AUDIO_DIR, "podcast_vocab_ledger.json")
 RADIO_HISTORY_PATH = os.path.join(AUDIO_DIR, "radio_history.json")
 STATE_PATH = os.path.join(BASE_DIR, "n3_live_state.json")
 
-GRADUATION_THRESHOLD = 5
-MIN_GRADUATION_DAYS = 2
+GRADUATION_THRESHOLD = 8
+MIN_GRADUATION_DAYS = 3
 DAILY_NEW_BUDGET = 12
 MAX_INLINE_PER_SENTENCE = 3
 
@@ -483,18 +483,68 @@ def _seed_historical_daily_counts(salon_stories: list[dict], before_date: str) -
     return daily_counts
 
 
+def _load_verified_mastery_sets() -> tuple[set[str], set[str]]:
+    """
+    Closed-loop mastery bridge (Uchihara/Webb 2019/2023 + Testing Effect):
+    - `verified_kanas`: words mastered true-green (3/3) in Vocab OR genuinely verified ('听后复盘:过', never fast-skip)
+      in Post-Listening Review -> can lock into pure Japanese early (>=3 podcast hits across >=1 day, or immediately if green)!
+    - `recent_fail_kanas`: words recently flagged for relearn or missed in Vocab -> auto-hold in bridge mode.
+    """
+    verified: set[str] = set()
+    recent_fail: set[str] = set()
+    kanji_to_kana = {e["kanji"]: e["kana"] for e in IMMERSION_VOCAB_BANK}
+
+    def _to_kana(raw: str) -> str:
+        s = str(raw or "").strip()
+        if s in VOCAB_BY_KANA:
+            return s
+        return kanji_to_kana.get(s, "")
+
+    if os.path.exists(STATE_PATH):
+        try:
+            st = json.load(open(STATE_PATH, encoding="utf-8"))
+            for v in st.get("vocab_tracked") or []:
+                k = _to_kana(v.get("word") or "")
+                if not k:
+                    continue
+                sv = str(v.get("status") or "")
+                if sv == "green":
+                    verified.add(k)
+                elif sv in ("red", "orange"):
+                    recent_fail.add(k)
+            for pt in (st.get("radio_verified_points") or {}).keys():
+                k = _to_kana(pt)
+                if k:
+                    verified.add(k)
+            for pt in (st.get("radio_relearn_queue") or {}).keys():
+                k = _to_kana(pt)
+                if k:
+                    recent_fail.add(k)
+        except Exception:
+            pass
+    # Recent fails override early verification
+    verified -= recent_fail
+    return verified, recent_fail
+
+
 def load_ledger(salon_stories: list[dict] | None = None, today_str: str = "") -> dict:
     if os.path.exists(LEDGER_PATH):
         try:
             data = json.load(open(LEDGER_PATH, encoding="utf-8"))
             if isinstance(data, dict) and isinstance(data.get("daily_counts"), dict):
+                # Upgrade legacy 5-hit/2-day ledgers cleanly to evidence-based 8-hit/3-day standard
+                if int(data.get("graduation_threshold") or 0) < GRADUATION_THRESHOLD:
+                    data["graduation_threshold"] = GRADUATION_THRESHOLD
+                if int(data.get("min_graduation_days") or 0) < MIN_GRADUATION_DAYS:
+                    data["min_graduation_days"] = MIN_GRADUATION_DAYS
                 return data
         except Exception:
             pass
     seeded = _seed_historical_daily_counts(salon_stories or [], before_date=(today_str or "9999-99-99"))
     return {
-        "schema": "podcast-immersion-ledger/1",
+        "schema": "podcast-immersion-ledger/2",
         "graduation_threshold": GRADUATION_THRESHOLD,
+        "min_graduation_days": MIN_GRADUATION_DAYS,
         "daily_new_budget": DAILY_NEW_BUDGET,
         "user_priority_words": ["じしょ", "としょかん", "はくぶつかん", "しょるい", "しゅっちょう"],
         "daily_counts": seeded,
@@ -565,10 +615,11 @@ def flag_relearn_words(words_or_kanas: list[str], flag_date: str) -> list[str]:
 
 
 def _rebuild_words_summary(ledger: dict) -> dict:
-    threshold = int(ledger.get("graduation_threshold") or GRADUATION_THRESHOLD)
-    min_days = int(ledger.get("min_graduation_days") or MIN_GRADUATION_DAYS)
+    threshold = max(GRADUATION_THRESHOLD, int(ledger.get("graduation_threshold") or GRADUATION_THRESHOLD))
+    min_days = max(MIN_GRADUATION_DAYS, int(ledger.get("min_graduation_days") or MIN_GRADUATION_DAYS))
     daily = ledger.get("daily_counts") or {}
-    active_holds = get_active_relearn_holds(ledger)
+    verified_kanas, recent_fail_kanas = _load_verified_mastery_sets()
+    active_holds = get_active_relearn_holds(ledger) | recent_fail_kanas
     sorted_dates = sorted(daily.keys())
     running: dict[str, int] = {}
     days_seen: dict[str, int] = {}
@@ -583,7 +634,8 @@ def _rebuild_words_summary(ledger: dict) -> dict:
             nxt = prev + cnt_i
             running[kana] = nxt
             days_seen[kana] = days_seen.get(kana, 0) + 1
-            can_lock = (nxt >= threshold and days_seen[kana] >= min_days and kana not in active_holds)
+            early_lock = (kana in verified_kanas and nxt >= 3 and days_seen[kana] >= 1)
+            can_lock = ((nxt >= threshold and days_seen[kana] >= min_days) or early_lock) and (kana not in active_holds)
             if kana not in meta:
                 entry = VOCAB_BY_KANA.get(kana) or {}
                 meta[kana] = {
@@ -612,7 +664,8 @@ def _rebuild_words_summary(ledger: dict) -> dict:
 def save_ledger(ledger: dict, today_str: str, today_counts: dict[str, int]) -> dict:
     if not isinstance(ledger.get("daily_counts"), dict):
         ledger["daily_counts"] = {}
-    ledger["min_graduation_days"] = int(ledger.get("min_graduation_days") or MIN_GRADUATION_DAYS)
+    ledger["graduation_threshold"] = max(GRADUATION_THRESHOLD, int(ledger.get("graduation_threshold") or GRADUATION_THRESHOLD))
+    ledger["min_graduation_days"] = max(MIN_GRADUATION_DAYS, int(ledger.get("min_graduation_days") or MIN_GRADUATION_DAYS))
     ledger["daily_counts"][today_str] = {k: int(v) for k, v in sorted(today_counts.items()) if int(v) > 0}
     ledger["updated_date"] = today_str
     ledger["words"] = _rebuild_words_summary(ledger)
@@ -694,12 +747,13 @@ def apply_immersion_to_stories(
     Returns `(updated_blocks, report_dict)`.
     """
     ledger = ledger_override if ledger_override is not None else load_ledger(salon_stories=salon_stories, today_str=today_str)
-    threshold = int(ledger.get("graduation_threshold") or GRADUATION_THRESHOLD)
-    min_days = int(ledger.get("min_graduation_days") or MIN_GRADUATION_DAYS)
+    threshold = max(GRADUATION_THRESHOLD, int(ledger.get("graduation_threshold") or GRADUATION_THRESHOLD))
+    min_days = max(MIN_GRADUATION_DAYS, int(ledger.get("min_graduation_days") or MIN_GRADUATION_DAYS))
     new_budget = int(ledger.get("daily_new_budget") or DAILY_NEW_BUDGET)
     prior_counts = compute_prior_counts(ledger, before_date=today_str)
     prior_days = compute_prior_days(ledger, before_date=today_str)
-    active_holds = get_active_relearn_holds(ledger, before_date=today_str)
+    verified_kanas, recent_fail_kanas = _load_verified_mastery_sets()
+    active_holds = get_active_relearn_holds(ledger, before_date=today_str) | recent_fail_kanas
     weak_words = _load_active_weak_words()
     user_prio = set(ledger.get("user_priority_words") or ["じしょ"])
 
@@ -739,10 +793,17 @@ def apply_immersion_to_stories(
                     if _is_clean_bridge_slot(txt, m.end()):
                         ep_bridgeable_hits[k] = ep_bridgeable_hits.get(k, 0) + 1
 
-    # Decide active word sets for today (Cross-Day Spacing: must span >= min_days AND >= threshold hits!):
+    # Decide active word sets for today:
+    # - Natural passive audio lock requires >= 8 hits across >= 3 distinct days (Uchihara/Webb 2019/2023)
+    # - Closed-loop verified mastery (true-green Vocab or verified Post-Listening Review pass) unlocks early (>= 3 hits across >= 1 day)!
     locked_set = {
         k for k, c in prior_counts.items()
-        if c >= threshold and prior_days.get(k, 0) >= min_days and k not in active_holds and k in VOCAB_BY_KANA
+        if (
+            (c >= threshold and prior_days.get(k, 0) >= min_days)
+            or (k in verified_kanas and c >= 3 and prior_days.get(k, 0) >= 1)
+        )
+        and k not in active_holds
+        and k in VOCAB_BY_KANA
     }
     learning_set = {
         k for k, c in prior_counts.items()

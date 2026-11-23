@@ -1998,6 +1998,50 @@ async def main():
         if "锵锵三人行" in last_line_txt and imm_profile["ja_ratio"] < 0.65:
             closing_turns = []
 
+    # Szpunar, Khan & Schacter (2013, PNAS) Interpolated Oral Micro-Checks (every ~15 min before ad breaks):
+    # Pure audio-only 10s recall cue + 2.6s retrieval pause + answer reveal — halves mind-wandering with zero screen tap!
+    if today_str >= "2026-11-23" and imm_profile["ja_ratio"] < 0.65:
+        _mc_used: set[str] = set()
+        def _build_micro_check_turns(act_slice: list[dict], variant_idx: int) -> list[tuple[str, object]]:
+            # Pick a spotlight or bridged word actually spoken inside this Act slice
+            found_k = ""
+            found_zh = ""
+            for _b in act_slice:
+                for _s, _t in (_b.get("raw_turns") or []):
+                    for _m in ive.SWAP_TOKEN_RE.finditer(str(_t or "")):
+                        _zh_c, _k_c = _m.group(1).strip(), _m.group(2).strip()
+                        if _k_c and _k_c not in _mc_used and _k_c in ive.VOCAB_BY_KANA:
+                            _ent = ive.VOCAB_BY_KANA[_k_c]
+                            if _ent.get("tier") != "n4_existing":
+                                found_k = _k_c
+                                found_zh = _ent.get("carrier") or _zh_c
+                                break
+                    if found_k:
+                        break
+                if found_k:
+                    break
+            if not found_k or not found_zh:
+                return []
+            _mc_used.add(found_k)
+            if variant_idx == 0:
+                return [
+                    ("W", f"对了，进广告前顺嘴考一下正听节目的你：刚才咱们聊到的「{found_zh}」，日语怎么念来着？心里默念两秒。"),
+                    ("PAUSE", 2.6),
+                    ("D", f"哈哈没错，就是{{{{{found_zh}|{found_k}}}}}！记牢了啊。"),
+                ]
+            return [
+                ("W", f"进第二段广告前再来个十秒小回声：刚才故事里那个「{found_zh}」，日语读音还记得吗？想两秒。"),
+                ("PAUSE", 2.6),
+                ("X", f"对喽，{{{{{found_zh}|{found_k}}}}}！耳朵一过就牢了。"),
+            ]
+
+        _mc1 = _build_micro_check_turns(story_blocks[: ad1_after + 1], 0)
+        if _mc1:
+            ad1_out_turns = _mc1 + (ad1_out_turns if ad1_out_turns else [("W", "好，《锵锵三人行》，广告之后见！")])
+        _mc2 = _build_micro_check_turns(story_blocks[ad1_after + 1 : ad2_after + 1], 1)
+        if _mc2:
+            ad2_out_turns = _mc2 + (ad2_out_turns if ad2_out_turns else [("W", "咱们再去一下广告，《锵锵三人行》，广告之后见！")])
+
     opening_evs = turns_to_expanded_events(opening_turns) if opening_turns else []
     ad1_out_evs = turns_to_expanded_events(ad1_out_turns) if ad1_out_turns else []
     ad1_in_evs = turns_to_expanded_events(ad1_in_turns) if ad1_in_turns else []

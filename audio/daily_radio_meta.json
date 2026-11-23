@@ -358,6 +358,7 @@
       "clip_start": 87.1,
       "clip_end": 107.1,
       "demo_audio": "",
+      "hook_audio": "",
       "is_new_n2": false,
       "status": "yellow",
       "streak": 0
@@ -384,6 +385,7 @@
       "clip_start": 314.9,
       "clip_end": 336.9,
       "demo_audio": "./audio/N3-G55_q.mp3",
+      "hook_audio": "",
       "is_new_n2": false,
       "status": "yellow",
       "streak": 1
@@ -410,6 +412,7 @@
       "clip_start": 337.5,
       "clip_end": 357.4,
       "demo_audio": "./audio/N3-G52_q.mp3",
+      "hook_audio": "",
       "is_new_n2": false,
       "status": "yellow",
       "streak": 1
@@ -438,6 +441,7 @@
       "clip_start": 585.5,
       "clip_end": 606.4,
       "demo_audio": "",
+      "hook_audio": "",
       "is_new_n2": true,
       "status": "yellow",
       "streak": 0
@@ -465,7 +469,8 @@
       "mnemonic": "短促喊一声 “Yo(よ) 算(さん)账！” → よさん，よ 绝不拖长",
       "clip_start": 716.3,
       "clip_end": 734.4,
-      "demo_audio": "./audio/words/vc_e18c54d4fc_rev.mp3?v=b73d0001",
+      "demo_audio": "./audio/words/vc_e18c54d4fc_rev.mp3?v=aec6446f",
+      "hook_audio": "./audio/words/vc_e18c54d4fc_hook.mp3?v=f46a08cb",
       "is_new_n2": false,
       "status": "green",
       "streak": 3
@@ -492,6 +497,7 @@
       "clip_start": 800.1,
       "clip_end": 822.1,
       "demo_audio": "./audio/N3-G63_q.mp3",
+      "hook_audio": "",
       "is_new_n2": false,
       "status": "yellow",
       "streak": 1
@@ -520,6 +526,7 @@
       "clip_start": 834.8,
       "clip_end": 854.8,
       "demo_audio": "",
+      "hook_audio": "",
       "is_new_n2": false,
       "status": "yellow",
       "streak": 0
@@ -543,9 +550,10 @@
       "nuance": "正打算做某个动作的当口被别的事件撞上，用「意向形＋としたとき」。",
       "twin": "出ようとしたとき：意向形＋とする＝正准备迈步出门那一瞬间 · 对比 出たばかりだ：た形＋ばかりだ＝刚刚已经出门了",
       "mnemonic": "",
-      "clip_start": 1372.3,
-      "clip_end": 1394.3,
+      "clip_start": 1373.0,
+      "clip_end": 1395.0,
       "demo_audio": "./audio/N3-G44_q.mp3",
+      "hook_audio": "",
       "is_new_n2": false,
       "status": "yellow",
       "streak": 1
@@ -574,6 +582,7 @@
       "clip_start": 1699.1,
       "clip_end": 1719.1,
       "demo_audio": "",
+      "hook_audio": "",
       "is_new_n2": true,
       "status": "yellow",
       "streak": 0
@@ -600,6 +609,7 @@
       "clip_start": 1853.8,
       "clip_end": 1874.5,
       "demo_audio": "./audio/N3-G51_q.mp3",
+      "hook_audio": "",
       "is_new_n2": false,
       "status": "yellow",
       "streak": 1
@@ -626,6 +636,7 @@
       "clip_start": 2447.5,
       "clip_end": 2469.5,
       "demo_audio": "./audio/N3-V34_q.mp3",
+      "hook_audio": "./audio/words/vc_8656fddab7_hook.mp3?v=3edcdc7e",
       "is_new_n2": false,
       "status": "red",
       "streak": 0
@@ -649,12 +660,13 @@
       "nuance": "在公告、商务邮件、新闻中表示「关于…及其相关领域」，用正式书面语「名词＋に関して」。",
       "twin": "規則に関して質問がある：名词＋に関して＝关于新规及相关事宜（较书面） · 对比 規則によって決まる：根据规定决定（方式/依据）",
       "mnemonic": "",
-      "clip_start": 3019.9,
-      "clip_end": 3041.9,
+      "clip_start": 3019.6,
+      "clip_end": 3041.6,
       "demo_audio": "./audio/N3-G69_q.mp3",
+      "hook_audio": "",
       "is_new_n2": false,
-      "status": "yellow",
-      "streak": 1
+      "status": "red",
+      "streak": 0
     }
   ]
 }

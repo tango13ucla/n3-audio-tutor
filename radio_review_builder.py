@@ -345,6 +345,14 @@ def _resolve_word_audio(word: str, manifest: dict[str, Any]) -> str:
     return ""
 
 
+def _resolve_hook_audio(word: str, manifest: dict[str, Any]) -> str:
+    vc_map = manifest.get("vocab_cards") or {}
+    vc_aud = vc_map.get(word) or {}
+    if vc_aud.get("hook"):
+        return str(vc_aud["hook"])
+    return ""
+
+
 def _resolve_point_audio(point_id: str, manifest: dict[str, Any]) -> str:
     for suffix in ("_q.mp3", "_exp.mp3"):
         rel = f"./audio/{point_id}{suffix}"
@@ -536,6 +544,7 @@ def build_episode_review_items(
                     "clip_start": clip_s,
                     "clip_end": clip_e,
                     "demo_audio": demo_aud,
+                    "hook_audio": (_resolve_hook_audio(title, manifest) or _resolve_hook_audio(key, manifest)) if kind == "vocab" else "",
                     "is_new_n2": is_n2,
                     "status": st_val,
                     "streak": streak_val,
@@ -668,6 +677,7 @@ def build_episode_review_items(
                 "clip_start": clip_s,
                 "clip_end": clip_e,
                 "demo_audio": _resolve_word_audio(kanji, manifest),
+                "hook_audio": _resolve_hook_audio(kanji, manifest),
                 "is_new_n2": ent.get("tier") == "n2_core",
                 "status": st_val,
                 "streak": streak_val,

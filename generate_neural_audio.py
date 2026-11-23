@@ -776,6 +776,13 @@ async def main():
         hook_file = f"vc_{vc_id}_hook.mp3"
         hook_hash = hashlib.sha256((f"v20vch:{vc_tag}:" + json.dumps(hook_turns, ensure_ascii=False)).encode("utf-8")).hexdigest()[:10]
 
+        # Dedicated pure-Japanese (no-mnemonic) clip for 1/3 & 2/3 mnemonic fading (Wang & Thomas 1995) & 2/3 kana recall
+        clean_turns = [("JF", word_ja)]
+        if chunk_ja and chunk_ja != word_ja:
+            clean_turns.extend([("PAUSE", 0.18), ("JF", chunk_ja)])
+        clean_file = f"vc_{vc_id}_clean.mp3"
+        clean_hash = hashlib.sha256((f"v20vcc:{vc_tag}:" + json.dumps(clean_turns, ensure_ascii=False)).encode("utf-8")).hexdigest()[:10]
+
         if mode == "kanji_read":
             # Front is silent; Reveal & Replay: Word (JA) -> Mnemonic (CN+EN) FIRST -> Short Phrase (JA) AFTER
             rev_turns = [("JF", word_ja)]
@@ -791,8 +798,9 @@ async def main():
                 "rev": (rev_file, rev_hash, rev_turns),
                 "full": (rev_file, rev_hash, rev_turns),
                 "hook": (hook_file, hook_hash, hook_turns),
+                "clean": (clean_file, clean_hash, clean_turns),
             }
-            for fn, fh, ft in (vc_specs[vw]["rev"], vc_specs[vw]["hook"]):
+            for fn, fh, ft in (vc_specs[vw]["rev"], vc_specs[vw]["hook"], vc_specs[vw]["clean"]):
                 f_abs = os.path.join(WORDS_AUDIO_DIR, fn)
                 if old_vc_hashes.get(fn) != fh or not os.path.exists(f_abs):
                     vc_jobs[fn] = (fh, ft)
@@ -826,8 +834,9 @@ async def main():
                 "rev": (rev_file, rev_hash, rev_turns),
                 "full": (full_file, full_hash, full_turns),
                 "hook": (hook_file, hook_hash, hook_turns),
+                "clean": (clean_file, clean_hash, clean_turns),
             }
-            for fn, fh, ft in (vc_specs[vw]["front"], vc_specs[vw]["rev"], vc_specs[vw]["full"], vc_specs[vw]["hook"]):
+            for fn, fh, ft in (vc_specs[vw]["front"], vc_specs[vw]["rev"], vc_specs[vw]["full"], vc_specs[vw]["hook"], vc_specs[vw]["clean"]):
                 f_abs = os.path.join(WORDS_AUDIO_DIR, fn)
                 if old_vc_hashes.get(fn) != fh or not os.path.exists(f_abs):
                     vc_jobs[fn] = (fh, ft)
@@ -886,7 +895,7 @@ async def main():
 
     for vw, spec in vc_specs.items():
         entry = {}
-        for slot in ("front", "rev", "full", "hook"):
+        for slot in ("front", "rev", "full", "hook", "clean"):
             item = spec.get(slot)
             if not item:
                 entry[slot] = ""
