@@ -1,6 +1,6 @@
 {
   "closed_study_day": "2026-11-21",
-  "summarized_at_pt": "2026-11-22T17:11:27-08:00",
+  "summarized_at_pt": "2026-11-22T17:33:17-08:00",
   "day_events_count": 114,
   "missed_or_unsure_points": [
     "V-041",
@@ -40,6 +40,11 @@
   ],
   "looked_up_words_count": 16,
   "top_looked_up_words": [
+    {
+      "surface": "こっそり",
+      "count": 2,
+      "last_ts": "2026-11-23T01:21:28.000Z"
+    },
     {
       "surface": "おく",
       "count": 1,
@@ -104,11 +109,6 @@
       "surface": "でしょう",
       "count": 1,
       "last_ts": "2026-11-21T23:05:14.000Z"
-    },
-    {
-      "surface": "こっそり",
-      "count": 1,
-      "last_ts": "2026-11-22T07:07:09.000Z"
     },
     {
       "surface": "にとって",

@@ -1123,3 +1123,15 @@
 {"id": "VC-任せる", "point": "任せる", "choice": "记词:没记住", "correct": "false", "ask_again": "false", "ts": "2026-11-22T18:30:28.000Z"}
 {"id": "VC-ぼろぼろ", "point": "ぼろぼろ", "choice": "记词:没记住", "correct": "false", "ask_again": "false", "ts": "2026-11-22T18:30:33.000Z"}
 {"id": "VAR8-19", "point": "〜べきではない", "choice": "ばかりだ", "correct": "false", "ask_again": "false", "ts": "2026-11-22T18:31:13.000Z"}
+{"id": "N3-G59", "point": "〜てもかまわない", "choice": "てもかまわない", "correct": "true", "ask_again": "false", "ts": "2026-11-23T01:21:11.000Z"}
+{"id": "N3-V34", "point": "そっくり", "choice": "そっくり", "correct": "true", "ask_again": "false", "ts": "2026-11-23T01:21:19.000Z"}
+{"id": "N3-V11", "point": "こっそり", "choice": "こっそり", "correct": "true", "ask_again": "false", "ts": "2026-11-23T01:21:25.000Z"}
+{"id": "LK:こっそり", "point": "N3-V11", "choice": "こっそり", "correct": "true", "ask_again": "false", "ts": "2026-11-23T01:21:28.000Z"}
+{"id": "V-20261114-04", "point": "貯める", "choice": "ためる", "correct": "true", "ask_again": "false", "ts": "2026-11-23T01:21:35.000Z"}
+{"id": "VAR8-19", "point": "〜べきではない", "choice": "べきではない", "correct": "true", "ask_again": "false", "ts": "2026-11-23T01:21:45.000Z"}
+{"id": "N3-G63", "point": "〜にもかかわらず", "choice": "にもかかわらず", "correct": "true", "ask_again": "false", "ts": "2026-11-23T01:21:52.000Z"}
+{"id": "VAR8-20", "point": "〜ちゃう／じゃう", "choice": "ちゃった", "correct": "true", "ask_again": "false", "ts": "2026-11-23T01:22:02.000Z"}
+{"id": "N3-G62", "point": "少しも〜ない", "choice": "下がらなかった", "correct": "true", "ask_again": "false", "ts": "2026-11-23T01:22:12.000Z"}
+{"id": "N3-G129", "point": "〜ことから", "choice": "ことから", "correct": "true", "ask_again": "false", "ts": "2026-11-23T01:22:19.000Z"}
+{"id": "VAR9-44", "point": "N3L-086", "choice": "取引先へ日程変更のメールを送る", "correct": "true", "ask_again": "false", "ts": "2026-11-23T01:22:44.000Z"}
+{"id": "VAR9-46", "point": "N3L-402", "choice": "駅前のイタリアンのお店", "correct": "true", "ask_again": "false", "ts": "2026-11-23T01:23:13.000Z"}
