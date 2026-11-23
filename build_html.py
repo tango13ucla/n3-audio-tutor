@@ -2762,24 +2762,52 @@ html = r"""<!DOCTYPE html>
     background: rgba(28, 27, 24, 0.05);
     font-weight: 600;
   }
-
-  /* ================= 4B. POST-LISTENING 5-MIN CONTEXTUAL REVIEW ("听后 5 分") ================= */
-  .rv-entry-link {
-    font-size: 13.5px;
-    font-weight: 500;
-    color: var(--ink-2);
-    letter-spacing: 0.04em;
-    padding: 4px 2px;
-    background: transparent;
-    border: none;
-    white-space: nowrap;
-    transition: color 0.18s ease, opacity 0.18s ease;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
+  .chap-sep {
+    width: 1px;
+    height: 14px;
+    background: var(--hairline-strong);
+    flex-shrink: 0;
+    margin: 0 2px;
   }
-  .rv-entry-link:active { opacity: 0.52; }
-  .rv-entry-link.is-ready { color: var(--moss); font-weight: 600; }
-  .rv-entry-link.is-done { color: var(--ink-3); }
+  .chap-link.chap-review {
+    color: var(--ink-2);
+    font-weight: 500;
+  }
+  .chap-link.chap-review.is-ready {
+    color: var(--moss);
+    background: var(--moss-soft);
+    font-weight: 600;
+  }
+  .chap-link.chap-review.is-done {
+    color: var(--moss);
+    opacity: 0.72;
+  }
+
+  /* ================= 4B. POST-LISTENING 5-MIN CONTEXTUAL REVIEW ("听后复盘" 收尾小节) ================= */
+  .rv-finish-strip {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 11px 14px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(43, 95, 73, 0.28);
+    background: var(--moss-soft);
+    color: var(--sumi);
+    font-size: 13px;
+    line-height: 1.4;
+    text-align: left;
+    transition: opacity 0.16s ease;
+  }
+  .rv-finish-strip:active { opacity: 0.72; }
+  .rv-finish-go {
+    flex-shrink: 0;
+    color: var(--moss);
+    font-weight: 600;
+    white-space: nowrap;
+  }
 
   #radio-player-stage.hidden,
   #radio-review-stage.hidden { display: none !important; }
@@ -4421,7 +4449,6 @@ html = r"""<!DOCTYPE html>
       <div id="radio-player-stage">
         <div class="meta-bar">
           <span class="overline" id="radio-date-pill">锵锵三人 · 文涛 · 文道 · 子东</span>
-          <button type="button" class="rv-entry-link" id="radio-review-entry" onclick="openRadioReview()">听后 5 分 ›</button>
         </div>
 
         <div class="radio-center">
@@ -4439,6 +4466,10 @@ html = r"""<!DOCTYPE html>
         </div>
 
         <div class="radio-dock">
+          <button type="button" class="rv-finish-strip" id="radio-review-cta" style="display:none;" onclick="openRadioReview()">
+            <span>节目已播完 · 进入收尾小节，3 分钟锁住重点</span>
+            <span class="rv-finish-go">开始复盘 →</span>
+          </button>
           <div class="chapter-strip" id="radio-chap-pills"></div>
 
           <div class="scrub-wrap">
@@ -5645,6 +5676,14 @@ function buildCompactPacket() {
     ];
     size += byteLen(JSON.stringify(pkt.gp)) + 7;
   }
+  if (A.radioReview && A.radioReview.sig === RADIO_SIG && A.radioReview.date === DATA.plan_date) {
+    const rvDoneFlag = A.radioReview.done ? 1 : 0;
+    const rvIdx = Math.floor(A.radioReview.triageIdx || 0);
+    if (rvDoneFlag || rvIdx > 0) {
+      pkt.rv = [rvDoneFlag, rvIdx, Math.floor(A.radioReview.updatedAt || nowUnixSec())];
+      size += byteLen(JSON.stringify(pkt.rv)) + 7;
+    }
+  }
   if (Array.isArray(A.tappedWords) && A.tappedWords.length) {
     const twSlice = A.tappedWords.slice(-30);
     const twAdd = byteLen(JSON.stringify(twSlice)) + 7;
@@ -5703,6 +5742,7 @@ function packetFingerprint(pkt) {
     rsig: pkt.rsig || "",
     fp: Array.isArray(pkt.fp) ? [Math.floor(pkt.fp[0] || 0), Math.floor(pkt.fp[1] || 0), Math.floor(pkt.fp[2] || 0)] : [],
     gp: Array.isArray(pkt.gp) ? [Math.floor(pkt.gp[0] || 0), Math.floor(pkt.gp[1] || 0), Math.floor(pkt.gp[2] || 0)] : [],
+    rv: Array.isArray(pkt.rv) ? [Math.floor(pkt.rv[0] || 0), Math.floor(pkt.rv[1] || 0)] : [],
     ga: sortedMap(pkt.ga || {}),
     z: String(pkt.z || "").split(";").filter(Boolean).sort().join(";"),
     c: pkt.c || [],
@@ -5795,6 +5835,21 @@ function applyIncomingPacket(pkt) {
     }
     if (pktVer >= 15 && Array.isArray(pkt.gp) && mergeGaProgTuple(A, pkt.gp)) {
       changed = true;
+    }
+    if (Array.isArray(pkt.rv) && pkt.rv.length >= 2) {
+      const rvDoneIn = !!pkt.rv[0];
+      const rvIdxIn = Math.max(0, Math.floor(pkt.rv[1] || 0));
+      const rvTsIn = Math.floor(pkt.rv[2] || 0);
+      const curRv = ensureRadioReviewState(false);
+      const curDone = !!curRv.done;
+      const curIdx = Math.floor(curRv.triageIdx || 0);
+      if ((rvDoneIn && !curDone) || (!curDone && rvIdxIn > curIdx)) {
+        curRv.done = curDone || rvDoneIn;
+        curRv.triageIdx = Math.max(curIdx, rvIdxIn);
+        if (curRv.done) curRv.tailQueue = [];
+        curRv.updatedAt = Math.max(curRv.updatedAt || 0, rvTsIn);
+        changed = true;
+      }
     }
 
     if (Array.isArray(pkt.rp) && pkt.rp.length === 2) {
@@ -6170,8 +6225,19 @@ function computeDaily120Metrics() {
   const targetMins = Math.max(1, Math.round(radioDur / 60));
   const listenedSec = Math.min(radioDur, Math.max(0, A.radioMaxSec || 0));
   const listenedMins = Math.min(targetMins, Math.floor(listenedSec / 60));
-  const radioRatio = Math.min(1.0, listenedSec / (radioDur * 0.92));
-  const radioDone = radioRatio >= 0.98;
+  const radioAudioRatio = Math.min(1.0, listenedSec / (radioDur * 0.92));
+  const radioAudioDone = radioAudioRatio >= 0.98;
+  const rvItemsList = (DATA.radio && Array.isArray(DATA.radio.review_items)) ? DATA.radio.review_items : [];
+  const rvTotal = rvItemsList.length;
+  const rvSt = (A.radioReview && A.radioReview.sig === RADIO_SIG && A.radioReview.date === DATA.plan_date) ? A.radioReview : null;
+  const radioReviewDone = rvTotal === 0 || !!(rvSt && rvSt.done);
+  const rvCleared = rvSt ? Math.min(rvTotal, Math.max(0, (rvSt.triageIdx || 0) - ((rvSt.tailQueue && rvSt.tailQueue.length) || 0))) : 0;
+  const rvRatio = radioReviewDone ? 1.0 : (rvTotal > 0 ? Math.min(0.95, rvCleared / rvTotal) : 1.0);
+  // Podcast integrity + Active Retrieval closure: 85% for full 60m audio + 15% for the closing 5-min review chapter!
+  const radioRatio = rvTotal > 0
+    ? Math.min(1.0, (radioAudioDone ? 1.0 : radioAudioRatio) * 0.85 + rvRatio * 0.15)
+    : radioAudioRatio;
+  const radioDone = radioAudioDone && radioReviewDone;
 
   const vItems = (DATA.mastery && DATA.mastery.vocab && DATA.mastery.vocab.items) ? DATA.mastery.vocab.items : [];
   const liveFlashLeft = vItems.filter(it => it.tier !== "done").length;
@@ -6209,7 +6275,9 @@ function computeDaily120Metrics() {
     quizRatio,
     quizDone,
     targetMins,
-    listenedMins: radioDone ? targetMins : listenedMins,
+    listenedMins: radioAudioDone ? targetMins : listenedMins,
+    radioAudioDone,
+    radioReviewDone,
     radioRatio: radioDone ? 1.0 : radioRatio,
     radioDone,
     flashSeen: flashDone ? Math.max(flashSeen, flashTarget) : flashSeen,
@@ -6982,11 +7050,15 @@ function paintRadioSeekProgress(t) {
   const rm = computeDaily120Metrics();
   if (pillEl) {
     const hostsLabel = DATA.radio.hosts || "文涛 · 文道 · 子东";
-    pillEl.textContent = rm.radioDone ? `锵锵三人 · ${hostsLabel} · 今日已听完 ✓` : `锵锵三人 · ${hostsLabel}`;
+    pillEl.textContent = rm.radioDone
+      ? `锵锵三人 · ${hostsLabel} · 今日已圆满 ✓`
+      : (rm.radioAudioDone && !rm.radioReviewDone
+        ? `锵锵三人 · ${hostsLabel} · 待收尾复盘`
+        : `锵锵三人 · ${hostsLabel}`);
   }
   if (seekEl) {
     const curPct = Math.max(0, Math.min(100, ((t || 0) / dur) * 100));
-    const maxPct = rm.radioDone ? 100 : Math.max(curPct, Math.min(100, ((A.radioMaxSec || 0) / dur) * 100));
+    const maxPct = rm.radioAudioDone ? 100 : Math.max(curPct, Math.min(100, ((A.radioMaxSec || 0) / dur) * 100));
     seekEl.style.background = `linear-gradient(to right, #2D7A56 0%, #2D7A56 ${curPct.toFixed(1)}%, rgba(45, 122, 86, 0.36) ${curPct.toFixed(1)}%, rgba(45, 122, 86, 0.36) ${maxPct.toFixed(1)}%, rgba(28, 27, 24, 0.10) ${maxPct.toFixed(1)}%, rgba(28, 27, 24, 0.10) 100%)`;
   }
 }
@@ -7134,9 +7206,13 @@ function cycleRadioSpeed() {
 
 function renderRadioChapters(activeChapIdx) {
   const chaps = DATA.radio.chapters || [];
+  const rvMeta = getReviewClosingChapMeta();
+  const closingHTML = rvMeta
+    ? `<span class="chap-sep" aria-hidden="true"></span><button type="button" class="chap-link chap-review${rvMeta.cls}" id="radio-review-chap" onclick="openRadioReview()">${escapeHtml(rvMeta.label)}</button>`
+    : "";
   document.getElementById("radio-chap-pills").innerHTML = chaps.map(c => `
     <button class="chap-link ${c.idx === activeChapIdx ? 'active' : ''}" onclick="jumpRadioChapter(${c.start})">${escapeHtml(c.title.replace(/^[①②③④⑤⑥]\s*/, ""))}</button>
-  `).join("");
+  `).join("") + closingHTML;
 }
 
 function updateRadioLiveDisplay(t) {
@@ -7354,6 +7430,7 @@ function ensureRadioReviewState(forceReset) {
     A.radioReview.relearnIds = (A.radioReview.relearnIds || []).filter(id => validIds.has(id));
     A.radioReview.tailQueue = (A.radioReview.tailQueue || []).filter(id => validIds.has(id));
     A.radioReview.tailDoneIds = (A.radioReview.tailDoneIds || []).filter(id => validIds.has(id));
+    if (!A.radioReview.updatedAt) A.radioReview.updatedAt = nowUnixSec();
     return A.radioReview;
   }
   A.radioReview = {
@@ -7364,37 +7441,48 @@ function ensureRadioReviewState(forceReset) {
     relearnIds: [],
     tailQueue: [],
     tailDoneIds: [],
-    done: items.length === 0
+    done: items.length === 0,
+    updatedAt: nowUnixSec()
   };
   saveAdaptiveState();
   return A.radioReview;
 }
 
-function updateRadioReviewEntryBadge() {
-  const btn = document.getElementById("radio-review-entry");
-  if (!btn) return;
+function getReviewClosingChapMeta() {
   const items = getRadioReviewItems();
-  if (!items.length) {
-    btn.style.display = "none";
-    return;
-  }
-  btn.style.display = "";
+  if (!items.length) return null;
   const st = ensureRadioReviewState(false);
-  const dur = getEffectiveRadioDuration();
-  const listenedRatio = dur > 0 ? ((A.radioMaxSec || 0) / dur) : 0;
-  btn.classList.remove("is-ready", "is-done");
+  const rm = computeDaily120Metrics();
   if (st.done) {
-    btn.textContent = "已复盘 ✓";
-    btn.classList.add("is-done");
-  } else if (st.triageIdx > 0 || (st.tailQueue && st.tailQueue.length > 0)) {
+    return { label: "复盘 ✓", cls: " is-done", needsClose: false };
+  }
+  if (st.triageIdx > 0 || (st.tailQueue && st.tailQueue.length > 0)) {
     const doneCnt = Math.min(items.length, st.triageIdx);
-    btn.textContent = `继续复盘 ${doneCnt}/${items.length} ›`;
-    btn.classList.add("is-ready");
-  } else if (listenedRatio >= 0.78) {
-    btn.textContent = "听完 · 5 分钟复盘 ›";
-    btn.classList.add("is-ready");
-  } else {
-    btn.textContent = "听后 5 分 ›";
+    return { label: `复盘 ${doneCnt}/${items.length}`, cls: " is-ready", needsClose: rm.radioAudioDone };
+  }
+  if (rm.radioAudioDone) {
+    return { label: "听后复盘", cls: " is-ready", needsClose: true };
+  }
+  return { label: "听后复盘", cls: "", needsClose: false };
+}
+
+function updateRadioReviewEntryBadge() {
+  const meta = getReviewClosingChapMeta();
+  const chapBtn = document.getElementById("radio-review-chap");
+  if (chapBtn && meta) {
+    chapBtn.textContent = meta.label;
+    chapBtn.className = "chap-link chap-review" + meta.cls;
+  }
+  const cta = document.getElementById("radio-review-cta");
+  if (cta) {
+    const showCta = !!(meta && meta.needsClose);
+    cta.style.display = showCta ? "flex" : "none";
+    if (showCta) {
+      const strip = document.getElementById("radio-chap-pills");
+      if (strip && typeof strip.scrollWidth === "number") {
+        try { strip.scrollLeft = strip.scrollWidth; } catch (e) {}
+      }
+    }
   }
 }
 
@@ -7601,11 +7689,15 @@ function advanceRadioReviewPointer() {
     rvRevealedAt = 0;
   } else {
     st.done = true;
+    st.updatedAt = nowUnixSec();
     rvMode = "done";
     rvActiveItemId = "";
     rvRevealedAt = 0;
     saveAdaptiveState();
+    scheduleCloudPush(80);
   }
+  renderGreenBoard();
+  paintRadioSeekProgress(radioPlayer.currentTime || 0);
   updateRadioReviewEntryBadge();
 }
 
@@ -7635,6 +7727,7 @@ function closeRadioReview() {
   const rStage = document.getElementById("radio-review-stage");
   if (rStage) rStage.classList.add("hidden");
   if (pStage) pStage.classList.remove("hidden");
+  paintRadioSeekProgress(radioPlayer.currentTime || 0);
   updateRadioReviewEntryBadge();
 }
 
@@ -7674,6 +7767,7 @@ function handleRadioReviewPass() {
   const isVerified = !!(rvRevealed && rvRevealedAt > 0 && (performance.now() - rvRevealedAt) >= 800);
 
   animateRvCardAndRun("fly-right", () => {
+    st.updatedAt = nowUnixSec();
     if (rvMode === "triage") {
       if (!st.passedIds.includes(item.id)) st.passedIds.push(item.id);
       if (isVerified && item.point_id && A.pts[item.point_id]) A.pts[item.point_id].audioPrimed = true;
@@ -7697,6 +7791,7 @@ function handleRadioReviewRelearn() {
   stopRadioReviewAudio();
 
   rvReturnMode = rvMode;
+  st.updatedAt = nowUnixSec();
   if (!st.relearnIds.includes(item.id)) {
     st.relearnIds.push(item.id);
     if (!st.tailQueue.includes(item.id)) st.tailQueue.push(item.id);
@@ -7803,15 +7898,19 @@ function renderRadioReviewStage() {
   const st = ensureRadioReviewState(false);
 
   if (rvMode === "done" || !rvActiveItemId) {
+    const rmDone = computeDaily120Metrics();
     const relearnedItems = (st.relearnIds || []).map(id => getReviewItemById(id)).filter(Boolean);
     const passedCnt = Math.max(0, items.length - relearnedItems.length);
     const relearnNamesHTML = relearnedItems.length
       ? `<div class="rv-done-list">${relearnedItems.map(x => `<span>${escapeHtml(x.title)}</span>`).join("")}</div>`
       : "";
+    const doneOverline = rmDone.radioDone
+      ? "收尾小节已收笔 · 随身听圆印圆满"
+      : "收尾小节已完成 · 听完正文即可收笔";
     host.innerHTML = `
       <div class="meta-bar">
         <button type="button" class="text-btn" onclick="closeRadioReview()">← 回到随身听</button>
-        <span class="overline ok">听后 5 分钟 · 已收笔</span>
+        <span class="overline ok">${doneOverline}</span>
       </div>
       <div class="rv-focal">
         <h2 class="point-heading">${relearnedItems.length ? `本次重学 ${relearnedItems.length} 项，其余 ${passedCnt} 项已秒过` : `本期 ${items.length} 个重点全部听懂`}</h2>
@@ -8270,9 +8369,14 @@ function renderGreenBoard() {
   const trioEl = document.getElementById("enso-trio");
   if (trioEl) {
     const doneKey = `${m.quizDone ? 1 : 0}${m.radioDone ? 1 : 0}${m.ritual3Done ? 1 : 0}${bm.done ? 1 : 0}`;
+    const radioRingLbl = m.radioDone
+      ? `随身听 已完成`
+      : (m.radioAudioDone && !m.radioReviewDone
+        ? `随身听 已听完 · 待收尾复盘`
+        : `随身听 ${m.listenedMins}/${m.targetMins}分`);
     const rings = [
       { ratio: m.quizRatio, done: m.quizDone, label: `做题 ${m.greenCnt}/${m.totalCards}` },
-      { ratio: m.radioRatio, done: m.radioDone, label: `随身听 ${m.listenedMins}/${m.targetMins}分` },
+      { ratio: m.radioRatio, done: m.radioDone, label: radioRingLbl },
       { ratio: m.ritual3Ratio, done: m.ritual3Done, label: r3Label },
       { ratio: bm.ratio, done: bm.done, label: bm.label }
     ];
@@ -8284,7 +8388,9 @@ function renderGreenBoard() {
   }
 
   const quizPart = m.quizDone ? `做题 ✓` : `做题 ${m.greenCnt}/${m.totalCards}`;
-  const radioPart = m.radioDone ? `随身听 ✓` : `听 ${m.listenedMins}/${m.targetMins}分`;
+  const radioPart = m.radioDone
+    ? `随身听 ✓`
+    : (m.radioAudioDone && !m.radioReviewDone ? `听完·待复盘` : `听 ${m.listenedMins}/${m.targetMins}分`);
   const flashPart = m.ritual3Done ? `记词 ✓` : r3Label;
   const bodyPart = bm.done ? `体律 ✓` : bm.label;
   document.getElementById("gm-left-txt").textContent = `${quizPart} · ${radioPart} · ${flashPart} · ${bodyPart}`;
@@ -13942,6 +14048,27 @@ if (qRevBefore !== false || qTimer !== null || !vHtml.includes('recall-veil-over
 sb.revealQuizChoicesNow();
 if (vm.runInNewContext('quizChoicesRevealed', sb) !== true) {
   throw new Error('Self-test 8 failed: revealQuizChoicesNow did not unveil choices');
+}
+// 8.7 Podcast closing-chapter review gates Enso Ring #2 (85% after 60m audio -> 100% after review) + sync pkt.rv
+sb.ensureRadioReviewState(true);
+vm.runInNewContext('A.radioMaxSec = DATA.radio.duration_sec || 3600;', sb);
+const mAudOnly = sb.computeDaily120Metrics();
+if (!mAudOnly.radioAudioDone || mAudOnly.radioReviewDone || mAudOnly.radioDone || mAudOnly.radioRatio < 0.84 || mAudOnly.radioRatio > 0.86) {
+  throw new Error('Self-test 8 failed: 60m audio done without closing review must leave Enso #2 at ~85% open: ' + JSON.stringify(mAudOnly));
+}
+sb.renderRadioChapters(0);
+const chapHtml = (els['radio-chap-pills'] && els['radio-chap-pills'].innerHTML) || '';
+if (!chapHtml.includes('radio-review-chap') || !chapHtml.includes('听后复盘') || chapHtml.includes('—')) {
+  throw new Error('Self-test 8 failed: chapter strip missing closing 听后复盘 chapter or contains em dash');
+}
+vm.runInNewContext('A.radioReview.done = true; A.radioReview.triageIdx = (DATA.radio.review_items || []).length; A.radioReview.updatedAt = Math.floor(Date.now()/1000);', sb);
+const mRadFull = sb.computeDaily120Metrics();
+if (!mRadFull.radioDone || mRadFull.radioRatio !== 1.0) {
+  throw new Error('Self-test 8 failed: completing closing review must seal Enso #2 to 100% green: ' + JSON.stringify(mRadFull));
+}
+const pktRv = sb.buildCompactPacket();
+if (!Array.isArray(pktRv.rv) || pktRv.rv[0] !== 1 || Buffer.byteLength(JSON.stringify(pktRv), 'utf8') > 3750) {
+  throw new Error('Self-test 8 failed: compact sync packet missing rv completion bit or oversized');
 }
 """
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
