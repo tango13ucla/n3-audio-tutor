@@ -20,6 +20,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 import wave
 
@@ -444,18 +445,19 @@ async def main():
         except Exception:
             old_manifest = {}
 
+    vocab_only = "--vocab-only" in sys.argv
     old_words = old_manifest.get("words", {})
     old_vc_map = old_manifest.get("vocab_cards", {})
     old_vc_hashes = old_manifest.get("vocab_card_hashes", {})
-    new_manifest = {
-        "words": dict(old_words),
-        "vocab_cards": dict(old_vc_map),
-        "vocab_card_hashes": dict(old_vc_hashes),
-    }
+    new_manifest = dict(old_manifest) if vocab_only else {}
+    new_manifest["words"] = dict(old_words)
+    new_manifest["vocab_cards"] = dict(old_vc_map)
+    new_manifest["vocab_card_hashes"] = dict(old_vc_hashes)
     can_synth = (edge_tts is not None) and (shutil.which("ffmpeg") is not None)
 
     voice_map = await detect_voice_map()
     det_tag = f"gemini:{GEMINI_TTS_MODEL}:v18" if (GEMINI_API_KEY and genai is not None) else "edge:Brian+5_0_v18"
+    sem = asyncio.Semaphore(14)
 
     to_build_q = {}
     to_build_exp = {}
@@ -536,12 +538,11 @@ async def main():
         if old_manifest.get(e_file) != e_hash or not os.path.exists(e_abs):
             to_build_exp[qid] = e_expanded
 
-    sem = asyncio.Semaphore(14)
     built_q_ok = set()
     built_e_ok = set()
     built_lp_ok = set()
 
-    if can_synth and (to_build_q or to_build_exp or to_build_lp):
+    if can_synth and (not vocab_only) and (to_build_q or to_build_exp or to_build_lp):
         tmpdir = tempfile.mkdtemp(prefix="n3_cards_v18_")
         try:
             needed_clips = {}
@@ -613,52 +614,53 @@ async def main():
         finally:
             shutil.rmtree(tmpdir, ignore_errors=True)
 
-    for lp_fn, lph in hashes_lp.items():
-        lp_abs = os.path.join(AUDIO_DIR, lp_fn)
-        if os.path.exists(lp_abs):
-            new_manifest[lp_fn] = lph if (lp_fn not in to_build_lp or lp_fn in built_lp_ok) else old_manifest.get(lp_fn, lph)
+    if not vocab_only:
+        for lp_fn, lph in hashes_lp.items():
+            lp_abs = os.path.join(AUDIO_DIR, lp_fn)
+            if os.path.exists(lp_abs):
+                new_manifest[lp_fn] = lph if (lp_fn not in to_build_lp or lp_fn in built_lp_ok) else old_manifest.get(lp_fn, lph)
 
-    for qid, card in CARDS_75.items():
-        q_file = f"{qid}_q.mp3"
-        e_file = f"{qid}_exp.mp3"
-        q_abs = os.path.join(AUDIO_DIR, q_file)
-        e_abs = os.path.join(AUDIO_DIR, e_file)
-        qh = hashes_q[qid]
-        eh = hashes_exp[qid]
+        for qid, card in CARDS_75.items():
+            q_file = f"{qid}_q.mp3"
+            e_file = f"{qid}_exp.mp3"
+            q_abs = os.path.join(AUDIO_DIR, q_file)
+            e_abs = os.path.join(AUDIO_DIR, e_file)
+            qh = hashes_q[qid]
+            eh = hashes_exp[qid]
 
-        if os.path.exists(q_abs):
-            new_manifest[q_file] = qh if (qid not in to_build_q or qid in built_q_ok) else old_manifest.get(q_file, qh)
-        if os.path.exists(e_abs):
-            new_manifest[e_file] = eh if (qid not in to_build_exp or qid in built_e_ok) else old_manifest.get(e_file, eh)
+            if os.path.exists(q_abs):
+                new_manifest[q_file] = qh if (qid not in to_build_q or qid in built_q_ok) else old_manifest.get(q_file, qh)
+            if os.path.exists(e_abs):
+                new_manifest[e_file] = eh if (qid not in to_build_exp or qid in built_e_ok) else old_manifest.get(e_file, eh)
 
-        q_ver = new_manifest.get(q_file, qh)[:8]
-        e_ver = new_manifest.get(e_file, eh)[:8]
-        meta_entry = {
-            "q_audio": f"./audio/{q_file}?v={q_ver}" if os.path.exists(q_abs) else "",
-            "exp_audio": f"./audio/{e_file}?v={e_ver}" if os.path.exists(e_abs) else "",
-            "spoken_text": f"{card['zh_meaning']} {card['why_line']} {card['form_line']}",
-        }
-        lspec = listen_specs.get(qid)
-        if lspec:
-            stem_fn = lspec["stem_fn"]
-            opt_spk = lspec["opt_spk"]
-            num_fns = [f"num_{opt_spk}_1.mp3", f"num_{opt_spk}_2.mp3", f"num_{opt_spk}_3.mp3"]
-            all_lp_exist = (
-                os.path.exists(os.path.join(AUDIO_DIR, stem_fn))
-                and all(os.path.exists(os.path.join(AUDIO_DIR, nf)) for nf in num_fns)
-                and all(os.path.exists(os.path.join(AUDIO_DIR, ofn)) for _, ofn in lspec["opt_files"])
-            )
-            if all_lp_exist:
-                stem_ver = new_manifest.get(stem_fn, hashes_lp.get(stem_fn, ""))[:8]
-                meta_entry["listen_parts"] = {
-                    "stem": f"./audio/{stem_fn}?v={stem_ver}",
-                    "nums": [f"./audio/{nf}" for nf in num_fns],
-                    "opts": {
-                        c_lbl: f"./audio/{ofn}?v={new_manifest.get(ofn, hashes_lp.get(ofn, ''))[:8]}"
-                        for c_lbl, ofn in lspec["opt_files"]
-                    },
-                }
-        new_manifest[f"meta:{qid}"] = meta_entry
+            q_ver = new_manifest.get(q_file, qh)[:8]
+            e_ver = new_manifest.get(e_file, eh)[:8]
+            meta_entry = {
+                "q_audio": f"./audio/{q_file}?v={q_ver}" if os.path.exists(q_abs) else "",
+                "exp_audio": f"./audio/{e_file}?v={e_ver}" if os.path.exists(e_abs) else "",
+                "spoken_text": f"{card['zh_meaning']} {card['why_line']} {card['form_line']}",
+            }
+            lspec = listen_specs.get(qid)
+            if lspec:
+                stem_fn = lspec["stem_fn"]
+                opt_spk = lspec["opt_spk"]
+                num_fns = [f"num_{opt_spk}_1.mp3", f"num_{opt_spk}_2.mp3", f"num_{opt_spk}_3.mp3"]
+                all_lp_exist = (
+                    os.path.exists(os.path.join(AUDIO_DIR, stem_fn))
+                    and all(os.path.exists(os.path.join(AUDIO_DIR, nf)) for nf in num_fns)
+                    and all(os.path.exists(os.path.join(AUDIO_DIR, ofn)) for _, ofn in lspec["opt_files"])
+                )
+                if all_lp_exist:
+                    stem_ver = new_manifest.get(stem_fn, hashes_lp.get(stem_fn, ""))[:8]
+                    meta_entry["listen_parts"] = {
+                        "stem": f"./audio/{stem_fn}?v={stem_ver}",
+                        "nums": [f"./audio/{nf}" for nf in num_fns],
+                        "opts": {
+                            c_lbl: f"./audio/{ofn}?v={new_manifest.get(ofn, hashes_lp.get(ofn, ''))[:8]}"
+                            for c_lbl, ofn in lspec["opt_files"]
+                        },
+                    }
+            new_manifest[f"meta:{qid}"] = meta_entry
 
     # Word pronunciations across full sentence & phrase lexicon
     merged_words = dict(SENTENCE_LEXICON)
@@ -685,35 +687,36 @@ async def main():
         except Exception:
             pass
 
+    if not vocab_only:
+        word_sem = asyncio.Semaphore(8)
 
-    word_sem = asyncio.Semaphore(8)
+        async def process_word(surface, info):
+            alias = info.get("audio_alias")
+            if alias and alias in old_words:
+                alias_abs = os.path.join(BASE_DIR, old_words[alias].split("?")[0].lstrip("./"))
+                if os.path.exists(alias_abs):
+                    new_manifest["words"][surface] = old_words[alias]
+                    return
+            speak_str = surface.replace("〜", "").strip()
+            if surface in KANJI_FORCE_KANA and info.get("kana"):
+                speak_str = info["kana"]
+            w_hash = hashlib.sha256(speak_str.encode("utf-8")).hexdigest()[:10]
+            w_file = f"w_{w_hash}.mp3"
+            w_abs = os.path.join(WORDS_AUDIO_DIR, w_file)
+            if not os.path.exists(w_abs) and can_synth:
+                await synth_raw_clip("JF", "ja-JP-NanamiNeural", "+0%", speak_str, w_abs, word_sem)
+            if os.path.exists(w_abs):
+                new_manifest["words"][surface] = f"./audio/words/{w_file}"
 
-    async def process_word(surface, info):
-        alias = info.get("audio_alias")
-        if alias and alias in old_words:
-            alias_abs = os.path.join(BASE_DIR, old_words[alias].split("?")[0].lstrip("./"))
-            if os.path.exists(alias_abs):
-                new_manifest["words"][surface] = old_words[alias]
-                return
-        speak_str = surface.replace("〜", "").strip()
-        if surface in KANJI_FORCE_KANA and info.get("kana"):
-            speak_str = info["kana"]
-        w_hash = hashlib.sha256(speak_str.encode("utf-8")).hexdigest()[:10]
-        w_file = f"w_{w_hash}.mp3"
-        w_abs = os.path.join(WORDS_AUDIO_DIR, w_file)
-        if not os.path.exists(w_abs) and can_synth:
-            await synth_raw_clip("JF", "ja-JP-NanamiNeural", "+0%", speak_str, w_abs, word_sem)
-        if os.path.exists(w_abs):
-            new_manifest["words"][surface] = f"./audio/words/{w_file}"
+        await asyncio.gather(*(process_word(surf, info) for surf, info in merged_words.items()))
 
-    await asyncio.gather(*(process_word(surf, info) for surf, info in merged_words.items()))
-
-    # Studio Bilingual Dual-Mode Vocab Cards (Japanese word+chunk + warm Mandarin meaning)
-    from vocab_cards import build_dynamic_vocab_card
-    vc_all_cards = dict(VOCAB_CARDS)
-    for vw, vinfo in merged_words.items():
-        if vw not in vc_all_cards and os.path.exists(live_path):
-            pass
+    # Studio Bilingual Dual-Mode Vocab Cards (Zen v20: Word -> Spoken Pronunciation Mnemonic FIRST -> Short Phrase AFTER)
+    from vocab_cards import build_dynamic_vocab_card, build_vocab_audio_spec
+    vc_all_cards = {}
+    for vw, vspec in VOCAB_CARDS.items():
+        c = dict(vspec)
+        c["word"] = vw
+        vc_all_cards[vw] = c
     if os.path.exists(live_path):
         try:
             with open(live_path, encoding="utf-8") as lf:
@@ -724,47 +727,88 @@ async def main():
         except Exception:
             pass
 
+    def _to_bilingual_turns(txt: str) -> list:
+        txt = str(txt or "").strip()
+        if not txt:
+            return []
+        return expand_exp_turn("T", txt, False) if JA_SPAN_RE.search(txt) else [("T_VC", txt)]
+
     vc_jobs = {}
     vc_specs = {}
-    vc_tag = "edge:Brian_v19"
+    vc_tag = "edge:Brian_v20_hookfirst"
     for vw, vc in vc_all_cards.items():
         vc_id = hashlib.sha256(vw.encode("utf-8")).hexdigest()[:10]
         mode = vc.get("mode", "kana_meaning")
-        ja_s = str(vc.get("ja_speak") or vw).strip()
-        zh_s = str(vc["zh_speak"] if "zh_speak" in vc else vc.get("zh", "")).strip()
-        zh_turns = (expand_exp_turn("T", zh_s, False) if JA_SPAN_RE.search(zh_s) else [("T_VC", zh_s)]) if zh_s else []
+        aspec = build_vocab_audio_spec(vc)
+        word_ja = aspec["word_ja"]
+        chunk_ja = aspec["chunk_ja"]
+        reveal_turns = _to_bilingual_turns(aspec["reveal_spoken"])
+        hook_only_turns = _to_bilingual_turns(aspec["hook_spoken"])
+
+        # Dedicated tap-to-hear mnemonic clip: target word -> pronunciation mnemonic
+        hook_turns = [("JF", word_ja), ("PAUSE", 0.14), *hook_only_turns] if hook_only_turns else [("JF", word_ja)]
+        hook_file = f"vc_{vc_id}_hook.mp3"
+        hook_hash = hashlib.sha256((f"v20vch:{vc_tag}:" + json.dumps(hook_turns, ensure_ascii=False)).encode("utf-8")).hexdigest()[:10]
+
         if mode == "kanji_read":
-            rev_turns = [("JF", ja_s), ("PAUSE", 0.22), *zh_turns] if zh_turns else [("JF", ja_s)]
+            # Front is silent; Reveal & Replay: Word (JA) -> Mnemonic (CN+EN) FIRST -> Short Phrase (JA) AFTER
+            rev_turns = [("JF", word_ja)]
+            if reveal_turns:
+                rev_turns.extend([("PAUSE", 0.16), *reveal_turns])
+            if chunk_ja:
+                rev_turns.extend([("PAUSE", 0.22), ("JF", chunk_ja)])
             rev_file = f"vc_{vc_id}_rev.mp3"
-            rev_hash = hashlib.sha256((f"v19vc:{vc_tag}:" + json.dumps(rev_turns, ensure_ascii=False)).encode("utf-8")).hexdigest()[:10]
-            vc_specs[vw] = {"mode": mode, "front": None, "rev": (rev_file, rev_hash, rev_turns), "full": (rev_file, rev_hash, rev_turns)}
-            rev_abs = os.path.join(WORDS_AUDIO_DIR, rev_file)
-            if old_vc_hashes.get(rev_file) != rev_hash or not os.path.exists(rev_abs):
-                vc_jobs[rev_file] = (rev_hash, rev_turns)
+            rev_hash = hashlib.sha256((f"v20vc:{vc_tag}:" + json.dumps(rev_turns, ensure_ascii=False)).encode("utf-8")).hexdigest()[:10]
+            vc_specs[vw] = {
+                "mode": mode,
+                "front": None,
+                "rev": (rev_file, rev_hash, rev_turns),
+                "full": (rev_file, rev_hash, rev_turns),
+                "hook": (hook_file, hook_hash, hook_turns),
+            }
+            for fn, fh, ft in (vc_specs[vw]["rev"], vc_specs[vw]["hook"]):
+                f_abs = os.path.join(WORDS_AUDIO_DIR, fn)
+                if old_vc_hashes.get(fn) != fh or not os.path.exists(f_abs):
+                    vc_jobs[fn] = (fh, ft)
         else:
-            front_turns = [("JF", ja_s)]
-            rev_turns = list(zh_turns) if zh_turns else [("JF", ja_s)]
-            full_turns = [("JF", ja_s), ("PAUSE", 0.22), *zh_turns] if zh_turns else [("JF", ja_s)]
+            # Front: crisp target word ONLY (forces clean retrieval before reveal)
+            front_turns = [("JF", word_ja)]
+            # Reveal: Meaning + Mnemonic FIRST -> Short Phrase (JA) AFTER
+            rev_turns = list(reveal_turns)
+            if chunk_ja:
+                if rev_turns:
+                    rev_turns.append(("PAUSE", 0.22))
+                rev_turns.append(("JF", chunk_ja))
+            if not rev_turns:
+                rev_turns = [("JF", word_ja)]
+            # Full / Replay: Word (JA) -> Meaning + Mnemonic FIRST -> Short Phrase (JA) AFTER
+            full_turns = [("JF", word_ja)]
+            if reveal_turns:
+                full_turns.extend([("PAUSE", 0.16), *reveal_turns])
+            if chunk_ja:
+                full_turns.extend([("PAUSE", 0.22), ("JF", chunk_ja)])
+
             front_file = f"vc_{vc_id}_front.mp3"
             rev_file = f"vc_{vc_id}_rev.mp3"
             full_file = f"vc_{vc_id}_full.mp3"
-            front_hash = hashlib.sha256(("v19vcf:" + json.dumps(front_turns, ensure_ascii=False)).encode("utf-8")).hexdigest()[:10]
-            rev_hash = hashlib.sha256((f"v19vcr:{vc_tag}:" + json.dumps(rev_turns, ensure_ascii=False)).encode("utf-8")).hexdigest()[:10]
-            full_hash = hashlib.sha256((f"v19vcx:{vc_tag}:" + json.dumps(full_turns, ensure_ascii=False)).encode("utf-8")).hexdigest()[:10]
+            front_hash = hashlib.sha256((f"v20vcf:{vc_tag}:" + json.dumps(front_turns, ensure_ascii=False)).encode("utf-8")).hexdigest()[:10]
+            rev_hash = hashlib.sha256((f"v20vcr:{vc_tag}:" + json.dumps(rev_turns, ensure_ascii=False)).encode("utf-8")).hexdigest()[:10]
+            full_hash = hashlib.sha256((f"v20vcx:{vc_tag}:" + json.dumps(full_turns, ensure_ascii=False)).encode("utf-8")).hexdigest()[:10]
             vc_specs[vw] = {
                 "mode": mode,
                 "front": (front_file, front_hash, front_turns),
                 "rev": (rev_file, rev_hash, rev_turns),
                 "full": (full_file, full_hash, full_turns),
+                "hook": (hook_file, hook_hash, hook_turns),
             }
-            for fn, fh, ft in (vc_specs[vw]["front"], vc_specs[vw]["rev"], vc_specs[vw]["full"]):
+            for fn, fh, ft in (vc_specs[vw]["front"], vc_specs[vw]["rev"], vc_specs[vw]["full"], vc_specs[vw]["hook"]):
                 f_abs = os.path.join(WORDS_AUDIO_DIR, fn)
                 if old_vc_hashes.get(fn) != fh or not os.path.exists(f_abs):
                     vc_jobs[fn] = (fh, ft)
 
     vc_built_ok = set()
     if can_synth and vc_jobs:
-        vc_tmp = tempfile.mkdtemp(prefix="n3_vc_v19_")
+        vc_tmp = tempfile.mkdtemp(prefix="n3_vc_v20_")
         try:
             vc_clips = {}
             vc_pauses = set()
@@ -810,13 +854,13 @@ async def main():
                 if stitch_turns(turns, vc_lookup, vc_sil, out_abs, vc_tmp, fn.replace(".mp3", "")):
                     vc_built_ok.add(fn)
                     new_manifest["vocab_card_hashes"][fn] = fh
-            print(f"Synthesized {len(vc_built_ok)}/{len(vc_jobs)} bilingual vocab card MP3s.")
+            print(f"Synthesized {len(vc_built_ok)}/{len(vc_jobs)} bilingual vocab card MP3s (v20 hook-first).")
         finally:
             shutil.rmtree(vc_tmp, ignore_errors=True)
 
     for vw, spec in vc_specs.items():
         entry = {}
-        for slot in ("front", "rev", "full"):
+        for slot in ("front", "rev", "full", "hook"):
             item = spec.get(slot)
             if not item:
                 entry[slot] = ""
@@ -832,17 +876,18 @@ async def main():
                 entry[slot] = ""
         new_manifest["vocab_cards"][vw] = entry
 
-    done_txt = "今天这五十个考点全部过关了。再去听一段三人闲聊，一百二十分就稳稳拿住了，好好歇会儿吧。"
-    done_hash = hashlib.sha256((f"v18:{det_tag}:" + done_txt).encode("utf-8")).hexdigest()[:12]
-    done_abs = os.path.join(AUDIO_DIR, "done.mp3")
-    if (old_manifest.get("done.mp3") != done_hash or not os.path.exists(done_abs)) and can_synth:
-        await synth_raw_clip("T", voice_map["T"][0], voice_map["T"][1], done_txt, done_abs, sem)
-    if os.path.exists(done_abs):
-        new_manifest["done.mp3"] = done_hash
+    if not vocab_only:
+        done_txt = "今天这五十个考点全部过关了。再去听一段三人闲聊，一百二十分就稳稳拿住了，好好歇会儿吧。"
+        done_hash = hashlib.sha256((f"v18:{det_tag}:" + done_txt).encode("utf-8")).hexdigest()[:12]
+        done_abs = os.path.join(AUDIO_DIR, "done.mp3")
+        if (old_manifest.get("done.mp3") != done_hash or not os.path.exists(done_abs)) and can_synth:
+            await synth_raw_clip("T", voice_map["T"][0], voice_map["T"][1], done_txt, done_abs, sem)
+        if os.path.exists(done_abs):
+            new_manifest["done.mp3"] = done_hash
 
     with open(MANIFEST_PATH, "w", encoding="utf-8") as f:
         json.dump(new_manifest, f, ensure_ascii=False, indent=2)
-    print(f"Verified {len(CARDS_75)} studio Zen v18 Q/Exp pairs + {len(new_manifest['words'])} word MP3s + {len(new_manifest['vocab_cards'])} dual-mode vocab cards.")
+    print(f"Verified {len(CARDS_75)} studio Zen v18 Q/Exp pairs + {len(new_manifest['words'])} word MP3s + {len(new_manifest['vocab_cards'])} dual-mode vocab cards (vocab_only={vocab_only}).")
 
 
 if __name__ == "__main__":
