@@ -1227,3 +1227,16 @@
 {"id": "N3-L28", "point": "N3L-284", "choice": "えっ、もう終わっちゃったの？行きたかったのに。", "correct": "true", "ask_again": "false", "ts": "2026-11-23T07:24:02.000Z"}
 {"id": "VAR9-18", "point": "ぶらぶら", "choice": "ぶらぶら", "correct": "true", "ask_again": "false", "ts": "2026-11-23T07:24:12.000Z"}
 {"id": "VAR6-18", "point": "からから", "choice": "からから", "correct": "true", "ask_again": "false", "ts": "2026-11-23T07:24:18.000Z"}
+{"id": "GA-G-028", "point": "〜にちがいない", "choice": "盘点:陌生", "correct": "false", "ask_again": "false", "ts": "2026-11-23T07:34:26.000Z"}
+{"id": "GA-G-086", "point": "〜はずがない", "choice": "盘点:本能", "correct": "true", "ask_again": "false", "ts": "2026-11-23T07:34:33.000Z"}
+{"id": "GA-G-092", "point": "〜べきだ", "choice": "盘点:本能", "correct": "true", "ask_again": "false", "ts": "2026-11-23T07:34:38.000Z"}
+{"id": "GA-G-104", "point": "〜わけにはいかない", "choice": "盘点:看懂", "correct": "true", "ask_again": "false", "ts": "2026-11-23T07:34:45.000Z"}
+{"id": "GA-G-011", "point": "〜あまり（に）", "choice": "盘点:看懂", "correct": "true", "ask_again": "false", "ts": "2026-11-23T07:34:48.000Z"}
+{"id": "GA-G-052", "point": "〜せいで", "choice": "盘点:本能", "correct": "true", "ask_again": "false", "ts": "2026-11-23T07:34:51.000Z"}
+{"id": "GA-G-082", "point": "〜に比べて", "choice": "盘点:看懂", "correct": "true", "ask_again": "false", "ts": "2026-11-23T07:34:56.000Z"}
+{"id": "GA-G-010", "point": "〜あいだ（に）", "choice": "盘点:陌生", "correct": "false", "ask_again": "false", "ts": "2026-11-23T07:35:03.000Z"}
+{"id": "GA-G-055", "point": "〜たとたん", "choice": "盘点:易混", "correct": "false", "ask_again": "false", "ts": "2026-11-23T07:35:13.000Z"}
+{"id": "GA-G-056", "point": "〜たびに", "choice": "盘点:本能", "correct": "true", "ask_again": "false", "ts": "2026-11-23T07:35:16.000Z"}
+{"id": "GA-G-096", "point": "〜まま", "choice": "盘点:本能", "correct": "true", "ask_again": "false", "ts": "2026-11-23T07:35:23.000Z"}
+{"id": "GA-GX-08", "point": "せっかく〜のに", "choice": "盘点:陌生", "correct": "false", "ask_again": "false", "ts": "2026-11-23T07:35:29.000Z"}
+{"id": "GA-G-031", "point": "〜ばかりか", "choice": "盘点:陌生", "correct": "false", "ask_again": "false", "ts": "2026-11-23T07:35:36.000Z"}
