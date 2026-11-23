@@ -255,6 +255,54 @@ def apply_practice_logs(state: dict, fallback_day_tag: str = "") -> int:
                         }
                     continue
 
+                # Automaticity latency signal ("HES:<qid>"): gentle spacing nudge without penalizing streak
+                if rec_id.startswith("HES:") or choice == "犹豫过关":
+                    day_tag_h = _iso_to_day_tag(ts, fallback_day_tag)
+                    if pt:
+                        hes_map = state.setdefault("hesitant_points", {})
+                        hes_map[pt] = max(str(hes_map.get(pt) or ""), day_tag_h)
+                    continue
+
+                # Post-Listening 5-Min Contextual Review ("RV:<id>"):
+                # - "听后复盘:过": log episodic verification without falsely inflating cross-day 3/3 true green
+                # - "听后复盘:重学": prioritize into tomorrow's Quiz/Vocab + hold podcast pure-JA lock for 1 gentle re-bridge!
+                if rec_id.startswith("RV:") or choice.startswith("听后复盘:"):
+                    day_tag_rv = _iso_to_day_tag(ts, fallback_day_tag)
+                    day_iso_rv = f"{day_tag_rv[:4]}-{day_tag_rv[4:6]}-{day_tag_rv[6:8]}" if len(day_tag_rv) == 8 else ""
+                    if choice == "听后复盘:重学" and pt:
+                        applied += 1
+                        rq = state.setdefault("radio_relearn_queue", {})
+                        rq[pt] = max(str(rq.get(pt) or ""), day_tag_rv)
+                        if pt in g_map:
+                            g_map[pt]["status"] = "orange"
+                            g_map[pt]["streak"] = min(1, _cur_streak(g_map[pt]))
+                            g_map[pt]["last_ng_date"] = day_tag_rv
+                        elif pt in h_map or pt in h_name_map:
+                            hp = h_map.get(pt) or h_name_map.get(pt)
+                            hp["status"] = "orange"
+                            hp["streak"] = min(1, _cur_streak(hp))
+                            hp["last_ng_date"] = day_tag_rv
+                        elif pt in l_map or pt in l_name_map:
+                            lp = l_map.get(pt) or l_name_map.get(pt)
+                            lp["status"] = "orange"
+                            lp["streak"] = min(1, _cur_streak(lp))
+                            lp["last_ng_date"] = day_tag_rv
+                        else:
+                            vp = v_map.get(pt) or _enroll_vocab_if_needed(state, v_map, pt, extra_meta, "red")
+                            if vp is not None:
+                                vp["status"] = "red"
+                                vp["streak"] = min(1, _cur_streak(vp))
+                                vp["last_ng_date"] = day_tag_rv
+                        try:
+                            import immersion_vocab_engine as _ive_rv
+                            _ive_rv.flag_relearn_words([pt], day_iso_rv or "2026-11-22")
+                        except Exception:
+                            pass
+                    elif pt:
+                        rv_ok = state.setdefault("radio_verified_points", {})
+                        rv_ok[pt] = max(str(rv_ok.get(pt) or ""), day_tag_rv)
+                    continue
+
                 # Never auto-promote passive timer events
                 if choice == "闪卡:顺过":
                     continue

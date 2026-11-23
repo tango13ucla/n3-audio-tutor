@@ -729,15 +729,33 @@ except Exception:
     _days_to_exam = 14
 
 
+_hesitant_points = set((live_state.get("hesitant_points") or {}).keys())
+_radio_relearn_points = set((live_state.get("radio_relearn_queue") or {}).keys())
+
+
 def _is_active_miss(p: dict) -> bool:
     st = resolve_point_status(p["point_key"])
+    qid = p["id"]
+    pk = p["point_key"]
+    if pk in _radio_relearn_points or qid in _radio_relearn_points:
+        return True
     if st == "green":
         return False
     if st in ("red", "orange"):
         return True
-    qid = p["id"]
-    pk = p["point_key"]
     return (qid in recent_weak_keys) or (pk in recent_weak_keys)
+
+
+def _expanding_min_gap(streak: int, is_hesitant: bool) -> int:
+    """FSRS/Cepeda/Nakata expanding spacing gap scaled to exam horizon & automaticity."""
+    if _days_to_exam <= 4:
+        return 1
+    if streak >= 2:
+        base = 4 if _days_to_exam > 10 else 3
+        return max(2, base - 1) if is_hesitant else base
+    if streak == 1:
+        return 1 if is_hesitant else 2
+    return 1
 
 
 def _spaced_wave_key(p: dict, allow_miss_top: bool = True):
@@ -747,22 +765,23 @@ def _spaced_wave_key(p: dict, allow_miss_top: bool = True):
     streak = resolve_point_streak(pk)
     dsl = _days_since_last(qid)
     is_miss = _is_active_miss(p)
+    is_hesitant = (pk in _hesitant_points) or (qid in _hesitant_points)
     in_focus = 1 if (qid in MEMORY_FOCUS or pk in MEMORY_FOCUS) else 0
     if st == "green":
         return (5, -dsl, -p["exam_weight"], qid)
     if is_miss and allow_miss_top:
         return (0, -p["roi_score"], -p["exam_weight"], qid)
     if dsl >= 999:
-        # Tier 1: Brand-new unseen N3 syllabus point — rollout systematically by exam ROI!
+        # Tier 1: Brand-new unseen syllabus point — rollout systematically by exam ROI!
         return (1, -p["exam_weight"], -in_focus, -p["roi_score"], qid)
-    min_gap = 1 if _days_to_exam <= 4 else 2
+    min_gap = _expanding_min_gap(streak, is_hesitant)
     if dsl >= min_gap and not is_miss:
-        # Tier 2: Spaced-repetition due (healthy >= 2-day confirmation gap before exam week)
+        # Tier 2: Spaced-repetition due (expanding 1d -> 2d -> 3-4d confirmation gap; hesitant points resurface slightly sooner)
         return (2, -dsl, streak, -p["exam_weight"], -in_focus, qid)
     if is_miss:
         # Tier 3: Overflow active misses beyond the 50% per-subject miss cap
         return (3, -p["roi_score"], -p["exam_weight"], qid)
-    # Tier 4: Recently practiced yellow (days_since == 1) — only used when fresh & due are exhausted
+    # Tier 4: Recently practiced yellow — only used when fresh & due are exhausted
     return (4, streak, -p["exam_weight"], -p["roi_score"], qid)
 
 
@@ -790,6 +809,23 @@ def select_balanced_spaced_deck(candidates: list[dict], cap: int) -> list[dict]:
         chosen_ids.add(p["id"])
     if len(chosen) >= cap:
         return chosen[:cap]
+
+    # Step B2 (Long-Horizon N2 Stability Decay Guard, FSRS DSR): when exam > 21 days away,
+    # reserve up to 3 silent maintenance slots for 3/3 true-green items unseen for >= 14 days
+    # so early-month grammar never silently fades over a 115-day N2 cycle.
+    if _days_to_exam > 21 and cap >= 25:
+        stale_greens = [
+            p for p in candidates
+            if p["id"] not in chosen_ids
+            and resolve_point_status(p["point_key"]) == "green"
+            and _days_since_last(p["id"]) >= 14
+        ]
+        stale_greens.sort(key=lambda p: (-_days_since_last(p["id"]), -p["exam_weight"], p["id"]))
+        for p in stale_greens[:3]:
+            if len(chosen) >= cap:
+                break
+            chosen.append(p)
+            chosen_ids.add(p["id"])
 
     # Step C: Exam-ROI Balanced Subject Quotas (24 Grammar / 10 Listening / 8 Henkei / 8 Vocab for cap=50)
     remaining_cap = cap - len(chosen)
@@ -845,7 +881,7 @@ def select_balanced_spaced_deck(candidates: list[dict], cap: int) -> list[dict]:
             chosen.append(p)
             chosen_ids.add(p["id"])
 
-    # Third pass: only if entire N3 syllabus non-green pool < cap, fill remaining with oldest green review cards
+    # Third pass: only if entire syllabus non-green pool < cap, fill remaining with oldest green review cards
     if len(chosen) < cap:
         greens = [p for p in candidates if p["id"] not in chosen_ids]
         greens.sort(key=lambda p: _spaced_wave_key(p, allow_miss_top=False))
@@ -2475,6 +2511,244 @@ html = r"""<!DOCTYPE html>
     font-weight: 600;
   }
 
+  /* ================= 4B. POST-LISTENING 5-MIN CONTEXTUAL REVIEW ("听后 5 分") ================= */
+  .rv-entry-link {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--ink-2);
+    letter-spacing: 0.04em;
+    padding: 4px 2px;
+    background: transparent;
+    border: none;
+    white-space: nowrap;
+    transition: color 0.18s ease, opacity 0.18s ease;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .rv-entry-link:active { opacity: 0.52; }
+  .rv-entry-link.is-ready { color: var(--moss); font-weight: 600; }
+  .rv-entry-link.is-done { color: var(--ink-3); }
+
+  #radio-player-stage.hidden,
+  #radio-review-stage.hidden { display: none !important; }
+  #radio-player-stage,
+  #radio-review-stage {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .rv-stage-card {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    scrollbar-width: none;
+    touch-action: pan-y;
+    will-change: transform, opacity;
+  }
+  .rv-stage-card::-webkit-scrollbar { display: none; }
+  .rv-stage-card.settling { transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease; }
+  .rv-stage-card.fly-right { transition: transform 0.22s ease-in, opacity 0.2s ease-in; transform: translate3d(115%, -14px, 0) rotate(9deg) !important; opacity: 0 !important; }
+  .rv-stage-card.fly-left { transition: transform 0.22s ease-in, opacity 0.2s ease-in; transform: translate3d(-115%, -14px, 0) rotate(-9deg) !important; opacity: 0 !important; }
+
+  .rv-focal {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 18px 0 14px;
+    gap: 14px;
+  }
+  .rv-focal.is-relearn {
+    justify-content: flex-start;
+    padding-top: 12px;
+    gap: 12px;
+  }
+  .rv-story-tag {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--moss);
+    letter-spacing: 0.08em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .rv-n2-dot {
+    color: var(--bengara);
+    font-weight: 600;
+  }
+  .rv-head {
+    margin: 0;
+    font-family: var(--serif-jp);
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--sumi);
+    line-height: 1.35;
+    letter-spacing: 0.02em;
+  }
+  .rv-cue-line {
+    margin: 0;
+    font-size: 15px;
+    color: var(--ink-3);
+    line-height: 1.65;
+  }
+  .rv-clip-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-top: 2px;
+  }
+  .rv-clip-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 0;
+    background: transparent;
+    border: none;
+    font-size: 14.5px;
+    font-weight: 500;
+    color: var(--moss);
+    letter-spacing: 0.04em;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .rv-clip-btn.playing { color: var(--bengara); font-weight: 600; }
+  .rv-clip-btn.quiet { color: var(--ink-3); font-size: 13.5px; }
+  .rv-clip-btn:active { opacity: 0.55; }
+
+  .rv-reveal-area {
+    margin-top: 4px;
+    padding-top: 14px;
+    border-top: 1px solid var(--hairline);
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+  }
+  .rv-reveal-area.shown {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  .rv-kana-line {
+    font-size: 19px;
+    font-weight: 500;
+    color: var(--ink-2);
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+  }
+  .rv-zh-line {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--sumi);
+    line-height: 1.5;
+    margin-bottom: 8px;
+  }
+  .rv-quote {
+    margin: 0;
+    padding-left: 12px;
+    border-left: 2px solid var(--hairline-strong);
+    font-size: 15.5px;
+    line-height: 1.78;
+    color: var(--ink-2);
+  }
+  .rv-quote-spk {
+    font-size: 12.5px;
+    color: var(--ink-3);
+    margin-right: 6px;
+    letter-spacing: 0.06em;
+  }
+  .rv-ja-ex {
+    margin: 6px 0 0;
+    font-family: var(--serif-jp);
+    font-size: 19.5px;
+    line-height: 1.7;
+    color: var(--sumi);
+  }
+  .rv-note-line {
+    margin: 4px 0 0;
+    font-size: 14.5px;
+    line-height: 1.72;
+    color: var(--ink-2);
+  }
+  .rv-twin-line {
+    margin: 2px 0 0;
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--ink-3);
+  }
+  .rv-shadow-row {
+    margin-top: 6px;
+    padding-top: 10px;
+    border-top: 1px solid var(--hairline);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .rv-shadow-hint {
+    font-size: 13px;
+    color: var(--ink-3);
+    letter-spacing: 0.03em;
+  }
+  .rv-tap-hint {
+    font-size: 13px;
+    color: var(--ink-3);
+    letter-spacing: 0.04em;
+    margin-top: 2px;
+  }
+  .rv-dock {
+    flex-shrink: 0;
+    padding-top: 10px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+  }
+  .rv-btn-relearn {
+    height: 48px;
+    padding: 0 18px;
+    border: 1px solid rgba(154, 70, 51, 0.34);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--bengara);
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .rv-btn-relearn:active { background: var(--tap-bg); }
+  .rv-btn-pass {
+    flex: 1;
+    max-width: 210px;
+    height: 48px;
+    padding: 0 20px;
+    border-radius: 8px;
+    background: var(--sumi);
+    color: var(--sheet);
+    font-size: 15.5px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .rv-btn-pass:active { opacity: 0.84; transform: scale(0.985); }
+  .rv-done-list {
+    margin: 8px 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    font-size: 15px;
+    color: var(--bengara);
+    font-family: var(--serif-jp);
+  }
+
   /* ================= 5. ZEN LEDGER ("总表") ================= */
   #dash-view {
     position: relative;
@@ -2896,6 +3170,12 @@ html = r"""<!DOCTYPE html>
     color: var(--sumi);
     line-height: 1.46;
     letter-spacing: 0.02em;
+    transition: filter 0.28s ease, opacity 0.28s ease;
+  }
+  .vc-chunk.ear-veil {
+    filter: blur(8px);
+    opacity: 0.34;
+    user-select: none;
   }
   .vc-hl {
     font-weight: 600;
@@ -3495,42 +3775,47 @@ html = r"""<!DOCTYPE html>
   <!-- 3B. THREE-HOST CULTURAL SALON SANCTUARY ("随身听") -->
   <section class="zen-panel hidden" id="radio-view">
     <div class="stage-wrap">
-      <div class="meta-bar">
-        <span class="overline" id="radio-date-pill">锵锵三人 · 文涛 · 文道 · 子东</span>
-      </div>
-
-      <div class="radio-center">
-        <div class="radio-chap" id="radio-chap-lbl">逐客茶</div>
-        <h2 class="radio-topic" id="radio-live-title">日本文化夜话</h2>
-        <p class="radio-ja" id="radio-live-ja"></p>
-        <div class="inline-lex empty" id="radio-inline-lex" data-surface="">
-          <div class="ilex-top">
-            <div class="ilex-head"><span class="ilex-surf"></span><span class="ilex-kana"></span></div>
-            <button class="ilex-speak" type="button">发音</button>
-          </div>
-          <div class="ilex-zh"></div>
-          <div class="ilex-meta"></div>
+      <div id="radio-player-stage">
+        <div class="meta-bar">
+          <span class="overline" id="radio-date-pill">锵锵三人 · 文涛 · 文道 · 子东</span>
+          <button type="button" class="rv-entry-link" id="radio-review-entry" onclick="openRadioReview()">听后 5 分 ›</button>
         </div>
-      </div>
 
-      <div class="radio-dock">
-        <div class="chapter-strip" id="radio-chap-pills"></div>
-
-        <div class="scrub-wrap">
-          <input type="range" class="zen-range" id="radio-seek" min="0" max="2100" value="0" step="1" oninput="onRadioScrub(this.value)" />
-          <div class="time-pair">
-            <span id="radio-cur-time">00:00</span>
-            <span id="radio-tot-time">35:00</span>
+        <div class="radio-center">
+          <div class="radio-chap" id="radio-chap-lbl">逐客茶</div>
+          <h2 class="radio-topic" id="radio-live-title">日本文化夜话</h2>
+          <p class="radio-ja" id="radio-live-ja"></p>
+          <div class="inline-lex empty" id="radio-inline-lex" data-surface="">
+            <div class="ilex-top">
+              <div class="ilex-head"><span class="ilex-surf"></span><span class="ilex-kana"></span></div>
+              <button class="ilex-speak" type="button">发音</button>
+            </div>
+            <div class="ilex-zh"></div>
+            <div class="ilex-meta"></div>
           </div>
         </div>
 
-        <div class="transport-row">
-          <button class="radio-spd-pill" id="radio-spd-btn" onclick="cycleRadioSpeed()">1.0x</button>
-          <button class="step-time-btn" onclick="seekRadioBy(-15)">-15s</button>
-          <button class="play-toggle-btn" id="radio-play-btn" onclick="toggleRadioPlay()">播放</button>
-          <button class="step-time-btn" onclick="seekRadioBy(15)">+15s</button>
+        <div class="radio-dock">
+          <div class="chapter-strip" id="radio-chap-pills"></div>
+
+          <div class="scrub-wrap">
+            <input type="range" class="zen-range" id="radio-seek" min="0" max="2100" value="0" step="1" oninput="onRadioScrub(this.value)" />
+            <div class="time-pair">
+              <span id="radio-cur-time">00:00</span>
+              <span id="radio-tot-time">35:00</span>
+            </div>
+          </div>
+
+          <div class="transport-row">
+            <button class="radio-spd-pill" id="radio-spd-btn" onclick="cycleRadioSpeed()">1.0x</button>
+            <button class="step-time-btn" onclick="seekRadioBy(-15)">-15s</button>
+            <button class="play-toggle-btn" id="radio-play-btn" onclick="toggleRadioPlay()">播放</button>
+            <button class="step-time-btn" onclick="seekRadioBy(15)">+15s</button>
+          </div>
         </div>
       </div>
+
+      <div id="radio-review-stage" class="hidden"></div>
     </div>
   </section>
 
@@ -3953,6 +4238,7 @@ function createFreshAdaptiveState() {
     radioSig: RADIO_SIG,
     flashProg: [0, 0, 0, 0],
     vocabSess: null,
+    radioReview: null,
     pts: pts,
     tappedWords: [],
     wordLookups: {},
@@ -4100,6 +4386,11 @@ function loadAdaptiveState() {
           if (!base.vocabSess || (saved.vocabSess.updatedAt || 0) >= (base.vocabSess.updatedAt || 0)) {
             base.vocabSess = saved.vocabSess;
           }
+        }
+        if (saved.radioReview && saved.radioReview.sig === RADIO_SIG && saved.radioReview.date === DATA.plan_date) {
+          const curScore = base.radioReview ? ((base.radioReview.done ? 999 : 0) + (base.radioReview.triageIdx || 0) + ((base.radioReview.tailDoneIds || []).length)) : -1;
+          const newScore = (saved.radioReview.done ? 999 : 0) + (saved.radioReview.triageIdx || 0) + ((saved.radioReview.tailDoneIds || []).length);
+          if (newScore >= curScore) base.radioReview = saved.radioReview;
         }
         if (Array.isArray(saved.tappedWords)) {
           saved.tappedWords.forEach(w => {
@@ -6081,6 +6372,7 @@ radioPlayer.addEventListener("ended", () => {
   saveAdaptiveState();
   renderGreenBoard();
   syncRadioUI(false);
+  updateRadioReviewEntryBadge();
   scheduleCloudPush(100);
 });
 radioPlayer.addEventListener("loadedmetadata", () => {
@@ -6091,6 +6383,7 @@ radioPlayer.addEventListener("loadedmetadata", () => {
     updateRadioLiveDisplay(radioPlayer.currentTime || 0);
   }
   renderGreenBoard();
+  updateRadioReviewEntryBadge();
 });
 radioPlayer.addEventListener("timeupdate", () => {
   if (pendingRadioSeekSec !== null) {
@@ -6104,12 +6397,569 @@ radioPlayer.addEventListener("timeupdate", () => {
     A.radioSig = RADIO_SIG;
     writeLocalRadioPos(t);
     saveAdaptiveState();
+    updateRadioReviewEntryBadge();
     if (Date.now() - lastRadioCloudPushMs > 60000) {
       lastRadioCloudPushMs = Date.now();
       scheduleCloudPush(400);
     }
   }
 });
+
+// ================= POST-LISTENING 5-MIN CONTEXTUAL REVIEW ("听后 5 分") =================
+// Backed by Encoding Specificity (Tulving 1973), Region of Proximal Learning (Metcalfe 2002),
+// Testing Effect (Roediger & Karpicke 2006), & Within-Session Spaced Retrieval (Nakata 2017).
+let radioReviewOpen = false;
+let rvMode = "triage"; // "triage" | "relearn" | "tail" | "done"
+let rvRevealed = false;
+let rvActiveItemId = "";
+let rvReturnMode = "triage";
+let rvAnimating = false;
+let rvClipPlayer = null;
+let rvClipEndSec = 0;
+let rvClipPlayingKey = "";
+
+function getRadioReviewItems() {
+  const arr = (DATA.radio && Array.isArray(DATA.radio.review_items)) ? DATA.radio.review_items : [];
+  return arr;
+}
+
+function getReviewItemById(id) {
+  return getRadioReviewItems().find(x => x.id === id) || null;
+}
+
+function ensureRadioReviewState(forceReset) {
+  const items = getRadioReviewItems();
+  const validIds = new Set(items.map(x => x.id));
+  if (!forceReset && A.radioReview && A.radioReview.sig === RADIO_SIG && A.radioReview.date === DATA.plan_date) {
+    A.radioReview.passedIds = (A.radioReview.passedIds || []).filter(id => validIds.has(id));
+    A.radioReview.relearnIds = (A.radioReview.relearnIds || []).filter(id => validIds.has(id));
+    A.radioReview.tailQueue = (A.radioReview.tailQueue || []).filter(id => validIds.has(id));
+    A.radioReview.tailDoneIds = (A.radioReview.tailDoneIds || []).filter(id => validIds.has(id));
+    return A.radioReview;
+  }
+  A.radioReview = {
+    sig: RADIO_SIG,
+    date: DATA.plan_date,
+    triageIdx: 0,
+    passedIds: [],
+    relearnIds: [],
+    tailQueue: [],
+    tailDoneIds: [],
+    done: items.length === 0
+  };
+  saveAdaptiveState();
+  return A.radioReview;
+}
+
+function updateRadioReviewEntryBadge() {
+  const btn = document.getElementById("radio-review-entry");
+  if (!btn) return;
+  const items = getRadioReviewItems();
+  if (!items.length) {
+    btn.style.display = "none";
+    return;
+  }
+  btn.style.display = "";
+  const st = ensureRadioReviewState(false);
+  const dur = getEffectiveRadioDuration();
+  const listenedRatio = dur > 0 ? ((A.radioMaxSec || 0) / dur) : 0;
+  btn.classList.remove("is-ready", "is-done");
+  if (st.done) {
+    btn.textContent = "已复盘 ✓";
+    btn.classList.add("is-done");
+  } else if (st.triageIdx > 0 || (st.tailQueue && st.tailQueue.length > 0)) {
+    const doneCnt = Math.min(items.length, st.triageIdx);
+    btn.textContent = `继续复盘 ${doneCnt}/${items.length} ›`;
+    btn.classList.add("is-ready");
+  } else if (listenedRatio >= 0.78) {
+    btn.textContent = "听完 · 5 分钟复盘 ›";
+    btn.classList.add("is-ready");
+  } else {
+    btn.textContent = "听后 5 分 ›";
+  }
+}
+
+function stopRadioReviewAudio() {
+  rvClipPlayingKey = "";
+  rvClipEndSec = 0;
+  try {
+    if (rvClipPlayer) {
+      rvClipPlayer.pause();
+      rvClipPlayer.ontimeupdate = null;
+      rvClipPlayer.onended = null;
+    }
+  } catch (e) {}
+  try {
+    wordPlayer.onended = null;
+    wordPlayer.onerror = null;
+    wordPlayer.pause();
+  } catch (e) {}
+  try {
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+  } catch (e) {}
+  syncRvAudioButtons();
+}
+
+function syncRvAudioButtons() {
+  document.querySelectorAll("[data-rv-aud]").forEach(el => {
+    const k = el.getAttribute("data-rv-aud");
+    el.classList.toggle("playing", !!rvClipPlayingKey && rvClipPlayingKey === k);
+  });
+}
+
+function playReviewPodcastClip(item, rateVal, toggleKey) {
+  if (!item) return;
+  const key = toggleKey || `clip_${rateVal}`;
+  if (rvClipPlayingKey === key && rvClipPlayer && !rvClipPlayer.paused) {
+    stopRadioReviewAudio();
+    return;
+  }
+  stopRadioReviewAudio();
+  if (radioInitialized && !radioPlayer.paused) {
+    radioPlayer.pause();
+    syncRadioUI(false);
+  }
+  const srcUrl = cachedRadioBlobUrl || (DATA.radio && DATA.radio.audio_url) || "";
+  if (!srcUrl) return;
+  if (!rvClipPlayer) {
+    rvClipPlayer = new Audio();
+    rvClipPlayer.preload = "metadata";
+    rvClipPlayer.playsInline = true;
+  }
+  const startS = Math.max(0, Number(item.clip_start || 0));
+  const endS = Math.max(startS + 4, Number(item.clip_end || (startS + 14)));
+  rvClipEndSec = endS;
+  rvClipPlayingKey = key;
+  syncRvAudioButtons();
+
+  const beginPlay = () => {
+    try {
+      rvClipPlayer.currentTime = startS;
+      rvClipPlayer.playbackRate = rateVal || 1.0;
+      rvClipPlayer.ontimeupdate = () => {
+        if (rvClipEndSec > 0 && (rvClipPlayer.currentTime || 0) >= rvClipEndSec) {
+          stopRadioReviewAudio();
+        }
+      };
+      rvClipPlayer.onended = () => stopRadioReviewAudio();
+      const pr = rvClipPlayer.play();
+      if (pr && typeof pr.catch === "function") pr.catch(() => stopRadioReviewAudio());
+    } catch (e) {
+      stopRadioReviewAudio();
+    }
+  };
+
+  if (rvClipPlayer.src !== srcUrl && !String(rvClipPlayer.src || "").endsWith(srcUrl.replace(/^\.\//, ""))) {
+    rvClipPlayer.src = srcUrl;
+    rvClipPlayer.onloadedmetadata = () => {
+      rvClipPlayer.onloadedmetadata = null;
+      beginPlay();
+    };
+    try { rvClipPlayer.load(); } catch (e) {}
+  } else if (rvClipPlayer.readyState >= 1) {
+    beginPlay();
+  } else {
+    rvClipPlayer.onloadedmetadata = () => {
+      rvClipPlayer.onloadedmetadata = null;
+      beginPlay();
+    };
+  }
+}
+
+function playReviewDemoSentence(item) {
+  if (!item) return;
+  if (rvClipPlayingKey === "demo") {
+    stopRadioReviewAudio();
+    return;
+  }
+  stopRadioReviewAudio();
+  rvClipPlayingKey = "demo";
+  syncRvAudioButtons();
+  const demoUrl = item.demo_audio || "";
+  const speakText = item.ja_example || item.kana || item.title || "";
+  const doneCb = () => {
+    if (rvClipPlayingKey === "demo") {
+      rvClipPlayingKey = "";
+      syncRvAudioButtons();
+    }
+  };
+  if (demoUrl) {
+    warmAudio(demoUrl).then(resolved => {
+      if (rvClipPlayingKey !== "demo") return;
+      try {
+        wordPlayer.onended = doneCb;
+        wordPlayer.onerror = () => speakUtteranceLang(speakText, "ja-JP", 0.96, doneCb);
+        wordPlayer.src = resolved || demoUrl;
+        wordPlayer.currentTime = 0;
+        wordPlayer.playbackRate = 1.0;
+        const pr = wordPlayer.play();
+        if (pr && typeof pr.catch === "function") {
+          pr.catch(() => speakUtteranceLang(speakText, "ja-JP", 0.96, doneCb));
+        }
+      } catch (e) {
+        speakUtteranceLang(speakText, "ja-JP", 0.96, doneCb);
+      }
+    });
+  } else {
+    speakUtteranceLang(speakText, "ja-JP", 0.96, doneCb);
+  }
+}
+
+function pushRadioReviewRecord(item, actionLabel, isOk) {
+  const tsSec = Math.max(TRUE_GREEN_EPOCH, nowUnixSec());
+  const ptKey = item.key || item.title;
+  const rec = {
+    id: `RV:${item.id}`,
+    point: ptKey,
+    choice: actionLabel,
+    correct: isOk ? "true" : "false",
+    ask_again: isOk ? "false" : "true",
+    ts: new Date(tsSec * 1000).toISOString()
+  };
+  if (!Array.isArray(A.recentRecords)) A.recentRecords = [];
+  A.recentRecords.push(rec);
+  if (A.recentRecords.length > 25) A.recentRecords = A.recentRecords.slice(-25);
+  const ob = loadOutbox();
+  ob.push([rec.id, rec.point, rec.choice, isOk ? 1 : 0, rec.ts]);
+  saveOutbox(ob);
+  saveAdaptiveState();
+  scheduleCloudPush(120);
+}
+
+function advanceRadioReviewPointer() {
+  const items = getRadioReviewItems();
+  const st = ensureRadioReviewState(false);
+  if (st.triageIdx < items.length) {
+    rvMode = "triage";
+    rvActiveItemId = items[st.triageIdx].id;
+    rvRevealed = false;
+  } else if (st.tailQueue && st.tailQueue.length > 0) {
+    rvMode = "tail";
+    rvActiveItemId = st.tailQueue[0];
+    rvRevealed = false;
+  } else {
+    st.done = true;
+    rvMode = "done";
+    rvActiveItemId = "";
+    saveAdaptiveState();
+  }
+  updateRadioReviewEntryBadge();
+}
+
+function openRadioReview(forceRestart) {
+  const items = getRadioReviewItems();
+  if (!items.length) return;
+  if (radioInitialized && !radioPlayer.paused) {
+    radioPlayer.pause();
+    syncRadioUI(false);
+  }
+  stopRadioReviewAudio();
+  ensureRadioReviewState(!!forceRestart);
+  radioReviewOpen = true;
+  const pStage = document.getElementById("radio-player-stage");
+  const rStage = document.getElementById("radio-review-stage");
+  if (pStage) pStage.classList.add("hidden");
+  if (rStage) rStage.classList.remove("hidden");
+  advanceRadioReviewPointer();
+  renderRadioReviewStage();
+}
+
+function closeRadioReview() {
+  stopRadioReviewAudio();
+  clearActiveWordToken();
+  radioReviewOpen = false;
+  const pStage = document.getElementById("radio-player-stage");
+  const rStage = document.getElementById("radio-review-stage");
+  if (rStage) rStage.classList.add("hidden");
+  if (pStage) pStage.classList.remove("hidden");
+  updateRadioReviewEntryBadge();
+}
+
+function revealRadioReviewCard() {
+  if (rvRevealed || rvMode === "relearn" || rvMode === "done") return;
+  rvRevealed = true;
+  const el = document.getElementById("rv-reveal-area");
+  if (el) el.classList.add("shown");
+  const hint = document.getElementById("rv-tap-hint");
+  if (hint) hint.style.display = "none";
+}
+
+function animateRvCardAndRun(dirCls, fn) {
+  const card = document.getElementById("rv-stage-card");
+  rvAnimating = true;
+  stopRadioReviewAudio();
+  if (!card) {
+    rvAnimating = false;
+    fn();
+    return;
+  }
+  card.classList.remove("settling");
+  card.classList.add(dirCls);
+  setTimeout(() => {
+    rvAnimating = false;
+    fn();
+  }, 210);
+}
+
+function handleRadioReviewPass() {
+  if (rvAnimating) return;
+  const st = ensureRadioReviewState(false);
+  const item = getReviewItemById(rvActiveItemId);
+  if (!item) return;
+
+  animateRvCardAndRun("fly-right", () => {
+    if (rvMode === "triage") {
+      if (!st.passedIds.includes(item.id)) st.passedIds.push(item.id);
+      if (item.point_id && A.pts[item.point_id]) A.pts[item.point_id].audioPrimed = true;
+      st.triageIdx += 1;
+      pushRadioReviewRecord(item, "听后复盘:过", true);
+    } else if (rvMode === "tail") {
+      st.tailQueue = (st.tailQueue || []).filter(id => id !== item.id);
+      if (!st.tailDoneIds.includes(item.id)) st.tailDoneIds.push(item.id);
+      saveAdaptiveState();
+    }
+    advanceRadioReviewPointer();
+    renderRadioReviewStage();
+  });
+}
+
+function handleRadioReviewRelearn() {
+  if (rvAnimating) return;
+  const st = ensureRadioReviewState(false);
+  const item = getReviewItemById(rvActiveItemId);
+  if (!item) return;
+  stopRadioReviewAudio();
+
+  rvReturnMode = rvMode;
+  if (!st.relearnIds.includes(item.id)) {
+    st.relearnIds.push(item.id);
+    if (!st.tailQueue.includes(item.id)) st.tailQueue.push(item.id);
+    pushRadioReviewRecord(item, "听后复盘:重学", false);
+  }
+  if (rvMode === "triage") {
+    st.triageIdx += 1;
+  } else if (rvMode === "tail") {
+    // Move to end of tail queue so it re-checks after any other flagged items
+    st.tailQueue = (st.tailQueue || []).filter(id => id !== item.id);
+    st.tailQueue.push(item.id);
+  }
+  saveAdaptiveState();
+  rvMode = "relearn";
+  rvRevealed = true;
+  renderRadioReviewStage();
+  // Immediately anchor with the exact podcast context clip (Encoding Specificity!)
+  playReviewPodcastClip(item, 1.0, "clip_1");
+}
+
+function finishRadioRelearnStep() {
+  if (rvAnimating) return;
+  stopRadioReviewAudio();
+  advanceRadioReviewPointer();
+  renderRadioReviewStage();
+}
+
+function bindRadioReviewSwipe(cardEl) {
+  if (!cardEl || rvMode === "relearn" || rvMode === "done") return;
+  let sx = 0, sy = 0, stMs = 0, tracking = false, axis = null;
+  cardEl.addEventListener("touchstart", e => {
+    if (rvAnimating || !e.touches || e.touches.length !== 1) return;
+    if (e.target && e.target.closest && e.target.closest("button, .w-tok")) return;
+    tracking = true;
+    axis = null;
+    sx = fpX(e.touches[0]);
+    sy = fpY(e.touches[0]);
+    stMs = performance.now();
+    cardEl.classList.remove("settling");
+  }, { passive: true });
+  cardEl.addEventListener("touchmove", e => {
+    if (!tracking || !e.touches || e.touches.length !== 1) return;
+    const dx = fpX(e.touches[0]) - sx;
+    const dy = fpY(e.touches[0]) - sy;
+    if (!axis) {
+      if (Math.hypot(dx, dy) < 10) return;
+      axis = Math.abs(dx) > Math.abs(dy) * 1.15 ? "x" : "y";
+    }
+    if (axis === "x") {
+      if (e.cancelable) e.preventDefault();
+      cardEl.style.transform = `translate3d(${dx.toFixed(1)}px, ${(dy * 0.14).toFixed(1)}px, 0) rotate(${(dx * 0.025).toFixed(2)}deg)`;
+      const stR = document.getElementById("rv-st-right");
+      const stL = document.getElementById("rv-st-left");
+      if (dx > 16) {
+        if (stR) stR.style.opacity = String(Math.min(1, (dx - 14) / 48));
+        if (stL) stL.style.opacity = "0";
+      } else if (dx < -16) {
+        if (stL) stL.style.opacity = String(Math.min(1, (-dx - 14) / 48));
+        if (stR) stR.style.opacity = "0";
+      } else {
+        if (stR) stR.style.opacity = "0";
+        if (stL) stL.style.opacity = "0";
+      }
+    }
+  }, { passive: false });
+  const endSwipe = (e, cancelled) => {
+    if (!tracking) return;
+    tracking = false;
+    if (cancelled || axis !== "x" || !e.changedTouches || !e.changedTouches.length) {
+      if (axis === "x") {
+        cardEl.classList.add("settling");
+        cardEl.style.transform = "";
+      }
+      axis = null;
+      return;
+    }
+    const dx = fpX(e.changedTouches[0]) - sx;
+    const dt = Math.max(1, performance.now() - stMs);
+    const vx = dx / dt;
+    axis = null;
+    if (dx >= 56 || (dx >= 30 && vx > 0.42)) {
+      handleRadioReviewPass();
+      return;
+    }
+    if (dx <= -56 || (dx <= -30 && vx < -0.42)) {
+      handleRadioReviewRelearn();
+      return;
+    }
+    cardEl.classList.add("settling");
+    cardEl.style.transform = "";
+    const stR = document.getElementById("rv-st-right");
+    const stL = document.getElementById("rv-st-left");
+    if (stR) stR.style.opacity = "0";
+    if (stL) stL.style.opacity = "0";
+  };
+  cardEl.addEventListener("touchend", e => endSwipe(e, false), { passive: true });
+  cardEl.addEventListener("touchcancel", e => endSwipe(e, true), { passive: true });
+}
+
+function renderRadioReviewStage() {
+  const host = document.getElementById("radio-review-stage");
+  if (!host) return;
+  const items = getRadioReviewItems();
+  const st = ensureRadioReviewState(false);
+
+  if (rvMode === "done" || !rvActiveItemId) {
+    const relearnedItems = (st.relearnIds || []).map(id => getReviewItemById(id)).filter(Boolean);
+    const passedCnt = Math.max(0, items.length - relearnedItems.length);
+    const relearnNamesHTML = relearnedItems.length
+      ? `<div class="rv-done-list">${relearnedItems.map(x => `<span>${escapeHtml(x.title)}</span>`).join("")}</div>`
+      : "";
+    host.innerHTML = `
+      <div class="meta-bar">
+        <button type="button" class="text-btn" onclick="closeRadioReview()">← 回到随身听</button>
+        <span class="overline ok">听后 5 分钟 · 已收笔</span>
+      </div>
+      <div class="rv-focal">
+        <h2 class="point-heading">${relearnedItems.length ? `本次重学 ${relearnedItems.length} 项，其余 ${passedCnt} 项已秒过` : `本期 ${items.length} 个重点全部听懂`}</h2>
+        <p class="logic-line">${relearnedItems.length
+          ? `下面标出的重点已自动记入明日做题与记词队列，下期《锵锵》也会顺嘴再帮你搭一次桥。`
+          : `今天 60 分钟里的表达和词汇都接住了，没有需要单独回炉的卡点。`}</p>
+        ${relearnNamesHTML}
+      </div>
+      <div class="rv-dock">
+        <button type="button" class="ghost-btn" onclick="openRadioReview(true)">重来一遍</button>
+        <button type="button" class="rv-btn-pass" onclick="closeRadioReview()">回到随身听</button>
+      </div>
+    `;
+    return;
+  }
+
+  const item = getReviewItemById(rvActiveItemId);
+  if (!item) return;
+
+  const hasKanji = /[\u4e00-\u9faf\u3400-\u4dbf]/.test(item.title || "");
+  const kanaHTML = (hasKanji && item.kana)
+    ? renderTrapKanaHTML(item.title, item.kana, item.trap_hl || [], item.trap_tag || "")
+    : (item.kana && item.kana !== item.title ? escapeHtml(item.kana) : "");
+  const clipSecs = Math.max(5, Math.round((item.clip_end || 14) - (item.clip_start || 0)));
+
+  if (rvMode === "relearn") {
+    host.innerHTML = `
+      <div class="meta-bar">
+        <button type="button" class="text-btn" onclick="closeRadioReview()">← 随身听</button>
+        <span class="overline warm">语境精学 · ${escapeHtml(item.chapter_title || "")}</span>
+      </div>
+      <div class="rv-stage-card" id="rv-stage-card">
+        <div class="rv-focal is-relearn">
+          <div class="rv-story-tag">
+            <span>${escapeHtml(item.chapter_title || "")}</span>
+            ${item.is_new_n2 ? `<span class="rv-n2-dot">· N2 新学</span>` : ""}
+          </div>
+          <h2 class="rv-head">${escapeHtml(item.title)}</h2>
+          ${kanaHTML ? `<div class="rv-kana-line">${kanaHTML}</div>` : ""}
+          <div class="rv-zh-line">${escapeHtml(item.zh || "")}</div>
+
+          <div class="rv-clip-row">
+            <button type="button" class="rv-clip-btn" data-rv-aud="clip_1" onclick="playReviewPodcastClip(getReviewItemById('${item.id}'), 1.0, 'clip_1')">▶ 原声语境 (${clipSecs}s)</button>
+            <button type="button" class="rv-clip-btn quiet" data-rv-aud="clip_085" onclick="playReviewPodcastClip(getReviewItemById('${item.id}'), 0.85, 'clip_085')">0.85x 慢听</button>
+          </div>
+
+          <p class="rv-quote"><span class="rv-quote-spk">${escapeHtml(item.speaker || "主持")}</span>${annotateJapanese(item.context_line || "")}</p>
+          ${item.mnemonic ? `<div class="vc-hook" style="margin-top:4px;"><span class="vc-hook-tag">记音</span>${escapeHtml(item.mnemonic)}</div>` : ""}
+          ${item.nuance ? `<p class="rv-note-line">${escapeHtml(item.nuance)}</p>` : ""}
+          ${item.twin ? `<p class="rv-twin-line">${escapeHtml(item.twin)}</p>` : ""}
+          ${item.ja_example && item.ja_example !== item.title ? `<div class="rv-ja-ex">${annotateJapanese(item.ja_example)}</div>` : ""}
+
+          <div class="rv-shadow-row">
+            <span class="rv-shadow-hint">顺口跟读一遍，耳朵和嘴一起锁住</span>
+            <button type="button" class="rv-clip-btn" data-rv-aud="demo" onclick="playReviewDemoSentence(getReviewItemById('${item.id}'))">▶ 示范发音</button>
+          </div>
+        </div>
+        ${lexBoxHTML("rv-inline-lex")}
+      </div>
+      <div class="rv-dock">
+        <button type="button" class="rv-btn-pass" onclick="finishRadioRelearnStep()">记住了 · 稍后复查 →</button>
+      </div>
+    `;
+    syncRvAudioButtons();
+    return;
+  }
+
+  // Phase 1 ("triage") or Phase 3 ("tail" blind re-check)
+  const isTail = rvMode === "tail";
+  const progressTxt = isTail
+    ? `收尾复查 · 仅余 ${st.tailQueue.length} 项`
+    : `听后复盘 · ${Math.min(items.length, st.triageIdx + 1)} / ${items.length}`;
+
+  host.innerHTML = `
+    <div class="meta-bar">
+      <button type="button" class="text-btn" onclick="closeRadioReview()">← 随身听</button>
+      <span class="overline${isTail ? " warm" : ""}">${progressTxt}</span>
+    </div>
+    <div class="rv-stage-card" id="rv-stage-card" onclick="if(!event.target.closest('button,.w-tok'))revealRadioReviewCard()">
+      <div class="tutor-stamp right" id="rv-st-right">懂了 · 过 →</div>
+      <div class="tutor-stamp left" id="rv-st-left">← 重学这个</div>
+
+      <div class="rv-focal">
+        <div class="rv-story-tag">
+          <span>${escapeHtml(item.chapter_title || "")}</span>
+          ${item.is_new_n2 ? `<span class="rv-n2-dot">· N2 新学</span>` : ""}
+          ${isTail ? `<span class="rv-n2-dot">· 刚才重学</span>` : ""}
+        </div>
+        <h2 class="rv-head">${escapeHtml(item.title)}</h2>
+        <p class="rv-cue-line">${escapeHtml(item.story_cue || "")}</p>
+
+        <div class="rv-clip-row">
+          <button type="button" class="rv-clip-btn" data-rv-aud="clip_1" onclick="event.stopPropagation();playReviewPodcastClip(getReviewItemById('${item.id}'), 1.0, 'clip_1')">▶ 听原声语境 (${clipSecs}s)</button>
+        </div>
+
+        <div class="rv-tap-hint" id="rv-tap-hint" style="${rvRevealed ? "display:none" : ""}">先回忆意思或读音，轻点核对</div>
+
+        <div class="rv-reveal-area${rvRevealed ? " shown" : ""}" id="rv-reveal-area">
+          ${kanaHTML ? `<div class="rv-kana-line">${kanaHTML}</div>` : ""}
+          <div class="rv-zh-line">${escapeHtml(item.zh || "")}</div>
+          ${item.mnemonic ? `<div class="vc-hook" style="margin-bottom:8px;"><span class="vc-hook-tag">记音</span>${escapeHtml(item.mnemonic)}</div>` : ""}
+          <p class="rv-quote"><span class="rv-quote-spk">${escapeHtml(item.speaker || "主持")}</span>${annotateJapanese(item.context_line || "")}</p>
+        </div>
+      </div>
+      ${lexBoxHTML("rv-inline-lex")}
+    </div>
+    <div class="rv-dock">
+      <button type="button" class="rv-btn-relearn" onclick="handleRadioReviewRelearn()">${isTail ? "← 再学一遍" : "← 重学这个"}</button>
+      <button type="button" class="rv-btn-pass" onclick="handleRadioReviewPass()">${isTail ? "真记住了 →" : "懂了 · 过 →"}</button>
+    </div>
+  `;
+  bindRadioReviewSwipe(document.getElementById("rv-stage-card"));
+  syncRvAudioButtons();
+}
 
 // ================= QUIZ ACTIONS =================
 let stageEnteredAt = performance.now();
@@ -6199,8 +7049,11 @@ function revealWithoutGuess() {
   playMainClip(activeQuizObj.exp_audio, "exp", false);
 }
 
+let lastAnswerHesitant = false;
+
 function submitAnswer(val) {
   if (viewStage !== "quiz" || !activeQuizObj) return;
+  const thinkMs = Math.max(0, performance.now() - (stageEnteredAt || 0));
   clearActiveWordToken();
   stopQuizAudio();
   pickedVal = val;
@@ -6212,8 +7065,14 @@ function submitAnswer(val) {
   const ps = A.pts[p.id];
   const isCorrect = (val === activeQuizObj.answer);
   const hadWrongToday = (ps.wrongCount || 0) > 0 || ((ps.retestAt || 0) > (A.resetAt || 0));
+  lastAnswerHesitant = !!(isCorrect && !activeQuizObj.is_listening && thinkMs >= 14000 && thinkMs < 90000);
 
   if (isCorrect) {
+    if (lastAnswerHesitant) {
+      const hOb = loadOutbox();
+      hOb.push([`HES:${activeQuizObj.id}`, p.point_key || p.point, "犹豫过关", 1, new Date(stamp * 1000).toISOString()]);
+      saveOutbox(hOb);
+    }
     if (hadWrongToday) {
       ps.passStreak = (ps.passStreak || 0) + 1;
       const needed = ps.reqPasses || ((activeQuizObj.is_listening && p.variants && p.variants.length > 0) ? 2 : 1);
@@ -6335,6 +7194,7 @@ function resetTodayMission() {
   const keepRadioPos = A.radioPos || [0, 0];
   const keepFlashProg = A.flashProg || [0, 0, 0, 0];
   const keepVocabSess = A.vocabSess || null;
+  const keepRadioReview = A.radioReview || null;
   const keepSt = A.st || 0;
   A = createFreshAdaptiveState();
   A.resetAt = stamp;
@@ -6346,6 +7206,7 @@ function resetTodayMission() {
   A.radioPos = keepRadioPos;
   A.flashProg = keepFlashProg;
   A.vocabSess = keepVocabSess;
+  A.radioReview = keepRadioReview;
   A.es = expSpeed;
   A.rs = radioSpeed;
   A.st = keepSt;
@@ -6626,7 +7487,8 @@ function renderTutor() {
       : `首轮订正答对 · 3 题后再过变式题即通关`;
   } else if (isCorrect) {
     overCls = "overline ok";
-    overTxt = q.is_listening && ansIdx > 0 ? `本题过关 · 正解 ${ansIdx} · ${streakTxt}` : `本题过关 · ${streakTxt}`;
+    const hesTag = lastAnswerHesitant ? " · 略犹豫" : "";
+    overTxt = q.is_listening && ansIdx > 0 ? `本题过关 · 正解 ${ansIdx} · ${streakTxt}` : `本题过关 · ${streakTxt}${hesTag}`;
   } else if (isUnsure) {
     overCls = "overline warm";
     overTxt = q.is_listening && ansIdx > 0
@@ -6842,7 +7704,9 @@ function showInlineWordMeaning(surface, tokEl) {
   const info = DATA.words[surface];
   if (!info) return;
 
-  const targetBoxId = activeMode === "radio" ? "radio-inline-lex" : "tutor-inline-lex";
+  const targetBoxId = activeMode === "radio"
+    ? (radioReviewOpen ? "rv-inline-lex" : "radio-inline-lex")
+    : "tutor-inline-lex";
   const box = document.getElementById(targetBoxId);
   if (!box) return;
 
@@ -6876,7 +7740,8 @@ function showInlineWordMeaning(surface, tokEl) {
   if (metaEl) metaEl.textContent = metaLine;
   box.classList.remove("empty");
 
-  if (player.paused && radioPlayer.paused) {
+  const rvClipSilent = !rvClipPlayer || rvClipPlayer.paused;
+  if (player.paused && radioPlayer.paused && rvClipSilent) {
     playWordAudio(surface, false);
   }
 }
@@ -6898,9 +7763,11 @@ document.addEventListener("click", e => {
     return;
   }
   if (!lexCard) {
-    const targetBoxId = activeMode === "radio" ? "radio-inline-lex" : "tutor-inline-lex";
+    const targetBoxId = activeMode === "radio"
+      ? (radioReviewOpen ? "rv-inline-lex" : "radio-inline-lex")
+      : "tutor-inline-lex";
     const box = document.getElementById(targetBoxId);
-    if (box && !box.classList.contains("empty") && (e.target.closest(".focal-space") || e.target.closest(".radio-center"))) {
+    if (box && !box.classList.contains("empty") && (e.target.closest(".focal-space") || e.target.closest(".radio-center") || e.target.closest(".rv-focal"))) {
       clearActiveWordToken();
       clearInlineLexicon(targetBoxId);
     }
@@ -7100,6 +7967,23 @@ document.addEventListener("keydown", e => {
   }
 
   if (activeMode === "radio") {
+    if (radioReviewOpen) {
+      if (e.key === "Escape") { e.preventDefault(); closeRadioReview(); }
+      else if (e.key === " ") {
+        e.preventDefault();
+        const curItem = getReviewItemById(rvActiveItemId);
+        if (!rvRevealed && rvMode !== "relearn") revealRadioReviewCard();
+        else if (curItem) playReviewPodcastClip(curItem, 1.0, "clip_1");
+      } else if (e.key === "ArrowRight" || e.key === "Enter") {
+        e.preventDefault();
+        if (rvMode === "relearn") finishRadioRelearnStep();
+        else if (rvMode !== "done") handleRadioReviewPass();
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        if (rvMode === "triage" || rvMode === "tail") handleRadioReviewRelearn();
+      }
+      return;
+    }
     if (e.key === " ") { e.preventDefault(); toggleRadioPlay(); }
     else if (e.key === "ArrowLeft") { e.preventDefault(); seekRadioBy(-15); }
     else if (e.key === "ArrowRight") { e.preventDefault(); seekRadioBy(15); }
@@ -7154,6 +8038,7 @@ function switchMode(m, autoPlayRadio) {
   clearActiveWordToken();
   if (m !== "tutor") stopQuizAudio();
   if (m !== "vocab") stopVocabAudioAndTimers();
+  if (m !== "radio") stopRadioReviewAudio();
   if (m !== "body" && window.ZB && typeof window.ZB.stopPacer === "function") window.ZB.stopPacer(false);
 
   document.getElementById("app-shell").classList.toggle("wide-mode", m === "dash");
@@ -7181,7 +8066,8 @@ function switchMode(m, autoPlayRadio) {
 
   if (m === "radio") {
     ensureRadioReady();
-    if (autoPlayRadio && radioPlayer.paused) {
+    updateRadioReviewEntryBadge();
+    if (!radioReviewOpen && autoPlayRadio && radioPlayer.paused) {
       toggleRadioPlay(true);
     } else {
       syncRadioUI();
@@ -7666,6 +8552,15 @@ function onRemoteVocabSync() {
   if (!sess.queue.length) renderVocabStage();
 }
 
+function isEarFirstGradCard(card) {
+  if (!card || card.mode !== "kanji_read") return false;
+  const eff = getEffectiveMastery(card.key, card.word);
+  if ((eff.streak || 0) !== 2) return false;
+  const sess = A.vocabSess;
+  if (sess && Array.isArray(sess.failedWords) && sess.failedWords.includes(card.word)) return false;
+  return !!(card.word_audio || card.front_audio || card.full_audio);
+}
+
 function dealCurrentVocabCard(autoStartAudio) {
   stopVocabAudioAndTimers();
   vcRevealed = false;
@@ -7688,8 +8583,29 @@ function dealCurrentVocabCard(autoStartAudio) {
   if (!autoStartAudio) return;
   const card = getVocabCardSpec(sess.queue[0]);
   const myToken = ++vcToken;
+  const earFirst = isEarFirstGradCard(card);
 
-  if (card.mode === "kanji_read") {
+  if (earFirst) {
+    // 2/3 Final Auditory Graduation (Tamaoka et al. 2012): play Japanese ear-first with Kanji veiled!
+    const earUrl = card.word_audio || card.front_audio || card.full_audio;
+    const afterEar = () => {
+      if (activeMode !== "vocab" || vcToken !== myToken || vcRevealed) return;
+      vcTimer = setTimeout(() => {
+        if (activeMode !== "vocab" || vcToken !== myToken || vcRevealed) return;
+        revealVocabCard(true);
+      }, 1150);
+    };
+    if (earUrl) {
+      playUrlOnWordPlayer(
+        earUrl,
+        myToken,
+        afterEar,
+        () => speakUtteranceLang(card.kana || card.word, "ja-JP", 0.98, afterEar)
+      );
+    } else {
+      speakUtteranceLang(card.kana || card.word, "ja-JP", 0.98, afterEar);
+    }
+  } else if (card.mode === "kanji_read") {
     // Silent Kanji micro-chunk front so audio never spoils the reading before retrieval!
     vcTimer = setTimeout(() => {
       if (activeMode !== "vocab" || vcToken !== myToken || vcRevealed) return;
@@ -7722,9 +8638,12 @@ function revealVocabCard(playAudioNow, forceFullBilingual) {
   const sess = A.vocabSess;
   if (!sess || !sess.queue.length) return;
   const card = getVocabCardSpec(sess.queue[0]);
+  const earFirst = isEarFirstGradCard(card);
   stopVocabAudioAndTimers();
   vcRevealed = true;
 
+  const chunkEl = document.getElementById("vc-chunk-box");
+  if (chunkEl) chunkEl.classList.remove("ear-veil");
   const revEl = document.getElementById("vc-reveal-box");
   if (revEl) revEl.classList.add("shown");
   const cueEl = document.getElementById("vc-cue-line");
@@ -7734,6 +8653,9 @@ function revealVocabCard(playAudioNow, forceFullBilingual) {
         ? "已标待练读音 · 盯住红字听清再滑"
         : "已记入没记住 · 听完滑一下继续";
       cueEl.className = "vc-cue ng";
+    } else if (earFirst) {
+      cueEl.textContent = "耳听秒认右滑毕业 · 迟疑就左滑";
+      cueEl.className = "vc-cue";
     } else {
       cueEl.textContent = card.mode === "kanji_read"
         ? "读音全准右滑 · 差一拍就左滑"
@@ -8089,16 +9011,19 @@ function renderVocabStage() {
     ? `回炉巩固 · 余 ${sess.queue.length} 词`
     : `今晚 ${posNum} / ${sess.total} 词${card.source ? " · " + card.source : ""}`;
   const isKanjiCard = card.mode === "kanji_read";
+  const earFirst = isEarFirstGradCard(card);
   const hasTargetKanji = /[\u4e00-\u9faf\u3400-\u4dbf]/.test(card.target || card.word);
   const kanaHtml = (hasTargetKanji && card.kana)
     ? renderTrapKanaHTML(card.target || card.word, card.kana, card.trap_hl, card.trap_tag)
     : "";
   const quietZh = isKanjiCard && !card.zh_opaque;
-  const initCue = isKanjiCard ? "默念读音 · 有一拍不准就左滑" : "听日文 · 想中文意思";
-  const rightStampTxt = isKanjiCard ? "读准了" : "记住";
+  const initCue = earFirst
+    ? "终审盲听 · 凭耳认词，轻点看汉字"
+    : (isKanjiCard ? "默念读音 · 有一拍不准就左滑" : "听日文 · 想中文意思");
+  const rightStampTxt = earFirst ? "听懂毕业" : (isKanjiCard ? "读准了" : "记住");
   const leftStampTxt = isKanjiCard ? "读音待练" : "没记住";
   const leftBtnTxt = isKanjiCard ? "← 读音不准" : "← 没记住";
-  const rightBtnTxt = isKanjiCard ? "读准了 →" : "记住 →";
+  const rightBtnTxt = earFirst ? "听懂毕业 →" : (isKanjiCard ? "读准了 →" : "记住 →");
 
   box.innerHTML = `
     <div class="meta-bar">
@@ -8116,7 +9041,7 @@ function renderVocabStage() {
         <div class="vc-stamp up" id="vc-st-up">太熟封存</div>
 
         <div class="vc-cue" id="vc-cue-line">${initCue}</div>
-        <div class="vc-chunk">${renderChunkHighlightHTML(card.chunk_ja, card.target)}</div>
+        <div class="vc-chunk${earFirst && !vcRevealed ? " ear-veil" : ""}" id="vc-chunk-box">${renderChunkHighlightHTML(card.chunk_ja, card.target)}</div>
 
         <div class="vc-reveal${vcRevealed ? " shown" : ""}" id="vc-reveal-box">
           ${kanaHtml ? `<div class="vc-kana">${kanaHtml}</div>` : ""}
@@ -10771,6 +11696,56 @@ if (!pzModalHtml.includes('第 1 章') || !pzModalHtml.includes('2–4 场球') 
 }
 sb.ZB.openPZList(1);
 sb.closeModal();
+
+// Self-test 6: Post-Listening 5-Min Contextual Review (Selective Re-Learn + Tail Check) & Ear-First 2/3 Vocab Graduation
+const rvItems = sb.getRadioReviewItems();
+if (!Array.isArray(rvItems) || rvItems.length < 6) {
+  throw new Error('Self-test 6 failed: expected >=6 episode review_items, got ' + (rvItems && rvItems.length));
+}
+sb.switchMode('radio', false);
+sb.openRadioReview(true);
+const rvHtml1 = (els['radio-review-stage'] && els['radio-review-stage'].innerHTML) || '';
+if (!rvHtml1.includes('听后复盘') || !rvHtml1.includes('重学这个') || !rvHtml1.includes('懂了') || rvHtml1.includes('—')) {
+  throw new Error('Self-test 6 failed: triage view missing core controls or contains em dash');
+}
+// Flag ONLY the first item for selective deep contextual re-learn; fast-pass all remaining items!
+sb.handleRadioReviewRelearn();
+const rvRelearnHtml = (els['radio-review-stage'] && els['radio-review-stage'].innerHTML) || '';
+if (!rvRelearnHtml.includes('语境精学') || !rvRelearnHtml.includes('原声语境') || !rvRelearnHtml.includes('0.85x') || rvRelearnHtml.includes('—')) {
+  throw new Error('Self-test 6 failed: selective relearn view missing audio context/0.85x or contains em dash');
+}
+sb.finishRadioRelearnStep();
+// Fast-pass remaining triage items synchronously without animation delay check
+const origSetTimeout = sb.setTimeout;
+sb.setTimeout = (fn) => { fn(); return 1; };
+for (let i = 1; i < rvItems.length; i++) {
+  sb.handleRadioReviewPass();
+}
+const rvTailHtml = (els['radio-review-stage'] && els['radio-review-stage'].innerHTML) || '';
+if (!rvTailHtml.includes('收尾复查') || !rvTailHtml.includes('仅余 1 项')) {
+  throw new Error('Self-test 6 failed: expected tail blind re-check on ONLY the 1 re-learned item, got: ' + rvTailHtml.slice(0, 260));
+}
+sb.handleRadioReviewPass();
+const rvDoneHtml = (els['radio-review-stage'] && els['radio-review-stage'].innerHTML) || '';
+if (!rvDoneHtml.includes('本次重学 1 项')) {
+  throw new Error('Self-test 6 failed: expected completion summary for 1 re-learned item');
+}
+sb.setTimeout = origSetTimeout;
+sb.closeRadioReview();
+// Verify Ear-First 2/3 Vocab Graduation veil activates ONLY on streak===2 kanji cards with audio
+const sampleKanji = '予算';
+const spec2 = sb.getVocabCardSpec(sampleKanji);
+if (!spec2 || spec2.mode !== 'kanji_read') {
+  throw new Error('Self-test 6 failed: expected 予算 kanji_read spec');
+}
+sb.setMasteryTier(sampleKanji, 'wip2:20261121', Math.floor(Date.now() / 1000) + 10);
+if (!sb.isEarFirstGradCard(spec2)) {
+  throw new Error('Self-test 6 failed: streak=2 kanji card with audio should activate Ear-First graduation');
+}
+sb.setMasteryTier(sampleKanji, 'wip1:20261121', Math.floor(Date.now() / 1000) + 20);
+if (sb.isEarFirstGradCard(spec2)) {
+  throw new Error('Self-test 6 failed: streak=1 kanji card must stay silent-kanji front');
+}
 """
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
 

@@ -117,8 +117,13 @@ def plan_n2_episode_pedagogy(
         ],
         "spaced_callbacks": selected_callbacks,
         "cumulative_vocab_graduation": {
-            "rule": "5次累计播客毕业制：新词首次用「中文也就是日语」自然搭桥，同集下段直切无缝日语；跨集累计听满5次永久锁成日语词，用单气口载波无缝拼接确保中日混讲毫无卡顿。",
+            "rule": "跨日 5 次累计播客毕业制（需跨至少 2 个不同日期且累计满 5 次，杜绝单日集中假毕业）：新词首次用「中文也就是日语」自然搭桥，同集下段直切无缝日语；若听后复盘标「重学」，下期自动再搭一次桥。",
             "ledger_brief": _vocab_brief,
+        },
+        "post_listening_5min_review": {
+            "enabled": True,
+            "mode": "selective_rpl_contextual_relearn",
+            "rule": "听完 60 分钟立刻用 5 分钟快筛本期重点：秒懂的右滑跳过，只对卡住或 N2 全新点左滑「重学这个」，回听该词在故事里的原声语境片段（支持 0.85x 慢听 + 示范句跟读），收尾仅复查重学项，次日做题/记词自动换新例句迁移并进入 2/3 盲听毕业。",
         },
         "flow_guardrail": "整期故事与世界视野占主体，回声点总数严控≤3个，单次回声不超过3-8秒，严禁打断叙事流畅性。",
     }

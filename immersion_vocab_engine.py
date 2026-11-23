@@ -36,6 +36,7 @@ RADIO_HISTORY_PATH = os.path.join(AUDIO_DIR, "radio_history.json")
 STATE_PATH = os.path.join(BASE_DIR, "n3_live_state.json")
 
 GRADUATION_THRESHOLD = 5
+MIN_GRADUATION_DAYS = 2
 DAILY_NEW_BUDGET = 12
 MAX_INLINE_PER_SENTENCE = 3
 
@@ -511,11 +512,66 @@ def compute_prior_counts(ledger: dict, before_date: str) -> dict[str, int]:
     return totals
 
 
+def compute_prior_days(ledger: dict, before_date: str) -> dict[str, int]:
+    """Returns distinct aired dates count per word strictly `< before_date` (Cepeda / Nakata cross-day spacing)."""
+    days_map: dict[str, int] = {}
+    for d_str, cmap in (ledger.get("daily_counts") or {}).items():
+        if d_str < before_date and isinstance(cmap, dict):
+            for kana, cnt in cmap.items():
+                if int(cnt) > 0:
+                    days_map[kana] = days_map.get(kana, 0) + 1
+    return days_map
+
+
+def get_active_relearn_holds(ledger: dict, before_date: str = "") -> set[str]:
+    """Words flagged as '重学' in post-listening review stay in gentle bridge mode until heard >=2 times after hold date."""
+    holds = ledger.get("relearn_hold") or {}
+    daily = ledger.get("daily_counts") or {}
+    active: set[str] = set()
+    for kana, hold_date in holds.items():
+        if not hold_date:
+            continue
+        post_hits = 0
+        for d_str, cmap in daily.items():
+            if d_str > str(hold_date) and (not before_date or d_str < before_date):
+                post_hits += int((cmap or {}).get(kana, 0))
+        if post_hits < 2:
+            active.add(kana)
+    return active
+
+
+def flag_relearn_words(words_or_kanas: list[str], flag_date: str) -> list[str]:
+    """Persist post-listening '重学' flags into podcast_vocab_ledger.json so next episode re-bridges them gently."""
+    if not words_or_kanas:
+        return []
+    kanji_to_kana = {e["kanji"]: e["kana"] for e in IMMERSION_VOCAB_BANK}
+    matched: list[str] = []
+    ledger = load_ledger(today_str=flag_date)
+    holds = ledger.setdefault("relearn_hold", {})
+    changed = False
+    for raw in words_or_kanas:
+        s = str(raw or "").strip()
+        k = s if s in VOCAB_BY_KANA else kanji_to_kana.get(s, "")
+        if k and (not holds.get(k) or str(flag_date) >= str(holds.get(k))):
+            holds[k] = str(flag_date)
+            matched.append(k)
+            changed = True
+    if changed:
+        ledger["words"] = _rebuild_words_summary(ledger)
+        os.makedirs(AUDIO_DIR, exist_ok=True)
+        with open(LEDGER_PATH, "w", encoding="utf-8") as f:
+            json.dump(ledger, f, ensure_ascii=False, indent=2)
+    return matched
+
+
 def _rebuild_words_summary(ledger: dict) -> dict:
     threshold = int(ledger.get("graduation_threshold") or GRADUATION_THRESHOLD)
+    min_days = int(ledger.get("min_graduation_days") or MIN_GRADUATION_DAYS)
     daily = ledger.get("daily_counts") or {}
+    active_holds = get_active_relearn_holds(ledger)
     sorted_dates = sorted(daily.keys())
     running: dict[str, int] = {}
+    days_seen: dict[str, int] = {}
     meta: dict[str, dict] = {}
     for d_str in sorted_dates:
         cmap = daily.get(d_str) or {}
@@ -526,6 +582,8 @@ def _rebuild_words_summary(ledger: dict) -> dict:
             prev = running.get(kana, 0)
             nxt = prev + cnt_i
             running[kana] = nxt
+            days_seen[kana] = days_seen.get(kana, 0) + 1
+            can_lock = (nxt >= threshold and days_seen[kana] >= min_days and kana not in active_holds)
             if kana not in meta:
                 entry = VOCAB_BY_KANA.get(kana) or {}
                 meta[kana] = {
@@ -533,23 +591,28 @@ def _rebuild_words_summary(ledger: dict) -> dict:
                     "zh": entry.get("zh", [get_carrier_zh(kana)]),
                     "tier": entry.get("tier", "n3_core"),
                     "exposures": nxt,
-                    "status": "locked_ja" if nxt >= threshold else "learning",
+                    "days_seen": days_seen[kana],
+                    "status": "locked_ja" if can_lock else "learning",
                     "first_date": d_str,
-                    "graduated_date": d_str if nxt >= threshold else "",
+                    "graduated_date": d_str if can_lock else "",
                     "last_date": d_str,
                 }
             else:
                 meta[kana]["exposures"] = nxt
+                meta[kana]["days_seen"] = days_seen[kana]
                 meta[kana]["last_date"] = d_str
-                if nxt >= threshold and meta[kana]["status"] != "locked_ja":
+                if can_lock and meta[kana]["status"] != "locked_ja":
                     meta[kana]["status"] = "locked_ja"
                     meta[kana]["graduated_date"] = d_str
+                elif kana in active_holds:
+                    meta[kana]["status"] = "learning"
     return meta
 
 
 def save_ledger(ledger: dict, today_str: str, today_counts: dict[str, int]) -> dict:
     if not isinstance(ledger.get("daily_counts"), dict):
         ledger["daily_counts"] = {}
+    ledger["min_graduation_days"] = int(ledger.get("min_graduation_days") or MIN_GRADUATION_DAYS)
     ledger["daily_counts"][today_str] = {k: int(v) for k, v in sorted(today_counts.items()) if int(v) > 0}
     ledger["updated_date"] = today_str
     ledger["words"] = _rebuild_words_summary(ledger)
@@ -632,8 +695,11 @@ def apply_immersion_to_stories(
     """
     ledger = ledger_override if ledger_override is not None else load_ledger(salon_stories=salon_stories, today_str=today_str)
     threshold = int(ledger.get("graduation_threshold") or GRADUATION_THRESHOLD)
+    min_days = int(ledger.get("min_graduation_days") or MIN_GRADUATION_DAYS)
     new_budget = int(ledger.get("daily_new_budget") or DAILY_NEW_BUDGET)
     prior_counts = compute_prior_counts(ledger, before_date=today_str)
+    prior_days = compute_prior_days(ledger, before_date=today_str)
+    active_holds = get_active_relearn_holds(ledger, before_date=today_str)
     weak_words = _load_active_weak_words()
     user_prio = set(ledger.get("user_priority_words") or ["じしょ"])
 
@@ -673,9 +739,15 @@ def apply_immersion_to_stories(
                     if _is_clean_bridge_slot(txt, m.end()):
                         ep_bridgeable_hits[k] = ep_bridgeable_hits.get(k, 0) + 1
 
-    # Decide active word sets for today:
-    locked_set = {k for k, c in prior_counts.items() if c >= threshold and k in VOCAB_BY_KANA}
-    learning_set = {k for k, c in prior_counts.items() if 1 <= c < threshold and k in VOCAB_BY_KANA}
+    # Decide active word sets for today (Cross-Day Spacing: must span >= min_days AND >= threshold hits!):
+    locked_set = {
+        k for k, c in prior_counts.items()
+        if c >= threshold and prior_days.get(k, 0) >= min_days and k not in active_holds and k in VOCAB_BY_KANA
+    }
+    learning_set = {
+        k for k, c in prior_counts.items()
+        if c >= 1 and k not in locked_set and k in VOCAB_BY_KANA
+    } | {k for k in active_holds if k in VOCAB_BY_KANA}
 
     # Score candidate brand-new words (`prior_E == 0`) that actually appear in today's stories!
     new_candidates: list[tuple[float, str]] = []
@@ -776,13 +848,14 @@ def apply_immersion_to_stories(
                     is_clean = _is_clean_bridge_slot(sent, m.end())
 
                     replacement = None
-                    if k in locked_set or prior_e >= 3 or deliv >= 1:
-                        # Already locked, or well into learning (3-4 hits), or already introduced earlier in THIS episode -> DIRECT JAPANESE!
+                    needs_relearn_bridge = (k in active_holds and deliv == 0)
+                    if not needs_relearn_bridge and (k in locked_set or (prior_e >= 3 and prior_days.get(k, 0) >= 1) or deliv >= 1):
+                        # Already locked, or well into multi-day learning, or already introduced earlier in THIS episode -> DIRECT JAPANESE!
                         replacement = f"{{{{{zh_hit}|{k}}}}}"
                         ep_ja_delivered[k] = deliv + 1
                         today_final_counts[k] = today_final_counts.get(k, 0) + 1
                     elif k in learning_set or k in today_new_set:
-                        # First introduction in this episode (prior_E in 0..2):
+                        # First introduction in this episode (or gentle post-review relearn rescue):
                         if is_clean and not turn_bridge_used and k not in used_kana_in_sent:
                             # Natural paired bridge: `{zh}也就是{{zh|kana}}` (e.g., `预算也就是よさん`)!
                             replacement = f"{zh_hit}也就是{{{{{zh_hit}|{k}}}}}"
@@ -821,23 +894,28 @@ def apply_immersion_to_stories(
         b_copy["raw_turns"] = new_turns
         new_blocks.append(b_copy)
 
-    # Compute graduation report
+    # Compute cross-day graduation report
     newly_graduated = []
     today_spotlight = []
     for k, cnt in sorted(today_final_counts.items(), key=lambda x: (-x[1], x[0])):
         prev = prior_counts.get(k, 0)
+        prev_d = prior_days.get(k, 0)
         tot = prev + cnt
+        tot_d = prev_d + (1 if cnt > 0 else 0)
+        was_locked = (prev >= threshold and prev_d >= min_days and k not in active_holds)
+        now_locked = (tot >= threshold and tot_d >= min_days and k not in active_holds)
         ent = VOCAB_BY_KANA.get(k) or {}
-        if prev < threshold <= tot:
-            newly_graduated.append({"kana": k, "kanji": ent.get("kanji", k), "zh": ent.get("carrier", k), "total": tot})
-        if k in today_new_set and ep_ja_delivered.get(k, 0) > 0:
+        if not was_locked and now_locked:
+            newly_graduated.append({"kana": k, "kanji": ent.get("kanji", k), "zh": ent.get("carrier", k), "total": tot, "days_seen": tot_d})
+        if (k in today_new_set or k in active_holds) and ep_ja_delivered.get(k, 0) > 0:
             today_spotlight.append({
                 "kana": k,
                 "kanji": ent.get("kanji", k),
                 "zh": ent.get("carrier", k),
                 "hits_today": cnt,
                 "total": tot,
-                "status": "locked_ja" if tot >= threshold else "learning",
+                "days_seen": tot_d,
+                "status": "locked_ja" if now_locked else "learning",
             })
 
     if commit_ledger:

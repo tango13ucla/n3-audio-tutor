@@ -2218,6 +2218,21 @@ async def main():
 
         chapter_starts: dict[int, float] = {0: 0.0}
         raw_seg_bounds: list[tuple[int, float, float]] = []
+        turn_timings: dict[tuple[int, int], tuple[float, float]] = {}
+
+        def _append_turns_tracked(ch_i: int, turns_sub: list[tuple[str, object]], base_t_idx: int = 0) -> None:
+            for rel_i, (spk, val) in enumerate(turns_sub):
+                if spk in ("PAUSE", "LATCH"):
+                    _append_events([(spk, float(val))])
+                    continue
+                t0 = mixer.sec
+                _append_events(expand_turn_events(spk, str(val)))
+                t1 = mixer.sec
+                turn_timings[(ch_i, base_t_idx + rel_i)] = (round(t0, 1), round(t1, 1))
+                if rel_i + 1 < len(turns_sub) and turns_sub[rel_i + 1][0] not in ("PAUSE", "LATCH"):
+                    next_spk, next_val = turns_sub[rel_i + 1]
+                    tr_kind, tr_sec = turn_switch_transition(spk, str(val), next_spk, str(next_val))
+                    _append_events([(tr_kind, tr_sec)])
 
         if opening_evs:
             _append_events(opening_evs)
@@ -2239,12 +2254,10 @@ async def main():
             # Main Salon Story Dialogue (for final story without separate closing_turns, sneak outro underneath final turn!)
             is_last_story = (ch_idx == total_stories - 1)
             if is_last_story and not closing_turns and len(b["raw_turns"]) >= 2:
-                body_evs = turns_to_expanded_events(b["raw_turns"][:-1])
-                final_w_evs = turns_to_expanded_events([b["raw_turns"][-1]])
-                _append_events(body_evs)
+                _append_turns_tracked(ch_idx, b["raw_turns"][:-1], base_t_idx=0)
                 mixer.advance(0.18)
                 w_start_sec = mixer.sec
-                _append_events(final_w_evs)
+                _append_turns_tracked(ch_idx, [b["raw_turns"][-1]], base_t_idx=len(b["raw_turns"]) - 1)
                 w_end_sec = mixer.sec
                 w_dur = max(0.8, w_end_sec - w_start_sec)
                 vo_overlap = min(2.0, w_dur * 0.45)
@@ -2253,7 +2266,7 @@ async def main():
                 outro_end = mixer.place_at(outro_start, pcm_outro, gain=outro_env)
                 mixer.cursor = int(round(outro_end * SR))
             else:
-                _append_events(b["events"])
+                _append_turns_tracked(ch_idx, b["raw_turns"], base_t_idx=0)
 
             # End-of-Story Transitions (ZERO "叮叮" stings between ordinary chapters — ONLY at the 2 "广告之后见" breaks!)
             if ch_idx == ad1_after:
@@ -2297,7 +2310,7 @@ async def main():
             test_mp3 = os.path.join(tmpdir, "dry_test_radio.mp3")
             dur = mixer.render_mp3(test_mp3)
             print(f"[dry-test] Rendered full broadcast timeline MP3: {dur:.1f}s ({os.path.getsize(test_mp3)} bytes)")
-            print(f"[dry-test] Act breaks after ch {ad1_after} & {ad2_after}; Chapters: {chapter_starts}")
+            print(f"[dry-test] Act breaks after ch {ad1_after} & {ad2_after}; Chapters: {chapter_starts}; tracked_turns={len(turn_timings)}")
             return
 
         final_dur = mixer.render_mp3(RADIO_MP3_PATH)
@@ -2323,6 +2336,20 @@ async def main():
             for b in story_blocks
         ]
         public_vocab_meta = {k: v for k, v in imm_vocab_report.items() if not k.startswith("_")}
+        review_items: list[dict] = []
+        try:
+            import radio_review_builder as rrb
+            review_items = rrb.build_episode_review_items(
+                story_blocks,
+                segments_meta,
+                public_vocab_meta,
+                turn_timings=turn_timings,
+                audio_mp3_path=RADIO_MP3_PATH,
+                max_total=12,
+            )
+        except Exception as exc:
+            print(f"[warn] review_items extraction skipped: {exc}")
+
         meta_obj = {
             "date": today_str,
             "radio_ver": radio_ver_tag,
@@ -2337,6 +2364,7 @@ async def main():
             "immersion_vocab": public_vocab_meta,
             "chapters": chapters_meta,
             "segments": segments_meta,
+            "review_items": review_items,
         }
         with open(RADIO_META_PATH, "w", encoding="utf-8") as f:
             json.dump(meta_obj, f, ensure_ascii=False, indent=2)
@@ -2346,7 +2374,8 @@ async def main():
         print(
             f"Built Qiang-Qiang {radio_ver_tag} Uchi Episode: {final_dur:.1f}s ({mins} mins), "
             f"stories={[s['short_tab'] for s in selected_stories]}, "
-            f"locked_ja={public_vocab_meta.get('locked_total', 0)}, new_vocab={public_vocab_meta.get('today_new_count', 0)}"
+            f"locked_ja={public_vocab_meta.get('locked_total', 0)}, new_vocab={public_vocab_meta.get('today_new_count', 0)}, "
+            f"review_items={len(review_items)}"
         )
     finally:
         shutil.rmtree(tmpdir, ignore_errors=True)
