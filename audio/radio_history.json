@@ -89,7 +89,15 @@
       "uchi8_s3a_walkman_part1",
       "uchi8_s3b_walkman_part2",
       "uchi8_s4_world_ai_math"
+    ],
+    "2026-11-23": [
+      "uchi9_s1_news_fallback",
+      "uchi9_s2a_osaka_expo_part1",
+      "uchi9_s2b_osaka_expo_part2",
+      "uchi9_s3a_glico_part1",
+      "uchi9_s3b_glico_part2",
+      "uchi9_s4_world_perovskite_energy"
     ]
   },
-  "last_date": "2026-11-22"
+  "last_date": "2026-11-23"
 }

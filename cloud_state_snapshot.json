@@ -3195,6 +3195,19 @@
         0,
         1795419336
       ]
+    },
+    "2026-11-23": {
+      "resetAt": 0,
+      "radioMaxSec": 0,
+      "radioPos": [
+        0,
+        0
+      ],
+      "radioSig": "",
+      "greenAt": {},
+      "retestAt": {},
+      "learning": {},
+      "sched": {}
     }
   },
   "masteryOverrides": {
