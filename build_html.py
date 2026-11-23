@@ -2018,28 +2018,52 @@ html = r"""<!DOCTYPE html>
     50% { height: 20px; opacity: 1; }
   }
 
-  .recall-veil-btn {
-    width: 100%;
-    padding: 10px 14px;
-    margin-bottom: 10px;
-    font-size: 13px;
+  .choice-veil-wrap {
+    position: relative;
+  }
+  .recall-veil-overlay {
+    position: absolute;
+    inset: -4px;
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border-radius: 10px;
+    background: rgba(250, 248, 244, 0.58);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    cursor: pointer;
+    text-align: center;
+    padding: 16px;
+  }
+  @media (prefers-color-scheme: dark) {
+    .recall-veil-overlay {
+      background: rgba(26, 25, 23, 0.58);
+    }
+  }
+  .recall-veil-title {
+    font-size: 15.5px;
+    font-weight: 600;
+    color: var(--sumi);
+    letter-spacing: 0.04em;
+  }
+  .recall-veil-sub {
+    font-size: 12.5px;
     font-weight: 500;
     color: var(--moss);
-    letter-spacing: 0.03em;
-    text-align: center;
-    border: 1px dashed rgba(43, 95, 73, 0.38);
-    border-radius: 8px;
-    background: var(--moss-soft);
+    letter-spacing: 0.04em;
   }
   .choice-list {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    transition: filter 0.24s ease, opacity 0.24s ease;
+    transition: filter 0.22s ease, opacity 0.22s ease;
   }
   .choice-list.recall-veiled {
-    filter: blur(8px);
-    opacity: 0.22;
+    filter: blur(10px);
+    opacity: 0.26;
     pointer-events: none;
     user-select: none;
   }
@@ -8386,7 +8410,8 @@ function renderTutor() {
     const isVariant = activeQuizObj.id !== p.primary.id;
     const isRetrySame = (ps.wrongCount || 0) > 0 && !isVariant;
     const effQ = getEffectiveMastery(p.point_key, p.point);
-    // Kang, McDermott & Roediger (2007): 2/3 final graduation cards pause 2.2s before revealing options (cued recall > recognition)
+    // Kang, McDermott & Roediger (2007) + Tullis & Benjamin (2011):
+    // Self-paced tap-to-reveal on 2/3 graduation cards — never rush reading with a short countdown!
     const useRecallVeil = !activeQuizObj.is_listening && (ps.wrongCount || 0) === 0 && (effQ.streak || 0) === 2;
     quizChoicesRevealed = !useRecallVeil;
 
@@ -8402,13 +8427,16 @@ function renderTutor() {
             <button class="listen-num-btn" onclick="submitAnswer(currentChoices[${cIdx}])">${cIdx + 1}</button>
           `).join("")}
         </div>`
-      : `${useRecallVeil ? `<button type="button" class="recall-veil-btn" id="quiz-recall-veil" onclick="revealQuizChoicesNow()">终审回忆 · 先在心里想答案（轻点看选项）</button>` : ""}<div class="choice-list${useRecallVeil ? " recall-veiled" : ""}" id="quiz-choice-list">
-          ${currentChoices.map((c, cIdx) => `
-            <button class="zen-choice" onclick="submitAnswer(currentChoices[${cIdx}])">
-              <span>${escapeHtml(c)}</span>
-              <span class="kbd-tag">${cIdx + 1}</span>
-            </button>
-          `).join("")}
+      : `<div class="choice-veil-wrap">
+          ${useRecallVeil ? `<button type="button" class="recall-veil-overlay" id="quiz-recall-veil" onclick="revealQuizChoicesNow()"><span class="recall-veil-title">读完题，先在心里想答案</span><span class="recall-veil-sub">想好轻点这里看选项</span></button>` : ""}
+          <div class="choice-list${useRecallVeil ? " recall-veiled" : ""}" id="quiz-choice-list">
+            ${currentChoices.map((c, cIdx) => `
+              <button class="zen-choice" onclick="submitAnswer(currentChoices[${cIdx}])">
+                <span>${escapeHtml(c)}</span>
+                <span class="kbd-tag">${cIdx + 1}</span>
+              </button>
+            `).join("")}
+          </div>
         </div>`;
 
     box.innerHTML = `
@@ -8439,9 +8467,6 @@ function renderTutor() {
         </div>
       </div>
     `;
-    if (useRecallVeil) {
-      quizRecallTimer = setTimeout(revealQuizChoicesNow, 2200);
-    }
     syncAudioButtons();
     return;
   }
@@ -9740,7 +9765,7 @@ function dealCurrentVocabCard(autoStartAudio) {
   const earFirst = isEarFirstGradCard(card);
   const kanaRecall = isKanaRecallGradCard(card);
 
-  // Pyc & Rawson (2009) Retrieval Effort Window: 2.4-2.8s retrieval space (tap card anytime for instant 0ms reveal!)
+  // Pyc & Rawson (2009) + Tullis & Benjamin (2011): calm 4.2-4.5s fallback window (tap card anytime for instant 0ms reveal!)
   if (earFirst) {
     // 2/3 Final Auditory Graduation (Tamaoka et al. 2012): play Japanese ear-first with Kanji veiled!
     const earUrl = card.word_audio || card.front_audio || card.full_audio;
@@ -9749,7 +9774,7 @@ function dealCurrentVocabCard(autoStartAudio) {
       vcTimer = setTimeout(() => {
         if (activeMode !== "vocab" || vcToken !== myToken || vcRevealed) return;
         revealVocabCard(true);
-      }, 2600);
+      }, 4200);
     };
     if (earUrl) {
       playUrlOnWordPlayer(
@@ -9762,26 +9787,26 @@ function dealCurrentVocabCard(autoStartAudio) {
       speakUtteranceLang(card.kana || card.word, "ja-JP", 0.98, afterEar);
     }
   } else if (kanaRecall) {
-    // 2/3 Pure Kana Productive Recall (L1->L2): silent Chinese cue on front, 2.8s to recall Japanese reading!
+    // 2/3 Pure Kana Productive Recall (L1->L2): silent Chinese cue on front, calm 4.5s fallback (tap anytime!)
     vcTimer = setTimeout(() => {
       if (activeMode !== "vocab" || vcToken !== myToken || vcRevealed) return;
       revealVocabCard(true);
-    }, 2800);
+    }, 4500);
   } else if (card.mode === "kanji_read") {
-    // Silent Kanji micro-chunk front: 2.6s retrieval window before auto-reveal (tap reveals instantly)
+    // Silent Kanji micro-chunk front: calm 4.5s fallback before auto-reveal (tap reveals instantly)
     vcTimer = setTimeout(() => {
       if (activeMode !== "vocab" || vcToken !== myToken || vcRevealed) return;
       revealVocabCard(true);
-    }, 2600);
+    }, 4500);
   } else {
-    // Kana / spoken word: play Japanese first, pause 2.4s for genuine meaning retrieval, then reveal
+    // Kana / spoken word: play Japanese first, calm 4.2s fallback for meaning retrieval (tap reveals instantly)
     const frontUrl = card.front_audio || card.word_audio;
     const afterFront = () => {
       if (activeMode !== "vocab" || vcToken !== myToken || vcRevealed) return;
       vcTimer = setTimeout(() => {
         if (activeMode !== "vocab" || vcToken !== myToken || vcRevealed) return;
         revealVocabCard(true);
-      }, 2400);
+      }, 4200);
     };
     if (frontUrl) {
       playUrlOnWordPlayer(
@@ -13901,6 +13926,22 @@ sb.switchMode('dash');
 const roiEl = els['dash-roi-focus'];
 if (!roiEl || !roiEl.innerHTML.includes('临门') || roiEl.innerHTML.includes('—')) {
   throw new Error('Self-test 8 failed: dashboard missing ZPL exam-ROI focus line or contains em dash');
+}
+// 8.6 Quiz 2/3 recall veil is self-paced tap-to-reveal (zero auto-timer rush, full-area overlay)
+const qPt = vm.runInNewContext('DATA.points.find(p => p.primary && !p.primary.is_listening)', sb);
+sb.setMasteryTier(qPt.point_key, 'wip2:20261121', Math.floor(Date.now() / 1000) + 60);
+sb.setupCurrentTurn(qPt.id);
+vm.runInNewContext('viewStage = "quiz";', sb);
+sb.renderTutor();
+const vHtml = (els['voice-card'] && els['voice-card'].innerHTML) || '';
+const qRevBefore = vm.runInNewContext('quizChoicesRevealed', sb);
+const qTimer = vm.runInNewContext('quizRecallTimer', sb);
+if (qRevBefore !== false || qTimer !== null || !vHtml.includes('recall-veil-overlay') || vHtml.includes('—')) {
+  throw new Error('Self-test 8 failed: 2/3 quiz veil must be self-paced tap-to-reveal without auto-timer');
+}
+sb.revealQuizChoicesNow();
+if (vm.runInNewContext('quizChoicesRevealed', sb) !== true) {
+  throw new Error('Self-test 8 failed: revealQuizChoicesNow did not unveil choices');
 }
 """
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
