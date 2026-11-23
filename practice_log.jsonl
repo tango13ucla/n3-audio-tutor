@@ -1135,3 +1135,15 @@
 {"id": "N3-G129", "point": "〜ことから", "choice": "ことから", "correct": "true", "ask_again": "false", "ts": "2026-11-23T01:22:19.000Z"}
 {"id": "VAR9-44", "point": "N3L-086", "choice": "取引先へ日程変更のメールを送る", "correct": "true", "ask_again": "false", "ts": "2026-11-23T01:22:44.000Z"}
 {"id": "VAR9-46", "point": "N3L-402", "choice": "駅前のイタリアンのお店", "correct": "true", "ask_again": "false", "ts": "2026-11-23T01:23:13.000Z"}
+{"id": "GROK-708", "point": "N3L-004", "correct": false, "ask_again": false, "source": "grok", "ts": "2026-11-21T18:13:01-08:00"}
+{"id": "GROK-709", "point": "まるで〜のように", "correct": true, "ask_again": true, "source": "grok", "ts": "2026-11-21T18:13:02-08:00"}
+{"id": "GROK-710", "point": "N3L-004", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-21T18:14:01-08:00"}
+{"id": "GROK-711", "point": "はっきり", "correct": true, "ask_again": true, "source": "grok", "ts": "2026-11-21T18:14:02-08:00"}
+{"id": "GROK-712", "point": "K-002", "correct": true, "ask_again": true, "source": "grok", "ts": "2026-11-21T18:14:03-08:00"}
+{"id": "GROK-713", "point": "N3L-248", "correct": false, "ask_again": false, "source": "grok", "ts": "2026-11-21T18:15:01-08:00"}
+{"id": "GROK-713-2", "point": "N3L-264", "correct": false, "ask_again": false, "source": "grok", "ts": "2026-11-21T18:15:02-08:00"}
+{"id": "GROK-714", "point": "N3L-004", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-21T18:16:01-08:00"}
+{"id": "GROK-715", "point": "〜気味", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-21T18:16:02-08:00"}
+{"id": "GROK-716", "point": "V-028", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-21T18:16:03-08:00"}
+{"id": "GROK-717", "point": "〜とすると", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-21T18:17:01-08:00"}
+{"id": "GROK-718", "point": "いよいよ", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-21T18:17:02-08:00"}

@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-22 20:10 PT",
+  "updated_at": "2026-11-22 20:37 PT",
   "exam_date": "2026-12-06",
   "days_left": 14,
   "target_score": "120+ / 180",
@@ -79,8 +79,8 @@
         "gray": 0
       },
       "green": 42,
-      "yellow": 110,
-      "orange": 0,
+      "yellow": 109,
+      "orange": 1,
       "red": 4,
       "gray": 0
     },
@@ -102,8 +102,8 @@
         "red": 10
       },
       "green": 16,
-      "yellow": 15,
-      "orange": 0,
+      "yellow": 14,
+      "orange": 1,
       "red": 4,
       "gray": 215
     },
@@ -118,10 +118,10 @@
         "gray": 379
       },
       "green": 17,
-      "yellow": 19,
+      "yellow": 18,
       "orange": 0,
-      "red": 4,
-      "gray": 363,
+      "red": 7,
+      "gray": 361,
       "total": 403
     },
     "vocab": {
@@ -137,10 +137,10 @@
         "gray": 0
       },
       "green": 45,
-      "yellow": 22,
+      "yellow": 21,
       "red": 64,
       "total": 131,
-      "orange": 0,
+      "orange": 1,
       "gray": 0
     }
   },
@@ -1549,7 +1549,8 @@
       "history": "Q133(10-21)✅",
       "note": "初步",
       "exam_alert": "",
-      "streak": 1
+      "streak": 2,
+      "last_ok_date": "20261121"
     },
     {
       "id": "G-113",
@@ -1757,7 +1758,7 @@
       "note": "答错退出",
       "exam_alert": "",
       "streak": 3,
-      "last_ok_date": "20261117",
+      "last_ok_date": "20261121",
       "last_ng_date": "20261115"
     },
     {
@@ -1848,13 +1849,13 @@
       "pool": "核心136点",
       "family": "8. 伝聞・様態・傾向",
       "meaning": "简直像……一样",
-      "status": "yellow",
+      "status": "orange",
       "history": "Q347(10-23)E",
       "note": "答错退出",
       "exam_alert": "",
-      "streak": 1,
+      "streak": 0,
       "last_ok_date": "20261121",
-      "last_ng_date": "20261120"
+      "last_ng_date": "20261121"
     },
     {
       "id": "G-136",
@@ -3607,10 +3608,10 @@
       "name": "言う → おっしゃる",
       "example": "何とおっしゃいましたか",
       "tier": "core_n3",
-      "status": "yellow",
+      "status": "orange",
       "note": "未单测（待按考频抽检）",
-      "streak": 1,
-      "last_ng_date": "20261117",
+      "streak": 0,
+      "last_ng_date": "20261121",
       "last_ok_date": "20261118"
     },
     {
@@ -4990,10 +4991,10 @@
       "meaning": "「〜ている」的て形",
       "trap": "听成「待って」，丢失「保持状态」",
       "is_core165": true,
-      "status": "yellow",
+      "status": "red",
       "note": "未测",
-      "streak": 1,
-      "last_ng_date": "20261117",
+      "streak": 0,
+      "last_ng_date": "20261121",
       "last_ok_date": "20261118"
     },
     {
@@ -8197,9 +8198,10 @@
       "meaning": "其实(重要信息)",
       "trap": "实は后=答案",
       "is_core165": false,
-      "status": "gray",
+      "status": "red",
       "note": "未测",
-      "streak": 0
+      "streak": 0,
+      "last_ng_date": "20261121"
     },
     {
       "id": "N3L-249",
@@ -8407,9 +8409,10 @@
       "meaning": "也考虑过…但",
       "trap": "主旨在でも之后",
       "is_core165": false,
-      "status": "gray",
+      "status": "red",
       "note": "未测",
-      "streak": 0
+      "streak": 0,
+      "last_ng_date": "20261121"
     },
     {
       "id": "N3L-265",
@@ -10469,14 +10472,14 @@
     {
       "word": "はっきり",
       "category": "1. 拟声拟态（〜っ〜り家族）",
-      "status": "yellow",
-      "seen": 18,
+      "status": "orange",
+      "seen": 19,
       "wrong": 8,
-      "streak": 1,
+      "streak": 0,
       "due": "2026-11-13",
       "note": "累计见 2 次｜错 2 次｜当前连对 0",
       "last_ok_date": "20261121",
-      "last_ng_date": "20261120"
+      "last_ng_date": "20261121"
     },
     {
       "word": "続く",
@@ -10911,11 +10914,11 @@
       "word": "いよいよ",
       "category": "高频假名副词",
       "status": "green",
-      "seen": 8,
+      "seen": 9,
       "wrong": 3,
       "streak": 3,
       "classroom_note": "声调 ② · 终于到了紧要关头（明日はいよいよ試験だ）",
-      "last_ok_date": "20261118",
+      "last_ok_date": "20261121",
       "last_ng_date": "20261116"
     },
     {
@@ -12691,6 +12694,18 @@
     "2026-11-21T08:00:01.000Z|N3-V37|めったに|めったに",
     "2026-11-21T08:00:11.000Z|N3-L32|N3L-403|友達から美味しいと聞いて気になっている",
     "2026-11-21T08:00:20.000Z|N3-V35|囲む|かこんで",
+    "2026-11-21T18:13:01-08:00|GROK-708|N3L-004|",
+    "2026-11-21T18:13:02-08:00|GROK-709|まるで〜のように|",
+    "2026-11-21T18:14:01-08:00|GROK-710|N3L-004|",
+    "2026-11-21T18:14:02-08:00|GROK-711|はっきり|",
+    "2026-11-21T18:14:03-08:00|GROK-712|K-002|",
+    "2026-11-21T18:15:01-08:00|GROK-713|N3L-248|",
+    "2026-11-21T18:15:02-08:00|GROK-713-2|N3L-264|",
+    "2026-11-21T18:16:01-08:00|GROK-714|N3L-004|",
+    "2026-11-21T18:16:02-08:00|GROK-715|〜気味|",
+    "2026-11-21T18:16:03-08:00|GROK-716|V-028|",
+    "2026-11-21T18:17:01-08:00|GROK-717|〜とすると|",
+    "2026-11-21T18:17:02-08:00|GROK-718|いよいよ|",
     "2026-11-21T23:03:05.000Z|VAR8-05|〜に基づいて|に基づいて",
     "2026-11-21T23:03:15.000Z|VAR8-06|〜ようとする|した",
     "2026-11-21T23:03:46.000Z|VAR9-34|V-028|食べられる",
@@ -12893,7 +12908,7 @@
     "2026-11-13T22:33:31.544371-08:00",
     "2026-11-13T22:40:32.759071-08:00"
   ],
-  "_grok_ledger_row_cursor": 708,
+  "_grok_ledger_row_cursor": 719,
   "_master_sheet_styled_v3": true,
   "_applied_override_ts": {
     "T-002": 1794762957,
@@ -13085,7 +13100,7 @@
     "flash_done": false
   },
   "study_date": "2026-11-22",
-  "_baked_epoch": 1795407044,
+  "_baked_epoch": 1795408644,
   "word_lookups": {
     "おく": {
       "count": 1,
