@@ -1066,8 +1066,6 @@ try:
                     "why_line": str(_av.get("why_line") or ""),
                     "form_line": str(_av.get("core_rule") or ""),
                     "exp_turns": [
-                        ("JF", str(_av.get("full_ja") or "")),
-                        ("PAUSE", 0.26),
                         ("T", str(_av.get("exp_zh") or "")),
                     ],
                 }

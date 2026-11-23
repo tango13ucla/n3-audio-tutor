@@ -45,11 +45,19 @@ except Exception:
     genai = None
     genai_types = None
 
-from adaptive_bank import CORE_N3_KANA_VOCAB, EXTRA_WORDS
+from adaptive_bank import (
+    CORE_N3_KANA_VOCAB,
+    EXTRA_PRIMARY_CARDS,
+    EXTRA_WORDS,
+    NEW_PRIMARY_CARDS,
+    NEW_VARIANT_CARDS,
+    VARIANT_CARDS,
+)
 from clear_explanations import CARDS_75
+from direct_explain_rules import build_direct_exp_turns
 from phrase_and_word_lexicon import PHRASE_AND_WORD_LEXICON
 from sentence_lexicon import SENTENCE_LEXICON
-from tutor_data import KANA_ADVERBS_36, WORD_DICT
+from tutor_data import KANA_ADVERBS_36, TUTOR_ITEMS, WORD_DICT
 from vocab_cards import VOCAB_CARDS
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -58,7 +66,7 @@ WORDS_AUDIO_DIR = os.path.join(AUDIO_DIR, "words")
 MANIFEST_PATH = os.path.join(AUDIO_DIR, "audio_manifest.json")
 PROXY_URL = os.environ.get("HTTPS_PROXY") or os.environ.get("HTTP_PROXY") or None
 COMM_KWARGS = {"proxy": PROXY_URL} if PROXY_URL else {}
-MAX_TRIES = 5 if os.environ.get("GITHUB_ACTIONS") == "true" else 1
+MAX_TRIES = 5
 GEMINI_API_KEY = (os.environ.get("GEMINI_API_KEY") or "").strip()
 GEMINI_TTS_MODEL = os.environ.get("GEMINI_TTS_MODEL", "gemini-2.5-flash-preview-tts")
 
@@ -191,14 +199,14 @@ async def detect_voice_map() -> dict:
                 if cand_f in short_names:
                     f_ja_voice = cand_f
                     break
-            print(f"Quiz Zen v18 voices: T={t_voice} (+5% ZH / +0% JA), JF/JM=+0% normal native speed")
+            print(f"Quiz Zen v19 Direct voices: T={t_voice} (+8% brisk ZH / +0% JA), JF/JM=+0% normal native speed")
         except Exception as e:
             print(f"[info] list_voices fallback: {e}")
 
     return {
         "JF": ("ja-JP-NanamiNeural", "+0%"),
         "JM": ("ja-JP-KeitaNeural", "+0%"),
-        "T": (t_voice, "+5%"),
+        "T": (t_voice, "+8%"),
         "T_VC": (t_voice, "+5%"),
         "T_JA": (t_voice, "+0%"),
         "EXP_F_JA": (f_ja_voice, "+0%"),
@@ -456,8 +464,17 @@ async def main():
     can_synth = (edge_tts is not None) and (shutil.which("ffmpeg") is not None)
 
     voice_map = await detect_voice_map()
-    det_tag = f"gemini:{GEMINI_TTS_MODEL}:v18" if (GEMINI_API_KEY and genai is not None) else "edge:Brian+5_0_v18"
-    sem = asyncio.Semaphore(14)
+    det_tag = f"gemini:{GEMINI_TTS_MODEL}:v19_direct" if (GEMINI_API_KEY and genai is not None) else "edge:Brian+8_0_v19_direct"
+    sem = asyncio.Semaphore(16)
+
+    card_meta_lookup = {}
+    if isinstance(TUTOR_ITEMS, dict):
+        for _tid, _tval in TUTOR_ITEMS.items():
+            card_meta_lookup[_tid] = dict(_tval, id=_tid)
+    for _src_list in (EXTRA_PRIMARY_CARDS, NEW_PRIMARY_CARDS, VARIANT_CARDS, NEW_VARIANT_CARDS):
+        for _it in _src_list:
+            if _it.get("id"):
+                card_meta_lookup[_it["id"]] = _it
 
     to_build_q = {}
     to_build_exp = {}
@@ -525,12 +542,12 @@ async def main():
                     opt_files.append((c_label, o_fn))
                 listen_specs[qid] = {"stem_fn": stem_fn, "opt_spk": opt_spk, "opt_files": opt_files}
 
-        spk_set = {s for s, _ in card["exp_turns"]}
-        two_spk = ("JF" in spk_set and "JM" in spk_set)
+        # Zen v19 Direct-to-Chinese Answer Audio: ZERO Japanese sentence/dialogue re-read!
+        direct_turns = build_direct_exp_turns(qid, card, card_meta_lookup.get(qid))
         e_expanded = []
-        for spk, val in card["exp_turns"]:
-            e_expanded.extend(expand_exp_turn(spk, val, two_spk))
-        e_sig = f"v18e:{det_tag}:" + json.dumps(e_expanded, ensure_ascii=False)
+        for spk, val in direct_turns:
+            e_expanded.extend(expand_exp_turn(spk, val, False))
+        e_sig = f"v19e_direct:{det_tag}:" + json.dumps(e_expanded, ensure_ascii=False)
         e_hash = hashlib.sha256(e_sig.encode("utf-8")).hexdigest()[:12]
         hashes_exp[qid] = e_hash
         e_file = f"{qid}_exp.mp3"
@@ -543,7 +560,7 @@ async def main():
     built_lp_ok = set()
 
     if can_synth and (not vocab_only) and (to_build_q or to_build_exp or to_build_lp):
-        tmpdir = tempfile.mkdtemp(prefix="n3_cards_v18_")
+        tmpdir = tempfile.mkdtemp(prefix="n3_cards_v19_")
         try:
             needed_clips = {}
             needed_pauses = set()
@@ -586,26 +603,35 @@ async def main():
                     if trim_p:
                         clip_lookup[key] = trim_p
 
-            for qid, turns in to_build_q.items():
-                q_abs = os.path.join(AUDIO_DIR, f"{qid}_q.mp3")
-                if stitch_turns(turns, clip_lookup, silence_lookup, q_abs, tmpdir, f"q_{qid}"):
-                    built_q_ok.add(qid)
-                else:
-                    print(f"[warn] stitch_turns incomplete for Q {qid}")
+                def _stitch_q(item):
+                    qid, turns = item
+                    return qid, stitch_turns(turns, clip_lookup, silence_lookup, os.path.join(AUDIO_DIR, f"{qid}_q.mp3"), tmpdir, f"q_{qid}")
 
-            for qid, turns in to_build_exp.items():
-                e_abs = os.path.join(AUDIO_DIR, f"{qid}_exp.mp3")
-                if stitch_turns(turns, clip_lookup, silence_lookup, e_abs, tmpdir, f"e_{qid}"):
-                    built_e_ok.add(qid)
-                else:
-                    print(f"[warn] stitch_turns incomplete for Exp {qid}")
+                def _stitch_e(item):
+                    qid, turns = item
+                    return qid, stitch_turns(turns, clip_lookup, silence_lookup, os.path.join(AUDIO_DIR, f"{qid}_exp.mp3"), tmpdir, f"e_{qid}")
 
-            for lp_fn, turns in to_build_lp.items():
-                lp_abs = os.path.join(AUDIO_DIR, lp_fn)
-                if stitch_turns(turns, clip_lookup, silence_lookup, lp_abs, tmpdir, f"lp_{lp_fn.replace('.mp3', '')}"):
-                    built_lp_ok.add(lp_fn)
-                else:
-                    print(f"[warn] stitch_turns incomplete for LP {lp_fn}")
+                def _stitch_lp(item):
+                    lp_fn, turns = item
+                    return lp_fn, stitch_turns(turns, clip_lookup, silence_lookup, os.path.join(AUDIO_DIR, lp_fn), tmpdir, f"lp_{lp_fn.replace('.mp3', '')}")
+
+                for qid, ok in pool.map(_stitch_q, to_build_q.items()):
+                    if ok:
+                        built_q_ok.add(qid)
+                    else:
+                        print(f"[warn] stitch_turns incomplete for Q {qid}")
+
+                for qid, ok in pool.map(_stitch_e, to_build_exp.items()):
+                    if ok:
+                        built_e_ok.add(qid)
+                    else:
+                        print(f"[warn] stitch_turns incomplete for Exp {qid}")
+
+                for lp_fn, ok in pool.map(_stitch_lp, to_build_lp.items()):
+                    if ok:
+                        built_lp_ok.add(lp_fn)
+                    else:
+                        print(f"[warn] stitch_turns incomplete for LP {lp_fn}")
 
             print(
                 f"Synthesized & trimmed {len(built_q_ok)}/{len(to_build_q)} Q MP3s, "

@@ -2161,6 +2161,24 @@ html = r"""<!DOCTYPE html>
     line-height: 1.52;
     letter-spacing: 0.01em;
   }
+  .res-point-head {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 7px;
+    font-size: 13px;
+    line-height: 1.48;
+    color: var(--moss);
+    font-weight: 500;
+    letter-spacing: 0.015em;
+  }
+  .res-point-subj {
+    color: var(--ink-3);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+  }
   .res-cue {
     display: grid;
     grid-template-columns: auto 1fr;
@@ -8217,6 +8235,20 @@ function renderTutor() {
   const leftStampTone = fullyPassed ? "" : " moss-tone";
   const rightStampLabel = fullyPassed ? "下一题 →" : (stillNeedsVariantPass ? "3 题后复考 →" : "未过 · 3 题后重考 →");
   const mainBtnLabel = fullyPassed ? "下一题 →" : (stillNeedsVariantPass ? "继续（3 题后复考） →" : "未过 · 3 题后重考 →");
+  const _twinTitleMap = {
+    "VAR-G05": "〜ついでに（顺便做另一件事）",
+    "VAR-G10": "〜はずがない（按理绝不可能）",
+    "VAR-G13": "〜そうだ（样态 · 眼看就要…）",
+    "VAR-G20": "〜ことにしている（个人坚持习惯）",
+    "VAR-G22": "〜てしかたがない（…得受不了）",
+    "VAR-H01": "食べる／飲む → いただく（謙譲）",
+    "VAR-H02": "一段动词 使役形（させる）",
+  };
+  const resPointTitle = _twinTitleMap[q.id] || (
+    p.subject === "词汇" && q.answer && /^[\u3040-\u30ffー]+$/.test(q.answer) && p.point && !p.point.includes(q.answer) && !/[\u4e00-\u9fff]/.test(p.point)
+      ? q.answer
+      : (p.point || "")
+  );
 
   box.innerHTML = `
     <div class="tutor-stamp right" id="tutor-st-right">${rightStampLabel}</div>
@@ -8233,6 +8265,7 @@ function renderTutor() {
       ${(q.is_listening && renderDialogueHTML(q.full_ja, q.answer, q.zh_meaning)) || `<div class="result-ja">${annotateSentenceWithAnswer(q.full_ja, q.answer)}</div>
       ${q.zh_meaning ? `<p class="result-zh">${escapeHtml(q.zh_meaning)}</p>` : ""}`}
       <div class="result-divider"></div>
+      ${resPointTitle ? `<div class="res-point-head"><span class="res-point-subj">${escapeHtml(p.subject || "")}</span><span>${escapeHtml(resPointTitle)}</span></div>` : ""}
       ${q.why_line ? `<div class="res-cue"><span class="cue-tag">要点</span><span class="cue-txt">${escapeHtml(q.why_line)}</span></div>` : ""}
       <div class="opt-breakdown${q.is_listening ? " is-listen" : ""}">${optRowsHTML}</div>
     </div>

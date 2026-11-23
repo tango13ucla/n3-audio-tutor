@@ -8,6 +8,9 @@ Designed for Chinese native speakers starting N2 grammar from scratch:
 - Mapped strictly across Intake Days 1..90 (2-3 points/day; travel window Days 8-34
   capped at exactly 2 points/day; home sprint Days 35-90 at 2-3 points/day).
 - Built-in spaced echo callback offsets (+1, +5, +14 days) for Story-First Radio & Quiz.
+- Answer audio standard (Zen v19 Direct Explain): NEVER re-read the Japanese sentence at the start;
+  open at 0.00s directly in brisk Chinese naming the point/pattern (using `kana` + `soul_meaning`)
+  and explaining the question directly.
 - 100% Zero-PII public study module.
 """
 
