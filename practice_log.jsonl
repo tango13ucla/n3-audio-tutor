@@ -1186,3 +1186,14 @@
 {"id": "N3-G131", "point": "〜にかけて", "choice": "にかけて", "correct": "true", "ask_again": "false", "ts": "2026-11-23T07:04:39.000Z"}
 {"id": "N3-L18", "point": "N3L-021", "choice": "不确定", "correct": "false", "ask_again": "false", "ts": "2026-11-23T07:04:52.000Z"}
 {"id": "N3-L21", "point": "N3L-005", "choice": "外へ散歩に出かけている", "correct": "false", "ask_again": "false", "ts": "2026-11-23T07:05:26.000Z"}
+{"id": "N3-L23", "point": "N3L-020", "choice": "コンビニでコーヒーを買って戻ってくる", "correct": "true", "ask_again": "false", "ts": "2026-11-23T07:10:04.000Z"}
+{"id": "N3-L18", "point": "N3L-021", "choice": "総務の林さんに使い方を聞きに行く", "correct": "true", "ask_again": "false", "ts": "2026-11-23T07:10:43.000Z"}
+{"id": "N3-L21", "point": "N3L-005", "choice": "新しい小説を読んでいる", "correct": "true", "ask_again": "false", "ts": "2026-11-23T07:11:03.000Z"}
+{"id": "N3-H22", "point": "V-069", "choice": "貼ってあります", "correct": "true", "ask_again": "false", "ts": "2026-11-23T07:11:14.000Z"}
+{"id": "HES:N3-H33", "point": "K-007", "choice": "犹豫过关", "correct": "true", "ask_again": "false", "ts": "2026-11-23T07:11:38.000Z"}
+{"id": "N3-H33", "point": "K-007", "choice": "お休みになり", "correct": "true", "ask_again": "false", "ts": "2026-11-23T07:11:38.000Z"}
+{"id": "VAR6-06", "point": "わざわざ", "choice": "わざわざ", "correct": "true", "ask_again": "false", "ts": "2026-11-23T07:11:52.000Z"}
+{"id": "N3-G31", "point": "〜にとって", "choice": "にとって", "correct": "true", "ask_again": "false", "ts": "2026-11-23T07:12:06.000Z"}
+{"id": "N3-G67", "point": "〜一方で", "choice": "一方で", "correct": "true", "ask_again": "false", "ts": "2026-11-23T07:12:18.000Z"}
+{"id": "N3-G71", "point": "〜として", "choice": "として", "correct": "true", "ask_again": "false", "ts": "2026-11-23T07:12:32.000Z"}
+{"id": "N3-G74", "point": "〜によると／によれば", "choice": "によると", "correct": "true", "ask_again": "false", "ts": "2026-11-23T07:12:40.000Z"}
