@@ -4004,13 +4004,15 @@ function loadAdaptiveState() {
   const base = createFreshAdaptiveState();
 
   // 1. Seed from cloud_state_snapshot.json / practice_log.jsonl baked into DATA.cloud_sync
+  const radioDurCap = Math.max(60, Math.floor((DATA.radio && DATA.radio.duration_sec) || 3400) - 8);
+  const clampRadioSec = (s) => Math.max(0, Math.min(radioDurCap, Math.floor(Number(s) || 0)));
   try {
     const cs = DATA.cloud_sync || {};
     const sd = cs.seeded_day || {};
     if (typeof sd.resetAt === "number" && sd.resetAt > base.resetAt) base.resetAt = Math.floor(sd.resetAt);
     if (typeof sd.radioMaxSec === "number" && sd.radioMaxSec > base.radioMaxSec) base.radioMaxSec = Math.floor(sd.radioMaxSec);
-    if ((!RADIO_SIG || String(sd.radioSig || "") === RADIO_SIG) && Array.isArray(sd.radioPos) && sd.radioPos.length === 2 && (sd.radioPos[1] || 0) > (base.radioPos[1] || 0)) {
-      base.radioPos = [Math.floor(sd.radioPos[0] || 0), Math.floor(sd.radioPos[1] || 0)];
+    if (Array.isArray(sd.radioPos) && sd.radioPos.length === 2 && (sd.radioPos[1] || 0) > (base.radioPos[1] || 0)) {
+      base.radioPos = [clampRadioSec(sd.radioPos[0]), Math.floor(sd.radioPos[1] || 0)];
     }
     const gMap = sd.greenAt || {};
     Object.keys(gMap).forEach(rawId => {
@@ -4101,8 +4103,16 @@ function loadAdaptiveState() {
         if (typeof saved.radioMaxSec === "number" && saved.radioMaxSec > base.radioMaxSec) {
           base.radioMaxSec = Math.floor(saved.radioMaxSec);
         }
-        if ((!RADIO_SIG || String(saved.radioSig || "") === RADIO_SIG) && Array.isArray(saved.radioPos) && saved.radioPos.length === 2 && (saved.radioPos[1] || 0) > (base.radioPos[1] || 0)) {
-          base.radioPos = [Math.floor(saved.radioPos[0] || 0), Math.floor(saved.radioPos[1] || 0)];
+        if (Array.isArray(saved.radioPos) && saved.radioPos.length === 2) {
+          const sSec = clampRadioSec(saved.radioPos[0]);
+          const sTs = Math.floor(saved.radioPos[1] || 0);
+          const bSec = Math.floor((base.radioPos && base.radioPos[0]) || 0);
+          const bTs = Math.floor((base.radioPos && base.radioPos[1]) || 0);
+          // Never let an accidental 0-2s glitch overwrite a real same-day resume spot unless user explicitly finished/reset
+          const incomingReal = sSec > 2 || bSec <= 2;
+          if (incomingReal && (sTs > bTs || (sTs === bTs && sSec > bSec))) {
+            base.radioPos = [sSec, sTs];
+          }
         }
         if (saved.masteryOverrides && typeof saved.masteryOverrides === "object") {
           const tsObj = saved.masteryOverrideTs || {};
@@ -4165,12 +4175,26 @@ function loadAdaptiveState() {
       } catch (innerErr) {}
     });
 
+    let bestLocalRadioPos = 0;
     const legacyRadioPos = parseFloat(localStorage.getItem(LEGACY_RADIO_POS_KEY) || "0");
     const savedRadioPos = parseFloat(localStorage.getItem(RADIO_POS_KEY) || "0");
-    if (legacyRadioPos > base.radioMaxSec) base.radioMaxSec = Math.floor(legacyRadioPos);
-    if (savedRadioPos > base.radioMaxSec) base.radioMaxSec = Math.floor(savedRadioPos);
-    if (savedRadioPos > 0 && (base.radioPos[1] || 0) === 0) {
-      base.radioPos = [Math.floor(savedRadioPos), 2];
+    bestLocalRadioPos = Math.max(bestLocalRadioPos, legacyRadioPos || 0, savedRadioPos || 0);
+    // Also check any earlier same-day revision keys (e.g. after a same-day audio re-render)
+    const dayPosPrefix = LEGACY_RADIO_POS_KEY + "_";
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(dayPosPrefix)) {
+        const v = parseFloat(localStorage.getItem(k) || "0");
+        if (v > bestLocalRadioPos) bestLocalRadioPos = v;
+      }
+    }
+    if (bestLocalRadioPos > base.radioMaxSec) base.radioMaxSec = Math.floor(bestLocalRadioPos);
+    if (bestLocalRadioPos > 2 && ((base.radioPos[1] || 0) === 0 || (base.radioPos[0] || 0) <= 2)) {
+      base.radioPos = [clampRadioSec(bestLocalRadioPos), Math.max(2, base.radioPos[1] || 0)];
+    }
+    // Safety fallback: if mid-episode (heard >10s, not finished) but radioPos somehow read <=2s, recover near radioMaxSec
+    if ((base.radioPos[0] || 0) <= 2 && base.radioMaxSec > 10 && base.radioMaxSec < radioDurCap - 20) {
+      base.radioPos = [clampRadioSec(Math.max(0, base.radioMaxSec - 3)), Math.max(2, base.radioPos[1] || 0)];
     }
   } catch (e) {}
 
@@ -4689,18 +4713,19 @@ function applyIncomingPacket(pkt) {
       changed = true;
     }
 
-    if ((!RADIO_SIG || String(pkt.rsig || "") === RADIO_SIG) && Array.isArray(pkt.rp) && pkt.rp.length === 2) {
-      const rpSec = Math.floor(pkt.rp[0] || 0);
+    if (Array.isArray(pkt.rp) && pkt.rp.length === 2) {
+      const durCap = Math.max(60, Math.floor((DATA.radio && DATA.radio.duration_sec) || 3400) - 8);
+      const rpSec = Math.max(0, Math.min(durCap, Math.floor(pkt.rp[0] || 0)));
       const rpTs = Math.floor(pkt.rp[1] || 0);
+      const mySec = Math.floor((A.radioPos && A.radioPos[0]) || 0);
       const myTs = (A.radioPos && A.radioPos[1]) || 0;
-      if (rpTs > myTs || (rpTs === myTs && rpSec > ((A.radioPos && A.radioPos[0]) || 0))) {
+      const incomingReal = rpSec > 2 || mySec <= 2;
+      if (incomingReal && (rpTs > myTs || (rpTs === myTs && rpSec > mySec))) {
         A.radioPos = [rpSec, rpTs];
         A.radioSig = RADIO_SIG;
-        try { localStorage.setItem(RADIO_POS_KEY, String(rpSec)); } catch (e) {}
+        writeLocalRadioPos(rpSec);
         if (radioInitialized && radioPlayer.paused && Math.abs((radioPlayer.currentTime || 0) - rpSec) > 1) {
-          lastSavedSec = rpSec;
-          radioPlayer.currentTime = rpSec;
-          updateRadioLiveDisplay(rpSec);
+          applyRadioSeek(rpSec);
         }
         changed = true;
       }
@@ -5575,6 +5600,77 @@ function syncAudioButtons() {
 let radioInitialized = false;
 let lastSavedSec = -1;
 let lastRenderedSegIdx = -1;
+let pendingRadioSeekSec = null;
+
+function writeLocalRadioPos(sec) {
+  const s = Math.max(0, Math.floor(Number(sec) || 0));
+  try {
+    localStorage.setItem(LEGACY_RADIO_POS_KEY, String(s));
+    localStorage.setItem(RADIO_POS_KEY, String(s));
+    // Clean stale earlier same-day revision keys so an explicit scrub back to 0 can never be resurrected
+    const dayPrefix = LEGACY_RADIO_POS_KEY + "_";
+    const stale = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(dayPrefix) && k !== RADIO_POS_KEY) stale.push(k);
+    }
+    stale.forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
+  } catch (e) {}
+}
+
+function getEffectiveRadioDuration() {
+  return (radioPlayer.duration && isFinite(radioPlayer.duration) && radioPlayer.duration > 10)
+    ? radioPlayer.duration
+    : (DATA.radio.duration_sec || 2400);
+}
+
+function applyRadioSeek(sec) {
+  const dur = getEffectiveRadioDuration();
+  const target = Math.max(0, Math.min(Math.max(0, dur - 2), Number(sec) || 0));
+  pendingRadioSeekSec = target;
+  lastSavedSec = target;
+  if (radioPlayer.readyState >= 1) {
+    try {
+      radioPlayer.currentTime = target;
+      if (Math.abs((radioPlayer.currentTime || 0) - target) <= 1.5) {
+        pendingRadioSeekSec = null;
+      }
+    } catch (e) {}
+  }
+  updateRadioLiveDisplay(target);
+}
+
+function flushPendingRadioSeek() {
+  if (pendingRadioSeekSec === null) return false;
+  if (radioPlayer.readyState < 1) return false;
+  const dur = getEffectiveRadioDuration();
+  const target = Math.max(0, Math.min(Math.max(0, dur - 2), pendingRadioSeekSec));
+  if (Math.abs((radioPlayer.currentTime || 0) - target) > 1.5) {
+    try {
+      radioPlayer.currentTime = target;
+    } catch (e) {}
+  }
+  if (Math.abs((radioPlayer.currentTime || 0) - target) <= 1.5) {
+    pendingRadioSeekSec = null;
+    updateRadioLiveDisplay(radioPlayer.currentTime || target);
+    return true;
+  }
+  return false;
+}
+
+function persistRadioPositionNow(pushNow) {
+  if (!radioInitialized || radioPlayer.ended || pendingRadioSeekSec !== null) return;
+  const t = Math.floor(radioPlayer.currentTime || 0);
+  if (t > 2) {
+    lastSavedSec = t;
+    A.radioPos = [t, nowUnixSec()];
+    A.radioSig = RADIO_SIG;
+    if (t > (A.radioMaxSec || 0)) A.radioMaxSec = t;
+    writeLocalRadioPos(t);
+    saveAdaptiveState();
+    if (pushNow) pushCloudSync(true);
+  }
+}
 
 function formatMMSS(sec) {
   const s = Math.max(0, Math.floor(sec || 0));
@@ -5602,22 +5698,37 @@ function paintRadioSeekProgress(t) {
 function ensureRadioReady() {
   if (!radioInitialized) {
     radioInitialized = true;
-    radioPlayer.src = DATA.radio.audio_url;
-    const localPos = parseFloat(localStorage.getItem(RADIO_POS_KEY) || "0");
-    const hasCloud = Array.isArray(A.radioPos) && A.radioPos.length === 2 && (A.radioPos[1] || 0) > 0;
-    const savedPos = hasCloud ? (A.radioPos[0] || 0) : localPos;
-    lastSavedSec = savedPos;
-    if (savedPos > 3 && savedPos < (DATA.radio.duration_sec || 2400) - 10) {
-      radioPlayer.currentTime = savedPos;
+    const dur = DATA.radio.duration_sec || 2400;
+    const localPos = Math.max(
+      parseFloat(localStorage.getItem(RADIO_POS_KEY) || "0") || 0,
+      parseFloat(localStorage.getItem(LEGACY_RADIO_POS_KEY) || "0") || 0
+    );
+    const hasState = Array.isArray(A.radioPos) && A.radioPos.length === 2 && (A.radioPos[1] || 0) > 0;
+    let savedPos = hasState ? (A.radioPos[0] || 0) : localPos;
+    if (savedPos <= 2 && localPos > 2) savedPos = localPos;
+    if (savedPos <= 2 && (A.radioMaxSec || 0) > 10 && (A.radioMaxSec || 0) < dur - 25) {
+      savedPos = Math.max(0, (A.radioMaxSec || 0) - 3);
     }
+    savedPos = Math.max(0, Math.min(Math.max(0, dur - 8), Math.floor(savedPos || 0)));
+
     document.getElementById("radio-spd-btn").textContent = `${radioSpeed}x`;
     const seekEl = document.getElementById("radio-seek");
-    seekEl.max = Math.ceil(DATA.radio.duration_sec || 2100);
-    document.getElementById("radio-tot-time").textContent = formatMMSS(DATA.radio.duration_sec || 2100);
+    seekEl.max = Math.ceil(dur);
+    document.getElementById("radio-tot-time").textContent = formatMMSS(dur);
     renderRadioChapters(0);
-    updateRadioLiveDisplay(radioPlayer.currentTime || savedPos || 0);
+
+    radioPlayer.preload = "metadata";
+    radioPlayer.src = DATA.radio.audio_url;
+    if (savedPos > 2) {
+      applyRadioSeek(savedPos);
+    } else {
+      lastSavedSec = 0;
+      updateRadioLiveDisplay(0);
+    }
+    try { radioPlayer.load(); } catch (e) {}
   } else {
-    paintRadioSeekProgress(radioPlayer.currentTime || 0);
+    const shownT = (pendingRadioSeekSec !== null) ? pendingRadioSeekSec : (radioPlayer.currentTime || 0);
+    paintRadioSeekProgress(shownT);
   }
   radioPlayer.defaultPlaybackRate = radioSpeed;
   radioPlayer.playbackRate = radioSpeed;
@@ -5646,8 +5757,12 @@ function toggleRadioPlay(forcePlay) {
   ensureRadioReady();
   const wantPlay = typeof forcePlay === "boolean" ? forcePlay : radioPlayer.paused;
   if (wantPlay) {
+    flushPendingRadioSeek();
     radioPlayer.playbackRate = radioSpeed;
-    radioPlayer.play().catch(() => {});
+    const p = radioPlayer.play();
+    if (p && typeof p.then === "function") {
+      p.then(() => { flushPendingRadioSeek(); }).catch(() => {});
+    }
   } else {
     radioPlayer.pause();
   }
@@ -5655,33 +5770,35 @@ function toggleRadioPlay(forcePlay) {
 }
 
 function markRadioPosByUser(t) {
-  A.radioPos = [Math.floor(t || 0), nowUnixSec()];
+  const s = Math.max(0, Math.floor(t || 0));
+  A.radioPos = [s, nowUnixSec()];
   A.radioSig = RADIO_SIG;
-  try { localStorage.setItem(RADIO_POS_KEY, String(Math.floor(t || 0))); } catch (e) {}
+  writeLocalRadioPos(s);
   saveAdaptiveState();
   scheduleCloudPush(800);
 }
 
 function seekRadioBy(delta) {
   ensureRadioReady();
-  const dur = radioPlayer.duration || DATA.radio.duration_sec || 2100;
-  radioPlayer.currentTime = Math.max(0, Math.min(dur - 1, (radioPlayer.currentTime || 0) + delta));
-  updateRadioLiveDisplay(radioPlayer.currentTime);
-  markRadioPosByUser(radioPlayer.currentTime);
+  const dur = getEffectiveRadioDuration();
+  const baseT = (pendingRadioSeekSec !== null) ? pendingRadioSeekSec : (radioPlayer.currentTime || 0);
+  const nextT = Math.max(0, Math.min(dur - 1, baseT + delta));
+  applyRadioSeek(nextT);
+  markRadioPosByUser(nextT);
 }
 
 function jumpRadioChapter(startSec) {
   ensureRadioReady();
-  radioPlayer.currentTime = startSec;
+  applyRadioSeek(startSec);
+  markRadioPosByUser(startSec);
   if (radioPlayer.paused) toggleRadioPlay(true);
-  updateRadioLiveDisplay(startSec);
 }
 
 function onRadioScrub(val) {
   ensureRadioReady();
-  radioPlayer.currentTime = parseFloat(val) || 0;
-  updateRadioLiveDisplay(radioPlayer.currentTime);
-  markRadioPosByUser(radioPlayer.currentTime);
+  const nextT = parseFloat(val) || 0;
+  applyRadioSeek(nextT);
+  markRadioPosByUser(nextT);
 }
 
 function cycleRadioSpeed() {
@@ -5713,9 +5830,10 @@ function updateRadioLiveDisplay(t) {
     const prevMin = Math.floor((A.radioMaxSec || 0) / 60);
     A.radioMaxSec = Math.floor(t);
     if (Math.floor(A.radioMaxSec / 60) !== prevMin) {
-      if (!radioPlayer.paused) {
+      if (!radioPlayer.paused && pendingRadioSeekSec === null) {
         A.radioPos = [Math.floor(t), nowUnixSec()];
         A.radioSig = RADIO_SIG;
+        writeLocalRadioPos(t);
       }
       saveAdaptiveState();
       renderGreenBoard();
@@ -5783,44 +5901,65 @@ function syncRadioUI() {
   if (bTabBtn) bTabBtn.classList.toggle("is-playing", playing);
 }
 
-radioPlayer.addEventListener("play", syncRadioUI);
+radioPlayer.addEventListener("play", () => {
+  flushPendingRadioSeek();
+  syncRadioUI();
+});
+radioPlayer.addEventListener("playing", () => {
+  flushPendingRadioSeek();
+  syncRadioUI();
+});
+radioPlayer.addEventListener("canplay", () => {
+  flushPendingRadioSeek();
+});
 radioPlayer.addEventListener("pause", () => {
   syncRadioUI();
+  if (pendingRadioSeekSec !== null) return;
   const t = Math.floor(radioPlayer.currentTime || 0);
   if (t > 2) {
+    lastSavedSec = t;
     A.radioPos = [t, nowUnixSec()];
     A.radioSig = RADIO_SIG;
     if (t > (A.radioMaxSec || 0)) A.radioMaxSec = t;
-    try { localStorage.setItem(RADIO_POS_KEY, String(t)); } catch (e) {}
+    writeLocalRadioPos(t);
     saveAdaptiveState();
     scheduleCloudPush(200);
   }
 });
 radioPlayer.addEventListener("ended", () => {
+  pendingRadioSeekSec = null;
   const dur = Math.ceil(radioPlayer.duration || DATA.radio.duration_sec || 2100);
   A.radioMaxSec = dur;
   A.radioPos = [0, nowUnixSec()];
   A.radioSig = RADIO_SIG;
-  try { localStorage.setItem(RADIO_POS_KEY, "0"); } catch (e) {}
+  writeLocalRadioPos(0);
   saveAdaptiveState();
   renderGreenBoard();
   syncRadioUI();
   scheduleCloudPush(100);
 });
 radioPlayer.addEventListener("loadedmetadata", () => {
-  updateRadioLiveDisplay(radioPlayer.currentTime || 0);
+  if (pendingRadioSeekSec !== null) {
+    flushPendingRadioSeek();
+    updateRadioLiveDisplay(pendingRadioSeekSec !== null ? pendingRadioSeekSec : (radioPlayer.currentTime || 0));
+  } else {
+    updateRadioLiveDisplay(radioPlayer.currentTime || 0);
+  }
   renderGreenBoard();
 });
 radioPlayer.addEventListener("timeupdate", () => {
+  if (pendingRadioSeekSec !== null) {
+    if (!flushPendingRadioSeek()) return;
+  }
   const t = radioPlayer.currentTime || 0;
   updateRadioLiveDisplay(t);
-  if (!radioPlayer.paused && Math.abs(t - lastSavedSec) >= 3) {
+  if (!radioPlayer.paused && Math.abs(t - lastSavedSec) >= 2) {
     lastSavedSec = t;
     A.radioPos = [Math.floor(t), nowUnixSec()];
     A.radioSig = RADIO_SIG;
-    try { localStorage.setItem(RADIO_POS_KEY, String(Math.floor(t))); } catch (e) {}
+    writeLocalRadioPos(t);
     saveAdaptiveState();
-    if (Date.now() - lastRadioCloudPushMs > 90000) {
+    if (Date.now() - lastRadioCloudPushMs > 60000) {
       lastRadioCloudPushMs = Date.now();
       scheduleCloudPush(400);
     }
@@ -8036,6 +8175,7 @@ window.addEventListener("hashchange", () => {
 let editionCheckBusy = false;
 let pendingEditionReload = false;
 function reloadFreshEdition() {
+  persistRadioPositionNow(true);
   let done = false;
   const go = () => {
     if (done) return;
@@ -8114,10 +8254,13 @@ document.addEventListener("visibilitychange", () => {
     connectCloudSSE();
     if (activeMode === "body" && window.ZB) window.ZB.onResume();
   } else {
+    persistRadioPositionNow(false);
     if (cloudPushTimer) {
       clearTimeout(cloudPushTimer);
       cloudPushTimer = null;
       pushCloudSync(true);
+    } else {
+      persistRadioPositionNow(true);
     }
   }
 });
@@ -8130,11 +8273,18 @@ window.addEventListener("online", () => {
 });
 
 window.addEventListener("pagehide", () => {
+  persistRadioPositionNow(false);
   if (cloudPushTimer) {
     clearTimeout(cloudPushTimer);
     cloudPushTimer = null;
     pushCloudSync(true);
+  } else {
+    persistRadioPositionNow(true);
   }
+});
+
+window.addEventListener("beforeunload", () => {
+  persistRadioPositionNow(false);
 });
 
 // ================= NATIVE ZEN BODY ENGINE ("体律" · v2 Native-App Polish · 零明文隐私) =================
