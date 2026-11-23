@@ -226,6 +226,7 @@ def empty_crdt_state(plan_date: str) -> dict:
             }
         },
         "masteryOverrides": {},
+        "grammarAudit": {},
         "records": [],
     }
 
@@ -315,6 +316,17 @@ def merge_day_bucket(dst: dict, src: dict) -> dict:
     fp_tgt = fp_b[1] if fp_b[3] >= fp_a[3] and fp_b[1] > 0 else (fp_a[1] or fp_b[1])
     if fp_seen > 0 or fp_done > 0:
         out["flashProg"] = [fp_seen, max(fp_seen, fp_tgt), fp_done, fp_upd]
+
+    gp_a = dst.get("gaProg") if isinstance(dst.get("gaProg"), list) else [0, 0, 0, 0]
+    gp_b = src.get("gaProg") if isinstance(src.get("gaProg"), list) else [0, 0, 0, 0]
+    gp_a = [int(x or 0) for x in (gp_a + [0, 0, 0, 0])[:4]]
+    gp_b = [int(x or 0) for x in (gp_b + [0, 0, 0, 0])[:4]]
+    gp_seen = max(gp_a[0], gp_b[0])
+    gp_done = max(gp_a[2], gp_b[2])
+    gp_upd = max(gp_a[3], gp_b[3])
+    gp_tgt = gp_b[1] if gp_b[3] >= gp_a[3] and gp_b[1] > 0 else (gp_a[1] or gp_b[1])
+    if gp_seen > 0 or gp_done > 0:
+        out["gaProg"] = [gp_seen, max(gp_seen, gp_tgt), gp_done, gp_upd]
     return out
 
 
@@ -326,12 +338,18 @@ def merge_crdt(a: dict, b: dict) -> dict:
         for mk, mv in (a.get("masteryOverrides") or {}).items()
         if isinstance(mv, list) and len(mv) == 2 and int(mv[1] or 0) >= TRUE_GREEN_EPOCH
     }
+    clean_a_ga = {
+        gk: [int(gv[0] or 0), int(gv[1] or 0), str(gv[2] if len(gv) >= 3 else "")]
+        for gk, gv in (a.get("grammarAudit") or {}).items()
+        if isinstance(gv, list) and len(gv) >= 2 and int(gv[1] or 0) >= MIN_REAL_TS
+    }
     out = {
         "v": 15,
         "app": "n3-zen",
         "updatedAt": max(int(a.get("updatedAt") or 0), int(b.get("updatedAt") or 0)),
         "dates": {},
         "masteryOverrides": clean_a_ov,
+        "grammarAudit": clean_a_ga,
         "wordLookups": dict(a.get("wordLookups") or {}),
         "records": [],
     }
@@ -359,6 +377,17 @@ def merge_crdt(a: dict, b: dict) -> dict:
             cur = out["masteryOverrides"].get(mk)
             if not isinstance(cur, list) or ts_i >= int(cur[1] or 0):
                 out["masteryOverrides"][mk] = [str(mv[0]), ts_i]
+
+    for gk, gv in (b.get("grammarAudit") or {}).items():
+        if isinstance(gv, list) and len(gv) >= 2:
+            code_i = int(gv[0] or 0)
+            ts_i = int(gv[1] or 0)
+            day_s = str(gv[2] if len(gv) >= 3 else "")
+            if ts_i < MIN_REAL_TS or code_i not in (0, 1, 2, 3, 4):
+                continue
+            cur = out["grammarAudit"].get(gk)
+            if not isinstance(cur, list) or ts_i > int(cur[1] or 0) or (ts_i == int(cur[1] or 0) and code_i >= int(cur[0] or 0)):
+                out["grammarAudit"][gk] = [code_i, ts_i, day_s or (cur[2] if isinstance(cur, list) and len(cur) >= 3 else "")]
 
     seen = set()
     merged_recs = []
@@ -427,6 +456,14 @@ def unpack_compact_ntfy(pkt: dict) -> dict | None:
             int(fp[2] or 0),
             int(fp[3] if len(fp) >= 4 and fp[3] else (pkt.get("u") or 0)),
         ]
+    if pkt_ver >= 15 and isinstance(pkt.get("gp"), list) and len(pkt["gp"]) >= 3:
+        gp = pkt["gp"]
+        day["gaProg"] = [
+            int(gp[0] or 0),
+            int(gp[1] or 0),
+            int(gp[2] or 0),
+            int(gp[3] if len(gp) >= 4 and gp[3] else (pkt.get("u") or 0)),
+        ]
     recs = []
     for item in pkt.get("l") or []:
         if isinstance(item, list) and len(item) >= 4:
@@ -448,6 +485,16 @@ def unpack_compact_ntfy(pkt: dict) -> dict | None:
         for ok_k, ok_v in raw_ov_map.items()
         if not (isinstance(ok_v, list) and len(ok_v) >= 2 and 1795016635 <= int(ok_v[1] or 0) <= 1795016690)
     }
+    raw_ga_map = pkt.get("ga") if (pkt_ver >= 15 and isinstance(pkt.get("ga"), dict)) else {}
+    clean_ga_map = {}
+    day_tag_compact = str(d).replace("-", "")
+    for gk, gv in raw_ga_map.items():
+        if isinstance(gv, list) and len(gv) >= 2:
+            code_i = int(gv[0] or 0)
+            ts_i = int(gv[1] or 0)
+            ds = str(gv[2] if len(gv) >= 3 and gv[2] else day_tag_compact)
+            if ts_i >= MIN_REAL_TS and code_i in (0, 1, 2, 3, 4):
+                clean_ga_map[str(gk)] = [code_i, ts_i, ds]
     if d == "2026-11-17" and int(day["retestAt"].get("N3-L11") or 0) in range(1795016635, 1795016691):
         day["retestAt"].pop("N3-L11", None)
         day["learning"].pop("N3-L11", None)
@@ -459,6 +506,7 @@ def unpack_compact_ntfy(pkt: dict) -> dict | None:
         "updatedAt": int(pkt.get("u") or 0),
         "dates": {d: day},
         "masteryOverrides": clean_ov_map,
+        "grammarAudit": clean_ga_map,
         "records": recs,
     }
 
@@ -506,6 +554,10 @@ def pack_compact_ntfy(state: dict, plan_date: str, baked_epoch: int = 0) -> dict
         fp = [int(x or 0) for x in (day["flashProg"] + [0, 0, 0, 0])[:4]]
         if fp[0] > 0 or fp[2] > 0:
             pkt["fp"] = fp
+    if isinstance(day.get("gaProg"), list):
+        gp = [int(x or 0) for x in (day["gaProg"] + [0, 0, 0, 0])[:4]]
+        if gp[0] > 0 or gp[2] > 0:
+            pkt["gp"] = gp
 
     def size(obj) -> int:
         return len(json.dumps(obj, ensure_ascii=False, separators=(",", ":")).encode("utf-8"))
@@ -527,8 +579,26 @@ def pack_compact_ntfy(state: dict, plan_date: str, baked_epoch: int = 0) -> dict
         pkt["l"].insert(0, item)
         cur += add
 
-    # Prioritize delta overrides newer than baked_epoch - 7200 first so unbaked overrides never get cut off
+    # Prioritize delta overrides & grammar audit deltas newer than baked_epoch - 7200
     delta_cutoff = max(TRUE_GREEN_EPOCH, int(baked_epoch or 0) - 7200)
+    raw_ga = [
+        (k, v)
+        for k, v in (state.get("grammarAudit") or {}).items()
+        if isinstance(v, list) and len(v) >= 2 and int(v[1] or 0) >= delta_cutoff
+    ]
+    if raw_ga:
+        pkt["ga"] = {}
+        cur += 7
+        for gk, gv in sorted(raw_ga, key=lambda kv: int(kv[1][1]), reverse=True):
+            val = [int(gv[0] or 0), int(gv[1] or 0)]
+            add = size({gk: val}) - 1
+            if cur + add > BYTE_LIMIT - 250:
+                break
+            pkt["ga"][gk] = val
+            cur += add
+        if not pkt["ga"]:
+            pkt.pop("ga", None)
+
     raw_ov = [
         (k, v)
         for k, v in (state.get("masteryOverrides") or {}).items()
@@ -602,6 +672,18 @@ def seed_from_practice_log(state: dict, plan_date: str) -> tuple[dict, list[dict
                         "last_ts": max(str(cur_lk.get("last_ts") or ""), ts_lk),
                         "contexts": ctxs[-12:],
                     }
+                continue
+            if raw_qid.startswith("GA-"):
+                gid = raw_qid[3:].strip()
+                ts_ga = _iso_to_unix_sec(str(rec.get("ts") or ""))
+                ch_ga = str(rec.get("choice") or "")
+                ga_code_map = {"盘点:陌生": 1, "盘点:易混": 2, "盘点:看懂": 3, "盘点:本能": 4, "盘点:不熟": 1, "盘点:模糊": 2, "盘点:稳熟": 4}
+                code_ga = ga_code_map.get(ch_ga, 0)
+                if gid and ts_ga >= MIN_REAL_TS and code_ga in (1, 2, 3, 4):
+                    ga_map = state.setdefault("grammarAudit", {})
+                    cur_ga = ga_map.get(gid)
+                    if not isinstance(cur_ga, list) or ts_ga >= int(cur_ga[1] or 0):
+                        ga_map[gid] = [code_ga, ts_ga, _iso_to_study_date(str(rec.get("ts") or "")).replace("-", "")]
                 continue
             if str(rec.get("source") or "") == "grok":
                 continue

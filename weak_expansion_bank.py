@@ -851,3 +851,18 @@ try:
 except ImportError:
     pass
 
+try:
+    from weak_expansion_wave10 import (
+        WAVE10_EXTRA_WORDS,
+        WAVE10_POINT_META,
+        WAVE10_PRIMARY_CARDS,
+        WAVE10_VARIANT_CARDS,
+    )
+    NEW_POINT_META.update(WAVE10_POINT_META)
+    NEW_PRIMARY_CARDS.extend(WAVE10_PRIMARY_CARDS)
+    NEW_VARIANT_CARDS.extend(WAVE10_VARIANT_CARDS)
+    NEW_EXTRA_WORDS.update(WAVE10_EXTRA_WORDS)
+except ImportError:
+    pass
+
+

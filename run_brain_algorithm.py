@@ -307,6 +307,51 @@ def apply_practice_logs(state: dict, fallback_day_tag: str = "") -> int:
                 if choice == "闪卡:顺过":
                     continue
 
+                # Grammar Self-Audit 4-Step Cognitive Spectrum ("GA-<id>", choice="盘点:陌生|易混|看懂|本能")
+                is_ga_rec = rec_id.startswith("GA-") or choice.startswith("盘点:")
+                if is_ga_rec:
+                    applied += 1
+                    day_tag = _iso_to_day_tag(ts, fallback_day_tag)
+                    ts_sec = 0
+                    try:
+                        ts_sec = int(datetime.datetime.fromisoformat(ts.replace("Z", "+00:00")).timestamp())
+                    except Exception:
+                        ts_sec = int(datetime.datetime.now(PT_TZ).timestamp())
+                    g_item = g_map.get(pt)
+                    if g_item is None and rec_id.startswith("GA-"):
+                        gid_only = rec_id[3:].strip()
+                        g_item = next((x for x in state.get("grammar_points", []) if x.get("id") == gid_only), None)
+                    if g_item is not None:
+                        if choice in ("盘点:陌生", "盘点:不熟"):
+                            g_item["status"] = "red"
+                            g_item["streak"] = 0
+                            g_item["last_ng_date"] = day_tag
+                            g_item["audit_verdict"] = "blank"
+                            g_item["audit_date"] = day_tag
+                            g_item["audit_ts"] = max(int(g_item.get("audit_ts") or 0), ts_sec)
+                        elif choice in ("盘点:易混", "盘点:模糊"):
+                            g_item["status"] = "orange"
+                            g_item["streak"] = 0
+                            g_item["last_ng_date"] = day_tag
+                            g_item["audit_verdict"] = "confuse"
+                            g_item["audit_date"] = day_tag
+                            g_item["audit_ts"] = max(int(g_item.get("audit_ts") or 0), ts_sec)
+                        elif choice == "盘点:看懂":
+                            g_item["status"] = "yellow"
+                            g_item["streak"] = 2
+                            g_item["last_ok_date"] = ""
+                            g_item["audit_verdict"] = "passive"
+                            g_item["audit_date"] = day_tag
+                            g_item["audit_ts"] = max(int(g_item.get("audit_ts") or 0), ts_sec)
+                        elif choice in ("盘点:本能", "盘点:稳熟"):
+                            g_item["status"] = "green"
+                            g_item["streak"] = 3
+                            g_item["last_ok_date"] = day_tag
+                            g_item["audit_verdict"] = "instinct"
+                            g_item["audit_date"] = day_tag
+                            g_item["audit_ts"] = max(int(g_item.get("audit_ts") or 0), ts_sec)
+                    continue
+
                 applied += 1
                 day_tag = _iso_to_day_tag(ts, fallback_day_tag)
                 ok = str(rec.get("correct", "")).lower() == "true"
@@ -331,11 +376,49 @@ def apply_practice_logs(state: dict, fallback_day_tag: str = "") -> int:
                             vp["wrong"] = vp.get("wrong", 0) + 1
                         _apply_cross_day_step(vp, day_tag, ok, again, instant_seal)
 
-    # Reconcile latest post-epoch masteryOverrides, tappedWords & 3-ritual progress from cloud_state_snapshot.json
+    # Reconcile latest post-epoch masteryOverrides, grammarAudit, tappedWords & ritual progress from cloud_state_snapshot.json
     if os.path.exists(SNAPSHOT_PATH):
         try:
             with open(SNAPSHOT_PATH, encoding="utf-8") as sf:
                 snap = json.load(sf)
+            g_id_map = {p["id"]: p for p in state.get("grammar_points", []) if p.get("id")}
+            for gk, gv in (snap.get("grammarAudit") or {}).items():
+                if not (isinstance(gv, list) and len(gv) >= 2):
+                    continue
+                code_i = int(gv[0] or 0)
+                ts_i = int(gv[1] or 0)
+                day_s = str(gv[2] if len(gv) >= 3 else "") or fallback_day_tag
+                g_item = g_id_map.get(gk) or g_map.get(gk)
+                if g_item is None or ts_i < MIN_REAL_TS:
+                    continue
+                if ts_i <= int(g_item.get("audit_ts") or 0):
+                    continue
+                if code_i == 1:
+                    g_item["audit_verdict"] = "blank"
+                    g_item["status"] = "red"
+                    g_item["streak"] = 0
+                    g_item["last_ng_date"] = day_s
+                elif code_i == 2:
+                    g_item["audit_verdict"] = "confuse"
+                    g_item["status"] = "orange"
+                    g_item["streak"] = 0
+                    g_item["last_ng_date"] = day_s
+                elif code_i == 3:
+                    g_item["audit_verdict"] = "passive"
+                    g_item["status"] = "yellow"
+                    g_item["streak"] = 2
+                    g_item["last_ok_date"] = ""
+                elif code_i == 4:
+                    g_item["audit_verdict"] = "instinct"
+                    g_item["status"] = "green"
+                    g_item["streak"] = 3
+                    g_item["last_ok_date"] = day_s
+                elif code_i == 0:
+                    g_item.pop("audit_verdict", None)
+                g_item["audit_date"] = day_s
+                g_item["audit_ts"] = ts_i
+                applied += 1
+
             ov_seen = state.setdefault("_applied_override_ts", {})
             for mk, mv in (snap.get("masteryOverrides") or {}).items():
                 if not (isinstance(mv, list) and len(mv) >= 2):
@@ -387,6 +470,9 @@ def apply_practice_logs(state: dict, fallback_day_tag: str = "") -> int:
                 )
                 fp = day.get("flashProg") if isinstance(day.get("flashProg"), list) else [0, 0, 0, 0]
                 fp = [int(x or 0) for x in (fp + [0, 0, 0, 0])[:4]]
+                gp = day.get("gaProg") if isinstance(day.get("gaProg"), list) else [0, 0, 0, 0]
+                gp = [int(x or 0) for x in (gp + [0, 0, 0, 0])[:4]]
+                ga_total = sum(1 for x in state.get("grammar_points", []) if x.get("audit_verdict"))
                 state["daily_rituals"] = {
                     "date": latest_d,
                     "quiz_green": g_cnt,
@@ -394,6 +480,10 @@ def apply_practice_logs(state: dict, fallback_day_tag: str = "") -> int:
                     "flash_seen": fp[0],
                     "flash_target": fp[1],
                     "flash_done": bool(fp[2] > 0),
+                    "ga_seen": gp[0],
+                    "ga_target": gp[1],
+                    "ga_done": bool(gp[2] > 0),
+                    "ga_total_audited": ga_total,
                 }
         except Exception:
             pass
@@ -468,6 +558,13 @@ def write_cloud_grok_brief(state: dict) -> None:
     )
     v_b = bucket(state.get("vocab_tracked", []), lambda x: x["word"])
 
+    ga_counts = {"blank": 0, "confuse": 0, "passive": 0, "instinct": 0}
+    for x in state.get("grammar_points", []):
+        av = str(x.get("audit_verdict") or "")
+        if av in ga_counts:
+            ga_counts[av] += 1
+    ga_audited = sum(ga_counts.values())
+
     brief_obj = {
         "schema": "n3-grok-cloud-brief/1",
         "study_date": state.get("study_date", ""),
@@ -475,6 +572,11 @@ def write_cloud_grok_brief(state: dict) -> None:
         "days_left": state.get("days_left", 21),
         "grok_cloud_ingest_url": f"https://ntfy.sh/{grok_topic}" if grok_topic else "",
         "grammar": g_b,
+        "grammar_audit": {
+            "audited": ga_audited,
+            "total": len(state.get("grammar_points", [])),
+            **ga_counts,
+        },
         "henkei": h_b,
         "listening": l_b,
         "vocab": v_b,
@@ -487,16 +589,23 @@ def write_cloud_grok_brief(state: dict) -> None:
     def join_or_none(arr: list[str]) -> str:
         return "、".join(arr) if arr else "（当前无）"
 
+    ga_line = (
+        f"- **全表语法 4 档光谱盘点进度**：已盘 `{ga_audited}/{len(state.get('grammar_points', []))}` 条（陌生 `{ga_counts['blank']}` · 易混 `{ga_counts['confuse']}` · 看懂 `{ga_counts['passive']}` · 本能 `{ga_counts['instinct']}`）"
+        if ga_audited > 0
+        else ""
+    )
+
     lines = [
         "# JLPT N3 中央大脑云端实时教务指令单（Zero-PII Cloud Live Brief）",
         "",
         f"- **基准学习日**：`{brief_obj['study_date']}`（距 `2026-12-06` 考试还剩 `{brief_obj['days_left']}` 天）",
         f"- **云端自动合流更新时间**：`{brief_obj['updated_at']}`",
-        "- **跨日 3/3 真掌握铁律**：同一天答对多次最多推进 `+1` 格；跨 3 个不同学习日答对（或明确点击「不用再考了 / 太熟」）才进入 🟢 已过关免考名单。",
+        "- **跨日 3/3 真掌握铁律**：同一天答对多次最多推进 `+1` 格；跨 3 个不同学习日答对（或明确点击「不用再考了 / 太熟 / 本能」）才进入 🟢 已过关免考名单。",
+        *( [ga_line] if ga_line else [] ),
         "",
         "## 一、 语法 Bot（1. JLPT 语法）今日优先级",
         f"- **🔴 P0 急需攻克（0/3，优先出正式题）**：{join_or_none(g_b['red'])}",
-        f"- **🟠 P1 重点复测（答对但要求再考，0/3）**：{join_or_none(g_b['orange'])}",
+        f"- **🟠 P1 重点复测（答对但要求再考 / 易混，0/3）**：{join_or_none(g_b['orange'])}",
         f"- **🟡 P2 跨日巩固（2/3 临门一脚）**：{join_or_none(g_b['yellow_2'])}",
         f"- **🟡 P2 跨日巩固（1/3 待隔日验证）**：{join_or_none(g_b['yellow_1'][:35])}" + (f" 等共 {len(g_b['yellow_1'])} 项" if len(g_b["yellow_1"]) > 35 else ""),
         f"- **🟢 已过关免考（3/3，14 天内严禁重复出题）**：{join_or_none(g_b['green'])}",
@@ -522,7 +631,7 @@ def write_cloud_grok_brief(state: dict) -> None:
         "## 五、 Grok -> 云端大脑免中转直传通道（20:45 PT 归档时同步 POST）",
         f"- 除照常写入 Google Sheet《N3答题总账（Bot练习）》外，`0. JLPT 群` 每次归档可同步向 `{brief_obj['grok_cloud_ingest_url']}` 发送纯考点 JSON（严禁含任何姓名/邮箱等个人信息）：",
         '  `{"a":"n3g","r":[[表行号,"YYYY-MM-DD HH:MM","科目","题目ID","考点","对/错","还是要考/不用再考/快速题不问"]]}`',
-        "- 云端 GitHub Actions 每 4 小时及每日清晨自动拉取该通道并合成次日约 60 分钟《锵锵三人行》电台、50 道错题靶向新卷与 24 词闪卡，彻底免除本地电脑中转依赖。",
+        "- 云端 GitHub Actions 每 4 小时及每日清晨自动拉取该通道并合成次日约 60 分钟《锵锵三人行》电台、每日靶向新卷与 24 词闪卡，彻底免除本地电脑中转依赖。",
         "",
     ]
     md_txt = "\n".join(lines)

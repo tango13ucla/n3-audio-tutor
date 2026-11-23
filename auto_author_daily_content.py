@@ -127,6 +127,13 @@ def collect_study_history(cutoff_study_day: str | None = None) -> tuple[
                         vlst.append(w)
                 continue
 
+            if cid.startswith("GA-"):
+                if pt and choice in ("盘点:陌生", "盘点:易混", "盘点:不熟") and not contains_pii(pt):
+                    pts = missed_by_day.setdefault(sday, [])
+                    if pt not in pts:
+                        pts.append(pt)
+                continue
+
             if cid and not cid.startswith("GROK-"):
                 ever_seen_cards.add(cid)
 
@@ -159,6 +166,8 @@ def run_night_summary(target_closed_day: str | None = None) -> int:
     subprocess.run([sys.executable, str(BASE_DIR / "run_brain_algorithm.py"), "--sync-only"], cwd=str(BASE_DIR), check=True)
     st_live = json.loads((BASE_DIR / "n3_live_state.json").read_text(encoding="utf-8")) if (BASE_DIR / "n3_live_state.json").exists() else {}
     green_keys: set[str] = set()
+    audit_blank_keys: list[str] = []
+    audit_confuse_keys: list[str] = []
     for _mod, _fld in (
         ("grammar_points", "name"),
         ("henkei_points", "id"),
@@ -170,19 +179,28 @@ def run_night_summary(target_closed_day: str | None = None) -> int:
                 _k = str(_it.get(_fld) or "").strip()
                 if _k:
                     green_keys.add(_k)
+            if _mod == "grammar_points" and _it.get("status") != "green":
+                _av = str(_it.get("audit_verdict") or "")
+                _wk = str(_it.get("name") or "").strip()
+                if _wk:
+                    if _av in ("blank", "weak") and _wk not in audit_blank_keys:
+                        audit_blank_keys.append(_wk)
+                    elif _av == "confuse" and _wk not in audit_confuse_keys:
+                        audit_confuse_keys.append(_wk)
 
     old_prefs = json.loads(PREFS_PATH.read_text(encoding="utf-8")) if PREFS_PATH.exists() else {}
     prefs = json.loads(json.dumps(old_prefs, ensure_ascii=False))
     prefs["schema"] = prefs.get("schema") or "n3-tutor-prefs/3"
     prefs["exam_date"] = "2026-12-06"
     prefs["daily_load"] = {"2026-12-06": {"load": "off", "why": "exam_day"}}
-    prefs.setdefault("load_caps", {"normal": 50, "light": 25, "off": 10})
+    prefs.setdefault("load_caps", {"normal": 60, "light": 25, "off": 10})
+    prefs.setdefault("grammar_audit_daily_count", 39)
     prev_focus = [p for p in prefs.get("focus_points", []) if isinstance(p, str)]
     merged_focus: list[str] = []
-    for p in missed_today + missed_vocab_today + prev_focus:
+    for p in audit_blank_keys + audit_confuse_keys + missed_today + missed_vocab_today + prev_focus:
         if p and p not in green_keys and not contains_pii(p) and p not in merged_focus:
             merged_focus.append(p)
-    prefs["focus_points"] = merged_focus[:32]
+    prefs["focus_points"] = merged_focus[:40]
     prefs["ui"] = {"orientation": "portrait"}
     prefs["generated_at"] = now_pt.strftime("%Y-%m-%dT%H:%M%z")
     prefs_txt = json.dumps(prefs, ensure_ascii=False, indent=2) + "\n"

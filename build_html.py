@@ -768,10 +768,19 @@ def _spaced_wave_key(p: dict, allow_miss_top: bool = True):
     is_miss = _is_active_miss(p)
     is_hesitant = (pk in _hesitant_points) or (qid in _hesitant_points)
     in_focus = 1 if (qid in MEMORY_FOCUS or pk in MEMORY_FOCUS) else 0
+    g_obj = g_state_map.get(pk) or {}
+    ga_verdict = str(g_obj.get("audit_verdict") or "")
     if st == "green":
         return (5, -dsl, -p["exam_weight"], qid)
-    if is_miss and allow_miss_top:
-        return (0, -p["roi_score"], -p["exam_weight"], qid)
+    if ga_verdict in ("blank", "weak") and allow_miss_top:
+        # Spectrum 1 (陌生): absolute P0 priority — teach first then quiz!
+        return (0, -(p["roi_score"] + 0.6), -p["exam_weight"], qid)
+    if (is_miss or ga_verdict == "confuse") and allow_miss_top:
+        # Spectrum 2 (易混) or recent miss: contrast quiz battle!
+        return (0, -(p["roi_score"] + (0.35 if ga_verdict == "confuse" else 0.0)), -p["exam_weight"], qid)
+    if ga_verdict == "passive" and dsl >= 1:
+        # Spectrum 3 (看懂): streak=2, single clean quiz verification turns True Green!
+        return (1, -p["exam_weight"], -1, -p["roi_score"], qid)
     if dsl >= 999:
         # Tier 1: Brand-new unseen syllabus point — rollout systematically by exam ROI!
         return (1, -p["exam_weight"], -in_focus, -p["roi_score"], qid)
@@ -791,7 +800,7 @@ def select_balanced_spaced_deck(candidates: list[dict], cap: int) -> list[dict]:
     chosen: list[dict] = []
     chosen_ids: set[str] = set()
 
-    # Step A: Exact same-day deck lock (never reshuffle mid-day once today's 50 cards are generated)
+    # Step A: Exact same-day deck lock (never reshuffle mid-day once today's cards are generated)
     if locked_same_day_ids:
         for lid in locked_same_day_ids:
             if lid in by_id and lid not in chosen_ids:
@@ -828,9 +837,11 @@ def select_balanced_spaced_deck(candidates: list[dict], cap: int) -> list[dict]:
             chosen.append(p)
             chosen_ids.add(p["id"])
 
-    # Step C: Exam-ROI Balanced Subject Quotas (24 Grammar / 10 Listening / 8 Henkei / 8 Vocab for cap=50)
+    # Step C: Exam-ROI Balanced Subject Quotas (29G/11L/10H/10V for cap=60, 24G/10L/8H/8V for cap=50)
     remaining_cap = cap - len(chosen)
-    if remaining_cap == 50:
+    if remaining_cap == 60:
+        quotas = {"语法": 29, "听力": 11, "活用": 10, "词汇": 10}
+    elif remaining_cap == 50:
         quotas = {"语法": 24, "听力": 10, "活用": 8, "词汇": 8}
     else:
         q_g = max(1, round(remaining_cap * 0.48))
@@ -895,6 +906,13 @@ def select_balanced_spaced_deck(candidates: list[dict], cap: int) -> list[dict]:
     return chosen[:cap]
 
 
+# Preserve complete 156-point grammar card metadata BEFORE slicing today's deck to DECK_CAP!
+all_grammar_cards_by_key = {}
+for _gp_card in raw_points:
+    if _gp_card.get("subject") == "语法" and _gp_card.get("point_key"):
+        all_grammar_cards_by_key.setdefault(_gp_card["point_key"], _gp_card)
+
+DECK_CAP = tutor_prefs.deck_cap(MEMORY_PREFS, day=plan_date_str)
 raw_points = select_balanced_spaced_deck(raw_points, DECK_CAP)
 
 # Cross-day fresh sentence rotation: if a point was NOT yet touched today and has variants,
@@ -929,6 +947,9 @@ for _p in raw_points:
 
 buckets = {"语法": [], "活用": [], "词汇": [], "听力": []}
 for p in raw_points:
+    g_st_ref = g_state_map.get(p.get("point_key", "")) or {}
+    if p["subject"] == "语法" and g_st_ref.get("audit_verdict") in ("blank", "weak"):
+        p["teach_first"] = True
     buckets[p["subject"]].append(p)
 
 ordered_points = []
@@ -958,21 +979,106 @@ def norm_tier_meta(p_obj: dict) -> tuple[str, str, int]:
     return "wip", f"wip{s}:{ok_d}", s
 
 
+def clean_grammar_family_cn(raw_fam: str) -> str:
+    s = re.sub(r"^\d+\.\s*", "", str(raw_fam or "")).strip()
+    mapping = {
+        "授受・敬語・依頼": "授受与敬语",
+        "授受・敬語・使役": "授受与敬语",
+        "時間・局面・順序": "时间与局面",
+        "時間・進行・瞬間": "时间与局面",
+        "判断・推量・道理・決定": "判断与推量",
+        "逆接・対比・基準外": "逆接与对比",
+        "変化・比例・習慣化": "变化与比例",
+        "原因・理由・根拠": "原因与依据",
+        "原因・理由・結果": "原因与依据",
+        "限定・強調・添加": "限定与递进",
+        "否定・強調・限定": "限定与递进",
+        "伝聞・様態・傾向": "传闻与倾向",
+        "アスペクト・感情強制・否定呼応": "状态与情感",
+        "対象・立場・条件・その他": "对象与条件",
+    }
+    return mapping.get(s, s or "核心语法")
+
+
 grammar_items = []
-for p in live_state.get("grammar_points", []):
+grammar_audit_items = []
+_ga_vmap = {"blank": 1, "weak": 1, "confuse": 2, "fuzzy": 2, "passive": 3, "instinct": 4, "solid": 4}
+for g_idx, p in enumerate(live_state.get("grammar_points", [])):
     nm = p.get("name", "")
+    gid = p.get("id", f"G-{g_idx + 1:03d}")
     tier, mstate, streak = norm_tier_meta(p)
+    ok_d = str(p.get("last_ok_date") or "")
+    ng_d = str(p.get("last_ng_date") or "")
+    nov_tested = ok_d.startswith("202611") or ng_d.startswith("202611")
+    fam_clean = clean_grammar_family_cn(p.get("family", ""))
+    card_ref = all_grammar_cards_by_key.get(nm) or {}
+    prim_ref = card_ref.get("primary") or {}
+    teach_ref = card_ref.get("teach") or {}
+    ex_ja = str(prim_ref.get("full_ja") or teach_ref.get("example_ja") or "").strip()
+    ex_zh = str(prim_ref.get("zh_meaning") or teach_ref.get("zh_meaning") or "").strip()
+    rule_txt = clean_zen_text(prim_ref.get("form_line") or prim_ref.get("why_line") or p.get("exam_alert") or p.get("note") or "")
+    if len(rule_txt) > 96:
+        rule_txt = rule_txt[:95].rstrip("，、； ") + "…"
+    exp_aud = str(prim_ref.get("exp_audio") or teach_ref.get("audio") or "")
+    meaning_clean = clean_zen_text(p.get("meaning", ""))
+    verdict_raw = str(p.get("audit_verdict") or "")
+    verdict_code = _ga_vmap.get(verdict_raw, 0)
+
     grammar_items.append({
+        "gid": gid,
         "key": nm,
         "name": nm,
-        "sub": p.get("meaning", ""),
-        "family": re.sub(r"^\d+\.\s*", "", p.get("family", "")),
+        "sub": meaning_clean,
+        "family": fam_clean,
         "tier": tier,
         "mstate": mstate,
         "streak": streak,
+        "nov_tested": nov_tested,
+        "audit_code": verdict_code,
         "point_id": point_id_by_key.get(nm, ""),
         "note": clean_zen_text(p.get("exam_alert") or p.get("note", "")),
     })
+
+    # Blind-Spot-First priority group for the 4-day 156-point Grammar Self-Audit:
+    # 0 = 17 old-green never tested in Nov (highest false-confidence risk!)
+    # 1 = current red/orange weak points
+    # 2 = 64 yellow never tested in Nov (grouped by family for twin comparison!)
+    # 3 = yellow 1/3 tested in Nov (grouped by family)
+    # 4 = yellow 2/3 tested in Nov (grouped by family)
+    # 5 = green tested in Nov (quick final confirmation)
+    st_raw = p.get("status", "yellow")
+    if st_raw == "green" and not nov_tested:
+        pri_grp = 0
+    elif st_raw in ("red", "orange"):
+        pri_grp = 1
+    elif not nov_tested:
+        pri_grp = 2
+    elif st_raw == "yellow" and streak <= 1:
+        pri_grp = 3
+    elif st_raw == "yellow":
+        pri_grp = 4
+    else:
+        pri_grp = 5
+
+    grammar_audit_items.append({
+        "gid": gid,
+        "name": nm,
+        "meaning": meaning_clean,
+        "family": fam_clean,
+        "rule": rule_txt,
+        "ex_ja": ex_ja,
+        "ex_zh": ex_zh,
+        "audio": exp_aud,
+        "sys_tier": tier,
+        "sys_streak": streak,
+        "nov_tested": nov_tested,
+        "pri": pri_grp,
+        "verdict": verdict_code,
+        "audit_ts": int(p.get("audit_ts") or 0),
+        "audit_date": str(p.get("audit_date") or ""),
+    })
+
+grammar_audit_items.sort(key=lambda x: (x["pri"], x["family"], x["gid"]))
 
 henkei_items = []
 for p in live_state.get("henkei_points", []):
@@ -1116,6 +1222,11 @@ seeded_overrides = {
     for mk, mv in (cloud_snap.get("masteryOverrides") or {}).items()
     if isinstance(mv, list) and len(mv) == 2 and int(mv[1] or 0) >= max(TRUE_GREEN_EPOCH, baked_epoch - 7200)
 }
+seeded_ga = {
+    gk: gv
+    for gk, gv in (cloud_snap.get("grammarAudit") or {}).items()
+    if isinstance(gv, list) and len(gv) >= 2 and int(gv[1] or 0) >= MIN_REAL_TS
+}
 recent_weak_words = [
     it["name"]
     for it in vocab_items
@@ -1124,6 +1235,7 @@ recent_weak_words = [
 
 vocab_base_done = sum(1 for it in vocab_items if it["tier"] == "done")
 vocab_daily_count = tutor_prefs.vocab_daily_count(MEMORY_PREFS, day=plan_date_str)
+ga_daily_target = tutor_prefs.grammar_audit_daily_count(MEMORY_PREFS, day=plan_date_str)
 
 payload = json.dumps({
     "plan_date": plan_date_str,
@@ -1134,6 +1246,11 @@ payload = json.dumps({
     "points": ordered_points,
     "words": rich_words,
     "vocab_cards": vocab_cards_payload,
+    "grammar_audit": {
+        "active_from": "2026-11-23",
+        "daily_target": ga_daily_target,
+        "items": grammar_audit_items,
+    },
     "mastery": mastery_data,
     "vocab_base_done": vocab_base_done,
     "vocab_daily_count": vocab_daily_count,
@@ -1144,6 +1261,7 @@ payload = json.dumps({
         "ntfy_topic": cloud_cfg.get("ntfy_topic", ""),
         "seeded_day": seeded_day,
         "seeded_overrides": seeded_overrides,
+        "seeded_ga": seeded_ga,
     },
 }, ensure_ascii=False)
 
@@ -3306,6 +3424,328 @@ html = r"""<!DOCTYPE html>
     color: var(--sheet);
     font-weight: 600;
   }
+  .vc-btn.ga-solid {
+    flex: 0.92;
+    border: 1px solid rgba(43, 95, 73, 0.36);
+    color: var(--moss);
+    font-weight: 600;
+    background: var(--sheet);
+    font-size: 13.8px;
+  }
+  .vc-btn.ga-fuzzy {
+    flex: 1.05;
+    background: var(--sumi);
+    color: var(--sheet);
+    font-weight: 600;
+  }
+
+  /* Position #3 Zen Sub-Bar ("记词 · 语法盘点" — auto-retires once 156/156 complete) */
+  .vc-subnav {
+    flex-shrink: 0;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 8px 0 7px;
+    border-bottom: 1px solid var(--hairline);
+    margin-bottom: 4px;
+  }
+  .vc-subtabs {
+    display: flex;
+    align-items: baseline;
+    gap: 22px;
+  }
+  .vc-subtab {
+    font-size: 14.5px;
+    font-weight: 500;
+    color: var(--ink-3);
+    padding: 4px 0 5px;
+    letter-spacing: 0.04em;
+    position: relative;
+    transition: color 0.18s ease;
+    font-variant-numeric: tabular-nums;
+  }
+  .vc-subtab.active {
+    color: var(--sumi);
+    font-weight: 600;
+  }
+  .vc-subtab.active::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -8px;
+    height: 1.5px;
+    background: var(--sumi);
+  }
+  .vc-subtab-cnt {
+    margin-left: 5px;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--ink-3);
+  }
+  .vc-subtab.active .vc-subtab-cnt {
+    color: var(--ink-2);
+  }
+  .vc-submeta {
+    font-size: 12px;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+  }
+
+  /* Grammar Self-Audit Card ("语法盘点" · 盲筛验真 · 单手三向) */
+  .vc-stamp.ga-fuzzy {
+    left: 18px;
+    color: var(--ochre);
+    border: 1.5px solid var(--ochre);
+    background: rgba(176, 125, 58, 0.07);
+  }
+  .ga-eyebrow {
+    font-size: 12px;
+    color: var(--ink-3);
+    letter-spacing: 0.05em;
+    margin-bottom: 14px;
+    font-variant-numeric: tabular-nums;
+  }
+  .ga-eyebrow.warn { color: var(--ochre); font-weight: 500; }
+  .ga-eyebrow.ng { color: var(--bengara); font-weight: 500; }
+  .ga-head {
+    font-family: var(--serif-jp);
+    font-size: 29px;
+    font-weight: 500;
+    color: var(--sumi);
+    line-height: 1.42;
+    letter-spacing: 0.02em;
+    word-break: keep-all;
+  }
+  .ga-reveal {
+    margin-top: 18px;
+    min-height: 148px;
+    width: 100%;
+    max-width: 396px;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+  }
+  .ga-reveal.shown {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  .ga-meaning {
+    font-size: 18.5px;
+    font-weight: 600;
+    color: var(--sumi);
+    line-height: 1.48;
+  }
+  .ga-rule {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--hairline);
+    font-size: 13.5px;
+    color: var(--ink-2);
+    line-height: 1.58;
+    text-align: left;
+  }
+  .ga-ex {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--hairline);
+    text-align: left;
+  }
+  .ga-ex-ja {
+    font-family: var(--serif-jp);
+    font-size: 15.5px;
+    color: var(--sumi);
+    line-height: 1.62;
+  }
+  .ga-ex-zh {
+    margin-top: 4px;
+    font-size: 12.8px;
+    color: var(--ink-3);
+    line-height: 1.5;
+  }
+  .ga-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin: 22px 0 8px;
+    padding: 14px 0;
+    border-top: 1px solid var(--hairline);
+    border-bottom: 1px solid var(--hairline);
+  }
+  .ga-stat-cell { text-align: center; }
+  .ga-stat-num {
+    font-family: var(--serif-jp);
+    font-size: 22px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+  }
+  .ga-stat-num.s1 { color: var(--bengara); }
+  .ga-stat-num.s2 { color: #C26735; }
+  .ga-stat-num.s3 { color: var(--ochre); }
+  .ga-stat-num.s4 { color: var(--moss); }
+  @media (prefers-color-scheme: dark) {
+    .ga-stat-num.s2 { color: #E08A54; }
+  }
+  .ga-stat-lbl {
+    margin-top: 3px;
+    font-size: 11.5px;
+    color: var(--ink-3);
+  }
+
+  /* Tactile 4-Stop Zen Spectrum Rail (单指轻点或沿线滑选 · 零犹豫) */
+  .ga-spec-wrap {
+    flex-shrink: 0;
+    padding: 4px 2px 2px;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .ga-spec-hint {
+    text-align: center;
+    font-size: 12.5px;
+    color: var(--ink-3);
+    letter-spacing: 0.04em;
+    min-height: 19px;
+    margin-bottom: 10px;
+    transition: color 0.15s ease;
+  }
+  .ga-spec-hint.s1 { color: var(--bengara); font-weight: 500; }
+  .ga-spec-hint.s2 { color: #C26735; font-weight: 500; }
+  .ga-spec-hint.s3 { color: var(--ochre); font-weight: 500; }
+  .ga-spec-hint.s4 { color: var(--moss); font-weight: 500; }
+  @media (prefers-color-scheme: dark) {
+    .ga-spec-hint.s2 { color: #E08A54; }
+  }
+  .ga-spec-rail {
+    position: relative;
+    padding: 6px 0 4px;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: pointer;
+  }
+  .ga-spec-line {
+    position: absolute;
+    left: 12.5%;
+    right: 12.5%;
+    top: 21px;
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, rgba(158, 62, 54, 0.32) 0%, rgba(194, 103, 53, 0.32) 34%, rgba(176, 125, 58, 0.34) 67%, rgba(43, 95, 73, 0.38) 100%);
+    pointer-events: none;
+  }
+  .ga-spec-stops {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    z-index: 2;
+  }
+  .ga-spec-stop {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0 6px;
+    color: var(--ink-3);
+    transition: transform 0.14s ease, color 0.14s ease;
+  }
+  .ga-spec-dot {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--washi);
+    border: 2px solid var(--hairline-strong);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  }
+  .ga-spec-dot::after {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: transparent;
+    transition: background 0.15s ease, transform 0.15s ease;
+  }
+  .ga-spec-stop.s1 .ga-spec-dot { border-color: rgba(158, 62, 54, 0.55); }
+  .ga-spec-stop.s2 .ga-spec-dot { border-color: rgba(194, 103, 53, 0.55); }
+  .ga-spec-stop.s3 .ga-spec-dot { border-color: rgba(176, 125, 58, 0.58); }
+  .ga-spec-stop.s4 .ga-spec-dot { border-color: rgba(43, 95, 73, 0.58); }
+  .ga-spec-stop.s1.active .ga-spec-dot { border-color: var(--bengara); background: var(--bengara); box-shadow: 0 0 0 6px rgba(158, 62, 54, 0.14); transform: scale(1.18); }
+  .ga-spec-stop.s2.active .ga-spec-dot { border-color: #C26735; background: #C26735; box-shadow: 0 0 0 6px rgba(194, 103, 53, 0.15); transform: scale(1.18); }
+  .ga-spec-stop.s3.active .ga-spec-dot { border-color: var(--ochre); background: var(--ochre); box-shadow: 0 0 0 6px rgba(176, 125, 58, 0.16); transform: scale(1.18); }
+  .ga-spec-stop.s4.active .ga-spec-dot { border-color: var(--moss-solid); background: var(--moss-solid); box-shadow: 0 0 0 6px rgba(43, 95, 73, 0.16); transform: scale(1.18); }
+  .ga-spec-stop.active .ga-spec-dot::after { background: var(--sheet); }
+  .ga-spec-name {
+    font-size: 13.5px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--ink-2);
+    transition: color 0.14s ease, font-weight 0.14s ease;
+  }
+  .ga-spec-stop.s1.active .ga-spec-name { color: var(--bengara); font-weight: 600; }
+  .ga-spec-stop.s2.active .ga-spec-name { color: #C26735; font-weight: 600; }
+  .ga-spec-stop.s3.active .ga-spec-name { color: var(--ochre); font-weight: 600; }
+  .ga-spec-stop.s4.active .ga-spec-name { color: var(--moss); font-weight: 600; }
+  .ga-spec-card-fade {
+    opacity: 0 !important;
+    transform: translateY(-6px) scale(0.985) !important;
+    transition: opacity 0.16s ease, transform 0.16s ease !important;
+  }
+  @media (max-height: 700px) {
+    .ga-eyebrow { margin-bottom: 8px; }
+    .ga-head { font-size: 25px; }
+    .ga-reveal { margin-top: 12px; min-height: 122px; }
+    .ga-meaning { font-size: 16.5px; }
+    .ga-rule { margin-top: 8px; padding-top: 8px; font-size: 12.8px; }
+    .ga-ex { margin-top: 8px; padding-top: 8px; }
+    .ga-ex-ja { font-size: 14.5px; }
+    .ga-spec-hint { margin-bottom: 6px; font-size: 12px; }
+  }
+
+  /* Quiet inline 4-step spectrum controls inside Zen Ledger ("总表 → 语法") */
+  .li-ga-tag {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    color: var(--ink-3);
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: var(--soft-bg);
+    white-space: nowrap;
+  }
+  .li-ga-tag.s1 { color: var(--bengara); background: rgba(158, 62, 54, 0.08); }
+  .li-ga-tag.s2 { color: #C26735; background: rgba(194, 103, 53, 0.10); }
+  .li-ga-tag.s3 { color: var(--ochre); background: rgba(176, 125, 58, 0.11); }
+  .li-ga-tag.s4 { color: var(--moss); background: var(--moss-soft); }
+  .li-ga-bar {
+    margin-top: 10px;
+    padding-left: 16.5px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .li-ga-lbl {
+    font-size: 12px;
+    color: var(--ink-3);
+  }
+  .li-ga-btn {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-3);
+    padding: 4px 2px;
+    border-bottom: 1.5px solid transparent;
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+  .li-ga-btn.s1.on { color: var(--bengara); border-bottom-color: var(--bengara); font-weight: 600; }
+  .li-ga-btn.s2.on { color: #C26735; border-bottom-color: #C26735; font-weight: 600; }
+  .li-ga-btn.s3.on { color: var(--ochre); border-bottom-color: var(--ochre); font-weight: 600; }
+  .li-ga-btn.s4.on { color: var(--moss); border-bottom-color: var(--moss); font-weight: 600; }
 
   /* ================= 6. NATIVE ZEN BODY MODULE ("体律" · Open-Washi Zen Ma & Kanso) ================= */
   #green-board.hidden, #body-view.hidden, .zen-panel.hidden { display: none !important; }
@@ -3830,8 +4270,15 @@ html = r"""<!DOCTYPE html>
     </div>
   </section>
 
-  <!-- 3C. ONE-HANDED SWIPE VOCAB SANCTUARY ("记词") -->
+  <!-- 3C. ONE-HANDED SWIPE SANCTUARY ("记词" · 临考语法全表盘点共用第 3 栏，盘完自动收起) -->
   <section class="zen-panel hidden" id="vocab-view">
+    <div class="vc-subnav" id="vc-subnav" style="display:none;">
+      <div class="vc-subtabs">
+        <button type="button" class="vc-subtab active" id="vsub-vocab" onclick="switchVocabSubMode('vocab')">记词<span class="vc-subtab-cnt" id="vsub-vocab-cnt"></span></button>
+        <button type="button" class="vc-subtab" id="vsub-ga" onclick="switchVocabSubMode('ga')">语法盘点<span class="vc-subtab-cnt" id="vsub-ga-cnt"></span></button>
+      </div>
+      <span class="vc-submeta" id="vc-submeta"></span>
+    </div>
     <div class="stage-wrap" id="vocab-stage-box"></div>
   </section>
 
@@ -4250,6 +4697,9 @@ function createFreshAdaptiveState() {
     flashProg: [0, 0, 0, 0],
     vocabSess: null,
     radioReview: null,
+    gaProg: [0, 0, 0, 0],
+    gaMap: {},
+    gaSess: null,
     pts: pts,
     tappedWords: [],
     wordLookups: {},
@@ -4258,6 +4708,8 @@ function createFreshAdaptiveState() {
     recentRecords: []
   };
 }
+
+const GA_STORE_KEY = "n3_ga_map_v1";
 
 function mergeFlashProgTuple(st, fp) {
   if (!Array.isArray(fp) || fp.length < 3) return false;
@@ -4275,6 +4727,40 @@ function mergeFlashProgTuple(st, fp) {
   if (String(next) === String(cur)) return false;
   st.flashProg = next;
   return true;
+}
+
+function mergeGaProgTuple(st, gp) {
+  if (!Array.isArray(gp) || gp.length < 3) return false;
+  const cur = Array.isArray(st.gaProg) ? st.gaProg : [0, 0, 0, 0];
+  const sSeen = Math.max(0, Math.floor(gp[0] || 0));
+  const sTgt = Math.max(0, Math.floor(gp[1] || 0));
+  const sDone = Math.max(0, Math.floor(gp[2] || 0));
+  const sUpd = Math.max(0, Math.floor(gp[3] || 0));
+  const nSeen = Math.max(Math.floor(cur[0] || 0), sSeen);
+  const nDone = Math.max(Math.floor(cur[2] || 0), sDone);
+  const nUpd = Math.max(Math.floor(cur[3] || 0), sUpd);
+  let nTgt = (sUpd >= Math.floor(cur[3] || 0) && sTgt > 0) ? sTgt : (Math.floor(cur[1] || 0) || sTgt);
+  nTgt = Math.max(nSeen, nTgt);
+  const next = [nSeen, nTgt, nDone, nUpd];
+  if (String(next) === String(cur)) return false;
+  st.gaProg = next;
+  return true;
+}
+
+function mergeGaMapEntry(st, gid, code, ts, dayTag) {
+  if (!gid) return false;
+  const c = Math.floor(code || 0);
+  const t = Math.floor(ts || 0);
+  if (t < MIN_REAL_TS || c < 0 || c > 4) return false;
+  if (!st.gaMap || typeof st.gaMap !== "object") st.gaMap = {};
+  const cur = st.gaMap[gid];
+  const curTs = Array.isArray(cur) ? Math.floor(cur[1] || 0) : 0;
+  const curCode = Array.isArray(cur) ? Math.floor(cur[0] || 0) : 0;
+  if (t > curTs || (t === curTs && c > curCode)) {
+    st.gaMap[gid] = [c, t, String(dayTag || (Array.isArray(cur) ? cur[2] : "") || TODAY_TAG)];
+    return true;
+  }
+  return false;
 }
 
 function recomputeStatusesFromCRDT(st) {
@@ -4306,6 +4792,23 @@ function recomputeStatusesFromCRDT(st) {
 // Seed from repo cloud_state_snapshot + union-merge ALL historical localStorage keys (v5..v13)
 function loadAdaptiveState() {
   const base = createFreshAdaptiveState();
+
+  // 0. Seed baked Grammar Audit verdicts from DATA.grammar_audit.items & cross-day local cache
+  try {
+    const gaItems = (DATA.grammar_audit && Array.isArray(DATA.grammar_audit.items)) ? DATA.grammar_audit.items : [];
+    gaItems.forEach(it => {
+      if (it && it.gid && it.verdict > 0 && (it.audit_ts || 0) >= MIN_REAL_TS) {
+        mergeGaMapEntry(base, it.gid, it.verdict, it.audit_ts, it.audit_date || "");
+      }
+    });
+    const savedGa = JSON.parse(localStorage.getItem(GA_STORE_KEY) || "null");
+    if (savedGa && typeof savedGa === "object") {
+      Object.keys(savedGa).forEach(gk => {
+        const gv = savedGa[gk];
+        if (Array.isArray(gv) && gv.length >= 2) mergeGaMapEntry(base, gk, gv[0], gv[1], gv[2] || "");
+      });
+    }
+  } catch (e) {}
 
   // 1. Seed from cloud_state_snapshot.json / practice_log.jsonl baked into DATA.cloud_sync
   const radioDurCap = Math.max(60, Math.floor((DATA.radio && DATA.radio.duration_sec) || 3400) - 8);
@@ -4347,6 +4850,7 @@ function loadAdaptiveState() {
     if (Array.isArray(sd.cursor)) applyCursorTuple(base, sd.cursor);
     if (Array.isArray(sd.speeds)) applySpeedTuple(base, sd.speeds);
     if (Array.isArray(sd.flashProg)) mergeFlashProgTuple(base, sd.flashProg);
+    if (Array.isArray(sd.gaProg)) mergeGaProgTuple(base, sd.gaProg);
     if (Array.isArray(sd.tappedWords)) {
       sd.tappedWords.forEach(w => {
         const ws = String(w || "").trim();
@@ -4363,6 +4867,11 @@ function loadAdaptiveState() {
           base.masteryOverrideTs[mk] = mts;
         }
       }
+    });
+    const sga = cs.seeded_ga || {};
+    Object.keys(sga).forEach(gk => {
+      const gv = sga[gk];
+      if (Array.isArray(gv) && gv.length >= 2) mergeGaMapEntry(base, gk, gv[0], gv[1], gv[2] || "");
     });
   } catch (e) {}
 
@@ -4393,6 +4902,7 @@ function loadAdaptiveState() {
         }
         if (typeof saved.st === "number" && saved.st > (base.st || 0)) applySpeedTuple(base, [saved.es, saved.rs, saved.st]);
         if (Array.isArray(saved.flashProg)) mergeFlashProgTuple(base, saved.flashProg);
+        if (Array.isArray(saved.gaProg)) mergeGaProgTuple(base, saved.gaProg);
         if (saved.vocabSess && saved.vocabSess.date === DATA.plan_date && Array.isArray(saved.vocabSess.queue)) {
           if (!base.vocabSess || (saved.vocabSess.updatedAt || 0) >= (base.vocabSess.updatedAt || 0)) {
             base.vocabSess = saved.vocabSess;
@@ -4402,6 +4912,17 @@ function loadAdaptiveState() {
           const curScore = base.radioReview ? ((base.radioReview.done ? 999 : 0) + (base.radioReview.triageIdx || 0) + ((base.radioReview.tailDoneIds || []).length)) : -1;
           const newScore = (saved.radioReview.done ? 999 : 0) + (saved.radioReview.triageIdx || 0) + ((saved.radioReview.tailDoneIds || []).length);
           if (newScore >= curScore) base.radioReview = saved.radioReview;
+        }
+        if (saved.gaSess && saved.gaSess.date === DATA.plan_date && Array.isArray(saved.gaSess.queue)) {
+          if (!base.gaSess || (saved.gaSess.updatedAt || 0) >= (base.gaSess.updatedAt || 0)) {
+            base.gaSess = saved.gaSess;
+          }
+        }
+        if (saved.gaMap && typeof saved.gaMap === "object") {
+          Object.keys(saved.gaMap).forEach(gk => {
+            const gv = saved.gaMap[gk];
+            if (Array.isArray(gv) && gv.length >= 2) mergeGaMapEntry(base, gk, gv[0], gv[1], gv[2] || "");
+          });
         }
         if (Array.isArray(saved.tappedWords)) {
           saved.tappedWords.forEach(w => {
@@ -4570,6 +5091,11 @@ function saveAdaptiveState() {
     snapshotSyncBaseline();
   }
   try { localStorage.setItem(ADAPTIVE_KEY, JSON.stringify(A)); } catch (e) {}
+  try {
+    if (A.gaMap && Object.keys(A.gaMap).length) {
+      localStorage.setItem(GA_STORE_KEY, JSON.stringify(A.gaMap));
+    }
+  } catch (e) {}
 }
 
 function schedTupleOf(ps) {
@@ -4903,6 +5429,15 @@ function buildCompactPacket() {
     ];
     size += byteLen(JSON.stringify(pkt.fp)) + 7;
   }
+  if (Array.isArray(A.gaProg) && (A.gaProg[0] > 0 || A.gaProg[2] > 0)) {
+    pkt.gp = [
+      Math.floor(A.gaProg[0] || 0),
+      Math.floor(A.gaProg[1] || 0),
+      Math.floor(A.gaProg[2] || 0),
+      Math.floor(A.gaProg[3] || 0)
+    ];
+    size += byteLen(JSON.stringify(pkt.gp)) + 7;
+  }
   if (Array.isArray(A.tappedWords) && A.tappedWords.length) {
     const twSlice = A.tappedWords.slice(-30);
     const twAdd = byteLen(JSON.stringify(twSlice)) + 7;
@@ -4912,6 +5447,25 @@ function buildCompactPacket() {
     }
   }
   const deltaFloor = Math.max(TRUE_GREEN_EPOCH, BAKED_EPOCH > 0 ? BAKED_EPOCH - 7200 : 0);
+  const gaEntries = Object.keys(A.gaMap || {})
+    .map(k => {
+      const gv = A.gaMap[k];
+      return Array.isArray(gv) && gv.length >= 2 ? [k, [Math.floor(gv[0] || 0), Math.floor(gv[1] || 0)]] : null;
+    })
+    .filter(kv => kv && kv[1][1] >= deltaFloor)
+    .sort((x, y) => y[1][1] - x[1][1]);
+  if (gaEntries.length) {
+    pkt.ga = {};
+    size += 7;
+    for (const kv of gaEntries) {
+      const add = byteLen(JSON.stringify(kv[0]) + ":" + JSON.stringify(kv[1])) + 1;
+      if (size + add > CLOUD_BYTE_LIMIT - 220) break;
+      pkt.ga[kv[0]] = kv[1];
+      size += add;
+    }
+    if (!Object.keys(pkt.ga).length) delete pkt.ga;
+    else pkt.ga = sortedMap(pkt.ga);
+  }
   const ovEntries = Object.keys(A.masteryOverrides || {})
     .map(k => [k, [String(A.masteryOverrides[k]), Math.floor((A.masteryOverrideTs && A.masteryOverrideTs[k]) || 0)]])
     .filter(kv => kv[1][1] >= TRUE_GREEN_EPOCH)
@@ -4941,6 +5495,8 @@ function packetFingerprint(pkt) {
     rp: pkt.rp || [0, 0],
     rsig: pkt.rsig || "",
     fp: Array.isArray(pkt.fp) ? [Math.floor(pkt.fp[0] || 0), Math.floor(pkt.fp[1] || 0), Math.floor(pkt.fp[2] || 0)] : [],
+    gp: Array.isArray(pkt.gp) ? [Math.floor(pkt.gp[0] || 0), Math.floor(pkt.gp[1] || 0), Math.floor(pkt.gp[2] || 0)] : [],
+    ga: sortedMap(pkt.ga || {}),
     z: String(pkt.z || "").split(";").filter(Boolean).sort().join(";"),
     c: pkt.c || [],
     sp: pkt.sp || [],
@@ -4997,6 +5553,15 @@ function applyIncomingPacket(pkt) {
         }
       });
     }
+    if (pktVer >= 15 && pkt.ga && typeof pkt.ga === "object") {
+      const pDayTag = String(pkt.d || "").replace(/-/g, "") || TODAY_TAG;
+      Object.keys(pkt.ga).forEach(gk => {
+        const gv = pkt.ga[gk];
+        if (Array.isArray(gv) && gv.length >= 2) {
+          if (mergeGaMapEntry(A, gk, gv[0], gv[1], gv[2] || pDayTag)) changed = true;
+        }
+      });
+    }
 
     if (pkt.d !== DATA.plan_date) {
       if (changed) {
@@ -5019,6 +5584,9 @@ function applyIncomingPacket(pkt) {
     }
 
     if (pktVer >= 14 && Array.isArray(pkt.fp) && mergeFlashProgTuple(A, pkt.fp)) {
+      changed = true;
+    }
+    if (pktVer >= 15 && Array.isArray(pkt.gp) && mergeGaProgTuple(A, pkt.gp)) {
       changed = true;
     }
 
@@ -5304,6 +5872,87 @@ applySyncCodeFromUrl();
 applyMasteryOverrides();
 saveAdaptiveState();
 
+const GA_SPECTRUM = [
+  null,
+  { code: 1, key: "blank", cls: "s1", label: "陌生", choice: "盘点:陌生", cue: "大脑空白 · 明天先讲透再重点考", shortCue: "重讲并必考" },
+  { code: 2, key: "confuse", cls: "s2", label: "易混", choice: "盘点:易混", cue: "怕接续错或跟双胞胎混 · 安排对打", shortCue: "双胞胎对打" },
+  { code: 3, key: "passive", cls: "s3", label: "看懂", choice: "盘点:看懂", cue: "句中能懂 · 考前只验一题就真绿", shortCue: "只验一题" },
+  { code: 4, key: "instinct", cls: "s4", label: "本能", choice: "盘点:本能", cue: "0.5 秒秒懂 · 立刻封存免考省时间", shortCue: "封存免考" }
+];
+
+const GA_ITEMS_LIST = (DATA.grammar_audit && Array.isArray(DATA.grammar_audit.items)) ? DATA.grammar_audit.items : [];
+const GA_BY_GID = {};
+const GA_BY_NAME = {};
+GA_ITEMS_LIST.forEach(it => {
+  if (it && it.gid) GA_BY_GID[it.gid] = it;
+  if (it && it.name) GA_BY_NAME[it.name] = it;
+});
+
+function getEffectiveGA(gid) {
+  const item = GA_BY_GID[gid] || null;
+  const bakedCode = item ? Math.floor(item.verdict || 0) : 0;
+  const bakedTs = item ? Math.floor(item.audit_ts || 0) : 0;
+  const bakedDate = item ? String(item.audit_date || "") : "";
+  const loc = (A && A.gaMap && Array.isArray(A.gaMap[gid])) ? A.gaMap[gid] : null;
+  const locCode = loc ? Math.floor(loc[0] || 0) : 0;
+  const locTs = loc ? Math.floor(loc[1] || 0) : 0;
+  const locDate = loc ? String(loc[2] || "") : "";
+  if (locTs > bakedTs || (locTs === bakedTs && locCode > bakedCode)) {
+    return { code: locCode, ts: locTs, date: locDate };
+  }
+  return { code: bakedCode, ts: bakedTs, date: bakedDate };
+}
+
+function computeGrammarAuditStats() {
+  const total = GA_ITEMS_LIST.length;
+  const counts = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 };
+  let audited = 0;
+  let todayAudited = 0;
+  GA_ITEMS_LIST.forEach(it => {
+    const eff = getEffectiveGA(it.gid);
+    const c = (eff.code >= 1 && eff.code <= 4) ? eff.code : 0;
+    counts[c] = (counts[c] || 0) + 1;
+    if (c > 0) {
+      audited += 1;
+      if (eff.date === TODAY_TAG) todayAudited += 1;
+    }
+  });
+  const remaining = Math.max(0, total - audited);
+  const dailyBase = Math.max(0, Number((DATA.grammar_audit && DATA.grammar_audit.daily_target) || 39));
+  const activeFrom = String((DATA.grammar_audit && DATA.grammar_audit.active_from) || "2026-11-23");
+  const gp = Array.isArray(A.gaProg) ? A.gaProg : [0, 0, 0, 0];
+  const sessCleared = (A.gaSess && A.gaSess.date === DATA.plan_date) ? Math.floor(A.gaSess.cleared || 0) : 0;
+  const sessTotal = (A.gaSess && A.gaSess.date === DATA.plan_date) ? Math.floor(A.gaSess.total || 0) : 0;
+  const gaSeen = Math.max(0, Math.floor(gp[0] || 0), sessCleared, todayAudited);
+  const availableToday = gaSeen + remaining;
+  const requiredToday = (DATA.plan_date >= activeFrom) && dailyBase > 0 && total > 0 && availableToday > 0;
+  const defaultTgt = Math.min(dailyBase, Math.max(0, availableToday));
+  const gaDone = total > 0 && (
+    remaining === 0 ||
+    Math.floor(gp[2] || 0) > 0 ||
+    !!(A.gaSess && A.gaSess.date === DATA.plan_date && A.gaSess.done) ||
+    (defaultTgt > 0 && gaSeen >= defaultTgt)
+  );
+  const gaTarget = gaDone
+    ? Math.max(gaSeen, sessTotal || Math.floor(gp[1] || 0) || defaultTgt)
+    : Math.max(gaSeen, sessTotal || Math.floor(gp[1] || 0) || defaultTgt);
+  const gaRatio = gaDone ? 1.0 : (gaSeen > 0 && gaTarget > 0 ? Math.min(0.96, gaSeen / gaTarget) : 0);
+  const showSubNav = total > 0 && (remaining > 0 || todayAudited > 0);
+  return {
+    total,
+    audited,
+    remaining,
+    counts,
+    todayAudited,
+    gaSeen: gaDone ? Math.max(gaSeen, gaTarget) : gaSeen,
+    gaTarget,
+    gaRatio,
+    gaDone,
+    requiredToday,
+    showSubNav
+  };
+}
+
 function computeDaily120Metrics() {
   const totalCards = Math.max(1, DATA.points.length);
   const greenCnt = DATA.points.filter(p => A.pts[p.id] && A.pts[p.id].status === "green").length;
@@ -5330,16 +5979,22 @@ function computeDaily120Metrics() {
     : Math.max(flashSeen, sessTotal || Math.floor(fp[1] || 0) || defaultTarget);
   const flashRatio = flashDone ? 1.0 : (flashSeen > 0 ? Math.min(0.96, flashSeen / Math.max(1, flashTarget)) : 0);
 
+  const ga = computeGrammarAuditStats();
+  const ritual3Ratio = ga.requiredToday
+    ? ((flashDone ? 0.5 : flashRatio * 0.5) + (ga.gaDone ? 0.5 : ga.gaRatio * 0.5))
+    : flashRatio;
+  const ritual3Done = ga.requiredToday ? (flashDone && ga.gaDone) : flashDone;
+
   const vDone = vItems.filter(it => it.tier === "done").length;
   const vWip = vItems.filter(it => it.tier === "wip").length;
   const baseDone = Number(DATA.vocab_base_done || 10);
   const vocabBonus = Math.min(8, Math.max(0, (vDone - baseDone) * 0.28 + Math.max(0, vWip - 35) * 0.06));
 
-  // Combined 3-ritual daily completion: 50% quiz + 32% podcast + 18% vocab swipe
-  const dailyLockPct = Math.min(100, Math.round((quizRatio * 0.50 + radioRatio * 0.32 + flashRatio * 0.18) * 100));
+  // Combined 3-ritual daily completion: 50% quiz + 32% podcast + 18% Position #3 (vocab + pre-exam grammar audit)
+  const dailyLockPct = Math.min(100, Math.round((quizRatio * 0.50 + radioRatio * 0.32 + ritual3Ratio * 0.18) * 100));
 
-  // Projected JLPT N3 score (/180): 108 base + 12 quiz + 8 podcast + 4 nightly vocab + cross-day vocab mastery lift
-  const projScore = Math.min(165, Math.round(108 + quizRatio * 12 + (radioDone ? 8 : radioRatio * 8) + flashRatio * 4 + vocabBonus));
+  // Projected JLPT N3 score (/180): 108 base + 12 quiz + 8 podcast + 4 Position #3 + cross-day vocab mastery lift
+  const projScore = Math.min(165, Math.round(108 + quizRatio * 12 + (radioDone ? 8 : radioRatio * 8) + ritual3Ratio * 4 + vocabBonus));
 
   return {
     totalCards,
@@ -5354,7 +6009,10 @@ function computeDaily120Metrics() {
     flashTarget,
     flashRatio,
     flashDone,
-    allThreeDone: quizDone && radioDone && flashDone,
+    ga,
+    ritual3Ratio,
+    ritual3Done,
+    allThreeDone: quizDone && radioDone && ritual3Done,
     dailyLockPct,
     projScore
   };
@@ -5479,7 +6137,7 @@ function setupCurrentTurn(forcedId) {
   }
   const p = getPointById(curPointId);
   const ps = A.pts[curPointId];
-  viewStage = "quiz";
+  viewStage = (p && p.teach_first && ps && ps.status === "unseen" && !ps.audioPrimed && p.teach) ? "teach" : "quiz";
   activeQuizObj = getQuizForPoint(p, ps);
   const attemptSalt = (ps.wrongCount || 0) * 7 + (ps.passStreak || 0) * 3 + 1;
   currentChoices = prepareChoices(activeQuizObj, attemptSalt, ps);
@@ -7206,6 +7864,9 @@ function resetTodayMission() {
   const keepFlashProg = A.flashProg || [0, 0, 0, 0];
   const keepVocabSess = A.vocabSess || null;
   const keepRadioReview = A.radioReview || null;
+  const keepGaProg = A.gaProg || [0, 0, 0, 0];
+  const keepGaMap = A.gaMap || {};
+  const keepGaSess = A.gaSess || null;
   const keepSt = A.st || 0;
   A = createFreshAdaptiveState();
   A.resetAt = stamp;
@@ -7218,6 +7879,9 @@ function resetTodayMission() {
   A.flashProg = keepFlashProg;
   A.vocabSess = keepVocabSess;
   A.radioReview = keepRadioReview;
+  A.gaProg = keepGaProg;
+  A.gaMap = keepGaMap;
+  A.gaSess = keepGaSess;
   A.es = expSpeed;
   A.rs = radioSpeed;
   A.st = keepSt;
@@ -7287,13 +7951,18 @@ function renderGreenBoard() {
     ? window.ZB.getSummary()
     : { ratio: 0, done: false, label: "体律 0/3", text: "0 / 3 项" };
 
+  const gaLbl = m.ga && m.ga.requiredToday
+    ? ` · 语法盘点 ${m.ga.gaDone ? "✓" : m.ga.gaSeen + "/" + m.ga.gaTarget}`
+    : "";
+  const r3Label = `记词 ${m.flashDone ? "✓" : m.flashSeen + "/" + m.flashTarget}${gaLbl}`;
+
   const trioEl = document.getElementById("enso-trio");
   if (trioEl) {
-    const doneKey = `${m.quizDone ? 1 : 0}${m.radioDone ? 1 : 0}${m.flashDone ? 1 : 0}${bm.done ? 1 : 0}`;
+    const doneKey = `${m.quizDone ? 1 : 0}${m.radioDone ? 1 : 0}${m.ritual3Done ? 1 : 0}${bm.done ? 1 : 0}`;
     const rings = [
       { ratio: m.quizRatio, done: m.quizDone, label: `做题 ${m.greenCnt}/${m.totalCards}` },
       { ratio: m.radioRatio, done: m.radioDone, label: `随身听 ${m.listenedMins}/${m.targetMins}分` },
-      { ratio: m.flashRatio, done: m.flashDone, label: `记词 ${m.flashDone ? "已完成" : m.flashSeen + "/" + m.flashTarget}` },
+      { ratio: m.ritual3Ratio, done: m.ritual3Done, label: r3Label },
       { ratio: bm.ratio, done: bm.done, label: bm.label }
     ];
     trioEl.innerHTML = rings.map((r, idx) => {
@@ -7305,7 +7974,7 @@ function renderGreenBoard() {
 
   const quizPart = m.quizDone ? `做题 ✓` : `做题 ${m.greenCnt}/${m.totalCards}`;
   const radioPart = m.radioDone ? `随身听 ✓` : `听 ${m.listenedMins}/${m.targetMins}分`;
-  const flashPart = m.flashDone ? `记词 ✓` : `记词 ${m.flashSeen}/${m.flashTarget}`;
+  const flashPart = m.ritual3Done ? `记词 ✓` : r3Label;
   const bodyPart = bm.done ? `体律 ✓` : bm.label;
   document.getElementById("gm-left-txt").textContent = `${quizPart} · ${radioPart} · ${flashPart} · ${bodyPart}`;
 
@@ -7354,16 +8023,16 @@ function renderTutor() {
     const m = computeDaily120Metrics();
     const nextBtn = !m.radioDone
       ? `<button class="sumi-btn" onclick="switchMode('radio', true)">去听随身听 →</button>`
-      : (!m.flashDone
-          ? `<button class="sumi-btn" onclick="switchMode('vocab')">去单手记词 →</button>`
+      : (!m.ritual3Done
+          ? `<button class="sumi-btn" onclick="switchMode('vocab')">${(!m.flashDone ? "去单手记词 →" : "去语法盘点 →")}</button>`
           : `<button class="sumi-btn" onclick="switchMode('dash')">查看总表 →</button>`);
     box.innerHTML = `
-      <div class="meta-bar"><span class="overline ok">${m.allThreeDone ? "今日三修圆满 · 稳过 120 分" : "今日五十道题已全部过关"}</span></div>
+      <div class="meta-bar"><span class="overline ok">${m.allThreeDone ? "今日日语三修圆满 · 稳过 120 分" : `今日 ${m.totalCards} 道题已全部过关`}</span></div>
       <div class="focal-space">
-        <h2 class="point-heading">${m.allThreeDone ? "今日三样皆已圆满" : "五十道题已全部过关"}</h2>
+        <h2 class="point-heading">${m.allThreeDone ? "今日三样皆已圆满" : `${m.totalCards} 道题已全部过关`}</h2>
         <p class="logic-line">${m.allThreeDone
-          ? `做题、三人随身听与单手记词皆已收笔，预计总分稳锁在 ${m.projScore} 分。安心休息，考场稳站 120 分以上。`
-          : `做题部分已拿满，当前预计 ${m.projScore} 分。${!m.radioDone ? "顺手听完今日随身听，" : ""}再去记词滑完今晚生词，就能把三枚圆印全部收满。`}</p>
+          ? `做题、三人随身听与记词皆已收笔，预计总分稳锁在 ${m.projScore} 分。安心休息，考场稳站 120 分以上。`
+          : `做题部分已拿满，当前预计 ${m.projScore} 分。${!m.radioDone ? "顺手听完今日随身听，" : ""}去第 3 栏收完今晚任务，就能把圆印全部点亮。`}</p>
       </div>
       <div class="action-dock">
         <div class="dock-row">
@@ -7970,6 +8639,16 @@ document.addEventListener("keydown", e => {
   }
 
   if (activeMode === "vocab") {
+    if (vocabSubMode === "ga") {
+      if (e.key === " ") { e.preventDefault(); onGACardTapOrAudio(); }
+      else if (e.key === "Enter") { e.preventDefault(); if (gaPendingNext) advancePendingGA(); else onGACardTapOrAudio(); }
+      else if (e.key === "1") { e.preventDefault(); commitGASpectrum(1); }
+      else if (e.key === "2") { e.preventDefault(); commitGASpectrum(2); }
+      else if (e.key === "3") { e.preventDefault(); commitGASpectrum(3); }
+      else if (e.key === "4") { e.preventDefault(); commitGASpectrum(4); }
+      else if (e.key.toLowerCase() === "z" || e.key === "Backspace") { e.preventDefault(); undoLastGA(); }
+      return;
+    }
     if (e.key === " ") { e.preventDefault(); onVocabCardTapOrReplay(); }
     else if (e.key === "ArrowRight" || e.key === "2" || e.key === "Enter") { e.preventDefault(); triggerVocabAction("right"); }
     else if (e.key === "ArrowLeft" || e.key === "1") { e.preventDefault(); triggerVocabAction("left"); }
@@ -8555,7 +9234,74 @@ function renderChunkHighlightHTML(chunkJa, target) {
   );
 }
 
+let vocabSubMode = "vocab";
+let gaRevealed = false;
+let gaPendingNext = false;
+let gaPendingCode = 0;
+let gaAnimating = false;
+let gaHoverCode = 0;
+let lastGACloudPushMs = 0;
+
+function updateVocabSubNav() {
+  const navEl = document.getElementById("vc-subnav");
+  if (!navEl) return;
+  const m = computeDaily120Metrics();
+  const ga = m.ga;
+  if (!ga || !ga.showSubNav) {
+    navEl.style.display = "none";
+    if (vocabSubMode === "ga") vocabSubMode = "vocab";
+    return;
+  }
+  navEl.style.display = "flex";
+  const bV = document.getElementById("vsub-vocab");
+  const bG = document.getElementById("vsub-ga");
+  if (bV) bV.classList.toggle("active", vocabSubMode === "vocab");
+  if (bG) bG.classList.toggle("active", vocabSubMode === "ga");
+  const cV = document.getElementById("vsub-vocab-cnt");
+  if (cV) cV.textContent = m.flashDone ? "✓" : `${m.flashSeen}/${m.flashTarget}`;
+  const cG = document.getElementById("vsub-ga-cnt");
+  if (cG) cG.textContent = ga.remaining === 0 ? "✓" : (ga.gaDone ? "✓" : `${ga.gaSeen}/${ga.gaTarget}`);
+  const metaEl = document.getElementById("vc-submeta");
+  if (metaEl) metaEl.textContent = `全表 ${ga.audited}/${ga.total}`;
+}
+
+function switchVocabSubMode(sub) {
+  const target = (sub === "ga" && GA_ITEMS_LIST.length > 0) ? "ga" : "vocab";
+  vocabSubMode = target;
+  stopVocabAudioAndTimers();
+  updateVocabSubNav();
+  if (vocabSubMode === "ga") {
+    enterGrammarAuditSubMode();
+  } else {
+    ensureVocabSession(false);
+    vcRevealed = false;
+    vcPendingLeft = false;
+    vcAnimating = false;
+    dealCurrentVocabCard(true);
+  }
+}
+
+function openGrammarAuditFromAnywhere() {
+  vocabSubMode = "ga";
+  if (activeMode !== "vocab") {
+    switchMode("vocab");
+  } else {
+    switchVocabSubMode("ga");
+  }
+}
+
 function enterVocabMode() {
+  const m = computeDaily120Metrics();
+  if (m.ga && m.ga.requiredToday && m.flashDone && !m.ga.gaDone) {
+    vocabSubMode = "ga";
+  } else if (!m.ga || !m.ga.showSubNav) {
+    vocabSubMode = "vocab";
+  }
+  updateVocabSubNav();
+  if (vocabSubMode === "ga") {
+    enterGrammarAuditSubMode();
+    return;
+  }
   ensureVocabSession(false);
   vcRevealed = false;
   vcPendingLeft = false;
@@ -8565,15 +9311,26 @@ function enterVocabMode() {
 
 function startNextVocabBatch() {
   stopVocabAudioAndTimers();
+  vocabSubMode = "vocab";
   ensureVocabSession(true);
   vcRevealed = false;
   vcPendingLeft = false;
   vcAnimating = false;
+  updateVocabSubNav();
   dealCurrentVocabCard(true);
 }
 
 function onRemoteVocabSync() {
-  if (activeMode !== "vocab" || vcAnimating || vcPendingLeft) return;
+  updateVocabSubNav();
+  if (activeMode !== "vocab") return;
+  if (vocabSubMode === "ga") {
+    if (!gaAnimating && !gaPendingNext) {
+      ensureGASession(false);
+      renderGrammarAuditStage();
+    }
+    return;
+  }
+  if (vcAnimating || vcPendingLeft) return;
   const sess = ensureVocabSession(false);
   if (!sess.queue.length) renderVocabStage();
 }
@@ -9037,29 +9794,39 @@ function bindVocabCardGestures(cardEl) {
 }
 
 function renderVocabStage() {
+  updateVocabSubNav();
   const box = document.getElementById("vocab-stage-box");
   if (!box) return;
+  if (vocabSubMode === "ga") {
+    renderGrammarAuditStage();
+    return;
+  }
   const sess = ensureVocabSession(false);
 
   if (!sess.queue.length) {
     const remPool = countRemainingVocabPool();
     const m = computeDaily120Metrics();
+    const needGA = m.ga && m.ga.requiredToday && !m.ga.gaDone && m.ga.remaining > 0;
     box.innerHTML = `
       <div class="meta-bar">
-        <span class="overline ok">${sess.total > 0 ? `本组 ${sess.total} 词已清零 · 圆印已收笔` : "核心生词已全部满 3/3"}</span>
+        <span class="overline ok">${sess.total > 0 ? (needGA ? `本组 ${sess.total} 词已清零 · 还差今日语法盘点` : `本组 ${sess.total} 词已清零 · 圆印已收笔`) : "核心生词已全部满 3/3"}</span>
       </div>
       <div class="focal-space">
         <h2 class="point-heading">${sess.total > 0 ? "今晚这组词全部过关" : "核心生词已全部掌握"}</h2>
-        <p class="logic-line">${remPool > 0
-          ? `今日记词圆印已点亮，当前预计 ${m.projScore} 分。总表里还有 ${remPool} 个词未满跨 3 天的 3/3，明天接着巩固就会真正变绿。`
-          : `所有核心生词都已跨 3 天答对满 3/3，稳稳锁进长期记忆。`}</p>
+        <p class="logic-line">${needGA
+          ? `记词部分已收完，顺手把今日 ${m.ga.gaTarget} 条语法光谱盘点过一遍（约 4 分钟），第 3 枚圆印就能彻底点亮。`
+          : (remPool > 0
+            ? `今日记词已点亮，当前预计 ${m.projScore} 分。总表里还有 ${remPool} 个词未满跨 3 天的 3/3，明天接着巩固就会真正变绿。`
+            : `所有核心生词都已跨 3 天答对满 3/3，稳稳锁进长期记忆。`)}</p>
       </div>
       <div class="action-dock">
         <div class="dock-row">
-          <button class="ghost-btn" onclick="switchMode('dash')">查看总表</button>
-          ${remPool > 0
-            ? `<button class="sumi-btn" onclick="startNextVocabBatch()">再练一组</button>`
-            : `<button class="sumi-btn" onclick="switchMode('tutor')">回做题</button>`}
+          <button class="ghost-btn" onclick="${needGA && remPool > 0 ? "startNextVocabBatch()" : "switchMode('dash')"}">${needGA && remPool > 0 ? "再练一组词" : "查看总表"}</button>
+          ${needGA
+            ? `<button class="sumi-btn" onclick="switchVocabSubMode('ga')">去语法盘点 (${m.ga.gaSeen}/${m.ga.gaTarget}) →</button>`
+            : (remPool > 0
+              ? `<button class="sumi-btn" onclick="startNextVocabBatch()">再练一组</button>`
+              : `<button class="sumi-btn" onclick="switchMode('tutor')">回做题</button>`)}
         </div>
       </div>
     `;
@@ -9126,6 +9893,508 @@ function renderVocabStage() {
   bindVocabCardGestures(document.getElementById("vc-card"));
 }
 
+// ================= 156-POINT GRAMMAR SELF-AUDIT (4-STEP ZEN COGNITIVE SPECTRUM) =================
+function curateGABatch(limitCnt) {
+  const maxN = Math.max(1, Number(limitCnt || (DATA.grammar_audit && DATA.grammar_audit.daily_target) || 39));
+  const out = [];
+  for (let i = 0; i < GA_ITEMS_LIST.length && out.length < maxN; i++) {
+    const it = GA_ITEMS_LIST[i];
+    if (!it || !it.gid) continue;
+    if (getEffectiveGA(it.gid).code === 0) out.push(it.gid);
+  }
+  return out;
+}
+
+function ensureGASession(forceNewBatch) {
+  const dailyTgt = Number((DATA.grammar_audit && DATA.grammar_audit.daily_target) || 39);
+  if (!forceNewBatch && A.gaSess && A.gaSess.date === DATA.plan_date && Array.isArray(A.gaSess.queue)) {
+    const filtered = A.gaSess.queue.filter(gid => getEffectiveGA(gid).code === 0);
+    if (filtered.length !== A.gaSess.queue.length) {
+      const diff = A.gaSess.queue.length - filtered.length;
+      A.gaSess.queue = filtered;
+      A.gaSess.cleared = Math.min(A.gaSess.total || 0, (A.gaSess.cleared || 0) + diff);
+    }
+    if (A.gaSess.queue.length === 0 && (A.gaSess.total || 0) > 0) {
+      A.gaSess.done = true;
+    }
+    if (!Array.isArray(A.gaSess.undoStack)) A.gaSess.undoStack = [];
+    return A.gaSess;
+  }
+  const queue = curateGABatch(dailyTgt);
+  A.gaSess = {
+    date: DATA.plan_date,
+    queue: queue,
+    total: queue.length,
+    cleared: 0,
+    undoStack: [],
+    done: queue.length === 0,
+    updatedAt: nowUnixSec()
+  };
+  saveAdaptiveState();
+  return A.gaSess;
+}
+
+function recordGAProgress(seenCnt, totalCnt, markDoneNow) {
+  const stamp = nowUnixSec();
+  const cur = Array.isArray(A.gaProg) ? A.gaProg : [0, 0, 0, 0];
+  const nextSeen = Math.max(Math.floor(cur[0] || 0), Math.max(0, Math.floor(seenCnt || 0)));
+  const nextTgt = Math.max(nextSeen, Math.floor(totalCnt || 0) || Math.floor(cur[1] || 0));
+  const nextDone = markDoneNow ? Math.max(Math.floor(cur[2] || 0), stamp) : Math.floor(cur[2] || 0);
+  const changed = mergeGaProgTuple(A, [nextSeen, nextTgt, nextDone, stamp]);
+  if (changed) {
+    saveAdaptiveState();
+    renderGreenBoard();
+    updateVocabSubNav();
+    if (markDoneNow || Date.now() - lastGACloudPushMs > 8000) {
+      lastGACloudPushMs = Date.now();
+      scheduleCloudPush(markDoneNow ? 80 : 300);
+    }
+  }
+}
+
+function applyGASpectrumVerdict(gid, code, stampSec) {
+  const item = GA_BY_GID[gid];
+  const spec = GA_SPECTRUM[code];
+  if (!item || !spec) return null;
+  const stamp = Math.max(TRUE_GREEN_EPOCH, Math.floor(stampSec || nowUnixSec()));
+  const prevGa = getEffectiveGA(gid);
+  const prevMs = (A.masteryOverrides && A.masteryOverrides[item.name]) ? String(A.masteryOverrides[item.name]) : "";
+  const prevMsTs = (A.masteryOverrideTs && A.masteryOverrideTs[item.name]) ? Number(A.masteryOverrideTs[item.name]) : 0;
+
+  if (!A.gaMap || typeof A.gaMap !== "object") A.gaMap = {};
+  A.gaMap[gid] = [code, stamp, TODAY_TAG];
+
+  let targetMs = "done";
+  let okBit = 1;
+  if (code === 1) {
+    targetMs = `todo:${TODAY_TAG}`;
+    okBit = 0;
+  } else if (code === 2) {
+    targetMs = `todo:${TODAY_TAG}`;
+    okBit = 0;
+  } else if (code === 3) {
+    // Spectrum 3 ("看懂"): set streak 2/3 with prior date tag so 1 clean quiz verification turns True Green!
+    targetMs = "wip2:20261114";
+    okBit = 1;
+  } else {
+    targetMs = "done";
+    okBit = 1;
+  }
+  setMasteryTier(item.name, targetMs, stamp);
+  applyMasteryOverrides();
+
+  const rec = {
+    id: `GA-${gid}`,
+    point: item.name,
+    choice: spec.choice,
+    correct: okBit ? "true" : "false",
+    ask_again: "false",
+    ts: new Date(stamp * 1000).toISOString()
+  };
+  if (!Array.isArray(A.recentRecords)) A.recentRecords = [];
+  A.recentRecords.push(rec);
+  if (A.recentRecords.length > 25) A.recentRecords = A.recentRecords.slice(-25);
+  const ob = loadOutbox();
+  ob.push([rec.id, rec.point, rec.choice, okBit, rec.ts]);
+  saveOutbox(ob);
+
+  saveAdaptiveState();
+  return { gid, prevGa, prevMs, prevMsTs, newTs: stamp, recTs: rec.ts };
+}
+
+function enterGrammarAuditSubMode() {
+  ensureGASession(false);
+  gaRevealed = false;
+  gaPendingNext = false;
+  gaPendingCode = 0;
+  gaAnimating = false;
+  gaHoverCode = 0;
+  renderGrammarAuditStage();
+}
+
+function startNextGABatch() {
+  stopVocabAudioAndTimers();
+  ensureGASession(true);
+  gaRevealed = false;
+  gaPendingNext = false;
+  gaPendingCode = 0;
+  gaAnimating = false;
+  gaHoverCode = 0;
+  renderGrammarAuditStage();
+}
+
+function playGAAudio(ev) {
+  if (ev) ev.stopPropagation();
+  const sess = A.gaSess;
+  if (!sess || !sess.queue.length) return;
+  const item = GA_BY_GID[sess.queue[0]];
+  if (!item) return;
+  stopVocabAudioAndTimers();
+  if (item.audio) {
+    playDirectUrl(item.audio);
+  } else if (item.ex_ja) {
+    speakJapaneseFallback(item.ex_ja);
+  } else {
+    speakJapaneseFallback(item.name);
+  }
+}
+
+function onGACardTapOrAudio() {
+  if (gaAnimating) return;
+  const sess = A.gaSess;
+  if (!sess || !sess.queue.length) return;
+  if (gaPendingNext) {
+    advancePendingGA();
+    return;
+  }
+  if (!gaRevealed) {
+    gaRevealed = true;
+    const revEl = document.getElementById("ga-reveal-box");
+    if (revEl) revEl.classList.add("shown");
+    const cueEl = document.getElementById("ga-cue-line");
+    if (cueEl) cueEl.textContent = "在下方光谱点选或滑选这一秒的真实感觉";
+    const audBtn = document.getElementById("ga-aud-btn");
+    if (audBtn) audBtn.style.display = "";
+  } else {
+    playGAAudio();
+  }
+}
+
+function setGASpectrumPreview(code) {
+  gaHoverCode = code || 0;
+  const hintEl = document.getElementById("ga-spec-hint");
+  for (let i = 1; i <= 4; i++) {
+    const el = document.getElementById("ga-stop-" + i);
+    if (el) el.classList.toggle("active", i === gaHoverCode);
+  }
+  if (hintEl) {
+    const sp = GA_SPECTRUM[gaHoverCode];
+    if (sp) {
+      hintEl.textContent = `${sp.label} · ${sp.cue}`;
+      hintEl.className = "ga-spec-hint " + sp.cls;
+    } else {
+      hintEl.textContent = "按住沿线左右滑动或轻点选一档";
+      hintEl.className = "ga-spec-hint";
+    }
+  }
+}
+
+function advancePendingGA() {
+  if (!gaPendingNext || gaAnimating) return;
+  const sess = A.gaSess;
+  if (!sess || !sess.queue.length) return;
+  const cardEl = document.getElementById("ga-card");
+  gaAnimating = true;
+  stopVocabAudioAndTimers();
+  if (cardEl) cardEl.classList.add("ga-spec-card-fade");
+  setTimeout(() => {
+    gaAnimating = false;
+    gaPendingNext = false;
+    gaPendingCode = 0;
+    gaRevealed = false;
+    gaHoverCode = 0;
+    sess.queue.shift();
+    sess.cleared = Math.min(sess.total, (sess.cleared || 0) + 1);
+    sess.done = sess.queue.length === 0;
+    sess.updatedAt = nowUnixSec();
+    const st = computeGrammarAuditStats();
+    const dailyTgt = Number((DATA.grammar_audit && DATA.grammar_audit.daily_target) || 39);
+    const doneDay = sess.done || st.remaining === 0 || st.todayAudited >= dailyTgt;
+    saveAdaptiveState();
+    recordGAProgress(Math.max(sess.cleared, st.todayAudited), Math.max(sess.total, Math.min(dailyTgt, st.todayAudited + st.remaining)), doneDay);
+    renderGreenBoard();
+    renderGrammarAuditStage();
+  }, 150);
+}
+
+function commitGASpectrum(code) {
+  if (gaAnimating) return;
+  if (gaPendingNext) {
+    advancePendingGA();
+    return;
+  }
+  const sess = A.gaSess;
+  if (!sess || !sess.queue.length) return;
+  const gid = sess.queue[0];
+  const spec = GA_SPECTRUM[code];
+  if (!spec) return;
+
+  const snapUndo = applyGASpectrumVerdict(gid, code, nowUnixSec());
+  if (snapUndo) {
+    if (!Array.isArray(sess.undoStack)) sess.undoStack = [];
+    sess.undoStack.push(snapUndo);
+    if (sess.undoStack.length > 20) sess.undoStack = sess.undoStack.slice(-20);
+  }
+  scheduleCloudPush(100);
+
+  // If user chose 陌生(1) or 易混(2) BEFORE flipping, show meaning/contrast/example cleanly before advancing
+  if (!gaRevealed && (code === 1 || code === 2)) {
+    gaRevealed = true;
+    gaPendingNext = true;
+    gaPendingCode = code;
+    const revEl = document.getElementById("ga-reveal-box");
+    if (revEl) revEl.classList.add("shown");
+    const audBtn = document.getElementById("ga-aud-btn");
+    if (audBtn) audBtn.style.display = "";
+    const cueEl = document.getElementById("ga-cue-line");
+    if (cueEl) {
+      cueEl.textContent = `已标「${spec.label}」· ${spec.shortCue}`;
+      cueEl.className = "vc-cue ng";
+    }
+    const specWrap = document.getElementById("ga-spec-wrap");
+    if (specWrap) {
+      specWrap.innerHTML = `
+        <div class="vc-dock">
+          <button class="vc-btn mid" onclick="playGAAudio(event)">听讲解</button>
+          <button class="vc-btn ok" onclick="advancePendingGA()">看清了 · 下一条 →</button>
+        </div>
+      `;
+    }
+    renderGreenBoard();
+    updateVocabSubNav();
+    return;
+  }
+
+  // Smooth fade-out and deal next grammar point
+  setGASpectrumPreview(code);
+  const cardEl = document.getElementById("ga-card");
+  gaAnimating = true;
+  stopVocabAudioAndTimers();
+  if (cardEl) cardEl.classList.add("ga-spec-card-fade");
+  setTimeout(() => {
+    gaAnimating = false;
+    gaRevealed = false;
+    gaPendingNext = false;
+    gaPendingCode = 0;
+    gaHoverCode = 0;
+    sess.queue.shift();
+    sess.cleared = Math.min(sess.total, (sess.cleared || 0) + 1);
+    sess.done = sess.queue.length === 0;
+    sess.updatedAt = nowUnixSec();
+    const st = computeGrammarAuditStats();
+    const dailyTgt = Number((DATA.grammar_audit && DATA.grammar_audit.daily_target) || 39);
+    const doneDay = sess.done || st.remaining === 0 || st.todayAudited >= dailyTgt;
+    saveAdaptiveState();
+    recordGAProgress(Math.max(sess.cleared, st.todayAudited), Math.max(sess.total, Math.min(dailyTgt, st.todayAudited + st.remaining)), doneDay);
+    renderGreenBoard();
+    renderGrammarAuditStage();
+  }, 155);
+}
+
+function undoLastGA(ev) {
+  if (ev) ev.stopPropagation();
+  if (gaAnimating) return;
+  const sess = A.gaSess;
+  if (!sess || !Array.isArray(sess.undoStack) || !sess.undoStack.length) return;
+  stopVocabAudioAndTimers();
+  const last = sess.undoStack.pop();
+  const item = GA_BY_GID[last.gid];
+  const undoStamp = Math.max(nowUnixSec(), (last.newTs || 0) + 1);
+  if (item) {
+    if (last.prevGa && last.prevGa.code > 0 && last.prevGa.ts >= MIN_REAL_TS) {
+      A.gaMap[last.gid] = [last.prevGa.code, undoStamp, last.prevGa.date || TODAY_TAG];
+    } else {
+      // Write a CRDT code=0 tombstone so cloud pull won't resurrect the undone mark
+      A.gaMap[last.gid] = [0, undoStamp, TODAY_TAG];
+    }
+    if (last.prevMs && last.prevMsTs >= TRUE_GREEN_EPOCH) {
+      A.masteryOverrides[item.name] = last.prevMs;
+      A.masteryOverrideTs[item.name] = undoStamp;
+    } else {
+      delete A.masteryOverrides[item.name];
+      delete A.masteryOverrideTs[item.name];
+    }
+    applyMasteryOverrides();
+    if (Array.isArray(A.recentRecords) && A.recentRecords.length) {
+      for (let i = A.recentRecords.length - 1; i >= 0; i--) {
+        if (A.recentRecords[i].id === `GA-${last.gid}` && (!last.recTs || A.recentRecords[i].ts === last.recTs)) {
+          A.recentRecords.splice(i, 1);
+          break;
+        }
+      }
+    }
+    const ob = loadOutbox();
+    for (let i = ob.length - 1; i >= 0; i--) {
+      if (ob[i][0] === `GA-${last.gid}` && (!last.recTs || ob[i][4] === last.recTs)) {
+        ob.splice(i, 1);
+        break;
+      }
+    }
+    saveOutbox(ob);
+  }
+  if (gaPendingNext && sess.queue[0] === last.gid) {
+    gaPendingNext = false;
+    gaPendingCode = 0;
+    gaRevealed = true;
+  } else {
+    sess.queue = [last.gid].concat((sess.queue || []).filter(id => id !== last.gid));
+    sess.cleared = Math.max(0, (sess.cleared || 0) - 1);
+    sess.done = false;
+    gaRevealed = false;
+  }
+  sess.updatedAt = undoStamp;
+  saveAdaptiveState();
+  scheduleCloudPush(250);
+  renderGreenBoard();
+  updateVocabSubNav();
+  renderGrammarAuditStage();
+}
+
+function bindGASpectrumGestures() {
+  const rail = document.getElementById("ga-spec-rail");
+  if (!rail) return;
+  let activePid = null;
+  let picked = 0;
+
+  function codeFromPointer(e) {
+    const rect = rail.getBoundingClientRect();
+    const pt = fpXY(e.clientX, e.clientY);
+    const ratio = Math.max(0, Math.min(0.999, (pt.x - rect.left) / Math.max(1, rect.width)));
+    return Math.min(4, Math.max(1, Math.floor(ratio * 4) + 1));
+  }
+
+  rail.addEventListener("pointerdown", e => {
+    if (gaAnimating || gaPendingNext) return;
+    if (typeof e.button === "number" && e.button !== 0) return;
+    activePid = e.pointerId;
+    picked = codeFromPointer(e);
+    setGASpectrumPreview(picked);
+    try { rail.setPointerCapture(e.pointerId); } catch (err) {}
+  });
+
+  rail.addEventListener("pointermove", e => {
+    if (activePid === null || e.pointerId !== activePid) return;
+    const nextCode = codeFromPointer(e);
+    if (nextCode !== picked) {
+      picked = nextCode;
+      setGASpectrumPreview(picked);
+    }
+  });
+
+  function finishRail(e, cancelled) {
+    if (activePid === null || e.pointerId !== activePid) return;
+    const finalCode = cancelled ? 0 : codeFromPointer(e);
+    activePid = null;
+    try { rail.releasePointerCapture(e.pointerId); } catch (err) {}
+    if (cancelled || !finalCode) {
+      setGASpectrumPreview(0);
+      return;
+    }
+    commitGASpectrum(finalCode);
+  }
+
+  rail.addEventListener("pointerup", e => finishRail(e, false));
+  rail.addEventListener("pointercancel", e => finishRail(e, true));
+}
+
+function renderGrammarAuditStage() {
+  updateVocabSubNav();
+  const box = document.getElementById("vocab-stage-box");
+  if (!box) return;
+  const sess = ensureGASession(false);
+  const st = computeGrammarAuditStats();
+  const m = computeDaily120Metrics();
+
+  if (!sess.queue.length) {
+    const allDone = st.remaining === 0;
+    const needVocab = !m.flashDone;
+    const title = allDone ? "全表 156 条语法已盘点完毕" : "今日这组语法已盘完";
+    const overTxt = allDone
+      ? `全表 ${st.total}/${st.total} 已盘清 · 后续精准补漏`
+      : `本组 ${sess.total} 条已完成 · 总进度 ${st.audited} / ${st.total}`;
+    const desc = allDone
+      ? `你亲手把 156 条语法全部标上了真实刻度：陌生项明日先讲透再重点考，易混项安排双胞胎对打，看懂项考前只验一题，本能项直接封存省时间。`
+      : `已盘 ${st.audited} / ${st.total} 条（余 ${st.remaining} 条）。标记已同步云端，明早自动按刻度分流排题；今天精力够的话可以直接再盘一组。`;
+    box.innerHTML = `
+      <div class="meta-bar">
+        <span class="overline ok">${escapeHtml(overTxt)}</span>
+      </div>
+      <div class="focal-space">
+        <h2 class="point-heading">${title}</h2>
+        <div class="ga-summary-grid">
+          <div class="ga-stat-cell"><div class="ga-stat-num s1">${st.counts[1] || 0}</div><div class="ga-stat-lbl">陌生 · 重讲</div></div>
+          <div class="ga-stat-cell"><div class="ga-stat-num s2">${st.counts[2] || 0}</div><div class="ga-stat-lbl">易混 · 对打</div></div>
+          <div class="ga-stat-cell"><div class="ga-stat-num s3">${st.counts[3] || 0}</div><div class="ga-stat-lbl">看懂 · 验一题</div></div>
+          <div class="ga-stat-cell"><div class="ga-stat-num s4">${st.counts[4] || 0}</div><div class="ga-stat-lbl">本能 · 封存</div></div>
+        </div>
+        <p class="logic-line">${desc}</p>
+      </div>
+      <div class="action-dock">
+        <div class="dock-row">
+          ${!allDone
+            ? `<button class="ghost-btn" onclick="startNextGABatch()">再盘一组 (${Math.min(39, st.remaining)}条)</button>`
+            : `<button class="ghost-btn" onclick="switchMode('dash')">去总表看缺口</button>`}
+          ${needVocab
+            ? `<button class="sumi-btn" onclick="switchVocabSubMode('vocab')">去单手记词 →</button>`
+            : (!allDone
+              ? `<button class="sumi-btn" onclick="switchMode('dash')">去总表看缺口 →</button>`
+              : `<button class="sumi-btn" onclick="switchMode('tutor')">回做题 →</button>`)}
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  const gid = sess.queue[0];
+  const item = GA_BY_GID[gid];
+  if (!item) return;
+  const posNum = Math.min(Math.max(1, sess.total), (sess.cleared || 0) + 1);
+  const canUndo = Array.isArray(sess.undoStack) && sess.undoStack.length > 0;
+  const sysBadge = item.sys_tier === "done"
+    ? (item.nov_tested ? "原账已掌握" : "11月未测 · 原账已掌握")
+    : (item.sys_tier === "todo" ? "原账待攻克" : (item.nov_tested ? `原账 ${item.sys_streak}/3` : "11月未测 · 原账 1/3"));
+  const eyeCls = !item.nov_tested && item.sys_tier === "done" ? "ga-eyebrow warn" : (item.sys_tier === "todo" ? "ga-eyebrow ng" : "ga-eyebrow");
+
+  box.innerHTML = `
+    <div class="meta-bar">
+      <span class="overline">今日 ${posNum} / ${sess.total} · 全表 ${st.audited + 1} / ${st.total}</span>
+      <div class="vc-meta-right">
+        ${canUndo ? `<button class="text-btn" onclick="undoLastGA(event)">撤销</button>` : ""}
+        <button class="text-btn" id="ga-aud-btn" style="${gaRevealed ? "" : "display:none;"}" onclick="playGAAudio(event)">听讲解</button>
+      </div>
+    </div>
+
+    <div class="vc-deck-area">
+      <div class="vc-card" id="ga-card" onclick="onGACardTapOrAudio()">
+        <div class="${eyeCls}">${escapeHtml(item.family)} · ${escapeHtml(sysBadge)}</div>
+        <div class="ga-head">${escapeHtml(item.name)}</div>
+        <div class="vc-cue" id="ga-cue-line" style="margin-top:10px;margin-bottom:0;">${gaRevealed ? "在下方光谱点选或滑选这一秒的真实感觉" : "脑中过一遍意思与接续 · 轻点翻面，或直接选光谱"}</div>
+
+        <div class="ga-reveal${gaRevealed ? " shown" : ""}" id="ga-reveal-box">
+          <div class="ga-meaning">${escapeHtml(item.meaning)}</div>
+          ${item.rule ? `<div class="ga-rule"><span class="vc-hook-tag">辨析</span>${escapeHtml(item.rule)}</div>` : ""}
+          ${item.ex_ja ? `<div class="ga-ex"><div class="ga-ex-ja">${escapeHtml(item.ex_ja)}</div>${item.ex_zh ? `<div class="ga-ex-zh">${escapeHtml(item.ex_zh)}</div>` : ""}</div>` : ""}
+        </div>
+      </div>
+    </div>
+
+    <div class="ga-spec-wrap" id="ga-spec-wrap">
+      <div class="ga-spec-hint" id="ga-spec-hint">按住沿线左右滑动，或轻点一档</div>
+      <div class="ga-spec-rail" id="ga-spec-rail">
+        <div class="ga-spec-line"></div>
+        <div class="ga-spec-stops">
+          <div class="ga-spec-stop s1" id="ga-stop-1"><span class="ga-spec-dot"></span><span class="ga-spec-name">陌生</span></div>
+          <div class="ga-spec-stop s2" id="ga-stop-2"><span class="ga-spec-dot"></span><span class="ga-spec-name">易混</span></div>
+          <div class="ga-spec-stop s3" id="ga-stop-3"><span class="ga-spec-dot"></span><span class="ga-spec-name">看懂</span></div>
+          <div class="ga-spec-stop s4" id="ga-stop-4"><span class="ga-spec-dot"></span><span class="ga-spec-name">本能</span></div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  bindGASpectrumGestures();
+}
+
+function setLedgerGrammarSpectrum(gid, code, ev) {
+  if (ev) ev.stopPropagation();
+  if (!gid || !GA_SPECTRUM[code]) return;
+  applyGASpectrumVerdict(gid, code, nowUnixSec());
+  scheduleCloudPush(100);
+  renderGreenBoard();
+  updateVocabSubNav();
+  renderDashboard();
+}
+
 function renderDashboard() {
   applyMasteryOverrides();
   const order = ["grammar", "henkei", "listening", "vocab"];
@@ -9151,10 +10420,26 @@ function renderDashboard() {
   }).join("");
 
   const dm = computeDaily120Metrics();
+  const ga = dm.ga;
   const remVocab = countRemainingVocabPool();
   const entryEl = document.getElementById("night-flash-entry");
   if (entryEl) {
-    if (remVocab > 0) {
+    if (dashMod === "grammar" && ga && ga.total > 0) {
+      const subTxt = ga.remaining > 0
+        ? `已盘 ${ga.audited}/${ga.total} · 陌生 ${ga.counts[1] || 0} · 易混 ${ga.counts[2] || 0} · 看懂 ${ga.counts[3] || 0} · 本能 ${ga.counts[4] || 0}`
+        : `全表 ${ga.total}/${ga.total} 已盘完 · 陌生 ${ga.counts[1] || 0} · 易混 ${ga.counts[2] || 0} · 看懂 ${ga.counts[3] || 0} · 本能 ${ga.counts[4] || 0}`;
+      entryEl.innerHTML = `
+        <div class="night-bar">
+          <div class="night-bar-txt">
+            <div class="night-bar-title">语法全表光谱盘点</div>
+            <div class="night-bar-sub">${subTxt}</div>
+          </div>
+          ${ga.remaining > 0
+            ? `<button class="night-go-btn" onclick="openGrammarAuditFromAnywhere()">去盘点</button>`
+            : `<button class="night-go-btn" onclick="switchMode('tutor')">去补漏</button>`}
+        </div>
+      `;
+    } else if (remVocab > 0) {
       const subTxt = dm.flashDone
         ? `今日一组已完成 · 余 ${remVocab} 词未满 3/3`
         : `单手右滑记住 · 左滑回炉 · 跨 3 天满 3/3 变绿`;
@@ -9214,12 +10499,25 @@ function renderMasteryList() {
     const canSpeak = !!(it.audio || dashMod === "vocab" || DATA.words[it.name]);
     const stNum = Math.max(0, Math.min(3, Number(it.streak || (it.tier === "done" ? 3 : (it.tier === "wip" ? 1 : 0)))));
     const stCls = it.tier === "done" ? "s-done" : (it.tier === "wip" ? "s-wip" : "");
+    const gaEff = (dashMod === "grammar" && it.gid) ? getEffectiveGA(it.gid) : null;
+    const gaSpec = (gaEff && gaEff.code >= 1 && gaEff.code <= 4) ? GA_SPECTRUM[gaEff.code] : null;
+    const gaTagHTML = gaSpec ? `<span class="li-ga-tag ${gaSpec.cls}">${gaSpec.label}</span>` : "";
+    const gaBarHTML = (expandedPt === i && dashMod === "grammar" && it.gid)
+      ? `<div class="li-ga-bar">
+          <span class="li-ga-lbl">自评光谱</span>
+          ${[1, 2, 3, 4].map(c => {
+            const sp = GA_SPECTRUM[c];
+            return `<button type="button" class="li-ga-btn ${sp.cls}${gaEff && gaEff.code === c ? " on" : ""}" onclick="setLedgerGrammarSpectrum('${it.gid}', ${c}, event)">${sp.label}</button>`;
+          }).join("")}
+        </div>`
+      : "";
     return `
     <div class="ledger-item" onclick="togglePtNote(${i})">
       <div class="li-row">
         <div class="li-left">
           <span class="li-dot ${it.tier}"></span>
           <span class="li-name">${escapeHtml(it.name)}</span>
+          ${gaTagHTML}
         </div>
         <div class="li-right">
           <span class="li-sub">${escapeHtml(it.sub)}</span>
@@ -9229,6 +10527,7 @@ function renderMasteryList() {
         </div>
       </div>
       ${expandedPt === i && (it.note || it.family) ? `<div class="li-note">${escapeHtml([it.family, it.note].filter(Boolean).join(" · "))}</div>` : ""}
+      ${gaBarHTML}
     </div>
   `;
   }).join("");
@@ -9257,6 +10556,8 @@ function manualCloudSync(btnEl) {
     if (minEl) minEl.textContent = `${m.listenedMins} / ${m.targetMins} 分钟`;
     const flEl = document.getElementById("modal-flash-cnt");
     if (flEl) flEl.textContent = m.flashDone ? "今日已完成" : `${m.flashSeen} / ${m.flashTarget} 词`;
+    const gaEl = document.getElementById("modal-ga-cnt");
+    if (gaEl && m.ga) gaEl.textContent = m.ga.remaining === 0 ? `全表 ${m.ga.total}/${m.ga.total} ✓` : `今日 ${m.ga.gaSeen}/${m.ga.gaTarget} · 总 ${m.ga.audited}/${m.ga.total}`;
     const scEl = document.getElementById("modal-proj-score");
     if (scEl) scEl.textContent = `${m.projScore} / 180 分`;
   });
@@ -9264,19 +10565,26 @@ function manualCloudSync(btnEl) {
 
 function openSessionModal() {
   const m = computeDaily120Metrics();
+  const ga = m.ga;
   const bm = (window.ZB && typeof window.ZB.getSummary === "function")
     ? window.ZB.getSummary()
     : { done: false, text: "0 / 3 项" };
+  const gaRow = (ga && ga.showSubNav)
+    ? `　 语法盘点　<strong id="modal-ga-cnt">${ga.remaining === 0 ? `全表 ${ga.total}/${ga.total} ✓` : `今日 ${ga.gaSeen} / ${ga.gaTarget} · 总 ${ga.audited}/${ga.total}`}</strong><br/>`
+    : "";
   document.getElementById("modal-content").innerHTML = `
     <h3 class="modal-h">今日四修 · 日语与体律</h3>
     <p class="modal-body">
       ① 做题　　　<strong id="modal-green-cnt">${m.greenCnt} / ${m.totalCards} 题</strong><br/>
       ② 随身听　　<strong id="modal-radio-min">${m.listenedMins} / ${m.targetMins} 分钟</strong><br/>
       ③ 单手记词　<strong id="modal-flash-cnt">${m.flashDone ? "今日已完成" : `${m.flashSeen} / ${m.flashTarget} 词`}</strong><br/>
+      ${gaRow}
       ④ 体律　　　<strong id="modal-body-cnt">${bm.done ? "今日已完成" : bm.text}</strong><br/>
       当前预计分　<strong id="modal-proj-score">${m.projScore} / 180 分</strong>
     </p>
-    <p class="modal-promise">四枚圆印依次对应做题、随身听、记词与体律；总表里每个词与考点需跨 3 天答对满 3/3 才算真正掌握。</p>
+    <p class="modal-promise">${ga && ga.requiredToday
+      ? "四枚圆印不变：第 3 枚圆印在考前 4 天兼含记词与语法光谱盘点，全表 156 条盘完后自动收起。"
+      : "四枚圆印依次对应做题、随身听、记词与体律；总表里每个词与考点需跨 3 天答对满 3/3 才算真正掌握。"}</p>
     <div class="sync-box">
       <p class="sync-note" id="cloud-sync-status-line">正在对齐云端进度…</p>
       <button class="sync-btn" onclick="manualCloudSync(this)">立即对齐多端进度</button>
@@ -11568,7 +12876,7 @@ function makeEl(id) {
 }
 const els = {}, store = {};
 const sb = {
-  console, Math, Date, JSON, Object, Array, String, Number, Boolean, Set, Map, RegExp, Error, Promise, URL, URLSearchParams,
+  console, Math, Date, JSON, Object, Array, String, Number, Boolean, Set, Map, RegExp, Error, Promise, URL, URLSearchParams, TextEncoder, TextDecoder,
   performance:{now:()=>Date.now()}, innerWidth:390, innerHeight:844, scrollTo:()=>{}, addEventListener:()=>{}, removeEventListener:()=>{},
   parseInt, parseFloat, isNaN, isFinite, encodeURIComponent, decodeURIComponent,
   setTimeout:()=>1, clearTimeout:()=>{}, setInterval:()=>1, clearInterval:()=>{}, requestAnimationFrame:()=>1, cancelAnimationFrame:()=>{},
@@ -11766,7 +13074,6 @@ if (!pzModalHtml.includes('第 1 章') || !pzModalHtml.includes('2–4 场球') 
 }
 sb.ZB.openPZList(1);
 sb.closeModal();
-
 // Self-test 6: Post-Listening 5-Min Contextual Review (Selective Re-Learn + Tail Check) & Ear-First 2/3 Vocab Graduation
 const rvItems = sb.getRadioReviewItems();
 if (!Array.isArray(rvItems) || rvItems.length < 6) {
@@ -11815,6 +13122,81 @@ if (!sb.isEarFirstGradCard(spec2)) {
 sb.setMasteryTier(sampleKanji, 'wip1:20261121', Math.floor(Date.now() / 1000) + 20);
 if (sb.isEarFirstGradCard(spec2)) {
   throw new Error('Self-test 6 failed: streak=1 kanji card must stay silent-kanji front');
+}
+// Self-test 7: 156/156 4-Step Cognitive Spectrum Grammar Audit inside Position #3
+const gaData = vm.runInNewContext('DATA.grammar_audit', sb);
+if (!gaData || !Array.isArray(gaData.items) || gaData.items.length !== 156) {
+  throw new Error('Self-test 7 failed: grammar_audit must contain all 156 points, got ' + (gaData && gaData.items ? gaData.items.length : 0));
+}
+for (const it of gaData.items) {
+  if (!it.gid || !it.name || !it.meaning || !it.ex_ja || !it.audio) {
+    throw new Error('Self-test 7 failed: incomplete grammar_audit item ' + JSON.stringify(it));
+  }
+  if (String(it.meaning).includes('—') || String(it.rule || '').includes('—')) {
+    throw new Error('Self-test 7 failed: em dash found in grammar_audit item ' + it.gid);
+  }
+}
+const planD = vm.runInNewContext('DATA.plan_date', sb);
+const ptsLen = vm.runInNewContext('DATA.points.length', sb);
+const m120Init = sb.computeDaily120Metrics();
+if (planD === '2026-11-22') {
+  if (ptsLen !== 50) throw new Error('Self-test 7 failed: 2026-11-22 deck must stay locked at 50 cards, got ' + ptsLen);
+  if (m120Init.ga && m120Init.ga.requiredToday) throw new Error('Self-test 7 failed: 2026-11-22 must NOT require GA in 3rd Enso Dot!');
+}
+sb.switchMode('vocab');
+sb.switchVocabSubMode('ga');
+const gaSess = vm.runInNewContext('A.gaSess', sb);
+if (!gaSess || !Array.isArray(gaSess.queue) || gaSess.queue.length !== 39) {
+  throw new Error('Self-test 7 failed: initial GA batch should have 39 items, got ' + (gaSess && gaSess.queue ? gaSess.queue.length : -1));
+}
+const firstItem = gaData.items.find(x => x.gid === gaSess.queue[0]);
+if (!firstItem || firstItem.pri !== 0) {
+  throw new Error('Self-test 7 failed: GA batch must start with priority-0 blind spots (old-green untouched in Nov)!');
+}
+const gaHtml = (els['vocab-stage-box'] && els['vocab-stage-box'].innerHTML) || '';
+if (!gaHtml.includes('ga-spec-rail') || !gaHtml.includes('陌生') || !gaHtml.includes('易混') || !gaHtml.includes('看懂') || !gaHtml.includes('本能') || gaHtml.includes('—')) {
+  throw new Error('Self-test 7 failed: GA spectrum rail missing 4 stops or contains em dash!');
+}
+// Commit code=1 (陌生) before reveal -> shows explanation dock synchronously, sets todo mastery
+sb.commitGASpectrum(1);
+const gaEntry1 = vm.runInNewContext(`A.gaMap["${firstItem.gid}"]`, sb);
+const ov1 = vm.runInNewContext(`A.masteryOverrides[${JSON.stringify(firstItem.name)}]`, sb);
+if (!Array.isArray(gaEntry1) || gaEntry1[0] !== 1 || !String(ov1 || '').startsWith('todo:')) {
+  throw new Error('Self-test 7 failed: spectrum 1 did not set code=1 and todo mastery: ' + JSON.stringify({gaEntry1, ov1}));
+}
+// Undo writes CRDT code=0 tombstone cleanly
+sb.undoLastGA();
+const gaEntryUndo = vm.runInNewContext(`A.gaMap["${firstItem.gid}"]`, sb);
+if (!Array.isArray(gaEntryUndo) || gaEntryUndo[0] !== 0) {
+  throw new Error('Self-test 7 failed: undoLastGA did not write CRDT code=0 tombstone: ' + JSON.stringify(gaEntryUndo));
+}
+// Test all 4 spectrum stops via ledger inline adjuster + CRDT packet size & round-trip
+const testItems = gaData.items.slice(0, 4);
+sb.setLedgerGrammarSpectrum(testItems[0].gid, 1);
+sb.setLedgerGrammarSpectrum(testItems[1].gid, 2);
+sb.setLedgerGrammarSpectrum(testItems[2].gid, 3);
+sb.setLedgerGrammarSpectrum(testItems[3].gid, 4);
+const ovCheck = [
+  vm.runInNewContext(`A.masteryOverrides[${JSON.stringify(testItems[0].name)}]`, sb),
+  vm.runInNewContext(`A.masteryOverrides[${JSON.stringify(testItems[1].name)}]`, sb),
+  vm.runInNewContext(`A.masteryOverrides[${JSON.stringify(testItems[2].name)}]`, sb),
+  vm.runInNewContext(`A.masteryOverrides[${JSON.stringify(testItems[3].name)}]`, sb),
+];
+if (!String(ovCheck[0]).startsWith('todo:') || !String(ovCheck[1]).startsWith('todo:') || ovCheck[2] !== 'wip2:20261114' || ovCheck[3] !== 'done') {
+  throw new Error('Self-test 7 failed: 4-step mastery mapping mismatch: ' + JSON.stringify(ovCheck));
+}
+const pktGa = sb.buildCompactPacket();
+const pktBytes = Buffer.byteLength(JSON.stringify(pktGa), 'utf8');
+if (!pktGa.ga || pktGa.ga[testItems[3].gid][0] !== 4 || pktBytes > 3750) {
+  throw new Error('Self-test 7 failed: compact packet GA missing or oversized: bytes=' + pktBytes);
+}
+sb.switchMode('dash');
+sb.selectDashMod('grammar');
+sb.selectDashTier('todo');
+sb.togglePtNote(0);
+const dashHtml = (els['point-list'] && els['point-list'].innerHTML) || '';
+if (!dashHtml.includes('setLedgerGrammarSpectrum') || !dashHtml.includes('li-ga-tag') || dashHtml.includes('—')) {
+  throw new Error('Self-test 7 failed: dashboard grammar ledger missing inline spectrum controls or contains em dash!');
 }
 """
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)

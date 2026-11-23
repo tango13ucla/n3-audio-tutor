@@ -9,11 +9,12 @@
     }
   },
   "load_caps": {
-    "normal": 50,
+    "normal": 60,
     "light": 25,
     "off": 10
   },
   "vocab_daily_count": 24,
+  "grammar_audit_daily_count": 39,
   "focus_points": [
     "ぼんやり",
     "N3L-085",

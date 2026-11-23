@@ -47,7 +47,10 @@ def today_load(prefs: dict | None = None, day: str | None = None) -> tuple[str, 
 
 def deck_cap(prefs: dict | None = None, day: str | None = None) -> int:
     prefs = load_prefs() if prefs is None else prefs
-    lv, _ = today_load(prefs, day)
+    cur_day = day or study_date()
+    if cur_day <= "2026-11-22":
+        return 50
+    lv, _ = today_load(prefs, cur_day)
     caps = dict(DEFAULT_CAPS)
     for k, v in (prefs.get("load_caps") or {}).items():
         try:
@@ -72,6 +75,19 @@ def vocab_daily_count(prefs: dict | None = None, day: str | None = None) -> int:
         return max(12, min(40, int(prefs.get("vocab_daily_count", 24))))
     except Exception:
         return 24
+
+
+def grammar_audit_daily_count(prefs: dict | None = None, day: str | None = None) -> int:
+    prefs = load_prefs() if prefs is None else prefs
+    cur_day = day or study_date()
+    lv, _ = today_load(prefs, cur_day)
+    if lv == "off":
+        return 0
+    try:
+        return max(15, min(60, int(prefs.get("grammar_audit_daily_count", 39))))
+    except Exception:
+        return 39
+
 
 
 def focus_set(prefs: dict | None = None) -> set:
