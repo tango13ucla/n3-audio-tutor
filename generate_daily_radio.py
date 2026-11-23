@@ -28,6 +28,7 @@ import concurrent.futures
 import datetime
 import hashlib
 import json
+import logging
 import os
 import random
 import re
@@ -41,6 +42,12 @@ try:
     import numpy as np
 except Exception:
     np = None
+
+try:
+    import jieba as _jieba_mod
+    _jieba_mod.setLogLevel(logging.ERROR)
+except Exception:
+    _jieba_mod = None
 
 try:
     import certifi
@@ -149,69 +156,342 @@ MANDARIN_SPECIAL_SPLITS = {
     "草间弥生": "草间\u200c弥生",
     "财前五郎": "财前\u200c五郎",
     "半泽直树": "半泽\u200c直树",
+    "江崎胜久": "江崎\u200c胜久",
+    "山本昌二": "山本\u200c昌二",
+    "盐田武士": "盐田\u200c武士",
+    "宫坂力": "宫坂\u200c力",
+    "浦泽直树": "浦泽\u200c直树",
+    "江户川乱步": "江户川\u200c乱步",
+    "小仓昌男": "小仓\u200c昌男",
+    "小仓康臣": "小仓\u200c康臣",
+    "山内溥": "山内\u200c溥",
+    "宫本茂": "宫本\u200c茂",
+    "仁科芳雄": "仁科\u200c芳雄",
+    "川端康成": "川端\u200c康成",
+    "大江健三郎": "大江\u200c健三郎",
 }
+
+# Ambiguous 2-char "和*" compounds (e.g. 和服 inside 和服务区, 和牛 inside 和牛奶, 和食 inside 和食物, 大和 inside 东大和京大)
+# are NEVER blindly substring-matched by regex; they are ONLY wrapped when jieba confirms them as standalone tokens!
+MANDARIN_TOKEN_ONLY_WORDS = frozenset({"大和", "和食", "和牛", "和纸", "和室", "和服", "和式"})
 
 MANDARIN_BOUNDARY_WORDS = sorted(
     set(
         list(MANDARIN_SPECIAL_SPLITS.keys())
         + [
-            # Japanese eras & "和/平/令/昭/大/明" compounds prone to particle mis-splitting
+            # Japanese eras & unambiguous compounds prone to particle mis-splitting
             "昭和", "平成", "令和", "大正", "明治", "江户", "幕府",
-            "大和号", "大和运输", "大和", "平安时代", "镰仓", "室町", "战国",
-            "和食", "和牛", "和纸", "和室", "和服", "和式", "和果子",
+            "大和号", "大和运输", "大和总研", "大和福祉财团", "平安时代", "镰仓", "室町", "战国", "和果子",
             # Japanese public-memory people
             "盛田昭夫", "井深大", "大曾根", "山口百惠", "手冢治虫", "藤子不二雄",
             "三岛由纪夫", "夏目漱石", "太宰治", "谷崎润一郎", "松本清张", "村上春树",
-            "宫崎骏", "黑泽明", "北野武", "坂本龙一", "久石让", "小八", "怪人二十一面相",
-            # Japanese geography, rail, landmarks & institutions
-            "东海道", "新干线", "山手线", "青函海底隧道", "青函隧道", "津轻海峡", "阪神高速",
+            "宫崎骏", "黑泽明", "北野武", "坂本龙一", "久石让", "小八", "怪人二十一面相", "怪人二十面相",
+            "阿加莎", "东野圭吾",
+            # Japanese geography, rail, landmarks, brands & institutions
+            "东海道", "新干线", "山手线", "青函海底隧道", "青函隧道", "津轻海峡", "阪神高速", "名神高速公路", "名神高速",
             "代代木公园", "代代木", "秋叶原", "白木屋", "日本桥", "樱木町", "神保町", "道顿堀",
             "濑户内海", "轻井泽", "浅间山庄", "常盘庄", "伊势神宫", "伊势湾", "直岛", "甲子园",
             "丹那", "日本坂", "箱根", "鸭宫", "关原", "筑地", "丰洲", "羽田", "成田", "芝公园",
             "东京塔", "晴空塔", "东京站", "武道馆", "品川", "涩谷", "涉谷", "新宿", "原宿",
             "银座", "池袋", "浅草", "上野", "六本木", "青山", "府中", "东大阪", "北九州",
             "新潟", "秋田", "函馆", "神户", "大阪", "京都", "横滨", "名古屋", "熊本", "北海道",
-            "冲绳", "千叶", "山口县", "爱知县", "丰田市", "静冈", "关西", "关东",
-            "农林水产省", "大藏省", "厚生劳动省", "运输省", "防卫省", "金融厅", "气象厅",
-            "日本银行", "国铁", "日航", "全日空", "索尼", "丰田", "本田", "松下", "东芝", "日立",
-            "东丽", "东陶", "任天堂", "无印良品", "优衣库", "吉野家", "西友", "金刚组",
-            "朝日新闻", "读卖新闻", "日本经济新闻", "每日新闻", "东京大学", "京都大学", "早稻田",
+            "冲绳", "千叶县厅", "千叶县", "千叶", "山口县", "爱知县", "丰田市", "静冈", "关西", "关东",
+            "吹田", "千里丘陵", "茨木市", "安威川", "西宫市", "草津市", "大津", "滋贺县", "兵库县", "堺市",
+            "大田区", "九十九里浜", "房总半岛", "大阪城", "大阪万博",
+            "农林水产省", "大藏省", "财务省", "厚生劳动省", "运输省", "防卫省", "金融厅", "气象厅",
+            "大阪府警", "京都府警", "国民民主党",
+            "日本银行", "国铁", "日航", "全日空", "索尼", "丰田", "本田", "松下电器", "松下", "东芝", "日立",
+            "东丽", "东陶", "任天堂", "无印良品", "优衣库", "吉野家", "西友", "金刚组", "积水化学", "三洋电机",
+            "江崎格力高", "格力高", "森永制果", "森永", "丸大食品", "好侍食品", "不二家", "百力滋", "肯德基",
+            "协鑫", "隆基", "京瓷", "夏普", "黑猫宅急便", "金足农业", "寿司三昧", "千客万来",
+            "朝日新闻", "读卖新闻", "日本经济新闻", "每日新闻", "东京大学", "京都大学", "早稻田", "桐荫横滨大学",
             "日内瓦", "克雷数学研究所", "牛津英语词典", "牛津词典", "理研", "东大",
-            # High-frequency Mandarin compounds audited as prone to cross-word gluing
+            # High-frequency Mandarin compounds & idioms audited as prone to Azure cross-word gluing
+            "脊背", "背脊", "后背", "发凉", "屋顶", "大屋顶", "投毒", "勒索", "公诉时效", "服务区", "服务器",
+            "本部长", "片假名", "使役形", "词尾", "托儿所", "税改", "炸鸡", "头一回", "探照灯", "便衣", "刑警",
+            "做空", "赎金", "天然气", "安全阀", "防拆卡扣", "塑封膜", "无线接收机", "模拟画像", "官僚壁垒",
+            "挑衅信", "碳边境税", "广域重要指定", "国铁道口", "氰化钾", "水防仓库", "忘年会", "住民税", "起征点",
+            "太阳之塔", "生命之树", "太阳之颜", "黄金之颜", "黑色太阳", "地底太阳", "绳文土器", "气膜帐篷",
+            "月球岩石", "万博", "世博会", "硅晶板", "硅晶", "太阳能板", "卤水层", "狐狸眼男子", "狐狸眼",
+            "罪之声", "二十世纪少年", "奥特曼", "毫发无损", "金盆洗手", "拟态词", "连环", "迷宫",
             "越光米", "储备米", "米骚动", "减产补贴", "立体声", "随身听", "单声道", "金属样机",
             "地下水", "站台", "群嘲", "回转寿司", "卫洗丽", "摇粒绒", "发热内衣", "超级幼兽",
             "看板方式", "脱印章", "志愿元年", "红白歌合战", "式年迁宫", "地方创生", "冰河期世代",
             "人形机器人", "杀人机器人", "黎曼猜想", "四色问题", "四色定理", "钙钛矿", "全固态电池",
             "海底光缆", "自主武器", "债务刹车", "核聚变", "超导线圈", "后量子", "减重神药",
             "核酸新疫苗", "超级马里奥", "红白机", "广播体操", "除夜钟声", "蓝鳍金枪鱼", "味之素", "第五味",
+            "淀号", "寿喜烧", "安灯", "雇止", "推活", "建前", "团地", "旨味", "御木曳", "具身智能",
+            "冰上丝绸之路", "北极东北航道",
         ]
     ),
     key=len,
     reverse=True,
 )
+MANDARIN_BOUNDARY_SET = frozenset(MANDARIN_BOUNDARY_WORDS)
+MANDARIN_PRIORITY_WORDS = MANDARIN_BOUNDARY_SET | MANDARIN_TOKEN_ONLY_WORDS | frozenset({
+    "公园", "战后", "真凶", "倒吸", "凉气", "高峰期", "日常物", "树枝", "满溢", "泛黄", "相册",
+    "面板", "反超", "量产", "缺口", "闭环", "狂热", "刻意", "摸清", "大喊", "当口", "遇上", "自称",
+})
 MANDARIN_BOUNDARY_RE = re.compile("|".join(re.escape(w) for w in MANDARIN_BOUNDARY_WORDS))
+
+_WORDGUARD_CJK_RE = re.compile(r"[\u4e00-\u9fff]+")
+_WORDGUARD_NUM_RE = re.compile(r"^[零一二三四五六七八九十百千万亿兆两几多余点分之第号年月日起至天岁个次遍回座条名位件家]+$")
+_WORDGUARD_READY = False
+_WORDGUARD_STATS = {"checked_turns": 0, "healed_turns": 0, "healed_seams": 0, "samples": []}
+
+
+def _ensure_wordguard_jieba():
+    """Lazily configures jieba with all Japanese/domain proper nouns & disambiguation pairs."""
+    global _WORDGUARD_READY
+    if _jieba_mod is None:
+        return None
+    if not _WORDGUARD_READY:
+        for w in MANDARIN_PRIORITY_WORDS:
+            _jieba_mod.add_word(w, freq=200000)
+        for pair in (
+            ("和", "服务区"), ("和", "服务器"), ("和", "服务"), ("和", "食物"), ("和", "牛奶"),
+            ("东大", "和"), ("人", "脊背"), ("大师", "屋顶"), ("连", "战后"), ("连", "真凶"),
+            ("炸鸡", "头一回"), ("做空", "森永"), ("森永", "和"), ("探照灯", "光束"),
+            ("大阪城", "公园"), ("一串", "连环"), ("连环", "迷宫"), ("三洋电机", "造"),
+            ("夏普", "败退"), ("山本", "本部长"), ("滋贺县", "警"), ("日语", "片假名"),
+            ("马上", "直击"),
+        ):
+            try:
+                _jieba_mod.suggest_freq(pair, True)
+            except Exception:
+                pass
+        _WORDGUARD_READY = True
+    return _jieba_mod
+
+
+def _cleanup_zwnj(s: str) -> str:
+    s = re.sub(r"\u200c{2,}", "\u200c", s)
+    s = re.sub(r"(^|[，、；：。！？「」『』《》“”（）\s])\u200c+", r"\1", s)
+    s = re.sub(r"\u200c+([，、；：。！？「」『』《》“”（）\s]|$)", r"\1", s)
+    return s
 
 
 def protect_mandarin_word_boundaries(text: str) -> str:
     """
+    Token-aware Mandarin word-boundary protection (v41):
     Normalizes stray intra-Chinese spaces and wraps known proper nouns / era names /
-    splice-prone compounds with Zero-Width Non-Joiner (`\u200c`) so Azure/Edge Neural TTS
-    respects true Chinese word boundaries without inserting artificial silence pauses.
+    splice-prone compounds with Zero-Width Non-Joiner (`\u200c`) without ever corrupting
+    valid overlapping words (e.g. `和服务区` stays `和 | 服务区`, never `和服 | 务区`).
     """
     if not text:
         return text
     # Strip stray ASCII spaces between CJK ideographs (which otherwise trigger ~0.5s pauses in Edge TTS)
     s = re.sub(r"([\u4e00-\u9fff])[ \t]+([\u4e00-\u9fff])", r"\1\2", text)
+    jb = _ensure_wordguard_jieba()
+    if jb is not None:
+        out_parts: list[str] = []
+        last = 0
+        for m in _WORDGUARD_CJK_RE.finditer(s):
+            if m.start() > last:
+                out_parts.append(s[last : m.start()])
+            chunk = m.group(0)
+            for tok in jb.cut(chunk, HMM=False):
+                if tok in MANDARIN_BOUNDARY_SET or tok in MANDARIN_TOKEN_ONLY_WORDS:
+                    inner = MANDARIN_SPECIAL_SPLITS.get(tok, tok)
+                    out_parts.append(f"\u200c{inner}\u200c")
+                else:
+                    out_parts.append(tok)
+            last = m.end()
+        if last < len(s):
+            out_parts.append(s[last:])
+        return _cleanup_zwnj("".join(out_parts))
+
     def _wrap(m: re.Match) -> str:
         w = m.group(0)
         inner = MANDARIN_SPECIAL_SPLITS.get(w, w)
         return f"\u200c{inner}\u200c"
-    s = MANDARIN_BOUNDARY_RE.sub(_wrap, s)
-    s = re.sub(r"\u200c{2,}", "\u200c", s)
-    # Remove redundant ZWNJ right next to punctuation or string edges
-    s = re.sub(r"(^|[，、；：。！？「」『』《》“”（）\s])\u200c+", r"\1", s)
-    s = re.sub(r"\u200c+([，、；：。！？「」『』《》“”（）\s]|$)", r"\1", s)
-    return s
+
+    return _cleanup_zwnj(MANDARIN_BOUNDARY_RE.sub(_wrap, s))
+
+
+def _wordguard_ref_segment(clean_text: str) -> tuple[str, list[tuple[int, int, str]], list[int]]:
+    jb = _ensure_wordguard_jieba()
+    if jb is None:
+        return "", [], []
+    norm: list[str] = []
+    spans: list[tuple[int, int, str]] = []
+    norm_to_raw: list[int] = []
+    pos = 0
+    for m in _WORDGUARD_CJK_RE.finditer(clean_text):
+        chunk = m.group(0)
+        base_raw = m.start()
+        local = 0
+        for tok in jb.cut(chunk, HMM=False):
+            if not tok:
+                continue
+            spans.append((pos, pos + len(tok), tok))
+            for k in range(len(tok)):
+                norm.append(tok[k])
+                norm_to_raw.append(base_raw + local + k)
+            pos += len(tok)
+            local += len(tok)
+    return "".join(norm), spans, norm_to_raw
+
+
+def _analyze_mandarin_straddles(
+    text: str,
+    wbs: list[dict],
+) -> tuple[set[int], list[str], list[int], str]:
+    """
+    Compares Azure's actual WordBoundary tokens against jieba(HMM=False) reference words.
+    Detects:
+      1) Strict partial cross-word overlaps (`as < rs < ae < re` or `rs < as < re < ae`)
+         where Azure glued parts of two distinct words (e.g. `人脊|背`, `大师屋|顶`, `高森|永投`).
+      2) Suspicious intra-word dead pauses (`>= 115ms`) strictly inside a 2-4 char dictionary word.
+    Never cuts inside a high-frequency real Azure word (`freq >= 500`) unless overridden by a priority term.
+    """
+    jb = _ensure_wordguard_jieba()
+    if jb is None or not text or not wbs:
+        return set(), [], [], text.replace("\u200c", "")
+    clean_text = text.replace("\u200c", "")
+    norm_str, ref_spans, norm_to_raw = _wordguard_ref_segment(clean_text)
+    if not norm_str:
+        return set(), [], norm_to_raw, clean_text
+
+    az_spans: list[tuple[int, int, str, float, float]] = []
+    pos = 0
+    for b in wbs:
+        tok = "".join(_WORDGUARD_CJK_RE.findall(str(b.get("text") or "")))
+        if not tok:
+            continue
+        idx = norm_str.find(tok, pos)
+        if idx == -1:
+            idx = norm_str.find(tok, max(0, pos - 4))
+        if idx != -1:
+            az_spans.append((idx, idx + len(tok), tok, float(b.get("offset_s", 0.0)), float(b.get("dur_s", 0.0))))
+            pos = idx + len(tok)
+
+    if not az_spans:
+        return set(), [], norm_to_raw, clean_text
+
+    freq_map = getattr(getattr(jb, "dt", None), "FREQ", {}) or {}
+    # Protect interiors of high-frequency real Azure words from non-priority splits (e.g. keep `起点` intact!)
+    protected_az_interiors: set[int] = set()
+    for as_, ae_, atok, _, _ in az_spans:
+        if ae_ - as_ >= 2 and freq_map.get(atok, 0) >= 500:
+            for k in range(as_ + 1, ae_):
+                protected_az_interiors.add(k)
+
+    bad_seams_norm: set[int] = set()
+    notes: list[str] = []
+
+    for as_, ae_, atok, _, _ in az_spans:
+        if ae_ - as_ < 2 or _WORDGUARD_NUM_RE.match(atok):
+            continue
+        az_freq = freq_map.get(atok, 0)
+        for rs, re_, rtok in ref_spans:
+            if re_ - rs < 2 or _WORDGUARD_NUM_RE.match(rtok):
+                continue
+            if not ((as_ < rs < ae_ < re_) or (rs < as_ < re_ < ae_)):
+                continue
+            ref_prio = rtok in MANDARIN_PRIORITY_WORDS
+            if az_freq >= 200 and not ref_prio:
+                continue
+            added = False
+            if rs > 0 and (ref_prio or rs not in protected_az_interiors):
+                bad_seams_norm.add(rs)
+                added = True
+            if re_ < len(norm_str) and (ref_prio or re_ not in protected_az_interiors):
+                bad_seams_norm.add(re_)
+                added = True
+            if added:
+                notes.append(f"{atok}->{rtok}")
+
+    # Also detect suspicious intra-word dead pauses >= 115ms inside a 2-4 char dictionary word
+    for i in range(len(az_spans) - 1):
+        a1, a2 = az_spans[i], az_spans[i + 1]
+        gap_s = a2[3] - (a1[3] + a1[4])
+        if gap_s >= 0.115:
+            for rs, re_, rtok in ref_spans:
+                if 2 <= (re_ - rs) <= 4 and not _WORDGUARD_NUM_RE.match(rtok) and a1[0] >= rs and a2[1] <= re_:
+                    if rs > 0:
+                        bad_seams_norm.add(rs)
+                    if re_ < len(norm_str):
+                        bad_seams_norm.add(re_)
+                    notes.append(f"pause({a1[2]}|{a2[2]})->{rtok}")
+                    break
+
+    return bad_seams_norm, notes, norm_to_raw, clean_text
+
+
+def count_mandarin_straddles(text: str, wbs: list[dict]) -> int:
+    _, notes, _, _ = _analyze_mandarin_straddles(text, wbs)
+    return len(notes)
+
+
+def detect_and_repair_straddles(
+    text: str,
+    wbs: list[dict],
+    target_spans: list[tuple[int, int, str, str]] | None = None,
+) -> tuple[str, list[str], list[tuple[int, int, str, str]] | None]:
+    """
+    Self-Healing Mandarin Word-Boundary Guardian (v41):
+    Injects `\u200c` ONLY at the exact violated word seams detected from Azure's own WordBoundary output,
+    preserving any existing `\u200c` marks and cleanly remapping `target_spans` for Carrier-Swap sentences.
+    """
+    bad_seams_norm, notes, norm_to_raw, clean_text = _analyze_mandarin_straddles(text, wbs)
+    if not bad_seams_norm:
+        return text, [], target_spans
+
+    # Map every character position in `text` to its index in `clean_text`
+    existing_seams_raw: set[int] = set()
+    old_to_clean: list[int] = []
+    c_i = 0
+    for ch in text:
+        old_to_clean.append(c_i)
+        if ch == "\u200c":
+            existing_seams_raw.add(c_i)
+        else:
+            c_i += 1
+    old_to_clean.append(c_i)
+
+    # Never inject ZWNJ inside a Carrier-Swap target span (already isolated by `\u200c{zh_w}\u200c`)
+    locked_clean_interiors: set[int] = set()
+    if target_spans:
+        for raw_s, raw_e, _, _ in target_spans:
+            cs = old_to_clean[min(raw_s, len(old_to_clean) - 1)]
+            ce = old_to_clean[min(raw_e, len(old_to_clean) - 1)]
+            for k in range(cs + 1, ce):
+                locked_clean_interiors.add(k)
+
+    new_seams_raw = set(existing_seams_raw)
+    for ns in bad_seams_norm:
+        if 0 < ns < len(norm_to_raw):
+            raw_pos = norm_to_raw[ns]
+            if (
+                raw_pos > 0
+                and raw_pos not in locked_clean_interiors
+                and _WORDGUARD_CJK_RE.match(clean_text[raw_pos - 1])
+            ):
+                new_seams_raw.add(raw_pos)
+
+    if new_seams_raw == existing_seams_raw:
+        return text, [], target_spans
+
+    out_chars: list[str] = []
+    clean_to_new: list[int] = [0] * (len(clean_text) + 1)
+    for i, ch in enumerate(clean_text):
+        if i in new_seams_raw:
+            out_chars.append("\u200c")
+        clean_to_new[i] = len(out_chars)
+        out_chars.append(ch)
+    clean_to_new[len(clean_text)] = len(out_chars)
+    repaired = "".join(out_chars)
+
+    if not target_spans:
+        return repaired, notes, target_spans
+
+    remapped_spans: list[tuple[int, int, str, str]] = []
+    for raw_s, raw_e, zh_w, ja_w in target_spans:
+        cs = old_to_clean[min(raw_s, len(old_to_clean) - 1)]
+        ce = old_to_clean[min(raw_e, len(old_to_clean) - 1)]
+        remapped_spans.append((clean_to_new[cs], clean_to_new[ce], zh_w, ja_w))
+    return repaired, notes, remapped_spans
 
 
 EXCITED_TURN_RE = re.compile(
@@ -917,18 +1197,46 @@ async def synth_turn(spk: str, voice_cfg: tuple, text: str, out_path: str, sem: 
                 use_voice, use_rate, use_pitch, use_txt = alt_voice, rate, alt_pitch, bare_no_punct
             try:
                 buf = bytearray()
+                bnds: list[dict] = []
+                want_wb = (not is_ja_clip) and (_jieba_mod is not None)
                 try:
-                    comm = edge_tts.Communicate(use_txt, use_voice, rate=use_rate, pitch=use_pitch, **COMM_KWARGS)
+                    if want_wb:
+                        comm = edge_tts.Communicate(use_txt, use_voice, rate=use_rate, pitch=use_pitch, boundary="WordBoundary", **COMM_KWARGS)
+                    else:
+                        comm = edge_tts.Communicate(use_txt, use_voice, rate=use_rate, pitch=use_pitch, **COMM_KWARGS)
                 except TypeError:
                     comm = edge_tts.Communicate(use_txt, use_voice, rate=use_rate, **COMM_KWARGS)
 
-                async def _pull():
-                    async for chunk in comm.stream():
+                async def _pull(c_obj, out_buf, out_bnds):
+                    async for chunk in c_obj.stream():
                         if chunk["type"] == "audio":
-                            buf.extend(chunk["data"])
+                            out_buf.extend(chunk["data"])
+                        elif want_wb and chunk["type"] == "WordBoundary":
+                            out_bnds.append({
+                                "text": chunk["text"],
+                                "offset_s": chunk["offset"] / 1e7,
+                                "dur_s": chunk["duration"] / 1e7,
+                            })
 
-                await asyncio.wait_for(_pull(), timeout=55.0)
+                await asyncio.wait_for(_pull(comm, buf, bnds), timeout=55.0)
                 if buf:
+                    if want_wb and bnds:
+                        _WORDGUARD_STATS["checked_turns"] += 1
+                        repaired_txt, notes, _ = detect_and_repair_straddles(use_txt, bnds)
+                        if repaired_txt != use_txt and notes:
+                            try:
+                                buf2 = bytearray()
+                                bnds2: list[dict] = []
+                                comm2 = edge_tts.Communicate(repaired_txt, use_voice, rate=use_rate, pitch=use_pitch, boundary="WordBoundary", **COMM_KWARGS)
+                                await asyncio.wait_for(_pull(comm2, buf2, bnds2), timeout=55.0)
+                                if buf2 and (not bnds2 or count_mandarin_straddles(repaired_txt, bnds2) < len(notes)):
+                                    buf = buf2
+                                    _WORDGUARD_STATS["healed_turns"] += 1
+                                    _WORDGUARD_STATS["healed_seams"] += len(notes)
+                                    if len(_WORDGUARD_STATS["samples"]) < 40:
+                                        _WORDGUARD_STATS["samples"].append(f"{spk}:{','.join(notes[:4])}")
+                            except Exception:
+                                pass
                     if use_voice != voice:
                         print(f"[fallback-voice] {spk} -> {use_voice} for {speak_txt!r}")
                     with open(out_path, "wb") as f:
@@ -1257,7 +1565,8 @@ async def synth_edge_with_boundaries(
     text: str,
     out_path: str,
     sem: asyncio.Semaphore,
-) -> list[dict] | None:
+    target_spans: list[tuple[int, int, str, str]] | None = None,
+) -> tuple[list[dict], str, list[tuple[int, int, str, str]]] | None:
     if edge_tts is None:
         return None
     voice, rate, pitch = voice_cfg[0], voice_cfg[1], (voice_cfg[2] if len(voice_cfg) > 2 else "+0Hz")
@@ -1288,22 +1597,49 @@ async def synth_edge_with_boundaries(
                 except TypeError:
                     comm = edge_tts.Communicate(u_t, u_v, rate=u_r, **COMM_KWARGS)
 
-                async def _pull():
-                    async for chunk in comm.stream():
+                async def _pull(c_obj, out_buf, out_bnds):
+                    async for chunk in c_obj.stream():
                         if chunk["type"] == "audio":
-                            buf.extend(chunk["data"])
+                            out_buf.extend(chunk["data"])
                         elif chunk["type"] == "WordBoundary":
-                            bnds.append({
+                            out_bnds.append({
                                 "text": chunk["text"],
                                 "offset_s": chunk["offset"] / 1e7,
                                 "dur_s": chunk["duration"] / 1e7,
                             })
 
-                await asyncio.wait_for(_pull(), timeout=55.0)
+                await asyncio.wait_for(_pull(comm, buf, bnds), timeout=55.0)
                 if buf:
+                    final_txt = u_t
+                    final_spans = list(target_spans or [])
+                    if _jieba_mod is not None and bnds:
+                        _WORDGUARD_STATS["checked_turns"] += 1
+                        repaired_txt, notes, remapped_spans = detect_and_repair_straddles(
+                            u_t, bnds, target_spans=final_spans
+                        )
+                        if repaired_txt != u_t and notes:
+                            try:
+                                buf2 = bytearray()
+                                bnds2: list[dict] = []
+                                comm2 = edge_tts.Communicate(
+                                    repaired_txt, u_v, rate=u_r, pitch=u_p, boundary="WordBoundary", **COMM_KWARGS
+                                )
+                                await asyncio.wait_for(_pull(comm2, buf2, bnds2), timeout=55.0)
+                                if buf2 and bnds2 and count_mandarin_straddles(repaired_txt, bnds2) < len(notes):
+                                    buf = buf2
+                                    bnds = bnds2
+                                    final_txt = repaired_txt
+                                    if remapped_spans is not None:
+                                        final_spans = remapped_spans
+                                    _WORDGUARD_STATS["healed_turns"] += 1
+                                    _WORDGUARD_STATS["healed_seams"] += len(notes)
+                                    if len(_WORDGUARD_STATS["samples"]) < 40:
+                                        _WORDGUARD_STATS["samples"].append(f"{spk_key}:{','.join(notes[:4])}")
+                            except Exception:
+                                pass
                     with open(out_path, "wb") as f:
                         f.write(buf)
-                    return bnds
+                    return bnds, final_txt, final_spans
             except Exception as e:
                 if attempt + 1 < MAX_TRIES:
                     await asyncio.sleep(0.45 * (attempt + 1))
@@ -2049,7 +2385,9 @@ async def main():
     ad2_in_evs = turns_to_expanded_events(ad2_in_turns) if ad2_in_turns else []
     closing_evs = turns_to_expanded_events(closing_turns) if closing_turns else []
 
-    if today_str >= "2026-11-22":
+    if today_str >= "2026-11-23":
+        radio_ver_tag = "v41_qq_60m_wordguard_seamless_5hit"
+    elif today_str >= "2026-11-22":
         radio_ver_tag = "v40_qq_60m_seamless_codeswitch_5hit"
     elif today_str >= "2026-11-19":
         radio_ver_tag = "v36_qq_real_public_memory"
@@ -2095,7 +2433,7 @@ async def main():
         *(b["events"] for b in story_blocks),
     ]
 
-    tmpdir = tempfile.mkdtemp(prefix="n3_radio_v40_")
+    tmpdir = tempfile.mkdtemp(prefix="n3_radio_v41_")
     try:
         unique_turns: dict[tuple[str, str], str] = {}
         mixed_keys: set[tuple[str, str]] = set()
@@ -2126,6 +2464,10 @@ async def main():
                 clip_pcm[key] = apply_host_vocal_timbre(raw_tone, key[0])
         else:
             sem = asyncio.Semaphore(16)
+            _WORDGUARD_STATS["checked_turns"] = 0
+            _WORDGUARD_STATS["healed_turns"] = 0
+            _WORDGUARD_STATS["healed_seams"] = 0
+            _WORDGUARD_STATS["samples"].clear()
 
             # Stage 1: Synthesize & tightly trim all unique inline Japanese words ONCE per (gear_spk, ja_kana)!
             unique_inline_ja: dict[tuple[str, str], str] = {}
@@ -2145,7 +2487,7 @@ async def main():
                         for (k, ja_w), jp in unique_inline_ja.items()
                     )
                 )
-                print(f"[v40-stage1] Synthesized {sum(1 for x in ja_ok if x)} / {len(unique_inline_ja)} unique inline Japanese word clips.")
+                print(f"[v41-stage1] Synthesized {sum(1 for x in ja_ok if x)} / {len(unique_inline_ja)} unique inline Japanese word clips.")
 
                 def _decode_ja_inline(item):
                     jkey, jp = item
@@ -2159,7 +2501,7 @@ async def main():
                         if arr is not None and len(arr) > 0:
                             ja_pcm_map[jkey] = arr
 
-            # Stage 2: Synthesize plain sentences AND Carrier-Swap mixed sentences in parallel!
+            # Stage 2: Synthesize plain sentences AND Carrier-Swap mixed sentences in parallel (with live WordGuard)!
             plain_items = [(key, raw_p) for key, raw_p in unique_turns.items() if key not in mixed_keys]
             mixed_items = [(key, raw_p) for key, raw_p in unique_turns.items() if key in mixed_keys]
 
@@ -2172,18 +2514,25 @@ async def main():
                 for (k, txt), raw_p in plain_items
             ]
             mixed_tasks = [
-                synth_edge_with_boundaries(k, voice_map[k], carrier_specs[(k, txt)][0], raw_p, sem)
+                synth_edge_with_boundaries(
+                    k, voice_map[k], carrier_specs[(k, txt)][0], raw_p, sem, target_spans=carrier_specs[(k, txt)][1]
+                )
                 for (k, txt), raw_p in mixed_items
             ]
-            plain_results, mixed_bnds_list = await asyncio.gather(
+            plain_results, mixed_res_list = await asyncio.gather(
                 asyncio.gather(*plain_tasks),
                 asyncio.gather(*mixed_tasks),
             )
             plain_ok = sum(1 for x in plain_results if x)
-            mixed_ok = sum(1 for b in mixed_bnds_list if b is not None)
+            mixed_ok = sum(1 for r in mixed_res_list if r is not None)
             print(
-                f"[v40-stage2] Synthesized {plain_ok}/{len(plain_items)} plain clips + "
+                f"[v41-stage2] Synthesized {plain_ok}/{len(plain_items)} plain clips + "
                 f"{mixed_ok}/{len(mixed_items)} seamless Carrier-Swap bilingual sentences."
+            )
+            print(
+                f"[v41-wordguard] Audited {_WORDGUARD_STATS['checked_turns']} Mandarin turns | "
+                f"Auto-healed {_WORDGUARD_STATS['healed_turns']} turns ({_WORDGUARD_STATS['healed_seams']} seams) | "
+                f"Samples: {'; '.join(_WORDGUARD_STATS['samples'][:15])}"
             )
 
             clip_pcm = {}
@@ -2195,8 +2544,10 @@ async def main():
                 return key, None
 
             def _splice_mixed(args):
-                key, raw_p, bnds = args
-                carrier_zh, target_spans = carrier_specs[key]
+                key, raw_p, res = args
+                if res is None:
+                    return key, None
+                bnds, carrier_zh, target_spans = res
                 arr = splice_mixed_swap_pcm(key[0], carrier_zh, target_spans, raw_p, bnds or [], ja_pcm_map)
                 return key, arr
 
@@ -2207,7 +2558,7 @@ async def main():
                 mixed_fallbacks: list[tuple[str, str]] = []
                 for key, arr in pool.map(
                     _splice_mixed,
-                    [(key, raw_p, bnds) for (key, raw_p), bnds in zip(mixed_items, mixed_bnds_list)],
+                    [(key, raw_p, res) for (key, raw_p), res in zip(mixed_items, mixed_res_list)],
                 ):
                     if arr is not None and len(arr) > 0:
                         clip_pcm[key] = arr

@@ -1,12 +1,12 @@
 {
   "date": "2026-11-23",
-  "radio_ver": "v40_qq_60m_seamless_codeswitch_5hit",
+  "radio_ver": "v41_qq_60m_wordguard_seamless_5hit",
   "display_date": "锵锵三人",
   "days_left": 13,
-  "script_sig": "a107b3bd834358",
-  "audio_url": "./audio/daily_radio.mp3?v=2026-11-23_a107b3",
-  "duration_sec": 3384.3,
-  "duration_label": "56 分钟",
+  "script_sig": "9afaec8523200e",
+  "audio_url": "./audio/daily_radio.mp3?v=2026-11-23_9afaec",
+  "duration_sec": 3400.2,
+  "duration_label": "57 分钟",
   "hosts": "文涛 · 文道 · 子东",
   "immersion_365": {
     "day_of_365": 9,
@@ -164,7 +164,7 @@
         "status": "learning"
       }
     ],
-    "today_total_inline_hits": 132
+    "today_total_inline_hits": 131
   },
   "chapters": [
     {
@@ -175,27 +175,27 @@
     {
       "idx": 1,
       "title": "太阳之塔",
-      "start": 548.4
+      "start": 551.8
     },
     {
       "idx": 2,
       "title": "生命之树",
-      "start": 1095.7
+      "start": 1101.3
     },
     {
       "idx": 3,
       "title": "怪人二十一面相",
-      "start": 1656.1
+      "start": 1664.1
     },
     {
       "idx": 4,
       "title": "狐狸眼之谜",
-      "start": 2174.2
+      "start": 2184.4
     },
     {
       "idx": 5,
       "title": "新能源暗战",
-      "start": 2692.8
+      "start": 2707.0
     }
   ],
   "segments": [
@@ -212,7 +212,7 @@
       "title": "一到十一月兼职员工集体请假停工：日本吵翻天的「一百零三万日元之壁」到底卡住了谁",
       "ja_focus": "データに基づいて税制を見直したうえで、もう少し働かせてもらう仕組みに変えるしかない。",
       "start": 0.0,
-      "end": 548.4
+      "end": 551.8
     },
     {
       "chapter": 1,
@@ -226,8 +226,8 @@
       ],
       "title": "捅穿大师的未来大屋顶：1970 大阪万博六千万人狂欢与冈本太郎的太阳之塔（上）",
       "ja_focus": "月の石をはじめ未来の技術が集まった。これほど強烈な塔はないと誰もが驚き、今も記憶に残っている。",
-      "start": 548.4,
-      "end": 1095.7
+      "start": 551.8,
+      "end": 1101.3
     },
     {
       "chapter": 2,
@@ -241,8 +241,8 @@
       ],
       "title": "四张脸与封存四十八年的生命之树：为什么大阪人死活不让拆太阳之塔（下）",
       "ja_focus": "見る人によって感想が違う。ただの飾りというわけではなく、四十八年ぶりに入ると懐かしくてたまらない。",
-      "start": 1095.7,
-      "end": 1656.1
+      "start": 1101.3,
+      "end": 1664.1
     },
     {
       "chapter": 3,
@@ -256,8 +256,8 @@
       ],
       "title": "写信把警察戏耍得团团转：1984 格力高森永案与关西超市恐慌（上）",
       "ja_focus": "入浴している最中に襲われた。警察に対して挑発状を送り続け、被害は広がるばかりだった。",
-      "start": 1656.1,
-      "end": 2174.2
+      "start": 1664.1,
+      "end": 2184.4
     },
     {
       "chapter": 4,
@@ -272,8 +272,8 @@
       ],
       "title": "就差几秒就能抓到狐狸眼男子：为什么整个日本至今难忘这桩悬案（下）",
       "ja_focus": "もう少しで犯人を捕まえられるところだったのに、最後の手紙を出したきり正体がわからずに時効を迎えた。",
-      "start": 2174.2,
-      "end": 2692.8
+      "start": 2184.4,
+      "end": 2707.0
     },
     {
       "chapter": 5,
@@ -288,8 +288,8 @@
       ],
       "title": "从日本看世界：薄如胶片的钙钛矿太阳能席卷全球，千叶地底为何藏着能源王牌",
       "ja_focus": "資源の少ない日本にとって、重いパネルのかわりに薄く曲がる電池を広げることは大きな希望だが、必ず勝てるとは限らない。",
-      "start": 2692.8,
-      "end": 3384.3
+      "start": 2707.0,
+      "end": 3400.2
     }
   ],
   "review_items": [
@@ -312,8 +312,8 @@
       "nuance": "以真实事件、调查数据或规章为依据进行创作或决策，用「名词＋に基づいて」。",
       "twin": "事実に基づいて作る：名词＋に基づいて＝以事实调查为依据创作判断 · 对比 客に対して親切だ：名词＋に対して＝朝向某对象采取态度",
       "mnemonic": "",
-      "clip_start": 219.8,
-      "clip_end": 241.8,
+      "clip_start": 221.3,
+      "clip_end": 243.3,
       "demo_audio": "./audio/N3-G43_q.mp3",
       "hook_audio": "",
       "is_new_n2": false,
@@ -339,8 +339,8 @@
       "nuance": "向长辈、上司或同事客气请求许可「请允许我做某事」，用「使役て形＋もらう／いただく」。",
       "twin": "帰らせてもらう：使役て形＋もらう＝承蒙对方准许让我早退 · 对比 帰られる：被别人回家（语法与意思均不通）",
       "mnemonic": "",
-      "clip_start": 242.0,
-      "clip_end": 260.2,
+      "clip_start": 243.5,
+      "clip_end": 261.8,
       "demo_audio": "./audio/N3-G123_q.mp3",
       "hook_audio": "",
       "is_new_n2": false,
@@ -368,8 +368,8 @@
       "nuance": "本期播客出现 3 次 · 累计 3 次",
       "twin": "",
       "mnemonic": "英文 “K(けい) Zai(ざい)” 算经济账，前长 けい + 济 浊音 ざい → けいざい",
-      "clip_start": 325.6,
-      "clip_end": 336.7,
+      "clip_start": 327.3,
+      "clip_end": 338.4,
       "demo_audio": "",
       "hook_audio": "",
       "is_new_n2": false,
@@ -397,8 +397,8 @@
       "nuance": "本期播客出现 2 次 · 累计 2 次",
       "twin": "",
       "mnemonic": "",
-      "clip_start": 393.6,
-      "clip_end": 410.1,
+      "clip_start": 395.6,
+      "clip_end": 412.0,
       "demo_audio": "./audio/words/w_9b13dc9602.mp3",
       "hook_audio": "",
       "is_new_n2": true,
@@ -426,8 +426,8 @@
       "nuance": "本期播客出现 4 次 · 累计 4 次",
       "twin": "",
       "mnemonic": "英文 “Ken(けん) Cheek(ちく)” 盖房子，筑 短清 ちく → けんちく",
-      "clip_start": 868.5,
-      "clip_end": 888.5,
+      "clip_start": 873.2,
+      "clip_end": 893.2,
       "demo_audio": "",
       "hook_audio": "",
       "is_new_n2": false,
@@ -453,8 +453,8 @@
       "nuance": "书面语中表示「随着A的发展变化，B也随之发生」，或「与某人共同」，用「〜とともに」。",
       "twin": "普及とともに変わった：名词／动词原形＋とともに＝随着普及同步变化（较书面） · 对比 店へ行くかわりにネットで買う：用网购替代去实体店（替代交换）",
       "mnemonic": "",
-      "clip_start": 1038.7,
-      "clip_end": 1060.7,
+      "clip_start": 1043.9,
+      "clip_end": 1065.9,
       "demo_audio": "./audio/N3-G72_q.mp3",
       "hook_audio": "",
       "is_new_n2": false,
@@ -482,8 +482,8 @@
       "nuance": "本期播客出现 3 次 · 累计 3 次",
       "twin": "",
       "mnemonic": "",
-      "clip_start": 1109.4,
-      "clip_end": 1129.4,
+      "clip_start": 1114.9,
+      "clip_end": 1134.9,
       "demo_audio": "",
       "hook_audio": "",
       "is_new_n2": true,
@@ -509,8 +509,8 @@
       "nuance": "名词＋によって ＝ 由于某客观原因／通过某手段；にとって ＝ 对某人而言。",
       "twin": "大雨によって乱れた：由于暴雨导致时刻表大乱 · 对比 私にとって大切だ：站在某人立场评价",
       "mnemonic": "",
-      "clip_start": 1404.9,
-      "clip_end": 1426.9,
+      "clip_start": 1411.6,
+      "clip_end": 1433.6,
       "demo_audio": "./audio/N3-G28_q.mp3",
       "hook_audio": "",
       "is_new_n2": false,
@@ -536,8 +536,8 @@
       "nuance": "正在干某事最投入的节骨眼上突然冒出意外状况（停电、来电话），用「Nの／Vている＋最中に（さいちゅうに）」。",
       "twin": "会議の最中に消えた：名词の／ている ＋ 最中に ＝ 正在兴头上突然被打断 · 对比 会議のあとで：开完会之后（无突发打断紧迫感）",
       "mnemonic": "",
-      "clip_start": 1729.8,
-      "clip_end": 1751.8,
+      "clip_start": 1738.5,
+      "clip_end": 1760.5,
       "demo_audio": "./audio/N3-G32_q.mp3",
       "hook_audio": "",
       "is_new_n2": false,
@@ -563,8 +563,8 @@
       "nuance": "前有「あと少しで・もう少しで・危うく」，表示险些出岔子但最后躲过去了，用「原形＋ところだった」。",
       "twin": "乗り遅れるところだった：あと少しで／もう少しで＋原形＋ところだった＝差点就误车（实际赶上了） · 对比 着くはずだった：本来理应到达（实际没到）",
       "mnemonic": "",
-      "clip_start": 2413.2,
-      "clip_end": 2437.0,
+      "clip_start": 2425.8,
+      "clip_end": 2449.5,
       "demo_audio": "./audio/N3-G47_q.mp3",
       "hook_audio": "",
       "is_new_n2": false,
@@ -592,8 +592,8 @@
       "nuance": "本期播客出现 6 次 · 累计 6 次",
       "twin": "",
       "mnemonic": "“传(でん)”浊 + “统(とう)”长音 → でんとう",
-      "clip_start": 2756.6,
-      "clip_end": 2771.0,
+      "clip_start": 2770.8,
+      "clip_end": 2785.3,
       "demo_audio": "./audio/words/w_b1b503aca8.mp3",
       "hook_audio": "",
       "is_new_n2": false,
@@ -619,8 +619,8 @@
       "nuance": "双方互换条件「作为…的交换回报」或「代替某人出场」，用「连体形＋かわりに」。",
       "twin": "教えてもらうかわりに教える：等价交换（他教我日语，作为回报我教他英语） · 对比 先生のおかげで合格した：多亏某人取得好结果",
       "mnemonic": "",
-      "clip_start": 2895.1,
-      "clip_end": 2917.1,
+      "clip_start": 2910.2,
+      "clip_end": 2932.2,
       "demo_audio": "./audio/N3-G36_q.mp3",
       "hook_audio": "",
       "is_new_n2": false,
