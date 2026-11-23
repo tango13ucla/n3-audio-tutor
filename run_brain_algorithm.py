@@ -263,6 +263,23 @@ def apply_practice_logs(state: dict, fallback_day_tag: str = "") -> int:
                         hes_map[pt] = max(str(hes_map.get(pt) or ""), day_tag_h)
                     continue
 
+                # Real Spoken Voice Active Output & Pronunciation Mirror ("SPK:<id>"):
+                # Never falsely inflates 3/3 true green; records spoken reps & flags pronunciation/grammar slips for reinforcement!
+                if rec_id.startswith("SPK:") or choice.startswith(("开口:", "试读:")):
+                    day_tag_s = _iso_to_day_tag(ts, fallback_day_tag)
+                    spk_st = state.setdefault("speaking_practice", {"total_reps": 0, "last_date": "", "slips": {}})
+                    spk_st["total_reps"] = int(spk_st.get("total_reps") or 0) + 1
+                    spk_st["last_date"] = max(str(spk_st.get("last_date") or ""), day_tag_s)
+                    if not is_correct and pt:
+                        slips = spk_st.setdefault("slips", {})
+                        cur_sl = slips.get(pt) or {"count": 0, "last_date": "", "last_note": ""}
+                        slips[pt] = {
+                            "count": int(cur_sl.get("count") or 0) + 1,
+                            "last_date": max(str(cur_sl.get("last_date") or ""), day_tag_s),
+                            "last_note": choice[:48],
+                        }
+                    continue
+
                 # Post-Listening 5-Min Contextual Review ("RV:<id>"):
                 # - "听后复盘:过": log episodic verification without falsely inflating cross-day 3/3 true green
                 # - "听后复盘:重学": prioritize into tomorrow's Quiz/Vocab + hold podcast pure-JA lock for 1 gentle re-bridge!

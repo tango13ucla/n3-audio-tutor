@@ -2381,6 +2381,7 @@ async def main():
         ]
         public_vocab_meta = {k: v for k, v in imm_vocab_report.items() if not k.startswith("_")}
         review_items: list[dict] = []
+        speaking_prompts: list[dict] = []
         try:
             import radio_review_builder as rrb
             review_items = rrb.build_episode_review_items(
@@ -2390,6 +2391,11 @@ async def main():
                 turn_timings=turn_timings,
                 audio_mp3_path=RADIO_MP3_PATH,
                 max_total=12,
+            )
+            speaking_prompts = rrb.build_episode_speaking_prompts(
+                story_blocks,
+                review_items,
+                max_prompts=2,
             )
         except Exception as exc:
             print(f"[warn] review_items extraction skipped: {exc}")
@@ -2409,6 +2415,7 @@ async def main():
             "chapters": chapters_meta,
             "segments": segments_meta,
             "review_items": review_items,
+            "speaking_prompts": speaking_prompts,
         }
         with open(RADIO_META_PATH, "w", encoding="utf-8") as f:
             json.dump(meta_obj, f, ensure_ascii=False, indent=2)
@@ -2419,7 +2426,7 @@ async def main():
             f"Built Qiang-Qiang {radio_ver_tag} Uchi Episode: {final_dur:.1f}s ({mins} mins), "
             f"stories={[s['short_tab'] for s in selected_stories]}, "
             f"locked_ja={public_vocab_meta.get('locked_total', 0)}, new_vocab={public_vocab_meta.get('today_new_count', 0)}, "
-            f"review_items={len(review_items)}"
+            f"review_items={len(review_items)}, speaking_prompts={len(speaking_prompts)}"
         )
     finally:
         shutil.rmtree(tmpdir, ignore_errors=True)

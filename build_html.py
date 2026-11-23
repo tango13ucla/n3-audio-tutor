@@ -3028,6 +3028,146 @@ html = r"""<!DOCTYPE html>
     color: var(--bengara);
     font-family: var(--serif-jp);
   }
+  @keyframes micPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+  .mic-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+  .mic-btn.listening {
+    color: var(--bengara) !important;
+    font-weight: 600;
+  }
+  .mic-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    display: inline-block;
+    animation: micPulse 1.05s ease-in-out infinite;
+  }
+  .mic-feedback {
+    margin-top: 8px;
+    font-size: 13.5px;
+    line-height: 1.55;
+    letter-spacing: 0.02em;
+    color: var(--ink-3);
+    min-height: 0;
+    text-align: center;
+  }
+  .mic-feedback:empty { display: none; }
+  .mic-feedback.ok { color: var(--moss); font-weight: 500; }
+  .mic-feedback.ng { color: var(--bengara); font-weight: 500; }
+  .mic-feedback.left { text-align: left; margin-top: 6px; }
+  .rv-meta-right {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .spk-prompt-ja {
+    margin: 2px 0 0;
+    font-family: var(--serif-jp);
+    font-size: 20px;
+    line-height: 1.72;
+    color: var(--sumi);
+  }
+  .spk-prompt-zh {
+    margin: 2px 0 0;
+    font-size: 14.5px;
+    line-height: 1.68;
+    color: var(--ink-3);
+  }
+  .spk-live-area {
+    margin-top: 8px;
+    padding-top: 14px;
+    border-top: 1px solid var(--hairline);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .spk-heard {
+    font-family: var(--serif-jp);
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--ink-2);
+  }
+  .spk-heard-lbl {
+    font-family: var(--sans);
+    font-size: 12.5px;
+    color: var(--ink-3);
+    margin-right: 6px;
+    letter-spacing: 0.06em;
+  }
+  .spk-verdict {
+    font-size: 14.5px;
+    line-height: 1.6;
+    font-weight: 500;
+  }
+  .spk-verdict.ok { color: var(--moss); }
+  .spk-verdict.warn { color: var(--bengara); }
+  .spk-trap-line {
+    font-size: 13.8px;
+    line-height: 1.62;
+    color: var(--bengara);
+    padding-left: 10px;
+    border-left: 2px solid rgba(154, 70, 51, 0.36);
+  }
+  .spk-model-wrap {
+    margin-top: 4px;
+    padding-top: 10px;
+    border-top: 1px solid var(--hairline);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .spk-model-lbl {
+    font-size: 12px;
+    color: var(--ink-3);
+    letter-spacing: 0.08em;
+  }
+  .spk-model-ja {
+    font-family: var(--serif-jp);
+    font-size: 19px;
+    line-height: 1.68;
+    color: var(--sumi);
+  }
+  .spk-model-zh {
+    font-size: 14px;
+    color: var(--ink-2);
+    line-height: 1.6;
+  }
+  .spk-tip {
+    font-size: 13.5px;
+    color: var(--ink-3);
+    line-height: 1.62;
+  }
+  .rv-btn-mic {
+    flex: 1;
+    max-width: 230px;
+    height: 48px;
+    padding: 0 20px;
+    border-radius: 8px;
+    background: var(--sumi);
+    color: var(--sheet);
+    font-size: 15.5px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .rv-btn-mic.listening {
+    background: var(--bengara);
+    color: #fff;
+  }
+  .rv-btn-mic:active { opacity: 0.85; transform: scale(0.985); }
 
   /* ================= 5. ZEN LEDGER ("总表") ================= */
   #dash-view {
@@ -7399,11 +7539,484 @@ radioPlayer.addEventListener("timeupdate", () => {
   }
 });
 
+// ================= REAL VOICE ACTIVE OUTPUT & PRONUNCIATION MIRROR (Web Speech ja-JP) =================
+// Zero-key, zero-server browser-native Japanese speech recognition for Android Chrome & Desktop Chrome.
+// Grounded in Swain (1985, 2005) Output Hypothesis, MacLeod et al. (2010) Production Effect, & DeKeyser (2007).
+const JA_ASR = (() => {
+  let rec = null;
+  let active = false;
+  let activeTag = "";
+  let safetyTimer = null;
+
+  const DAKUTEN_MAP = {
+    "が":"か","ぎ":"き","ぐ":"く","げ":"け","ご":"こ",
+    "ざ":"さ","じ":"し","ず":"す","ぜ":"せ","ぞ":"そ",
+    "だ":"た","ぢ":"ち","づ":"つ","で":"て","ど":"と",
+    "ば":"は","び":"ひ","ぶ":"ふ","べ":"へ","ぼ":"ほ",
+    "ぱ":"は","ぴ":"ひ","ぷ":"ふ","ぺ":"へ","ぽ":"ほ",
+    "ゔ":"う"
+  };
+
+  // Common ASR homophone/near-miss readings so Kanji transcripts still get accurate phonetic diagnostics
+  const EXTRA_KANA = {
+    "予算":"よさん","余算":"よさん","洋三":"ようさん","与三":"よさん","養蚕":"ようさん",
+    "書類":"しょるい","種類":"しゅるい","出張":"しゅっちょう","主張":"しゅちょう","首相":"しゅしょう",
+    "鍵":"かぎ","柿":"かき","夏季":"かき","下記":"かき","牡蠣":"かき",
+    "合格":"ごうかく","広告":"こうこく","降格":"こうかく","広角":"こうかく",
+    "設計":"せっけい","世間":"せけん","赤径":"せっけい","整形":"せいけい",
+    "読解":"どっかい","妖怪":"ようかい","了解":"りょうかい",
+    "現金":"げんきん","景気":"けいき","平均":"へいきん","原因":"げんいん",
+    "象徴":"しょうちょう","所長":"しょちょう","署長":"しょちょう",
+    "伝統":"でんとう","電灯":"でんとう","転倒":"てんとう",
+    "建築":"けんちく","経済":"けいざい","補助金":"ほじょきん",
+    "図書館":"としょかん","博物館":"はくぶつかん","辞書":"じしょ","事情":"じじょう"
+  };
+
+  const SPOKEN_TRAPS = [
+    {
+      re: /(?:[\u4e00-\u9faf][ぁ-ん]{0,3}(?:る|た|く|ぐ|す|つ|ぶ|む|ない)|(?:する|した|くる|きた|いる|いた|ある|あった|すぎた|しすぎた|いく|ねる|でる|たべる|のむ|みる|かう|かえる))の(?:時|とき)/,
+      tip: "动词接「時」不用加「の」，直接说「〜る時／〜た時」。"
+    },
+    {
+      re: /(?:つもり|ところ|はず|わけ|予定|はずなん|ようとした)たった|たったんです|たったのに|ところたった/,
+      tip: "注意浊音「だった」，刚才听成清音「たった」了。"
+    },
+    {
+      re: /はずないんです|はつない|はずないけど|はずないです/,
+      tip: "想表达「按理应该」用「はずなんですが」，多出「ない」会翻成否定。"
+    },
+    {
+      re: /(?:上手|静か|元気|大変|好き|嫌い|便利|簡単|親切|暇|幸せそう|おいしそう|美味しそう|楽しそう|高そう|難しそう)わけ/,
+      tip: "ナ形容词和「そう」接「わけ」时，中间必须补「な」（如 上手なわけ）。"
+    },
+    {
+      re: /(?:ある|いる|行く|来る|降る|晴れ|雨|休み|いい|良い|高い|安い|忙しい|大変)だと?らしい|とらしい/,
+      tip: "传闻「らしい」直接接简体，前面不加「と」或「だ」。"
+    },
+    {
+      re: /(?:休み|休んで|参加して|帰って|早退して)いただけませんか|(?:休み|休んで|参加して|早退して)もらってもいいですか/,
+      tip: "自己请假或早退求对方批准，要用使役「帰らせて／休ませていただけませんか」。"
+    },
+    {
+      re: /(?:話|渡|出|直|消|探|返|押|貸|起こ|壊)さされ/,
+      tip: "「す」结尾动词使役受身不能缩约，要完整说「話させられる」。"
+    },
+    {
+      re: /(?:する|行く|帰る|休む|食べる|飲む|買う|見る|辞める|やめる|働く|運動する|勉強する|退職する|転職する|引っ越す)にしました|(?:する|行く|帰る|休む|食べる|飲む|買う|見る|辞める|やめる|働く|退職する|転勤する)になりました/,
+      tip: "动词原形接「にする／になる」表决定时，中间别漏掉形式名词「こと」。"
+    },
+    {
+      re: /(?:酸っぱい|辛い|美味しい|おいしい|高い|安い|忙しい|楽しい|寒い|暑い|難しい|面白い|すごい|痛い|眠い|大きい|小さい)でした|(?:大好き|好き|静か|元気|便利|簡単|親切|大変)かった/,
+      tip: "イ形容词过去式用「〜かったです」，ナ形容词过去式用「〜でした」。"
+    },
+    {
+      re: /たくさんの?方が|たくさん(?:美味しい|おいしい|いい|良い|速い|早い|高い|安い|面白い|上手)/,
+      tip: "比较差距大时不用「たくさん」，地道说法是用「ずっと」。"
+    },
+    {
+      re: /まだ.{0,8}(?:食べません|来ません|終わりません|決めません|見ません|買いません|読みません|飲みません|着きません)/,
+      tip: "「还没做」表示持续未完成状态，要用「まだ〜ていません」。"
+    },
+    {
+      re: /知ります(?:か|よ|ね)?(?!ん)/,
+      tip: "「知道」表示认知状态，用持续体「知っています／知っていますか」。"
+    },
+    {
+      re: /(?:行こよう|おぼてよう)|(?:しよう|行こう|出よう|食べよう|飲もう|買おう|帰ろう|話そう|連絡しよう)した(?:時|とき)/,
+      tip: "意志形接「とした時」别漏掉中间的引述助词「と」。"
+    },
+    {
+      re: /(?:仕事|宿題|作業|準備|会議|発表|プロジェクト)を終わる/,
+      tip: "带宾语「〜を」表示人为完成，要用他动词「終わらせる」或「終える」。"
+    },
+    {
+      re: /遠慮がちに.{0,14}(?:いいですか|でしょうか|聞いても|伺っても)/,
+      tip: "「遠慮がちに」只描写别人神态，自己礼貌发问直接用「よろしければ」。"
+    }
+  ];
+
+  function supported() {
+    return typeof window !== "undefined" && !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+  }
+
+  function toHira(raw) {
+    const cleaned = String(raw || "").replace(/[、。！？.,!?・「」『』（）()【】\s〜~～…・]/g, "");
+    let out = "";
+    for (let i = 0; i < cleaned.length; i++) {
+      const code = cleaned.charCodeAt(i);
+      if (code >= 0x30a1 && code <= 0x30f6) out += String.fromCharCode(code - 0x60);
+      else out += cleaned[i];
+    }
+    return out;
+  }
+
+  function stripDakuten(hira) {
+    return String(hira || "").split("").map(ch => DAKUTEN_MAP[ch] || ch).join("");
+  }
+
+  function stripSokuon(hira) {
+    return String(hira || "").replace(/っ/g, "");
+  }
+
+  function collapseLongVowels(hira) {
+    let s = String(hira || "").replace(/ー/g, "");
+    s = s.replace(/([あかさたなはまやらわがざだばぱぁゃ])あ/g, "$1");
+    s = s.replace(/([いきしちにひみりぎじぢびぴぃ])い/g, "$1");
+    s = s.replace(/([うくすつぬふむゆるぐずづぶぷぅゅ])う/g, "$1");
+    s = s.replace(/([えけせてねへめれげぜでべぺぇ])[えい]/g, "$1");
+    s = s.replace(/([おこそとのほもよろをごぞどぼぽぉょ])[おう]/g, "$1");
+    return s;
+  }
+
+  function resolveKana(raw) {
+    const clean = String(raw || "").replace(/[、。！？.,!?・「」『』（）()【】\s〜~～…・]/g, "");
+    if (!clean) return "";
+    if (!/[\u4e00-\u9faf\u3400-\u4dbf]/.test(clean)) return toHira(clean);
+    if (EXTRA_KANA[clean]) return toHira(EXTRA_KANA[clean]);
+    try {
+      if (typeof DATA !== "undefined" && DATA) {
+        if (DATA.words && DATA.words[clean] && DATA.words[clean].kana) {
+          return toHira(DATA.words[clean].kana);
+        }
+        if (DATA.vocab_cards && DATA.vocab_cards[clean] && DATA.vocab_cards[clean].kana) {
+          return toHira(DATA.vocab_cards[clean].kana);
+        }
+      }
+    } catch (e) {}
+    return toHira(clean);
+  }
+
+  function levenshtein(a, b) {
+    const m = a.length, n = b.length;
+    if (!m) return n;
+    if (!n) return m;
+    const dp = new Array(n + 1);
+    for (let j = 0; j <= n; j++) dp[j] = j;
+    for (let i = 1; i <= m; i++) {
+      let prev = dp[0];
+      dp[0] = i;
+      for (let j = 1; j <= n; j++) {
+        const tmp = dp[j];
+        const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+        dp[j] = Math.min(dp[j] + 1, dp[j - 1] + 1, prev + cost);
+        prev = tmp;
+      }
+    }
+    return dp[n];
+  }
+
+  function detectSpokenTraps(rawText) {
+    const s = String(rawText || "").trim();
+    if (!s) return [];
+    const tips = [];
+    for (let i = 0; i < SPOKEN_TRAPS.length; i++) {
+      if (SPOKEN_TRAPS[i].re.test(s)) {
+        tips.push(SPOKEN_TRAPS[i].tip);
+      }
+    }
+    return tips;
+  }
+
+  function analyzePronunciation(rawAlts, targetWord, targetKana, targetChunk) {
+    const alts = (Array.isArray(rawAlts) ? rawAlts : [rawAlts])
+      .map(x => String(x || "").trim())
+      .filter(Boolean);
+    if (!alts.length) {
+      return { ok: false, kind: "empty", heard: "", verdict: "没听清，靠近一点再试一次" };
+    }
+    const tgtWordH = toHira(targetWord || "");
+    const tgtKanaH = toHira(targetKana || resolveKana(targetWord || ""));
+    const tgtChunkH = toHira(targetChunk || "");
+    const bestRaw = alts[0];
+
+    for (let i = 0; i < alts.length; i++) {
+      const a = alts[i];
+      const aH = toHira(a);
+      const aK = resolveKana(a);
+      if (
+        (tgtWordH && (aH === tgtWordH || aH.includes(tgtWordH))) ||
+        (tgtKanaH && (aH === tgtKanaH || aK === tgtKanaH || (tgtKanaH.length >= 2 && (aH.includes(tgtKanaH) || aK.includes(tgtKanaH))))) ||
+        (tgtChunkH && tgtChunkH.length >= 3 && (aH === tgtChunkH || aH.includes(tgtChunkH)))
+      ) {
+        return {
+          ok: true,
+          kind: "exact",
+          heard: a,
+          verdict: "读准了"
+        };
+      }
+    }
+
+    const heardKana = resolveKana(bestRaw);
+    const dispHeard = (heardKana && heardKana !== toHira(bestRaw) && /[\u4e00-\u9faf]/.test(bestRaw))
+      ? `${bestRaw}（${heardKana}）`
+      : bestRaw;
+
+    if (tgtKanaH && heardKana && !/[\u4e00-\u9faf]/.test(heardKana)) {
+      if (stripDakuten(heardKana) === stripDakuten(tgtKanaH)) {
+        return { ok: false, kind: "voicing", heard: dispHeard, verdict: `清浊音差了一拍，目标「${tgtKanaH}」` };
+      }
+      if (stripSokuon(heardKana) === stripSokuon(tgtKanaH)) {
+        const msg = tgtKanaH.includes("っ") && !heardKana.includes("っ")
+          ? `漏了促音「っ」停顿，目标「${tgtKanaH}」`
+          : `多出了促音「っ」，目标「${tgtKanaH}」`;
+        return { ok: false, kind: "sokuon", heard: dispHeard, verdict: msg };
+      }
+      if (collapseLongVowels(heardKana) === collapseLongVowels(tgtKanaH)) {
+        return { ok: false, kind: "length", heard: dispHeard, verdict: `长短音差了一拍，目标「${tgtKanaH}」` };
+      }
+      const deepA = stripDakuten(collapseLongVowels(stripSokuon(heardKana)));
+      const deepT = stripDakuten(collapseLongVowels(stripSokuon(tgtKanaH)));
+      if (deepA === deepT || levenshtein(heardKana, tgtKanaH) <= 2) {
+        return { ok: false, kind: "near", heard: dispHeard, verdict: `很接近，再核对一拍「${tgtKanaH}」` };
+      }
+    }
+
+    return {
+      ok: false,
+      kind: "miss",
+      heard: dispHeard,
+      verdict: tgtKanaH ? `和「${tgtKanaH}」有点偏，听示范跟读一遍` : "读音有点偏，再试一次"
+    };
+  }
+
+  function analyzeSpokenOutput(rawAlts, prompt) {
+    const alts = (Array.isArray(rawAlts) ? rawAlts : [rawAlts])
+      .map(x => String(x || "").trim())
+      .filter(Boolean);
+    if (!alts.length) {
+      return {
+        ok: false,
+        usedTarget: false,
+        heard: "",
+        traps: [],
+        verdict: "没听到清晰语音，靠近一点再说一句就行。"
+      };
+    }
+    const stems = Array.isArray(prompt && prompt.target_stems) ? prompt.target_stems : [];
+    const stemHiras = stems.map(s => toHira(s)).filter(Boolean);
+
+    let chosen = alts[0];
+    let usedTarget = false;
+    for (let i = 0; i < alts.length; i++) {
+      const a = alts[i];
+      const aH = toHira(a);
+      const hit = stems.some(s => s && a.includes(s)) || stemHiras.some(sh => sh && aH.includes(sh));
+      if (hit) {
+        chosen = a;
+        usedTarget = true;
+        break;
+      }
+    }
+
+    const traps = detectSpokenTraps(chosen);
+    // Also detect voicing slip on target stem itself (e.g. ところたった instead of ところだった)
+    if (!usedTarget && stems.length) {
+      const chosenNoDak = stripDakuten(toHira(chosen));
+      if (stemHiras.some(sh => sh.length >= 4 && chosenNoDak.includes(stripDakuten(sh)))) {
+        if (!traps.some(t => t.includes("清音") || t.includes("浊音"))) {
+          traps.push(`目标句型「${prompt.title || ""}」的清浊音差了一拍，注意听清浊再说一遍。`);
+        }
+      }
+    }
+
+    const jaLen = chosen.replace(/[^\u3040-\u30ff\u4e00-\u9faf]/g, "").length;
+    if (jaLen < 3) {
+      return {
+        ok: false,
+        usedTarget: false,
+        heard: chosen,
+        traps: traps,
+        verdict: "这句话太短了，试着用完整短句说一遍。"
+      };
+    }
+
+    if (usedTarget && traps.length === 0) {
+      return {
+        ok: true,
+        usedTarget: true,
+        heard: chosen,
+        traps: [],
+        verdict: `句型「${prompt.title || ""}」用对了，表达很自然。`
+      };
+    }
+    if (usedTarget && traps.length > 0) {
+      return {
+        ok: false,
+        usedTarget: true,
+        heard: chosen,
+        traps: traps,
+        verdict: `目标句型用上了，顺手修一个小习惯。`
+      };
+    }
+    return {
+      ok: false,
+      usedTarget: false,
+      heard: chosen,
+      traps: traps,
+      verdict: `听懂意思了，试着把「${prompt.title || ""}」直接套进去再说一遍。`
+    };
+  }
+
+  function stop() {
+    if (safetyTimer) {
+      clearTimeout(safetyTimer);
+      safetyTimer = null;
+    }
+    active = false;
+    activeTag = "";
+    if (rec) {
+      try { rec.onresult = null; rec.onerror = null; rec.onend = null; rec.abort(); } catch (e) {}
+      rec = null;
+    }
+  }
+
+  function start(tag, handlers) {
+    stop();
+    if (!supported()) {
+      if (handlers && handlers.onError) handlers.onError("当前浏览器不支持实时收音，听示范直接跟读即可。");
+      return false;
+    }
+    // Mute every active audio player before opening the mic so playback never leaks into ASR!
+    try { if (typeof stopQuizAudio === "function") stopQuizAudio(); } catch (e) {}
+    try { if (typeof stopVocabAudioAndTimers === "function") stopVocabAudioAndTimers(); } catch (e) {}
+    try { if (typeof stopRadioReviewAudio === "function") stopRadioReviewAudio(); } catch (e) {}
+    try {
+      if (typeof radioInitialized !== "undefined" && radioInitialized && radioPlayer && !radioPlayer.paused) {
+        radioPlayer.pause();
+        if (typeof syncRadioUI === "function") syncRadioUI(false);
+      }
+    } catch (e) {}
+    try { if ("speechSynthesis" in window) window.speechSynthesis.cancel(); } catch (e) {}
+
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    try {
+      rec = new SR();
+      rec.lang = "ja-JP";
+      rec.interimResults = true;
+      rec.maxAlternatives = 5;
+      rec.continuous = false;
+    } catch (e) {
+      if (handlers && handlers.onError) handlers.onError("语音识别初始化失败，请稍后重试。");
+      return false;
+    }
+
+    active = true;
+    activeTag = String(tag || "");
+    let gotFinal = false;
+    let lastInterim = "";
+
+    rec.onresult = (ev) => {
+      if (!active || !ev || !ev.results) return;
+      const alts = [];
+      let isFinal = false;
+      for (let i = ev.resultIndex || 0; i < ev.results.length; i++) {
+        const res = ev.results[i];
+        if (res && res.isFinal) isFinal = true;
+        if (res && res.length) {
+          for (let j = 0; j < res.length; j++) {
+            const tr = String((res[j] && res[j].transcript) || "").trim();
+            if (tr && !alts.includes(tr)) alts.push(tr);
+          }
+        }
+      }
+      if (!alts.length) return;
+      lastInterim = alts[0];
+      if (isFinal) {
+        gotFinal = true;
+        const doneCb = handlers && handlers.onFinal;
+        stop();
+        if (doneCb) doneCb(alts);
+      } else if (handlers && handlers.onInterim) {
+        handlers.onInterim(alts[0]);
+      }
+    };
+
+    rec.onerror = (ev) => {
+      if (!active) return;
+      const code = String((ev && ev.error) || "");
+      const errMap = {
+        "not-allowed": "请允许浏览器使用麦克风权限，点地址栏左侧图标打开即可。",
+        "service-not-allowed": "请允许浏览器使用麦克风权限，点地址栏左侧图标打开即可。",
+        "no-speech": "没听到声音，靠近一点再说一遍。",
+        "audio-capture": "未检测到麦克风设备。",
+        "network": "语音识别网络暂时连不上，稍后再试。",
+        "aborted": ""
+      };
+      const msg = (code in errMap) ? errMap[code] : "没听清，再试一次就行。";
+      const errCb = handlers && handlers.onError;
+      stop();
+      if (msg && errCb) errCb(msg);
+    };
+
+    rec.onend = () => {
+      const wasActive = active;
+      const endCb = handlers && handlers.onEnd;
+      const finalCb = handlers && handlers.onFinal;
+      const fallbackTxt = lastInterim;
+      stop();
+      if (wasActive && !gotFinal && fallbackTxt && finalCb) {
+        finalCb([fallbackTxt]);
+      } else if (wasActive && endCb) {
+        endCb();
+      }
+    };
+
+    safetyTimer = setTimeout(() => {
+      if (active && rec) {
+        try { rec.stop(); } catch (e) { stop(); }
+      }
+    }, 10500);
+
+    try {
+      rec.start();
+      return true;
+    } catch (e) {
+      stop();
+      if (handlers && handlers.onError) handlers.onError("麦克风启动失败，再点一次试试。");
+      return false;
+    }
+  }
+
+  return {
+    supported,
+    isActive: (tag) => active && (!tag || activeTag === tag),
+    start,
+    stop,
+    toHira,
+    stripDakuten,
+    stripSokuon,
+    collapseLongVowels,
+    resolveKana,
+    detectSpokenTraps,
+    analyzePronunciation,
+    analyzeSpokenOutput
+  };
+})();
+window.JA_ASR = JA_ASR;
+
+function pushSpokenRecord(idTag, pointKey, label, isOk) {
+  const tsSec = Math.max(TRUE_GREEN_EPOCH, nowUnixSec());
+  const rec = {
+    id: `SPK:${idTag}`,
+    point: String(pointKey || idTag),
+    choice: String(label || "开口:练过"),
+    correct: isOk ? "true" : "false",
+    ask_again: "false",
+    ts: new Date(tsSec * 1000).toISOString()
+  };
+  const ob = loadOutbox();
+  ob.push([rec.id, rec.point, rec.choice, isOk ? 1 : 0, rec.ts]);
+  saveOutbox(ob);
+  saveAdaptiveState();
+  scheduleCloudPush(220);
+}
+
 // ================= POST-LISTENING 5-MIN CONTEXTUAL REVIEW ("听后 5 分") =================
 // Backed by Encoding Specificity (Tulving 1973), Region of Proximal Learning (Metcalfe 2002),
 // Testing Effect (Roediger & Karpicke 2006), & Within-Session Spaced Retrieval (Nakata 2017).
 let radioReviewOpen = false;
-let rvMode = "triage"; // "triage" | "relearn" | "tail" | "done"
+let rvMode = "triage"; // "triage" | "relearn" | "tail" | "done" | "speak"
 let rvRevealed = false;
 let rvRevealedAt = 0;
 let rvActiveItemId = "";
@@ -7412,10 +8025,22 @@ let rvAnimating = false;
 let rvClipPlayer = null;
 let rvClipEndSec = 0;
 let rvClipPlayingKey = "";
+let rvSpeakIdx = 0;
+let rvSpeakState = { listening: false, interim: "", result: null, revealedModel: false, errorMsg: "" };
 
 function getRadioReviewItems() {
   const arr = (DATA.radio && Array.isArray(DATA.radio.review_items)) ? DATA.radio.review_items : [];
   return arr;
+}
+
+function getRadioSpeakingPrompts() {
+  const arr = (DATA.radio && Array.isArray(DATA.radio.speaking_prompts)) ? DATA.radio.speaking_prompts : [];
+  return arr;
+}
+
+function getActiveSpeakingPrompt() {
+  const arr = getRadioSpeakingPrompts();
+  return arr[rvSpeakIdx] || null;
 }
 
 function getReviewItemById(id) {
@@ -7425,11 +8050,15 @@ function getReviewItemById(id) {
 function ensureRadioReviewState(forceReset) {
   const items = getRadioReviewItems();
   const validIds = new Set(items.map(x => x.id));
+  const prevSpoken = (!forceReset && A.radioReview && A.radioReview.sig === RADIO_SIG && A.radioReview.date === DATA.plan_date && Array.isArray(A.radioReview.spokenIds))
+    ? A.radioReview.spokenIds.slice()
+    : [];
   if (!forceReset && A.radioReview && A.radioReview.sig === RADIO_SIG && A.radioReview.date === DATA.plan_date) {
     A.radioReview.passedIds = (A.radioReview.passedIds || []).filter(id => validIds.has(id));
     A.radioReview.relearnIds = (A.radioReview.relearnIds || []).filter(id => validIds.has(id));
     A.radioReview.tailQueue = (A.radioReview.tailQueue || []).filter(id => validIds.has(id));
     A.radioReview.tailDoneIds = (A.radioReview.tailDoneIds || []).filter(id => validIds.has(id));
+    if (!Array.isArray(A.radioReview.spokenIds)) A.radioReview.spokenIds = [];
     if (!A.radioReview.updatedAt) A.radioReview.updatedAt = nowUnixSec();
     return A.radioReview;
   }
@@ -7441,6 +8070,7 @@ function ensureRadioReviewState(forceReset) {
     relearnIds: [],
     tailQueue: [],
     tailDoneIds: [],
+    spokenIds: prevSpoken,
     done: items.length === 0,
     updatedAt: nowUnixSec()
   };
@@ -7720,6 +8350,7 @@ function openRadioReview(forceRestart) {
 }
 
 function closeRadioReview() {
+  JA_ASR.stop();
   stopRadioReviewAudio();
   clearActiveWordToken();
   radioReviewOpen = false;
@@ -7731,8 +8362,293 @@ function closeRadioReview() {
   updateRadioReviewEntryBadge();
 }
 
+function openRadioSpeaking(startIdx) {
+  const prompts = getRadioSpeakingPrompts();
+  if (!prompts.length) return;
+  if (radioInitialized && !radioPlayer.paused) {
+    radioPlayer.pause();
+    syncRadioUI(false);
+  }
+  JA_ASR.stop();
+  stopRadioReviewAudio();
+  ensureRadioReviewState(false);
+  radioReviewOpen = true;
+  const pStage = document.getElementById("radio-player-stage");
+  const rStage = document.getElementById("radio-review-stage");
+  if (pStage) pStage.classList.add("hidden");
+  if (rStage) rStage.classList.remove("hidden");
+  rvMode = "speak";
+  rvSpeakIdx = Math.max(0, Math.min(prompts.length, Number(startIdx || 0)));
+  rvSpeakState = { listening: false, interim: "", result: null, revealedModel: false, errorMsg: "" };
+  renderRadioReviewStage();
+}
+
+function playSpeakingPromptAudio(prompt, which) {
+  if (!prompt) return;
+  const key = which === "model" ? "spk_model" : "spk_q";
+  if (rvClipPlayingKey === key) {
+    stopRadioReviewAudio();
+    return;
+  }
+  JA_ASR.stop();
+  stopRadioReviewAudio();
+  rvClipPlayingKey = key;
+  syncRvAudioButtons();
+  const text = which === "model" ? (prompt.model_ja || "") : (prompt.prompt_ja || "");
+  const doneCb = () => {
+    if (rvClipPlayingKey === key) {
+      rvClipPlayingKey = "";
+      syncRvAudioButtons();
+    }
+  };
+  if (which === "model" && prompt.demo_audio && prompt.model_ja === (getReviewItemById(`RVR-${prompt.point_id}`) || {}).ja_example) {
+    warmAudio(prompt.demo_audio).then(resolved => {
+      if (rvClipPlayingKey !== key) return;
+      try {
+        wordPlayer.onended = doneCb;
+        wordPlayer.onerror = () => speakUtteranceLang(text, "ja-JP", 0.94, doneCb);
+        wordPlayer.src = resolved || prompt.demo_audio;
+        wordPlayer.currentTime = 0;
+        wordPlayer.playbackRate = 1.0;
+        const pr = wordPlayer.play();
+        if (pr && typeof pr.catch === "function") pr.catch(() => speakUtteranceLang(text, "ja-JP", 0.94, doneCb));
+      } catch (e) {
+        speakUtteranceLang(text, "ja-JP", 0.94, doneCb);
+      }
+    });
+  } else {
+    speakUtteranceLang(text, "ja-JP", 0.94, doneCb);
+  }
+}
+
+function revealSpeakingModelNow() {
+  rvSpeakState.revealedModel = true;
+  renderRadioReviewStage();
+}
+
+function toggleRadioSpeakingMic() {
+  const prompt = getActiveSpeakingPrompt();
+  if (!prompt) return;
+  if (rvSpeakState.listening || JA_ASR.isActive("rv_speak")) {
+    JA_ASR.stop();
+    rvSpeakState.listening = false;
+    renderRadioReviewStage();
+    return;
+  }
+  rvSpeakState = { listening: true, interim: "", result: null, revealedModel: rvSpeakState.revealedModel, errorMsg: "" };
+  renderRadioReviewStage();
+  const started = JA_ASR.start("rv_speak", {
+    onInterim: (txt) => {
+      rvSpeakState.interim = txt;
+      const el = document.getElementById("spk-interim-live");
+      if (el) el.textContent = txt;
+    },
+    onFinal: (alts) => {
+      rvSpeakState.listening = false;
+      rvSpeakState.interim = "";
+      rvSpeakState.errorMsg = "";
+      const res = JA_ASR.analyzeSpokenOutput(alts, prompt);
+      rvSpeakState.result = res;
+      rvSpeakState.revealedModel = true;
+      const st = ensureRadioReviewState(false);
+      if (!Array.isArray(st.spokenIds)) st.spokenIds = [];
+      if (!st.spokenIds.includes(prompt.id)) st.spokenIds.push(prompt.id);
+      st.updatedAt = nowUnixSec();
+      const lbl = res.ok ? "开口:自然达标" : (res.traps && res.traps.length ? `开口:提醒(${res.traps[0].slice(0, 14)})` : "开口:再练目标句型");
+      pushSpokenRecord(prompt.id, prompt.key || prompt.title, lbl, res.ok);
+      renderRadioReviewStage();
+    },
+    onError: (msg) => {
+      rvSpeakState.listening = false;
+      rvSpeakState.errorMsg = msg;
+      renderRadioReviewStage();
+    },
+    onEnd: () => {
+      if (rvSpeakState.listening) {
+        rvSpeakState.listening = false;
+        renderRadioReviewStage();
+      }
+    }
+  });
+  if (!started) {
+    rvSpeakState.listening = false;
+    renderRadioReviewStage();
+  }
+}
+
+function nextRadioSpeakingPrompt() {
+  JA_ASR.stop();
+  stopRadioReviewAudio();
+  const prompts = getRadioSpeakingPrompts();
+  rvSpeakIdx += 1;
+  rvSpeakState = { listening: false, interim: "", result: null, revealedModel: false, errorMsg: "" };
+  if (rvSpeakIdx >= prompts.length) {
+    const st = ensureRadioReviewState(false);
+    st.updatedAt = nowUnixSec();
+    saveAdaptiveState();
+  }
+  renderRadioReviewStage();
+}
+
+function toggleReviewMicCheck() {
+  const item = getReviewItemById(rvActiveItemId);
+  if (!item) return;
+  const btn = document.getElementById("rv-mic-btn");
+  const fb = document.getElementById("rv-mic-feedback");
+  if (JA_ASR.isActive("rv_item")) {
+    JA_ASR.stop();
+    if (btn) { btn.classList.remove("listening"); btn.innerHTML = "试读"; }
+    if (fb && fb.textContent === "请开口读出日语…") fb.textContent = "";
+    return;
+  }
+  if (btn) { btn.classList.add("listening"); btn.innerHTML = `<span class="mic-dot"></span>聆听中`; }
+  if (fb) { fb.className = "mic-feedback left"; fb.textContent = "请开口读出日语…"; }
+  JA_ASR.start("rv_item", {
+    onInterim: (txt) => {
+      const f = document.getElementById("rv-mic-feedback");
+      if (f) { f.className = "mic-feedback left"; f.textContent = `听到：${txt}`; }
+    },
+    onFinal: (alts) => {
+      const b = document.getElementById("rv-mic-btn");
+      const f = document.getElementById("rv-mic-feedback");
+      if (b) { b.classList.remove("listening"); b.innerHTML = "试读"; }
+      const res = item.kind === "vocab"
+        ? JA_ASR.analyzePronunciation(alts, item.title, item.kana, item.ja_example)
+        : JA_ASR.analyzeSpokenOutput(alts, {
+            title: item.title,
+            target_stems: [String(item.title || "").replace(/[〜~～]/g, "").trim()].filter(Boolean)
+          });
+      if (f) {
+        f.className = "mic-feedback left " + (res.ok ? "ok" : "ng");
+        f.textContent = res.ok
+          ? `✓ ${res.verdict}${res.heard ? " · " + res.heard : ""}`
+          : `听到「${res.heard || ""}」· ${res.verdict}`;
+      }
+      pushSpokenRecord(`RV-${item.id}`, item.key || item.title, res.ok ? "试读:准确" : `试读:${res.verdict.slice(0, 18)}`, res.ok);
+    },
+    onError: (msg) => {
+      const b = document.getElementById("rv-mic-btn");
+      const f = document.getElementById("rv-mic-feedback");
+      if (b) { b.classList.remove("listening"); b.innerHTML = "试读"; }
+      if (f) { f.className = "mic-feedback left ng"; f.textContent = msg; }
+    },
+    onEnd: () => {
+      const b = document.getElementById("rv-mic-btn");
+      if (b) { b.classList.remove("listening"); b.innerHTML = "试读"; }
+    }
+  });
+}
+
+function renderRadioSpeakingStage(host) {
+  const prompts = getRadioSpeakingPrompts();
+  if (!prompts.length || rvSpeakIdx >= prompts.length) {
+    const practicedHTML = prompts.length
+      ? `<div class="rv-done-list">${prompts.map(x => `<span style="color:var(--moss);">${escapeHtml(x.title)}</span>`).join("")}</div>`
+      : "";
+    host.innerHTML = `
+      <div class="meta-bar">
+        <button type="button" class="text-btn" onclick="closeRadioReview()">← 回到随身听</button>
+        <span class="overline ok">听后开口已完成</span>
+      </div>
+      <div class="rv-focal">
+        <h2 class="point-heading">今日 ${prompts.length} 句开口已练完</h2>
+        <p class="logic-line">刚听完就顺嘴把句型说出口，耳朵的被动识别会更快变成嘴上的自然反应。</p>
+        ${practicedHTML}
+      </div>
+      <div class="rv-dock">
+        <button type="button" class="ghost-btn" onclick="openRadioSpeaking(0)">再练一遍</button>
+        <button type="button" class="rv-btn-pass" onclick="closeRadioReview()">回到随身听</button>
+      </div>
+    `;
+    return;
+  }
+
+  const p = prompts[rvSpeakIdx];
+  const canRec = JA_ASR.supported();
+  const s = rvSpeakState || { listening: false, interim: "", result: null, revealedModel: false, errorMsg: "" };
+  const isLast = rvSpeakIdx + 1 >= prompts.length;
+  const showLiveArea = !!(s.listening || s.result || s.revealedModel || s.errorMsg);
+
+  let liveHTML = "";
+  if (showLiveArea) {
+    const trapsHTML = (s.result && Array.isArray(s.result.traps) && s.result.traps.length)
+      ? s.result.traps.map(t => `<div class="spk-trap-line">${escapeHtml(t)}</div>`).join("")
+      : "";
+    liveHTML = `
+      <div class="spk-live-area">
+        ${s.listening ? `<div class="spk-heard"><span class="spk-heard-lbl">聆听中</span><span id="spk-interim-live">${escapeHtml(s.interim || "请自然说出日语…")}</span></div>` : ""}
+        ${s.errorMsg ? `<div class="spk-verdict warn">${escapeHtml(s.errorMsg)}</div>` : ""}
+        ${s.result ? `
+          <div class="spk-heard"><span class="spk-heard-lbl">你说</span>${escapeHtml(s.result.heard || "")}</div>
+          <div class="spk-verdict ${s.result.ok ? "ok" : "warn"}">${s.result.ok ? "✓ " : ""}${escapeHtml(s.result.verdict || "")}</div>
+          ${trapsHTML}
+        ` : ""}
+        ${s.revealedModel ? `
+          <div class="spk-model-wrap">
+            <span class="spk-model-lbl">地道参考说法</span>
+            <div class="spk-model-ja">${annotateJapanese(p.model_ja || "")}</div>
+            ${p.model_zh ? `<div class="spk-model-zh">${escapeHtml(p.model_zh)}</div>` : ""}
+            ${p.coaching_tip ? `<div class="spk-tip">${escapeHtml(p.coaching_tip)}</div>` : ""}
+            <div class="rv-clip-row" style="margin-top:4px;">
+              <button type="button" class="rv-clip-btn" data-rv-aud="spk_model" onclick="playSpeakingPromptAudio(getActiveSpeakingPrompt(), 'model')">▶ 听地道说法跟读</button>
+            </div>
+          </div>
+        ` : ""}
+      </div>
+    `;
+  }
+
+  let dockHTML = "";
+  if (!canRec) {
+    dockHTML = `
+      <button type="button" class="ghost-btn" onclick="playSpeakingPromptAudio(getActiveSpeakingPrompt(), 'model')">▶ 听示范跟读</button>
+      <button type="button" class="rv-btn-pass" onclick="nextRadioSpeakingPrompt()">${isLast ? "完成开口 ✓" : "下一句 →"}</button>
+    `;
+  } else if (s.listening) {
+    dockHTML = `
+      <button type="button" class="rv-btn-mic listening" onclick="toggleRadioSpeakingMic()"><span class="mic-dot"></span>聆听中 · 点此结束</button>
+    `;
+  } else if (s.result) {
+    dockHTML = `
+      <button type="button" class="ghost-btn" onclick="toggleRadioSpeakingMic()">再说一遍</button>
+      <button type="button" class="rv-btn-pass" onclick="nextRadioSpeakingPrompt()">${isLast ? "完成开口 ✓" : "下一句 →"}</button>
+    `;
+  } else {
+    dockHTML = `
+      <button type="button" class="ghost-btn" onclick="nextRadioSpeakingPrompt()">${isLast ? "跳过收尾" : "跳过"}</button>
+      <button type="button" class="rv-btn-mic" onclick="toggleRadioSpeakingMic()">按下开口说日语</button>
+    `;
+  }
+
+  host.innerHTML = `
+    <div class="meta-bar">
+      <button type="button" class="text-btn" onclick="closeRadioReview()">← 回到随身听</button>
+      <span class="overline warm">听后开口 · ${rvSpeakIdx + 1} / ${prompts.length}</span>
+    </div>
+    <div class="rv-stage-card" id="rv-stage-card">
+      <div class="rv-focal is-relearn">
+        <div class="rv-story-tag">
+          <span>${escapeHtml(p.chapter_title || "")} · 练「${escapeHtml(p.title || "")}」</span>
+          ${p.is_new_n2 ? `<span class="rv-n2-dot">· N2 新学</span>` : ""}
+        </div>
+        <p class="spk-prompt-ja">${annotateJapanese(p.prompt_ja || "")}</p>
+        <p class="spk-prompt-zh">${escapeHtml(p.prompt_zh || "")}</p>
+        <div class="rv-clip-row">
+          <button type="button" class="rv-clip-btn" data-rv-aud="spk_q" onclick="playSpeakingPromptAudio(getActiveSpeakingPrompt(), 'q')">▶ 听问题</button>
+          ${!s.revealedModel ? `<button type="button" class="rv-clip-btn quiet" onclick="revealSpeakingModelNow()">看参考说法</button>` : ""}
+        </div>
+        ${!canRec ? `<p class="spk-tip">当前浏览器不支持实时收音，听示范直接开口跟读即可。</p>` : ""}
+        ${liveHTML}
+      </div>
+      ${lexBoxHTML("rv-inline-lex")}
+    </div>
+    <div class="rv-dock">${dockHTML}</div>
+  `;
+  syncRvAudioButtons();
+}
+
 function revealRadioReviewCard() {
-  if (rvRevealed || rvMode === "relearn" || rvMode === "done") return;
+  if (rvRevealed || rvMode === "relearn" || rvMode === "done" || rvMode === "speak") return;
   rvRevealed = true;
   rvRevealedAt = performance.now();
   const el = document.getElementById("rv-reveal-area");
@@ -7744,6 +8660,7 @@ function revealRadioReviewCard() {
 function animateRvCardAndRun(dirCls, fn) {
   const card = document.getElementById("rv-stage-card");
   rvAnimating = true;
+  JA_ASR.stop();
   stopRadioReviewAudio();
   if (!card) {
     rvAnimating = false;
@@ -7788,6 +8705,7 @@ function handleRadioReviewRelearn() {
   const st = ensureRadioReviewState(false);
   const item = getReviewItemById(rvActiveItemId);
   if (!item) return;
+  JA_ASR.stop();
   stopRadioReviewAudio();
 
   rvReturnMode = rvMode;
@@ -7814,13 +8732,14 @@ function handleRadioReviewRelearn() {
 
 function finishRadioRelearnStep() {
   if (rvAnimating) return;
+  JA_ASR.stop();
   stopRadioReviewAudio();
   advanceRadioReviewPointer();
   renderRadioReviewStage();
 }
 
 function bindRadioReviewSwipe(cardEl) {
-  if (!cardEl || rvMode === "relearn" || rvMode === "done") return;
+  if (!cardEl || rvMode === "relearn" || rvMode === "done" || rvMode === "speak") return;
   let sx = 0, sy = 0, stMs = 0, tracking = false, axis = null;
   cardEl.addEventListener("touchstart", e => {
     if (rvAnimating || !e.touches || e.touches.length !== 1) return;
@@ -7897,6 +8816,15 @@ function renderRadioReviewStage() {
   const items = getRadioReviewItems();
   const st = ensureRadioReviewState(false);
 
+  if (rvMode === "speak") {
+    renderRadioSpeakingStage(host);
+    return;
+  }
+
+  const spPrompts = getRadioSpeakingPrompts();
+  const spokenSet = new Set(Array.isArray(st.spokenIds) ? st.spokenIds : []);
+  const allSpokenDone = spPrompts.length > 0 && spPrompts.every(x => spokenSet.has(x.id));
+
   if (rvMode === "done" || !rvActiveItemId) {
     const rmDone = computeDaily120Metrics();
     const relearnedItems = (st.relearnIds || []).map(id => getReviewItemById(id)).filter(Boolean);
@@ -7907,6 +8835,20 @@ function renderRadioReviewStage() {
     const doneOverline = rmDone.radioDone
       ? "收尾小节已收笔 · 随身听圆印圆满"
       : "收尾小节已完成 · 听完正文即可收笔";
+    const speakHintLine = spPrompts.length
+      ? (allSpokenDone
+        ? `<p class="spk-tip" style="margin-top:6px;">今日 ${spPrompts.length} 句听后开口已完成 ✓</p>`
+        : `<p class="spk-tip" style="margin-top:6px;">方便开口的话，顺手把今天学的 ${spPrompts.length} 个句型用日语说出口（在外面可随时跳过）。</p>`)
+      : "";
+    const dockHTML = spPrompts.length && !allSpokenDone
+      ? `
+        <button type="button" class="ghost-btn" onclick="closeRadioReview()">回到随身听</button>
+        <button type="button" class="rv-btn-pass" onclick="openRadioSpeaking(0)">开口说 ${spPrompts.length} 句 →</button>
+      `
+      : `
+        <button type="button" class="ghost-btn" onclick="${spPrompts.length ? "openRadioSpeaking(0)" : "openRadioReview(true)"}">${spPrompts.length ? "再练开口" : "重来一遍"}</button>
+        <button type="button" class="rv-btn-pass" onclick="closeRadioReview()">回到随身听</button>
+      `;
     host.innerHTML = `
       <div class="meta-bar">
         <button type="button" class="text-btn" onclick="closeRadioReview()">← 回到随身听</button>
@@ -7918,11 +8860,9 @@ function renderRadioReviewStage() {
           ? `下面标出的重点已自动记入明日做题与记词队列，下期《锵锵》也会顺嘴再帮你搭一次桥。`
           : `今天 60 分钟里的表达和词汇都接住了，没有需要单独回炉的卡点。`}</p>
         ${relearnNamesHTML}
+        ${speakHintLine}
       </div>
-      <div class="rv-dock">
-        <button type="button" class="ghost-btn" onclick="openRadioReview(true)">重来一遍</button>
-        <button type="button" class="rv-btn-pass" onclick="closeRadioReview()">回到随身听</button>
-      </div>
+      <div class="rv-dock">${dockHTML}</div>
     `;
     return;
   }
@@ -7937,6 +8877,7 @@ function renderRadioReviewStage() {
   const clipSecs = Math.max(5, Math.round((item.clip_end || 14) - (item.clip_start || 0)));
 
   if (rvMode === "relearn") {
+    const showMic = JA_ASR.supported();
     host.innerHTML = `
       <div class="meta-bar">
         <button type="button" class="text-btn" onclick="closeRadioReview()">← 随身听</button>
@@ -7965,8 +8906,12 @@ function renderRadioReviewStage() {
 
           <div class="rv-shadow-row">
             <span class="rv-shadow-hint">顺口跟读一遍，耳朵和嘴一起锁住</span>
-            <button type="button" class="rv-clip-btn" data-rv-aud="demo" onclick="playReviewDemoSentence(getReviewItemById('${item.id}'))">▶ 示范发音</button>
+            <div class="rv-meta-right">
+              <button type="button" class="rv-clip-btn" data-rv-aud="demo" onclick="playReviewDemoSentence(getReviewItemById('${item.id}'))">▶ 示范发音</button>
+              ${showMic ? `<button type="button" class="rv-clip-btn quiet mic-btn" id="rv-mic-btn" onclick="toggleReviewMicCheck()">试读</button>` : ""}
+            </div>
           </div>
+          <div class="mic-feedback left" id="rv-mic-feedback"></div>
         </div>
         ${lexBoxHTML("rv-inline-lex")}
       </div>
@@ -7987,7 +8932,10 @@ function renderRadioReviewStage() {
   host.innerHTML = `
     <div class="meta-bar">
       <button type="button" class="text-btn" onclick="closeRadioReview()">← 随身听</button>
-      <span class="overline${isTail ? " warm" : ""}">${progressTxt}</span>
+      <div class="rv-meta-right">
+        <span class="overline${isTail ? " warm" : ""}">${progressTxt}</span>
+        ${spPrompts.length ? `<button type="button" class="text-btn" onclick="openRadioSpeaking(0)">开口 ${spPrompts.length} 句</button>` : ""}
+      </div>
     </div>
     <div class="rv-stage-card" id="rv-stage-card" onclick="if(!event.target.closest('button,.w-tok,.vc-hook'))revealRadioReviewCard()">
       <div class="tutor-stamp right" id="rv-st-right">懂了 · 过 →</div>
@@ -9172,6 +10120,7 @@ function switchMode(m, autoPlayRadio) {
   if (m !== "dash") prevNonDashMode = m;
   activeMode = m;
   clearActiveWordToken();
+  JA_ASR.stop();
   if (m !== "tutor") stopQuizAudio();
   if (m !== "vocab") stopVocabAudioAndTimers();
   if (m !== "radio") stopRadioReviewAudio();
@@ -9847,6 +10796,7 @@ function shouldFadeVocabMnemonic(card) {
 }
 
 function dealCurrentVocabCard(autoStartAudio) {
+  JA_ASR.stop();
   stopVocabAudioAndTimers();
   vcRevealed = false;
   vcPendingLeft = false;
@@ -10071,6 +11021,7 @@ function resetVocabCardTransform() {
 function animateOutAndNext(flyCls, afterOut) {
   const cardEl = document.getElementById("vc-card");
   vcAnimating = true;
+  JA_ASR.stop();
   stopVocabAudioAndTimers();
   if (!cardEl) {
     vcAnimating = false;
@@ -10391,12 +11342,14 @@ function renderVocabStage() {
   const leftBtnTxt = isKanjiCard ? "← 读音不准" : "← 没记住";
   const rightBtnTxt = earFirst ? "听懂毕业 →" : (kanaRecall ? "想起毕业 →" : (isKanjiCard ? "读准了 →" : "记住 →"));
   const kanaFrontTxt = kanaRecall ? (cleanSpeakZh(card.zh) || card.zh) : "";
+  const showVocabMic = JA_ASR.supported();
 
   box.innerHTML = `
     <div class="meta-bar">
       <span class="overline${isRequeued ? " warm" : ""}">${escapeHtml(leftLabel)}</span>
       <div class="vc-meta-right">
         <span id="vc-meta-dots" style="display:inline-flex;align-items:center;gap:6px;">${renderStreakDotsHTML(eff.streak)}</span>
+        ${showVocabMic ? `<button type="button" class="text-btn mic-btn" id="vc-mic-btn" onclick="toggleVocabMicCheck(event)">试读</button>` : ""}
         <button class="text-btn" onclick="replayVocabAudio(event)">重听</button>
       </div>
     </div>
@@ -10417,6 +11370,7 @@ function renderVocabStage() {
           ${card.mnemonic ? `<div class="vc-hook" title="轻点重听记音联想"><span class="vc-hook-tag">记音 ♪</span>${escapeHtml(card.mnemonic)}</div>` : ""}
           ${card.twin ? `<div class="vc-twin${card.mnemonic ? " sub" : ""}">${escapeHtml(card.twin)}</div>` : ""}
         </div>
+        <div class="mic-feedback" id="vc-mic-feedback"></div>
       </div>
     </div>
 
@@ -10428,6 +11382,55 @@ function renderVocabStage() {
   `;
 
   bindVocabCardGestures(document.getElementById("vc-card"));
+}
+
+function toggleVocabMicCheck(ev) {
+  if (ev) ev.stopPropagation();
+  const sess = A.vocabSess;
+  if (!sess || !sess.queue.length) return;
+  const word = sess.queue[0];
+  const card = getVocabCardSpec(word);
+  const btn = document.getElementById("vc-mic-btn");
+  const fb = document.getElementById("vc-mic-feedback");
+  if (JA_ASR.isActive("vc_word")) {
+    JA_ASR.stop();
+    if (btn) { btn.classList.remove("listening"); btn.innerHTML = "试读"; }
+    if (fb && fb.textContent === "请读出这个日语词…") fb.textContent = "";
+    return;
+  }
+  stopVocabAudioAndTimers();
+  if (btn) { btn.classList.add("listening"); btn.innerHTML = `<span class="mic-dot"></span>聆听中`; }
+  if (fb) { fb.className = "mic-feedback"; fb.textContent = "请读出这个日语词…"; }
+  JA_ASR.start("vc_word", {
+    onInterim: (txt) => {
+      const f = document.getElementById("vc-mic-feedback");
+      if (f) { f.className = "mic-feedback"; f.textContent = `听到：${txt}`; }
+    },
+    onFinal: (alts) => {
+      const b = document.getElementById("vc-mic-btn");
+      const f = document.getElementById("vc-mic-feedback");
+      if (b) { b.classList.remove("listening"); b.innerHTML = "试读"; }
+      const res = JA_ASR.analyzePronunciation(alts, card.target || card.word, card.kana, card.chunk_ja);
+      if (!vcRevealed) revealVocabCard(false, false);
+      if (f) {
+        f.className = "mic-feedback " + (res.ok ? "ok" : "ng");
+        f.textContent = res.ok
+          ? `✓ 读准了 · ${res.heard}`
+          : `听到「${res.heard}」· ${res.verdict}`;
+      }
+      pushSpokenRecord(`W-${card.word}`, card.key || card.word, res.ok ? "试读:准确" : `试读:${res.verdict.slice(0, 18)}`, res.ok);
+    },
+    onError: (msg) => {
+      const b = document.getElementById("vc-mic-btn");
+      const f = document.getElementById("vc-mic-feedback");
+      if (b) { b.classList.remove("listening"); b.innerHTML = "试读"; }
+      if (f) { f.className = "mic-feedback ng"; f.textContent = msg; }
+    },
+    onEnd: () => {
+      const b = document.getElementById("vc-mic-btn");
+      if (b) { b.classList.remove("listening"); b.innerHTML = "试读"; }
+    }
+  });
 }
 
 // ================= 156-POINT GRAMMAR SELF-AUDIT (4-STEP ZEN COGNITIVE SPECTRUM) =================
@@ -14069,6 +15072,66 @@ if (!mRadFull.radioDone || mRadFull.radioRatio !== 1.0) {
 const pktRv = sb.buildCompactPacket();
 if (!Array.isArray(pktRv.rv) || pktRv.rv[0] !== 1 || Buffer.byteLength(JSON.stringify(pktRv), 'utf8') > 3750) {
   throw new Error('Self-test 8 failed: compact sync packet missing rv completion bit or oversized');
+}
+// Self-test 9: Real Voice Active Output ("听后开口 2 句") & Pronunciation Mirror ("读音照妖镜")
+const spPrompts = sb.getRadioSpeakingPrompts();
+if (!Array.isArray(spPrompts) || spPrompts.length < 2) {
+  throw new Error('Self-test 9 failed: expected >=2 speaking_prompts, got ' + (spPrompts && spPrompts.length));
+}
+for (const sp of spPrompts) {
+  if (!sp.prompt_ja || !sp.prompt_zh || !sp.model_ja || !Array.isArray(sp.target_stems) || !sp.target_stems.length) {
+    throw new Error('Self-test 9 failed: incomplete speaking prompt ' + JSON.stringify(sp));
+  }
+  if ((sp.prompt_ja + sp.prompt_zh + sp.model_ja + sp.coaching_tip).includes('—')) {
+    throw new Error('Self-test 9 failed: em dash found in speaking prompt ' + sp.id);
+  }
+}
+const asr = sb.window.JA_ASR;
+if (!asr) throw new Error('Self-test 9 failed: window.JA_ASR missing');
+const pExact = asr.analyzePronunciation(['予算'], '予算', 'よさん', '予算を組む');
+if (!pExact.ok) throw new Error('Self-test 9 failed: exact kanji match 予算 should pass: ' + JSON.stringify(pExact));
+const pLong = asr.analyzePronunciation(['洋三'], '予算', 'よさん', '予算を組む');
+if (pLong.ok || pLong.kind !== 'length') throw new Error('Self-test 9 failed: 洋三 vs 予算 should detect long-vowel slip: ' + JSON.stringify(pLong));
+const pSok = asr.analyzePronunciation(['主張'], '出張', 'しゅっちょう', '海外出張');
+if (pSok.ok || pSok.kind !== 'sokuon') throw new Error('Self-test 9 failed: 主張 vs 出張 should detect sokuon slip: ' + JSON.stringify(pSok));
+const pDak = asr.analyzePronunciation(['柿'], '鍵', 'かぎ', '家の鍵');
+if (pDak.ok || pDak.kind !== 'voicing') throw new Error('Self-test 9 failed: 柿 vs 鍵 should detect voicing slip: ' + JSON.stringify(pDak));
+const pNear = asr.analyzePronunciation(['種類'], '書類', 'しょるい', '書類を出す');
+if (pNear.ok || pNear.kind !== 'near') throw new Error('Self-test 9 failed: 種類 vs 書類 should detect near-miss: ' + JSON.stringify(pNear));
+// Spoken grammar & habit trap checks
+const sOk = asr.analyzeSpokenOutput(['体調が悪いので今日は早めに帰らせてもらってもいいですか'], { title: '〜させてもらう', target_stems: ['させてもら', '帰らせ'] });
+if (!sOk.ok || sOk.traps.length !== 0) throw new Error('Self-test 9 failed: valid させてもらう should pass cleanly: ' + JSON.stringify(sOk));
+const sCaus = asr.analyzeSpokenOutput(['体調が悪いので今日は早めに帰っていただけませんか'], { title: '〜させてもらう', target_stems: ['させてもら', '帰らせ'] });
+if (sCaus.ok || !sCaus.traps.some(t => t.includes('使役'))) throw new Error('Self-test 9 failed: missing causative trap not caught: ' + JSON.stringify(sCaus));
+const sDevoice = asr.analyzeSpokenOutput(['もう少しで終電に乗り遅れるところたった'], { title: 'ところだった', target_stems: ['ところだった'] });
+if (sDevoice.ok || !sDevoice.traps.some(t => t.includes('だった'))) throw new Error('Self-test 9 failed: だった->たった devoicing trap not caught: ' + JSON.stringify(sDevoice));
+const sNoToki = asr.detectSpokenTraps('家を出るの時雨が降りました');
+if (!sNoToki.some(t => t.includes('時'))) throw new Error('Self-test 9 failed: V+の時 trap not caught');
+const sWakeNa = asr.detectSpokenTraps('日本語が上手わけですね');
+if (!sWakeNa.some(t => t.includes('な'))) throw new Error('Self-test 9 failed: na-adj+わけ missing な not caught');
+const sHazu = asr.detectSpokenTraps('アイスコーヒーをお願いしたはずないんですが');
+if (!sHazu.some(t => t.includes('はずなんですが'))) throw new Error('Self-test 9 failed: はずないんですが trap not caught');
+// Graceful fallback render when browser lacks SpeechRecognition
+sb.window.SpeechRecognition = undefined;
+sb.window.webkitSpeechRecognition = undefined;
+sb.openRadioSpeaking(0);
+const spFallbackHtml = (els['radio-review-stage'] && els['radio-review-stage'].innerHTML) || '';
+if (!spFallbackHtml.includes('听后开口') || !spFallbackHtml.includes('不支持实时收音') || spFallbackHtml.includes('—')) {
+  throw new Error('Self-test 9 failed: speaking fallback UI broken or contains em dash');
+}
+// Supported SpeechRecognition render in both 听后开口 2 句 & 记词 试读
+sb.window.webkitSpeechRecognition = function() {};
+sb.openRadioSpeaking(0);
+const spMicHtml = (els['radio-review-stage'] && els['radio-review-stage'].innerHTML) || '';
+if (!spMicHtml.includes('按下开口说日语') || !spMicHtml.includes('听问题') || spMicHtml.includes('—')) {
+  throw new Error('Self-test 9 failed: speaking mic UI missing core controls or contains em dash');
+}
+sb.closeRadioReview();
+sb.switchMode('vocab');
+sb.switchVocabSubMode('vocab');
+const vcMicHtml = (els['vocab-stage-box'] && els['vocab-stage-box'].innerHTML) || '';
+if (!vcMicHtml.includes('vc-mic-btn') || !vcMicHtml.includes('试读') || vcMicHtml.includes('—')) {
+  throw new Error('Self-test 9 failed: vocab card missing 试读 pronunciation mirror button or contains em dash');
 }
 """
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
