@@ -2426,6 +2426,8 @@ html = r"""<!DOCTYPE html>
     color: var(--ink-2);
     font-variant-numeric: tabular-nums;
     flex-shrink: 0;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
   .step-time-btn:active, .radio-spd-pill:active { background: var(--tap-bg); }
   .play-toggle-btn {
@@ -2439,7 +2441,10 @@ html = r"""<!DOCTYPE html>
     font-size: 16px;
     font-weight: 500;
     letter-spacing: 0.08em;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
+  .play-toggle-btn:active { opacity: 0.84; transform: scale(0.985); }
 
   .chapter-strip {
     display: flex;
@@ -2461,6 +2466,8 @@ html = r"""<!DOCTYPE html>
     border-radius: 6px;
     white-space: nowrap;
     flex-shrink: 0;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
   .chap-link.active {
     color: var(--sumi);
@@ -5601,13 +5608,20 @@ let radioInitialized = false;
 let lastSavedSec = -1;
 let lastRenderedSegIdx = -1;
 let pendingRadioSeekSec = null;
+let radioSeekIssuedTarget = null;
+let radioBuffering = false;
+let radioBufTimer = null;
+let radioPauseSaveTimer = null;
+let cachedRadioBlobUrl = null;
+let radioUsingLocalBlob = false;
+let radioCacheFetchStarted = false;
+const RADIO_BLOB_CACHE_NAME = "n3-daily-radio-v1";
 
 function writeLocalRadioPos(sec) {
   const s = Math.max(0, Math.floor(Number(sec) || 0));
   try {
     localStorage.setItem(LEGACY_RADIO_POS_KEY, String(s));
     localStorage.setItem(RADIO_POS_KEY, String(s));
-    // Clean stale earlier same-day revision keys so an explicit scrub back to 0 can never be resurrected
     const dayPrefix = LEGACY_RADIO_POS_KEY + "_";
     const stale = [];
     for (let i = 0; i < localStorage.length; i++) {
@@ -5624,16 +5638,79 @@ function getEffectiveRadioDuration() {
     : (DATA.radio.duration_sec || 2400);
 }
 
+function setRadioBufferingUI(on) {
+  radioBuffering = !!on;
+  if (radioBufTimer) {
+    clearTimeout(radioBufTimer);
+    radioBufTimer = null;
+  }
+  syncRadioUI();
+}
+
+function upgradeRadioToLocalBlobIfPaused() {
+  if (!cachedRadioBlobUrl || radioUsingLocalBlob || !radioInitialized) return false;
+  if (!radioPlayer.paused) return false;
+  const keepT = (pendingRadioSeekSec !== null) ? pendingRadioSeekSec : (radioPlayer.currentTime || lastSavedSec || 0);
+  radioUsingLocalBlob = true;
+  radioSeekIssuedTarget = null;
+  radioPlayer.preload = "auto";
+  radioPlayer.src = cachedRadioBlobUrl;
+  if (keepT > 0) applyRadioSeek(keepT);
+  try { radioPlayer.load(); } catch (e) {}
+  return true;
+}
+
+function primeRadioLocalBlob(allowNetworkDownload) {
+  if (cachedRadioBlobUrl || !DATA.radio || !DATA.radio.audio_url) return;
+  if (typeof caches === "undefined" || typeof URL === "undefined" || !URL.createObjectURL) return;
+  const audioUrl = DATA.radio.audio_url;
+  caches.open(RADIO_BLOB_CACHE_NAME).then(cache => {
+    return cache.match(audioUrl).then(hit => {
+      if (hit) {
+        return hit.blob().then(blob => {
+          if (blob && blob.size > 100000 && !cachedRadioBlobUrl) {
+            cachedRadioBlobUrl = URL.createObjectURL(blob);
+            upgradeRadioToLocalBlobIfPaused();
+          }
+        });
+      }
+      if (!allowNetworkDownload || radioCacheFetchStarted) return;
+      radioCacheFetchStarted = true;
+      return fetch(audioUrl, { cache: "force-cache" }).then(res => {
+        if (!res || !res.ok) return;
+        const copy = res.clone();
+        // Evict previous days' daily_radio.mp3 so phone storage stays fixed at 1 episode (~26MB)
+        const cleanup = cache.keys().then(keys =>
+          Promise.all(keys.map(k => (k.url && !k.url.endsWith(audioUrl.replace(/^\.\//, ""))) ? cache.delete(k) : null))
+        ).catch(() => {});
+        return Promise.all([cleanup, cache.put(audioUrl, copy).catch(() => {}), res.blob()]).then(([, , blob]) => {
+          if (blob && blob.size > 100000 && !cachedRadioBlobUrl) {
+            cachedRadioBlobUrl = URL.createObjectURL(blob);
+            upgradeRadioToLocalBlobIfPaused();
+          }
+        });
+      }).catch(() => { radioCacheFetchStarted = false; });
+    });
+  }).catch(() => {});
+}
+
+// Immediately check local CacheStorage on page open (~5ms, 0 network); background-cache today's MP3 once idle
+primeRadioLocalBlob(false);
+setTimeout(() => primeRadioLocalBlob(true), 2200);
+
 function applyRadioSeek(sec) {
   const dur = getEffectiveRadioDuration();
   const target = Math.max(0, Math.min(Math.max(0, dur - 2), Number(sec) || 0));
   pendingRadioSeekSec = target;
+  radioSeekIssuedTarget = null;
   lastSavedSec = target;
   if (radioPlayer.readyState >= 1) {
     try {
+      radioSeekIssuedTarget = target;
       radioPlayer.currentTime = target;
-      if (Math.abs((radioPlayer.currentTime || 0) - target) <= 1.5) {
+      if (!radioPlayer.seeking && Math.abs((radioPlayer.currentTime || 0) - target) <= 1.5) {
         pendingRadioSeekSec = null;
+        radioSeekIssuedTarget = null;
       }
     } catch (e) {}
   }
@@ -5645,13 +5722,23 @@ function flushPendingRadioSeek() {
   if (radioPlayer.readyState < 1) return false;
   const dur = getEffectiveRadioDuration();
   const target = Math.max(0, Math.min(Math.max(0, dur - 2), pendingRadioSeekSec));
-  if (Math.abs((radioPlayer.currentTime || 0) - target) > 1.5) {
-    try {
-      radioPlayer.currentTime = target;
-    } catch (e) {}
-  }
-  if (Math.abs((radioPlayer.currentTime || 0) - target) <= 1.5) {
+  if (!radioPlayer.seeking && Math.abs((radioPlayer.currentTime || 0) - target) <= 1.5) {
     pendingRadioSeekSec = null;
+    radioSeekIssuedTarget = null;
+    updateRadioLiveDisplay(radioPlayer.currentTime || target);
+    return true;
+  }
+  // Never re-issue currentTime while an async network seek is already in flight!
+  if (radioPlayer.seeking || radioSeekIssuedTarget === target) {
+    return false;
+  }
+  try {
+    radioSeekIssuedTarget = target;
+    radioPlayer.currentTime = target;
+  } catch (e) {}
+  if (!radioPlayer.seeking && Math.abs((radioPlayer.currentTime || 0) - target) <= 1.5) {
+    pendingRadioSeekSec = null;
+    radioSeekIssuedTarget = null;
     updateRadioLiveDisplay(radioPlayer.currentTime || target);
     return true;
   }
@@ -5717,8 +5804,15 @@ function ensureRadioReady() {
     document.getElementById("radio-tot-time").textContent = formatMMSS(dur);
     renderRadioChapters(0);
 
-    radioPlayer.preload = "metadata";
-    radioPlayer.src = DATA.radio.audio_url;
+    radioPlayer.preload = "auto";
+    if (cachedRadioBlobUrl) {
+      radioUsingLocalBlob = true;
+      radioPlayer.src = cachedRadioBlobUrl;
+    } else {
+      radioUsingLocalBlob = false;
+      radioPlayer.src = DATA.radio.audio_url;
+      primeRadioLocalBlob(true);
+    }
     if (savedPos > 2) {
       applyRadioSeek(savedPos);
     } else {
@@ -5727,6 +5821,7 @@ function ensureRadioReady() {
     }
     try { radioPlayer.load(); } catch (e) {}
   } else {
+    upgradeRadioToLocalBlobIfPaused();
     const shownT = (pendingRadioSeekSec !== null) ? pendingRadioSeekSec : (radioPlayer.currentTime || 0);
     paintRadioSeekProgress(shownT);
   }
@@ -5753,28 +5848,46 @@ function setupMediaSession(segTitle) {
 }
 
 function toggleRadioPlay(forcePlay) {
-  stopQuizAudio();
-  ensureRadioReady();
   const wantPlay = typeof forcePlay === "boolean" ? forcePlay : radioPlayer.paused;
-  if (wantPlay) {
-    flushPendingRadioSeek();
-    radioPlayer.playbackRate = radioSpeed;
-    const p = radioPlayer.play();
-    if (p && typeof p.then === "function") {
-      p.then(() => { flushPendingRadioSeek(); }).catch(() => {});
-    }
-  } else {
+  if (!wantPlay) {
+    // 0ms instant mute + pause so Android Chrome / Bluetooth audio stops immediately with zero pipeline tail
+    radioPlayer.muted = true;
     radioPlayer.pause();
+    setRadioBufferingUI(false);
+    syncRadioUI(false);
+    return;
   }
-  syncRadioUI();
+  if (activeKind !== null || (typeof player !== "undefined" && !player.paused) || (typeof wordPlayer !== "undefined" && !wordPlayer.paused)) {
+    stopQuizAudio();
+  }
+  ensureRadioReady();
+  radioPlayer.muted = false;
+  flushPendingRadioSeek();
+  radioPlayer.playbackRate = radioSpeed;
+  syncRadioUI(true);
+  if (radioBufTimer) clearTimeout(radioBufTimer);
+  if (!radioUsingLocalBlob && radioPlayer.readyState < 3) {
+    radioBufTimer = setTimeout(() => {
+      if (!radioPlayer.paused && (radioPlayer.readyState < 3 || radioPlayer.seeking)) {
+        radioBuffering = true;
+        syncRadioUI(true);
+      }
+    }, 240);
+  }
+  const p = radioPlayer.play();
+  if (p && typeof p.then === "function") {
+    p.then(() => { flushPendingRadioSeek(); }).catch(() => { setRadioBufferingUI(false); syncRadioUI(false); });
+  }
 }
 
 function markRadioPosByUser(t) {
   const s = Math.max(0, Math.floor(t || 0));
   A.radioPos = [s, nowUnixSec()];
   A.radioSig = RADIO_SIG;
-  writeLocalRadioPos(s);
-  saveAdaptiveState();
+  setTimeout(() => {
+    writeLocalRadioPos(s);
+    saveAdaptiveState();
+  }, 20);
   scheduleCloudPush(800);
 }
 
@@ -5891,10 +6004,10 @@ function updateRadioLiveDisplay(t) {
   }
 }
 
-function syncRadioUI() {
-  const playing = !radioPlayer.paused;
+function syncRadioUI(optimisticPlaying) {
+  const playing = typeof optimisticPlaying === "boolean" ? optimisticPlaying : !radioPlayer.paused;
   const btn = document.getElementById("radio-play-btn");
-  if (btn) btn.textContent = playing ? "暂停" : "播放";
+  if (btn) btn.textContent = playing ? (radioBuffering ? "缓冲中…" : "暂停") : "播放";
   const tabBtn = document.getElementById("tab-radio");
   if (tabBtn) tabBtn.classList.toggle("is-playing", playing);
   const bTabBtn = document.getElementById("btab-radio");
@@ -5902,18 +6015,40 @@ function syncRadioUI() {
 }
 
 radioPlayer.addEventListener("play", () => {
+  radioPlayer.muted = false;
   flushPendingRadioSeek();
-  syncRadioUI();
+  syncRadioUI(true);
 });
 radioPlayer.addEventListener("playing", () => {
+  radioPlayer.muted = false;
+  setRadioBufferingUI(false);
   flushPendingRadioSeek();
-  syncRadioUI();
+  syncRadioUI(true);
+});
+radioPlayer.addEventListener("waiting", () => {
+  if (!radioPlayer.paused && !radioUsingLocalBlob) {
+    if (radioBufTimer) clearTimeout(radioBufTimer);
+    radioBufTimer = setTimeout(() => {
+      if (!radioPlayer.paused && (radioPlayer.readyState < 3 || radioPlayer.seeking)) {
+        radioBuffering = true;
+        syncRadioUI(true);
+      }
+    }, 240);
+  }
 });
 radioPlayer.addEventListener("canplay", () => {
   flushPendingRadioSeek();
 });
+radioPlayer.addEventListener("seeked", () => {
+  if (pendingRadioSeekSec !== null && Math.abs((radioPlayer.currentTime || 0) - pendingRadioSeekSec) <= 2.0) {
+    pendingRadioSeekSec = null;
+    radioSeekIssuedTarget = null;
+  }
+  updateRadioLiveDisplay(radioPlayer.currentTime || 0);
+});
 radioPlayer.addEventListener("pause", () => {
-  syncRadioUI();
+  setRadioBufferingUI(false);
+  syncRadioUI(false);
   if (pendingRadioSeekSec !== null) return;
   const t = Math.floor(radioPlayer.currentTime || 0);
   if (t > 2) {
@@ -5921,13 +6056,23 @@ radioPlayer.addEventListener("pause", () => {
     A.radioPos = [t, nowUnixSec()];
     A.radioSig = RADIO_SIG;
     if (t > (A.radioMaxSec || 0)) A.radioMaxSec = t;
-    writeLocalRadioPos(t);
-    saveAdaptiveState();
-    scheduleCloudPush(200);
+    // Defer synchronous localStorage serialization off the tap frame for 0ms UI response
+    if (radioPauseSaveTimer) clearTimeout(radioPauseSaveTimer);
+    radioPauseSaveTimer = setTimeout(() => {
+      radioPauseSaveTimer = null;
+      writeLocalRadioPos(t);
+      saveAdaptiveState();
+      upgradeRadioToLocalBlobIfPaused();
+    }, 30);
+    scheduleCloudPush(250);
+  } else {
+    setTimeout(() => upgradeRadioToLocalBlobIfPaused(), 50);
   }
 });
 radioPlayer.addEventListener("ended", () => {
   pendingRadioSeekSec = null;
+  radioSeekIssuedTarget = null;
+  setRadioBufferingUI(false);
   const dur = Math.ceil(radioPlayer.duration || DATA.radio.duration_sec || 2100);
   A.radioMaxSec = dur;
   A.radioPos = [0, nowUnixSec()];
@@ -5935,7 +6080,7 @@ radioPlayer.addEventListener("ended", () => {
   writeLocalRadioPos(0);
   saveAdaptiveState();
   renderGreenBoard();
-  syncRadioUI();
+  syncRadioUI(false);
   scheduleCloudPush(100);
 });
 radioPlayer.addEventListener("loadedmetadata", () => {
