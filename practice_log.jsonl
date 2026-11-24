@@ -1246,3 +1246,7 @@
 {"id": "N3-G145", "point": "〜たとたん", "choice": "とたん", "correct": "true", "ask_again": "false", "ts": "2026-11-24T06:28:53.000Z"}
 {"id": "N3-G158", "point": "せっかく〜のに", "choice": "せっかく", "correct": "true", "ask_again": "false", "ts": "2026-11-24T06:29:00.000Z"}
 {"id": "N3-G142", "point": "〜ばかりか", "choice": "ばかりか", "correct": "true", "ask_again": "false", "ts": "2026-11-24T06:29:05.000Z"}
+{"id": "RV:RVW-ひょうじゅん", "point": "標準", "choice": "听后复盘:快过存疑", "correct": "true", "ask_again": "false", "ts": "2026-11-24T06:44:33.000Z"}
+{"id": "RV:RVR-N3-G43", "point": "〜に基づいて", "choice": "听后复盘:快过存疑", "correct": "true", "ask_again": "false", "ts": "2026-11-24T06:44:50.000Z"}
+{"id": "RV:RVR-N3-G123", "point": "〜させてもらう", "choice": "听后复盘:快过存疑", "correct": "true", "ask_again": "false", "ts": "2026-11-24T06:44:56.000Z"}
+{"id": "RV:RVW-ほじょきん", "point": "補助金", "choice": "听后复盘:快过存疑", "correct": "true", "ask_again": "false", "ts": "2026-11-24T06:45:01.000Z"}

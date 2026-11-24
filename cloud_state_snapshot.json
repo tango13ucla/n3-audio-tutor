@@ -1,7 +1,7 @@
 {
   "v": 15,
   "app": "n3-zen",
-  "updatedAt": 1795501747,
+  "updatedAt": 1795502713,
   "dates": {
     "2026-11-14": {
       "resetAt": 0,
@@ -3200,10 +3200,10 @@
       "resetAt": 0,
       "radioMaxSec": 3401,
       "radioPos": [
-        3392,
-        1795501135
+        3361,
+        1795502713
       ],
-      "radioSig": "9afaec85",
+      "radioSig": "247aec6e",
       "greenAt": {
         "N3-G145": 1795501733,
         "N3-G158": 1795501740,
@@ -4875,38 +4875,6 @@
     }
   },
   "records": [
-    {
-      "id": "N3-H30",
-      "point": "V-085",
-      "choice": "帰って",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-21T07:36:03.000Z"
-    },
-    {
-      "id": "N3-H34",
-      "point": "T-021",
-      "choice": "上がって",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-21T07:36:42.000Z"
-    },
-    {
-      "id": "N3-H35",
-      "point": "T-034",
-      "choice": "届いた",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-21T07:36:48.000Z"
-    },
-    {
-      "id": "N3-L19",
-      "point": "N3L-017",
-      "choice": "じゃあ、急いで帰ろう。",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-21T07:37:15.000Z"
-    },
     {
       "id": "N3-H19",
       "point": "K-008",
@@ -7274,6 +7242,38 @@
       "correct": "true",
       "ask_again": "false",
       "ts": "2026-11-24T06:29:05.000Z"
+    },
+    {
+      "id": "RV:RVW-ひょうじゅん",
+      "point": "標準",
+      "choice": "听后复盘:快过存疑",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T06:44:33.000Z"
+    },
+    {
+      "id": "RV:RVR-N3-G43",
+      "point": "〜に基づいて",
+      "choice": "听后复盘:快过存疑",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T06:44:50.000Z"
+    },
+    {
+      "id": "RV:RVR-N3-G123",
+      "point": "〜させてもらう",
+      "choice": "听后复盘:快过存疑",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T06:44:56.000Z"
+    },
+    {
+      "id": "RV:RVW-ほじょきん",
+      "point": "補助金",
+      "choice": "听后复盘:快过存疑",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T06:45:01.000Z"
     }
   ]
 }
