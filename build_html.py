@@ -1016,8 +1016,91 @@ def _norm_last_date(p_obj: dict, qid: str) -> str:
     return raw.replace("-", "")[:8]
 
 
+GA_MEANING_CLEAN_MAP = {
+    "G-010": "期间持续（あいだ）／期间某时点（あいだに）",
+    "G-003": "只好、别无选择",
+    "G-004": "做了之后才第一次领悟",
+    "G-009": "时隔……（再次）",
+    "G-012": "做完……之后再；在……方面",
+    "G-014": "代替；作为交换",
+    "G-002": "动不动就、往往（多指负面）",
+    "G-021": "只要……就",
+    "G-022": "像……；动不动就",
+    "G-045": "彻底做完／无法做完",
+    "G-049": "一……就立即",
+    "G-051": "没做……就（书面 〜ないで）",
+    "G-062": "做完了／不小心（〜てしまう 口语）",
+    "G-077": "因……而异、视情况不同",
+    "G-090": "越来越（多往坏处发展）",
+    "G-100": "很有……的样子；听说・似乎",
+    "G-111": "（性质上）适合……",
+    "G-131": "装作……",
+    "G-133": "试图、刚要……",
+    "G-134": "听说……",
+    "GX-09": "没必要、用不着",
+}
+
+GA_ATOMIC_SPLITS = {
+    "G-116": [
+        ("G-116a", "いらっしゃる", "去・来・在（尊敬语）", "「行く・来る・いる」尊敬形，自己用参る", "社長は先ほど会議室へいらっしゃいました。", "社长刚才已经去会议室了。", "K-001"),
+        ("G-116b", "召し上がる", "吃・喝（尊敬语）", "「食べる・飲む」尊敬形，自己用いただく", "どうぞ温かいうちに召し上がってください。", "请趁热享用。", "K-003"),
+        ("G-116c", "おっしゃる", "说（尊敬语）", "「言う」尊敬形，ます形为おっしゃいます", "先生のおっしゃる通りだと思います。", "我觉得正如老师所说。", "K-002"),
+        ("G-116d", "ご覧になる", "看（尊敬语）", "「見る」尊敬形，自己看用拝見する", "こちらの資料をもうご覧になりましたか。", "这份资料您已经看过了吗？", "K-004"),
+        ("G-116e", "なさる", "做（尊敬语）", "「する」尊敬形，ます形为なさいます", "先生は今、日本の歴史をご研究なさっています。", "老师现在正在研究日本历史。", "K-005"),
+        ("G-116f", "ご存じだ", "知道・认识（尊敬语）", "「知っている」尊敬形，自己用存じる", "こちらの鈴木様をご存じですか。", "您认识这位铃木先生吗？", "K-008"),
+    ],
+    "G-119": [
+        ("G-119a", "伺う", "听・问・拜访（谦让语）", "向尊长「聞く・行く・訪ねる」", "明日の午後、御社に伺います。", "明天下午我去贵公司拜访。", "K-014"),
+        ("G-119b", "拝見する", "看・拜读（谦让语）", "自己看对方资料，尊长看用ご覧になる", "お送りいただいた資料は、すでに拝見いたしました。", "您发来的资料，我已经拜读过了。", "K-013"),
+        ("G-119c", "申す／申し上げる", "说・自称（谦让语）", "自报姓名用申します，禀报用申し上げます", "初めまして、田中と申します。", "初次见面，我叫田中。", "K-011"),
+        ("G-119d", "参る", "去・来（谦让语）", "压低自己「行く・来る」，尊长用いらっしゃる", "ただいま担当者が参りますので、少々お待ちください。", "负责人马上就过来，请稍候。", "K-010"),
+        ("G-119e", "いただく", "吃・喝・收下（谦让语）", "自己「食べる・飲む・もらう」，尊长用召し上がる", "素敵なお土産をいただき、ありがとうございます。", "非常感谢您送的精美伴手礼。", "K-012"),
+        ("G-119f", "いたす", "做（谦让语）", "压低自己「する」，尊长用なさる", "会場の準備は私の方でいたします。", "会场的准备工作由我来做。", "K-016"),
+        ("G-119g", "お目にかかる", "见面・拜见（谦让语）", "自己去见尊长的「会う」", "またお目にかかれて、とても嬉しいです。", "能再次见到您，非常高兴。", "K-019"),
+        ("G-119h", "存じる／存じ上げる", "知道・认为（谦让语）", "知事用存じる，识人用存じ上げる", "申し訳ありませんが、その件は存じ上げません。", "很抱歉，那件事我不太清楚。", "K-017"),
+    ],
+    "G-117": [
+        ("G-117a", "〜てくださる", "尊长主动为我做", "「〜てくれる」尊敬形，主语是尊长（が）", "お忙しいところ、先生が推薦状を書いてくださった。", "老师在百忙之中替我写了推荐信。", "K-006"),
+        ("G-117b", "〜ていただく", "承蒙尊长为我做", "「〜てもらう」谦让形，对象是尊长（に）", "部長に企画書をチェックしていただきました。", "请部长帮我审了企划书。", "K-045"),
+        ("G-117c", "〜てさしあげる", "恭敬地为尊长做", "「〜てあげる」谦让形，不当面直接对长辈说", "お世話になった先生に、お礼の手紙を書いて差し上げた。", "给关照过我的老师写了感谢信。", "K-023"),
+    ],
+    "G-124": [
+        ("G-124a", "〜ていく", "由近及远・今后持续变化", "从现在往未来发展，或渐行渐远", "これから日本でもキャッシュレスがますます広がっていくだろう。", "今后在日本无现金支付也会越来越普及吧。", ""),
+        ("G-124b", "〜てくる", "由远及近・至今渐渐变化", "从过去持续到现在，或走近・出现", "四月に入ってから、だんだん暖かくなってきた。", "进入四月以来，天气渐渐暖和起来了。", ""),
+    ],
+    "G-125": [
+        ("G-125a", "〜てくれる", "对方主动为我做", "动作指向自己，主语是对方（先輩が）", "困っていたとき、先輩が優しく相談に乗ってくれた。", "我遇到困难时，前辈热心帮我出主意。", ""),
+        ("G-125b", "〜てもらう", "我请对方为我做", "主语是自己，受惠对象用「に」（先輩に）", "わからない問題があったので、先輩に解き方を教えてもらった。", "因为有不会的题，我请前辈教了我解法。", ""),
+    ],
+    "G-098": [
+        ("G-098a", "〜やすい", "容易做……", "动词ます干＋やすい，表顺手或易发生", "この辞書は文字が大きくて、とても使いやすい。", "这本词典字很大，非常好用。", ""),
+        ("G-098b", "〜にくい", "难以做……", "动词ます干＋にくい，偏物理客观不便", "この靴は底が硬くて、長時間歩きにくい。", "这双鞋鞋底很硬，走久了不舒服。", ""),
+    ],
+}
+
+
+def _ga_audio_url_for_sub(sub_gid: str, fallback_aud: str) -> str:
+    fname = f"GA-{sub_gid}_ex.mp3"
+    fpath = os.path.join(BASE_DIR, "audio", fname)
+    if os.path.exists(fpath):
+        with open(fpath, "rb") as af:
+            h8 = hashlib.md5(af.read()).hexdigest()[:8]
+        return f"./audio/{fname}?v={h8}"
+    return fallback_aud
+
+
+def _clean_ga_meaning(gid: str, raw: str) -> str:
+    if gid in GA_MEANING_CLEAN_MAP:
+        return GA_MEANING_CLEAN_MAP[gid]
+    s = clean_zen_text(raw or "")
+    s = s.replace(";", "；").replace(",", "，")
+    s = re.sub(r"\(([^)]*)\)", r"（\1）", s)
+    return s.strip()
+
+
 grammar_items = []
 grammar_audit_items = []
+ga_split_map = {}
 _ga_vmap = {"blank": 1, "weak": 1, "confuse": 2, "fuzzy": 2, "passive": 3, "instinct": 4, "solid": 4}
 for g_idx, p in enumerate(live_state.get("grammar_points", [])):
     nm = p.get("name", "")
@@ -1036,7 +1119,7 @@ for g_idx, p in enumerate(live_state.get("grammar_points", [])):
     if len(rule_txt) > 96:
         rule_txt = rule_txt[:95].rstrip("，、； ") + "…"
     exp_aud = str(prim_ref.get("exp_audio") or teach_ref.get("audio") or "")
-    meaning_clean = clean_zen_text(p.get("meaning", ""))
+    meaning_clean = _clean_ga_meaning(gid, p.get("meaning", ""))
     verdict_raw = str(p.get("audit_verdict") or "")
     verdict_code = _ga_vmap.get(verdict_raw, 0)
     g_pid = point_id_by_key.get(nm, "")
@@ -1058,13 +1141,7 @@ for g_idx, p in enumerate(live_state.get("grammar_points", [])):
         "note": clean_zen_text(p.get("exam_alert") or p.get("note", "")),
     })
 
-    # Blind-Spot-First priority group for the 4-day 156-point Grammar Self-Audit:
-    # 0 = 17 old-green never tested in Nov (highest false-confidence risk!)
-    # 1 = current red/orange weak points
-    # 2 = 64 yellow never tested in Nov (grouped by family for twin comparison!)
-    # 3 = yellow 1/3 tested in Nov (grouped by family)
-    # 4 = yellow 2/3 tested in Nov (grouped by family)
-    # 5 = green tested in Nov (quick final confirmation)
+    # Blind-Spot-First priority group for atomic 1-by-1 Grammar Self-Audit:
     st_raw = p.get("status", "yellow")
     if st_raw == "green" and not nov_tested:
         pri_grp = 0
@@ -1079,24 +1156,56 @@ for g_idx, p in enumerate(live_state.get("grammar_points", [])):
     else:
         pri_grp = 5
 
-    grammar_audit_items.append({
-        "gid": gid,
-        "name": nm,
-        "front_name": clean_grammar_front_name(nm),
-        "meaning": meaning_clean,
-        "family": fam_clean,
-        "rule": rule_txt,
-        "ex_ja": ex_ja,
-        "ex_zh": ex_zh,
-        "audio": exp_aud,
-        "sys_tier": tier,
-        "sys_streak": streak,
-        "nov_tested": nov_tested,
-        "pri": pri_grp,
-        "verdict": verdict_code,
-        "audit_ts": int(p.get("audit_ts") or 0),
-        "audit_date": str(p.get("audit_date") or ""),
-    })
+    if gid in GA_ATOMIC_SPLITS:
+        sub_audits = p.get("sub_audits") or {}
+        child_gids = []
+        for s_gid, s_name, s_meaning, s_rule, s_ex_ja, s_ex_zh, s_hk in GA_ATOMIC_SPLITS[gid]:
+            child_gids.append(s_gid)
+            s_rec = sub_audits.get(s_gid) or {}
+            s_code = int(s_rec.get("code") or _ga_vmap.get(str(s_rec.get("verdict") or ""), 0))
+            s_ts = int(s_rec.get("ts") or 0)
+            s_date = str(s_rec.get("date") or "")
+            grammar_audit_items.append({
+                "gid": s_gid,
+                "parent_gid": gid,
+                "parent_name": nm,
+                "henkei_key": s_hk,
+                "name": s_name,
+                "front_name": clean_grammar_front_name(s_name),
+                "meaning": clean_zen_text(s_meaning),
+                "family": fam_clean,
+                "rule": clean_zen_text(s_rule),
+                "ex_ja": s_ex_ja,
+                "ex_zh": s_ex_zh,
+                "audio": _ga_audio_url_for_sub(s_gid, exp_aud),
+                "sys_tier": tier,
+                "sys_streak": streak,
+                "nov_tested": nov_tested,
+                "pri": pri_grp,
+                "verdict": s_code,
+                "audit_ts": s_ts,
+                "audit_date": s_date,
+            })
+        ga_split_map[gid] = child_gids
+    else:
+        grammar_audit_items.append({
+            "gid": gid,
+            "name": nm,
+            "front_name": clean_grammar_front_name(nm),
+            "meaning": meaning_clean,
+            "family": fam_clean,
+            "rule": rule_txt,
+            "ex_ja": ex_ja,
+            "ex_zh": ex_zh,
+            "audio": exp_aud,
+            "sys_tier": tier,
+            "sys_streak": streak,
+            "nov_tested": nov_tested,
+            "pri": pri_grp,
+            "verdict": verdict_code,
+            "audit_ts": int(p.get("audit_ts") or 0),
+            "audit_date": str(p.get("audit_date") or ""),
+        })
 
 _ga_front_counts = {}
 for _it in grammar_audit_items:
@@ -1340,6 +1449,7 @@ payload = json.dumps({
     "grammar_audit": {
         "active_from": "2026-11-23",
         "daily_target": ga_daily_target,
+        "split_map": ga_split_map,
         "items": grammar_audit_items,
     },
     "mastery": mastery_data,
@@ -4128,39 +4238,60 @@ html = r"""<!DOCTYPE html>
     letter-spacing: 0.02em;
   }
 
-  /* Grammar Self-Audit Card ("语法盘点" · 盲筛验真 · 单手三向) */
-  .vc-stamp.ga-fuzzy {
-    left: 18px;
-    color: var(--ochre);
-    border: 1.5px solid var(--ochre);
-    background: rgba(176, 125, 58, 0.07);
+  /* Grammar Self-Audit ("语法盘点" · 开放宣纸/夜墨画布 · 一词一问 · 零废话) */
+  .ga-meta-bar {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 28px;
+    padding: 4px 0 2px;
   }
-  .ga-eyebrow {
-    font-size: 12px;
+  .ga-meta-fam {
+    font-size: 12.5px;
     color: var(--ink-3);
-    letter-spacing: 0.05em;
-    margin-bottom: 14px;
-    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.06em;
+    transition: color 0.18s ease, opacity 0.18s ease;
   }
-  .ga-eyebrow.warn { color: var(--ochre); font-weight: 500; }
-  .ga-eyebrow.ng { color: var(--bengara); font-weight: 500; }
+  .ga-meta-fam.s1 { color: var(--bengara); }
+  .ga-meta-fam.s2 { color: var(--ochre); }
+  .ga-stage {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 8px 6px 14px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .ga-canvas {
+    width: 100%;
+    max-width: 396px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: opacity 0.16s ease, transform 0.16s ease;
+  }
   .ga-head {
     font-family: var(--serif-jp);
-    font-size: 29px;
+    font-size: clamp(29px, 7.8vw, 36px);
     font-weight: 500;
     color: var(--sumi);
-    line-height: 1.42;
-    letter-spacing: 0.02em;
+    line-height: 1.38;
+    letter-spacing: 0.03em;
     word-break: keep-all;
   }
   .ga-reveal {
-    margin-top: 18px;
-    min-height: 148px;
+    margin-top: 22px;
+    min-height: 168px;
     width: 100%;
-    max-width: 396px;
     opacity: 0;
-    transform: translateY(4px);
-    transition: opacity 0.2s ease, transform 0.2s ease;
+    transform: translateY(5px);
+    transition: opacity 0.22s ease, transform 0.22s ease;
     pointer-events: none;
   }
   .ga-reveal.shown {
@@ -4169,37 +4300,45 @@ html = r"""<!DOCTYPE html>
     pointer-events: auto;
   }
   .ga-meaning {
-    font-size: 18.5px;
-    font-weight: 600;
+    font-size: 18px;
+    font-weight: 500;
     color: var(--sumi);
-    line-height: 1.48;
+    line-height: 1.5;
+    letter-spacing: 0.015em;
+    text-wrap: balance;
   }
   .ga-rule {
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px solid var(--hairline);
+    margin: 9px auto 0;
+    max-width: 344px;
     font-size: 13.5px;
-    color: var(--ink-2);
-    line-height: 1.58;
-    text-align: left;
+    color: var(--ink-3);
+    line-height: 1.62;
+    text-wrap: balance;
+  }
+  .ga-divider {
+    width: 28px;
+    height: 1px;
+    background: var(--hairline-strong);
+    margin: 18px auto 16px;
   }
   .ga-ex {
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px solid var(--hairline);
-    text-align: left;
+    max-width: 356px;
+    margin: 0 auto;
+    text-align: center;
   }
   .ga-ex-ja {
     font-family: var(--serif-jp);
-    font-size: 15.5px;
+    font-size: 16px;
     color: var(--sumi);
-    line-height: 1.62;
+    line-height: 1.66;
+    text-wrap: balance;
   }
   .ga-ex-zh {
-    margin-top: 4px;
-    font-size: 12.8px;
+    margin-top: 5px;
+    font-size: 13px;
     color: var(--ink-3);
-    line-height: 1.5;
+    line-height: 1.54;
+    text-wrap: balance;
   }
   .ga-summary-grid {
     display: grid;
@@ -4219,44 +4358,26 @@ html = r"""<!DOCTYPE html>
     line-height: 1.2;
   }
   .ga-stat-num.s1 { color: var(--bengara); }
-  .ga-stat-num.s2 { color: #C26735; }
-  .ga-stat-num.s3 { color: var(--ochre); }
+  .ga-stat-num.s2 { color: var(--ochre); }
+  .ga-stat-num.s3 { color: var(--sumi); }
   .ga-stat-num.s4 { color: var(--moss); }
-  @media (prefers-color-scheme: dark) {
-    .ga-stat-num.s2 { color: #E08A54; }
-  }
   .ga-stat-lbl {
-    margin-top: 3px;
-    font-size: 11.5px;
+    margin-top: 4px;
+    font-size: 12px;
     color: var(--ink-3);
+    letter-spacing: 0.04em;
   }
 
-  /* Tactile 4-Stop Zen Spectrum Rail (单指轻点或沿线滑选 · 零犹豫) */
+  /* Monochrome Karesansui 4-Stop Zen Tactile Rail (静默枯山水墨点 · 轻点或沿线滑选) */
   .ga-spec-wrap {
     flex-shrink: 0;
-    padding: 4px 2px 2px;
+    padding: 6px 0 6px;
     user-select: none;
     -webkit-user-select: none;
   }
-  .ga-spec-hint {
-    text-align: center;
-    font-size: 12.5px;
-    color: var(--ink-3);
-    letter-spacing: 0.04em;
-    min-height: 19px;
-    margin-bottom: 10px;
-    transition: color 0.15s ease;
-  }
-  .ga-spec-hint.s1 { color: var(--bengara); font-weight: 500; }
-  .ga-spec-hint.s2 { color: #C26735; font-weight: 500; }
-  .ga-spec-hint.s3 { color: var(--ochre); font-weight: 500; }
-  .ga-spec-hint.s4 { color: var(--moss); font-weight: 500; }
-  @media (prefers-color-scheme: dark) {
-    .ga-spec-hint.s2 { color: #E08A54; }
-  }
   .ga-spec-rail {
     position: relative;
-    padding: 6px 0 4px;
+    padding: 10px 0 6px;
     touch-action: none;
     user-select: none;
     -webkit-user-select: none;
@@ -4266,10 +4387,9 @@ html = r"""<!DOCTYPE html>
     position: absolute;
     left: 12.5%;
     right: 12.5%;
-    top: 21px;
-    height: 2px;
-    border-radius: 2px;
-    background: linear-gradient(90deg, rgba(158, 62, 54, 0.32) 0%, rgba(194, 103, 53, 0.32) 34%, rgba(176, 125, 58, 0.34) 67%, rgba(43, 95, 73, 0.38) 100%);
+    top: 19px;
+    height: 1px;
+    background: var(--hairline-strong);
     pointer-events: none;
   }
   .ga-spec-stops {
@@ -4282,67 +4402,49 @@ html = r"""<!DOCTYPE html>
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 11px;
     padding: 4px 0 6px;
     color: var(--ink-3);
     transition: transform 0.14s ease, color 0.14s ease;
   }
   .ga-spec-dot {
-    width: 22px;
-    height: 22px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
     background: var(--washi);
-    border: 2px solid var(--hairline-strong);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    border: 1.5px solid var(--ink-3);
     transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
   }
-  .ga-spec-dot::after {
-    content: "";
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: transparent;
-    transition: background 0.15s ease, transform 0.15s ease;
-  }
-  .ga-spec-stop.s1 .ga-spec-dot { border-color: rgba(158, 62, 54, 0.55); }
-  .ga-spec-stop.s2 .ga-spec-dot { border-color: rgba(194, 103, 53, 0.55); }
-  .ga-spec-stop.s3 .ga-spec-dot { border-color: rgba(176, 125, 58, 0.58); }
-  .ga-spec-stop.s4 .ga-spec-dot { border-color: rgba(43, 95, 73, 0.58); }
-  .ga-spec-stop.s1.active .ga-spec-dot { border-color: var(--bengara); background: var(--bengara); box-shadow: 0 0 0 6px rgba(158, 62, 54, 0.14); transform: scale(1.18); }
-  .ga-spec-stop.s2.active .ga-spec-dot { border-color: #C26735; background: #C26735; box-shadow: 0 0 0 6px rgba(194, 103, 53, 0.15); transform: scale(1.18); }
-  .ga-spec-stop.s3.active .ga-spec-dot { border-color: var(--ochre); background: var(--ochre); box-shadow: 0 0 0 6px rgba(176, 125, 58, 0.16); transform: scale(1.18); }
-  .ga-spec-stop.s4.active .ga-spec-dot { border-color: var(--moss-solid); background: var(--moss-solid); box-shadow: 0 0 0 6px rgba(43, 95, 73, 0.16); transform: scale(1.18); }
-  .ga-spec-stop.active .ga-spec-dot::after { background: var(--sheet); }
+  .ga-spec-stop.s1.active .ga-spec-dot { border-color: var(--bengara); background: var(--bengara); box-shadow: 0 0 0 7px rgba(158, 62, 54, 0.14); transform: scale(1.42); }
+  .ga-spec-stop.s2.active .ga-spec-dot { border-color: var(--ochre); background: var(--ochre); box-shadow: 0 0 0 7px rgba(176, 125, 58, 0.16); transform: scale(1.42); }
+  .ga-spec-stop.s3.active .ga-spec-dot { border-color: var(--sumi); background: var(--sumi); box-shadow: 0 0 0 7px var(--tap-bg); transform: scale(1.42); }
+  .ga-spec-stop.s4.active .ga-spec-dot { border-color: var(--moss-solid); background: var(--moss-solid); box-shadow: 0 0 0 7px rgba(43, 95, 73, 0.16); transform: scale(1.42); }
   .ga-spec-name {
     font-size: 13.5px;
-    font-weight: 500;
-    letter-spacing: 0.04em;
+    font-weight: 400;
+    letter-spacing: 0.08em;
     color: var(--ink-2);
     transition: color 0.14s ease, font-weight 0.14s ease;
   }
   .ga-spec-stop.s1.active .ga-spec-name { color: var(--bengara); font-weight: 600; }
-  .ga-spec-stop.s2.active .ga-spec-name { color: #C26735; font-weight: 600; }
-  .ga-spec-stop.s3.active .ga-spec-name { color: var(--ochre); font-weight: 600; }
+  .ga-spec-stop.s2.active .ga-spec-name { color: var(--ochre); font-weight: 600; }
+  .ga-spec-stop.s3.active .ga-spec-name { color: var(--sumi); font-weight: 600; }
   .ga-spec-stop.s4.active .ga-spec-name { color: var(--moss); font-weight: 600; }
   .ga-spec-card-fade {
     opacity: 0 !important;
-    transform: translateY(-6px) scale(0.985) !important;
-    transition: opacity 0.16s ease, transform 0.16s ease !important;
+    transform: translateY(-5px) !important;
+    transition: opacity 0.15s ease, transform 0.15s ease !important;
   }
   @media (max-height: 700px) {
-    .ga-eyebrow { margin-bottom: 8px; }
-    .ga-head { font-size: 25px; }
-    .ga-reveal { margin-top: 12px; min-height: 122px; }
+    .ga-head { font-size: 27px; }
+    .ga-reveal { margin-top: 14px; min-height: 134px; }
     .ga-meaning { font-size: 16.5px; }
-    .ga-rule { margin-top: 8px; padding-top: 8px; font-size: 12.8px; }
-    .ga-ex { margin-top: 8px; padding-top: 8px; }
-    .ga-ex-ja { font-size: 14.5px; }
-    .ga-spec-hint { margin-bottom: 6px; font-size: 12px; }
+    .ga-rule { margin-top: 6px; font-size: 12.8px; }
+    .ga-divider { margin: 12px auto 11px; }
+    .ga-ex-ja { font-size: 14.8px; }
   }
 
-  /* Quiet inline 4-step spectrum controls inside Zen Ledger ("总表 → 语法") */
+  /* Quiet inline 4-step controls inside Zen Ledger ("总表 → 语法") */
   .li-ga-tag {
     font-size: 11px;
     font-weight: 500;
@@ -4354,8 +4456,8 @@ html = r"""<!DOCTYPE html>
     white-space: nowrap;
   }
   .li-ga-tag.s1 { color: var(--bengara); background: rgba(158, 62, 54, 0.08); }
-  .li-ga-tag.s2 { color: #C26735; background: rgba(194, 103, 53, 0.10); }
-  .li-ga-tag.s3 { color: var(--ochre); background: rgba(176, 125, 58, 0.11); }
+  .li-ga-tag.s2 { color: var(--ochre); background: rgba(176, 125, 58, 0.11); }
+  .li-ga-tag.s3 { color: var(--sumi); background: var(--soft-bg); }
   .li-ga-tag.s4 { color: var(--moss); background: var(--moss-soft); }
   .li-ga-bar {
     margin-top: 10px;
@@ -4364,6 +4466,34 @@ html = r"""<!DOCTYPE html>
     align-items: center;
     gap: 14px;
     flex-wrap: wrap;
+  }
+  .li-ga-sublist {
+    margin-top: 8px;
+    padding-left: 16.5px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .li-ga-subrow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 4px 0;
+    border-top: 1px solid var(--hairline);
+  }
+  .li-ga-subrow:first-child { border-top: none; }
+  .li-ga-subname {
+    font-family: var(--serif-jp);
+    font-size: 13.5px;
+    color: var(--sumi);
+    min-width: 92px;
+  }
+  .li-ga-subbtns {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
   }
   .li-ga-lbl {
     font-size: 12px;
@@ -4378,8 +4508,8 @@ html = r"""<!DOCTYPE html>
     transition: color 0.15s ease, border-color 0.15s ease;
   }
   .li-ga-btn.s1.on { color: var(--bengara); border-bottom-color: var(--bengara); font-weight: 600; }
-  .li-ga-btn.s2.on { color: #C26735; border-bottom-color: #C26735; font-weight: 600; }
-  .li-ga-btn.s3.on { color: var(--ochre); border-bottom-color: var(--ochre); font-weight: 600; }
+  .li-ga-btn.s2.on { color: var(--ochre); border-bottom-color: var(--ochre); font-weight: 600; }
+  .li-ga-btn.s3.on { color: var(--sumi); border-bottom-color: var(--sumi); font-weight: 600; }
   .li-ga-btn.s4.on { color: var(--moss); border-bottom-color: var(--moss); font-weight: 600; }
   .dash-roi-bar {
     display: flex;
@@ -6761,13 +6891,16 @@ saveAdaptiveState();
 
 const GA_SPECTRUM = [
   null,
-  { code: 1, key: "blank", cls: "s1", label: "陌生", choice: "盘点:陌生", cue: "大脑空白 · 明天先讲透再重点考", shortCue: "重讲并必考" },
-  { code: 2, key: "confuse", cls: "s2", label: "易混", choice: "盘点:易混", cue: "怕接续错或跟双胞胎混 · 安排对打", shortCue: "双胞胎对打" },
-  { code: 3, key: "passive", cls: "s3", label: "看懂", choice: "盘点:看懂", cue: "句中能懂 · 考前只验一题就真绿", shortCue: "只验一题" },
-  { code: 4, key: "instinct", cls: "s4", label: "本能", choice: "盘点:本能", cue: "0.5 秒秒懂 · 立刻封存免考省时间", shortCue: "封存免考" }
+  { code: 1, key: "blank", cls: "s1", label: "陌生", choice: "盘点:陌生" },
+  { code: 2, key: "confuse", cls: "s2", label: "易混", choice: "盘点:易混" },
+  { code: 3, key: "passive", cls: "s3", label: "看懂", choice: "盘点:看懂" },
+  { code: 4, key: "instinct", cls: "s4", label: "本能", choice: "盘点:本能" }
 ];
 
 const GA_ITEMS_LIST = (DATA.grammar_audit && Array.isArray(DATA.grammar_audit.items)) ? DATA.grammar_audit.items : [];
+const GA_SPLIT_MAP = (DATA.grammar_audit && DATA.grammar_audit.split_map && typeof DATA.grammar_audit.split_map === "object")
+  ? DATA.grammar_audit.split_map
+  : {};
 const GA_BY_GID = {};
 const GA_BY_NAME = {};
 GA_ITEMS_LIST.forEach(it => {
@@ -6788,6 +6921,25 @@ function getEffectiveGA(gid) {
     return { code: locCode, ts: locTs, date: locDate };
   }
   return { code: bakedCode, ts: bakedTs, date: bakedDate };
+}
+
+function getEffectiveParentGA(gid) {
+  const children = GA_SPLIT_MAP[gid];
+  if (!Array.isArray(children) || !children.length) return getEffectiveGA(gid);
+  let worst = 0;
+  let maxTs = 0;
+  let lastDate = "";
+  children.forEach(cgid => {
+    const eff = getEffectiveGA(cgid);
+    if (eff.code >= 1 && eff.code <= 4) {
+      if (worst === 0 || eff.code < worst) worst = eff.code;
+      if (eff.ts > maxTs) {
+        maxTs = eff.ts;
+        lastDate = eff.date || lastDate;
+      }
+    }
+  });
+  return { code: worst, ts: maxTs, date: lastDate };
 }
 
 function computeGrammarAuditStats() {
@@ -11535,7 +11687,11 @@ function updateVocabSubNav() {
   const cG = document.getElementById("vsub-ga-cnt");
   if (cG) cG.textContent = ga.remaining === 0 ? "✓" : (ga.gaDone ? "✓" : `${ga.gaSeen}/${ga.gaTarget}`);
   const metaEl = document.getElementById("vc-submeta");
+<<<<<<< Updated upstream
   if (metaEl) metaEl.textContent = "";
+=======
+  if (metaEl) metaEl.textContent = `${ga.audited}/${ga.total}`;
+>>>>>>> Stashed changes
 }
 
 function switchVocabSubMode(sub) {
@@ -12116,7 +12272,7 @@ function renderVocabStage() {
       <div class="focal-space">
         <h2 class="point-heading">${sess.total > 0 ? "今晚这组词全部过关" : "核心生词已全部掌握"}</h2>
         <p class="logic-line">${needGA
-          ? `记词部分已收完，顺手把今日 ${m.ga.gaTarget} 条语法光谱盘点过一遍（约 4 分钟），第 3 枚圆印就能彻底点亮。`
+          ? `记词已完成，还有 ${Math.max(1, m.ga.gaTarget - m.ga.gaSeen)} 条语法待盘点。`
           : (remPool > 0
             ? `今日记词已点亮，当前预计 ${m.projScore} 分。总表里还有 ${remPool} 个词未满跨 3 天的 3/3，明天接着巩固就会真正变绿。`
             : `所有核心生词都已跨 3 天答对满 3/3，稳稳锁进长期记忆。`)}</p>
@@ -12260,7 +12416,23 @@ function toggleVocabMicCheck(ev) {
   });
 }
 
-// ================= 156-POINT GRAMMAR SELF-AUDIT (4-STEP ZEN COGNITIVE SPECTRUM) =================
+// ================= ATOMIC 1-BY-1 GRAMMAR SELF-AUDIT (ZEN OPEN-CANVAS) =================
+function expandGAQueue(rawQueue) {
+  const out = [];
+  const seen = new Set();
+  (Array.isArray(rawQueue) ? rawQueue : []).forEach(gid => {
+    const kids = GA_SPLIT_MAP[gid];
+    const list = (Array.isArray(kids) && kids.length) ? kids : [gid];
+    list.forEach(id => {
+      if (id && GA_BY_GID[id] && !seen.has(id)) {
+        seen.add(id);
+        out.push(id);
+      }
+    });
+  });
+  return out;
+}
+
 function curateGABatch(limitCnt) {
   const maxN = Math.max(1, Number(limitCnt || (DATA.grammar_audit && DATA.grammar_audit.daily_target) || 39));
   const out = [];
@@ -12275,11 +12447,18 @@ function curateGABatch(limitCnt) {
 function ensureGASession(forceNewBatch) {
   const dailyTgt = Number((DATA.grammar_audit && DATA.grammar_audit.daily_target) || 39);
   if (!forceNewBatch && A.gaSess && A.gaSess.date === DATA.plan_date && Array.isArray(A.gaSess.queue)) {
-    const filtered = A.gaSess.queue.filter(gid => getEffectiveGA(gid).code === 0);
-    if (filtered.length !== A.gaSess.queue.length) {
-      const diff = A.gaSess.queue.length - filtered.length;
+    const rawLen = A.gaSess.queue.length;
+    const expanded = expandGAQueue(A.gaSess.queue);
+    const expandedAdded = Math.max(0, expanded.length - rawLen);
+    if (expandedAdded > 0) {
+      A.gaSess.total = Math.max((A.gaSess.total || 0) + expandedAdded, (A.gaSess.cleared || 0) + expanded.length);
+    }
+    const filtered = expanded.filter(gid => getEffectiveGA(gid).code === 0);
+    if (filtered.length !== expanded.length || expanded.length !== rawLen) {
+      const doneDiff = Math.max(0, expanded.length - filtered.length);
       A.gaSess.queue = filtered;
-      A.gaSess.cleared = Math.min(A.gaSess.total || 0, (A.gaSess.cleared || 0) + diff);
+      A.gaSess.cleared = Math.min(A.gaSess.total || 0, (A.gaSess.cleared || 0) + doneDiff);
+      saveAdaptiveState();
     }
     if (A.gaSess.queue.length === 0 && (A.gaSess.total || 0) > 0) {
       A.gaSess.done = true;
@@ -12319,35 +12498,37 @@ function recordGAProgress(seenCnt, totalCnt, markDoneNow) {
   }
 }
 
+function gaCodeToMasteryTier(code) {
+  if (code === 1 || code === 2) return `todo:${TODAY_TAG}`;
+  if (code === 3) return "wip2:20261114";
+  return "done";
+}
+
 function applyGASpectrumVerdict(gid, code, stampSec) {
   const item = GA_BY_GID[gid];
   const spec = GA_SPECTRUM[code];
   if (!item || !spec) return null;
   const stamp = Math.max(TRUE_GREEN_EPOCH, Math.floor(stampSec || nowUnixSec()));
   const prevGa = getEffectiveGA(gid);
-  const prevMs = (A.masteryOverrides && A.masteryOverrides[item.name]) ? String(A.masteryOverrides[item.name]) : "";
-  const prevMsTs = (A.masteryOverrideTs && A.masteryOverrideTs[item.name]) ? Number(A.masteryOverrideTs[item.name]) : 0;
+  const msTargetKey = item.parent_name || item.name;
+  const prevMs = (A.masteryOverrides && A.masteryOverrides[msTargetKey]) ? String(A.masteryOverrides[msTargetKey]) : "";
+  const prevMsTs = (A.masteryOverrideTs && A.masteryOverrideTs[msTargetKey]) ? Number(A.masteryOverrideTs[msTargetKey]) : 0;
+  const hkKey = item.henkei_key || "";
+  const prevHkMs = (hkKey && A.masteryOverrides && A.masteryOverrides[hkKey]) ? String(A.masteryOverrides[hkKey]) : "";
+  const prevHkMsTs = (hkKey && A.masteryOverrideTs && A.masteryOverrideTs[hkKey]) ? Number(A.masteryOverrideTs[hkKey]) : 0;
 
   if (!A.gaMap || typeof A.gaMap !== "object") A.gaMap = {};
   A.gaMap[gid] = [code, stamp, TODAY_TAG];
 
-  let targetMs = "done";
-  let okBit = 1;
-  if (code === 1) {
-    targetMs = `todo:${TODAY_TAG}`;
-    okBit = 0;
-  } else if (code === 2) {
-    targetMs = `todo:${TODAY_TAG}`;
-    okBit = 0;
-  } else if (code === 3) {
-    // Spectrum 3 ("看懂"): set streak 2/3 with prior date tag so 1 clean quiz verification turns True Green!
-    targetMs = "wip2:20261114";
-    okBit = 1;
+  const okBit = (code === 1 || code === 2) ? 0 : 1;
+  if (item.parent_gid && item.parent_name) {
+    const agg = getEffectiveParentGA(item.parent_gid);
+    const aggCode = (agg.code >= 1 && agg.code <= 4) ? agg.code : code;
+    setMasteryTier(item.parent_name, gaCodeToMasteryTier(aggCode), stamp);
+    if (hkKey) setMasteryTier(hkKey, gaCodeToMasteryTier(code), stamp);
   } else {
-    targetMs = "done";
-    okBit = 1;
+    setMasteryTier(item.name, gaCodeToMasteryTier(code), stamp);
   }
-  setMasteryTier(item.name, targetMs, stamp);
   applyMasteryOverrides();
 
   const rec = {
@@ -12366,7 +12547,7 @@ function applyGASpectrumVerdict(gid, code, stampSec) {
   saveOutbox(ob);
 
   saveAdaptiveState();
-  return { gid, prevGa, prevMs, prevMsTs, newTs: stamp, recTs: rec.ts };
+  return { gid, prevGa, msTargetKey, prevMs, prevMsTs, hkKey, prevHkMs, prevHkMsTs, newTs: stamp, recTs: rec.ts };
 }
 
 function enterGrammarAuditSubMode() {
@@ -12390,13 +12571,6 @@ function startNextGABatch() {
   renderGrammarAuditStage();
 }
 
-function getGASysBadge(item) {
-  if (!item) return "";
-  return item.sys_tier === "done"
-    ? (item.nov_tested ? "原账已掌握" : "11月未测 · 原账已掌握")
-    : (item.sys_tier === "todo" ? "原账待攻克" : (item.nov_tested ? `原账 ${item.sys_streak}/3` : "11月未测 · 原账 1/3"));
-}
-
 function stripGrammarSpoilerTitle(raw) {
   let s = String(raw || "").trim();
   s = s.replace(/[（(](?![ぁ-んァ-ヶー]+[）)])[^）)]*[）)]/g, "").trim();
@@ -12409,10 +12583,14 @@ function getGAFrontName(item) {
   return item.front_name || stripGrammarSpoilerTitle(item.name);
 }
 
-function syncGARevealedCardHeader(item) {
+function syncGARevealedCardHeader(item, markedCode) {
   if (!item) return;
   const eyeEl = document.getElementById("ga-eyebrow");
-  if (eyeEl) eyeEl.textContent = `${item.family} · ${getGASysBadge(item)}`;
+  if (eyeEl) {
+    const sp = markedCode ? GA_SPECTRUM[markedCode] : null;
+    eyeEl.textContent = sp ? `${item.family} · ${sp.label}` : item.family;
+    eyeEl.className = "ga-meta-fam" + (sp ? " " + sp.cls : "");
+  }
   const headEl = document.getElementById("ga-head");
   if (headEl) headEl.textContent = item.name;
 }
@@ -12444,11 +12622,9 @@ function onGACardTapOrAudio() {
   if (!gaRevealed) {
     gaRevealed = true;
     const item = GA_BY_GID[sess.queue[0]];
-    syncGARevealedCardHeader(item);
+    syncGARevealedCardHeader(item, 0);
     const revEl = document.getElementById("ga-reveal-box");
     if (revEl) revEl.classList.add("shown");
-    const cueEl = document.getElementById("ga-cue-line");
-    if (cueEl) cueEl.textContent = "在下方光谱点选或滑选这一秒的真实感觉";
     const audBtn = document.getElementById("ga-aud-btn");
     if (audBtn) audBtn.style.display = "";
   } else {
@@ -12458,20 +12634,9 @@ function onGACardTapOrAudio() {
 
 function setGASpectrumPreview(code) {
   gaHoverCode = code || 0;
-  const hintEl = document.getElementById("ga-spec-hint");
   for (let i = 1; i <= 4; i++) {
     const el = document.getElementById("ga-stop-" + i);
     if (el) el.classList.toggle("active", i === gaHoverCode);
-  }
-  if (hintEl) {
-    const sp = GA_SPECTRUM[gaHoverCode];
-    if (sp) {
-      hintEl.textContent = `${sp.label} · ${sp.cue}`;
-      hintEl.className = "ga-spec-hint " + sp.cls;
-    } else {
-      hintEl.textContent = "按住沿线左右滑动或轻点选一档";
-      hintEl.className = "ga-spec-hint";
-    }
   }
 }
 
@@ -12523,27 +12688,22 @@ function commitGASpectrum(code) {
   }
   scheduleCloudPush(100);
 
-  // If user chose 陌生(1) or 易混(2) BEFORE flipping, show meaning/contrast/example cleanly before advancing
+  // If user chose 陌生(1) or 易混(2) BEFORE flipping, unfold meaning & example on open canvas with unified Zen dock
   if (!gaRevealed && (code === 1 || code === 2)) {
     gaRevealed = true;
     gaPendingNext = true;
     gaPendingCode = code;
-    syncGARevealedCardHeader(GA_BY_GID[gid]);
+    syncGARevealedCardHeader(GA_BY_GID[gid], code);
     const revEl = document.getElementById("ga-reveal-box");
     if (revEl) revEl.classList.add("shown");
     const audBtn = document.getElementById("ga-aud-btn");
-    if (audBtn) audBtn.style.display = "";
-    const cueEl = document.getElementById("ga-cue-line");
-    if (cueEl) {
-      cueEl.textContent = `已标「${spec.label}」· ${spec.shortCue}`;
-      cueEl.className = "vc-cue ng";
-    }
+    if (audBtn) audBtn.style.display = "none";
     const specWrap = document.getElementById("ga-spec-wrap");
     if (specWrap) {
       specWrap.innerHTML = `
-        <div class="vc-dock">
-          <button class="vc-btn mid" onclick="playGAAudio(event)">听讲解</button>
-          <button class="vc-btn ok" onclick="advancePendingGA()">看清了 · 下一条 →</button>
+        <div class="dock-row">
+          <button class="dock-replay-btn" onclick="playGAAudio(event)">听</button>
+          <button class="sumi-btn" onclick="advancePendingGA()">下一条 →</button>
         </div>
       `;
     }
@@ -12552,7 +12712,7 @@ function commitGASpectrum(code) {
     return;
   }
 
-  // Smooth fade-out and deal next grammar point
+  // Smooth fade-out and deal next atomic grammar point
   setGASpectrumPreview(code);
   const cardEl = document.getElementById("ga-card");
   gaAnimating = true;
@@ -12575,7 +12735,7 @@ function commitGASpectrum(code) {
     recordGAProgress(Math.max(sess.cleared, st.todayAudited), Math.max(sess.total, Math.min(dailyTgt, st.todayAudited + st.remaining)), doneDay);
     renderGreenBoard();
     renderGrammarAuditStage();
-  }, 155);
+  }, 150);
 }
 
 function undoLastGA(ev) {
@@ -12591,15 +12751,24 @@ function undoLastGA(ev) {
     if (last.prevGa && last.prevGa.code > 0 && last.prevGa.ts >= MIN_REAL_TS) {
       A.gaMap[last.gid] = [last.prevGa.code, undoStamp, last.prevGa.date || TODAY_TAG];
     } else {
-      // Write a CRDT code=0 tombstone so cloud pull won't resurrect the undone mark
       A.gaMap[last.gid] = [0, undoStamp, TODAY_TAG];
     }
+    const msKey = last.msTargetKey || item.parent_name || item.name;
     if (last.prevMs && last.prevMsTs >= TRUE_GREEN_EPOCH) {
-      A.masteryOverrides[item.name] = last.prevMs;
-      A.masteryOverrideTs[item.name] = undoStamp;
+      A.masteryOverrides[msKey] = last.prevMs;
+      A.masteryOverrideTs[msKey] = undoStamp;
     } else {
-      delete A.masteryOverrides[item.name];
-      delete A.masteryOverrideTs[item.name];
+      delete A.masteryOverrides[msKey];
+      delete A.masteryOverrideTs[msKey];
+    }
+    if (last.hkKey) {
+      if (last.prevHkMs && last.prevHkMsTs >= TRUE_GREEN_EPOCH) {
+        A.masteryOverrides[last.hkKey] = last.prevHkMs;
+        A.masteryOverrideTs[last.hkKey] = undoStamp;
+      } else {
+        delete A.masteryOverrides[last.hkKey];
+        delete A.masteryOverrideTs[last.hkKey];
+      }
     }
     applyMasteryOverrides();
     if (Array.isArray(A.recentRecords) && A.recentRecords.length) {
@@ -12695,36 +12864,30 @@ function renderGrammarAuditStage() {
   if (!sess.queue.length) {
     const allDone = st.remaining === 0;
     const needVocab = !m.flashDone;
-    const title = allDone ? "全表 156 条语法已盘点完毕" : "今日这组语法已盘完";
-    const overTxt = allDone
-      ? `全表 ${st.total}/${st.total} 已盘清 · 后续精准补漏`
-      : `本组 ${sess.total} 条已完成 · 总进度 ${st.audited} / ${st.total}`;
+    const title = allDone ? "语法已全部盘完" : "今日这组已盘完";
     const desc = allDone
-      ? `你亲手把 156 条语法全部标上了真实刻度：陌生项明日先讲透再重点考，易混项安排双胞胎对打，看懂项考前只验一题，本能项直接封存省时间。`
-      : `已盘 ${st.audited} / ${st.total} 条（余 ${st.remaining} 条）。标记已同步云端，明早自动按刻度分流排题；今天精力够的话可以直接再盘一组。`;
+      ? `全表 ${st.total} 条已同步，后续按熟度精准排题。`
+      : `已盘 ${st.audited} / ${st.total} 条，余 ${st.remaining} 条。`;
     box.innerHTML = `
-      <div class="meta-bar">
-        <span class="overline ok">${escapeHtml(overTxt)}</span>
-      </div>
       <div class="focal-space">
         <h2 class="point-heading">${title}</h2>
         <div class="ga-summary-grid">
-          <div class="ga-stat-cell"><div class="ga-stat-num s1">${st.counts[1] || 0}</div><div class="ga-stat-lbl">陌生 · 重讲</div></div>
-          <div class="ga-stat-cell"><div class="ga-stat-num s2">${st.counts[2] || 0}</div><div class="ga-stat-lbl">易混 · 对打</div></div>
-          <div class="ga-stat-cell"><div class="ga-stat-num s3">${st.counts[3] || 0}</div><div class="ga-stat-lbl">看懂 · 验一题</div></div>
-          <div class="ga-stat-cell"><div class="ga-stat-num s4">${st.counts[4] || 0}</div><div class="ga-stat-lbl">本能 · 封存</div></div>
+          <div class="ga-stat-cell"><div class="ga-stat-num s1">${st.counts[1] || 0}</div><div class="ga-stat-lbl">陌生</div></div>
+          <div class="ga-stat-cell"><div class="ga-stat-num s2">${st.counts[2] || 0}</div><div class="ga-stat-lbl">易混</div></div>
+          <div class="ga-stat-cell"><div class="ga-stat-num s3">${st.counts[3] || 0}</div><div class="ga-stat-lbl">看懂</div></div>
+          <div class="ga-stat-cell"><div class="ga-stat-num s4">${st.counts[4] || 0}</div><div class="ga-stat-lbl">本能</div></div>
         </div>
         <p class="logic-line">${desc}</p>
       </div>
       <div class="action-dock">
         <div class="dock-row">
           ${!allDone
-            ? `<button class="ghost-btn" onclick="startNextGABatch()">再盘一组 (${Math.min(39, st.remaining)}条)</button>`
-            : `<button class="ghost-btn" onclick="switchMode('dash')">去总表看缺口</button>`}
+            ? `<button class="ghost-btn" onclick="startNextGABatch()">再盘一组</button>`
+            : `<button class="ghost-btn" onclick="switchMode('dash')">看总表</button>`}
           ${needVocab
-            ? `<button class="sumi-btn" onclick="switchVocabSubMode('vocab')">去单手记词 →</button>`
+            ? `<button class="sumi-btn" onclick="switchVocabSubMode('vocab')">去记词 →</button>`
             : (!allDone
-              ? `<button class="sumi-btn" onclick="switchMode('dash')">去总表看缺口 →</button>`
+              ? `<button class="sumi-btn" onclick="switchMode('dash')">看总表 →</button>`
               : `<button class="sumi-btn" onclick="switchMode('tutor')">回做题 →</button>`)}
         </div>
       </div>
@@ -12735,38 +12898,32 @@ function renderGrammarAuditStage() {
   const gid = sess.queue[0];
   const item = GA_BY_GID[gid];
   if (!item) return;
-  const posNum = Math.min(Math.max(1, sess.total), (sess.cleared || 0) + 1);
   const canUndo = Array.isArray(sess.undoStack) && sess.undoStack.length > 0;
-  const sysBadge = getGASysBadge(item);
-  const eyeCls = !item.nov_tested && item.sys_tier === "done" ? "ga-eyebrow warn" : (item.sys_tier === "todo" ? "ga-eyebrow ng" : "ga-eyebrow");
-  const eyeText = gaRevealed ? `${item.family} · ${sysBadge}` : sysBadge;
+  const eyeText = gaRevealed ? item.family : "";
   const headText = gaRevealed ? item.name : getGAFrontName(item);
 
   box.innerHTML = `
-    <div class="meta-bar">
-      <span class="overline">今日 ${posNum} / ${sess.total} · 全表 ${st.audited + 1} / ${st.total}</span>
+    <div class="ga-meta-bar">
+      <span class="ga-meta-fam" id="ga-eyebrow">${escapeHtml(eyeText)}</span>
       <div class="vc-meta-right">
         ${canUndo ? `<button class="text-btn" onclick="undoLastGA(event)">撤销</button>` : ""}
-        <button class="text-btn" id="ga-aud-btn" style="${gaRevealed ? "" : "display:none;"}" onclick="playGAAudio(event)">听讲解</button>
+        <button class="text-btn" id="ga-aud-btn" style="${gaRevealed ? "" : "display:none;"}" onclick="playGAAudio(event)">听</button>
       </div>
     </div>
 
-    <div class="vc-deck-area">
-      <div class="vc-card" id="ga-card" onclick="onGACardTapOrAudio()">
-        <div class="${eyeCls}" id="ga-eyebrow">${escapeHtml(eyeText)}</div>
+    <div class="ga-stage" onclick="onGACardTapOrAudio()">
+      <div class="ga-canvas" id="ga-card">
         <div class="ga-head" id="ga-head">${escapeHtml(headText)}</div>
-        <div class="vc-cue" id="ga-cue-line" style="margin-top:10px;margin-bottom:0;">${gaRevealed ? "在下方光谱点选或滑选这一秒的真实感觉" : "脑中过一遍意思与接续 · 轻点翻面，或直接选光谱"}</div>
 
         <div class="ga-reveal${gaRevealed ? " shown" : ""}" id="ga-reveal-box">
           <div class="ga-meaning">${escapeHtml(item.meaning)}</div>
-          ${item.rule ? `<div class="ga-rule"><span class="vc-hook-tag">辨析</span>${escapeHtml(item.rule)}</div>` : ""}
-          ${item.ex_ja ? `<div class="ga-ex"><div class="ga-ex-ja">${escapeHtml(item.ex_ja)}</div>${item.ex_zh ? `<div class="ga-ex-zh">${escapeHtml(item.ex_zh)}</div>` : ""}</div>` : ""}
+          ${item.rule ? `<div class="ga-rule">${escapeHtml(item.rule)}</div>` : ""}
+          ${item.ex_ja ? `<div class="ga-divider"></div><div class="ga-ex"><div class="ga-ex-ja">${escapeHtml(item.ex_ja)}</div>${item.ex_zh ? `<div class="ga-ex-zh">${escapeHtml(item.ex_zh)}</div>` : ""}</div>` : ""}
         </div>
       </div>
     </div>
 
     <div class="ga-spec-wrap" id="ga-spec-wrap">
-      <div class="ga-spec-hint" id="ga-spec-hint">按住沿线左右滑动，或轻点一档</div>
       <div class="ga-spec-rail" id="ga-spec-rail">
         <div class="ga-spec-line"></div>
         <div class="ga-spec-stops">
@@ -12904,7 +13061,7 @@ function renderDashboard() {
       entryEl.innerHTML = `
         <div class="night-bar">
           <div class="night-bar-txt">
-            <div class="night-bar-title">语法全表光谱盘点</div>
+            <div class="night-bar-title">语法盘点</div>
             <div class="night-bar-sub">${subTxt}</div>
           </div>
           ${ga.remaining > 0
@@ -12979,22 +13136,39 @@ function renderMasteryList() {
     const canSpeak = !!(it.audio || dashMod === "vocab" || DATA.words[it.name]);
     const stNum = Math.max(0, Math.min(3, Number(it.streak || (it.tier === "done" ? 3 : (it.tier === "wip" ? 1 : 0)))));
     const stCls = it.tier === "done" ? "s-done" : (it.tier === "wip" ? "s-wip" : "");
-    const gaEff = (dashMod === "grammar" && it.gid) ? getEffectiveGA(it.gid) : null;
+    const splitKids = (dashMod === "grammar" && it.gid && Array.isArray(GA_SPLIT_MAP[it.gid])) ? GA_SPLIT_MAP[it.gid] : null;
+    const gaEff = (dashMod === "grammar" && it.gid) ? (splitKids ? getEffectiveParentGA(it.gid) : getEffectiveGA(it.gid)) : null;
     const gaSpec = (gaEff && gaEff.code >= 1 && gaEff.code <= 4) ? GA_SPECTRUM[gaEff.code] : null;
     const gaTagHTML = gaSpec ? `<span class="li-ga-tag ${gaSpec.cls}">${gaSpec.label}</span>` : "";
     const hesHTML = isItemHesitant(it) ? `<span class="li-hes">略生</span>` : "";
     const lastD = it.tier === "done" ? getEffectiveItemLastDate(it) : "";
     const dStale = lastD ? daysSinceTag(lastD) : 0;
     const staleHTML = (it.tier === "done" && dStale >= 10) ? `<span class="li-stale">${dStale}天前·抽查</span>` : "";
-    const gaBarHTML = (expandedPt === i && dashMod === "grammar" && it.gid)
-      ? `<div class="li-ga-bar">
-          <span class="li-ga-lbl">自评光谱</span>
+    let gaBarHTML = "";
+    if (expandedPt === i && dashMod === "grammar" && it.gid) {
+      if (splitKids && splitKids.length) {
+        gaBarHTML = `<div class="li-ga-sublist">${splitKids.map(cgid => {
+          const cit = GA_BY_GID[cgid];
+          if (!cit) return "";
+          const ceff = getEffectiveGA(cgid);
+          return `<div class="li-ga-subrow">
+            <span class="li-ga-subname">${escapeHtml(cit.name)}</span>
+            <span class="li-ga-subbtns">${[1, 2, 3, 4].map(c => {
+              const sp = GA_SPECTRUM[c];
+              return `<button type="button" class="li-ga-btn ${sp.cls}${ceff && ceff.code === c ? " on" : ""}" onclick="setLedgerGrammarSpectrum('${cgid}', ${c}, event)">${sp.label}</button>`;
+            }).join("")}</span>
+          </div>`;
+        }).join("")}</div>`;
+      } else {
+        gaBarHTML = `<div class="li-ga-bar">
+          <span class="li-ga-lbl">盘点</span>
           ${[1, 2, 3, 4].map(c => {
             const sp = GA_SPECTRUM[c];
             return `<button type="button" class="li-ga-btn ${sp.cls}${gaEff && gaEff.code === c ? " on" : ""}" onclick="setLedgerGrammarSpectrum('${it.gid}', ${c}, event)">${sp.label}</button>`;
           }).join("")}
-        </div>`
-      : "";
+        </div>`;
+      }
+    }
     return `
     <div class="ledger-item" onclick="togglePtNote(${i})">
       <div class="li-row">
@@ -13068,7 +13242,7 @@ function openSessionModal() {
       当前预计分　<strong id="modal-proj-score">${m.projScore} / 180 分</strong>
     </p>
     <p class="modal-promise">${ga && ga.requiredToday
-      ? "四枚圆印不变：第 3 枚圆印在考前 4 天兼含记词与语法光谱盘点，全表 156 条盘完后自动收起。"
+      ? `四枚圆印不变，第 3 枚圆印兼含记词与语法盘点，盘完自动收起。`
       : "四枚圆印依次对应做题、随身听、记词与体律；总表里每个词与考点需跨 3 天答对满 3/3 才算真正掌握。"}</p>
     <div class="sync-box">
       <p class="sync-note" id="cloud-sync-status-line">正在对齐云端进度…</p>
@@ -15792,10 +15966,10 @@ sb.setMasteryTier(sampleKanji, 'wip1:20261121', Math.floor(Date.now() / 1000) + 
 if (sb.isEarFirstGradCard(spec2)) {
   throw new Error('Self-test 6 failed: streak=1 kanji card must stay silent-kanji front');
 }
-// Self-test 7: 156/156 4-Step Cognitive Spectrum Grammar Audit inside Position #3
+// Self-test 7: Atomic 1-by-1 Zen Open-Canvas Grammar Audit (zero grouped buckets, zero spoilers, zero waste words)
 const gaData = vm.runInNewContext('DATA.grammar_audit', sb);
-if (!gaData || !Array.isArray(gaData.items) || gaData.items.length !== 156) {
-  throw new Error('Self-test 7 failed: grammar_audit must contain all 156 points, got ' + (gaData && gaData.items ? gaData.items.length : 0));
+if (!gaData || !Array.isArray(gaData.items) || gaData.items.length !== 173) {
+  throw new Error('Self-test 7 failed: grammar_audit must contain 173 atomic 1-by-1 points, got ' + (gaData && gaData.items ? gaData.items.length : 0));
 }
 const gaSpoilerRe = /[（(](?![ぁ-んァ-ヶー]+[）)])[^）)]*[）)]/;
 for (const it of gaData.items) {
@@ -15805,16 +15979,27 @@ for (const it of gaData.items) {
   if (gaSpoilerRe.test(it.front_name)) {
     throw new Error('Self-test 7 failed: semantic spoiler leaked in front_name of ' + it.gid + ': ' + it.front_name);
   }
+  if (String(it.name).includes('動詞组') || String(it.name).includes('敬语升级') || String(it.meaning).startsWith('如 ') || String(it.meaning).includes('待验')) {
+    throw new Error('Self-test 7 failed: grouped bucket or dirty CSV note leaked in ' + it.gid + ': ' + it.name + ' / ' + it.meaning);
+  }
   if (String(it.meaning).includes('—') || String(it.rule || '').includes('—')) {
     throw new Error('Self-test 7 failed: em dash found in grammar_audit item ' + it.gid);
   }
 }
 const gaById = Object.fromEntries(gaData.items.map(x => [x.gid, x]));
+if (!gaById['G-116a'] || gaById['G-116a'].name !== 'いらっしゃる' || !gaById['G-116b'] || gaById['G-116b'].name !== '召し上がる' || !gaById['G-119a'] || gaById['G-119a'].name !== '伺う' || !gaById['G-117a'] || gaById['G-117a'].name !== '〜てくださる' || gaById['G-116'] || gaById['G-119'] || gaById['G-117']) {
+  throw new Error('Self-test 7 failed: keigo groups were not cleanly split 1-by-1');
+}
 if (gaById['G-047'].front_name !== '〜ことがある' || gaById['G-017'].front_name !== '〜ことだ' || gaById['G-134'].front_name !== '〜そうだ' || gaById['G-057'].front_name !== '〜ために ①' || gaById['G-058'].front_name !== '〜ために ②' || gaById['G-010'].front_name !== '〜あいだ（に）' || gaById['G-011'].front_name !== '〜あまり（に）') {
   throw new Error('Self-test 7 failed: unexpected front_name mapping: ' + JSON.stringify(['G-047','G-017','G-134','G-057','G-058','G-010','G-011'].map(k => [k, gaById[k] && gaById[k].front_name])));
 }
 if (sb.stripGrammarSpoilerTitle('〜ことがある（経験）') !== '〜ことがある' || sb.stripGrammarSpoilerTitle('〜あいだ（に）') !== '〜あいだ（に）') {
   throw new Error('Self-test 7 failed: stripGrammarSpoilerTitle mismatch');
+}
+// Verify seamless legacy queue expansion (phone mid-session holding G-116 expands automatically to G-116a..f)
+const migratedQ = sb.expandGAQueue(['G-116', 'G-119', 'G-004']);
+if (migratedQ[0] !== 'G-116a' || migratedQ[5] !== 'G-116f' || migratedQ[6] !== 'G-119a' || migratedQ[migratedQ.length - 1] !== 'G-004') {
+  throw new Error('Self-test 7 failed: legacy queue expansion failed: ' + JSON.stringify(migratedQ));
 }
 const planD = vm.runInNewContext('DATA.plan_date', sb);
 const ptsLen = vm.runInNewContext('DATA.points.length', sb);
@@ -15834,8 +16019,13 @@ if (!firstItem || firstItem.pri !== 0) {
   throw new Error('Self-test 7 failed: GA batch must start with priority-0 blind spots (old-green untouched in Nov)!');
 }
 const gaHtml = (els['vocab-stage-box'] && els['vocab-stage-box'].innerHTML) || '';
-if (!gaHtml.includes('ga-spec-rail') || !gaHtml.includes('陌生') || !gaHtml.includes('易混') || !gaHtml.includes('看懂') || !gaHtml.includes('本能') || gaHtml.includes('—')) {
-  throw new Error('Self-test 7 failed: GA spectrum rail missing 4 stops or contains em dash!');
+if (!gaHtml.includes('ga-stage') || !gaHtml.includes('ga-spec-rail') || !gaHtml.includes('陌生') || !gaHtml.includes('易混') || !gaHtml.includes('看懂') || !gaHtml.includes('本能') || gaHtml.includes('—')) {
+  throw new Error('Self-test 7 failed: GA open Zen stage or 4 stops missing, or contains em dash!');
+}
+for (const banned of ['vc-card', '光谱', '原账', '11月未测', '按住沿线', '这一秒的真实感觉', '脑中过一遍', 'vc-hook-tag', '今日 ']) {
+  if (gaHtml.includes(banned)) {
+    throw new Error('Self-test 7 failed: un-Zen box or waste word leaked in GA UI: ' + banned);
+  }
 }
 if (gaHtml.includes(`id="ga-eyebrow">${firstItem.family}`)) {
   throw new Error('Self-test 7 failed: unflipped GA card leaked semantic family on eyebrow: ' + firstItem.family);
@@ -15843,7 +16033,7 @@ if (gaHtml.includes(`id="ga-eyebrow">${firstItem.family}`)) {
 if (!gaHtml.includes(`id="ga-head">${firstItem.front_name}</div>`)) {
   throw new Error('Self-test 7 failed: unflipped GA card did not render clean front_name: ' + firstItem.front_name);
 }
-// Commit code=1 (陌生) before reveal -> reveals family & full name + explanation dock synchronously, sets todo mastery
+// Commit code=1 (陌生) before reveal -> reveals family & full name + unified Zen dock synchronously, sets todo mastery
 sb.commitGASpectrum(1);
 if (!els['ga-eyebrow'] || !String(els['ga-eyebrow'].textContent || '').includes(firstItem.family) || !els['ga-head'] || els['ga-head'].textContent !== firstItem.name) {
   throw new Error('Self-test 7 failed: revealing GA card did not unveil family & full name: ' + JSON.stringify({eye: els['ga-eyebrow'] && els['ga-eyebrow'].textContent, head: els['ga-head'] && els['ga-head'].textContent}));
@@ -15858,6 +16048,14 @@ sb.undoLastGA();
 const gaEntryUndo = vm.runInNewContext(`A.gaMap["${firstItem.gid}"]`, sb);
 if (!Array.isArray(gaEntryUndo) || gaEntryUndo[0] !== 0) {
   throw new Error('Self-test 7 failed: undoLastGA did not write CRDT code=0 tombstone: ' + JSON.stringify(gaEntryUndo));
+}
+// Verify atomic split child syncs to parent group & henkei mastery (G-116e なさる -> K-005 + 尊敬語特殊動詞组)
+sb.setLedgerGrammarSpectrum('G-116a', 4);
+sb.setLedgerGrammarSpectrum('G-116e', 1);
+const parentOv = vm.runInNewContext('A.masteryOverrides["尊敬語特殊動詞组"]', sb);
+const hkOv = vm.runInNewContext('A.masteryOverrides["K-005"]', sb);
+if (!String(parentOv || '').startsWith('todo:') || !String(hkOv || '').startsWith('todo:')) {
+  throw new Error('Self-test 7 failed: split child did not aggregate weakest verdict to parent & K-005: ' + JSON.stringify({parentOv, hkOv}));
 }
 // Test all 4 spectrum stops via ledger inline adjuster + CRDT packet size & round-trip
 const testItems = gaData.items.slice(0, 4);

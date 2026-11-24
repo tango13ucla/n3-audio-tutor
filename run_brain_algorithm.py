@@ -337,33 +337,75 @@ def apply_practice_logs(state: dict, fallback_day_tag: str = "") -> int:
                         ts_sec = int(datetime.datetime.fromisoformat(ts.replace("Z", "+00:00")).timestamp())
                     except Exception:
                         ts_sec = int(datetime.datetime.now(PT_TZ).timestamp())
+                    _sub_henkei = {
+                        "G-116a": "K-001", "G-116b": "K-003", "G-116c": "K-002",
+                        "G-116d": "K-004", "G-116e": "K-005", "G-116f": "K-008",
+                        "G-119a": "K-014", "G-119b": "K-013", "G-119c": "K-011",
+                        "G-119d": "K-010", "G-119e": "K-012", "G-119f": "K-016",
+                        "G-119g": "K-019", "G-119h": "K-017",
+                        "G-117a": "K-006", "G-117b": "K-045", "G-117c": "K-023",
+                    }
+                    _verdict_rank = {"blank": 1, "confuse": 2, "passive": 3, "instinct": 4}
+                    gid_only = rec_id[3:].strip() if rec_id.startswith("GA-") else ""
+                    base_gid = re.sub(r"[a-z]+$", "", gid_only)
+                    is_sub_gid = bool(gid_only and base_gid and base_gid != gid_only)
                     g_item = g_map.get(pt)
-                    if g_item is None and rec_id.startswith("GA-"):
-                        gid_only = rec_id[3:].strip()
-                        g_item = next((x for x in state.get("grammar_points", []) if x.get("id") == gid_only), None)
-                    if g_item is not None:
-                        if choice in ("盘点:陌生", "盘点:不熟"):
+                    if g_item is None and gid_only:
+                        g_item = next((x for x in state.get("grammar_points", []) if x.get("id") in (gid_only, base_gid)), None)
+                    c_verdict = (
+                        "blank" if choice in ("盘点:陌生", "盘点:不熟")
+                        else ("confuse" if choice in ("盘点:易混", "盘点:模糊")
+                              else ("passive" if choice == "盘点:看懂"
+                                    else ("instinct" if choice in ("盘点:本能", "盘点:稳熟") else "")))
+                    )
+                    if g_item is not None and c_verdict:
+                        if is_sub_gid:
+                            sub_map = g_item.setdefault("sub_audits", {})
+                            prev_sub = sub_map.get(gid_only) or {}
+                            if ts_sec >= int(prev_sub.get("ts") or 0):
+                                sub_map[gid_only] = {
+                                    "verdict": c_verdict,
+                                    "code": _verdict_rank[c_verdict],
+                                    "ts": ts_sec,
+                                    "date": day_tag,
+                                }
+                            hk_id = _sub_henkei.get(gid_only)
+                            if hk_id and hk_id in h_map:
+                                hp_sub = h_map[hk_id]
+                                if c_verdict == "blank":
+                                    hp_sub["status"] = "red"; hp_sub["streak"] = 0; hp_sub["last_ng_date"] = day_tag
+                                elif c_verdict == "confuse":
+                                    hp_sub["status"] = "orange"; hp_sub["streak"] = 0; hp_sub["last_ng_date"] = day_tag
+                                elif c_verdict == "passive":
+                                    hp_sub["status"] = "yellow"; hp_sub["streak"] = 2; hp_sub["last_ok_date"] = ""
+                                elif c_verdict == "instinct":
+                                    hp_sub["status"] = "green"; hp_sub["streak"] = 3; hp_sub["last_ok_date"] = day_tag
+                            active_subs = [v for v in sub_map.values() if int(v.get("code") or 0) > 0]
+                            eff_verdict = min(active_subs, key=lambda v: int(v["code"]))["verdict"] if active_subs else c_verdict
+                        else:
+                            eff_verdict = c_verdict
+                        if eff_verdict == "blank":
                             g_item["status"] = "red"
                             g_item["streak"] = 0
                             g_item["last_ng_date"] = day_tag
                             g_item["audit_verdict"] = "blank"
                             g_item["audit_date"] = day_tag
                             g_item["audit_ts"] = max(int(g_item.get("audit_ts") or 0), ts_sec)
-                        elif choice in ("盘点:易混", "盘点:模糊"):
+                        elif eff_verdict == "confuse":
                             g_item["status"] = "orange"
                             g_item["streak"] = 0
                             g_item["last_ng_date"] = day_tag
                             g_item["audit_verdict"] = "confuse"
                             g_item["audit_date"] = day_tag
                             g_item["audit_ts"] = max(int(g_item.get("audit_ts") or 0), ts_sec)
-                        elif choice == "盘点:看懂":
+                        elif eff_verdict == "passive":
                             g_item["status"] = "yellow"
                             g_item["streak"] = 2
                             g_item["last_ok_date"] = ""
                             g_item["audit_verdict"] = "passive"
                             g_item["audit_date"] = day_tag
                             g_item["audit_ts"] = max(int(g_item.get("audit_ts") or 0), ts_sec)
-                        elif choice in ("盘点:本能", "盘点:稳熟"):
+                        elif eff_verdict == "instinct":
                             g_item["status"] = "green"
                             g_item["streak"] = 3
                             g_item["last_ok_date"] = day_tag
@@ -402,41 +444,76 @@ def apply_practice_logs(state: dict, fallback_day_tag: str = "") -> int:
             with open(SNAPSHOT_PATH, encoding="utf-8") as sf:
                 snap = json.load(sf)
             g_id_map = {p["id"]: p for p in state.get("grammar_points", []) if p.get("id")}
+            _code_to_verdict = {1: "blank", 2: "confuse", 3: "passive", 4: "instinct"}
+            _sub_henkei_snap = {
+                "G-116a": "K-001", "G-116b": "K-003", "G-116c": "K-002",
+                "G-116d": "K-004", "G-116e": "K-005", "G-116f": "K-008",
+                "G-119a": "K-014", "G-119b": "K-013", "G-119c": "K-011",
+                "G-119d": "K-010", "G-119e": "K-012", "G-119f": "K-016",
+                "G-119g": "K-019", "G-119h": "K-017",
+                "G-117a": "K-006", "G-117b": "K-045", "G-117c": "K-023",
+            }
             for gk, gv in (snap.get("grammarAudit") or {}).items():
                 if not (isinstance(gv, list) and len(gv) >= 2):
                     continue
                 code_i = int(gv[0] or 0)
                 ts_i = int(gv[1] or 0)
                 day_s = str(gv[2] if len(gv) >= 3 else "") or fallback_day_tag
-                g_item = g_id_map.get(gk) or g_map.get(gk)
+                base_gk = re.sub(r"[a-z]+$", "", gk)
+                is_sub = bool(base_gk and base_gk != gk)
+                g_item = g_id_map.get(gk) or g_id_map.get(base_gk) or g_map.get(gk)
                 if g_item is None or ts_i < MIN_REAL_TS:
                     continue
-                if ts_i <= int(g_item.get("audit_ts") or 0):
-                    continue
-                if code_i == 1:
+                if is_sub:
+                    sub_map = g_item.setdefault("sub_audits", {})
+                    prev_sub = sub_map.get(gk) or {}
+                    if ts_i <= int(prev_sub.get("ts") or 0):
+                        continue
+                    if code_i in _code_to_verdict:
+                        sub_map[gk] = {"verdict": _code_to_verdict[code_i], "code": code_i, "ts": ts_i, "date": day_s}
+                    elif code_i == 0:
+                        sub_map[gk] = {"verdict": "", "code": 0, "ts": ts_i, "date": day_s}
+                    hk_id = _sub_henkei_snap.get(gk)
+                    if hk_id and hk_id in h_map and code_i in _code_to_verdict:
+                        hp_sub = h_map[hk_id]
+                        if code_i == 1:
+                            hp_sub["status"] = "red"; hp_sub["streak"] = 0; hp_sub["last_ng_date"] = day_s
+                        elif code_i == 2:
+                            hp_sub["status"] = "orange"; hp_sub["streak"] = 0; hp_sub["last_ng_date"] = day_s
+                        elif code_i == 3:
+                            hp_sub["status"] = "yellow"; hp_sub["streak"] = 2; hp_sub["last_ok_date"] = ""
+                        elif code_i == 4:
+                            hp_sub["status"] = "green"; hp_sub["streak"] = 3; hp_sub["last_ok_date"] = day_s
+                    active_codes = [int(v.get("code") or 0) for v in sub_map.values() if int(v.get("code") or 0) > 0]
+                    eff_code = min(active_codes) if active_codes else 0
+                else:
+                    if ts_i <= int(g_item.get("audit_ts") or 0):
+                        continue
+                    eff_code = code_i
+                if eff_code == 1:
                     g_item["audit_verdict"] = "blank"
                     g_item["status"] = "red"
                     g_item["streak"] = 0
                     g_item["last_ng_date"] = day_s
-                elif code_i == 2:
+                elif eff_code == 2:
                     g_item["audit_verdict"] = "confuse"
                     g_item["status"] = "orange"
                     g_item["streak"] = 0
                     g_item["last_ng_date"] = day_s
-                elif code_i == 3:
+                elif eff_code == 3:
                     g_item["audit_verdict"] = "passive"
                     g_item["status"] = "yellow"
                     g_item["streak"] = 2
                     g_item["last_ok_date"] = ""
-                elif code_i == 4:
+                elif eff_code == 4:
                     g_item["audit_verdict"] = "instinct"
                     g_item["status"] = "green"
                     g_item["streak"] = 3
                     g_item["last_ok_date"] = day_s
-                elif code_i == 0:
+                elif eff_code == 0:
                     g_item.pop("audit_verdict", None)
                 g_item["audit_date"] = day_s
-                g_item["audit_ts"] = ts_i
+                g_item["audit_ts"] = max(int(g_item.get("audit_ts") or 0), ts_i)
                 applied += 1
 
             ov_seen = state.setdefault("_applied_override_ts", {})
