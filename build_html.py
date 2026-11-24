@@ -8823,14 +8823,17 @@ function stopRadioReviewAudio() {
 function syncRvAudioButtons() {
   document.querySelectorAll("[data-rv-aud]").forEach(el => {
     const k = el.getAttribute("data-rv-aud");
-    el.classList.toggle("playing", !!rvClipPlayingKey && rvClipPlayingKey === k);
+    const isPlaying = !!rvClipPlayingKey && rvClipPlayingKey === k;
+    el.classList.toggle("playing", isPlaying);
+    const ico = el.querySelector(".rv-aud-ico");
+    if (ico) ico.textContent = isPlaying ? "⏸" : "▶";
   });
 }
 
-function playReviewPodcastClip(item, rateVal, toggleKey) {
+function playReviewPodcastClip(item, rateVal, toggleKey, forcePlay) {
   if (!item) return;
   const key = toggleKey || `clip_${rateVal}`;
-  if (rvClipPlayingKey === key && rvClipPlayer && !rvClipPlayer.paused) {
+  if (!forcePlay && rvClipPlayingKey === key && rvClipPlayer && !rvClipPlayer.paused) {
     stopRadioReviewAudio();
     return;
   }
@@ -8845,6 +8848,10 @@ function playReviewPodcastClip(item, rateVal, toggleKey) {
     rvClipPlayer = new Audio();
     rvClipPlayer.preload = "metadata";
     rvClipPlayer.playsInline = true;
+    try {
+      rvClipPlayer.style.display = "none";
+      if (document.body) document.body.appendChild(rvClipPlayer);
+    } catch (e) {}
   }
   const startS = Math.max(0, Number(item.clip_start || 0));
   const endS = Math.max(startS + 4, Number(item.clip_end || (startS + 14)));
@@ -8857,7 +8864,7 @@ function playReviewPodcastClip(item, rateVal, toggleKey) {
       rvClipPlayer.currentTime = startS;
       rvClipPlayer.playbackRate = rateVal || 1.0;
       rvClipPlayer.ontimeupdate = () => {
-        if (rvClipEndSec > 0 && (rvClipPlayer.currentTime || 0) >= rvClipEndSec) {
+        if (!rvClipPlayer.seeking && (rvClipPlayer.currentTime || 0) >= startS && rvClipEndSec > 0 && (rvClipPlayer.currentTime || 0) >= rvClipEndSec) {
           stopRadioReviewAudio();
         }
       };
@@ -8883,6 +8890,7 @@ function playReviewPodcastClip(item, rateVal, toggleKey) {
       rvClipPlayer.onloadedmetadata = null;
       beginPlay();
     };
+    try { rvClipPlayer.load(); } catch (e) {}
   }
 }
 
@@ -9410,7 +9418,7 @@ function handleRadioReviewRelearn() {
   rvRevealed = true;
   renderRadioReviewStage();
   // Immediately anchor with the exact podcast context clip (Encoding Specificity!)
-  playReviewPodcastClip(item, 1.0, "clip_1");
+  playReviewPodcastClip(item, 1.0, "clip_1", true);
 }
 
 function finishRadioRelearnStep() {
@@ -9579,7 +9587,7 @@ function renderRadioReviewStage() {
           <div class="rv-zh-line">${escapeHtml(item.zh || "")}</div>
 
           <div class="rv-clip-row">
-            <button type="button" class="rv-clip-btn" data-rv-aud="clip_1" onclick="playReviewPodcastClip(getReviewItemById('${item.id}'), 1.0, 'clip_1')">▶ 原声语境 (${clipSecs}s)</button>
+            <button type="button" class="rv-clip-btn" data-rv-aud="clip_1" onclick="playReviewPodcastClip(getReviewItemById('${item.id}'), 1.0, 'clip_1')"><span class="rv-aud-ico">▶</span> 原声语境 (${clipSecs}s)</button>
             <button type="button" class="rv-clip-btn quiet" data-rv-aud="clip_085" onclick="playReviewPodcastClip(getReviewItemById('${item.id}'), 0.85, 'clip_085')">0.85x 慢听</button>
           </div>
 
@@ -9636,7 +9644,7 @@ function renderRadioReviewStage() {
         <p class="rv-cue-line">${escapeHtml(item.story_cue || "")}</p>
 
         <div class="rv-clip-row">
-          <button type="button" class="rv-clip-btn" data-rv-aud="clip_1" onclick="event.stopPropagation();playReviewPodcastClip(getReviewItemById('${item.id}'), 1.0, 'clip_1')">▶ 听原声语境 (${clipSecs}s)</button>
+          <button type="button" class="rv-clip-btn" data-rv-aud="clip_1" onclick="event.stopPropagation();playReviewPodcastClip(getReviewItemById('${item.id}'), 1.0, 'clip_1')"><span class="rv-aud-ico">▶</span> 听原声语境 (${clipSecs}s)</button>
         </div>
 
         <div class="rv-tap-hint" id="rv-tap-hint" style="${rvRevealed ? "display:none" : ""}">先回忆意思或读音，轻点核对</div>
@@ -9657,6 +9665,9 @@ function renderRadioReviewStage() {
   `;
   bindRadioReviewSwipe(document.getElementById("rv-stage-card"));
   syncRvAudioButtons();
+  if (rvMode === "triage" || rvMode === "tail") {
+    playReviewPodcastClip(item, 1.0, "clip_1", true);
+  }
 }
 
 // ================= QUIZ ACTIONS =================
@@ -15574,6 +15585,10 @@ sb.openRadioReview(true);
 const rvHtml1 = (els['radio-review-stage'] && els['radio-review-stage'].innerHTML) || '';
 if (!rvHtml1.includes('听后复盘') || !rvHtml1.includes('重学这个') || !rvHtml1.includes('懂了') || rvHtml1.includes('—')) {
   throw new Error('Self-test 6 failed: triage view missing core controls or contains em dash');
+}
+const clipKey1 = vm.runInNewContext('rvClipPlayingKey', sb);
+if (clipKey1 !== 'clip_1') {
+  throw new Error('Self-test 6 failed: review card must directly auto-play contextual podcast clip');
 }
 // Flag ONLY the first item for selective deep contextual re-learn; fast-pass all remaining items!
 sb.handleRadioReviewRelearn();
