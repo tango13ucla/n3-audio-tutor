@@ -2682,7 +2682,8 @@
     "ふと": "./audio/words/w_ff5409a66b.mp3",
     "ほっとする": "./audio/words/w_7d88757140.mp3",
     "じっと": "./audio/words/w_b54efe3ba1.mp3",
-    "さっと": "./audio/words/w_5e06a598a4.mp3"
+    "さっと": "./audio/words/w_5e06a598a4.mp3",
+    "象徴": "./audio/words/w_e5017e70a4.mp3"
   },
   "vocab_cards": {
     "書類": {
@@ -3621,6 +3622,13 @@
       "full": "./audio/words/vc_ff5409a66b_full.mp3?v=50ae4adc",
       "hook": "./audio/words/vc_ff5409a66b_hook.mp3?v=a71c8ef7",
       "clean": "./audio/words/vc_ff5409a66b_clean.mp3?v=51e0136c"
+    },
+    "象徴": {
+      "front": "",
+      "rev": "./audio/words/vc_e5017e70a4_rev.mp3?v=08da551e",
+      "full": "./audio/words/vc_e5017e70a4_rev.mp3?v=08da551e",
+      "hook": "./audio/words/vc_e5017e70a4_hook.mp3?v=8ce32ae7",
+      "clean": "./audio/words/vc_e5017e70a4_clean.mp3?v=32dc0407"
     }
   },
   "vocab_card_hashes": {
@@ -4142,7 +4150,10 @@
     "vc_25161e4413_clean.mp3": "dc39a1b0ac",
     "vc_55bd630b22_clean.mp3": "a501999444",
     "vc_863c6a494c_clean.mp3": "5d6cbb5c55",
-    "vc_a4e3057f99_clean.mp3": "744daff26e"
+    "vc_a4e3057f99_clean.mp3": "744daff26e",
+    "vc_e5017e70a4_rev.mp3": "08da551eeb",
+    "vc_e5017e70a4_hook.mp3": "8ce32ae76e",
+    "vc_e5017e70a4_clean.mp3": "32dc0407c4"
   },
   "num_JF_1.mp3": "b67108e5b8a0",
   "num_JF_2.mp3": "faee77d48904",

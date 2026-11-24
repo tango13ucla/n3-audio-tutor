@@ -1,8 +1,8 @@
 # Cloud Lookup & Weakness Telemetry Ledger
 
-- Updated: `2026-11-23 22:45 PT`
-- Study Date: `2026-11-23`
-- Total Looked-Up Words/Phrases: `16`
+- Updated: `2026-11-24 08:43 PT`
+- Study Date: `2026-11-24`
+- Total Looked-Up Words/Phrases: `17`
 
 | Word / Phrase | Lookups | Last Seen | Contexts |
 | :--- | :---: | :--- | :--- |
@@ -22,3 +22,4 @@
 | `でしょう` | 1 | `2026-11-21 23:05` | VAR9-09 |
 | `にとって` | 1 | `2026-11-22 08:15` | VAR8-17 |
 | `ばかり` | 1 | `2026-11-22 08:33` | N3-G132 |
+| `ぎっしり` | 1 | `2026-11-24 07:11` | VAR-V14 |
