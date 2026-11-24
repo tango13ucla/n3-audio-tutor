@@ -1,7 +1,7 @@
 {
   "v": 15,
   "app": "n3-zen",
-  "updatedAt": 1795505730,
+  "updatedAt": 1795551968,
   "dates": {
     "2026-11-14": {
       "resetAt": 0,
@@ -3429,12 +3429,12 @@
     },
     "2026-11-24": {
       "resetAt": 0,
-      "radioMaxSec": 0,
+      "radioMaxSec": 74,
       "radioPos": [
-        0,
-        0
+        74,
+        1795551968
       ],
-      "radioSig": "",
+      "radioSig": "cfa80085",
       "greenAt": {},
       "retestAt": {},
       "learning": {},
@@ -5362,438 +5362,6 @@
     }
   },
   "records": [
-    {
-      "id": "N3-G124",
-      "point": "〜おきに",
-      "choice": "おきに",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:26:15.000Z"
-    },
-    {
-      "id": "N3-H28",
-      "point": "V-042",
-      "choice": "調べさせられ",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:26:36.000Z"
-    },
-    {
-      "id": "VAR9-01",
-      "point": "〜ところだ",
-      "choice": "ところ",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:27:01.000Z"
-    },
-    {
-      "id": "N3-H31",
-      "point": "K-005",
-      "choice": "いたし",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:27:14.000Z"
-    },
-    {
-      "id": "VAR9-16",
-      "point": "ついてない",
-      "choice": "ついてない",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:27:41.000Z"
-    },
-    {
-      "id": "N3-G59",
-      "point": "〜てもかまわない",
-      "choice": "てたまらない",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:28:08.000Z"
-    },
-    {
-      "id": "N3-H31",
-      "point": "K-005",
-      "choice": "なさ",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:28:25.000Z"
-    },
-    {
-      "id": "N3-G60",
-      "point": "〜こそ",
-      "choice": "こそ",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:28:29.000Z"
-    },
-    {
-      "id": "N3-G59",
-      "point": "〜てもかまわない",
-      "choice": "てもかまわない",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:28:33.000Z"
-    },
-    {
-      "id": "N3-G62",
-      "point": "少しも〜ない",
-      "choice": "下がった",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:28:50.000Z"
-    },
-    {
-      "id": "N3-G57",
-      "point": "〜べきではない",
-      "choice": "はずがない",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:29:07.000Z"
-    },
-    {
-      "id": "N3-G126",
-      "point": "〜に限る",
-      "choice": "に限る",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:29:25.000Z"
-    },
-    {
-      "id": "N3-G62",
-      "point": "少しも〜ない",
-      "choice": "下がらなかった",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:29:32.000Z"
-    },
-    {
-      "id": "N3-G57",
-      "point": "〜べきではない",
-      "choice": "べきではない",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:29:38.000Z"
-    },
-    {
-      "id": "N3-G58",
-      "point": "〜ちゃう／じゃう",
-      "choice": "といた",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:29:53.000Z"
-    },
-    {
-      "id": "N3-G128",
-      "point": "〜と同時に",
-      "choice": "と同時に",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:30:08.000Z"
-    },
-    {
-      "id": "N3-G129",
-      "point": "〜ことから",
-      "choice": "にもかかわらず",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:30:20.000Z"
-    },
-    {
-      "id": "N3-G58",
-      "point": "〜ちゃう／じゃう",
-      "choice": "ちゃった",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:30:40.000Z"
-    },
-    {
-      "id": "N3-G130",
-      "point": "〜というより",
-      "choice": "にしたがって",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:30:54.000Z"
-    },
-    {
-      "id": "N3-G129",
-      "point": "〜ことから",
-      "choice": "にもかかわらず",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:32:40.000Z"
-    },
-    {
-      "id": "N3-G132",
-      "point": "〜ばかりに",
-      "choice": "ばかりに",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:32:57.000Z"
-    },
-    {
-      "id": "LK:ばかり",
-      "point": "N3-G132",
-      "choice": "ばかり",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:33:02.000Z"
-    },
-    {
-      "id": "N3-G130",
-      "point": "〜というより",
-      "choice": "というより",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:33:09.000Z"
-    },
-    {
-      "id": "N3-G129",
-      "point": "〜ことから",
-      "choice": "ことから",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:33:13.000Z"
-    },
-    {
-      "id": "N3-G131",
-      "point": "〜にかけて",
-      "choice": "について",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:33:37.000Z"
-    },
-    {
-      "id": "N3-L17",
-      "point": "N3L-013",
-      "choice": "その箱を開けずにそのままにしておく",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:34:58.000Z"
-    },
-    {
-      "id": "N3-L18",
-      "point": "N3L-021",
-      "choice": "不确定",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:35:21.000Z"
-    },
-    {
-      "id": "N3-G131",
-      "point": "〜にかけて",
-      "choice": "にかけて",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:35:46.000Z"
-    },
-    {
-      "id": "N3-L20",
-      "point": "N3L-001",
-      "choice": "図書館でレポートを書いている",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:36:20.000Z"
-    },
-    {
-      "id": "N3-L18",
-      "point": "N3L-021",
-      "choice": "総務の林さんに使い方を聞きに行く",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:36:43.000Z"
-    },
-    {
-      "id": "N3-L21",
-      "point": "N3L-005",
-      "choice": "リビングでテレビを見ている",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:37:08.000Z"
-    },
-    {
-      "id": "N3-L22",
-      "point": "N3L-006",
-      "choice": "冷蔵庫にケーキを入れておく",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:37:29.000Z"
-    },
-    {
-      "id": "N3-V36",
-      "point": "任せる",
-      "choice": "まかせよう",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:37:48.000Z"
-    },
-    {
-      "id": "N3-L21",
-      "point": "N3L-005",
-      "choice": "新しい小説を読んでいる",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:38:11.000Z"
-    },
-    {
-      "id": "VAR9-13",
-      "point": "はっきり",
-      "choice": "はっきり",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:39:01.000Z"
-    },
-    {
-      "id": "VAR9-24",
-      "point": "貯める",
-      "choice": "ちょめた",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:39:11.000Z"
-    },
-    {
-      "id": "VAR9-12",
-      "point": "がらがら",
-      "choice": "がらがら",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:39:23.000Z"
-    },
-    {
-      "id": "VAR9-24",
-      "point": "貯める",
-      "choice": "ためた",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T08:39:30.000Z"
-    },
-    {
-      "id": "VAR9-09",
-      "point": "〜させてもらう",
-      "choice": "させてもらっ",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T18:19:44.000Z"
-    },
-    {
-      "id": "VAR9-35",
-      "point": "V-041",
-      "choice": "歩かされた",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T18:20:06.000Z"
-    },
-    {
-      "id": "VAR8-07",
-      "point": "〜ながらも",
-      "choice": "ながらも",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T18:20:11.000Z"
-    },
-    {
-      "id": "VAR9-39",
-      "point": "T-034",
-      "choice": "届って",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-22T18:20:40.000Z"
-    },
-    {
-      "id": "N3-H21",
-      "point": "T-008",
-      "choice": "壊れて",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T18:21:43.000Z"
-    },
-    {
-      "id": "VAR8-13",
-      "point": "〜っぽい",
-      "choice": "っぽい",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T18:21:59.000Z"
-    },
-    {
-      "id": "VAR9-39",
-      "point": "T-034",
-      "choice": "届けて",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T18:22:04.000Z"
-    },
-    {
-      "id": "VC-こっそり",
-      "point": "こっそり",
-      "choice": "记词:没记住",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-22T18:22:24.000Z"
-    },
-    {
-      "id": "VC-貯める",
-      "point": "貯める",
-      "choice": "记词:没记住",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-22T18:22:27.000Z"
-    },
-    {
-      "id": "VC-仲直り",
-      "point": "仲直り",
-      "choice": "记词:没记住",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-22T18:22:30.000Z"
-    },
-    {
-      "id": "VC-そっくり",
-      "point": "そっくり",
-      "choice": "记词:没记住",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-22T18:22:35.000Z"
-    },
-    {
-      "id": "VC-がらがら",
-      "point": "がらがら",
-      "choice": "记词:记住",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T18:22:37.000Z"
-    },
-    {
-      "id": "VC-こっそり",
-      "point": "こっそり",
-      "choice": "记词:记住",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T18:22:43.000Z"
-    },
-    {
-      "id": "VC-貯める",
-      "point": "貯める",
-      "choice": "记词:记住",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T18:22:45.000Z"
-    },
-    {
-      "id": "VC-仲直り",
-      "point": "仲直り",
-      "choice": "记词:没记住",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-22T18:22:48.000Z"
-    },
-    {
-      "id": "VC-そっくり",
-      "point": "そっくり",
-      "choice": "记词:没记住",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-22T18:22:50.000Z"
-    },
     {
       "id": "VC-囲む",
       "point": "囲む",
@@ -7761,6 +7329,438 @@
       "correct": "true",
       "ask_again": "false",
       "ts": "2026-11-24T07:12:06.000Z"
+    },
+    {
+      "id": "N3-H23",
+      "point": "A-042",
+      "choice": "よさそう",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:12:14.000Z"
+    },
+    {
+      "id": "N3-H23",
+      "point": "A-042",
+      "choice": "よさそう",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:12:18.000Z"
+    },
+    {
+      "id": "HES:N3-G77",
+      "point": "〜ようにする",
+      "choice": "犹豫过关",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:12:37.000Z"
+    },
+    {
+      "id": "N3-G77",
+      "point": "〜ようにする",
+      "choice": "ようにし",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:12:37.000Z"
+    },
+    {
+      "id": "N3-G80",
+      "point": "〜きり",
+      "choice": "きり",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:12:47.000Z"
+    },
+    {
+      "id": "HES:N3-G33",
+      "point": "〜しかない",
+      "choice": "犹豫过关",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:13:06.000Z"
+    },
+    {
+      "id": "N3-G33",
+      "point": "〜しかない",
+      "choice": "帰るしかない",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:13:06.000Z"
+    },
+    {
+      "id": "N3-H23",
+      "point": "A-042",
+      "choice": "不确定",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:14:08.000Z"
+    },
+    {
+      "id": "HES:N3-G85",
+      "point": "〜たものだ",
+      "choice": "犹豫过关",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:14:39.000Z"
+    },
+    {
+      "id": "N3-G85",
+      "point": "〜たものだ",
+      "choice": "だものだ",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:14:39.000Z"
+    },
+    {
+      "id": "VAR6-10",
+      "point": "N3L-009",
+      "choice": "今日のうちに資料を印刷してしまう",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:14:56.000Z"
+    },
+    {
+      "id": "N3-H23",
+      "point": "A-042",
+      "choice": "よさそう",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:15:02.000Z"
+    },
+    {
+      "id": "VAR9-43",
+      "point": "N3L-012",
+      "choice": "いつものメガネを踏んで壊してしまったから",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:18:29.000Z"
+    },
+    {
+      "id": "N3-G75",
+      "point": "〜ということだ",
+      "choice": "不确定",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:20:33.000Z"
+    },
+    {
+      "id": "N3-G76",
+      "point": "〜ことだ（忠告）",
+      "choice": "ばかりだ",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:21:19.000Z"
+    },
+    {
+      "id": "HES:N3-G78",
+      "point": "〜向け",
+      "choice": "犹豫过关",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:22:50.000Z"
+    },
+    {
+      "id": "N3-G78",
+      "point": "〜向け",
+      "choice": "向け",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:22:50.000Z"
+    },
+    {
+      "id": "N3-G75",
+      "point": "〜ということだ",
+      "choice": "ということだ",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:22:56.000Z"
+    },
+    {
+      "id": "N3-G76",
+      "point": "〜ことだ（忠告）",
+      "choice": "ばかりだ",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:23:04.000Z"
+    },
+    {
+      "id": "N3-G81",
+      "point": "〜きる／〜きれない",
+      "choice": "やすい",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:23:28.000Z"
+    },
+    {
+      "id": "N3-G79",
+      "point": "〜がたい",
+      "choice": "にくい",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:23:44.000Z"
+    },
+    {
+      "id": "N3-G76",
+      "point": "〜ことだ（忠告）",
+      "choice": "ことだ",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:27:02.000Z"
+    },
+    {
+      "id": "N3-G81",
+      "point": "〜きる／〜きれない",
+      "choice": "きれない",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:27:11.000Z"
+    },
+    {
+      "id": "N3-G79",
+      "point": "〜がたい",
+      "choice": "がたい",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:27:29.000Z"
+    },
+    {
+      "id": "N3-G82",
+      "point": "〜さえ",
+      "choice": "さえ",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:29:01.000Z"
+    },
+    {
+      "id": "N3-G83",
+      "point": "〜たとえ〜ても",
+      "choice": "たら",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:29:13.000Z"
+    },
+    {
+      "id": "N3-G86",
+      "point": "〜だらけ",
+      "choice": "だらけ",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:29:31.000Z"
+    },
+    {
+      "id": "N3-G87",
+      "point": "〜にしても",
+      "choice": "にしても",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:29:45.000Z"
+    },
+    {
+      "id": "N3-G83",
+      "point": "〜たとえ〜ても",
+      "choice": "ても",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:29:52.000Z"
+    },
+    {
+      "id": "HES:N3-G88",
+      "point": "〜といっても",
+      "choice": "犹豫过关",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:31:13.000Z"
+    },
+    {
+      "id": "N3-G88",
+      "point": "〜といっても",
+      "choice": "といっても",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:31:13.000Z"
+    },
+    {
+      "id": "N3-G89",
+      "point": "〜としたら",
+      "choice": "としたら",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:31:24.000Z"
+    },
+    {
+      "id": "N3-G92",
+      "point": "〜気味",
+      "choice": "だらけ",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:32:03.000Z"
+    },
+    {
+      "id": "VAR6-05",
+      "point": "V-031",
+      "choice": "食べられます",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:32:23.000Z"
+    },
+    {
+      "id": "HES:N3-G153",
+      "point": "〜わけにはいかない",
+      "choice": "犹豫过关",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:33:00.000Z"
+    },
+    {
+      "id": "N3-G153",
+      "point": "〜わけにはいかない",
+      "choice": "わけにはいかない",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:33:00.000Z"
+    },
+    {
+      "id": "N3-G92",
+      "point": "〜気味",
+      "choice": "気味",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:33:14.000Z"
+    },
+    {
+      "id": "HES:N3-G37",
+      "point": "〜ば〜のに",
+      "choice": "犹豫过关",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:33:31.000Z"
+    },
+    {
+      "id": "N3-G37",
+      "point": "〜ば〜のに",
+      "choice": "出れば",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:33:31.000Z"
+    },
+    {
+      "id": "VAR6-12",
+      "point": "N3L-015",
+      "choice": "うん、急いでタクシー乗り場へ行こう。",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:34:34.000Z"
+    },
+    {
+      "id": "VAR9-40",
+      "point": "N3L-087",
+      "choice": "ゴミ袋を玄関に出す",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:35:26.000Z"
+    },
+    {
+      "id": "VAR6-13",
+      "point": "N3L-007",
+      "choice": "はい、今すぐつけておきます。",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:35:51.000Z"
+    },
+    {
+      "id": "VAR5-27",
+      "point": "ついてない",
+      "choice": "たまらない",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:36:11.000Z"
+    },
+    {
+      "id": "N3-L27",
+      "point": "N3L-244",
+      "choice": "うん、スープがすごくおいしいね。",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:36:28.000Z"
+    },
+    {
+      "id": "N3-H15",
+      "point": "T-001",
+      "choice": "開いた",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:36:42.000Z"
+    },
+    {
+      "id": "VAR5-27",
+      "point": "ついてない",
+      "choice": "ついてない",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:36:50.000Z"
+    },
+    {
+      "id": "N3-H16",
+      "point": "K-012",
+      "choice": "いただいても",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:36:56.000Z"
+    },
+    {
+      "id": "VAR9-27",
+      "point": "組む",
+      "choice": "ぐむ",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:37:06.000Z"
+    },
+    {
+      "id": "N3-H14",
+      "point": "K-001",
+      "choice": "いらっしゃいます",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:37:16.000Z"
+    },
+    {
+      "id": "VAR9-28",
+      "point": "指示",
+      "choice": "しじ",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:37:21.000Z"
+    },
+    {
+      "id": "VAR9-27",
+      "point": "組む",
+      "choice": "くむ",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:37:26.000Z"
+    },
+    {
+      "id": "G-20261114-08",
+      "point": "〜さえ〜ば",
+      "choice": "さえ",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:37:28.000Z"
+    },
+    {
+      "id": "N3-G125",
+      "point": "〜っぱなし",
+      "choice": "っぱなし",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:37:37.000Z"
+    },
+    {
+      "id": "N3-G15",
+      "point": "〜ば〜ほど",
+      "choice": "読めば",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T07:37:49.000Z"
     }
   ]
 }
