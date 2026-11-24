@@ -2224,12 +2224,12 @@ async def main():
         opening_turns = POST_N3_BILINGUAL_OPENING
         ad1_out_turns, ad1_in_turns = AD_BREAK_1_POOL[day_ord % len(AD_BREAK_1_POOL)]
         ad2_out_turns, ad2_in_turns = AD_BREAK_2_POOL[(day_ord + 1) % len(AD_BREAK_2_POOL)]
-        closing_turns = CLOSING_POOL[day_ord % len(CLOSING_POOL)]
+        closing_turns = []  # Authentic Qiangqiang: zero artificial sign-off, ends naturally on final story turn!
     else:
         opening_turns = []
         ad1_out_turns, ad1_in_turns = AD_BREAK_1_POOL[day_ord % len(AD_BREAK_1_POOL)]
         ad2_out_turns, ad2_in_turns = AD_BREAK_2_POOL[(day_ord + 1) % len(AD_BREAK_2_POOL)]
-        closing_turns = CLOSING_POOL[day_ord % len(CLOSING_POOL)]
+        closing_turns = []  # Authentic Qiangqiang: zero artificial sign-off, ends naturally on final story turn!
 
     story_blocks = []
     for ch_idx, st in enumerate(selected_stories):
