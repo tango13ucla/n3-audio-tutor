@@ -12901,10 +12901,6 @@ function renderGrammarAuditStage() {
   box.innerHTML = `
     <div class="ga-meta-bar">
       <span class="ga-meta-fam" id="ga-eyebrow">${escapeHtml(eyeText)}</span>
-      <div class="vc-meta-right">
-        ${canUndo ? `<button class="text-btn" onclick="undoLastGA(event)">撤销</button>` : ""}
-        <button class="text-btn" id="ga-aud-btn" style="${gaRevealed ? "" : "display:none;"}" onclick="playGAAudio(event)">听</button>
-      </div>
     </div>
 
     <div class="ga-stage" onclick="onGACardTapOrAudio()">
@@ -12916,6 +12912,13 @@ function renderGrammarAuditStage() {
           ${item.rule ? `<div class="ga-rule">${escapeHtml(item.rule)}</div>` : ""}
           ${item.ex_ja ? `<div class="ga-divider"></div><div class="ga-ex"><div class="ga-ex-ja">${escapeHtml(item.ex_ja)}</div>${item.ex_zh ? `<div class="ga-ex-zh">${escapeHtml(item.ex_zh)}</div>` : ""}</div>` : ""}
         </div>
+      </div>
+    </div>
+
+    <div class="vc-aux-row" id="ga-aux-row" style="min-height:46px;">
+      ${canUndo ? `<button type="button" class="vc-aux-btn seal" onclick="undoLastGA(event)">撤销</button>` : `<span></span>`}
+      <div class="vc-aux-right">
+        <button type="button" class="vc-aux-btn replay" id="ga-aud-btn" style="${gaRevealed ? "" : "display:none;"}" onclick="playGAAudio(event)">听</button>
       </div>
     </div>
 
