@@ -4550,6 +4550,138 @@ html = r"""<!DOCTYPE html>
     white-space: nowrap;
   }
   .zb-toast.show { opacity: 0.94; transform: translateX(-50%) translateY(0); }
+  /* ================= 3F. GLOBAL FLOATING MINI RADIO BAR (跨 Tab 无缝随身听) ================= */
+  .radio-mini-bar {
+    position: relative;
+    width: 100%;
+    margin-top: auto;
+    margin-bottom: 8px;
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--hairline-2);
+    border-radius: 12px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    cursor: pointer;
+    z-index: 80;
+    transition: opacity 0.22s ease, transform 0.22s ease;
+  }
+  .radio-mini-bar.hidden {
+    display: none !important;
+  }
+  .rmb-progress-rail {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: rgba(28, 27, 24, 0.08);
+  }
+  .rmb-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--moss);
+    transition: width 0.3s linear;
+  }
+  .rmb-body {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px 7px;
+    gap: 10px;
+  }
+  .rmb-left {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    flex: 1;
+  }
+  .rmb-wave-icon {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 2px;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+  }
+  .rmb-bar {
+    width: 2.5px;
+    height: 4px;
+    background: var(--ink-3);
+    border-radius: 1px;
+    transition: height 0.2s ease, background-color 0.2s ease;
+  }
+  .rmb-wave-icon.is-playing .rmb-bar {
+    background: var(--moss);
+    animation: rmbEqualizer 1s infinite ease-in-out alternate;
+  }
+  .rmb-wave-icon.is-playing .rmb-bar:nth-child(1) { animation-delay: 0.1s; height: 12px; }
+  .rmb-wave-icon.is-playing .rmb-bar:nth-child(2) { animation-delay: 0.35s; height: 7px; }
+  .rmb-wave-icon.is-playing .rmb-bar:nth-child(3) { animation-delay: 0.2s; height: 14px; }
+  @keyframes rmbEqualizer {
+    0% { height: 4px; }
+    50% { height: 14px; }
+    100% { height: 6px; }
+  }
+  .rmb-meta {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+  }
+  .rmb-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--sumi);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.25;
+  }
+  .rmb-time {
+    font-size: 11px;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+    margin-top: 1px;
+  }
+  .rmb-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .rmb-play-btn {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--moss);
+    background: rgba(45, 122, 86, 0.09);
+    padding: 5px 11px;
+    border-radius: 14px;
+    transition: all 0.15s ease;
+  }
+  .rmb-play-btn:active {
+    transform: scale(0.95);
+    background: rgba(45, 122, 86, 0.18);
+  }
+  .rmb-jump-btn {
+    font-size: 11.5px;
+    color: var(--ink-3);
+    padding: 4px 6px;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+  .rmb-jump-btn:active {
+    color: var(--sumi);
+  }
+  @media (max-width: 859px), (max-height: 520px) {
+    .radio-mini-bar {
+      margin-bottom: 6px;
+      border-radius: 10px;
+    }
+  }
 </style>
 </head>
 <body>
@@ -4899,6 +5031,26 @@ html = r"""<!DOCTYPE html>
     </div>
     <div class="zb-toast" id="zb-toast"></div>
   </section>
+
+  <!-- 3F. GLOBAL FLOATING MINI RADIO BAR (跨 Tab 无缝随身听) -->
+  <aside class="radio-mini-bar hidden" id="radio-mini-bar" onclick="onMiniBarTap(event)">
+    <div class="rmb-progress-rail"><div class="rmb-progress-fill" id="rmb-progress-fill"></div></div>
+    <div class="rmb-body">
+      <div class="rmb-left">
+        <span class="rmb-wave-icon" id="rmb-wave-icon">
+          <span class="rmb-bar"></span><span class="rmb-bar"></span><span class="rmb-bar"></span>
+        </span>
+        <div class="rmb-meta">
+          <span class="rmb-title" id="rmb-title">锵锵三人行</span>
+          <span class="rmb-time" id="rmb-time">00:00 / 60:00</span>
+        </div>
+      </div>
+      <div class="rmb-actions">
+        <button type="button" class="rmb-play-btn" id="rmb-play-btn" onclick="onMiniBarPlayToggle(event)" aria-label="播放/暂停">播放</button>
+        <button type="button" class="rmb-jump-btn" onclick="onMiniBarJump(event)" aria-label="回到随身听">随身听 ›</button>
+      </div>
+    </div>
+  </aside>
 
   <!-- 4. RIGHT-THUMB NAV (phone only · 上看下点: top is for reading, bottom-right is for touching; mirrors the old top header, no ornament) -->
   <nav class="thumb-nav" aria-label="切换">
@@ -6597,9 +6749,16 @@ player.preload = "auto";
 const wordPlayer = new Audio();
 wordPlayer.preload = "auto";
 const radioPlayer = new Audio();
-radioPlayer.preload = "metadata";
+radioPlayer.preload = "auto";
 radioPlayer.setAttribute("playsinline", "");
-radioPlayer.style.display = "none";
+// Attach as active offscreen DOM node (never display:none, preventing background tab throttling/discard)
+radioPlayer.style.position = "fixed";
+radioPlayer.style.bottom = "-9999px";
+radioPlayer.style.left = "-9999px";
+radioPlayer.style.width = "1px";
+radioPlayer.style.height = "1px";
+radioPlayer.style.opacity = "0.001";
+radioPlayer.style.pointerEvents = "none";
 try { if (document.body) document.body.appendChild(radioPlayer); } catch (e) {}
 
 const PARTICLE_FALLBACK = {
@@ -7124,7 +7283,7 @@ function primeRadioLocalBlob(allowNetworkDownload) {
 
 // Immediately check local CacheStorage on page open (~5ms, 0 network); background-cache today's MP3 once idle
 primeRadioLocalBlob(false);
-setTimeout(() => primeRadioLocalBlob(true), 2200);
+setTimeout(() => primeRadioLocalBlob(true), 400);
 
 function applyRadioSeek(sec) {
   const dur = getEffectiveRadioDuration();
@@ -7328,6 +7487,7 @@ function setupMediaSession(segTitle) {
       const bind = (act, fn) => { try { navigator.mediaSession.setActionHandler(act, fn); } catch (e) {} };
       bind("play", () => toggleRadioPlay(true));
       bind("pause", () => toggleRadioPlay(false));
+      bind("stop", () => toggleRadioPlay(false));
       bind("seekbackward", details => seekRadioBy(-(details && details.seekOffset > 0 ? details.seekOffset : 15)));
       bind("seekforward", details => seekRadioBy(details && details.seekOffset > 0 ? details.seekOffset : 15));
       bind("previoustrack", () => seekRadioBy(-15));
@@ -7476,77 +7636,139 @@ function renderRadioChapters(activeChapIdx) {
 }
 
 function updateRadioLiveDisplay(t) {
-  const seekEl = document.getElementById("radio-seek");
-  if (seekEl) seekEl.value = Math.floor(t);
-  document.getElementById("radio-cur-time").textContent = formatMMSS(t);
-  if (radioPlayer.duration && isFinite(radioPlayer.duration)) {
-    seekEl.max = Math.ceil(radioPlayer.duration);
-    document.getElementById("radio-tot-time").textContent = formatMMSS(radioPlayer.duration);
-  }
-
-  if (t > (A.radioMaxSec || 0)) {
-    const prevMin = Math.floor((A.radioMaxSec || 0) / 60);
-    A.radioMaxSec = Math.floor(t);
-    if (Math.floor(A.radioMaxSec / 60) !== prevMin) {
-      if (!radioPlayer.paused && pendingRadioSeekSec === null) {
-        A.radioPos = [Math.floor(t), nowUnixSec()];
-        A.radioSig = RADIO_SIG;
-        writeLocalRadioPos(t);
-      }
-      saveAdaptiveState();
-      renderGreenBoard();
-      if (Date.now() - lastRadioCloudPushMs > 55000) {
-        lastRadioCloudPushMs = Date.now();
-        scheduleCloudPush(400);
-      }
+  try {
+    const seekEl = document.getElementById("radio-seek");
+    if (seekEl) seekEl.value = Math.floor(t);
+    const curTimeEl = document.getElementById("radio-cur-time");
+    if (curTimeEl) curTimeEl.textContent = formatMMSS(t);
+    if (seekEl && radioPlayer.duration && isFinite(radioPlayer.duration)) {
+      seekEl.max = Math.ceil(radioPlayer.duration);
     }
-  }
-  paintRadioSeekProgress(t);
-
-  const segs = DATA.radio.segments || [];
-  let curSeg = null;
-  let segIdx = -1;
-  for (let i = 0; i < segs.length; i++) {
-    if (t >= segs[i].start && t < segs[i].end) {
-      curSeg = segs[i];
-      segIdx = i;
-      break;
-    }
-  }
-
-  if (curSeg) {
-    if (segIdx !== lastRenderedSegIdx) {
-      lastRenderedSegIdx = segIdx;
-      const chaps = DATA.radio.chapters || [];
-      const chapObj = chaps[curSeg.chapter] || chaps[0];
-      if (chapObj) {
-        document.getElementById("radio-chap-lbl").textContent = chapObj.title.replace(/^[①②③④⑤⑥]\s*/, "");
-        renderRadioChapters(chapObj.idx);
-      }
-      document.getElementById("radio-live-title").textContent = curSeg.title;
-      document.getElementById("radio-live-ja").innerHTML = annotateJapanese(curSeg.ja_focus || "");
-      clearInlineLexicon("radio-inline-lex");
-      setupMediaSession(curSeg.title);
+    const totTimeEl = document.getElementById("radio-tot-time");
+    if (totTimeEl && radioPlayer.duration && isFinite(radioPlayer.duration)) {
+      totTimeEl.textContent = formatMMSS(radioPlayer.duration);
     }
 
-    const segPids = Array.isArray(curSeg.point_ids) && curSeg.point_ids.length
-      ? curSeg.point_ids
-      : (curSeg.point_id ? [curSeg.point_id] : []);
-    if (segPids.length && t >= curSeg.end - 12) {
-      let changed = false;
-      for (const pid of segPids) {
-        const ps = A.pts[pid];
-        if (ps && !ps.audioPrimed) {
-          ps.audioPrimed = true;
-          changed = true;
+    if (t > (A.radioMaxSec || 0)) {
+      const prevMin = Math.floor((A.radioMaxSec || 0) / 60);
+      A.radioMaxSec = Math.floor(t);
+      if (Math.floor(A.radioMaxSec / 60) !== prevMin) {
+        if (!radioPlayer.paused && pendingRadioSeekSec === null) {
+          A.radioPos = [Math.floor(t), nowUnixSec()];
+          A.radioSig = RADIO_SIG;
+          writeLocalRadioPos(t);
         }
-      }
-      if (changed) {
         saveAdaptiveState();
         renderGreenBoard();
+        if (Date.now() - lastRadioCloudPushMs > 55000) {
+          lastRadioCloudPushMs = Date.now();
+          scheduleCloudPush(400);
+        }
       }
     }
+    paintRadioSeekProgress(t);
+
+    const segs = DATA.radio.segments || [];
+    let curSeg = null;
+    let segIdx = -1;
+    for (let i = 0; i < segs.length; i++) {
+      if (t >= segs[i].start && t < segs[i].end) {
+        curSeg = segs[i];
+        segIdx = i;
+        break;
+      }
+    }
+
+    if (curSeg) {
+      if (segIdx !== lastRenderedSegIdx) {
+        lastRenderedSegIdx = segIdx;
+        const chaps = DATA.radio.chapters || [];
+        const chapObj = chaps[curSeg.chapter] || chaps[0];
+        if (chapObj) {
+          const chapLbl = document.getElementById("radio-chap-lbl");
+          if (chapLbl) chapLbl.textContent = chapObj.title.replace(/^[①②③④⑤⑥]\s*/, "");
+          renderRadioChapters(chapObj.idx);
+        }
+        const titleEl = document.getElementById("radio-live-title");
+        if (titleEl) titleEl.textContent = curSeg.title;
+        const jaEl = document.getElementById("radio-live-ja");
+        if (jaEl) jaEl.innerHTML = annotateJapanese(curSeg.ja_focus || "");
+        clearInlineLexicon("radio-inline-lex");
+        setupMediaSession(curSeg.title);
+      }
+
+      const segPids = Array.isArray(curSeg.point_ids) && curSeg.point_ids.length
+        ? curSeg.point_ids
+        : (curSeg.point_id ? [curSeg.point_id] : []);
+      if (segPids.length && t >= curSeg.end - 12) {
+        let changed = false;
+        for (const pid of segPids) {
+          const ps = A.pts[pid];
+          if (ps && !ps.audioPrimed) {
+            ps.audioPrimed = true;
+            changed = true;
+          }
+        }
+        if (changed) {
+          saveAdaptiveState();
+          renderGreenBoard();
+        }
+      }
+    }
+    syncRadioMiniBar();
+  } catch (e) {}
+}
+
+function onMiniBarTap(e) {
+  if (e && e.target && e.target.closest && e.target.closest(".rmb-play-btn")) return;
+  switchMode("radio", false);
+}
+
+function onMiniBarPlayToggle(e) {
+  if (e) {
+    if (e.stopPropagation) e.stopPropagation();
+    if (e.preventDefault) e.preventDefault();
   }
+  toggleRadioPlay();
+}
+
+function onMiniBarJump(e) {
+  if (e) {
+    if (e.stopPropagation) e.stopPropagation();
+    if (e.preventDefault) e.preventDefault();
+  }
+  switchMode("radio", false);
+}
+
+function syncRadioMiniBar() {
+  try {
+    const bar = document.getElementById("radio-mini-bar");
+    if (!bar) return;
+    const isRadioTab = (activeMode === "radio");
+    const hasRadioSession = (typeof radioHasPlayedOnce !== "undefined" && radioHasPlayedOnce) || (typeof radioPlayer !== "undefined" && !radioPlayer.paused);
+    if (isRadioTab || !hasRadioSession) {
+      bar.classList.add("hidden");
+      return;
+    }
+    bar.classList.remove("hidden");
+    const isPlaying = typeof radioPlayer !== "undefined" && !radioPlayer.paused;
+    const playBtn = document.getElementById("rmb-play-btn");
+    if (playBtn) playBtn.textContent = isPlaying ? (radioBuffering ? "缓冲中…" : "暂停") : "播放";
+    const wave = document.getElementById("rmb-wave-icon");
+    if (wave) wave.classList.toggle("is-playing", isPlaying);
+    const dur = getEffectiveRadioDuration();
+    const curT = (pendingRadioSeekSec !== null) ? pendingRadioSeekSec : ((typeof radioPlayer !== "undefined" && radioPlayer.currentTime) || 0);
+    const curTitle = getCurrentRadioSegTitle();
+    const titleEl = document.getElementById("rmb-title");
+    if (titleEl) titleEl.textContent = curTitle;
+    const timeEl = document.getElementById("rmb-time");
+    if (timeEl) timeEl.textContent = `${formatMMSS(curT)} / ${formatMMSS(dur)}`;
+    const fillEl = document.getElementById("rmb-progress-fill");
+    if (fillEl) {
+      const pct = Math.max(0, Math.min(100, (curT / dur) * 100));
+      fillEl.style.width = pct.toFixed(1) + "%";
+    }
+  } catch (e) {}
 }
 
 function syncRadioUI(optimisticPlaying) {
@@ -7557,7 +7779,40 @@ function syncRadioUI(optimisticPlaying) {
   if (tabBtn) tabBtn.classList.toggle("is-playing", playing);
   const bTabBtn = document.getElementById("btab-radio");
   if (bTabBtn) bTabBtn.classList.toggle("is-playing", playing);
+  syncRadioMiniBar();
 }
+
+function recoverRadioPlayback(isHardError) {
+  if (!radioInitialized || radioPlayer.ended) return;
+  const isPlayingIntent = !radioPlayer.paused || radioHasPlayedOnce;
+  if (!isPlayingIntent) return;
+  const t = Math.max(0, Math.floor((pendingRadioSeekSec !== null ? pendingRadioSeekSec : (radioPlayer.currentTime || lastSavedSec || 0))));
+  if (cachedRadioBlobUrl && !radioUsingLocalBlob) {
+    radioUsingLocalBlob = true;
+    radioPlayer.src = cachedRadioBlobUrl;
+    if (t > 0) applyRadioSeek(t);
+    try { radioPlayer.load(); } catch (e) {}
+    radioPlayer.play().then(() => {
+      syncRadioUI(true);
+    }).catch(() => {});
+    return;
+  }
+  if (isHardError) {
+    const src = cachedRadioBlobUrl || DATA.radio.audio_url;
+    radioPlayer.src = src;
+    if (t > 0) applyRadioSeek(t);
+    try { radioPlayer.load(); } catch (e) {}
+    radioPlayer.play().then(() => {
+      syncRadioUI(true);
+    }).catch(() => {});
+  }
+}
+radioPlayer.addEventListener("error", () => recoverRadioPlayback(true));
+radioPlayer.addEventListener("stalled", () => {
+  if (!radioPlayer.paused && !radioUsingLocalBlob) {
+    recoverRadioPlayback(false);
+  }
+});
 
 radioPlayer.addEventListener("play", () => {
   radioHasPlayedOnce = true;
@@ -10302,10 +10557,6 @@ function switchMode(m, autoPlayRadio) {
       syncRadioUI();
     }
   } else if (m === "vocab") {
-    if (!radioPlayer.paused) {
-      radioPlayer.pause();
-      syncRadioUI();
-    }
     enterVocabMode();
   } else if (m === "body") {
     if (window.ZB && typeof window.ZB.onEnter === "function") window.ZB.onEnter();
@@ -10314,6 +10565,7 @@ function switchMode(m, autoPlayRadio) {
   } else {
     renderTutor();
   }
+  syncRadioMiniBar();
 }
 
 function recalcCounts(modKey) {
@@ -12414,7 +12666,7 @@ function flushPendingEditionReload(allowDuringActiveRadioSession) {
   // Never reload while backgrounded/screen-off or right after pausing radio:
   // reloading destroys the active Android MediaSession so Pixel Buds tap-to-resume fails!
   if (document.visibilityState !== "visible") return;
-  if (!allowDuringActiveRadioSession && typeof radioHasPlayedOnce !== "undefined" && radioHasPlayedOnce && activeMode === "radio") return;
+  if (!allowDuringActiveRadioSession && typeof radioHasPlayedOnce !== "undefined" && radioHasPlayedOnce) return;
   if (!activeKind && radioPlayer.paused) {
     pendingEditionReload = false;
     reloadFreshEdition();
@@ -12448,7 +12700,7 @@ function checkNewDailyEdition() {
           if (parts[0] === targetKey && (Date.now() - Number(parts[1] || 0)) < 20000) return;
           sessionStorage.setItem("n3_edition_reload", `${targetKey}@${Date.now()}`);
         } catch (e) {}
-        const radioSessionLive = typeof radioHasPlayedOnce !== "undefined" && radioHasPlayedOnce && activeMode === "radio";
+        const radioSessionLive = typeof radioHasPlayedOnce !== "undefined" && radioHasPlayedOnce;
         if (document.visibilityState === "visible" && !activeKind && radioPlayer.paused && !radioSessionLive) {
           reloadFreshEdition();
         } else {
@@ -15359,6 +15611,27 @@ if (rpEl.loadCount !== loadsBeforePause) {
   throw new Error('Self-test 10 failed: resuming via Pixel Buds unexpectedly called load()');
 }
 sb.document.visibilityState = 'visible';
+
+// Self-test 11: Seamless Cross-Tab Radio Playback & Mini Bar Visibility
+sb.switchMode('radio', false);
+sb.toggleRadioPlay(true);
+if (rpEl.paused) throw new Error('Self-test 11 failed: radioPlayer not playing after toggleRadioPlay');
+sb.switchMode('vocab');
+if (rpEl.paused) throw new Error('Self-test 11 failed: radioPlayer paused on switching to vocab tab!');
+const miniBarEl = els['radio-mini-bar'];
+if (!miniBarEl || miniBarEl.classList.contains('hidden')) {
+  throw new Error('Self-test 11 failed: radio-mini-bar not visible after switching away from radio tab!');
+}
+sb.switchMode('tutor');
+if (rpEl.paused) throw new Error('Self-test 11 failed: radioPlayer paused on switching to tutor tab!');
+sb.switchMode('body');
+if (rpEl.paused) throw new Error('Self-test 11 failed: radioPlayer paused on switching to body tab!');
+sb.switchMode('dash');
+if (rpEl.paused) throw new Error('Self-test 11 failed: radioPlayer paused on switching to dash tab!');
+sb.switchMode('radio', false);
+if (!miniBarEl.classList.contains('hidden')) {
+  throw new Error('Self-test 11 failed: radio-mini-bar should be hidden on radio tab!');
+}
 """
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
 
