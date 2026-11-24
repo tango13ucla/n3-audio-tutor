@@ -1,7 +1,7 @@
 {
   "v": 15,
   "app": "n3-zen",
-  "updatedAt": 1795465683,
+  "updatedAt": 1795492660,
   "dates": {
     "2026-11-14": {
       "resetAt": 0,
@@ -3198,16 +3198,24 @@
     },
     "2026-11-23": {
       "resetAt": 0,
-      "radioMaxSec": 432,
+      "radioMaxSec": 574,
       "radioPos": [
-        432,
-        1795465683
+        574,
+        1795492660
       ],
-      "radioSig": "a107b3bd",
+      "radioSig": "9afaec85",
       "greenAt": {},
       "retestAt": {},
       "learning": {},
-      "sched": {}
+      "sched": {
+        "N3-G33": [
+          0,
+          1,
+          0,
+          0,
+          1795492591879
+        ]
+      }
     }
   },
   "masteryOverrides": {
