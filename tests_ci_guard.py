@@ -205,10 +205,16 @@ def test_apply_practice_logs_all_event_types() -> None:
     ]
 
     with tempfile.TemporaryDirectory() as td:
+        import immersion_vocab_engine as ive
+
         log_file = pathlib.Path(td) / "practice_log.jsonl"
         snap_file = pathlib.Path(td) / "cloud_state_snapshot.json"
+        ledger_file = pathlib.Path(td) / "podcast_vocab_ledger.json"
         log_file.write_text("\n".join(json.dumps(r, ensure_ascii=False) for r in synthetic_records) + "\n", encoding="utf-8")
         snap_file.write_text("{}", encoding="utf-8")
+        orig_ledger = getattr(ive, "LEDGER_PATH", None)
+        if orig_ledger and pathlib.Path(orig_ledger).exists():
+            ledger_file.write_text(pathlib.Path(orig_ledger).read_text(encoding="utf-8"), encoding="utf-8")
 
         orig_rba_log, orig_rba_snap = rba.LOG_PATH, rba.SNAPSHOT_PATH
         orig_aadc_log, orig_aadc_snap = aadc.LOG_PATH, aadc.SNAP_PATH
@@ -217,6 +223,8 @@ def test_apply_practice_logs_all_event_types() -> None:
             rba.SNAPSHOT_PATH = str(snap_file)
             aadc.LOG_PATH = log_file
             aadc.SNAP_PATH = snap_file
+            if orig_ledger is not None:
+                ive.LEDGER_PATH = str(ledger_file)
 
             state = {
                 "grammar_points": [
@@ -252,6 +260,8 @@ def test_apply_practice_logs_all_event_types() -> None:
         finally:
             rba.LOG_PATH, rba.SNAPSHOT_PATH = orig_rba_log, orig_rba_snap
             aadc.LOG_PATH, aadc.SNAP_PATH = orig_aadc_log, orig_aadc_snap
+            if orig_ledger is not None:
+                ive.LEDGER_PATH = orig_ledger
     print("[PASS 2/6] apply_practice_logs & collect_study_history all-event-types test")
 
 

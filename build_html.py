@@ -15643,8 +15643,9 @@ for (let k = 0; k < spCount6; k++) {
   sb.handleRadioReviewPass();
 }
 const rvDoneHtml = (els['radio-review-stage'] && els['radio-review-stage'].innerHTML) || '';
-if (!rvDoneHtml.includes('回炉 1 项') || !rvDoneHtml.includes('rv-triptych') || rvDoneHtml.includes('—')) {
-  throw new Error('Self-test 6 failed: expected completion summary with triptych and zero em dash, got: ' + rvDoneHtml.slice(0, 260));
+const hasStoryArts = !!vm.runInNewContext('DATA.radio && Array.isArray(DATA.radio.story_arts) && DATA.radio.story_arts.length > 0', sb);
+if (!rvDoneHtml.includes('回炉 1 项') || (hasStoryArts && !rvDoneHtml.includes('rv-triptych')) || rvDoneHtml.includes('—')) {
+  throw new Error('Self-test 6 failed: expected completion summary (with triptych when story_arts present) and zero em dash, got: ' + rvDoneHtml.slice(0, 260));
 }
 sb.setTimeout = origSetTimeout;
 sb.closeRadioReview();
