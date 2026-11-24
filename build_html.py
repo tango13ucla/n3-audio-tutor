@@ -11687,11 +11687,7 @@ function updateVocabSubNav() {
   const cG = document.getElementById("vsub-ga-cnt");
   if (cG) cG.textContent = ga.remaining === 0 ? "✓" : (ga.gaDone ? "✓" : `${ga.gaSeen}/${ga.gaTarget}`);
   const metaEl = document.getElementById("vc-submeta");
-<<<<<<< Updated upstream
-  if (metaEl) metaEl.textContent = "";
-=======
-  if (metaEl) metaEl.textContent = `${ga.audited}/${ga.total}`;
->>>>>>> Stashed changes
+  if (metaEl) metaEl.textContent = vocabSubMode === "ga" ? `${ga.audited}/${ga.total}` : "";
 }
 
 function switchVocabSubMode(sub) {
