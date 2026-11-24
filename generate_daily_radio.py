@@ -2751,10 +2751,12 @@ async def main():
         except Exception as exc:
             print(f"[warn] review_items extraction skipped: {exc}")
 
-        # Preserve same-date story woodblock artwork across sync/re-render passes
+        # Auto-generate real documentary posters, per-card MP4 clips & synchronized VTT subtitles!
+        # Preserve manually crafted same-date artwork only if it already has valid MP4 video clips.
         prev_art_url = ""
         prev_story_arts: list[dict] = []
         prev_chap_imgs: dict[int, str] = {}
+        need_visual_render = True
         if os.path.exists(RADIO_META_PATH):
             try:
                 prev_meta = json.load(open(RADIO_META_PATH, encoding="utf-8"))
@@ -2765,9 +2767,31 @@ async def main():
                     for ci, ch in enumerate(prev_meta.get("chapters") or []):
                         if isinstance(ch, dict) and ch.get("img"):
                             prev_chap_imgs[int(ch.get("idx", ci))] = str(ch["img"])
+                    prev_vids = sum(1 for x in (prev_meta.get("review_items") or []) if isinstance(x, dict) and x.get("video_url"))
+                    if prev_vids >= max(1, len(review_items) // 2) and prev_meta.get("script_sig") == script_sig:
+                        need_visual_render = False
             except Exception:
                 pass
-        if prev_chap_imgs:
+
+        if need_visual_render and review_items:
+            try:
+                import radio_visual_studio as rvs
+                vis = rvs.build_episode_visuals(
+                    today_str=today_str,
+                    script_sig=script_sig,
+                    story_blocks=story_blocks,
+                    chapters_meta=chapters_meta,
+                    review_items=review_items,
+                    speaking_prompts=speaking_prompts,
+                    audio_mp3_path=RADIO_MP3_PATH,
+                )
+                if vis.get("artwork_url"):
+                    prev_art_url = vis["artwork_url"]
+                if vis.get("story_arts"):
+                    prev_story_arts = vis["story_arts"]
+            except Exception as exc:
+                print(f"[warn] radio_visual_studio skipped: {exc}")
+        elif prev_chap_imgs:
             for ch in chapters_meta:
                 img_v = prev_chap_imgs.get(int(ch["idx"]))
                 if img_v:

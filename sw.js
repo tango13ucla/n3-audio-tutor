@@ -1,5 +1,5 @@
-const CACHE_NAME = "n3-studio-tutor-v59";
-const BUILD_STAMP = "2026-11-24_cfa80085bb77cb_3706b3d1_de8a0c_0aebea94";
+const CACHE_NAME = "n3-studio-tutor-v60";
+const BUILD_STAMP = "2026-11-24_cfa80085bb77cb_3706b3d1_de8a0c_19afdcdc";
 const CORE_SHELL = [
   "./",
   "./index.html",
@@ -42,10 +42,10 @@ self.addEventListener("fetch", event => {
   if (req.method !== "GET" || req.headers.has("range")) return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
-  if (url.pathname.includes("/api/") || url.pathname.endsWith("daily_radio.mp3") || url.pathname.endsWith("daily_radio_meta.json") || url.pathname.endsWith("body_vault.enc")) return;
+  if (url.pathname.includes("/api/") || url.pathname.endsWith("daily_radio.mp3") || url.pathname.endsWith(".mp4") || url.pathname.endsWith("daily_radio_meta.json") || url.pathname.endsWith("body_vault.enc")) return;
 
-  // Cache-First keyed by ?v=<hash> for short studio MP3s, icons, and story artwork
-  if (url.pathname.endsWith(".mp3") || url.pathname.endsWith(".png") || url.pathname.endsWith(".jpg")) {
+  // Cache-First keyed by ?v=<hash> for short studio MP3s, icons, story posters, and WebVTT subtitles
+  if (url.pathname.endsWith(".mp3") || url.pathname.endsWith(".png") || url.pathname.endsWith(".jpg") || url.pathname.endsWith(".vtt")) {
     event.respondWith(
       caches.match(req).then(cached => {
         if (cached) return cached;

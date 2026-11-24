@@ -571,6 +571,7 @@ def build_episode_review_items(
                     "story_cue": story_cue,
                     "speaker": SPK_NAMES.get(spk_code, "文道"),
                     "context_line": ctx_line,
+                    "full_context": readable,
                     "ja_example": _short_ja_example(ja_ex, stems, fallback_short=short_ex_fallback, max_chars=24),
                     "nuance": nuance,
                     "twin": twin,
@@ -706,6 +707,7 @@ def build_episode_review_items(
                 "story_cue": story_cue,
                 "speaker": SPK_NAMES.get(spk_code, "文道"),
                 "context_line": ctx_line,
+                "full_context": readable,
                 "ja_example": _clean_text(ja_ex),
                 "nuance": f"本期播客出现 {int(sp_item.get('hits_today') or 1)} 次 · 累计 {int(sp_item.get('total') or 1)} 次",
                 "twin": twin,
@@ -1126,6 +1128,13 @@ if __name__ == "__main__":
         mandarin_boundary_re=gdr.MANDARIN_BOUNDARY_RE,
         commit_ledger=False,
     )
+    # Preserve exact mixer-captured clip_start/clip_end from existing review_items if present
+    existing_items = meta.get("review_items") or []
+    existing_timings = {
+        str(x.get("id")): (x.get("clip_start"), x.get("clip_end"))
+        for x in existing_items
+        if isinstance(x, dict) and x.get("id") and x.get("clip_start") is not None
+    }
     items = build_episode_review_items(
         blocks_imm,
         meta.get("segments") or [],
@@ -1134,20 +1143,58 @@ if __name__ == "__main__":
         audio_mp3_path=mp3_path,
         max_total=8,
     )
-    # Preserve chapter -> story artwork mapping if present
-    chap_img_map = {int(c.get("idx", i)): c.get("img") for i, c in enumerate(meta.get("chapters") or []) if c.get("img")}
-    if chap_img_map:
+    if existing_items:
+        by_new_id = {str(x.get("id")): x for x in items}
+        merged_items = []
+        for ex in existing_items:
+            eid = str(ex.get("id") or "")
+            fresh = by_new_id.get(eid)
+            if fresh and fresh.get("full_context"):
+                ex["full_context"] = fresh["full_context"]
+            elif not ex.get("full_context"):
+                # Match full turn from blocks_imm directly
+                ch_i = int(ex.get("chapter_idx", 0))
+                if 0 <= ch_i < len(blocks_imm):
+                    core = str(ex.get("context_line") or "").strip("…")[:14]
+                    for _spk, t_raw in blocks_imm[ch_i].get("raw_turns") or []:
+                        rd = _readable_turn(str(t_raw), ive.VOCAB_BY_KANA)
+                        if core and core in rd:
+                            ex["full_context"] = rd
+                            break
+            merged_items.append(ex)
+        items = merged_items
+    else:
         for it in items:
-            c_img = chap_img_map.get(int(it.get("chapter_idx", -1)))
-            if c_img:
-                it["img"] = c_img
-    speaking_prompts = build_episode_speaking_prompts(blocks_imm, items, max_prompts=2)
+            if it["id"] in existing_timings:
+                it["clip_start"], it["clip_end"] = existing_timings[it["id"]]
+
+    speaking_prompts = meta.get("speaking_prompts") or build_episode_speaking_prompts(blocks_imm, items, max_prompts=2)
+    chapters_meta = meta.get("chapters") or []
+
+    try:
+        import radio_visual_studio as rvs
+        vis = rvs.build_episode_visuals(
+            today_str=today_str,
+            script_sig=str(meta.get("script_sig") or ""),
+            story_blocks=blocks_imm,
+            chapters_meta=chapters_meta,
+            review_items=items,
+            speaking_prompts=speaking_prompts,
+            audio_mp3_path=mp3_path,
+        )
+        if vis.get("artwork_url"):
+            meta["artwork_url"] = vis["artwork_url"]
+        if vis.get("story_arts"):
+            meta["story_arts"] = vis["story_arts"]
+    except Exception as exc:
+        print(f"[warn] radio_visual_studio failed during backfill: {exc}")
+
+    meta["chapters"] = chapters_meta
     meta["review_items"] = items
     meta["speaking_prompts"] = speaking_prompts
     with open(meta_path, "w", encoding="utf-8") as f:
         json.dump(meta, f, ensure_ascii=False, indent=2)
-    print(f"Enriched {meta_path}: review_items={len(items)}, speaking_prompts={len(speaking_prompts)} (script_sig preserved: {meta.get('script_sig')}):")
-    for idx, sp in enumerate(speaking_prompts, 1):
-        print(f"  SPK {idx}. [{sp['title']}] {sp['prompt_short']} -> {sp['model_ja']}")
+    vids = sum(1 for x in items if x.get("video_url"))
+    print(f"Enriched {meta_path}: review_items={len(items)} (videos={vids}), speaking_prompts={len(speaking_prompts)}, story_arts={len(meta.get('story_arts') or [])} (script_sig preserved: {meta.get('script_sig')})")
 
 

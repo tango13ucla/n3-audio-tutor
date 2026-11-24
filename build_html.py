@@ -1501,8 +1501,10 @@ html = r"""<!DOCTYPE html>
     --moss: #2B5F49;
     --moss-solid: #2D7A56;
     --moss-soft: rgba(43, 95, 73, 0.10);
+    --moss-border: rgba(43, 95, 73, 0.28);
     --ochre: #B07D3A;
     --bengara: #9E3E36;
+    --bengara-soft: rgba(158, 62, 54, 0.10);
     --tap-bg: #EDEAE1;
     --hover-bg: #FFFFFF;
     --soft-bg: #F4F1E8;
@@ -1524,13 +1526,17 @@ html = r"""<!DOCTYPE html>
       --moss: #62AD89;
       --moss-solid: #3F8B66;
       --moss-soft: rgba(98, 173, 137, 0.14);
+      --moss-border: rgba(98, 173, 137, 0.34);
       --ochre: #D2A35C;
       --bengara: #D46F66;
+      --bengara-soft: rgba(212, 111, 102, 0.15);
       --tap-bg: #2B2925;
       --hover-bg: #272521;
       --soft-bg: #22201D;
     }
   }
+
+  .nw { white-space: nowrap; }
 
   * {
     box-sizing: border-box;
@@ -1979,6 +1985,15 @@ html = r"""<!DOCTYPE html>
     .ga-spec-wrap {
       padding-bottom: clamp(16px, 4.4vh, 44px);
     }
+    .zen-shell.has-mini-bar .action-dock,
+    .zen-shell.has-mini-bar .vc-dock,
+    .zen-shell.has-mini-bar .rv-dock,
+    .zen-shell.has-mini-bar .ga-spec-wrap {
+      padding-bottom: 4px;
+    }
+    .zen-shell.has-mini-bar .ledger-scroll {
+      padding-bottom: 12px;
+    }
     #tutor-view .stage-quiz .focal-space {
       justify-content: flex-end;
       padding-bottom: 24px;
@@ -2034,6 +2049,7 @@ html = r"""<!DOCTYPE html>
     line-height: 1.38;
     letter-spacing: 0.03em;
     color: var(--sumi);
+    text-wrap: balance;
   }
   .zen-pair {
     border-top: 1px solid var(--hairline);
@@ -2398,7 +2414,7 @@ html = r"""<!DOCTYPE html>
   }
   .dlg-row.is-ans .dlg-who {
     color: var(--moss);
-    border-color: rgba(43, 95, 73, 0.35);
+    border-color: var(--moss-border);
   }
   .dlg-zh {
     margin-top: 2px;
@@ -2461,7 +2477,7 @@ html = r"""<!DOCTYPE html>
     grid-template-columns: 20px 1fr;
     column-gap: 9px;
     padding: 9px 0;
-    border-top: 1px dashed rgba(28, 27, 24, 0.10);
+    border-top: 1px dashed var(--hairline);
     align-items: baseline;
   }
   .opt-breakdown.is-listen .opt-row {
@@ -2483,7 +2499,7 @@ html = r"""<!DOCTYPE html>
     white-space: nowrap;
   }
   .opt-row.ok .opt-mark {
-    color: #2D7A56;
+    color: var(--moss);
   }
   .opt-row.ng .opt-mark {
     color: var(--bengara);
@@ -2505,7 +2521,7 @@ html = r"""<!DOCTYPE html>
     line-height: 1.45;
   }
   .opt-row.ok .opt-ja {
-    color: #266A4A;
+    color: var(--moss);
   }
   .opt-row.ng .opt-ja {
     color: var(--bengara);
@@ -2524,12 +2540,12 @@ html = r"""<!DOCTYPE html>
     letter-spacing: 0.03em;
   }
   .opt-badge.ok {
-    color: #266A4A;
-    background: rgba(45, 122, 86, 0.11);
+    color: var(--moss);
+    background: var(--moss-soft);
   }
   .opt-badge.ng {
     color: var(--bengara);
-    background: rgba(166, 61, 47, 0.10);
+    background: var(--bengara-soft);
   }
   .opt-desc {
     margin-top: 2.5px;
@@ -2584,7 +2600,7 @@ html = r"""<!DOCTYPE html>
     border-radius: 8px;
     background: var(--sheet);
     border: 1px solid var(--hairline-strong);
-    box-shadow: 0 6px 20px rgba(28, 27, 24, 0.06);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.10);
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
@@ -2680,7 +2696,7 @@ html = r"""<!DOCTYPE html>
     color: var(--moss);
     padding: 0 9px;
     border-radius: 5px;
-    border: 1px solid rgba(43, 95, 73, 0.25);
+    border: 1px solid var(--moss-border);
   }
 
   .result-divider {
@@ -2774,6 +2790,7 @@ html = r"""<!DOCTYPE html>
     font-weight: 600;
     line-height: 1.45;
     color: var(--sumi);
+    text-wrap: balance;
   }
   .radio-ja {
     margin: 0;
@@ -2784,12 +2801,12 @@ html = r"""<!DOCTYPE html>
     color: var(--ink-2);
   }
 
-  /* Story Artwork Presentation (Quiet Japanese Woodblock Aesthetics) */
+  /* Story Artwork Presentation (Quiet Documentary Aesthetics) */
   .radio-art-card {
     position: relative;
     width: 100%;
     max-width: 440px;
-    height: 116px;
+    height: 122px;
     margin: 2px 0 0;
     border-radius: 8px;
     overflow: hidden;
@@ -2802,7 +2819,7 @@ html = r"""<!DOCTYPE html>
     transition: opacity 0.2s ease;
   }
   @media (min-width: 860px) and (min-height: 521px) {
-    .radio-art-card { height: 152px; }
+    .radio-art-card { height: 156px; }
   }
   .radio-art-card:active { opacity: 0.86; }
   .radio-art-img {
@@ -2813,7 +2830,7 @@ html = r"""<!DOCTYPE html>
     transition: opacity 0.35s ease;
   }
 
-  /* Quiet Borderless Triptych on Episode Review Completion */
+  /* Quiet Borderless Story Reel on Episode Review Completion */
   .rv-triptych {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -2822,6 +2839,7 @@ html = r"""<!DOCTYPE html>
     margin: 18px 0 8px;
   }
   .rv-triptych-item {
+    position: relative;
     border-radius: 6px;
     overflow: hidden;
     aspect-ratio: 16 / 10;
@@ -2839,8 +2857,41 @@ html = r"""<!DOCTYPE html>
     object-fit: cover;
     display: block;
   }
+  .rv-triptych-cap {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 12px 6px 4px;
+    background: linear-gradient(to top, rgba(14, 13, 11, 0.78), transparent);
+    color: rgba(246, 243, 236, 0.94);
+    font-size: 10.5px;
+    font-weight: 500;
+    line-height: 1.25;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    pointer-events: none;
+  }
+  .rv-triptych-play {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: rgba(14, 13, 11, 0.62);
+    color: rgba(246, 243, 236, 0.95);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    padding-left: 1px;
+    pointer-events: none;
+  }
 
-  /* Story Modal Presentation */
+  /* Story Cinema Modal Presentation */
   .story-modal-box {
     display: flex;
     flex-direction: column;
@@ -2852,7 +2903,14 @@ html = r"""<!DOCTYPE html>
     width: 100%;
     max-height: 260px;
     overflow: hidden;
-    background: var(--tap-bg);
+    background: #141311;
+  }
+  .story-modal-video {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    display: block;
+    background: #141311;
+    object-fit: cover;
   }
   .story-modal-img {
     width: 100%;
@@ -2966,13 +3024,20 @@ html = r"""<!DOCTYPE html>
 
   .chapter-strip {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
     gap: 8px;
     padding-bottom: 10px;
     border-bottom: 1px solid var(--hairline);
     overflow-x: auto;
     scrollbar-width: none;
+    scroll-behavior: smooth;
+    -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 26px), transparent 100%);
+    mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 26px), transparent 100%);
+  }
+  .chapter-strip.at-end {
+    -webkit-mask-image: none;
+    mask-image: none;
   }
   .chapter-strip::-webkit-scrollbar { display: none; }
   .chap-link {
@@ -2980,7 +3045,7 @@ html = r"""<!DOCTYPE html>
     font-weight: 500;
     color: var(--ink-3);
     letter-spacing: 0.04em;
-    padding: 7px 6px;
+    padding: 7px 9px;
     border-radius: 6px;
     white-space: nowrap;
     flex-shrink: 0;
@@ -2989,7 +3054,7 @@ html = r"""<!DOCTYPE html>
   }
   .chap-link.active {
     color: var(--sumi);
-    background: rgba(28, 27, 24, 0.05);
+    background: var(--tap-bg);
     font-weight: 600;
   }
   .chap-sep {
@@ -3002,6 +3067,7 @@ html = r"""<!DOCTYPE html>
   .chap-link.chap-review {
     color: var(--ink-2);
     font-weight: 500;
+    padding-right: 12px;
   }
   .chap-link.chap-review.is-ready {
     color: var(--moss);
@@ -3023,7 +3089,7 @@ html = r"""<!DOCTYPE html>
     padding: 11px 14px;
     margin-bottom: 10px;
     border-radius: 8px;
-    border: 1px solid rgba(43, 95, 73, 0.28);
+    border: 1px solid var(--moss-border);
     background: var(--moss-soft);
     color: var(--sumi);
     font-size: 13px;
@@ -3049,7 +3115,157 @@ html = r"""<!DOCTYPE html>
     flex-direction: column;
   }
 
-  /* Quiet frameless woodblock vignette floating peacefully on the open Zen canvas */
+  /* Zen Cinema Frame + Live Synchronized Subtitles (Post-Listening 5-Minute Visual Review) */
+  .rv-cinema {
+    position: relative;
+    width: 100%;
+    max-width: 344px;
+    aspect-ratio: 16 / 9;
+    border-radius: 9px;
+    overflow: hidden;
+    margin: 0 auto 14px;
+    background: #141311;
+    border: 1px solid var(--hairline);
+    flex-shrink: 0;
+    cursor: pointer;
+    user-select: none;
+  }
+  .rv-cinema-slot {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .rv-cinema-video,
+  .rv-cinema-poster {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    background: #141311;
+  }
+  .rv-cinema-ctrls {
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    z-index: 4;
+  }
+  .rv-cinema-pill {
+    height: 24px;
+    padding: 0 8px;
+    border-radius: 12px;
+    background: rgba(16, 15, 13, 0.56);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(245, 240, 232, 0.18);
+    color: rgba(246, 243, 236, 0.88);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+  .rv-cinema-pill.off {
+    color: rgba(246, 243, 236, 0.48);
+  }
+  .rv-cinema-pill:active { opacity: 0.72; }
+  .rv-cinema-pause-badge {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -58%);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(16, 15, 13, 0.62);
+    border: 1px solid rgba(245, 240, 232, 0.28);
+    color: rgba(246, 243, 236, 0.94);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    padding-left: 2px;
+    z-index: 3;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease;
+  }
+  .rv-cinema.is-paused .rv-cinema-pause-badge {
+    opacity: 1;
+  }
+  .rv-sub-scrim {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 26px 11px 9px;
+    background: linear-gradient(to top, rgba(12, 11, 9, 0.86) 0%, rgba(12, 11, 9, 0.52) 64%, transparent 100%);
+    z-index: 3;
+    text-align: center;
+    transition: opacity 0.2s ease;
+  }
+  .rv-cinema.sub-off .rv-sub-scrim {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .rv-sub-line {
+    font-size: 12.6px;
+    line-height: 1.46;
+    font-weight: 500;
+    color: #F6F2EA;
+    letter-spacing: 0.015em;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.72);
+    text-wrap: balance;
+    min-height: 19px;
+  }
+  .rv-sub-spk {
+    color: #E3BC78;
+    font-weight: 600;
+    margin-right: 3px;
+  }
+  .rv-sub-hl {
+    color: #8FD4B0;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .rv-sub-line .w-tok {
+    color: inherit;
+    padding: 0;
+  }
+  .rv-sub-line .w-tok.active-tok {
+    color: #171614;
+    background: #E3BC78;
+    box-shadow: none;
+  }
+  video::cue {
+    background: rgba(12, 11, 9, 0.74);
+    color: #F6F2EA;
+    font-family: var(--sans);
+    font-size: 13px;
+    line-height: 1.45;
+  }
+  .rv-cinema-rail {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2.2px;
+    background: rgba(255, 255, 255, 0.18);
+    z-index: 4;
+  }
+  .rv-cinema-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--moss);
+    transition: width 0.14s linear;
+  }
+
+  /* Quiet frameless vignette fallback (used on silent speaking cards) */
   .rv-art-vignette {
     width: 184px;
     height: 86px;
@@ -3071,13 +3287,14 @@ html = r"""<!DOCTYPE html>
   }
   .rv-card-ex {
     position: relative;
-    margin: 20px auto 0;
-    padding-top: 16px;
+    margin: 14px auto 0;
+    padding-top: 12px;
     max-width: 332px;
     font-family: var(--serif-jp);
-    font-size: 17px;
-    line-height: 1.62;
+    font-size: 16.5px;
+    line-height: 1.58;
     color: var(--ink-2);
+    text-wrap: balance;
   }
   .rv-card-ex::before {
     content: "";
@@ -3135,7 +3352,31 @@ html = r"""<!DOCTYPE html>
     color: var(--bengara);
     font-family: var(--serif-jp);
   }
-  @media (max-height: 700px) {
+  #radio-review-stage .vc-card {
+    padding: 6px 2px;
+  }
+  #radio-review-stage .vc-cue {
+    margin-bottom: 8px;
+  }
+  #radio-review-stage .vc-chunk {
+    font-size: 28px;
+    line-height: 1.38;
+  }
+  #radio-review-stage .vc-reveal {
+    margin-top: 10px;
+    min-height: 92px;
+  }
+  #radio-review-stage .vc-hook {
+    margin-top: 12px;
+    padding-top: 10px;
+    font-size: 13px;
+    line-height: 1.58;
+  }
+  @media (max-height: 740px) {
+    .rv-cinema { max-width: 288px; margin-bottom: 10px; }
+    .rv-sub-line { font-size: 11.8px; }
+    #radio-review-stage .vc-chunk { font-size: 25px; }
+    #radio-review-stage .vc-reveal { min-height: 78px; }
     .rv-art-vignette { width: 158px; height: 74px; margin-bottom: 12px; }
     .rv-spk-prompt { font-size: 24px; }
     .rv-spk-model { font-size: 17.5px; }
@@ -3268,11 +3509,12 @@ html = r"""<!DOCTYPE html>
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 12px;
     padding-bottom: 12px;
     border-bottom: 1px solid var(--hairline);
     margin-bottom: 8px;
   }
-  .tier-links { display: flex; gap: 16px; }
+  .tier-links { display: flex; gap: 16px; flex-shrink: 0; }
   .tier-link {
     font-size: 15px;
     color: var(--ink-3);
@@ -3285,6 +3527,8 @@ html = r"""<!DOCTYPE html>
   }
   .zen-search {
     width: 128px;
+    min-width: 68px;
+    flex: 0 1 128px;
     border: none;
     border-bottom: 1px solid var(--hairline-strong);
     background: transparent;
@@ -3314,6 +3558,19 @@ html = r"""<!DOCTYPE html>
     align-items: center;
     gap: 10px;
     min-width: 0;
+    flex: 1;
+  }
+  .li-name-stack {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+  }
+  .li-name-line {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
   }
   .li-dot {
     width: 6.5px;
@@ -3326,9 +3583,21 @@ html = r"""<!DOCTYPE html>
   .li-dot.done { background: var(--moss); }
   .li-name {
     font-family: var(--serif-jp);
-    font-size: 18.5px;
+    font-size: 18px;
     font-weight: 500;
     color: var(--sumi);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .li-sub-mob {
+    display: none;
+    margin-top: 2px;
+    font-size: 12.5px;
+    color: var(--ink-3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .li-right {
     display: flex;
@@ -3343,6 +3612,15 @@ html = r"""<!DOCTYPE html>
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  @media (max-width: 859px), (max-height: 520px) {
+    .ledger-controls { gap: 10px; }
+    .tier-links { gap: 11px; }
+    .tier-link { font-size: 13.8px; }
+    .zen-search { flex: 1 1 74px; min-width: 62px; max-width: 102px; width: auto; font-size: 13.5px; text-align: right; }
+    .li-name { font-size: 16.5px; }
+    .li-sub { display: none; }
+    .li-sub-mob { display: block; }
   }
   .li-streak {
     font-size: 12.5px;
@@ -3359,7 +3637,7 @@ html = r"""<!DOCTYPE html>
     height: 32px;
     padding: 0 10px;
     border-radius: 6px;
-    border: 1px solid rgba(43, 95, 73, 0.22);
+    border: 1px solid var(--moss-border);
     background: var(--sheet);
     display: inline-flex;
     align-items: center;
@@ -3684,6 +3962,7 @@ html = r"""<!DOCTYPE html>
     line-height: 1.72;
     letter-spacing: 0.015em;
     cursor: default;
+    text-wrap: balance;
   }
   .vc-hook::before {
     content: "";
@@ -3723,6 +4002,7 @@ html = r"""<!DOCTYPE html>
     font-size: 13.5px;
     color: var(--ink-2);
     line-height: 1.6;
+    text-wrap: balance;
   }
   .vc-twin.sub {
     margin: 10px auto 0;
@@ -3733,6 +4013,7 @@ html = r"""<!DOCTYPE html>
     color: var(--ink-3);
     opacity: 0.84;
     line-height: 1.58;
+    text-wrap: balance;
   }
   @media (max-height: 700px) {
     .vc-card { padding: 8px 2px; }
@@ -3833,7 +4114,7 @@ html = r"""<!DOCTYPE html>
   .vc-btn.ng:active, .vc-btn.mid:active { background: var(--tap-bg); }
   .vc-btn.ga-solid {
     flex: 0.92;
-    border: 1px solid rgba(43, 95, 73, 0.36);
+    border: 1px solid var(--moss-border);
     color: var(--moss);
     font-weight: 600;
     background: var(--sheet);
@@ -4084,7 +4365,7 @@ html = r"""<!DOCTYPE html>
   .ga-spec-stop.s1.active .ga-spec-dot { border-color: var(--bengara); background: var(--bengara); box-shadow: 0 0 0 7px rgba(158, 62, 54, 0.14); transform: scale(1.42); }
   .ga-spec-stop.s2.active .ga-spec-dot { border-color: var(--ochre); background: var(--ochre); box-shadow: 0 0 0 7px rgba(176, 125, 58, 0.16); transform: scale(1.42); }
   .ga-spec-stop.s3.active .ga-spec-dot { border-color: var(--sumi); background: var(--sumi); box-shadow: 0 0 0 7px var(--tap-bg); transform: scale(1.42); }
-  .ga-spec-stop.s4.active .ga-spec-dot { border-color: var(--moss-solid); background: var(--moss-solid); box-shadow: 0 0 0 7px rgba(43, 95, 73, 0.16); transform: scale(1.42); }
+  .ga-spec-stop.s4.active .ga-spec-dot { border-color: var(--moss-solid); background: var(--moss-solid); box-shadow: 0 0 0 7px var(--moss-soft); transform: scale(1.42); }
   .ga-spec-name {
     font-size: 13.5px;
     font-weight: 400;
@@ -4672,22 +4953,21 @@ html = r"""<!DOCTYPE html>
     white-space: nowrap;
   }
   .zb-toast.show { opacity: 0.94; transform: translateX(-50%) translateY(0); }
-  /* ================= 3F. GLOBAL FLOATING MINI RADIO BAR (跨 Tab 无缝随身听) ================= */
+  /* ================= 3F. GLOBAL FLOATING MINI RADIO BAR (跨 Tab 无缝随身听 · 禅宗双色原生) ================= */
   .radio-mini-bar {
     position: relative;
+    flex-shrink: 0;
     width: 100%;
-    margin-top: auto;
-    margin-bottom: 8px;
-    background: rgba(255, 255, 255, 0.94);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--hairline-2);
-    border-radius: 12px;
-    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
+    margin-top: 10px;
+    margin-bottom: 10px;
+    background: var(--sheet);
+    border: 1px solid var(--hairline-strong);
+    border-radius: 10px;
+    box-shadow: none;
     overflow: hidden;
     cursor: pointer;
     z-index: 80;
-    transition: opacity 0.22s ease, transform 0.22s ease;
+    transition: opacity 0.2s ease, transform 0.2s ease;
   }
   .radio-mini-bar.hidden {
     display: none !important;
@@ -4698,7 +4978,7 @@ html = r"""<!DOCTYPE html>
     left: 0;
     right: 0;
     height: 2px;
-    background: rgba(28, 27, 24, 0.08);
+    background: var(--track);
   }
   .rmb-progress-fill {
     height: 100%;
@@ -4710,7 +4990,7 @@ html = r"""<!DOCTYPE html>
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 12px 7px;
+    padding: 9px 12px 8px;
     gap: 10px;
   }
   .rmb-left {
@@ -4760,38 +5040,39 @@ html = r"""<!DOCTYPE html>
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    line-height: 1.25;
+    line-height: 1.28;
   }
   .rmb-time {
     font-size: 11px;
     color: var(--ink-3);
     font-variant-numeric: tabular-nums;
-    line-height: 1.2;
-    margin-top: 1px;
+    line-height: 1.25;
+    margin-top: 2px;
   }
   .rmb-actions {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     flex-shrink: 0;
   }
   .rmb-play-btn {
     font-size: 12px;
     font-weight: 600;
     color: var(--moss);
-    background: rgba(45, 122, 86, 0.09);
+    background: var(--moss-soft);
+    border: 1px solid var(--moss-border);
     padding: 5px 11px;
     border-radius: 14px;
-    transition: all 0.15s ease;
+    transition: opacity 0.15s ease, transform 0.12s ease;
   }
   .rmb-play-btn:active {
     transform: scale(0.95);
-    background: rgba(45, 122, 86, 0.18);
+    opacity: 0.76;
   }
   .rmb-jump-btn {
     font-size: 11.5px;
-    color: var(--ink-3);
-    padding: 4px 6px;
+    color: var(--ink-2);
+    padding: 4px 5px;
     border-radius: 6px;
     white-space: nowrap;
   }
@@ -4800,7 +5081,8 @@ html = r"""<!DOCTYPE html>
   }
   @media (max-width: 859px), (max-height: 520px) {
     .radio-mini-bar {
-      margin-bottom: 6px;
+      margin-top: 8px;
+      margin-bottom: 12px;
       border-radius: 10px;
     }
   }
@@ -6958,6 +7240,18 @@ function escapeHtml(s) {
     .replace(/"/g, "&quot;");
 }
 
+function formatZenNoteHTML(raw) {
+  let s = String(raw || "").trim();
+  if (!s) return "";
+  s = s.replace(/\s+([“（（「『，。：；、！？])/g, "$1")
+       .replace(/([”））」』，。：；、！？])\s+/g, "$1")
+       .replace(/([\u4e00-\u9fff\u3040-\u30ff]),\s*([\u4e00-\u9fff\u3040-\u30ff])/g, "$1，$2");
+  let h = escapeHtml(s);
+  h = h.replace(/([\u4e00-\u9fff]{1,5}\([^()]{2,24}\))/g, '<span class="nw">$1</span>');
+  h = h.replace(/(→\s*[ぁ-んァ-ヶー]{2,8})/g, '<span class="nw">$1</span>');
+  return h;
+}
+
 function isWordMarkedForReading(surface) {
   if (!surface || PARTICLE_FALLBACK[surface] || TRIVIAL_TAP_WORDS.has(surface)) return false;
   const inTapped = Array.isArray(A.tappedWords) && A.tappedWords.includes(surface);
@@ -7653,19 +7947,23 @@ function renderReviewStoryGalleryHTML() {
   if (!storyArts.length) return "";
   return `
     <div class="rv-triptych">
-      ${storyArts.slice(0, 3).map((art, idx) => `
+      ${storyArts.slice(0, 6).map((art, idx) => `
         <button type="button" class="rv-triptych-item" onclick="openStoryArtModal(${idx})" aria-label="${escapeHtml(art.title)}">
           <img src="${escapeHtml(art.img)}" alt="${escapeHtml(art.title)}" class="rv-triptych-img" />
+          ${art.video_url ? `<span class="rv-triptych-play" aria-hidden="true">▶</span>` : ""}
+          <span class="rv-triptych-cap">${escapeHtml(art.title)}</span>
         </button>
       `).join("")}
     </div>
   `;
 }
 
-function openStoryArtModal(idx) {
+function openStoryArtModal(idx, overrideMedia) {
   const storyArts = (DATA.radio && Array.isArray(DATA.radio.story_arts)) ? DATA.radio.story_arts : [];
   let art = null;
-  if (typeof idx === "number" && storyArts[idx]) {
+  if (overrideMedia && typeof overrideMedia === "object") {
+    art = overrideMedia;
+  } else if (typeof idx === "number" && storyArts[idx]) {
     art = storyArts[idx];
   } else {
     const t = (pendingRadioSeekSec !== null) ? pendingRadioSeekSec : (radioPlayer.currentTime || 0);
@@ -7677,17 +7975,28 @@ function openStoryArtModal(idx) {
     art = storyArts.find(s => Array.isArray(s.chapters) && s.chapters.includes(curC)) || storyArts[0];
   }
   if (!art) return;
+  if (typeof stopRadioReviewAudio === "function") stopRadioReviewAudio();
+  if (radioInitialized && !radioPlayer.paused) {
+    radioPlayer.pause();
+    syncRadioUI(false);
+  }
   const modal = document.getElementById("app-modal");
   const content = document.getElementById("modal-content");
   if (!modal || !content) return;
+  const mediaHTML = art.video_url
+    ? `<video class="story-modal-video" id="story-modal-video" controls playsinline autoplay poster="${escapeHtml(art.img || "")}">
+         <source src="${escapeHtml(art.video_url)}" type="video/mp4" />
+         ${art.vtt_url ? `<track kind="subtitles" src="${escapeHtml(art.vtt_url)}" srclang="zh" label="同步字幕" default />` : ""}
+       </video>`
+    : `<img src="${escapeHtml(art.img || "")}" alt="${escapeHtml(art.title || "")}" class="story-modal-img" />`;
   content.innerHTML = `
     <div class="story-modal-box">
       <div class="story-modal-img-wrap">
-        <img src="${escapeHtml(art.img)}" alt="${escapeHtml(art.title)}" class="story-modal-img" />
+        ${mediaHTML}
       </div>
       <div class="story-modal-body">
-        <span class="overline">今日故事</span>
-        <h3 class="story-modal-title">${escapeHtml(art.title)}</h3>
+        <span class="overline">${art.video_url ? "片段影像 · 含字幕" : "今日故事"}</span>
+        <h3 class="story-modal-title">${escapeHtml(art.title || "")}</h3>
         <p class="story-modal-sub">${escapeHtml(art.subtitle || "")}</p>
         <button type="button" class="vc-btn ok" style="width:100%;margin-top:14px;" onclick="closeModal()">关闭</button>
       </div>
@@ -7859,15 +8168,34 @@ function cycleRadioSpeed() {
   stampSpeeds();
 }
 
+function updateChapterStripFade(stripEl) {
+  if (!stripEl) return;
+  try {
+    const atEnd = (stripEl.scrollWidth - stripEl.clientWidth - stripEl.scrollLeft) <= 8;
+    stripEl.classList.toggle("at-end", atEnd);
+  } catch (e) {}
+}
+
 function renderRadioChapters(activeChapIdx) {
   const chaps = DATA.radio.chapters || [];
   const rvMeta = getReviewClosingChapMeta();
   const closingHTML = rvMeta
     ? `<span class="chap-sep" aria-hidden="true"></span><button type="button" class="chap-link chap-review${rvMeta.cls}" id="radio-review-chap" onclick="openRadioReview()">${escapeHtml(rvMeta.label)}</button>`
     : "";
-  document.getElementById("radio-chap-pills").innerHTML = chaps.map(c => `
+  const strip = document.getElementById("radio-chap-pills");
+  if (!strip) return;
+  strip.innerHTML = chaps.map(c => `
     <button class="chap-link ${c.idx === activeChapIdx ? 'active' : ''}" onclick="jumpRadioChapter(${c.start})">${escapeHtml(c.title.replace(/^[①②③④⑤⑥]\s*/, ""))}</button>
   `).join("") + closingHTML;
+  if (!strip._fadeBound) {
+    strip._fadeBound = true;
+    strip.addEventListener("scroll", () => updateChapterStripFade(strip), { passive: true });
+  }
+  const activeBtn = strip.querySelector ? strip.querySelector(".chap-link.active") : null;
+  if (activeBtn && typeof activeBtn.scrollIntoView === "function") {
+    try { activeBtn.scrollIntoView({ behavior: "auto", inline: "nearest", block: "nearest" }); } catch (e) {}
+  }
+  updateChapterStripFade(strip);
 }
 
 function updateRadioLiveDisplay(t) {
@@ -7979,14 +8307,17 @@ function onMiniBarJump(e) {
 function syncRadioMiniBar() {
   try {
     const bar = document.getElementById("radio-mini-bar");
+    const shell = document.getElementById("app-shell");
     if (!bar) return;
     const isRadioTab = (activeMode === "radio");
     const hasRadioSession = (typeof radioHasPlayedOnce !== "undefined" && radioHasPlayedOnce) || (typeof radioPlayer !== "undefined" && !radioPlayer.paused);
     if (isRadioTab || !hasRadioSession) {
       bar.classList.add("hidden");
+      if (shell) shell.classList.remove("has-mini-bar");
       return;
     }
     bar.classList.remove("hidden");
+    if (shell) shell.classList.add("has-mini-bar");
     const isPlaying = typeof radioPlayer !== "undefined" && !radioPlayer.paused;
     const playBtn = document.getElementById("rmb-play-btn");
     if (playBtn) playBtn.textContent = isPlaying ? (radioBuffering ? "缓冲中…" : "暂停") : "播放";
@@ -8668,8 +8999,14 @@ let rvPendingLeft = false;
 let rvActiveItemId = "";
 let rvAnimating = false;
 let rvClipPlayer = null;
+let rvVideoEl = null;
 let rvClipEndSec = 0;
 let rvClipPlayingKey = "";
+let rvSubEnabled = (() => {
+  try { return localStorage.getItem("n3_rv_sub") !== "0"; } catch (e) { return true; }
+})();
+let rvCurrentVideoItem = null;
+let rvLastSubIdx = -2;
 let rvSpeakIdx = 0;
 let rvSpeakPassedSession = false;
 let rvSpeakState = { listening: false, interim: "", result: null, revealedModel: false, errorMsg: "" };
@@ -8762,9 +9099,165 @@ function updateRadioReviewEntryBadge() {
   }
 }
 
+function formatReviewSubTextHTML(item, cue) {
+  if (!cue || !cue.txt) return "";
+  const spk = cue.spk ? `<span class="rv-sub-spk">${escapeHtml(cue.spk)}：</span>` : "";
+  const raw = String(cue.txt || "");
+  // Annotate ONLY genuine Japanese kana/mixed spans (leave plain Chinese prose untouched & gap-free)
+  const jaRunRe = /([ぁ-んァ-ヶー][ぁ-んァ-ヶー・一-龥、。！？]*|[一-龥]{1,4}[ぁ-んァ-ヶー][ぁ-んァ-ヶー・一-龥]*)/g;
+  let body = "";
+  let last = 0;
+  let m;
+  while ((m = jaRunRe.exec(raw)) !== null) {
+    if (m.index > last) body += escapeHtml(raw.slice(last, m.index));
+    body += annotateJapanese(m[0]);
+    last = m.index + m[0].length;
+  }
+  if (last < raw.length) body += escapeHtml(raw.slice(last));
+  // Softly highlight & keep unbroken the target grammar/vocab stem inside the live subtitle
+  const stems = [];
+  if (item) {
+    const cleanT = String(item.title || "").replace(/[〜~～（(][^）)]*[）)]?/g, "").replace(/[〜~～]/g, "").trim();
+    if (cleanT.length >= 2) stems.push(cleanT);
+    if (item.kana && String(item.kana).length >= 2) stems.push(String(item.kana).trim());
+  }
+  for (let i = 0; i < stems.length; i++) {
+    const st = escapeHtml(stems[i]);
+    if (st && body.includes(st)) {
+      body = body.replace(st, `<span class="rv-sub-hl">${st}</span>`);
+      break;
+    }
+  }
+  return `${spk}${body}`;
+}
+
+function syncReviewSubtitle(item, curSec) {
+  const subEl = document.getElementById("rv-sub-line");
+  const fillEl = document.getElementById("rv-cinema-fill");
+  const cues = (item && Array.isArray(item.subtitles)) ? item.subtitles : [];
+  const dur = Math.max(1, Number((rvVideoEl && rvVideoEl.duration && isFinite(rvVideoEl.duration)) ? rvVideoEl.duration : (item && item.clip_dur) || 16));
+  const t = Math.max(0, Number(curSec || 0));
+  if (fillEl) {
+    fillEl.style.width = `${Math.max(0, Math.min(100, (t / dur) * 100)).toFixed(1)}%`;
+  }
+  if (!subEl) return;
+  if (!cues.length) {
+    const fallback = (item && (item.context_line || item.ja_example)) || "";
+    if (rvLastSubIdx !== -1) {
+      rvLastSubIdx = -1;
+      subEl.innerHTML = fallback ? formatReviewSubTextHTML(item, { spk: item.speaker || "", txt: fallback }) : "";
+    }
+    return;
+  }
+  let idx = 0;
+  for (let i = 0; i < cues.length; i++) {
+    if (t >= Number(cues[i].s || 0) - 0.15) idx = i;
+  }
+  if (idx !== rvLastSubIdx) {
+    rvLastSubIdx = idx;
+    subEl.innerHTML = formatReviewSubTextHTML(item, cues[idx]);
+  }
+}
+
+function ensureRvVideoEl() {
+  if (!rvVideoEl) {
+    rvVideoEl = document.createElement("video");
+    rvVideoEl.className = "rv-cinema-video";
+    rvVideoEl.id = "rv-video-el";
+    rvVideoEl.playsInline = true;
+    rvVideoEl.preload = "auto";
+    rvVideoEl.setAttribute("playsinline", "");
+    rvVideoEl.setAttribute("webkit-playsinline", "");
+    rvVideoEl.addEventListener("timeupdate", () => {
+      if (rvCurrentVideoItem) syncReviewSubtitle(rvCurrentVideoItem, rvVideoEl.currentTime || 0);
+    });
+    rvVideoEl.addEventListener("play", () => {
+      const box = document.getElementById("rv-cinema-box");
+      if (box) box.classList.remove("is-paused");
+    });
+    rvVideoEl.addEventListener("pause", () => {
+      const box = document.getElementById("rv-cinema-box");
+      if (box) box.classList.add("is-paused");
+    });
+    rvVideoEl.addEventListener("ended", () => {
+      const fillEl = document.getElementById("rv-cinema-fill");
+      if (fillEl) fillEl.style.width = "100%";
+      rvClipPlayingKey = "";
+      const box = document.getElementById("rv-cinema-box");
+      if (box) box.classList.add("is-paused");
+      syncRvAudioButtons();
+    });
+  }
+  return rvVideoEl;
+}
+
+function toggleReviewSubtitles(ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  rvSubEnabled = !rvSubEnabled;
+  try { localStorage.setItem("n3_rv_sub", rvSubEnabled ? "1" : "0"); } catch (e) {}
+  const box = document.getElementById("rv-cinema-box");
+  if (box) box.classList.toggle("sub-off", !rvSubEnabled);
+  const pill = document.getElementById("rv-sub-toggle");
+  if (pill) {
+    pill.classList.toggle("off", !rvSubEnabled);
+    pill.textContent = rvSubEnabled ? "字幕" : "字幕关";
+  }
+}
+
+function onReviewCinemaTap(ev) {
+  if (ev && ev.target && ev.target.closest) {
+    if (ev.target.closest("button")) return;
+    if (ev.target.closest(".w-tok")) {
+      if (rvVideoEl && !rvVideoEl.paused) {
+        rvVideoEl.pause();
+        rvClipPlayingKey = "";
+        syncRvAudioButtons();
+      }
+      return;
+    }
+  }
+  const item = getReviewItemById(rvActiveItemId);
+  if (!item) return;
+  if (rvVideoEl && item.video_url) {
+    if (!rvVideoEl.paused && rvVideoEl.muted) {
+      rvVideoEl.muted = false;
+      rvClipPlayingKey = "clip_1";
+      syncRvAudioButtons();
+      return;
+    }
+    if (!rvVideoEl.paused) {
+      rvVideoEl.pause();
+      rvClipPlayingKey = "";
+      syncRvAudioButtons();
+    } else {
+      playReviewPodcastClip(item, 1.0, "clip_1", true);
+    }
+  } else {
+    playReviewPodcastClip(item, 1.0, "clip_1");
+  }
+}
+
+function openReviewItemCinema(ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  const item = getReviewItemById(rvActiveItemId);
+  if (!item) return;
+  openStoryArtModal(-1, {
+    title: `${item.chapter_title || ""} · ${stripGrammarSpoilerTitle(item.title || "")}`,
+    subtitle: item.full_context || item.context_line || item.story_cue || "",
+    img: item.img || "",
+    video_url: item.video_url || "",
+    vtt_url: item.vtt_url || ""
+  });
+}
+
 function stopRadioReviewAudio() {
   rvClipPlayingKey = "";
   rvClipEndSec = 0;
+  try {
+    if (rvVideoEl) {
+      rvVideoEl.pause();
+    }
+  } catch (e) {}
   try {
     if (rvClipPlayer) {
       rvClipPlayer.pause();
@@ -8780,6 +9273,8 @@ function stopRadioReviewAudio() {
   try {
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
   } catch (e) {}
+  const box = document.getElementById("rv-cinema-box");
+  if (box) box.classList.add("is-paused");
   syncRvAudioButtons();
 }
 
@@ -8799,7 +9294,8 @@ function syncRvAudioButtons() {
 function playReviewPodcastClip(item, rateVal, toggleKey, forcePlay) {
   if (!item) return;
   const key = toggleKey || `clip_${rateVal}`;
-  if (!forcePlay && rvClipPlayingKey === key && rvClipPlayer && !rvClipPlayer.paused) {
+  const videoActive = !!(item.video_url && rvVideoEl && !rvVideoEl.paused);
+  if (!forcePlay && rvClipPlayingKey === key && (videoActive || (rvClipPlayer && !rvClipPlayer.paused))) {
     stopRadioReviewAudio();
     return;
   }
@@ -8808,6 +9304,52 @@ function playReviewPodcastClip(item, rateVal, toggleKey, forcePlay) {
     radioPlayer.pause();
     syncRadioUI(false);
   }
+
+  // Primary Path: Native self-contained MP4 documentary video + muxed podcast audio + synced subtitles!
+  const slot = document.getElementById("rv-cinema-slot");
+  if (item.video_url && slot) {
+    const v = ensureRvVideoEl();
+    rvCurrentVideoItem = item;
+    rvLastSubIdx = -2;
+    if (v.parentNode !== slot) {
+      slot.innerHTML = "";
+      slot.appendChild(v);
+    }
+    const wantSrc = item.video_url;
+    const sameSrc = (v.getAttribute && v.getAttribute("data-src") === wantSrc);
+    if (!sameSrc) {
+      if (item.img) v.poster = item.img;
+      v.src = wantSrc;
+      if (v.setAttribute) v.setAttribute("data-src", wantSrc);
+      try { v.load(); } catch (e) {}
+    } else if (v.ended || (v.duration && isFinite(v.duration) && (v.currentTime || 0) >= v.duration - 0.35)) {
+      v.currentTime = 0;
+    }
+    v.muted = false;
+    v.playbackRate = rateVal || 1.0;
+    rvClipPlayingKey = key;
+    const box = document.getElementById("rv-cinema-box");
+    if (box) box.classList.remove("is-paused");
+    syncReviewSubtitle(item, v.currentTime || 0);
+    syncRvAudioButtons();
+    try {
+      const pr = v.play();
+      if (pr && typeof pr.catch === "function") {
+        pr.catch(() => {
+          // If browser blocks unmuted autoplay, still roll visual video muted so user sees cinema immediately
+          try {
+            v.muted = true;
+            const pr2 = v.play();
+            if (pr2 && typeof pr2.catch === "function") pr2.catch(() => {});
+          } catch (e2) {}
+          if (box) box.classList.add("is-paused");
+        });
+      }
+    } catch (e) {}
+    return;
+  }
+
+  // Fallback Path: Direct daily_radio.mp3 audio slice (when an episode has no MP4 clips)
   const srcUrl = cachedRadioBlobUrl || (DATA.radio && DATA.radio.audio_url) || "";
   if (!srcUrl) return;
   if (!rvClipPlayer) {
@@ -9348,6 +9890,7 @@ function bindRadioReviewCardGestures(cardEl) {
   let activePid = null;
   let sx = 0, sy = 0, st = 0;
   let tappedArt = false;
+  let tappedCinema = false;
   let tappedTok = false;
   const DRAG_DEADZONE = 12;
 
@@ -9362,6 +9905,7 @@ function bindRadioReviewCardGestures(cardEl) {
     sy = fpY(e);
     st = performance.now();
     tappedArt = !!(e.target && e.target.closest && e.target.closest(".rv-art-vignette"));
+    tappedCinema = !!(e.target && e.target.closest && e.target.closest(".rv-cinema"));
     tappedTok = !!(e.target && e.target.closest && e.target.closest(".w-tok"));
     cardEl.classList.remove("settling");
     try { cardEl.setPointerCapture(e.pointerId); } catch (err) {}
@@ -9410,6 +9954,7 @@ function bindRadioReviewCardGestures(cardEl) {
       if (hasDragged) resetRvCardTransform();
       hasDragged = false;
       if (tappedTok) return;
+      if (tappedCinema) return;
       if (tappedArt) {
         const ch = Number(cardEl.getAttribute("data-art-ch") || 0);
         const aIdx = getStoryArtIdxForChapter(ch);
@@ -9591,9 +10136,26 @@ function renderRadioReviewStage() {
     : (item.kana && item.kana !== item.title ? escapeHtml(item.kana) : "");
   const showMic = JA_ASR.supported();
   const artSrc = item.img || "";
-  const artHTML = artSrc
-    ? `<div class="rv-art-vignette"><img class="rv-art-vignette-img" src="${escapeHtml(artSrc)}" alt="" /></div>`
-    : "";
+  const firstCue = (Array.isArray(item.subtitles) && item.subtitles.length)
+    ? item.subtitles[0]
+    : (item.context_line ? { spk: item.speaker || "", txt: item.context_line } : null);
+  const initSubHTML = firstCue ? formatReviewSubTextHTML(item, firstCue) : "";
+  const visualHTML = item.video_url
+    ? `<div class="rv-cinema${rvSubEnabled ? "" : " sub-off"}" id="rv-cinema-box" onclick="onReviewCinemaTap(event)">
+         <div class="rv-cinema-slot" id="rv-cinema-slot">
+           ${artSrc ? `<img class="rv-cinema-poster" src="${escapeHtml(artSrc)}" alt="" />` : ""}
+         </div>
+         <div class="rv-cinema-ctrls">
+           <button type="button" class="rv-cinema-pill${rvSubEnabled ? "" : " off"}" id="rv-sub-toggle" onclick="toggleReviewSubtitles(event)">${rvSubEnabled ? "字幕" : "字幕关"}</button>
+           <button type="button" class="rv-cinema-pill" onclick="openReviewItemCinema(event)" aria-label="全屏播放">⤢</button>
+         </div>
+         <div class="rv-cinema-pause-badge" aria-hidden="true">▶</div>
+         <div class="rv-sub-scrim"><div class="rv-sub-line" id="rv-sub-line">${initSubHTML}</div></div>
+         <div class="rv-cinema-rail"><div class="rv-cinema-fill" id="rv-cinema-fill"></div></div>
+       </div>`
+    : (artSrc
+      ? `<div class="rv-art-vignette"><img class="rv-art-vignette-img" src="${escapeHtml(artSrc)}" alt="" /></div>`
+      : "");
   const showShortEx = !!(
     !item.mnemonic &&
     item.ja_example &&
@@ -9613,14 +10175,14 @@ function renderRadioReviewStage() {
         <div class="vc-stamp right" id="rv-st-right">懂了</div>
         <div class="vc-stamp left" id="rv-st-left">再过</div>
 
-        ${artHTML}
+        ${visualHTML}
         <div class="vc-cue${rvRevealed && !rvPendingLeft ? " quiet-hide" : (isTail ? " ng" : "")}" id="rv-cue-line">${cueTxt}</div>
         <div class="vc-chunk" id="rv-head">${escapeHtml(rvRevealed ? item.title : stripGrammarSpoilerTitle(item.title))}</div>
 
         <div class="vc-reveal${rvRevealed ? " shown" : ""}" id="rv-reveal-box">
           ${kanaHTML ? `<div class="vc-kana">${kanaHTML}</div>` : ""}
           <div class="vc-zh">${escapeHtml(item.zh || "")}</div>
-          ${item.mnemonic ? `<div class="vc-hook"><span class="vc-hook-tag">记音</span>${escapeHtml(item.mnemonic)}</div>` : ""}
+          ${item.mnemonic ? `<div class="vc-hook"><span class="vc-hook-tag">记音</span>${formatZenNoteHTML(item.mnemonic)}</div>` : ""}
           ${showShortEx ? `<div class="rv-card-ex">${annotateJapanese(item.ja_example)}</div>` : ""}
         </div>
         <div class="mic-feedback" id="rv-mic-feedback"></div>
@@ -9633,7 +10195,7 @@ function renderRadioReviewStage() {
       <button type="button" class="vc-aux-btn seal" onclick="closeRadioReview()">随身听</button>
       <div class="vc-aux-right">
         ${showMic ? `<button type="button" class="vc-aux-btn mic-btn" id="rv-mic-btn" onclick="toggleReviewMicCheck()">试读</button>` : ""}
-        <button type="button" class="vc-aux-btn replay" data-rv-aud="clip_1" data-lbl-idle="原声" data-lbl-play="暂停" onclick="playReviewPodcastClip(getReviewItemById('${item.id}'), 1.0, 'clip_1')">原声</button>
+        <button type="button" class="vc-aux-btn replay" data-rv-aud="clip_1" data-lbl-idle="${item.video_url ? "重播" : "原声"}" data-lbl-play="暂停" onclick="playReviewPodcastClip(getReviewItemById('${item.id}'), 1.0, 'clip_1')">${item.video_url ? "重播" : "原声"}</button>
       </div>
     </div>
 
@@ -12019,8 +12581,8 @@ function renderVocabStage() {
         <div class="vc-reveal${vcRevealed ? " shown" : ""}" id="vc-reveal-box">
           ${kanaHtml ? `<div class="vc-kana">${kanaHtml}</div>` : ""}
           <div class="vc-zh${quietZh ? " quiet" : ""}">${escapeHtml(card.zh)}</div>
-          ${card.mnemonic ? `<div class="vc-hook"><span class="vc-hook-tag">记音</span>${escapeHtml(card.mnemonic)}</div>` : ""}
-          ${card.twin ? `<div class="vc-twin${card.mnemonic ? " sub" : ""}">${escapeHtml(card.twin)}</div>` : ""}
+          ${card.mnemonic ? `<div class="vc-hook"><span class="vc-hook-tag">记音</span>${formatZenNoteHTML(card.mnemonic)}</div>` : ""}
+          ${card.twin ? `<div class="vc-twin${card.mnemonic ? " sub" : ""}">${formatZenNoteHTML(card.twin)}</div>` : ""}
         </div>
         <div class="mic-feedback" id="vc-mic-feedback"></div>
       </div>
@@ -12692,19 +13254,19 @@ function renderDashboard() {
     const totalHes = pillarMeta.reduce((s, x) => s + x.hesCnt, 0);
     const dLeft = Number(DATA.days_to_exam || 14);
     const extras = [];
-    if (totalHes > 0) extras.push(`略生 ${totalHes} 项`);
-    if (totalStale > 0) extras.push(`待保鲜抽查 ${totalStale} 项`);
-    const extraStr = extras.length ? ` · ${extras.join(" · ")}` : "";
+    if (totalHes > 0) extras.push(`<span class="nw">略生 ${totalHes} 项</span>`);
+    if (totalStale > 0) extras.push(`<span class="nw">待保鲜 ${totalStale} 项</span>`);
+    const extraStr = extras.length ? `，${extras.join("，")}` : "";
     if (best && totalWip2 > 0) {
       roiEl.innerHTML = `
         <div class="dash-roi-bar">
-          <span class="dash-roi-txt">距考剩 <b>${dLeft} 天</b> · 临门 2/3 共 <b>${totalWip2} 项</b>（${best.m.label}最提分${extraStr}）</span>
+          <span class="dash-roi-txt"><span class="nw">距考剩 <b>${dLeft} 天</b></span> · <span class="nw">临门 2/3 共 <b>${totalWip2} 项</b></span>（<span class="nw">${best.m.label}最提分</span>${extraStr}）</span>
           <button type="button" class="dash-roi-btn" onclick="jumpToRoiPillar('${best.k}')">看 ${best.m.label} ›</button>
         </div>`;
     } else {
       roiEl.innerHTML = `
         <div class="dash-roi-bar">
-          <span class="dash-roi-txt">距考剩 <b>${dLeft} 天</b> · 临门 2/3 已清空${extraStr || " · 稳步攻克新点即可"}</span>
+          <span class="dash-roi-txt"><span class="nw">距考剩 <b>${dLeft} 天</b></span> · <span class="nw">临门 2/3 已清空</span>${extraStr || "，稳步攻克新点即可"}</span>
         </div>`;
     }
   }
@@ -12853,8 +13415,13 @@ function renderMasteryList() {
       <div class="li-row">
         <div class="li-left">
           <span class="li-dot ${it.tier}"></span>
-          <span class="li-name">${escapeHtml(it.name)}</span>
-          ${gaTagHTML}${hesHTML}
+          <div class="li-name-stack">
+            <div class="li-name-line">
+              <span class="li-name">${escapeHtml(it.name)}</span>
+              ${gaTagHTML}${hesHTML}
+            </div>
+            ${it.sub ? `<span class="li-sub-mob">${escapeHtml(it.sub)}</span>` : ""}
+          </div>
         </div>
         <div class="li-right">
           <span class="li-sub">${escapeHtml(it.sub)}</span>
@@ -12872,6 +13439,10 @@ function renderMasteryList() {
 }
 
 function closeModal() {
+  try {
+    const mv = document.getElementById("story-modal-video");
+    if (mv && typeof mv.pause === "function") mv.pause();
+  } catch (e) {}
   document.getElementById("app-modal").classList.remove("open");
 }
 
@@ -15405,7 +15976,7 @@ const sb = {
   fetch:()=>Promise.resolve({ok:true, text:()=>Promise.resolve(''), json:()=>Promise.resolve({})}),
   location:{href:'https://tango13ucla.github.io/n3-audio-tutor/', hostname:'tango13ucla.github.io', search:'', hash:'', reload:()=>{reloadCount += 1;}},
   history:{replaceState:()=>{}, pushState:()=>{}}, screen:{orientation:{lock:()=>Promise.resolve()}}, matchMedia:()=>({matches:false, addEventListener:()=>{}}),
-  document:{body:makeEl('body'), documentElement:makeEl('html'), visibilityState:'visible', getElementById:id=>(els[id]||(els[id]=makeEl(id))), querySelector:s=>makeEl(s), querySelectorAll:()=>[], createElement:t=>makeEl(t), addEventListener:()=>{}}
+  document:{body:makeEl('body'), documentElement:makeEl('html'), visibilityState:'visible', getElementById:id=>(els[id]||(els[id]=makeEl(id))), querySelector:s=>makeEl(s), querySelectorAll:()=>[], createElement:t=>(t==='video'?makeAudioEl():makeEl(t)), addEventListener:()=>{}}
 };
 sb.window = sb; sb.self = sb; sb.globalThis = sb;
 vm.runInNewContext(m[1], sb, { filename: 'index.html.js' });
@@ -16048,6 +16619,45 @@ sb.replayVocabAudio();
 const tokAfterReplay = vm.runInNewContext('vcToken', sb);
 if (tokAfterReplay <= tokAfterReveal) {
   throw new Error('Self-test 12 failed: explicit thumb-zone 重听 did not advance vcToken to replay!');
+}
+
+// Self-test 13: Dark-Mode Papercut Hygiene & Post-Listening Documentary Video + Synced Subtitles
+if (html.includes('--hairline-2') || html.includes('rgba(255, 255, 255, 0.94)')) {
+  throw new Error('Self-test 13 failed: broken --hairline-2 or hardcoded white mini-bar background regressed!');
+}
+const fmtTest = sb.formatZenNoteHTML('英文 “Show(しょう) Torch(ちょう)” 高举火炬，所長(しょちょう) → よさん');
+if (fmtTest.includes(' “') || fmtTest.includes('” ') || !fmtTest.includes('class="nw">所長(しょちょう)<') || !fmtTest.includes('class="nw">→ よさん<')) {
+  throw new Error('Self-test 13 failed: formatZenNoteHTML did not normalize quote spacing & kana nw spans: ' + fmtTest);
+}
+sb.switchMode('radio', false);
+sb.toggleRadioPlay(true);
+sb.switchMode('vocab');
+if (!els['app-shell'].classList.contains('has-mini-bar')) {
+  throw new Error('Self-test 13 failed: #app-shell missing has-mini-bar class when mini-bar visible!');
+}
+sb.switchMode('radio', false);
+if (els['app-shell'].classList.contains('has-mini-bar')) {
+  throw new Error('Self-test 13 failed: #app-shell kept has-mini-bar class on radio tab!');
+}
+const rvWithVid = (sb.getRadioReviewItems() || []).filter(x => x && x.video_url);
+if (rvWithVid.length > 0) {
+  sb.openRadioReview(true);
+  const rvCinHtml = (els['radio-review-stage'] && els['radio-review-stage'].innerHTML) || '';
+  if (!rvCinHtml.includes('rv-cinema') || !rvCinHtml.includes('rv-sub-line') || !rvCinHtml.includes('rv-sub-toggle')) {
+    throw new Error('Self-test 13 failed: video-backed review card missing .rv-cinema / .rv-sub-line / subtitle toggle!');
+  }
+  sb.toggleReviewSubtitles();
+  if (!els['rv-cinema-box'].classList.contains('sub-off')) {
+    throw new Error('Self-test 13 failed: toggleReviewSubtitles did not toggle sub-off class!');
+  }
+  sb.toggleReviewSubtitles();
+  sb.openReviewItemCinema();
+  const cinModHtml = (els['modal-content'] && els['modal-content'].innerHTML) || '';
+  if (!cinModHtml.includes('<video') || !cinModHtml.includes('<track kind="subtitles"')) {
+    throw new Error('Self-test 13 failed: cinema modal missing native <video> and WebVTT <track> subtitles!');
+  }
+  sb.closeModal();
+  sb.closeRadioReview();
 }
 """
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
