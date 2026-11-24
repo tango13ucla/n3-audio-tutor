@@ -1001,6 +1001,16 @@ def clean_grammar_family_cn(raw_fam: str) -> str:
     return mapping.get(s, s or "核心语法")
 
 
+def clean_grammar_front_name(nm: str) -> str:
+    """Strip parenthetical meaning/usage spoilers like （経験）, （忠告）, （原因）, （目的）, （伝聞）
+    for blind front-of-card recall, while preserving pure kana optional particle markers like （に）."""
+    s = str(nm or "").strip()
+    s = re.sub(r"[（(](?![ぁ-んァ-ヶー]+[）)])[^）)]*[）)]", "", s).strip()
+    if s == "そうだ":
+        s = "〜そうだ"
+    return s or str(nm or "").strip()
+
+
 def _norm_last_date(p_obj: dict, qid: str) -> str:
     raw = str(p_obj.get("last_ok_date") or p_obj.get("last_ng_date") or last_practiced_day_by_base.get(qid, "") or "")
     return raw.replace("-", "")[:8]
@@ -1072,6 +1082,7 @@ for g_idx, p in enumerate(live_state.get("grammar_points", [])):
     grammar_audit_items.append({
         "gid": gid,
         "name": nm,
+        "front_name": clean_grammar_front_name(nm),
         "meaning": meaning_clean,
         "family": fam_clean,
         "rule": rule_txt,
@@ -1086,6 +1097,20 @@ for g_idx, p in enumerate(live_state.get("grammar_points", [])):
         "audit_ts": int(p.get("audit_ts") or 0),
         "audit_date": str(p.get("audit_date") or ""),
     })
+
+_ga_front_counts = {}
+for _it in grammar_audit_items:
+    _fn = _it["front_name"]
+    _ga_front_counts[_fn] = _ga_front_counts.get(_fn, 0) + 1
+_ga_front_seen = {}
+_ga_circled = ["①", "②", "③", "④", "⑤"]
+for _it in grammar_audit_items:
+    _fn = _it["front_name"]
+    if _ga_front_counts.get(_fn, 0) > 1:
+        _idx = _ga_front_seen.get(_fn, 0)
+        _ga_front_seen[_fn] = _idx + 1
+        _tag = _ga_circled[_idx] if _idx < len(_ga_circled) else str(_idx + 1)
+        _it["front_name"] = f"{_fn} {_tag}"
 
 grammar_audit_items.sort(key=lambda x: (x["pri"], x["family"], x["gid"]))
 
@@ -9371,6 +9396,9 @@ function revealRadioReviewCard() {
   if (rvRevealed || rvMode === "relearn" || rvMode === "done" || rvMode === "speak") return;
   rvRevealed = true;
   rvRevealedAt = performance.now();
+  const item = getReviewItemById(rvActiveItemId);
+  const headEl = document.getElementById("rv-head");
+  if (headEl && item && item.title) headEl.textContent = item.title;
   const el = document.getElementById("rv-reveal-area");
   if (el) el.classList.add("shown");
   const hint = document.getElementById("rv-tap-hint");
@@ -9669,7 +9697,7 @@ function renderRadioReviewStage() {
           ${item.is_new_n2 ? `<span class="rv-n2-dot">· N2 新学</span>` : ""}
           ${isTail ? `<span class="rv-n2-dot">· 刚才重学</span>` : ""}
         </div>
-        <h2 class="rv-head">${escapeHtml(item.title)}</h2>
+        <h2 class="rv-head" id="rv-head">${escapeHtml(rvRevealed ? item.title : stripGrammarSpoilerTitle(item.title))}</h2>
         <p class="rv-cue-line">${escapeHtml(item.story_cue || "")}</p>
 
         <div class="rv-clip-row">
@@ -12285,6 +12313,33 @@ function startNextGABatch() {
   renderGrammarAuditStage();
 }
 
+function getGASysBadge(item) {
+  if (!item) return "";
+  return item.sys_tier === "done"
+    ? (item.nov_tested ? "原账已掌握" : "11月未测 · 原账已掌握")
+    : (item.sys_tier === "todo" ? "原账待攻克" : (item.nov_tested ? `原账 ${item.sys_streak}/3` : "11月未测 · 原账 1/3"));
+}
+
+function stripGrammarSpoilerTitle(raw) {
+  let s = String(raw || "").trim();
+  s = s.replace(/[（(](?![ぁ-んァ-ヶー]+[）)])[^）)]*[）)]/g, "").trim();
+  if (s === "そうだ") s = "〜そうだ";
+  return s || String(raw || "").trim();
+}
+
+function getGAFrontName(item) {
+  if (!item) return "";
+  return item.front_name || stripGrammarSpoilerTitle(item.name);
+}
+
+function syncGARevealedCardHeader(item) {
+  if (!item) return;
+  const eyeEl = document.getElementById("ga-eyebrow");
+  if (eyeEl) eyeEl.textContent = `${item.family} · ${getGASysBadge(item)}`;
+  const headEl = document.getElementById("ga-head");
+  if (headEl) headEl.textContent = item.name;
+}
+
 function playGAAudio(ev) {
   if (ev) ev.stopPropagation();
   const sess = A.gaSess;
@@ -12297,7 +12352,7 @@ function playGAAudio(ev) {
   } else if (item.ex_ja) {
     speakJapaneseFallback(item.ex_ja);
   } else {
-    speakJapaneseFallback(item.name);
+    speakJapaneseFallback(getGAFrontName(item));
   }
 }
 
@@ -12311,6 +12366,8 @@ function onGACardTapOrAudio() {
   }
   if (!gaRevealed) {
     gaRevealed = true;
+    const item = GA_BY_GID[sess.queue[0]];
+    syncGARevealedCardHeader(item);
     const revEl = document.getElementById("ga-reveal-box");
     if (revEl) revEl.classList.add("shown");
     const cueEl = document.getElementById("ga-cue-line");
@@ -12394,6 +12451,7 @@ function commitGASpectrum(code) {
     gaRevealed = true;
     gaPendingNext = true;
     gaPendingCode = code;
+    syncGARevealedCardHeader(GA_BY_GID[gid]);
     const revEl = document.getElementById("ga-reveal-box");
     if (revEl) revEl.classList.add("shown");
     const audBtn = document.getElementById("ga-aud-btn");
@@ -12602,10 +12660,10 @@ function renderGrammarAuditStage() {
   if (!item) return;
   const posNum = Math.min(Math.max(1, sess.total), (sess.cleared || 0) + 1);
   const canUndo = Array.isArray(sess.undoStack) && sess.undoStack.length > 0;
-  const sysBadge = item.sys_tier === "done"
-    ? (item.nov_tested ? "原账已掌握" : "11月未测 · 原账已掌握")
-    : (item.sys_tier === "todo" ? "原账待攻克" : (item.nov_tested ? `原账 ${item.sys_streak}/3` : "11月未测 · 原账 1/3"));
+  const sysBadge = getGASysBadge(item);
   const eyeCls = !item.nov_tested && item.sys_tier === "done" ? "ga-eyebrow warn" : (item.sys_tier === "todo" ? "ga-eyebrow ng" : "ga-eyebrow");
+  const eyeText = gaRevealed ? `${item.family} · ${sysBadge}` : sysBadge;
+  const headText = gaRevealed ? item.name : getGAFrontName(item);
 
   box.innerHTML = `
     <div class="meta-bar">
@@ -12618,8 +12676,8 @@ function renderGrammarAuditStage() {
 
     <div class="vc-deck-area">
       <div class="vc-card" id="ga-card" onclick="onGACardTapOrAudio()">
-        <div class="${eyeCls}">${escapeHtml(item.family)} · ${escapeHtml(sysBadge)}</div>
-        <div class="ga-head">${escapeHtml(item.name)}</div>
+        <div class="${eyeCls}" id="ga-eyebrow">${escapeHtml(eyeText)}</div>
+        <div class="ga-head" id="ga-head">${escapeHtml(headText)}</div>
         <div class="vc-cue" id="ga-cue-line" style="margin-top:10px;margin-bottom:0;">${gaRevealed ? "在下方光谱点选或滑选这一秒的真实感觉" : "脑中过一遍意思与接续 · 轻点翻面，或直接选光谱"}</div>
 
         <div class="ga-reveal${gaRevealed ? " shown" : ""}" id="ga-reveal-box">
@@ -15662,13 +15720,24 @@ const gaData = vm.runInNewContext('DATA.grammar_audit', sb);
 if (!gaData || !Array.isArray(gaData.items) || gaData.items.length !== 156) {
   throw new Error('Self-test 7 failed: grammar_audit must contain all 156 points, got ' + (gaData && gaData.items ? gaData.items.length : 0));
 }
+const gaSpoilerRe = /[（(](?![ぁ-んァ-ヶー]+[）)])[^）)]*[）)]/;
 for (const it of gaData.items) {
-  if (!it.gid || !it.name || !it.meaning || !it.ex_ja || !it.audio) {
+  if (!it.gid || !it.name || !it.front_name || !it.meaning || !it.ex_ja || !it.audio) {
     throw new Error('Self-test 7 failed: incomplete grammar_audit item ' + JSON.stringify(it));
+  }
+  if (gaSpoilerRe.test(it.front_name)) {
+    throw new Error('Self-test 7 failed: semantic spoiler leaked in front_name of ' + it.gid + ': ' + it.front_name);
   }
   if (String(it.meaning).includes('—') || String(it.rule || '').includes('—')) {
     throw new Error('Self-test 7 failed: em dash found in grammar_audit item ' + it.gid);
   }
+}
+const gaById = Object.fromEntries(gaData.items.map(x => [x.gid, x]));
+if (gaById['G-047'].front_name !== '〜ことがある' || gaById['G-017'].front_name !== '〜ことだ' || gaById['G-134'].front_name !== '〜そうだ' || gaById['G-057'].front_name !== '〜ために ①' || gaById['G-058'].front_name !== '〜ために ②' || gaById['G-010'].front_name !== '〜あいだ（に）' || gaById['G-011'].front_name !== '〜あまり（に）') {
+  throw new Error('Self-test 7 failed: unexpected front_name mapping: ' + JSON.stringify(['G-047','G-017','G-134','G-057','G-058','G-010','G-011'].map(k => [k, gaById[k] && gaById[k].front_name])));
+}
+if (sb.stripGrammarSpoilerTitle('〜ことがある（経験）') !== '〜ことがある' || sb.stripGrammarSpoilerTitle('〜あいだ（に）') !== '〜あいだ（に）') {
+  throw new Error('Self-test 7 failed: stripGrammarSpoilerTitle mismatch');
 }
 const planD = vm.runInNewContext('DATA.plan_date', sb);
 const ptsLen = vm.runInNewContext('DATA.points.length', sb);
@@ -15691,8 +15760,17 @@ const gaHtml = (els['vocab-stage-box'] && els['vocab-stage-box'].innerHTML) || '
 if (!gaHtml.includes('ga-spec-rail') || !gaHtml.includes('陌生') || !gaHtml.includes('易混') || !gaHtml.includes('看懂') || !gaHtml.includes('本能') || gaHtml.includes('—')) {
   throw new Error('Self-test 7 failed: GA spectrum rail missing 4 stops or contains em dash!');
 }
-// Commit code=1 (陌生) before reveal -> shows explanation dock synchronously, sets todo mastery
+if (gaHtml.includes(`id="ga-eyebrow">${firstItem.family}`)) {
+  throw new Error('Self-test 7 failed: unflipped GA card leaked semantic family on eyebrow: ' + firstItem.family);
+}
+if (!gaHtml.includes(`id="ga-head">${firstItem.front_name}</div>`)) {
+  throw new Error('Self-test 7 failed: unflipped GA card did not render clean front_name: ' + firstItem.front_name);
+}
+// Commit code=1 (陌生) before reveal -> reveals family & full name + explanation dock synchronously, sets todo mastery
 sb.commitGASpectrum(1);
+if (!els['ga-eyebrow'] || !String(els['ga-eyebrow'].textContent || '').includes(firstItem.family) || !els['ga-head'] || els['ga-head'].textContent !== firstItem.name) {
+  throw new Error('Self-test 7 failed: revealing GA card did not unveil family & full name: ' + JSON.stringify({eye: els['ga-eyebrow'] && els['ga-eyebrow'].textContent, head: els['ga-head'] && els['ga-head'].textContent}));
+}
 const gaEntry1 = vm.runInNewContext(`A.gaMap["${firstItem.gid}"]`, sb);
 const ov1 = vm.runInNewContext(`A.masteryOverrides[${JSON.stringify(firstItem.name)}]`, sb);
 if (!Array.isArray(gaEntry1) || gaEntry1[0] !== 1 || !String(ov1 || '').startsWith('todo:')) {
