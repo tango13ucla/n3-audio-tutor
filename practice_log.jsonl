@@ -1240,3 +1240,4 @@
 {"id": "GA-G-096", "point": "〜まま", "choice": "盘点:本能", "correct": "true", "ask_again": "false", "ts": "2026-11-23T07:35:23.000Z"}
 {"id": "GA-GX-08", "point": "せっかく〜のに", "choice": "盘点:陌生", "correct": "false", "ask_again": "false", "ts": "2026-11-23T07:35:29.000Z"}
 {"id": "GA-G-031", "point": "〜ばかりか", "choice": "盘点:陌生", "correct": "false", "ask_again": "false", "ts": "2026-11-23T07:35:36.000Z"}
+{"id": "N3-G145", "point": "〜たとたん", "choice": "うちに", "correct": "false", "ask_again": "false", "ts": "2026-11-24T06:19:06.000Z"}
