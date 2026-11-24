@@ -2647,6 +2647,187 @@ html = r"""<!DOCTYPE html>
     color: var(--ink-2);
   }
 
+  /* Story Artwork Presentation (Zen Woodblock & Wabi-Sabi Aesthetics) */
+  .radio-art-card {
+    position: relative;
+    width: 100%;
+    max-width: 440px;
+    height: 140px;
+    margin: 2px 0 0;
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--sheet);
+    border: 1px solid var(--hairline-strong);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: transform 0.18s ease, border-color 0.18s ease;
+  }
+  @media (min-width: 860px) and (min-height: 521px) {
+    .radio-art-card { height: 180px; }
+  }
+  .radio-art-card:active { transform: scale(0.99); }
+  .radio-art-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    transition: opacity 0.35s ease;
+  }
+  .radio-art-meta {
+    position: absolute;
+    bottom: 8px;
+    right: 10px;
+    background: rgba(23, 22, 20, 0.76);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    color: #F5F2EB;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    padding: 3px 8px;
+    border-radius: 4px;
+    pointer-events: none;
+  }
+
+  /* Review Story Gallery (End-of-day / Episode Wrap-up) */
+  .rv-gallery-wrap {
+    margin: 14px 0 10px;
+    width: 100%;
+  }
+  .rv-gallery-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .rv-gallery-overline {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--moss);
+    text-transform: uppercase;
+  }
+  .rv-gallery-scroll {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    width: 100%;
+  }
+  @media (max-width: 480px) {
+    .rv-gallery-scroll {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      padding-bottom: 6px;
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+  .rv-story-art-card {
+    background: var(--sheet);
+    border: 1px solid var(--hairline-strong);
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+    display: flex;
+    flex-direction: column;
+  }
+  @media (max-width: 480px) {
+    .rv-story-art-card {
+      flex: 0 0 220px;
+      scroll-snap-align: start;
+    }
+  }
+  .rv-story-art-card:active { transform: scale(0.98); }
+  .rv-story-art-img-wrap {
+    width: 100%;
+    height: 105px;
+    background: var(--tap-bg);
+    overflow: hidden;
+  }
+  .rv-story-art-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .rv-story-art-body {
+    padding: 7px 9px 8px;
+  }
+  .rv-story-art-title {
+    font-family: var(--serif-jp);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sumi);
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .rv-story-art-sub {
+    font-size: 11px;
+    color: var(--ink-2);
+    margin-top: 2px;
+    line-height: 1.35;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .rv-relearn-art-wrap {
+    width: 100%;
+    max-height: 120px;
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 4px 0 8px;
+    border: 1px solid var(--hairline-strong);
+  }
+  .rv-relearn-art-img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* Story Modal Presentation */
+  .story-modal-box {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 8px;
+    background: var(--sheet);
+  }
+  .story-modal-img-wrap {
+    width: 100%;
+    max-height: 260px;
+    overflow: hidden;
+    background: var(--tap-bg);
+  }
+  .story-modal-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .story-modal-body {
+    padding: 16px 18px 18px;
+  }
+  .story-modal-title {
+    margin: 6px 0 4px;
+    font-family: var(--serif-jp);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--sumi);
+  }
+  .story-modal-sub {
+    margin: 0;
+    font-size: 14px;
+    color: var(--ink-2);
+    line-height: 1.6;
+  }
+
   .radio-dock {
     flex-shrink: 0;
     display: flex;
@@ -4726,6 +4907,12 @@ html = r"""<!DOCTYPE html>
         <div class="radio-center">
           <div class="radio-chap" id="radio-chap-lbl">逐客茶</div>
           <h2 class="radio-topic" id="radio-live-title">日本文化夜话</h2>
+          <div class="radio-art-card" id="radio-art-card" style="display:none;" onclick="openStoryArtModal()">
+            <img class="radio-art-img" id="radio-art-img" src="" alt="" />
+            <div class="radio-art-meta">
+              <span class="radio-art-tag" id="radio-art-tag"></span>
+            </div>
+          </div>
           <p class="radio-ja" id="radio-live-ja"></p>
           <div class="inline-lex empty" id="radio-inline-lex" data-surface="">
             <div class="ilex-top">
@@ -7394,6 +7581,7 @@ function ensureRadioReady() {
     seekEl.max = Math.ceil(dur);
     document.getElementById("radio-tot-time").textContent = formatMMSS(dur);
     renderRadioChapters(0);
+    updateRadioArtwork((DATA.radio.chapters && DATA.radio.chapters[0]) || null);
 
     radioPlayer.preload = "auto";
     if (cachedRadioBlobUrl) {
@@ -7463,6 +7651,99 @@ function updateMediaSessionPosition(force) {
   } catch (e) {}
 }
 
+function getCurrentRadioArtworkUrl() {
+  const segs = (DATA.radio && DATA.radio.segments) || [];
+  const chaps = (DATA.radio && DATA.radio.chapters) || [];
+  const t = (pendingRadioSeekSec !== null) ? pendingRadioSeekSec : (radioPlayer.currentTime || 0);
+  for (let i = 0; i < segs.length; i++) {
+    if (t >= segs[i].start && t < segs[i].end) {
+      const c = chaps[segs[i].chapter];
+      if (c && c.img) return c.img;
+      break;
+    }
+  }
+  return (DATA.radio && DATA.radio.artwork_url) || "./icon-512.png";
+}
+
+function updateRadioArtwork(chapObj) {
+  const artCard = document.getElementById("radio-art-card");
+  const artImg = document.getElementById("radio-art-img");
+  const artTag = document.getElementById("radio-art-tag");
+  if (!artCard || !artImg) return;
+  const imgSrc = (chapObj && chapObj.img) || (DATA.radio && DATA.radio.artwork_url) || "";
+  if (!imgSrc) {
+    artCard.style.display = "none";
+    return;
+  }
+  if (artImg.getAttribute("src") !== imgSrc) {
+    artImg.src = imgSrc;
+    artImg.alt = (chapObj && chapObj.title) || "";
+  }
+  if (artTag && chapObj && chapObj.title) {
+    artTag.textContent = chapObj.title.replace(/^[①②③④⑤⑥]\s*/, "");
+  }
+  artCard.style.display = "flex";
+}
+
+function renderReviewStoryGalleryHTML() {
+  const storyArts = (DATA.radio && Array.isArray(DATA.radio.story_arts)) ? DATA.radio.story_arts : [];
+  if (!storyArts.length) return "";
+  return `
+    <div class="rv-gallery-wrap">
+      <div class="rv-gallery-head">
+        <span class="rv-gallery-overline">今日故事画卷 · 触景生情</span>
+      </div>
+      <div class="rv-gallery-scroll">
+        ${storyArts.map((art, idx) => `
+          <div class="rv-story-art-card" onclick="openStoryArtModal(${idx})">
+            <div class="rv-story-art-img-wrap">
+              <img src="${escapeHtml(art.img)}" alt="${escapeHtml(art.title)}" class="rv-story-art-img" loading="lazy" />
+            </div>
+            <div class="rv-story-art-body">
+              <div class="rv-story-art-title">${escapeHtml(art.title)}</div>
+              <div class="rv-story-art-sub">${escapeHtml(art.subtitle || "")}</div>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function openStoryArtModal(idx) {
+  const storyArts = (DATA.radio && Array.isArray(DATA.radio.story_arts)) ? DATA.radio.story_arts : [];
+  let art = null;
+  if (typeof idx === "number" && storyArts[idx]) {
+    art = storyArts[idx];
+  } else {
+    const t = (pendingRadioSeekSec !== null) ? pendingRadioSeekSec : (radioPlayer.currentTime || 0);
+    const segs = (DATA.radio && DATA.radio.segments) || [];
+    let curC = 0;
+    for (let i = 0; i < segs.length; i++) {
+      if (t >= segs[i].start && t < segs[i].end) { curC = segs[i].chapter; break; }
+    }
+    art = storyArts.find(s => Array.isArray(s.chapters) && s.chapters.includes(curC)) || storyArts[0];
+  }
+  if (!art) return;
+  const modal = document.getElementById("app-modal");
+  const content = document.getElementById("modal-content");
+  if (!modal || !content) return;
+  content.innerHTML = `
+    <div class="story-modal-box">
+      <div class="story-modal-img-wrap">
+        <img src="${escapeHtml(art.img)}" alt="${escapeHtml(art.title)}" class="story-modal-img" />
+      </div>
+      <div class="story-modal-body">
+        <span class="overline warm">文化夜话 · 故事画卷</span>
+        <h3 class="story-modal-title">${escapeHtml(art.title)}</h3>
+        <p class="story-modal-sub">${escapeHtml(art.subtitle || "")}</p>
+        <button type="button" class="rv-btn-pass" style="margin-top:14px;" onclick="closeModal()">关 闭</button>
+      </div>
+    </div>
+  `;
+  modal.classList.add("open");
+}
+
 function setupMediaSession(segTitle) {
   if (!("mediaSession" in navigator)) return;
   const title = segTitle || getCurrentRadioSegTitle();
@@ -7470,7 +7751,9 @@ function setupMediaSession(segTitle) {
     if (!navigator.mediaSession.metadata || lastMediaTitle !== title) {
       let artwork = [];
       try {
+        const segArt = getCurrentRadioArtworkUrl();
         artwork = [
+          { src: new URL(segArt, location.href).href, sizes: "1280x720", type: "image/jpeg" },
           { src: new URL("./icon-192.png", location.href).href, sizes: "192x192", type: "image/png" },
           { src: new URL("./icon-512.png", location.href).href, sizes: "512x512", type: "image/png" }
         ];
@@ -7688,6 +7971,7 @@ function updateRadioLiveDisplay(t) {
           const chapLbl = document.getElementById("radio-chap-lbl");
           if (chapLbl) chapLbl.textContent = chapObj.title.replace(/^[①②③④⑤⑥]\s*/, "");
           renderRadioChapters(chapObj.idx);
+          updateRadioArtwork(chapObj);
         }
         const titleEl = document.getElementById("radio-live-title");
         if (titleEl) titleEl.textContent = curSeg.title;
@@ -9258,6 +9542,7 @@ function renderRadioReviewStage() {
         <p class="logic-line">${relearnedItems.length
           ? `下面标出的重点已自动记入明日做题与记词队列，下期《锵锵》也会顺嘴再帮你搭一次桥。`
           : `今天 60 分钟里的表达和词汇都接住了，没有需要单独回炉的卡点。`}</p>
+        ${renderReviewStoryGalleryHTML()}
         ${relearnNamesHTML}
         ${speakHintLine}
       </div>
@@ -9288,6 +9573,7 @@ function renderRadioReviewStage() {
             <span>${escapeHtml(item.chapter_title || "")}</span>
             ${item.is_new_n2 ? `<span class="rv-n2-dot">· N2 新学</span>` : ""}
           </div>
+          ${item.img ? `<div class="rv-relearn-art-wrap" onclick="openStoryArtModal()"><img src="${escapeHtml(item.img)}" class="rv-relearn-art-img" alt="${escapeHtml(item.chapter_title || '')}" /></div>` : ""}
           <h2 class="rv-head">${escapeHtml(item.title)}</h2>
           ${kanaHTML ? `<div class="rv-kana-line">${kanaHTML}</div>` : ""}
           <div class="rv-zh-line">${escapeHtml(item.zh || "")}</div>
