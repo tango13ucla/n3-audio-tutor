@@ -1,5 +1,5 @@
-const CACHE_NAME = "n3-studio-tutor-v58";
-const BUILD_STAMP = "2026-11-23_247aec6e345c22_fc5439c1_66bd65_86700e1c";
+const CACHE_NAME = "n3-studio-tutor-v59";
+const BUILD_STAMP = "2026-11-23_247aec6e345c22_fc5439c1_66bd65_eb1d2a85";
 const CORE_SHELL = [
   "./",
   "./index.html",
@@ -44,8 +44,8 @@ self.addEventListener("fetch", event => {
   if (url.origin !== self.location.origin) return;
   if (url.pathname.includes("/api/") || url.pathname.endsWith("daily_radio.mp3") || url.pathname.endsWith("daily_radio_meta.json") || url.pathname.endsWith("body_vault.enc")) return;
 
-  // Cache-First keyed by ?v=<hash> for short studio MP3s and icons
-  if (url.pathname.endsWith(".mp3") || url.pathname.endsWith(".png")) {
+  // Cache-First keyed by ?v=<hash> for short studio MP3s, icons, and story artwork
+  if (url.pathname.endsWith(".mp3") || url.pathname.endsWith(".png") || url.pathname.endsWith(".jpg")) {
     event.respondWith(
       caches.match(req).then(cached => {
         if (cached) return cached;

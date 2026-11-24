@@ -157,27 +157,32 @@
     {
       "idx": 1,
       "title": "太阳之塔",
-      "start": 551.8
+      "start": 551.8,
+      "img": "./img/qq_vol9_tower_of_the_sun.jpg"
     },
     {
       "idx": 2,
       "title": "生命之树",
-      "start": 1101.3
+      "start": 1101.3,
+      "img": "./img/qq_vol9_tower_of_the_sun.jpg"
     },
     {
       "idx": 3,
       "title": "怪人二十一面相",
-      "start": 1664.1
+      "start": 1664.1,
+      "img": "./img/qq_vol9_otsu_night.jpg"
     },
     {
       "idx": 4,
       "title": "狐狸眼之谜",
-      "start": 2184.5
+      "start": 2184.5,
+      "img": "./img/qq_vol9_otsu_night.jpg"
     },
     {
       "idx": 5,
       "title": "新能源暗战",
-      "start": 2707.1
+      "start": 2707.1,
+      "img": "./img/qq_vol9_perovskite.jpg"
     }
   ],
   "segments": [
@@ -276,62 +281,6 @@
   ],
   "review_items": [
     {
-      "id": "RVW-ひょうじゅん",
-      "kind": "vocab",
-      "key": "標準",
-      "point_id": "",
-      "title": "標準",
-      "kana": "ひょうじゅん",
-      "trap_hl": [
-        "ひょう"
-      ],
-      "trap_tag": "长音",
-      "zh": "标准",
-      "chapter_idx": 0,
-      "chapter_title": "年収之壁",
-      "story_cue": "一到十一月兼职员工集体请假停工",
-      "speaker": "文道",
-      "context_line": "一百零三万日元这条线，是一九九五年平成七年定下来的老標準（ひょうじゅん）！",
-      "ja_example": "標準（ひょうじゅん）",
-      "nuance": "本期播客出现 2 次 · 累计 2 次",
-      "twin": "",
-      "mnemonic": "“标(ひょう)”长 + “准(じゅん)”浊短 → ひょうじゅん",
-      "clip_start": 126.8,
-      "clip_end": 146.8,
-      "demo_audio": "",
-      "hook_audio": "",
-      "is_new_n2": false,
-      "status": "yellow",
-      "streak": 0
-    },
-    {
-      "id": "RVR-N3-G43",
-      "kind": "grammar",
-      "key": "〜に基づいて",
-      "point_id": "N3-G43",
-      "title": "〜に基づいて",
-      "kana": "",
-      "trap_hl": [],
-      "trap_tag": "",
-      "zh": "以事实数据为依据",
-      "chapter_idx": 0,
-      "chapter_title": "年収之壁",
-      "story_cue": "一到十一月兼职员工集体请假停工",
-      "speaker": "子东",
-      "context_line": "这里头立刻冒出一个 ニュース 和商务汇报里高频极高的句型：根据某种数据、法律或者原则来做决定，日语叫 にもとづいて！",
-      "ja_example": "データに基づいて税制を見直したうえで、もう少し働かせてもらう仕組みに変えるしかない。",
-      "nuance": "以真实事件、调查数据或规章为依据进行创作或决策，用「名词＋に基づいて」。",
-      "twin": "事実に基づいて作る：名词＋に基づいて＝以事实调查为依据创作判断 · 对比 客に対して親切だ：名词＋に対して＝朝向某对象采取态度",
-      "mnemonic": "",
-      "clip_start": 221.3,
-      "clip_end": 243.3,
-      "demo_audio": "./audio/N3-G43_q.mp3",
-      "hook_audio": "",
-      "is_new_n2": false,
-      "status": "yellow",
-      "streak": 1
-    },
-    {
       "id": "RVR-N3-G123",
       "kind": "grammar",
       "key": "〜させてもらう",
@@ -346,12 +295,12 @@
       "story_cue": "一到十一月兼职员工集体请假停工",
       "speaker": "文涛",
       "context_line": "记住了， にもとづいて 专门讲依据根基！对了，平时打工的 がくせい 去找店长客客气气商量说，不好意思，十二月能不能容我多休几天假，这种日本职场最讲究分寸的客气说法是不是 させてもらう？",
-      "ja_example": "体調が悪いので、今日は早めに帰らせてもらってもいいですか。",
+      "ja_example": "帰らせてもらう",
       "nuance": "向长辈、上司或同事客气请求许可「请允许我做某事」，用「使役て形＋もらう／いただく」。",
       "twin": "帰らせてもらう：使役て形＋もらう＝承蒙对方准许让我早退 · 对比 帰られる：被别人回家（语法与意思均不通）",
       "mnemonic": "",
-      "clip_start": 243.5,
-      "clip_end": 261.8,
+      "clip_start": 250.7,
+      "clip_end": 271.2,
       "demo_audio": "./audio/N3-G123_q.mp3",
       "hook_audio": "",
       "is_new_n2": false,
@@ -379,40 +328,11 @@
       "nuance": "本期播客出现 2 次 · 累计 2 次",
       "twin": "",
       "mnemonic": "",
-      "clip_start": 395.6,
-      "clip_end": 412.0,
+      "clip_start": 419.3,
+      "clip_end": 436.4,
       "demo_audio": "./audio/words/w_9b13dc9602.mp3",
       "hook_audio": "",
       "is_new_n2": true,
-      "status": "yellow",
-      "streak": 0
-    },
-    {
-      "id": "RVW-けんちく",
-      "kind": "vocab",
-      "key": "建築",
-      "point_id": "",
-      "title": "建築",
-      "kana": "けんちく",
-      "trap_hl": [
-        "け"
-      ],
-      "trap_tag": "短音",
-      "zh": "建筑",
-      "chapter_idx": 1,
-      "chapter_title": "太阳之塔",
-      "story_cue": "捅穿大师的未来大屋顶",
-      "speaker": "文道",
-      "context_line": "这就要请出日本現代（げんだい）艺术史和建築（けんちく）史上最火星四溅、也最痛快淋漓的一场天才撞天才的真事儿了！",
-      "ja_example": "建築（けんちく）",
-      "nuance": "本期播客出现 4 次 · 累计 4 次",
-      "twin": "",
-      "mnemonic": "英文 “Ken(けん) Cheek(ちく)” 盖房子，筑 短清 ちく → けんちく",
-      "clip_start": 873.2,
-      "clip_end": 893.2,
-      "demo_audio": "",
-      "hook_audio": "",
-      "is_new_n2": false,
       "status": "yellow",
       "streak": 0
     },
@@ -431,17 +351,18 @@
       "story_cue": "捅穿大师的未来大屋顶",
       "speaker": "文道",
       "context_line": "这里头表达『伴随着前头变化，后头一同演进』的书面高频句型，就是 とともに： けいざいのせいちょうとともに、しゃかいもおおきくかわった！",
-      "ja_example": "けいざいのせいちょうとともに、しゃかいもおおきくかわった。",
+      "ja_example": "普及とともに変わった",
       "nuance": "书面语中表示「随着A的发展变化，B也随之发生」，或「与某人共同」，用「〜とともに」。",
       "twin": "普及とともに変わった：名词／动词原形＋とともに＝随着普及同步变化（较书面） · 对比 店へ行くかわりにネットで買う：用网购替代去实体店（替代交换）",
       "mnemonic": "",
-      "clip_start": 1043.9,
-      "clip_end": 1065.9,
+      "clip_start": 1041.9,
+      "clip_end": 1063.9,
       "demo_audio": "./audio/N3-G72_q.mp3",
       "hook_audio": "",
       "is_new_n2": false,
       "status": "red",
-      "streak": 0
+      "streak": 0,
+      "img": "./img/qq_vol9_tower_of_the_sun.jpg"
     },
     {
       "id": "RVW-しょうちょう",
@@ -464,13 +385,14 @@
       "nuance": "本期播客出现 3 次 · 累计 3 次",
       "twin": "",
       "mnemonic": "",
-      "clip_start": 1115.0,
-      "clip_end": 1135.0,
+      "clip_start": 1118.6,
+      "clip_end": 1138.6,
       "demo_audio": "",
       "hook_audio": "",
       "is_new_n2": true,
       "status": "yellow",
-      "streak": 0
+      "streak": 0,
+      "img": "./img/qq_vol9_tower_of_the_sun.jpg"
     },
     {
       "id": "RVR-N3-G28",
@@ -481,7 +403,7 @@
       "kana": "",
       "trap_hl": [],
       "trap_tag": "",
-      "zh": "名词＋によって ＝ 由于某客观原因／通过某手段；にとって ＝ 对某人…",
+      "zh": "由于某客观原因／通过某手段",
       "chapter_idx": 2,
       "chapter_title": "生命之树",
       "story_cue": "四张脸与封存四十八年的生命之树",
@@ -491,13 +413,14 @@
       "nuance": "名词＋によって ＝ 由于某客观原因／通过某手段；にとって ＝ 对某人而言。",
       "twin": "大雨によって乱れた：由于暴雨导致时刻表大乱 · 对比 私にとって大切だ：站在某人立场评价",
       "mnemonic": "",
-      "clip_start": 1411.7,
-      "clip_end": 1433.7,
+      "clip_start": 1421.8,
+      "clip_end": 1443.8,
       "demo_audio": "./audio/N3-G28_q.mp3",
       "hook_audio": "",
       "is_new_n2": false,
       "status": "yellow",
-      "streak": 1
+      "streak": 1,
+      "img": "./img/qq_vol9_tower_of_the_sun.jpg"
     },
     {
       "id": "RVR-N3-G32",
@@ -518,13 +441,14 @@
       "nuance": "正在干某事最投入的节骨眼上突然冒出意外状况（停电、来电话），用「Nの／Vている＋最中に（さいちゅうに）」。",
       "twin": "会議の最中に消えた：名词の／ている ＋ 最中に ＝ 正在兴头上突然被打断 · 对比 会議のあとで：开完会之后（无突发打断紧迫感）",
       "mnemonic": "",
-      "clip_start": 1738.6,
-      "clip_end": 1760.6,
+      "clip_start": 1741.9,
+      "clip_end": 1763.9,
       "demo_audio": "./audio/N3-G32_q.mp3",
       "hook_audio": "",
       "is_new_n2": false,
       "status": "yellow",
-      "streak": 2
+      "streak": 2,
+      "img": "./img/qq_vol9_otsu_night.jpg"
     },
     {
       "id": "RVR-N3-G47",
@@ -541,46 +465,18 @@
       "story_cue": "就差几秒就能抓到狐狸眼男子",
       "speaker": "文道",
       "context_line": "动词辞书形加上 ところだった，前面常搭 もうすこしで 差一点或者 あぶなく 险些，意思是险些、差一点就那样了！",
-      "ja_example": "もう少しで犯人を捕まえられるところだったのに、最後の手紙を出したきり正体がわからずに時効を迎えた。",
+      "ja_example": "乗り遅れるところだった",
       "nuance": "前有「あと少しで・もう少しで・危うく」，表示险些出岔子但最后躲过去了，用「原形＋ところだった」。",
       "twin": "乗り遅れるところだった：あと少しで／もう少しで＋原形＋ところだった＝差点就误车（实际赶上了） · 对比 着くはずだった：本来理应到达（实际没到）",
       "mnemonic": "",
-      "clip_start": 2425.9,
-      "clip_end": 2449.6,
+      "clip_start": 2418.1,
+      "clip_end": 2440.1,
       "demo_audio": "./audio/N3-G47_q.mp3",
       "hook_audio": "",
       "is_new_n2": false,
       "status": "yellow",
-      "streak": 2
-    },
-    {
-      "id": "RVW-でんとう",
-      "kind": "vocab",
-      "key": "伝統",
-      "point_id": "",
-      "title": "伝統",
-      "kana": "でんとう",
-      "trap_hl": [
-        "とう"
-      ],
-      "trap_tag": "长音",
-      "zh": "传统",
-      "chapter_idx": 5,
-      "chapter_title": "新能源暗战",
-      "story_cue": "从日本看世界",
-      "speaker": "文涛",
-      "context_line": "装在政府大楼的玻璃窗上直接发电？等等，伝統（でんとう）硅晶太阳能板不是已经便宜得像白菜一样了吗，全世界干嘛还要花天文数字去抢这种新电池？",
-      "ja_example": "伝統（でんとう）",
-      "nuance": "本期播客出现 6 次 · 累计 6 次",
-      "twin": "",
-      "mnemonic": "“传(でん)”浊 + “统(とう)”长音 → でんとう",
-      "clip_start": 2771.0,
-      "clip_end": 2785.6,
-      "demo_audio": "./audio/words/w_b1b503aca8.mp3",
-      "hook_audio": "",
-      "is_new_n2": false,
-      "status": "yellow",
-      "streak": 0
+      "streak": 2,
+      "img": "./img/qq_vol9_otsu_night.jpg"
     },
     {
       "id": "RVR-N3-G36",
@@ -597,17 +493,18 @@
       "story_cue": "从日本看世界",
       "speaker": "文道",
       "context_line": "拿轻薄弯曲的薄膜去代替笨重易碎的传统面板，正是日语里极其常用的表达 かわりに！",
-      "ja_example": "資源の少ない日本にとって、重いパネルのかわりに薄く曲がる電池を広げることは大きな希望だが、必ず勝てるとは限らない。",
+      "ja_example": "教えてもらうかわりに教える",
       "nuance": "双方互换条件「作为…的交换回报」或「代替某人出场」，用「连体形＋かわりに」。",
       "twin": "教えてもらうかわりに教える：等价交换（他教我日语，作为回报我教他英语） · 对比 先生のおかげで合格した：多亏某人取得好结果",
       "mnemonic": "",
-      "clip_start": 2910.9,
-      "clip_end": 2932.9,
+      "clip_start": 2912.8,
+      "clip_end": 2934.8,
       "demo_audio": "./audio/N3-G36_q.mp3",
       "hook_audio": "",
       "is_new_n2": false,
       "status": "yellow",
-      "streak": 1
+      "streak": 1,
+      "img": "./img/qq_vol9_perovskite.jpg"
     }
   ],
   "speaking_prompts": [
@@ -620,8 +517,9 @@
       "chapter_idx": 0,
       "chapter_title": "年収之壁",
       "story_cue": "一到十一月兼职员工集体请假停工",
-      "prompt_ja": "体調があまり良くない日、上司に「今日は早めに帰りたい」と丁寧に頼むなら、どう言いますか。",
-      "prompt_zh": "场景：今天身体不太舒服，客气请求主管让你早点回去，用「〜させてもらう／いただく」说一句。",
+      "prompt_short": "让我早点回去",
+      "prompt_ja": "早めに帰りたいとき",
+      "prompt_zh": "客气请示让我早点回去",
       "target_stems": [
         "させてもら",
         "させていただ",
@@ -631,13 +529,14 @@
         "行かせてもら",
         "させてもらう"
       ],
-      "model_ja": "体調が悪いので、今日は早めに帰らせてもらってもいいですか。",
-      "model_zh": "我身体不太舒服，今天能让我早点回去吗？",
-      "coaching_tip": "动作是「我自己回去」，求对方准许，必须用使役形「帰らせて」而不是「帰って」。",
-      "clip_start": 243.5,
-      "clip_end": 261.8,
+      "model_ja": "早めに帰らせてもらえますか。",
+      "model_zh": "能让我早点回去吗？",
+      "coaching_tip": "求准许用使役形「帰らせて」",
+      "clip_start": 250.7,
+      "clip_end": 271.2,
       "demo_audio": "./audio/N3-G123_q.mp3",
-      "is_new_n2": false
+      "is_new_n2": false,
+      "img": ""
     },
     {
       "id": "SPK-N3-G47",
@@ -648,19 +547,50 @@
       "chapter_idx": 4,
       "chapter_title": "狐狸眼之谜",
       "story_cue": "就差几秒就能抓到狐狸眼男子",
-      "prompt_ja": "駅まで走って、あと数秒で終電に乗り遅れそうになった経験を、友達にどう話しますか。",
-      "prompt_zh": "场景：差点没赶上末班车，惊险逃过一劫，用「もう少しで〜ところだった」说一句。",
+      "prompt_short": "差点错过末班车",
+      "prompt_ja": "終電に遅れそうになった",
+      "prompt_zh": "差一点没赶上末班车",
       "target_stems": [
         "ところだった",
         "ところでした"
       ],
-      "model_ja": "もう少しで終電に乗り遅れるところだったよ。",
-      "model_zh": "差一点就错过末班车了。",
-      "coaching_tip": "动词原形接「ところだった」，注意浊音「だった」别滑成清音「たった」。",
-      "clip_start": 2425.9,
-      "clip_end": 2449.6,
+      "model_ja": "もう少しで乗り遅れるところだった。",
+      "model_zh": "差一点就误车了。",
+      "coaching_tip": "注意浊音「だった」别清化",
+      "clip_start": 2418.1,
+      "clip_end": 2440.1,
       "demo_audio": "./audio/N3-G47_q.mp3",
-      "is_new_n2": false
+      "is_new_n2": false,
+      "img": "./img/qq_vol9_otsu_night.jpg"
+    }
+  ],
+  "artwork_url": "./img/qq_vol9_tower_of_the_sun.jpg",
+  "story_arts": [
+    {
+      "title": "1970 大阪万博 · 太阳之塔",
+      "subtitle": "冈本太郎捅穿大屋顶的生命之树",
+      "img": "./img/qq_vol9_tower_of_the_sun.jpg",
+      "chapters": [
+        1,
+        2
+      ]
+    },
+    {
+      "title": "1984 昭和五十九年 · 大津休憩所",
+      "subtitle": "怪人二十一面相与狐狸眼之谜",
+      "img": "./img/qq_vol9_otsu_night.jpg",
+      "chapters": [
+        3,
+        4
+      ]
+    },
+    {
+      "title": "日本看世界 · 次世代绿色技术",
+      "subtitle": "柔性钙钛矿太阳能薄膜与千叶地下碘矿",
+      "img": "./img/qq_vol9_perovskite.jpg",
+      "chapters": [
+        5
+      ]
     }
   ]
 }

@@ -361,16 +361,49 @@ def _resolve_point_audio(point_id: str, manifest: dict[str, Any]) -> str:
     return ""
 
 
+def _short_zh(s: str, max_chars: int = 16) -> str:
+    txt = _clean_text(s)
+    # Strip verbose grammar formula prefixes ("名词＋によって ＝ ...") and second half after "；"
+    txt = re.split(r"[；;。]", txt)[0].strip()
+    if "＝" in txt:
+        txt = txt.split("＝", 1)[1].strip()
+    elif "=" in txt:
+        txt = txt.split("=", 1)[1].strip()
+    if len(txt) > max_chars:
+        txt = txt[:max_chars].rstrip("，、／/ ") + "…"
+    return txt
+
+
+def _short_ja_example(s: str, stems: list[str], fallback_short: str = "", max_chars: int = 24) -> str:
+    txt = _clean_text(s)
+    fb = _clean_text(fallback_short)
+    if txt and len(txt) <= max_chars and (not fb or re.search(r"[\u4e00-\u9faf]", txt)):
+        return txt
+    loose_stems = list(dict.fromkeys(stems + [st[:-1] for st in stems if len(st) >= 4]))
+    parts = [p.strip("、，。 ") for p in re.split(r"[、，。]", txt) if p.strip("、，。 ")]
+    for p in parts:
+        if (
+            any(st in p for st in loose_stems)
+            and 5 <= len(p) <= max_chars
+            and (not fb or re.search(r"[\u4e00-\u9faf]", p))
+            and not re.search(r"(とともに|によって|かわりに|うえで|最中に|のに|ので|から|が)$", p)
+        ):
+            return p + "。"
+    if fb and len(fb) <= max_chars:
+        return fb
+    return txt
+
+
 def build_episode_review_items(
     story_blocks: list[dict],
     segments_meta: list[dict],
     imm_vocab_report: dict,
     turn_timings: dict[tuple[int, int], tuple[float, float]] | None = None,
     audio_mp3_path: str = "",
-    max_total: int = 12,
+    max_total: int = 8,
 ) -> list[dict]:
     """
-    Build the 10-12 item 5-Minute Post-Listening Contextual Review deck directly from
+    Build the concise 8-card Zen Tinder Post-Listening Review deck directly from
     what today's 60-minute 《锵锵三人行》 actually taught.
     """
     import sys
@@ -415,10 +448,11 @@ def build_episode_review_items(
             if not c and not n2g:
                 continue
 
+            short_ex_fallback = ""
             if is_n2:
                 key = str(n2g.get("point") or pid)
                 title = key
-                zh = _clean_text(str(n2g.get("soul_meaning") or ""))
+                zh = _short_zh(str(n2g.get("soul_meaning") or ""))
                 nuance = _clean_text(f"接续：{n2g.get('connection', '')}。{n2g.get('soul_meaning', '')}")
                 twin = _clean_text(str(n2g.get("vs_twin") or ""))
                 kind = "grammar"
@@ -428,12 +462,12 @@ def build_episode_review_items(
                 raw_disp = str(c.get("point_display") or key).strip()
                 title = re.sub(r"[（(][^）)]*[）)]", "", raw_disp).strip() or key
                 m_paren = re.search(r"[（(]([^）)]+)[）)]", raw_disp)
-                zh = _clean_text(m_paren.group(1) if m_paren else str(c.get("zh_meaning") or c.get("core_rule") or ""))
-                if len(zh) > 34:
-                    zh = zh[:34].rstrip("，、；") + "…"
+                zh = _short_zh(m_paren.group(1) if m_paren else str(c.get("zh_meaning") or c.get("core_rule") or ""))
                 nuance = _clean_text(str(c.get("core_rule") or c.get("why_line") or ""))
                 tl = c.get("teach_left") or {}
                 tr = c.get("teach_right") or {}
+                if isinstance(tl, dict) and tl.get("ja"):
+                    short_ex_fallback = str(tl["ja"])
                 twin_parts = []
                 if isinstance(tl, dict) and tl.get("ja") and tl.get("sub"):
                     twin_parts.append(f"{tl['ja']}：{tl['sub']}")
@@ -537,7 +571,7 @@ def build_episode_review_items(
                     "story_cue": story_cue,
                     "speaker": SPK_NAMES.get(spk_code, "文道"),
                     "context_line": ctx_line,
-                    "ja_example": _clean_text(ja_ex),
+                    "ja_example": _short_ja_example(ja_ex, stems, fallback_short=short_ex_fallback, max_chars=24),
                     "nuance": nuance,
                     "twin": twin,
                     "mnemonic": _clean_text(mn),
@@ -551,7 +585,7 @@ def build_episode_review_items(
                 },
             ))
 
-    # Select balanced grammar/expression items: guarantee breadth across chapters (1 per chapter first, up to 7 total)
+    # Select balanced grammar/expression items: guarantee breadth across chapters (1 per chapter, up to 6 for an 8-card Zen deck)
     picked_grammar: list[dict] = []
     picked_ids: set[str] = set()
     by_chap: dict[int, list[tuple[float, dict]]] = {}
@@ -562,12 +596,14 @@ def build_episode_review_items(
         top_item = by_chap[ch_idx][0][1]
         picked_grammar.append(top_item)
         picked_ids.add(top_item["id"])
-    # Fill up to 7 grammar slots with highest remaining priority (e.g. N2 new items or weak points)
+    # Fill remaining grammar slots up to max_grammar
     rem_grammar = sorted(
         [(sc, it) for sc, it in grammar_candidates if it["id"] not in picked_ids],
         key=lambda x: (-x[0], x[1]["chapter_idx"], x[1]["id"]),
     )
-    max_grammar = min(7, max(6, max_total - 5))
+    max_grammar = min(6, max(4, max_total - 2))
+    picked_grammar = picked_grammar[:max_grammar]
+    picked_ids = {it["id"] for it in picked_grammar}
     for _sc, it in rem_grammar:
         if len(picked_grammar) >= max_grammar:
             break
@@ -685,7 +721,7 @@ def build_episode_review_items(
         ))
 
     vocab_candidates.sort(key=lambda x: (-x[0], x[1]["chapter_idx"], x[1]["title"]))
-    vocab_slots = max(4, max_total - len(picked_grammar))
+    vocab_slots = max(2, max_total - len(picked_grammar))
     picked_vocab = [it for _sc, it in vocab_candidates[:vocab_slots]]
 
     # Order naturally: N2 brand-new grammar first, then chronological podcast story flow!
@@ -695,211 +731,234 @@ def build_episode_review_items(
 
 
 # ==============================================================================
-# Post-Listening Guided Oral Output ("听后开口 2 句")
-# Backed by Swain (1985, 2005) Output Hypothesis & DeKeyser (2007) Skill Acquisition:
-# Immediately after 60m listening comprehension, push 2 short syntactic-encoding turns
-# anchored directly to today's episode chapters & target grammar patterns.
+# Post-Listening Crisp Spoken Prompts (Zen Short-Phrase Output inside Tinder Deck)
+# Every prompt stays ultra-brief: 6-10 char Chinese cue + 1 crisp short Japanese sentence.
 # ==============================================================================
 _SPEAKING_TEMPLATES: dict[str, dict[str, Any]] = {
     "させてもらう": {
-        "prompt_ja": "体調があまり良くない日、上司に「今日は早めに帰りたい」と丁寧に頼むなら、どう言いますか。",
-        "prompt_zh": "场景：今天身体不太舒服，客气请求主管让你早点回去，用「〜させてもらう／いただく」说一句。",
+        "prompt_short": "让我早点回去",
+        "prompt_ja": "早めに帰りたいとき",
+        "prompt_zh": "客气请示让我早点回去",
         "target_stems": ["させてもら", "させていただ", "帰らせ", "休ませ", "いかせてもら", "行かせてもら"],
-        "model_ja": "体調が悪いので、今日は早めに帰らせてもらってもいいですか。",
-        "model_zh": "我身体不太舒服，今天能让我早点回去吗？",
-        "coaching_tip": "动作是「我自己回去」，求对方准许，必须用使役形「帰らせて」而不是「帰って」。",
+        "model_ja": "早めに帰らせてもらえますか。",
+        "model_zh": "能让我早点回去吗？",
+        "coaching_tip": "求准许用使役形「帰らせて」",
     },
     "に基づいて": {
-        "prompt_ja": "会議で「このデータを使って計画を立てました」と、もう少し自然なビジネス日本語で説明するならどう言いますか。",
-        "prompt_zh": "场景：开会汇报「我们是根据这份数据定计划的」，用「〜に基づいて」说一句。",
+        "prompt_short": "根据数据定计划",
+        "prompt_ja": "データを使って計画を立てた",
+        "prompt_zh": "根据这份数据制定了计划",
         "target_stems": ["に基づいて", "にもとづいて", "に基づき", "にもとづき", "に基づく", "にもとづく"],
-        "model_ja": "今回の調査データに基づいて、新しい計画を立てました。",
-        "model_zh": "我们根据这次的调查数据制定了新计划。",
-        "coaching_tip": "名词直接加「に基づいて」，专门表达以数据、事实、规章为根据。",
+        "model_ja": "データに基づいて計画を立てました。",
+        "model_zh": "根据数据制定了计划。",
+        "coaching_tip": "名词直接接「に基づいて」",
     },
     "ところだった": {
-        "prompt_ja": "駅まで走って、あと数秒で終電に乗り遅れそうになった経験を、友達にどう話しますか。",
-        "prompt_zh": "场景：差点没赶上末班车，惊险逃过一劫，用「もう少しで〜ところだった」说一句。",
+        "prompt_short": "差点错过末班车",
+        "prompt_ja": "終電に遅れそうになった",
+        "prompt_zh": "差一点没赶上末班车",
         "target_stems": ["ところだった", "ところでした"],
-        "model_ja": "もう少しで終電に乗り遅れるところだったよ。",
-        "model_zh": "差一点就错过末班车了。",
-        "coaching_tip": "动词原形接「ところだった」，注意浊音「だった」别滑成清音「たった」。",
+        "model_ja": "もう少しで乗り遅れるところだった。",
+        "model_zh": "差一点就误车了。",
+        "coaching_tip": "注意浊音「だった」别清化",
     },
     "最中に": {
-        "prompt_ja": "お風呂に入っていたり、大事な会議をしていたりするちょうどその時に、電話がかかってきた状況をどう言いますか。",
-        "prompt_zh": "场景：正开着重要会议或正洗澡时，突然来电话打断，用「〜最中に」说一句。",
+        "prompt_short": "开会正酣来电话",
+        "prompt_ja": "会議の途中で電話が来た",
+        "prompt_zh": "正在开会当口来了电话",
         "target_stems": ["最中に", "最中は", "さいちゅうに", "さいちゅうは"],
-        "model_ja": "大事な会議をしている最中に、急に電話がかかってきました。",
-        "model_zh": "正在开重要会议当口，突然来了电话。",
-        "coaching_tip": "「〜ている最中に」或「名词＋の最中に」，强调正干得起劲时被意外打断。",
+        "model_ja": "会議の最中に電話が来ました。",
+        "model_zh": "正在开会时来了电话。",
+        "coaching_tip": "Nの／Vている ＋ 最中に",
     },
     "かわりに": {
-        "prompt_ja": "今日はコーヒーをやめてお茶を飲む、あるいは誰かの代わりに会議に出る状況を、一言いってみましょう。",
-        "prompt_zh": "场景：不喝咖啡改喝茶，或者替同事去开会，用「〜かわりに」说一句。",
+        "prompt_short": "不喝咖啡改喝茶",
+        "prompt_ja": "コーヒーをやめてお茶にする",
+        "prompt_zh": "不喝咖啡，改喝茶",
         "target_stems": ["かわりに", "代わりに", "かわり", "代わり"],
-        "model_ja": "今日はコーヒーのかわりに、温かいお茶を飲むことにしました。",
-        "model_zh": "今天不喝咖啡，决定改喝热茶。",
-        "coaching_tip": "名词用「〜のかわりに」，动词简体直接接「かわりに」，表示替代或交换。",
+        "model_ja": "コーヒーのかわりにお茶にします。",
+        "model_zh": "不喝咖啡改喝茶。",
+        "coaching_tip": "名词接「のかわりに」",
     },
     "とともに": {
-        "prompt_ja": "年を重ねたり、技術が進んだりするにつれて生活が変わってきたことを、どう表現しますか。",
-        "prompt_zh": "场景：随着科技进步或年纪增长，生活方式也在变化，用「〜とともに」说一句。",
+        "prompt_short": "随技术一起变化",
+        "prompt_ja": "技術が進んで働き方が変わった",
+        "prompt_zh": "随着技术进步，工作方式变了",
         "target_stems": ["とともに", "と共に"],
-        "model_ja": "技術の進歩とともに、働き方も大きく変わってきました。",
-        "model_zh": "随着技术进步，工作方式也大大改变了。",
-        "coaching_tip": "名词或动词原形接「とともに」，表示伴随某种趋势一起变化。",
+        "model_ja": "技術の進歩とともに変わりました。",
+        "model_zh": "随着技术进步改变了。",
+        "coaching_tip": "名词／原形 ＋ とともに",
     },
     "によって": {
-        "prompt_ja": "同じ映画や料理でも、人それぞれ感想が違うと言いたいとき、日本語でどう言いますか。",
-        "prompt_zh": "场景：同一部电影每个人感想都不同，用「人によって」说一句。",
+        "prompt_short": "因人而异感想不同",
+        "prompt_ja": "人それぞれ感想が違う",
+        "prompt_zh": "看的人不同，感想也不同",
         "target_stems": ["によって", "による", "により", "によっては"],
-        "model_ja": "同じ映画でも、見る人によって感想がぜんぜん違います。",
-        "model_zh": "就算是同一部电影，不同人看感想也完全不同。",
-        "coaching_tip": "表示「因人而异／凭某种手段」用「によって」，别和「にとって（对某人来说）」混用。",
+        "model_ja": "見る人によって感想が違います。",
+        "model_zh": "看的人不同感想也不同。",
+        "coaching_tip": "因人而异用「人によって」",
     },
     "につれて": {
-        "prompt_ja": "試験の日が近づくほど緊張してきた気持ちを、そのまま日本語で言ってみましょう。",
-        "prompt_zh": "场景：随着考试临近，心里越来越紧张，用「〜につれて」说一句。",
+        "prompt_short": "临近考试越紧张",
+        "prompt_ja": "試験が近づいて緊張してきた",
+        "prompt_zh": "越临近考试越紧张",
         "target_stems": ["につれて", "につれ"],
-        "model_ja": "試験の日が近づくにつれて、だんだん緊張してきました。",
-        "model_zh": "随着考试日期临近，渐渐紧张起来了。",
-        "coaching_tip": "「动词原形／变化名词＋につれて」，前后都是自然而然的同步变化。",
+        "model_ja": "試験が近づくにつれて緊張します。",
+        "model_zh": "越临近考试越紧张。",
+        "coaching_tip": "动词原形 ＋ につれて",
     },
     "わけだ": {
-        "prompt_ja": "相手が東京に十年住んでいたと聞いて、「なるほど、だから日本語が上手なんですね」と納得したとき、どう言いますか。",
-        "prompt_zh": "场景：恍然大悟「难怪日语这么好」，用「〜わけだ／わけです」说一句。",
+        "prompt_short": "难怪日语这么好",
+        "prompt_ja": "十年住んでいたから上手なんだ",
+        "prompt_zh": "难怪日语这么好",
         "target_stems": ["わけだ", "わけです", "わけですね", "わけだね"],
-        "model_ja": "東京に十年も住んでいたんですね。だから日本語が上手なわけですね。",
-        "model_zh": "原来在东京住了十年啊，难怪日语这么好。",
-        "coaching_tip": "ナ形容词和「そう」接「わけ」时，中间一定别漏掉「な」（上手なわけ）。",
+        "model_ja": "だから日本語が上手なわけですね。",
+        "model_zh": "难怪日语这么好啊。",
+        "coaching_tip": "ナ形接わけ别漏「な」",
     },
     "わけではない": {
-        "prompt_ja": "甘いものが嫌いなわけじゃないけど、今はダイエット中なので控えている、と柔らかく断るならどう言いますか。",
-        "prompt_zh": "场景：委婉澄清「并不是讨厌甜食，只是最近在控制」，用「〜わけではない」说一句。",
+        "prompt_short": "倒也不是讨厌甜食",
+        "prompt_ja": "甘いものが嫌いじゃないけど控えている",
+        "prompt_zh": "并不是讨厌甜食",
         "target_stems": ["わけではない", "わけではありません", "わけじゃない", "わけじゃありません"],
-        "model_ja": "甘いものが嫌いなわけではないんですが、今は少し控えています。",
-        "model_zh": "倒也不是讨厌甜食，只是最近稍微克制一下。",
-        "coaching_tip": "部分否定用「〜わけではない」，ナ形容词接「わけ」同样必须保留「な」。",
+        "model_ja": "甘いものが嫌いなわけではないです。",
+        "model_zh": "倒也不是讨厌甜食。",
+        "coaching_tip": "ナ形接わけ保留「な」",
     },
     "はずだ": {
-        "prompt_ja": "さっきアイスコーヒーを頼んだのに来ていないとき、店員さんに丁寧に確認するならどう言いますか。",
-        "prompt_zh": "场景：明明点过冰咖啡却一直没上，礼貌向店员确认，用「〜はずなんですが」说一句。",
+        "prompt_short": "刚才应该点过咖啡",
+        "prompt_ja": "さっきコーヒーを頼んだと思う",
+        "prompt_zh": "刚才应该点过咖啡来着",
         "target_stems": ["はずなん", "はずだ", "はずです", "はずで"],
-        "model_ja": "すみません、さっきアイスコーヒーをお願いしたはずなんですが。",
-        "model_zh": "不好意思，我刚才应该点过一杯冰咖啡来着。",
-        "coaching_tip": "盯紧「はずなんですが」，千万别多滑出一个「ない」变成否定「はずないんですが」。",
+        "model_ja": "さっきコーヒーを頼んだはずなんですが。",
+        "model_zh": "我刚才应该点过咖啡来着。",
+        "coaching_tip": "盯紧「はずなんですが」别滑成ない",
     },
     "らしい": {
-        "prompt_ja": "ニュースや友達から「明日は雨が降る」と聞いたとき、伝聞でどう伝えますか。",
-        "prompt_zh": "场景：听说「明天会下雨」，用传闻「〜らしいです」转述一句。",
+        "prompt_short": "听说明天会下雨",
+        "prompt_ja": "明日は雨だと聞いた",
+        "prompt_zh": "听说明天会下雨",
         "target_stems": ["らしい"],
-        "model_ja": "天気予報によると、明日は一日中雨が降るらしいです。",
-        "model_zh": "听天气预报说明天会下一整天雨。",
-        "coaching_tip": "传闻「らしい」直接接简体，前面绝对不要多加「と」或「だ」。",
+        "model_ja": "明日は雨が降るらしいです。",
+        "model_zh": "听说明天会下雨。",
+        "coaching_tip": "直接接简体，不加「と／だ」",
     },
     "ことにする": {
-        "prompt_ja": "健康のために、これから毎日少しずつ運動しようと自分で決めたことを、どう話しますか。",
-        "prompt_zh": "场景：为了健康自己决定每天运动一点，用「〜ことにした／ことにしている」说一句。",
+        "prompt_short": "决定每天运动一下",
+        "prompt_ja": "毎日運動しようと決めた",
+        "prompt_zh": "自己决定每天运动",
         "target_stems": ["ことにし", "ことにする", "ことにします"],
-        "model_ja": "健康のために、毎日三十分は運動をすることにしました。",
-        "model_zh": "为了健康，我决定每天至少运动三十分钟。",
-        "coaching_tip": "动词原形不能直接撞「にする」，中间一定垫住「こと」（することにしました）。",
+        "model_ja": "毎日運動することにしました。",
+        "model_zh": "我决定每天运动。",
+        "coaching_tip": "中间垫住「こと」",
     },
     "ことになる": {
-        "prompt_ja": "会社の都合で、来年から東京で働くことが決まったと友達に報告するならどう言いますか。",
-        "prompt_zh": "场景：客观安排下来「明年要去东京工作」，用「〜ことになった」说一句。",
+        "prompt_short": "定下来要去东京",
+        "prompt_ja": "来年から東京で働くことが決まった",
+        "prompt_zh": "定下来明年去东京工作",
         "target_stems": ["ことにな", "ことになる", "ことになります"],
-        "model_ja": "来年から東京のオフィスで働くことになりました。",
-        "model_zh": "定下来明年起要去东京办公室工作了。",
-        "coaching_tip": "外部或公司定下的决定用「〜ことになりました」，同样别漏中间的「こと」。",
+        "model_ja": "来年東京で働くことになりました。",
+        "model_zh": "定下来明年去东京工作。",
+        "coaching_tip": "客观决定用「ことになった」",
     },
     "ようとする": {
-        "prompt_ja": "ちょうど家を出ようとした瞬間に雨が降り出した場面を、日本語で言ってみましょう。",
-        "prompt_zh": "场景：正准备出门那一刻下起雨来，用「〜ようとした時」说一句。",
+        "prompt_short": "刚要出门就下雨",
+        "prompt_ja": "家を出る瞬間に雨が降った",
+        "prompt_zh": "正准备出门就下起雨来",
         "target_stems": ["ようとした", "おうとした", "こうとした", "そうとした", "とうとした", "のうとした", "もうとした", "ろうとした", "ようとして"],
-        "model_ja": "家を出ようとした時、急に雨が降り出しました。",
-        "model_zh": "正准备出门的时候，突然下起雨来了。",
-        "coaching_tip": "意志形接「とした時」，别漏中间的「と」，也别在「時」前面多加「の」。",
+        "model_ja": "家を出ようとした時、雨が降りました。",
+        "model_zh": "刚要出门就下雨了。",
+        "coaching_tip": "「時」前面别多加「の」",
     },
     "がち": {
-        "prompt_ja": "忙しいとつい運動をサボったり、約束を忘れたりしやすい自分のクセをどう言いますか。",
-        "prompt_zh": "场景：一忙起来就容易忘记或偷懒，用「〜がち」说一句。",
+        "prompt_short": "一忙就容易忘事",
+        "prompt_ja": "忙しいと忘れやすい",
+        "prompt_zh": "一忙就容易忘记",
         "target_stems": ["がち"],
-        "model_ja": "仕事が忙しいと、つい運動をサボりがちになります。",
-        "model_zh": "工作一忙起来，就不知不觉容易偷懒不运动。",
-        "coaching_tip": "动词ます形去ます或名词直接接「がち」，表示反复出现的消极倾向。",
+        "model_ja": "忙しいと約束を忘れがちです。",
+        "model_zh": "一忙就容易忘约定。",
+        "coaching_tip": "去ます形／名词 ＋ がち",
     },
     "気味": {
-        "prompt_ja": "最近ちょっと疲れていたり、風邪を引きかけていたりするとき、控えめにどう伝えますか。",
-        "prompt_zh": "场景：觉得自己有点累或有点要感冒，用「〜気味」说一句。",
+        "prompt_short": "最近感觉有点累",
+        "prompt_ja": "最近ちょっと疲れている",
+        "prompt_zh": "最近稍微有点累",
         "target_stems": ["気味", "ぎみ"],
-        "model_ja": "今週はずっと忙しくて、少し疲れ気味です。",
-        "model_zh": "这周一直很忙，感觉有点累了。",
-        "coaching_tip": "「疲れ気味／風邪気味」形容当下刚冒头的一点点身体或状态苗头。",
+        "model_ja": "最近ちょっと疲れ気味です。",
+        "model_zh": "最近有点累。",
+        "coaching_tip": "疲れ気味／風邪気味",
     },
     "ながらも": {
-        "prompt_ja": "体に良くないと分かっていながら、つい夜更かししてしまうことをどう言いますか。",
-        "prompt_zh": "场景：明知道熬夜不好却还是忍不住晚睡，用「〜ながらも」说一句。",
+        "prompt_short": "明知不好还熬夜",
+        "prompt_ja": "体に悪いと分かっていて夜更かしする",
+        "prompt_zh": "明知不好还是忍不住熬夜",
         "target_stems": ["ながらも", "ながら"],
-        "model_ja": "体に良くないと知りながらも、つい夜更かししてしまいます。",
-        "model_zh": "明知道对身体不好，还是忍不住熬夜。",
-        "coaching_tip": "动词ます形去ます＋ながらも，表示「虽然心里明白…但还是…」。",
+        "model_ja": "悪いと知りながらも夜更かしします。",
+        "model_zh": "明知不好还是会熬夜。",
+        "coaching_tip": "去ます形 ＋ ながらも",
     },
     "うえで": {
-        "prompt_ja": "よく調べたあとで決めたいと相手に伝えるとき、丁寧な日本語でどう言いますか。",
-        "prompt_zh": "场景：想仔细调查完再做决定，用「〜たうえで」说一句。",
+        "prompt_short": "确认完之后再回复",
+        "prompt_ja": "よく確認してから返事する",
+        "prompt_zh": "确认完内容后再回复",
         "target_stems": ["うえで", "上で"],
-        "model_ja": "内容をよく確認したうえで、明日お返事します。",
-        "model_zh": "仔细确认完内容之后，我明天再回复您。",
-        "coaching_tip": "动词た形或名词＋の＋うえで，表示先做完前置功课再进入下一步。",
+        "model_ja": "確認したうえで、お返事します。",
+        "model_zh": "确认完之后再回复。",
+        "coaching_tip": "动词た形 ＋ うえで",
     },
     "おかげで": {
-        "prompt_ja": "毎日少しずつ続けたから前より聞き取れるようになった、と感謝を込めて言ってみましょう。",
-        "prompt_zh": "场景：多亏每天听一点，现在比以前听得懂了，用「〜おかげで」说一句。",
+        "prompt_short": "多亏每天听一点",
+        "prompt_ja": "毎日聴いたから聞き取れるようになった",
+        "prompt_zh": "多亏每天听，能听懂了",
         "target_stems": ["おかげで", "お陰で"],
-        "model_ja": "毎日ラジオを聴いたおかげで、前よりずっと聞き取れるようになりました。",
-        "model_zh": "多亏每天听播客，比以前听得懂多了。",
-        "coaching_tip": "好结果归功于某事用「おかげで」，顺手用上「ずっと」表示差距大。",
+        "model_ja": "毎日聴いたおかげで聞き取れます。",
+        "model_zh": "多亏每天听，能听懂了。",
+        "coaching_tip": "好结果归功于「おかげで」",
     },
     "せいで": {
-        "prompt_ja": "昨日あまり寝られなかったせいで今日は眠い、とカジュアルに話すならどう言いますか。",
-        "prompt_zh": "场景：都怪昨晚没睡好今天很困，用「〜せいで」说一句。",
+        "prompt_short": "都怪昨晚没睡好",
+        "prompt_ja": "昨日寝られなくて眠い",
+        "prompt_zh": "都怪没睡好今天很困",
         "target_stems": ["せいで", "せいだ", "せいです"],
-        "model_ja": "昨日あまり寝られなかったせいで、今日は少し眠いです。",
-        "model_zh": "都怪昨晚没怎么睡好，今天有点困。",
-        "coaching_tip": "坏结果归咎原因用「せいで」，名词接「のせいで」、动词直接简体接。",
+        "model_ja": "寝られなかったせいで眠いです。",
+        "model_zh": "都怪没睡好现在很困。",
+        "coaching_tip": "坏结果用「せいで」",
     },
     "ざるを得ない": {
-        "prompt_ja": "本当は行きたかったのに、急な仕事が入って諦めるしかないとき、どう言いますか。",
-        "prompt_zh": "场景：本来想去但突发工作只能放弃，用「〜ざるを得ない」说一句。",
+        "prompt_short": "这次只好放弃了",
+        "prompt_ja": "急な仕事で諦めるしかない",
+        "prompt_zh": "没办法这次只好放弃",
         "target_stems": ["ざるを得ない", "ざるをえない", "ざるを得ません", "ざるをえません", "ざるを得なかった"],
-        "model_ja": "急な仕事が入ったので、今回は諦めざるを得ません。",
-        "model_zh": "突然插进来工作，这次只好放弃了。",
-        "coaching_tip": "动词ない形去ない＋ざるを得ない（する变せざるを得ない），语气偏正式无奈。",
+        "model_ja": "今回は諦めざるを得ません。",
+        "model_zh": "这次只好放弃了。",
+        "coaching_tip": "ない形去ない ＋ ざるを得ない",
     },
     "わけにはいかない": {
-        "prompt_ja": "もうすぐ大事な本番なので、ここで休むわけにはいかないと言いたいとき、どう言いますか。",
-        "prompt_zh": "场景：快考试了实在不能松懈，用「〜わけにはいかない」说一句。",
+        "prompt_short": "现在实在不能放弃",
+        "prompt_ja": "大事な本番なので諦められない",
+        "prompt_zh": "现在实在不能放弃",
         "target_stems": ["わけにはいかない", "わけにはいきません", "わけにいかない"],
-        "model_ja": "もうすぐ試験なので、ここで諦めるわけにはいきません。",
-        "model_zh": "马上就考试了，现在实在不能放弃。",
-        "coaching_tip": "动词原形接「わけにはいかない」，表示情理或责任上绝不允许这样做。",
+        "model_ja": "ここで諦めるわけにはいきません。",
+        "model_zh": "现在实在不能放弃。",
+        "coaching_tip": "动词原形 ＋ わけにはいかない",
     },
     "とは限らない": {
-        "prompt_ja": "高いものが必ずしも一番良いとは限らない、と自分の意見を言うならどう言いますか。",
-        "prompt_zh": "场景：贵的东西未必就是最好的，用「必ずしも〜とは限らない」说一句。",
+        "prompt_short": "贵的未必最好",
+        "prompt_ja": "高いものが一番良いとは言い切れない",
+        "prompt_zh": "贵的东西未必最好",
         "target_stems": ["とは限らない", "とはかぎらない", "とは限りません", "とはかぎりません"],
-        "model_ja": "高いものが必ずしも一番良いとは限りません。",
-        "model_zh": "贵的东西未必就是最好的。",
-        "coaching_tip": "常与「必ずしも」呼应，客观反驳「未必总是那样」。",
+        "model_ja": "高いものが良いとは限りません。",
+        "model_zh": "贵的东西未必最好。",
+        "coaching_tip": "常配「必ずしも〜とは限らない」",
     },
     "にもかかわらず": {
-        "prompt_ja": "激しい雨が降っているのに、たくさんの人が集まった場面を少し硬めにどう言いますか。",
-        "prompt_zh": "场景：尽管下着大雨还是来了很多人，用「〜にもかかわらず」说一句。",
+        "prompt_short": "尽管大雨还是来了",
+        "prompt_ja": "大雨なのにみんな集まった",
+        "prompt_zh": "尽管下大雨大家还是来了",
         "target_stems": ["にもかかわらず", "にも関わらず", "にも拘らず"],
-        "model_ja": "激しい雨にもかかわらず、大勢の人が集まりました。",
-        "model_zh": "尽管下着大雨，还是聚集了很多人。",
-        "coaching_tip": "名词直接接「にもかかわらず」（不加だ），表达超出预期的强转折。",
+        "model_ja": "大雨にもかかわらず集まりました。",
+        "model_zh": "尽管下大雨还是聚集起来了。",
+        "coaching_tip": "名词直接接「にもかかわらず」",
     },
 }
 
@@ -921,8 +980,8 @@ def build_episode_speaking_prompts(
     max_prompts: int = 2,
 ) -> list[dict]:
     """
-    Build 2 episode-anchored conversational Japanese speaking prompts directly tied
-    to today's 60-minute 《锵锵》 stories & target grammar points (works for N3 & N2!).
+    Build 2 crisp episode-anchored speaking prompt cards directly tied to today's
+    60-minute 《锵锵》 stories & target grammar points (works for N3 & N2).
     """
     grammar_items = [it for it in (review_items or []) if it.get("kind") == "grammar"]
     if not grammar_items:
@@ -942,7 +1001,6 @@ def build_episode_speaking_prompts(
             sc += 35.0
         elif it.get("status") != "green":
             sc += 20.0
-        # Extra boost for high-ROI oral patterns frequently tripped up in live speech
         if any(k in title or k in key for k in ("させてもらう", "ところだった", "わけだ", "はず", "らしい", "ことにする", "ようとする", "に基づいて")):
             sc += 28.0
         scored.append((sc, it, tpl))
@@ -953,7 +1011,6 @@ def build_episode_speaking_prompts(
     used_chapters: set[int] = set()
     used_keys: set[str] = set()
 
-    # Pass 1: maximize chapter diversity so both prompts span distinct stories from today's episode
     for _sc, it, tpl in scored:
         if len(picked) >= max_prompts:
             break
@@ -965,7 +1022,6 @@ def build_episode_speaking_prompts(
         used_chapters.add(ch)
         used_keys.add(k)
 
-    # Pass 2: backfill if episode had <2 distinct grammar chapters
     for _sc, it, tpl in scored:
         if len(picked) >= max_prompts:
             break
@@ -982,13 +1038,13 @@ def build_episode_speaking_prompts(
         pid = str(it.get("point_id") or f"SPK{idx}")
         ch_title = _clean_text(str(it.get("chapter_title") or ""))
         story_cue = _clean_text(str(it.get("story_cue") or ""))
-        zh = _clean_text(str(it.get("zh") or ""))
-        nuance = _clean_text(str(it.get("nuance") or ""))
+        zh = _short_zh(str(it.get("zh") or ""))
         ex_ja = _clean_text(str(it.get("ja_example") or ""))
         stems = _strip_point_stem(title) + _strip_point_stem(key)
 
         if tpl is not None:
             t_stems = list(dict.fromkeys(list(tpl["target_stems"]) + stems))
+            prompt_short = _clean_text(tpl.get("prompt_short") or tpl["prompt_zh"])
             prompt_ja = _clean_text(tpl["prompt_ja"])
             prompt_zh = _clean_text(tpl["prompt_zh"])
             model_ja = _clean_text(tpl["model_ja"])
@@ -997,11 +1053,12 @@ def build_episode_speaking_prompts(
         else:
             t_stems = list(dict.fromkeys(stems))
             clean_pt = title.replace("〜", "").replace("~", "").strip()
-            prompt_ja = _clean_text(f"今日の番組に出てきた「{title}」を使って、自分の生活や仕事のことについて一言いってみましょう。")
-            prompt_zh = _clean_text(f"结合今天「{ch_title}」学到的「{title}」（{zh}），用自己的话造一句自然日语。")
-            model_ja = ex_ja or _clean_text(f"{clean_pt}を使って話してみます。")
-            model_zh = zh or "参考自然表达"
-            tip = nuance or f"试着把「{title}」顺口放进完整短句里说出来。"
+            prompt_short = zh or f"用「{title}」说一句"
+            prompt_ja = _clean_text(f"「{title}」で一言")
+            prompt_zh = _clean_text(f"用「{title}」说个短句")
+            model_ja = _short_ja_example(ex_ja, t_stems, max_chars=20) or _clean_text(f"{clean_pt}を使って話します。")
+            model_zh = zh or "参考短句"
+            tip = _short_zh(f"顺口带出「{title}」", max_chars=18)
 
         prompts.append({
             "id": f"SPK-{pid}",
@@ -1012,6 +1069,7 @@ def build_episode_speaking_prompts(
             "chapter_idx": int(it.get("chapter_idx", 0)),
             "chapter_title": ch_title,
             "story_cue": story_cue,
+            "prompt_short": prompt_short,
             "prompt_ja": prompt_ja,
             "prompt_zh": prompt_zh,
             "target_stems": [s for s in t_stems if len(s) >= 2],
@@ -1022,13 +1080,14 @@ def build_episode_speaking_prompts(
             "clip_end": float(it.get("clip_end", 14.0)),
             "demo_audio": str(it.get("demo_audio") or ""),
             "is_new_n2": bool(it.get("is_new_n2")),
+            "img": str(it.get("img") or ""),
         })
 
     return prompts
 
 
 if __name__ == "__main__":
-    # Safe backfill for today's already-rendered episode (preserves script_sig & daily_radio.mp3!)
+    # Safe backfill for today's already-rendered episode (preserves script_sig, daily_radio.mp3 & story_arts!)
     import sys
     if BASE_DIR not in sys.path:
         sys.path.insert(0, BASE_DIR)
@@ -1058,7 +1117,6 @@ if __name__ == "__main__":
         }
         for i, st in enumerate(stories)
     ]
-    # Re-apply immersion in dry mode (commit_ledger=False) so {{zh|kana}} bridge tags match the aired episode!
     blocks_imm, rep = ive.apply_immersion_to_stories(
         blocks,
         today_str=today_str,
@@ -1066,14 +1124,21 @@ if __name__ == "__main__":
         mandarin_boundary_re=gdr.MANDARIN_BOUNDARY_RE,
         commit_ledger=False,
     )
-    items = meta.get("review_items") or build_episode_review_items(
+    items = build_episode_review_items(
         blocks_imm,
         meta.get("segments") or [],
         meta.get("immersion_vocab") or rep,
         turn_timings=None,
         audio_mp3_path=mp3_path,
-        max_total=12,
+        max_total=8,
     )
+    # Preserve chapter -> story artwork mapping if present
+    chap_img_map = {int(c.get("idx", i)): c.get("img") for i, c in enumerate(meta.get("chapters") or []) if c.get("img")}
+    if chap_img_map:
+        for it in items:
+            c_img = chap_img_map.get(int(it.get("chapter_idx", -1)))
+            if c_img:
+                it["img"] = c_img
     speaking_prompts = build_episode_speaking_prompts(blocks_imm, items, max_prompts=2)
     meta["review_items"] = items
     meta["speaking_prompts"] = speaking_prompts
@@ -1081,5 +1146,6 @@ if __name__ == "__main__":
         json.dump(meta, f, ensure_ascii=False, indent=2)
     print(f"Enriched {meta_path}: review_items={len(items)}, speaking_prompts={len(speaking_prompts)} (script_sig preserved: {meta.get('script_sig')}):")
     for idx, sp in enumerate(speaking_prompts, 1):
-        print(f"  SPK {idx}. [{sp['title']}] ch={sp['chapter_title']} | Q: {sp['prompt_ja']} | A: {sp['model_ja']}")
+        print(f"  SPK {idx}. [{sp['title']}] {sp['prompt_short']} -> {sp['model_ja']}")
+
 

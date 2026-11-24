@@ -2784,28 +2784,27 @@ html = r"""<!DOCTYPE html>
     color: var(--ink-2);
   }
 
-  /* Story Artwork Presentation (Zen Woodblock & Wabi-Sabi Aesthetics) */
+  /* Story Artwork Presentation (Quiet Japanese Woodblock Aesthetics) */
   .radio-art-card {
     position: relative;
     width: 100%;
     max-width: 440px;
-    height: 140px;
+    height: 116px;
     margin: 2px 0 0;
     border-radius: 8px;
     overflow: hidden;
     background: var(--sheet);
-    border: 1px solid var(--hairline-strong);
+    border: 1px solid var(--hairline);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-    transition: transform 0.18s ease, border-color 0.18s ease;
+    transition: opacity 0.2s ease;
   }
   @media (min-width: 860px) and (min-height: 521px) {
-    .radio-art-card { height: 180px; }
+    .radio-art-card { height: 152px; }
   }
-  .radio-art-card:active { transform: scale(0.99); }
+  .radio-art-card:active { opacity: 0.86; }
   .radio-art-img {
     width: 100%;
     height: 100%;
@@ -2813,117 +2812,30 @@ html = r"""<!DOCTYPE html>
     object-position: center;
     transition: opacity 0.35s ease;
   }
-  .radio-art-meta {
-    position: absolute;
-    bottom: 8px;
-    right: 10px;
-    background: rgba(23, 22, 20, 0.76);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    color: #F5F2EB;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.06em;
-    padding: 3px 8px;
-    border-radius: 4px;
-    pointer-events: none;
-  }
 
-  /* Review Story Gallery (End-of-day / Episode Wrap-up) */
-  .rv-gallery-wrap {
-    margin: 14px 0 10px;
-    width: 100%;
-  }
-  .rv-gallery-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 8px;
-  }
-  .rv-gallery-overline {
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    color: var(--moss);
-    text-transform: uppercase;
-  }
-  .rv-gallery-scroll {
+  /* Quiet Borderless Triptych on Episode Review Completion */
+  .rv-triptych {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
     width: 100%;
+    margin: 18px 0 8px;
   }
-  @media (max-width: 480px) {
-    .rv-gallery-scroll {
-      display: flex;
-      overflow-x: auto;
-      scroll-snap-type: x mandatory;
-      padding-bottom: 6px;
-      -webkit-overflow-scrolling: touch;
-    }
-  }
-  .rv-story-art-card {
-    background: var(--sheet);
-    border: 1px solid var(--hairline-strong);
-    border-radius: 8px;
-    overflow: hidden;
-    cursor: pointer;
-    transition: transform 0.15s ease, border-color 0.15s ease;
-    display: flex;
-    flex-direction: column;
-  }
-  @media (max-width: 480px) {
-    .rv-story-art-card {
-      flex: 0 0 220px;
-      scroll-snap-align: start;
-    }
-  }
-  .rv-story-art-card:active { transform: scale(0.98); }
-  .rv-story-art-img-wrap {
-    width: 100%;
-    height: 105px;
-    background: var(--tap-bg);
-    overflow: hidden;
-  }
-  .rv-story-art-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-  .rv-story-art-body {
-    padding: 7px 9px 8px;
-  }
-  .rv-story-art-title {
-    font-family: var(--serif-jp);
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--sumi);
-    line-height: 1.4;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .rv-story-art-sub {
-    font-size: 11px;
-    color: var(--ink-2);
-    margin-top: 2px;
-    line-height: 1.35;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .rv-relearn-art-wrap {
-    width: 100%;
-    max-height: 120px;
+  .rv-triptych-item {
     border-radius: 6px;
     overflow: hidden;
-    margin: 4px 0 8px;
-    border: 1px solid var(--hairline-strong);
-  }
-  .rv-relearn-art-img {
+    aspect-ratio: 16 / 10;
+    background: var(--tap-bg);
+    cursor: pointer;
+    padding: 0;
+    border: none;
+    display: block;
     width: 100%;
-    height: 120px;
+  }
+  .rv-triptych-item:active { opacity: 0.78; }
+  .rv-triptych-img {
+    width: 100%;
+    height: 100%;
     object-fit: cover;
     display: block;
   }
@@ -2954,13 +2866,13 @@ html = r"""<!DOCTYPE html>
   .story-modal-title {
     margin: 6px 0 4px;
     font-family: var(--serif-jp);
-    font-size: 20px;
+    font-size: 19px;
     font-weight: 600;
     color: var(--sumi);
   }
   .story-modal-sub {
     margin: 0;
-    font-size: 14px;
+    font-size: 13.5px;
     color: var(--ink-2);
     line-height: 1.6;
   }
@@ -3101,7 +3013,7 @@ html = r"""<!DOCTYPE html>
     opacity: 0.72;
   }
 
-  /* ================= 4B. POST-LISTENING 5-MIN CONTEXTUAL REVIEW ("听后复盘" 收尾小节) ================= */
+  /* ================= 4B. POST-LISTENING FRAMELESS ZEN TINDER REVIEW ("听后复盘") ================= */
   .rv-finish-strip {
     width: 100%;
     display: flex;
@@ -3136,225 +3048,99 @@ html = r"""<!DOCTYPE html>
     display: flex;
     flex-direction: column;
   }
-  .rv-stage-card {
-    position: relative;
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-    scrollbar-width: none;
-    touch-action: pan-y;
-    will-change: transform, opacity;
-  }
-  .rv-stage-card::-webkit-scrollbar { display: none; }
-  .rv-stage-card.settling { transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease; }
-  .rv-stage-card.fly-right { transition: transform 0.22s ease-in, opacity 0.2s ease-in; transform: translate3d(115%, -14px, 0) rotate(9deg) !important; opacity: 0 !important; }
-  .rv-stage-card.fly-left { transition: transform 0.22s ease-in, opacity 0.2s ease-in; transform: translate3d(-115%, -14px, 0) rotate(-9deg) !important; opacity: 0 !important; }
 
-  .rv-focal {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    padding: clamp(16px, 3.5vh, 28px) 0 14px;
-    gap: 14px;
+  /* Quiet frameless woodblock vignette floating peacefully on the open Zen canvas */
+  .rv-art-vignette {
+    width: 184px;
+    height: 86px;
+    border-radius: 7px;
+    overflow: hidden;
+    margin-bottom: 18px;
+    cursor: pointer;
+    flex-shrink: 0;
+    opacity: 0.92;
+    transition: opacity 0.18s ease;
   }
-  .rv-focal.is-relearn {
-    justify-content: flex-start;
-    padding-top: 12px;
-    gap: 12px;
+  .rv-art-vignette:active { opacity: 0.72; }
+  .rv-art-vignette-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 45%;
+    display: block;
   }
-  .rv-story-tag {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--moss);
-    letter-spacing: 0.08em;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .rv-n2-dot {
-    color: var(--bengara);
-    font-weight: 600;
-  }
-  .rv-head {
-    margin: 0;
+  .rv-card-ex {
+    position: relative;
+    margin: 20px auto 0;
+    padding-top: 16px;
+    max-width: 332px;
     font-family: var(--serif-jp);
-    font-size: 32px;
-    font-weight: 600;
-    color: var(--sumi);
-    line-height: 1.35;
-    letter-spacing: 0.02em;
+    font-size: 17px;
+    line-height: 1.62;
+    color: var(--ink-2);
   }
-  .rv-cue-line {
-    margin: 0;
-    font-size: 15px;
-    color: var(--ink-3);
-    line-height: 1.65;
+  .rv-card-ex::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 28px;
+    height: 1px;
+    background: var(--hairline-strong);
   }
-  .rv-clip-row {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    flex-wrap: wrap;
-    margin-top: 2px;
-  }
-  .rv-clip-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 0;
-    background: transparent;
-    border: none;
-    font-size: 14.5px;
+  .rv-spk-prompt {
+    font-family: var(--sans);
+    font-size: 28px;
     font-weight: 500;
-    color: var(--moss);
-    letter-spacing: 0.04em;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
+    color: var(--sumi);
+    line-height: 1.44;
+    letter-spacing: 0.03em;
   }
-  .rv-clip-btn.playing {
-    color: var(--bengara);
-    font-weight: 600;
-    animation: rvAudioPulse 1.2s ease-in-out infinite;
+  .rv-spk-model {
+    font-family: var(--serif-jp);
+    font-size: 19px;
+    font-weight: 500;
+    color: var(--sumi);
+    line-height: 1.56;
+  }
+  .rv-spk-tip {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--ink-3);
+    line-height: 1.54;
   }
   @keyframes rvAudioPulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.55; }
   }
-  .rv-clip-btn.quiet { color: var(--ink-3); font-size: 13.5px; }
-  .rv-clip-btn:active { opacity: 0.55; }
-
-  .rv-reveal-area {
-    margin-top: 4px;
-    padding-top: 14px;
-    border-top: 1px solid var(--hairline);
-    opacity: 0;
-    transform: translateY(4px);
-    transition: opacity 0.2s ease, transform 0.2s ease;
-    pointer-events: none;
-  }
-  .rv-reveal-area.shown {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
-  }
-  .rv-kana-line {
-    font-size: 19px;
-    font-weight: 500;
-    color: var(--ink-2);
-    letter-spacing: 0.04em;
-    margin-bottom: 6px;
-  }
-  .rv-zh-line {
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--sumi);
-    line-height: 1.5;
-    margin-bottom: 8px;
-  }
-  .rv-quote {
-    margin: 0;
-    padding-left: 12px;
-    border-left: 2px solid var(--hairline-strong);
-    font-size: 15.5px;
-    line-height: 1.78;
-    color: var(--ink-2);
-  }
-  .rv-quote-spk {
-    font-size: 12.5px;
-    color: var(--ink-3);
-    margin-right: 6px;
-    letter-spacing: 0.06em;
-  }
-  .rv-ja-ex {
-    margin: 6px 0 0;
-    font-family: var(--serif-jp);
-    font-size: 19.5px;
-    line-height: 1.7;
-    color: var(--sumi);
-  }
-  .rv-note-line {
-    margin: 4px 0 0;
-    font-size: 14.5px;
-    line-height: 1.72;
-    color: var(--ink-2);
-  }
-  .rv-twin-line {
-    margin: 2px 0 0;
-    font-size: 13.5px;
-    line-height: 1.65;
-    color: var(--ink-3);
-  }
-  .rv-shadow-row {
-    margin-top: 6px;
-    padding-top: 10px;
-    border-top: 1px solid var(--hairline);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-  }
-  .rv-shadow-hint {
-    font-size: 13px;
-    color: var(--ink-3);
-    letter-spacing: 0.03em;
-  }
-  .rv-tap-hint {
-    font-size: 13px;
-    color: var(--ink-3);
-    letter-spacing: 0.04em;
-    margin-top: 2px;
-  }
-  .rv-dock {
-    flex-shrink: 0;
-    padding-top: 10px;
-    padding-bottom: 16px;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 10px;
-  }
-  .rv-btn-relearn {
-    height: 48px;
-    padding: 0 18px;
-    border: 1px solid rgba(154, 70, 51, 0.34);
-    border-radius: 8px;
-    background: transparent;
+  .vc-aux-btn.playing {
     color: var(--bengara);
-    font-size: 15px;
-    font-weight: 500;
-    letter-spacing: 0.04em;
-    flex-shrink: 0;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
+    font-weight: 600;
+    animation: rvAudioPulse 1.3s ease-in-out infinite;
   }
-  .rv-btn-relearn:active { background: var(--tap-bg); }
-  .rv-btn-pass {
+  .vc-btn.listening {
     flex: 1;
-    max-width: 210px;
-    height: 48px;
-    padding: 0 20px;
-    border-radius: 8px;
-    background: var(--sumi);
-    color: var(--sheet);
-    font-size: 15.5px;
-    font-weight: 500;
-    letter-spacing: 0.06em;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
+    background: var(--bengara);
+    color: #fff;
+    border: 1px solid var(--bengara);
+    font-weight: 600;
   }
-  .rv-btn-pass:active { opacity: 0.84; transform: scale(0.985); }
   .rv-done-list {
-    margin: 8px 0 0;
+    margin: 10px 0 0;
     display: flex;
     flex-wrap: wrap;
     gap: 8px 14px;
-    font-size: 15px;
+    font-size: 14.5px;
     color: var(--bengara);
     font-family: var(--serif-jp);
   }
+  @media (max-height: 700px) {
+    .rv-art-vignette { width: 158px; height: 74px; margin-bottom: 12px; }
+    .rv-spk-prompt { font-size: 24px; }
+    .rv-spk-model { font-size: 17.5px; }
+  }
+
   @keyframes micPulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.35; }
@@ -3378,9 +3164,9 @@ html = r"""<!DOCTYPE html>
     animation: micPulse 1.05s ease-in-out infinite;
   }
   .mic-feedback {
-    margin-top: 8px;
+    margin-top: 10px;
     font-size: 13.5px;
-    line-height: 1.55;
+    line-height: 1.5;
     letter-spacing: 0.02em;
     color: var(--ink-3);
     min-height: 0;
@@ -3389,131 +3175,11 @@ html = r"""<!DOCTYPE html>
   .mic-feedback:empty { display: none; }
   .mic-feedback.ok { color: var(--moss); font-weight: 500; }
   .mic-feedback.ng { color: var(--bengara); font-weight: 500; }
-  .mic-feedback.left { text-align: left; margin-top: 6px; }
   .rv-meta-right {
     display: inline-flex;
     align-items: center;
     gap: 10px;
   }
-  .rv-spk-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--moss);
-    background: var(--moss-soft);
-    border: 1px solid rgba(43, 95, 73, 0.22);
-    padding: 2.5px 8px;
-    border-radius: 12px;
-    line-height: 1.25;
-    white-space: nowrap;
-    cursor: pointer;
-    transition: opacity 0.16s ease, transform 0.16s ease;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .rv-spk-pill:active { opacity: 0.65; transform: scale(0.97); }
-  .spk-prompt-ja {
-    margin: 2px 0 0;
-    font-family: var(--serif-jp);
-    font-size: 20px;
-    line-height: 1.72;
-    color: var(--sumi);
-  }
-  .spk-prompt-zh {
-    margin: 2px 0 0;
-    font-size: 14.5px;
-    line-height: 1.68;
-    color: var(--ink-3);
-  }
-  .spk-live-area {
-    margin-top: 8px;
-    padding-top: 14px;
-    border-top: 1px solid var(--hairline);
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .spk-heard {
-    font-family: var(--serif-jp);
-    font-size: 17px;
-    line-height: 1.6;
-    color: var(--ink-2);
-  }
-  .spk-heard-lbl {
-    font-family: var(--sans);
-    font-size: 12.5px;
-    color: var(--ink-3);
-    margin-right: 6px;
-    letter-spacing: 0.06em;
-  }
-  .spk-verdict {
-    font-size: 14.5px;
-    line-height: 1.6;
-    font-weight: 500;
-  }
-  .spk-verdict.ok { color: var(--moss); }
-  .spk-verdict.warn { color: var(--bengara); }
-  .spk-trap-line {
-    font-size: 13.8px;
-    line-height: 1.62;
-    color: var(--bengara);
-    padding-left: 10px;
-    border-left: 2px solid rgba(154, 70, 51, 0.36);
-  }
-  .spk-model-wrap {
-    margin-top: 4px;
-    padding-top: 10px;
-    border-top: 1px solid var(--hairline);
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-  .spk-model-lbl {
-    font-size: 12px;
-    color: var(--ink-3);
-    letter-spacing: 0.08em;
-  }
-  .spk-model-ja {
-    font-family: var(--serif-jp);
-    font-size: 19px;
-    line-height: 1.68;
-    color: var(--sumi);
-  }
-  .spk-model-zh {
-    font-size: 14px;
-    color: var(--ink-2);
-    line-height: 1.6;
-  }
-  .spk-tip {
-    font-size: 13.5px;
-    color: var(--ink-3);
-    line-height: 1.62;
-  }
-  .rv-btn-mic {
-    flex: 1;
-    max-width: 230px;
-    height: 48px;
-    padding: 0 20px;
-    border-radius: 8px;
-    background: var(--sumi);
-    color: var(--sheet);
-    font-size: 15.5px;
-    font-weight: 500;
-    letter-spacing: 0.05em;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .rv-btn-mic.listening {
-    background: var(--bengara);
-    color: #fff;
-  }
-  .rv-btn-mic:active { opacity: 0.85; transform: scale(0.985); }
 
   /* ================= 5. ZEN LEDGER ("总表") ================= */
   #dash-view {
@@ -5184,9 +4850,6 @@ html = r"""<!DOCTYPE html>
           <h2 class="radio-topic" id="radio-live-title">日本文化夜话</h2>
           <div class="radio-art-card" id="radio-art-card" style="display:none;" onclick="openStoryArtModal()">
             <img class="radio-art-img" id="radio-art-img" src="" alt="" />
-            <div class="radio-art-meta">
-              <span class="radio-art-tag" id="radio-art-tag"></span>
-            </div>
           </div>
           <p class="radio-ja" id="radio-live-ja"></p>
           <div class="inline-lex empty" id="radio-inline-lex" data-surface="">
@@ -7965,7 +7628,6 @@ function getCurrentRadioArtworkUrl() {
 function updateRadioArtwork(chapObj) {
   const artCard = document.getElementById("radio-art-card");
   const artImg = document.getElementById("radio-art-img");
-  const artTag = document.getElementById("radio-art-tag");
   if (!artCard || !artImg) return;
   const imgSrc = (chapObj && chapObj.img) || (DATA.radio && DATA.radio.artwork_url) || "";
   if (!imgSrc) {
@@ -7976,33 +7638,26 @@ function updateRadioArtwork(chapObj) {
     artImg.src = imgSrc;
     artImg.alt = (chapObj && chapObj.title) || "";
   }
-  if (artTag && chapObj && chapObj.title) {
-    artTag.textContent = chapObj.title.replace(/^[①②③④⑤⑥]\s*/, "");
-  }
   artCard.style.display = "flex";
+}
+
+function getStoryArtIdxForChapter(chapIdx) {
+  const storyArts = (DATA.radio && Array.isArray(DATA.radio.story_arts)) ? DATA.radio.story_arts : [];
+  if (!storyArts.length) return -1;
+  const idx = storyArts.findIndex(s => Array.isArray(s.chapters) && s.chapters.includes(Number(chapIdx)));
+  return idx >= 0 ? idx : 0;
 }
 
 function renderReviewStoryGalleryHTML() {
   const storyArts = (DATA.radio && Array.isArray(DATA.radio.story_arts)) ? DATA.radio.story_arts : [];
   if (!storyArts.length) return "";
   return `
-    <div class="rv-gallery-wrap">
-      <div class="rv-gallery-head">
-        <span class="rv-gallery-overline">今日故事画卷 · 触景生情</span>
-      </div>
-      <div class="rv-gallery-scroll">
-        ${storyArts.map((art, idx) => `
-          <div class="rv-story-art-card" onclick="openStoryArtModal(${idx})">
-            <div class="rv-story-art-img-wrap">
-              <img src="${escapeHtml(art.img)}" alt="${escapeHtml(art.title)}" class="rv-story-art-img" loading="lazy" />
-            </div>
-            <div class="rv-story-art-body">
-              <div class="rv-story-art-title">${escapeHtml(art.title)}</div>
-              <div class="rv-story-art-sub">${escapeHtml(art.subtitle || "")}</div>
-            </div>
-          </div>
-        `).join("")}
-      </div>
+    <div class="rv-triptych">
+      ${storyArts.slice(0, 3).map((art, idx) => `
+        <button type="button" class="rv-triptych-item" onclick="openStoryArtModal(${idx})" aria-label="${escapeHtml(art.title)}">
+          <img src="${escapeHtml(art.img)}" alt="${escapeHtml(art.title)}" class="rv-triptych-img" />
+        </button>
+      `).join("")}
     </div>
   `;
 }
@@ -8031,10 +7686,10 @@ function openStoryArtModal(idx) {
         <img src="${escapeHtml(art.img)}" alt="${escapeHtml(art.title)}" class="story-modal-img" />
       </div>
       <div class="story-modal-body">
-        <span class="overline warm">文化夜话 · 故事画卷</span>
+        <span class="overline">今日故事</span>
         <h3 class="story-modal-title">${escapeHtml(art.title)}</h3>
         <p class="story-modal-sub">${escapeHtml(art.subtitle || "")}</p>
-        <button type="button" class="rv-btn-pass" style="margin-top:14px;" onclick="closeModal()">关 闭</button>
+        <button type="button" class="vc-btn ok" style="width:100%;margin-top:14px;" onclick="closeModal()">关闭</button>
       </div>
     </div>
   `;
@@ -8807,7 +8462,7 @@ const JA_ASR = (() => {
         usedTarget: false,
         heard: chosen,
         traps: traps,
-        verdict: "这句话太短了，试着用完整短句说一遍。"
+        verdict: "没听清，再说一遍"
       };
     }
 
@@ -8817,7 +8472,7 @@ const JA_ASR = (() => {
         usedTarget: true,
         heard: chosen,
         traps: [],
-        verdict: `句型「${prompt.title || ""}」用对了，表达很自然。`
+        verdict: "用对了，很自然"
       };
     }
     if (usedTarget && traps.length > 0) {
@@ -8826,7 +8481,16 @@ const JA_ASR = (() => {
         usedTarget: true,
         heard: chosen,
         traps: traps,
-        verdict: `目标句型用上了，顺手修一个小习惯。`
+        verdict: traps[0]
+      };
+    }
+    if (traps.length > 0) {
+      return {
+        ok: false,
+        usedTarget: false,
+        heard: chosen,
+        traps: traps,
+        verdict: traps[0]
       };
     }
     return {
@@ -8834,7 +8498,7 @@ const JA_ASR = (() => {
       usedTarget: false,
       heard: chosen,
       traps: traps,
-      verdict: `听懂意思了，试着把「${prompt.title || ""}」直接套进去再说一遍。`
+      verdict: `试着用上「${prompt.title || ""}」`
     };
   }
 
@@ -8992,20 +8656,22 @@ function pushSpokenRecord(idTag, pointKey, label, isOk) {
   scheduleCloudPush(220);
 }
 
-// ================= POST-LISTENING 5-MIN CONTEXTUAL REVIEW ("听后 5 分") =================
-// Backed by Encoding Specificity (Tulving 1973), Region of Proximal Learning (Metcalfe 2002),
-// Testing Effect (Roediger & Karpicke 2006), & Within-Session Spaced Retrieval (Nakata 2017).
+// ================= POST-LISTENING FRAMELESS ZEN TINDER REVIEW ("听后复盘") =================
+// Unified with v56 Kanso "记词": frameless open canvas, read-only top meta-bar (上看下点),
+// 12px drag deadzone Tinder swipe, thumb-zone frameless aux row, auto-play podcast clip,
+// and concise 1-phrase speaking cards at the tail of the same deck.
 let radioReviewOpen = false;
-let rvMode = "triage"; // "triage" | "relearn" | "tail" | "done" | "speak"
+let rvMode = "triage"; // "triage" | "tail" | "speak" | "done"
 let rvRevealed = false;
 let rvRevealedAt = 0;
+let rvPendingLeft = false;
 let rvActiveItemId = "";
-let rvReturnMode = "triage";
 let rvAnimating = false;
 let rvClipPlayer = null;
 let rvClipEndSec = 0;
 let rvClipPlayingKey = "";
 let rvSpeakIdx = 0;
+let rvSpeakPassedSession = false;
 let rvSpeakState = { listening: false, interim: "", result: null, revealedModel: false, errorMsg: "" };
 
 function getRadioReviewItems() {
@@ -9122,8 +8788,11 @@ function syncRvAudioButtons() {
     const k = el.getAttribute("data-rv-aud");
     const isPlaying = !!rvClipPlayingKey && rvClipPlayingKey === k;
     el.classList.toggle("playing", isPlaying);
-    const ico = el.querySelector(".rv-aud-ico");
-    if (ico) ico.textContent = isPlaying ? "⏸" : "▶";
+    const lblIdle = el.getAttribute("data-lbl-idle");
+    const lblPlay = el.getAttribute("data-lbl-play");
+    if (lblIdle && lblPlay) {
+      el.textContent = isPlaying ? lblPlay : lblIdle;
+    }
   });
 }
 
@@ -9230,47 +8899,6 @@ function playReviewDemoSentence(item) {
   }
 }
 
-function playReviewHookAudio(item) {
-  if (!item) return;
-  if (rvClipPlayingKey === "hook") {
-    stopRadioReviewAudio();
-    return;
-  }
-  stopRadioReviewAudio();
-  rvClipPlayingKey = "hook";
-  syncRvAudioButtons();
-  const hookUrl = item.hook_audio || "";
-  const speakText = item.mnemonic || "";
-  const doneCb = () => {
-    if (rvClipPlayingKey === "hook") {
-      rvClipPlayingKey = "";
-      syncRvAudioButtons();
-    }
-  };
-  if (hookUrl) {
-    warmAudio(hookUrl).then(resolved => {
-      if (rvClipPlayingKey !== "hook") return;
-      try {
-        wordPlayer.onended = doneCb;
-        wordPlayer.onerror = () => speakUtteranceLang(speakText, "zh-CN", 1.04, doneCb);
-        wordPlayer.src = resolved || hookUrl;
-        wordPlayer.currentTime = 0;
-        wordPlayer.playbackRate = 1.0;
-        const pr = wordPlayer.play();
-        if (pr && typeof pr.catch === "function") {
-          pr.catch(() => speakUtteranceLang(speakText, "zh-CN", 1.04, doneCb));
-        }
-      } catch (e) {
-        speakUtteranceLang(speakText, "zh-CN", 1.04, doneCb);
-      }
-    });
-  } else if (speakText) {
-    speakUtteranceLang(speakText, "zh-CN", 1.04, doneCb);
-  } else {
-    doneCb();
-  }
-}
-
 function pushRadioReviewRecord(item, actionLabel, isOk) {
   const tsSec = Math.max(TRUE_GREEN_EPOCH, nowUnixSec());
   const ptKey = item.key || item.title;
@@ -9294,7 +8922,10 @@ function pushRadioReviewRecord(item, actionLabel, isOk) {
 
 function advanceRadioReviewPointer() {
   const items = getRadioReviewItems();
+  const prompts = getRadioSpeakingPrompts();
   const st = ensureRadioReviewState(false);
+  rvPendingLeft = false;
+
   if (st.triageIdx < items.length) {
     rvMode = "triage";
     rvActiveItemId = items[st.triageIdx].id;
@@ -9306,13 +8937,25 @@ function advanceRadioReviewPointer() {
     rvRevealed = false;
     rvRevealedAt = 0;
   } else {
+    // Clearing focus cards immediately seals Enso Ring #2 so skipping speech never blocks check-in!
+    const wasDone = !!st.done;
     st.done = true;
     st.updatedAt = nowUnixSec();
-    rvMode = "done";
     rvActiveItemId = "";
+    rvRevealed = false;
     rvRevealedAt = 0;
-    saveAdaptiveState();
-    scheduleCloudPush(80);
+    if (!wasDone) {
+      saveAdaptiveState();
+      scheduleCloudPush(80);
+    }
+    const spokenSet = new Set(Array.isArray(st.spokenIds) ? st.spokenIds : []);
+    const allSpoken = prompts.length > 0 && prompts.every(x => spokenSet.has(x.id));
+    if (prompts.length > 0 && !rvSpeakPassedSession && !allSpoken && rvSpeakIdx < prompts.length) {
+      rvMode = "speak";
+      rvSpeakState = { listening: false, interim: "", result: null, revealedModel: false, errorMsg: "" };
+    } else {
+      rvMode = "done";
+    }
   }
   renderGreenBoard();
   paintRadioSeekProgress(radioPlayer.currentTime || 0);
@@ -9326,14 +8969,23 @@ function openRadioReview(forceRestart) {
     radioPlayer.pause();
     syncRadioUI(false);
   }
+  JA_ASR.stop();
   stopRadioReviewAudio();
   ensureRadioReviewState(!!forceRestart);
+  if (forceRestart) {
+    rvSpeakIdx = 0;
+    rvSpeakPassedSession = false;
+    rvSpeakState = { listening: false, interim: "", result: null, revealedModel: false, errorMsg: "" };
+  }
   radioReviewOpen = true;
   const pStage = document.getElementById("radio-player-stage");
   const rStage = document.getElementById("radio-review-stage");
   if (pStage) pStage.classList.add("hidden");
   if (rStage) rStage.classList.remove("hidden");
   advanceRadioReviewPointer();
+  if (typeof Image !== "undefined" && DATA.radio && Array.isArray(DATA.radio.story_arts)) {
+    DATA.radio.story_arts.forEach(a => { if (a && a.img) { const im = new Image(); im.src = a.img; } });
+  }
   renderRadioReviewStage();
 }
 
@@ -9342,6 +8994,7 @@ function closeRadioReview() {
   stopRadioReviewAudio();
   clearActiveWordToken();
   radioReviewOpen = false;
+  rvPendingLeft = false;
   const pStage = document.getElementById("radio-player-stage");
   const rStage = document.getElementById("radio-review-stage");
   if (rStage) rStage.classList.add("hidden");
@@ -9361,11 +9014,13 @@ function openRadioSpeaking(startIdx) {
   stopRadioReviewAudio();
   ensureRadioReviewState(false);
   radioReviewOpen = true;
+  rvPendingLeft = false;
   const pStage = document.getElementById("radio-player-stage");
   const rStage = document.getElementById("radio-review-stage");
   if (pStage) pStage.classList.add("hidden");
   if (rStage) rStage.classList.remove("hidden");
   rvMode = "speak";
+  rvSpeakPassedSession = false;
   rvSpeakIdx = Math.max(0, Math.min(prompts.length, Number(startIdx || 0)));
   rvSpeakState = { listening: false, interim: "", result: null, revealedModel: false, errorMsg: "" };
   renderRadioReviewStage();
@@ -9382,36 +9037,24 @@ function playSpeakingPromptAudio(prompt, which) {
   stopRadioReviewAudio();
   rvClipPlayingKey = key;
   syncRvAudioButtons();
-  const text = which === "model" ? (prompt.model_ja || "") : (prompt.prompt_ja || "");
+  const text = which === "model" ? (prompt.model_ja || "") : (prompt.prompt_ja || prompt.model_ja || "");
   const doneCb = () => {
     if (rvClipPlayingKey === key) {
       rvClipPlayingKey = "";
       syncRvAudioButtons();
     }
   };
-  if (which === "model" && prompt.demo_audio && prompt.model_ja === (getReviewItemById(`RVR-${prompt.point_id}`) || {}).ja_example) {
-    warmAudio(prompt.demo_audio).then(resolved => {
-      if (rvClipPlayingKey !== key) return;
-      try {
-        wordPlayer.onended = doneCb;
-        wordPlayer.onerror = () => speakUtteranceLang(text, "ja-JP", 0.94, doneCb);
-        wordPlayer.src = resolved || prompt.demo_audio;
-        wordPlayer.currentTime = 0;
-        wordPlayer.playbackRate = 1.0;
-        const pr = wordPlayer.play();
-        if (pr && typeof pr.catch === "function") pr.catch(() => speakUtteranceLang(text, "ja-JP", 0.94, doneCb));
-      } catch (e) {
-        speakUtteranceLang(text, "ja-JP", 0.94, doneCb);
-      }
-    });
-  } else {
-    speakUtteranceLang(text, "ja-JP", 0.94, doneCb);
-  }
+  speakUtteranceLang(text, "ja-JP", 0.94, doneCb);
 }
 
 function revealSpeakingModelNow() {
   rvSpeakState.revealedModel = true;
-  renderRadioReviewStage();
+  const el = document.getElementById("rv-reveal-box");
+  if (el) el.classList.add("shown");
+  const cueEl = document.getElementById("rv-cue-line");
+  if (cueEl) cueEl.classList.add("quiet-hide");
+  const p = getActiveSpeakingPrompt();
+  if (p) playSpeakingPromptAudio(p, "model");
 }
 
 function toggleRadioSpeakingMic() {
@@ -9428,8 +9071,8 @@ function toggleRadioSpeakingMic() {
   const started = JA_ASR.start("rv_speak", {
     onInterim: (txt) => {
       rvSpeakState.interim = txt;
-      const el = document.getElementById("spk-interim-live");
-      if (el) el.textContent = txt;
+      const el = document.getElementById("rv-mic-feedback");
+      if (el) { el.className = "mic-feedback"; el.textContent = `听到：${txt}`; }
     },
     onFinal: (alts) => {
       rvSpeakState.listening = false;
@@ -9442,7 +9085,7 @@ function toggleRadioSpeakingMic() {
       if (!Array.isArray(st.spokenIds)) st.spokenIds = [];
       if (!st.spokenIds.includes(prompt.id)) st.spokenIds.push(prompt.id);
       st.updatedAt = nowUnixSec();
-      const lbl = res.ok ? "开口:自然达标" : (res.traps && res.traps.length ? `开口:提醒(${res.traps[0].slice(0, 14)})` : "开口:再练目标句型");
+      const lbl = res.ok ? "开口:自然达标" : (res.traps && res.traps.length ? `开口:提醒(${res.traps[0].slice(0, 14)})` : "开口:再练句型");
       pushSpokenRecord(prompt.id, prompt.key || prompt.title, lbl, res.ok);
       renderRadioReviewStage();
     },
@@ -9471,7 +9114,10 @@ function nextRadioSpeakingPrompt() {
   rvSpeakIdx += 1;
   rvSpeakState = { listening: false, interim: "", result: null, revealedModel: false, errorMsg: "" };
   if (rvSpeakIdx >= prompts.length) {
+    rvSpeakPassedSession = true;
+    rvMode = "done";
     const st = ensureRadioReviewState(false);
+    st.done = true;
     st.updatedAt = nowUnixSec();
     saveAdaptiveState();
   }
@@ -9486,15 +9132,16 @@ function toggleReviewMicCheck() {
   if (JA_ASR.isActive("rv_item")) {
     JA_ASR.stop();
     if (btn) { btn.classList.remove("listening"); btn.innerHTML = "试读"; }
-    if (fb && fb.textContent === "请开口读出日语…") fb.textContent = "";
+    if (fb && fb.textContent === "请读出日语…") fb.textContent = "";
     return;
   }
+  stopRadioReviewAudio();
   if (btn) { btn.classList.add("listening"); btn.innerHTML = `<span class="mic-dot"></span>聆听中`; }
-  if (fb) { fb.className = "mic-feedback left"; fb.textContent = "请开口读出日语…"; }
+  if (fb) { fb.className = "mic-feedback"; fb.textContent = "请读出日语…"; }
   JA_ASR.start("rv_item", {
     onInterim: (txt) => {
       const f = document.getElementById("rv-mic-feedback");
-      if (f) { f.className = "mic-feedback left"; f.textContent = `听到：${txt}`; }
+      if (f) { f.className = "mic-feedback"; f.textContent = `听到：${txt}`; }
     },
     onFinal: (alts) => {
       const b = document.getElementById("rv-mic-btn");
@@ -9506,8 +9153,9 @@ function toggleReviewMicCheck() {
             title: item.title,
             target_stems: [String(item.title || "").replace(/[〜~～]/g, "").trim()].filter(Boolean)
           });
+      if (!rvRevealed) revealRadioReviewCard();
       if (f) {
-        f.className = "mic-feedback left " + (res.ok ? "ok" : "ng");
+        f.className = "mic-feedback " + (res.ok ? "ok" : "ng");
         f.textContent = res.ok
           ? `✓ ${res.verdict}${res.heard ? " · " + res.heard : ""}`
           : `听到「${res.heard || ""}」· ${res.verdict}`;
@@ -9518,7 +9166,7 @@ function toggleReviewMicCheck() {
       const b = document.getElementById("rv-mic-btn");
       const f = document.getElementById("rv-mic-feedback");
       if (b) { b.classList.remove("listening"); b.innerHTML = "试读"; }
-      if (f) { f.className = "mic-feedback left ng"; f.textContent = msg; }
+      if (f) { f.className = "mic-feedback ng"; f.textContent = msg; }
     },
     onEnd: () => {
       const b = document.getElementById("rv-mic-btn");
@@ -9527,129 +9175,39 @@ function toggleReviewMicCheck() {
   });
 }
 
-function renderRadioSpeakingStage(host) {
-  const prompts = getRadioSpeakingPrompts();
-  if (!prompts.length || rvSpeakIdx >= prompts.length) {
-    const practicedHTML = prompts.length
-      ? `<div class="rv-done-list">${prompts.map(x => `<span style="color:var(--moss);">${escapeHtml(x.title)}</span>`).join("")}</div>`
-      : "";
-    host.innerHTML = `
-      <div class="meta-bar">
-        <button type="button" class="text-btn" onclick="closeRadioReview()">← 回到随身听</button>
-        <span class="overline ok">听后开口已完成</span>
-      </div>
-      <div class="rv-focal">
-        <h2 class="point-heading">今日 ${prompts.length} 句开口已练完</h2>
-        <p class="logic-line">刚听完就顺嘴把句型说出口，耳朵的被动识别会更快变成嘴上的自然反应。</p>
-        ${practicedHTML}
-      </div>
-      <div class="rv-dock">
-        <button type="button" class="ghost-btn" onclick="openRadioSpeaking(0)">再练一遍</button>
-        <button type="button" class="rv-btn-pass" onclick="closeRadioReview()">回到随身听</button>
-      </div>
-    `;
-    return;
-  }
-
-  const p = prompts[rvSpeakIdx];
-  const canRec = JA_ASR.supported();
-  const s = rvSpeakState || { listening: false, interim: "", result: null, revealedModel: false, errorMsg: "" };
-  const isLast = rvSpeakIdx + 1 >= prompts.length;
-  const showLiveArea = !!(s.listening || s.result || s.revealedModel || s.errorMsg);
-
-  let liveHTML = "";
-  if (showLiveArea) {
-    const trapsHTML = (s.result && Array.isArray(s.result.traps) && s.result.traps.length)
-      ? s.result.traps.map(t => `<div class="spk-trap-line">${escapeHtml(t)}</div>`).join("")
-      : "";
-    liveHTML = `
-      <div class="spk-live-area">
-        ${s.listening ? `<div class="spk-heard"><span class="spk-heard-lbl">聆听中</span><span id="spk-interim-live">${escapeHtml(s.interim || "请自然说出日语…")}</span></div>` : ""}
-        ${s.errorMsg ? `<div class="spk-verdict warn">${escapeHtml(s.errorMsg)}</div>` : ""}
-        ${s.result ? `
-          <div class="spk-heard"><span class="spk-heard-lbl">你说</span>${escapeHtml(s.result.heard || "")}</div>
-          <div class="spk-verdict ${s.result.ok ? "ok" : "warn"}">${s.result.ok ? "✓ " : ""}${escapeHtml(s.result.verdict || "")}</div>
-          ${trapsHTML}
-        ` : ""}
-        ${s.revealedModel ? `
-          <div class="spk-model-wrap">
-            <span class="spk-model-lbl">地道参考说法</span>
-            <div class="spk-model-ja">${annotateJapanese(p.model_ja || "")}</div>
-            ${p.model_zh ? `<div class="spk-model-zh">${escapeHtml(p.model_zh)}</div>` : ""}
-            ${p.coaching_tip ? `<div class="spk-tip">${escapeHtml(p.coaching_tip)}</div>` : ""}
-            <div class="rv-clip-row" style="margin-top:4px;">
-              <button type="button" class="rv-clip-btn" data-rv-aud="spk_model" onclick="playSpeakingPromptAudio(getActiveSpeakingPrompt(), 'model')">▶ 听地道说法跟读</button>
-            </div>
-          </div>
-        ` : ""}
-      </div>
-    `;
-  }
-
-  let dockHTML = "";
-  if (!canRec) {
-    dockHTML = `
-      <button type="button" class="ghost-btn" onclick="playSpeakingPromptAudio(getActiveSpeakingPrompt(), 'model')">▶ 听示范跟读</button>
-      <button type="button" class="rv-btn-pass" onclick="nextRadioSpeakingPrompt()">${isLast ? "完成开口 ✓" : "下一句 →"}</button>
-    `;
-  } else if (s.listening) {
-    dockHTML = `
-      <button type="button" class="rv-btn-mic listening" onclick="toggleRadioSpeakingMic()"><span class="mic-dot"></span>聆听中 · 点此结束</button>
-    `;
-  } else if (s.result) {
-    dockHTML = `
-      <button type="button" class="ghost-btn" onclick="toggleRadioSpeakingMic()">再说一遍</button>
-      <button type="button" class="rv-btn-pass" onclick="nextRadioSpeakingPrompt()">${isLast ? "完成开口 ✓" : "下一句 →"}</button>
-    `;
-  } else {
-    dockHTML = `
-      <button type="button" class="ghost-btn" onclick="nextRadioSpeakingPrompt()">${isLast ? "跳过收尾" : "跳过"}</button>
-      <button type="button" class="rv-btn-mic" onclick="toggleRadioSpeakingMic()">按下开口说日语</button>
-    `;
-  }
-
-  host.innerHTML = `
-    <div class="meta-bar">
-      <button type="button" class="text-btn" onclick="closeRadioReview()">← 回到随身听</button>
-      <span class="overline warm">听后开口 · ${rvSpeakIdx + 1} / ${prompts.length}</span>
-    </div>
-    <div class="rv-stage-card" id="rv-stage-card">
-      <div class="rv-focal is-relearn">
-        <div class="rv-story-tag">
-          <span>${escapeHtml(p.chapter_title || "")} · 练「${escapeHtml(p.title || "")}」</span>
-          ${p.is_new_n2 ? `<span class="rv-n2-dot">· N2 新学</span>` : ""}
-        </div>
-        <p class="spk-prompt-ja">${annotateJapanese(p.prompt_ja || "")}</p>
-        <p class="spk-prompt-zh">${escapeHtml(p.prompt_zh || "")}</p>
-        <div class="rv-clip-row">
-          <button type="button" class="rv-clip-btn" data-rv-aud="spk_q" onclick="playSpeakingPromptAudio(getActiveSpeakingPrompt(), 'q')">▶ 听问题</button>
-          ${!s.revealedModel ? `<button type="button" class="rv-clip-btn quiet" onclick="revealSpeakingModelNow()">看参考说法</button>` : ""}
-        </div>
-        ${!canRec ? `<p class="spk-tip">当前浏览器不支持实时收音，听示范直接开口跟读即可。</p>` : ""}
-        ${liveHTML}
-      </div>
-      ${lexBoxHTML("rv-inline-lex")}
-    </div>
-    <div class="rv-dock">${dockHTML}</div>
-  `;
-  syncRvAudioButtons();
+function resetRvCardTransform() {
+  const cardEl = document.getElementById("rv-card");
+  if (!cardEl) return;
+  cardEl.classList.remove("dragging");
+  cardEl.classList.add("settling");
+  cardEl.style.transform = "";
+  ["rv-st-right", "rv-st-left"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.opacity = "0";
+  });
 }
 
 function revealRadioReviewCard() {
-  if (rvRevealed || rvMode === "relearn" || rvMode === "done" || rvMode === "speak") return;
+  if (rvMode === "speak") {
+    if (!rvSpeakState.revealedModel) {
+      revealSpeakingModelNow();
+    }
+    return;
+  }
+  if (rvMode === "done" || rvRevealed) return;
   rvRevealed = true;
   rvRevealedAt = performance.now();
   const item = getReviewItemById(rvActiveItemId);
   const headEl = document.getElementById("rv-head");
-  if (headEl && item && item.title) headEl.textContent = item.title;
-  const el = document.getElementById("rv-reveal-area");
+  if (headEl && item) headEl.textContent = item.title || "";
+  const cueEl = document.getElementById("rv-cue-line");
+  if (cueEl && !rvPendingLeft) cueEl.classList.add("quiet-hide");
+  const el = document.getElementById("rv-reveal-box");
   if (el) el.classList.add("shown");
-  const hint = document.getElementById("rv-tap-hint");
-  if (hint) hint.style.display = "none";
 }
 
 function animateRvCardAndRun(dirCls, fn) {
-  const card = document.getElementById("rv-stage-card");
+  const card = document.getElementById("rv-card");
   rvAnimating = true;
   JA_ASR.stop();
   stopRadioReviewAudio();
@@ -9658,20 +9216,59 @@ function animateRvCardAndRun(dirCls, fn) {
     fn();
     return;
   }
-  card.classList.remove("settling");
+  card.classList.remove("dragging", "settling");
   card.classList.add(dirCls);
   setTimeout(() => {
     rvAnimating = false;
     fn();
-  }, 210);
+  }, 220);
+}
+
+function requeueCurrentRvItem(st, item) {
+  if (!st || !item) return;
+  st.updatedAt = nowUnixSec();
+  if (!st.relearnIds.includes(item.id)) {
+    st.relearnIds.push(item.id);
+    pushRadioReviewRecord(item, "听后复盘:再过", false);
+  }
+  if (rvMode === "triage") {
+    if (!st.tailQueue.includes(item.id)) st.tailQueue.push(item.id);
+    st.triageIdx += 1;
+  } else if (rvMode === "tail") {
+    st.tailQueue = (st.tailQueue || []).filter(id => id !== item.id);
+    st.tailQueue.push(item.id);
+  }
+  saveAdaptiveState();
+}
+
+function acknowledgeRvPendingLeft(flyDir) {
+  if (!rvPendingLeft || rvAnimating) return;
+  const st = ensureRadioReviewState(false);
+  const item = getReviewItemById(rvActiveItemId);
+  const cls = flyDir === "right" ? "fly-right" : "fly-left";
+  animateRvCardAndRun(cls, () => {
+    rvPendingLeft = false;
+    requeueCurrentRvItem(st, item);
+    advanceRadioReviewPointer();
+    renderRadioReviewStage();
+  });
 }
 
 function handleRadioReviewPass() {
   if (rvAnimating) return;
+  if (rvPendingLeft) {
+    acknowledgeRvPendingLeft("right");
+    return;
+  }
+  if (rvMode === "speak") {
+    animateRvCardAndRun("fly-right", () => {
+      nextRadioSpeakingPrompt();
+    });
+    return;
+  }
   const st = ensureRadioReviewState(false);
   const item = getReviewItemById(rvActiveItemId);
   if (!item) return;
-  // Dunlosky & Lipko (2007) JOL calibration: require reveal + >=800ms verification before marking as verified pass
   const isVerified = !!(rvRevealed && rvRevealedAt > 0 && (performance.now() - rvRevealedAt) >= 800);
 
   animateRvCardAndRun("fly-right", () => {
@@ -9693,112 +9290,252 @@ function handleRadioReviewPass() {
 
 function handleRadioReviewRelearn() {
   if (rvAnimating) return;
+  if (rvPendingLeft) {
+    acknowledgeRvPendingLeft("left");
+    return;
+  }
+  if (rvMode === "speak") {
+    if (!rvSpeakState.revealedModel) {
+      resetRvCardTransform();
+      revealSpeakingModelNow();
+      return;
+    }
+    animateRvCardAndRun("fly-left", () => {
+      rvSpeakState = { listening: false, interim: "", result: null, revealedModel: false, errorMsg: "" };
+      renderRadioReviewStage();
+    });
+    return;
+  }
   const st = ensureRadioReviewState(false);
   const item = getReviewItemById(rvActiveItemId);
   if (!item) return;
-  JA_ASR.stop();
-  stopRadioReviewAudio();
 
-  rvReturnMode = rvMode;
-  st.updatedAt = nowUnixSec();
-  if (!st.relearnIds.includes(item.id)) {
-    st.relearnIds.push(item.id);
-    if (!st.tailQueue.includes(item.id)) st.tailQueue.push(item.id);
-    pushRadioReviewRecord(item, "听后复盘:重学", false);
+  // Match v56 "记词" Tinder flow: swiping left before revealing flips gently in place on the open canvas!
+  if (!rvRevealed) {
+    resetRvCardTransform();
+    rvPendingLeft = true;
+    const dockEl = document.getElementById("rv-dock-row");
+    if (dockEl) {
+      dockEl.innerHTML = `
+        <button type="button" class="vc-btn mid" data-rv-aud="clip_1" data-lbl-idle="听原声" data-lbl-play="暂停原声" onclick="playReviewPodcastClip(getReviewItemById('${item.id}'), 1.0, 'clip_1')">听原声</button>
+        <button type="button" class="vc-btn ok" onclick="acknowledgeRvPendingLeft('left')">稍后再过</button>
+      `;
+    }
+    revealRadioReviewCard();
+    syncRvAudioButtons();
+    return;
   }
-  if (rvMode === "triage") {
-    st.triageIdx += 1;
-  } else if (rvMode === "tail") {
-    // Move to end of tail queue so it re-checks after any other flagged items
-    st.tailQueue = (st.tailQueue || []).filter(id => id !== item.id);
-    st.tailQueue.push(item.id);
-  }
-  saveAdaptiveState();
-  rvMode = "relearn";
-  rvRevealed = true;
-  renderRadioReviewStage();
-  // Immediately anchor with the exact podcast context clip (Encoding Specificity!)
-  playReviewPodcastClip(item, 1.0, "clip_1", true);
+
+  animateRvCardAndRun("fly-left", () => {
+    requeueCurrentRvItem(st, item);
+    advanceRadioReviewPointer();
+    renderRadioReviewStage();
+  });
 }
 
 function finishRadioRelearnStep() {
-  if (rvAnimating) return;
-  JA_ASR.stop();
-  stopRadioReviewAudio();
-  advanceRadioReviewPointer();
-  renderRadioReviewStage();
+  if (rvPendingLeft) {
+    acknowledgeRvPendingLeft("left");
+  } else {
+    handleRadioReviewPass();
+  }
 }
 
-function bindRadioReviewSwipe(cardEl) {
-  if (!cardEl || rvMode === "relearn" || rvMode === "done" || rvMode === "speak") return;
-  let sx = 0, sy = 0, stMs = 0, tracking = false, axis = null;
-  cardEl.addEventListener("touchstart", e => {
-    if (rvAnimating || !e.touches || e.touches.length !== 1) return;
-    if (e.target && e.target.closest && e.target.closest("button, .w-tok")) return;
+function bindRadioReviewCardGestures(cardEl) {
+  if (!cardEl || rvMode === "done") return;
+  let tracking = false;
+  let hasDragged = false;
+  let activePid = null;
+  let sx = 0, sy = 0, st = 0;
+  let tappedArt = false;
+  let tappedTok = false;
+  const DRAG_DEADZONE = 12;
+
+  cardEl.addEventListener("pointerdown", e => {
+    if (rvAnimating) return;
+    if (typeof e.button === "number" && e.button !== 0) return;
+    if (e.target && e.target.closest && e.target.closest("button")) return;
     tracking = true;
-    axis = null;
-    sx = fpX(e.touches[0]);
-    sy = fpY(e.touches[0]);
-    stMs = performance.now();
+    hasDragged = false;
+    activePid = e.pointerId;
+    sx = fpX(e);
+    sy = fpY(e);
+    st = performance.now();
+    tappedArt = !!(e.target && e.target.closest && e.target.closest(".rv-art-vignette"));
+    tappedTok = !!(e.target && e.target.closest && e.target.closest(".w-tok"));
     cardEl.classList.remove("settling");
-  }, { passive: true });
-  cardEl.addEventListener("touchmove", e => {
-    if (!tracking || !e.touches || e.touches.length !== 1) return;
-    const dx = fpX(e.touches[0]) - sx;
-    const dy = fpY(e.touches[0]) - sy;
-    if (!axis) {
-      if (Math.hypot(dx, dy) < 10) return;
-      axis = Math.abs(dx) > Math.abs(dy) * 1.15 ? "x" : "y";
+    try { cardEl.setPointerCapture(e.pointerId); } catch (err) {}
+  });
+
+  cardEl.addEventListener("pointermove", e => {
+    if (!tracking || e.pointerId !== activePid) return;
+    const dx = fpX(e) - sx;
+    const dy = fpY(e) - sy;
+    if (!hasDragged) {
+      if (Math.hypot(dx, dy) < DRAG_DEADZONE) return;
+      hasDragged = true;
+      cardEl.classList.add("dragging");
     }
-    if (axis === "x") {
-      if (e.cancelable) e.preventDefault();
-      cardEl.style.transform = `translate3d(${dx.toFixed(1)}px, ${(dy * 0.14).toFixed(1)}px, 0) rotate(${(dx * 0.025).toFixed(2)}deg)`;
-      const stR = document.getElementById("rv-st-right");
-      const stL = document.getElementById("rv-st-left");
-      if (dx > 16) {
-        if (stR) stR.style.opacity = String(Math.min(1, (dx - 14) / 48));
-        if (stL) stL.style.opacity = "0";
-      } else if (dx < -16) {
-        if (stL) stL.style.opacity = String(Math.min(1, (-dx - 14) / 48));
-        if (stR) stR.style.opacity = "0";
-      } else {
-        if (stR) stR.style.opacity = "0";
-        if (stL) stL.style.opacity = "0";
-      }
+    cardEl.style.transform = `translate3d(${dx.toFixed(1)}px, ${(dy * 0.42).toFixed(1)}px, 0) rotate(${(dx * 0.036).toFixed(2)}deg)`;
+    const stR = document.getElementById("rv-st-right");
+    const stL = document.getElementById("rv-st-left");
+    if (dx > 18) {
+      if (stR) stR.style.opacity = String(Math.min(1, (dx - 16) / 50));
+      if (stL) stL.style.opacity = "0";
+    } else if (dx < -18) {
+      if (stL) stL.style.opacity = String(Math.min(1, (-dx - 16) / 50));
+      if (stR) stR.style.opacity = "0";
+    } else {
+      if (stR) stR.style.opacity = "0";
+      if (stL) stL.style.opacity = "0";
     }
-  }, { passive: false });
-  const endSwipe = (e, cancelled) => {
-    if (!tracking) return;
+  });
+
+  function finishGesture(e, isCancel) {
+    if (!tracking || e.pointerId !== activePid) return;
     tracking = false;
-    if (cancelled || axis !== "x" || !e.changedTouches || !e.changedTouches.length) {
-      if (axis === "x") {
-        cardEl.classList.add("settling");
-        cardEl.style.transform = "";
-      }
-      axis = null;
+    activePid = null;
+    try { cardEl.releasePointerCapture(e.pointerId); } catch (err) {}
+    if (isCancel) {
+      if (hasDragged) resetRvCardTransform();
+      hasDragged = false;
       return;
     }
-    const dx = fpX(e.changedTouches[0]) - sx;
-    const dt = Math.max(1, performance.now() - stMs);
+    const dx = fpX(e) - sx;
+    const dy = fpY(e) - sy;
+    const dt = Math.max(1, performance.now() - st);
     const vx = dx / dt;
-    axis = null;
-    if (dx >= 56 || (dx >= 30 && vx > 0.42)) {
+
+    if (!hasDragged || (Math.hypot(dx, dy) < 20 && dt < 650)) {
+      if (hasDragged) resetRvCardTransform();
+      hasDragged = false;
+      if (tappedTok) return;
+      if (tappedArt) {
+        const ch = Number(cardEl.getAttribute("data-art-ch") || 0);
+        const aIdx = getStoryArtIdxForChapter(ch);
+        if (aIdx >= 0) openStoryArtModal(aIdx);
+        return;
+      }
+      revealRadioReviewCard();
+      return;
+    }
+    hasDragged = false;
+
+    if (rvPendingLeft) {
+      if (Math.abs(dx) >= 48 || (Math.abs(dx) >= 28 && Math.abs(vx) > 0.4)) {
+        acknowledgeRvPendingLeft(dx >= 0 ? "right" : "left");
+      } else {
+        resetRvCardTransform();
+      }
+      return;
+    }
+
+    if (dx >= 62 || (dx >= 34 && vx > 0.45 && Math.abs(dx) > Math.abs(dy))) {
       handleRadioReviewPass();
       return;
     }
-    if (dx <= -56 || (dx <= -30 && vx < -0.42)) {
+    if (dx <= -62 || (dx <= -34 && vx < -0.45 && Math.abs(dx) > Math.abs(dy))) {
       handleRadioReviewRelearn();
       return;
     }
-    cardEl.classList.add("settling");
-    cardEl.style.transform = "";
-    const stR = document.getElementById("rv-st-right");
-    const stL = document.getElementById("rv-st-left");
-    if (stR) stR.style.opacity = "0";
-    if (stL) stL.style.opacity = "0";
-  };
-  cardEl.addEventListener("touchend", e => endSwipe(e, false), { passive: true });
-  cardEl.addEventListener("touchcancel", e => endSwipe(e, true), { passive: true });
+    resetRvCardTransform();
+  }
+
+  cardEl.addEventListener("pointerup", e => finishGesture(e, false));
+  cardEl.addEventListener("pointercancel", e => finishGesture(e, true));
+}
+
+function renderRadioSpeakingCard(host) {
+  const prompts = getRadioSpeakingPrompts();
+  if (!prompts.length || rvSpeakIdx >= prompts.length) {
+    rvSpeakPassedSession = true;
+    rvMode = "done";
+    renderRadioReviewStage();
+    return;
+  }
+  const p = prompts[rvSpeakIdx];
+  const canRec = JA_ASR.supported();
+  const s = rvSpeakState || { listening: false, interim: "", result: null, revealedModel: false, errorMsg: "" };
+  const isLast = rvSpeakIdx + 1 >= prompts.length;
+  const artSrc = p.img || "";
+  const artHTML = artSrc
+    ? `<div class="rv-art-vignette"><img class="rv-art-vignette-img" src="${escapeHtml(artSrc)}" alt="" /></div>`
+    : "";
+
+  let fbCls = "mic-feedback";
+  let fbTxt = "";
+  if (s.listening) {
+    fbTxt = s.interim ? `听到：${s.interim}` : "请开口说一句日语…";
+  } else if (s.errorMsg) {
+    fbCls += " ng";
+    fbTxt = s.errorMsg;
+  } else if (s.result) {
+    fbCls += s.result.ok ? " ok" : " ng";
+    fbTxt = s.result.ok
+      ? `✓ ${s.result.verdict}${s.result.heard ? " · " + s.result.heard : ""}`
+      : `听到「${s.result.heard || ""}」· ${s.result.verdict}`;
+  } else if (!canRec) {
+    fbTxt = "轻点看示范，顺口跟读一句即可";
+  }
+
+  let dockHTML = "";
+  if (!canRec) {
+    dockHTML = `
+      <button type="button" class="vc-btn mid" onclick="playSpeakingPromptAudio(getActiveSpeakingPrompt(), 'model')">听示范</button>
+      <button type="button" class="vc-btn ok" onclick="handleRadioReviewPass()">${isLast ? "完成" : "下一张"}</button>
+    `;
+  } else if (s.listening) {
+    dockHTML = `
+      <button type="button" class="vc-btn listening" onclick="toggleRadioSpeakingMic()"><span class="mic-dot"></span>聆听中 · 点此结束</button>
+    `;
+  } else if (s.result) {
+    dockHTML = `
+      <button type="button" class="vc-btn mid" onclick="toggleRadioSpeakingMic()">再说</button>
+      <button type="button" class="vc-btn ok" onclick="handleRadioReviewPass()">${isLast ? "完成" : "下一张"}</button>
+    `;
+  } else {
+    dockHTML = `
+      <button type="button" class="vc-btn ng" onclick="handleRadioReviewPass()">跳过</button>
+      <button type="button" class="vc-btn ok" onclick="toggleRadioSpeakingMic()">开口说一句</button>
+    `;
+  }
+
+  host.innerHTML = `
+    <div class="meta-bar">
+      <span class="overline warm">开口 · ${rvSpeakIdx + 1} / ${prompts.length}</span>
+      <span class="overline">${escapeHtml(p.chapter_title || "")}</span>
+    </div>
+
+    <div class="vc-deck-area">
+      <div class="vc-card" id="rv-card" data-art-ch="${Number(p.chapter_idx || 0)}">
+        <div class="vc-stamp right" id="rv-st-right">过了</div>
+        <div class="vc-stamp left" id="rv-st-left">再练</div>
+
+        ${artHTML}
+        <div class="vc-cue${s.revealedModel ? " quiet-hide" : ""}" id="rv-cue-line">用「${escapeHtml(p.title || "")}」</div>
+        <div class="rv-spk-prompt">${escapeHtml(p.prompt_short || p.prompt_zh || p.title || "")}</div>
+
+        <div class="vc-reveal${s.revealedModel ? " shown" : ""}" id="rv-reveal-box">
+          <div class="rv-spk-model">${annotateJapanese(p.model_ja || "")}</div>
+          ${p.coaching_tip ? `<div class="rv-spk-tip">${escapeHtml(p.coaching_tip)}</div>` : ""}
+        </div>
+        <div class="${fbCls}" id="rv-mic-feedback">${escapeHtml(fbTxt)}</div>
+      </div>
+    </div>
+
+    ${lexBoxHTML("rv-inline-lex")}
+
+    <div class="vc-aux-row">
+      <button type="button" class="vc-aux-btn seal" onclick="closeRadioReview()">随身听</button>
+      <div class="vc-aux-right">
+        <button type="button" class="vc-aux-btn replay" data-rv-aud="spk_model" data-lbl-idle="示范" data-lbl-play="暂停" onclick="playSpeakingPromptAudio(getActiveSpeakingPrompt(), 'model')">示范</button>
+      </div>
+    </div>
+
+    <div class="vc-dock" id="rv-dock-row">${dockHTML}</div>
+  `;
+  bindRadioReviewCardGestures(document.getElementById("rv-card"));
+  syncRvAudioButtons();
 }
 
 function renderRadioReviewStage() {
@@ -9808,53 +9545,35 @@ function renderRadioReviewStage() {
   const st = ensureRadioReviewState(false);
 
   if (rvMode === "speak") {
-    renderRadioSpeakingStage(host);
+    renderRadioSpeakingCard(host);
     return;
   }
-
-  const spPrompts = getRadioSpeakingPrompts();
-  const spokenSet = new Set(Array.isArray(st.spokenIds) ? st.spokenIds : []);
-  const allSpokenDone = spPrompts.length > 0 && spPrompts.every(x => spokenSet.has(x.id));
 
   if (rvMode === "done" || !rvActiveItemId) {
     const rmDone = computeDaily120Metrics();
     const relearnedItems = (st.relearnIds || []).map(id => getReviewItemById(id)).filter(Boolean);
-    const passedCnt = Math.max(0, items.length - relearnedItems.length);
     const relearnNamesHTML = relearnedItems.length
       ? `<div class="rv-done-list">${relearnedItems.map(x => `<span>${escapeHtml(x.title)}</span>`).join("")}</div>`
       : "";
     const doneOverline = rmDone.radioDone
-      ? "收尾小节已收笔 · 随身听圆印圆满"
-      : "收尾小节已完成 · 听完正文即可收笔";
-    const speakHintLine = spPrompts.length
-      ? (allSpokenDone
-        ? `<p class="spk-tip" style="margin-top:6px;">今日 ${spPrompts.length} 句听后开口已完成 ✓</p>`
-        : `<p class="spk-tip" style="margin-top:6px;">方便开口的话，顺手把今天学的 ${spPrompts.length} 个句型用日语说出口（在外面可随时跳过）。</p>`)
-      : "";
-    const dockHTML = spPrompts.length && !allSpokenDone
-      ? `
-        <button type="button" class="ghost-btn" onclick="closeRadioReview()">回到随身听</button>
-        <button type="button" class="rv-btn-pass" onclick="openRadioSpeaking(0)">开口说 ${spPrompts.length} 句 →</button>
-      `
-      : `
-        <button type="button" class="ghost-btn" onclick="${spPrompts.length ? "openRadioSpeaking(0)" : "openRadioReview(true)"}">${spPrompts.length ? "再练开口" : "重来一遍"}</button>
-        <button type="button" class="rv-btn-pass" onclick="closeRadioReview()">回到随身听</button>
-      `;
+      ? "随身听圆印圆满"
+      : "过点完成 · 听完正文即圆满";
     host.innerHTML = `
       <div class="meta-bar">
-        <button type="button" class="text-btn" onclick="closeRadioReview()">← 回到随身听</button>
         <span class="overline ok">${doneOverline}</span>
       </div>
-      <div class="rv-focal">
-        <h2 class="point-heading">${relearnedItems.length ? `本次重学 ${relearnedItems.length} 项，其余 ${passedCnt} 项已秒过` : `本期 ${items.length} 个重点全部听懂`}</h2>
-        <p class="logic-line">${relearnedItems.length
-          ? `下面标出的重点已自动记入明日做题与记词队列，下期《锵锵》也会顺嘴再帮你搭一次桥。`
-          : `今天 60 分钟里的表达和词汇都接住了，没有需要单独回炉的卡点。`}</p>
+      <div class="focal-space">
+        <h2 class="point-heading">${relearnedItems.length ? `本期过完 · 回炉 ${relearnedItems.length} 项` : `本期 ${items.length} 个重点全部接住`}</h2>
         ${renderReviewStoryGalleryHTML()}
+        <p class="logic-line">${relearnedItems.length
+          ? "刚才回炉的重点已顺手记入明日队列。"
+          : "听完顺手滑一遍，印象最牢。"}</p>
         ${relearnNamesHTML}
-        ${speakHintLine}
       </div>
-      <div class="rv-dock">${dockHTML}</div>
+      <div class="vc-dock">
+        <button type="button" class="vc-btn mid" onclick="openRadioReview(true)">重过一遍</button>
+        <button type="button" class="vc-btn ok" onclick="closeRadioReview()">回到随身听</button>
+      </div>
     `;
     return;
   }
@@ -9862,108 +9581,68 @@ function renderRadioReviewStage() {
   const item = getReviewItemById(rvActiveItemId);
   if (!item) return;
 
+  const isTail = rvMode === "tail";
+  const leftLabel = isTail
+    ? `回炉 · 余 ${st.tailQueue.length}`
+    : `${Math.min(items.length, st.triageIdx + 1)} / ${items.length}`;
   const hasKanji = /[\u4e00-\u9faf\u3400-\u4dbf]/.test(item.title || "");
   const kanaHTML = (hasKanji && item.kana)
     ? renderTrapKanaHTML(item.title, item.kana, item.trap_hl || [], item.trap_tag || "")
     : (item.kana && item.kana !== item.title ? escapeHtml(item.kana) : "");
-  const clipSecs = Math.max(5, Math.round((item.clip_end || 14) - (item.clip_start || 0)));
-
-  if (rvMode === "relearn") {
-    const showMic = JA_ASR.supported();
-    host.innerHTML = `
-      <div class="meta-bar">
-        <button type="button" class="text-btn" onclick="closeRadioReview()">← 随身听</button>
-        <span class="overline warm">语境精学 · ${escapeHtml(item.chapter_title || "")}</span>
-      </div>
-      <div class="rv-stage-card" id="rv-stage-card">
-        <div class="rv-focal is-relearn">
-          <div class="rv-story-tag">
-            <span>${escapeHtml(item.chapter_title || "")}</span>
-            ${item.is_new_n2 ? `<span class="rv-n2-dot">· N2 新学</span>` : ""}
-          </div>
-          ${item.img ? `<div class="rv-relearn-art-wrap" onclick="openStoryArtModal()"><img src="${escapeHtml(item.img)}" class="rv-relearn-art-img" alt="${escapeHtml(item.chapter_title || '')}" /></div>` : ""}
-          <h2 class="rv-head">${escapeHtml(item.title)}</h2>
-          ${kanaHTML ? `<div class="rv-kana-line">${kanaHTML}</div>` : ""}
-          <div class="rv-zh-line">${escapeHtml(item.zh || "")}</div>
-
-          <div class="rv-clip-row">
-            <button type="button" class="rv-clip-btn" data-rv-aud="clip_1" onclick="playReviewPodcastClip(getReviewItemById('${item.id}'), 1.0, 'clip_1')"><span class="rv-aud-ico">▶</span> 原声语境 (${clipSecs}s)</button>
-            <button type="button" class="rv-clip-btn quiet" data-rv-aud="clip_085" onclick="playReviewPodcastClip(getReviewItemById('${item.id}'), 0.85, 'clip_085')">0.85x 慢听</button>
-          </div>
-
-          <p class="rv-quote"><span class="rv-quote-spk">${escapeHtml(item.speaker || "主持")}</span>${annotateJapanese(item.context_line || "")}</p>
-          ${item.mnemonic ? `<div class="vc-hook rv-hook" style="margin-top:4px;"><span class="vc-hook-tag">记音</span>${escapeHtml(item.mnemonic)}</div>` : ""}
-          ${item.nuance ? `<p class="rv-note-line">${escapeHtml(item.nuance)}</p>` : ""}
-          ${item.twin ? `<p class="rv-twin-line">${escapeHtml(item.twin)}</p>` : ""}
-          ${item.ja_example && item.ja_example !== item.title ? `<div class="rv-ja-ex">${annotateJapanese(item.ja_example)}</div>` : ""}
-
-          <div class="rv-shadow-row">
-            <span class="rv-shadow-hint">顺口跟读一遍，耳朵和嘴一起锁住</span>
-            <div class="rv-meta-right">
-              <button type="button" class="rv-clip-btn" data-rv-aud="demo" onclick="playReviewDemoSentence(getReviewItemById('${item.id}'))">▶ 示范发音</button>
-              ${showMic ? `<button type="button" class="rv-clip-btn quiet mic-btn" id="rv-mic-btn" onclick="toggleReviewMicCheck()">试读</button>` : ""}
-            </div>
-          </div>
-          <div class="mic-feedback left" id="rv-mic-feedback"></div>
-        </div>
-        ${lexBoxHTML("rv-inline-lex")}
-      </div>
-      <div class="rv-dock">
-        <button type="button" class="rv-btn-pass" onclick="finishRadioRelearnStep()">记住了 · 稍后复查 →</button>
-      </div>
-    `;
-    syncRvAudioButtons();
-    return;
-  }
-
-  // Phase 1 ("triage") or Phase 3 ("tail" blind re-check)
-  const isTail = rvMode === "tail";
-  const progressTxt = isTail
-    ? `收尾复查 · 仅余 ${st.tailQueue.length} 项`
-    : `听后复盘 · ${Math.min(items.length, st.triageIdx + 1)} / ${items.length}`;
+  const showMic = JA_ASR.supported();
+  const artSrc = item.img || "";
+  const artHTML = artSrc
+    ? `<div class="rv-art-vignette"><img class="rv-art-vignette-img" src="${escapeHtml(artSrc)}" alt="" /></div>`
+    : "";
+  const showShortEx = !!(
+    !item.mnemonic &&
+    item.ja_example &&
+    item.ja_example !== item.title &&
+    !String(item.ja_example).startsWith(String(item.title || "") + "（")
+  );
+  const cueTxt = isTail ? "再过一遍" : (item.kind === "vocab" ? "默念读音" : "默念意思");
 
   host.innerHTML = `
     <div class="meta-bar">
-      <button type="button" class="text-btn" onclick="closeRadioReview()">← 随身听</button>
-      <div class="rv-meta-right">
-        <span class="overline${isTail ? " warm" : ""}">${progressTxt}</span>
-        ${spPrompts.length ? `<button type="button" class="rv-spk-pill" onclick="openRadioSpeaking(0)">开口 ${spPrompts.length} 句 ›</button>` : ""}
+      <span class="overline${isTail ? " warm" : ""}">${escapeHtml(leftLabel)}</span>
+      <span class="overline">${escapeHtml(item.chapter_title || "")}${item.is_new_n2 ? " · N2" : ""}</span>
+    </div>
+
+    <div class="vc-deck-area">
+      <div class="vc-card" id="rv-card" data-art-ch="${Number(item.chapter_idx || 0)}">
+        <div class="vc-stamp right" id="rv-st-right">懂了</div>
+        <div class="vc-stamp left" id="rv-st-left">再过</div>
+
+        ${artHTML}
+        <div class="vc-cue${rvRevealed && !rvPendingLeft ? " quiet-hide" : (isTail ? " ng" : "")}" id="rv-cue-line">${cueTxt}</div>
+        <div class="vc-chunk" id="rv-head">${escapeHtml(rvRevealed ? item.title : stripGrammarSpoilerTitle(item.title))}</div>
+
+        <div class="vc-reveal${rvRevealed ? " shown" : ""}" id="rv-reveal-box">
+          ${kanaHTML ? `<div class="vc-kana">${kanaHTML}</div>` : ""}
+          <div class="vc-zh">${escapeHtml(item.zh || "")}</div>
+          ${item.mnemonic ? `<div class="vc-hook"><span class="vc-hook-tag">记音</span>${escapeHtml(item.mnemonic)}</div>` : ""}
+          ${showShortEx ? `<div class="rv-card-ex">${annotateJapanese(item.ja_example)}</div>` : ""}
+        </div>
+        <div class="mic-feedback" id="rv-mic-feedback"></div>
       </div>
     </div>
-    <div class="rv-stage-card" id="rv-stage-card" onclick="if(!event.target.closest('button,.w-tok'))revealRadioReviewCard()">
-      <div class="tutor-stamp right" id="rv-st-right">懂了 · 过 →</div>
-      <div class="tutor-stamp left" id="rv-st-left">← 重学这个</div>
 
-      <div class="rv-focal">
-        <div class="rv-story-tag">
-          <span>${escapeHtml(item.chapter_title || "")}</span>
-          ${item.is_new_n2 ? `<span class="rv-n2-dot">· N2 新学</span>` : ""}
-          ${isTail ? `<span class="rv-n2-dot">· 刚才重学</span>` : ""}
-        </div>
-        <h2 class="rv-head" id="rv-head">${escapeHtml(rvRevealed ? item.title : stripGrammarSpoilerTitle(item.title))}</h2>
-        <p class="rv-cue-line">${escapeHtml(item.story_cue || "")}</p>
+    ${lexBoxHTML("rv-inline-lex")}
 
-        <div class="rv-clip-row">
-          <button type="button" class="rv-clip-btn" data-rv-aud="clip_1" onclick="event.stopPropagation();playReviewPodcastClip(getReviewItemById('${item.id}'), 1.0, 'clip_1')"><span class="rv-aud-ico">▶</span> 听原声语境 (${clipSecs}s)</button>
-        </div>
-
-        <div class="rv-tap-hint" id="rv-tap-hint" style="${rvRevealed ? "display:none" : ""}">先回忆意思或读音，轻点核对</div>
-
-        <div class="rv-reveal-area${rvRevealed ? " shown" : ""}" id="rv-reveal-area">
-          ${kanaHTML ? `<div class="rv-kana-line">${kanaHTML}</div>` : ""}
-          <div class="rv-zh-line">${escapeHtml(item.zh || "")}</div>
-          ${item.mnemonic ? `<div class="vc-hook rv-hook" style="margin-bottom:8px;"><span class="vc-hook-tag">记音</span>${escapeHtml(item.mnemonic)}</div>` : ""}
-          <p class="rv-quote"><span class="rv-quote-spk">${escapeHtml(item.speaker || "主持")}</span>${annotateJapanese(item.context_line || "")}</p>
-        </div>
+    <div class="vc-aux-row">
+      <button type="button" class="vc-aux-btn seal" onclick="closeRadioReview()">随身听</button>
+      <div class="vc-aux-right">
+        ${showMic ? `<button type="button" class="vc-aux-btn mic-btn" id="rv-mic-btn" onclick="toggleReviewMicCheck()">试读</button>` : ""}
+        <button type="button" class="vc-aux-btn replay" data-rv-aud="clip_1" data-lbl-idle="原声" data-lbl-play="暂停" onclick="playReviewPodcastClip(getReviewItemById('${item.id}'), 1.0, 'clip_1')">原声</button>
       </div>
-      ${lexBoxHTML("rv-inline-lex")}
     </div>
-    <div class="rv-dock">
-      <button type="button" class="rv-btn-relearn" onclick="handleRadioReviewRelearn()">${isTail ? "← 再学一遍" : "← 重学这个"}</button>
-      <button type="button" class="rv-btn-pass" onclick="handleRadioReviewPass()">${isTail ? "真记住了 →" : "懂了 · 过 →"}</button>
+
+    <div class="vc-dock" id="rv-dock-row">
+      <button type="button" class="vc-btn ng" onclick="handleRadioReviewRelearn()">再过</button>
+      <button type="button" class="vc-btn ok" onclick="handleRadioReviewPass()">懂了</button>
     </div>
   `;
-  bindRadioReviewSwipe(document.getElementById("rv-stage-card"));
+  bindRadioReviewCardGestures(document.getElementById("rv-card"));
   syncRvAudioButtons();
   if (rvMode === "triage" || rvMode === "tail") {
     playReviewPodcastClip(item, 1.0, "clip_1", true);
@@ -11050,16 +10729,17 @@ document.addEventListener("keydown", e => {
       if (e.key === "Escape") { e.preventDefault(); closeRadioReview(); }
       else if (e.key === " ") {
         e.preventDefault();
-        const curItem = getReviewItemById(rvActiveItemId);
-        if (!rvRevealed && rvMode !== "relearn") revealRadioReviewCard();
-        else if (curItem) playReviewPodcastClip(curItem, 1.0, "clip_1");
+        if (rvMode === "speak" || !rvRevealed) revealRadioReviewCard();
+        else {
+          const curItem = getReviewItemById(rvActiveItemId);
+          if (curItem) playReviewPodcastClip(curItem, 1.0, "clip_1");
+        }
       } else if (e.key === "ArrowRight" || e.key === "Enter") {
         e.preventDefault();
-        if (rvMode === "relearn") finishRadioRelearnStep();
-        else if (rvMode !== "done") handleRadioReviewPass();
+        if (rvMode !== "done") handleRadioReviewPass();
       } else if (e.key === "ArrowLeft") {
         e.preventDefault();
-        if (rvMode === "triage" || rvMode === "tail") handleRadioReviewRelearn();
+        if (rvMode !== "done") handleRadioReviewRelearn();
       }
       return;
     }
@@ -15912,42 +15592,53 @@ if (!pzModalHtml.includes('第 1 章') || !pzModalHtml.includes('2–4 场球') 
 }
 sb.ZB.openPZList(1);
 sb.closeModal();
-// Self-test 6: Post-Listening 5-Min Contextual Review (Selective Re-Learn + Tail Check) & Ear-First 2/3 Vocab Graduation
+// Self-test 6: Unified Frameless Zen Tinder Post-Listening Deck (vc-card + auto-play clip + 上看下点 + pendingLeft + Tail + Short Speaking + Triptych) & Ear-First 2/3 Vocab Graduation
 const rvItems = sb.getRadioReviewItems();
-if (!Array.isArray(rvItems) || rvItems.length < 6) {
-  throw new Error('Self-test 6 failed: expected >=6 episode review_items, got ' + (rvItems && rvItems.length));
+if (!Array.isArray(rvItems) || rvItems.length < 6 || rvItems.length > 10) {
+  throw new Error('Self-test 6 failed: expected 6..10 concise episode review_items, got ' + (rvItems && rvItems.length));
 }
 sb.switchMode('radio', false);
 sb.openRadioReview(true);
 const rvHtml1 = (els['radio-review-stage'] && els['radio-review-stage'].innerHTML) || '';
-if (!rvHtml1.includes('听后复盘') || !rvHtml1.includes('重学这个') || !rvHtml1.includes('懂了') || rvHtml1.includes('—')) {
-  throw new Error('Self-test 6 failed: triage view missing core controls or contains em dash');
+if (!rvHtml1.includes('vc-card') || !rvHtml1.includes('vc-aux-row') || !rvHtml1.includes('再过') || !rvHtml1.includes('懂了') || rvHtml1.includes('—') || rvHtml1.includes('♪')) {
+  throw new Error('Self-test 6 failed: Zen Tinder card missing core Kanso controls or contains em dash/♪');
+}
+const rvMetaBar1 = (rvHtml1.match(/<div class="meta-bar">[\s\S]*?<\/div>/) || [''])[0];
+if (rvMetaBar1.includes('<button')) {
+  throw new Error('Self-test 6 failed: top meta-bar on radio review must remain read-only (上看下点)!');
 }
 const clipKey1 = vm.runInNewContext('rvClipPlayingKey', sb);
 if (clipKey1 !== 'clip_1') {
   throw new Error('Self-test 6 failed: review card must directly auto-play contextual podcast clip');
 }
-// Flag ONLY the first item for selective deep contextual re-learn; fast-pass all remaining items!
+// Swipe left before reveal -> flips calmly in place on open vc-card (rvPendingLeft) without jumping to bloated detail page!
 sb.handleRadioReviewRelearn();
-const rvRelearnHtml = (els['radio-review-stage'] && els['radio-review-stage'].innerHTML) || '';
-if (!rvRelearnHtml.includes('语境精学') || !rvRelearnHtml.includes('原声语境') || !rvRelearnHtml.includes('0.85x') || rvRelearnHtml.includes('—')) {
-  throw new Error('Self-test 6 failed: selective relearn view missing audio context/0.85x or contains em dash');
+const rvPendingHtml = (els['radio-review-stage'] && els['radio-review-stage'].innerHTML) || '';
+if (!vm.runInNewContext('rvPendingLeft', sb) || rvPendingHtml.includes('语境精学') || !rvPendingHtml.includes('rv-card')) {
+  throw new Error('Self-test 6 failed: unrevealed left swipe must flip in place on vc-card without jumping to bloated detail page');
 }
-sb.finishRadioRelearnStep();
 // Fast-pass remaining triage items synchronously without animation delay check
 const origSetTimeout = sb.setTimeout;
 sb.setTimeout = (fn) => { fn(); return 1; };
+sb.finishRadioRelearnStep();
 for (let i = 1; i < rvItems.length; i++) {
   sb.handleRadioReviewPass();
 }
 const rvTailHtml = (els['radio-review-stage'] && els['radio-review-stage'].innerHTML) || '';
-if (!rvTailHtml.includes('收尾复查') || !rvTailHtml.includes('仅余 1 项')) {
-  throw new Error('Self-test 6 failed: expected tail blind re-check on ONLY the 1 re-learned item, got: ' + rvTailHtml.slice(0, 260));
+if (!rvTailHtml.includes('回炉') || !rvTailHtml.includes('余 1')) {
+  throw new Error('Self-test 6 failed: expected tail re-check on ONLY the 1 requeued item, got: ' + rvTailHtml.slice(0, 260));
 }
 sb.handleRadioReviewPass();
+if (!vm.runInNewContext('A.radioReview.done', sb)) {
+  throw new Error('Self-test 6 failed: clearing focus cards must immediately seal A.radioReview.done');
+}
+const spCount6 = (sb.getRadioSpeakingPrompts() || []).length;
+for (let k = 0; k < spCount6; k++) {
+  sb.handleRadioReviewPass();
+}
 const rvDoneHtml = (els['radio-review-stage'] && els['radio-review-stage'].innerHTML) || '';
-if (!rvDoneHtml.includes('本次重学 1 项')) {
-  throw new Error('Self-test 6 failed: expected completion summary for 1 re-learned item');
+if (!rvDoneHtml.includes('回炉 1 项') || !rvDoneHtml.includes('rv-triptych') || rvDoneHtml.includes('—')) {
+  throw new Error('Self-test 6 failed: expected completion summary with triptych and zero em dash, got: ' + rvDoneHtml.slice(0, 260));
 }
 sb.setTimeout = origSetTimeout;
 sb.closeRadioReview();
@@ -16185,16 +15876,19 @@ const pktRv = sb.buildCompactPacket();
 if (!Array.isArray(pktRv.rv) || pktRv.rv[0] !== 1 || Buffer.byteLength(JSON.stringify(pktRv), 'utf8') > 3750) {
   throw new Error('Self-test 8 failed: compact sync packet missing rv completion bit or oversized');
 }
-// Self-test 9: Real Voice Active Output ("听后开口 2 句") & Pronunciation Mirror ("读音照妖镜")
+// Self-test 9: Crisp Short-Phrase Speaking Cards inside Frameless Zen Tinder Deck & Pronunciation Mirror
 const spPrompts = sb.getRadioSpeakingPrompts();
 if (!Array.isArray(spPrompts) || spPrompts.length < 2) {
   throw new Error('Self-test 9 failed: expected >=2 speaking_prompts, got ' + (spPrompts && spPrompts.length));
 }
 for (const sp of spPrompts) {
-  if (!sp.prompt_ja || !sp.prompt_zh || !sp.model_ja || !Array.isArray(sp.target_stems) || !sp.target_stems.length) {
+  if (!sp.prompt_short || !sp.model_ja || !Array.isArray(sp.target_stems) || !sp.target_stems.length) {
     throw new Error('Self-test 9 failed: incomplete speaking prompt ' + JSON.stringify(sp));
   }
-  if ((sp.prompt_ja + sp.prompt_zh + sp.model_ja + sp.coaching_tip).includes('—')) {
+  if (String(sp.prompt_short).length > 14 || String(sp.model_ja).length > 26) {
+    throw new Error('Self-test 9 failed: speaking prompt too long (must stay crisp Zen short phrase): ' + JSON.stringify({short: sp.prompt_short, model: sp.model_ja}));
+  }
+  if ((sp.prompt_short + sp.prompt_ja + sp.prompt_zh + sp.model_ja + sp.coaching_tip).includes('—')) {
     throw new Error('Self-test 9 failed: em dash found in speaking prompt ' + sp.id);
   }
 }
@@ -16210,12 +15904,14 @@ const pDak = asr.analyzePronunciation(['柿'], '鍵', 'かぎ', '家の鍵');
 if (pDak.ok || pDak.kind !== 'voicing') throw new Error('Self-test 9 failed: 柿 vs 鍵 should detect voicing slip: ' + JSON.stringify(pDak));
 const pNear = asr.analyzePronunciation(['種類'], '書類', 'しょるい', '書類を出す');
 if (pNear.ok || pNear.kind !== 'near') throw new Error('Self-test 9 failed: 種類 vs 書類 should detect near-miss: ' + JSON.stringify(pNear));
-// Spoken grammar & habit trap checks
-const sOk = asr.analyzeSpokenOutput(['体調が悪いので今日は早めに帰らせてもらってもいいですか'], { title: '〜させてもらう', target_stems: ['させてもら', '帰らせ'] });
-if (!sOk.ok || sOk.traps.length !== 0) throw new Error('Self-test 9 failed: valid させてもらう should pass cleanly: ' + JSON.stringify(sOk));
-const sCaus = asr.analyzeSpokenOutput(['体調が悪いので今日は早めに帰っていただけませんか'], { title: '〜させてもらう', target_stems: ['させてもら', '帰らせ'] });
+// Spoken grammar, honest miss feedback & habit trap checks
+const sOk = asr.analyzeSpokenOutput(['早めに帰らせてもらえますか'], { title: '〜させてもらう', target_stems: ['させてもら', '帰らせ'] });
+if (!sOk.ok || sOk.traps.length !== 0) throw new Error('Self-test 9 failed: valid short させてもらう should pass cleanly: ' + JSON.stringify(sOk));
+const sMiss = asr.analyzeSpokenOutput(['東京が'], { title: '〜させてもらう', target_stems: ['させてもら', '帰らせ'] });
+if (sMiss.ok || String(sMiss.verdict).includes('听懂意思了')) throw new Error('Self-test 9 failed: partial miss must never falsely claim 听懂意思了: ' + JSON.stringify(sMiss));
+const sCaus = asr.analyzeSpokenOutput(['早めに帰っていただけませんか'], { title: '〜させてもらう', target_stems: ['させてもら', '帰らせ'] });
 if (sCaus.ok || !sCaus.traps.some(t => t.includes('使役'))) throw new Error('Self-test 9 failed: missing causative trap not caught: ' + JSON.stringify(sCaus));
-const sDevoice = asr.analyzeSpokenOutput(['もう少しで終電に乗り遅れるところたった'], { title: 'ところだった', target_stems: ['ところだった'] });
+const sDevoice = asr.analyzeSpokenOutput(['もう少しで乗り遅れるところたった'], { title: 'ところだった', target_stems: ['ところだった'] });
 if (sDevoice.ok || !sDevoice.traps.some(t => t.includes('だった'))) throw new Error('Self-test 9 failed: だった->たった devoicing trap not caught: ' + JSON.stringify(sDevoice));
 const sNoToki = asr.detectSpokenTraps('家を出るの時雨が降りました');
 if (!sNoToki.some(t => t.includes('時'))) throw new Error('Self-test 9 failed: V+の時 trap not caught');
@@ -16223,20 +15919,20 @@ const sWakeNa = asr.detectSpokenTraps('日本語が上手わけですね');
 if (!sWakeNa.some(t => t.includes('な'))) throw new Error('Self-test 9 failed: na-adj+わけ missing な not caught');
 const sHazu = asr.detectSpokenTraps('アイスコーヒーをお願いしたはずないんですが');
 if (!sHazu.some(t => t.includes('はずなんですが'))) throw new Error('Self-test 9 failed: はずないんですが trap not caught');
-// Graceful fallback render when browser lacks SpeechRecognition
+// Graceful fallback render when browser lacks SpeechRecognition (still inside unified frameless vc-card!)
 sb.window.SpeechRecognition = undefined;
 sb.window.webkitSpeechRecognition = undefined;
 sb.openRadioSpeaking(0);
 const spFallbackHtml = (els['radio-review-stage'] && els['radio-review-stage'].innerHTML) || '';
-if (!spFallbackHtml.includes('听后开口') || !spFallbackHtml.includes('不支持实时收音') || spFallbackHtml.includes('—')) {
-  throw new Error('Self-test 9 failed: speaking fallback UI broken or contains em dash');
+if (!spFallbackHtml.includes('vc-card') || !spFallbackHtml.includes('vc-aux-row') || !spFallbackHtml.includes('听示范') || spFallbackHtml.includes('—')) {
+  throw new Error('Self-test 9 failed: speaking fallback Zen card broken or contains em dash');
 }
-// Supported SpeechRecognition render in both 听后开口 2 句 & 记词 试读
+// Supported SpeechRecognition render inside unified frameless vc-card & 记词 试读
 sb.window.webkitSpeechRecognition = function() {};
 sb.openRadioSpeaking(0);
 const spMicHtml = (els['radio-review-stage'] && els['radio-review-stage'].innerHTML) || '';
-if (!spMicHtml.includes('按下开口说日语') || !spMicHtml.includes('听问题') || spMicHtml.includes('—')) {
-  throw new Error('Self-test 9 failed: speaking mic UI missing core controls or contains em dash');
+if (!spMicHtml.includes('vc-card') || !spMicHtml.includes('开口说一句') || !spMicHtml.includes('跳过') || spMicHtml.includes('—')) {
+  throw new Error('Self-test 9 failed: speaking mic Zen card missing core controls or contains em dash');
 }
 sb.closeRadioReview();
 sb.switchMode('vocab');

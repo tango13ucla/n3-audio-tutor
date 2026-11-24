@@ -2741,7 +2741,7 @@ async def main():
                 public_vocab_meta,
                 turn_timings=turn_timings,
                 audio_mp3_path=RADIO_MP3_PATH,
-                max_total=12,
+                max_total=8,
             )
             speaking_prompts = rrb.build_episode_speaking_prompts(
                 story_blocks,
@@ -2750,6 +2750,36 @@ async def main():
             )
         except Exception as exc:
             print(f"[warn] review_items extraction skipped: {exc}")
+
+        # Preserve same-date story woodblock artwork across sync/re-render passes
+        prev_art_url = ""
+        prev_story_arts: list[dict] = []
+        prev_chap_imgs: dict[int, str] = {}
+        if os.path.exists(RADIO_META_PATH):
+            try:
+                prev_meta = json.load(open(RADIO_META_PATH, encoding="utf-8"))
+                if prev_meta.get("date") == today_str:
+                    prev_art_url = str(prev_meta.get("artwork_url") or "")
+                    if isinstance(prev_meta.get("story_arts"), list):
+                        prev_story_arts = prev_meta["story_arts"]
+                    for ci, ch in enumerate(prev_meta.get("chapters") or []):
+                        if isinstance(ch, dict) and ch.get("img"):
+                            prev_chap_imgs[int(ch.get("idx", ci))] = str(ch["img"])
+            except Exception:
+                pass
+        if prev_chap_imgs:
+            for ch in chapters_meta:
+                img_v = prev_chap_imgs.get(int(ch["idx"]))
+                if img_v:
+                    ch["img"] = img_v
+            for it in review_items:
+                img_v = prev_chap_imgs.get(int(it.get("chapter_idx", -1)))
+                if img_v:
+                    it["img"] = img_v
+            for sp in speaking_prompts:
+                img_v = prev_chap_imgs.get(int(sp.get("chapter_idx", -1)))
+                if img_v:
+                    sp["img"] = img_v
 
         meta_obj = {
             "date": today_str,
@@ -2768,6 +2798,10 @@ async def main():
             "review_items": review_items,
             "speaking_prompts": speaking_prompts,
         }
+        if prev_art_url:
+            meta_obj["artwork_url"] = prev_art_url
+        if prev_story_arts:
+            meta_obj["story_arts"] = prev_story_arts
         with open(RADIO_META_PATH, "w", encoding="utf-8") as f:
             json.dump(meta_obj, f, ensure_ascii=False, indent=2)
         save_today_stories(today_str, [st["id"] for st in selected_stories])
