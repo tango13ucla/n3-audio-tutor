@@ -1,5 +1,10 @@
+<<<<<<< Updated upstream
 const CACHE_NAME = "n3-studio-tutor-v55";
-const BUILD_STAMP = "2026-11-23_247aec6e345c22_fc5439c1_66bd65_58bef286";
+const BUILD_STAMP = "2026-11-23_247aec6e345c22_fc5439c1_66bd65_7f041659";
+=======
+const CACHE_NAME = "n3-studio-tutor-v54";
+const BUILD_STAMP = "2026-11-23_247aec6e345c22_fc5439c1_66bd65_8288a027";
+>>>>>>> Stashed changes
 const CORE_SHELL = [
   "./",
   "./index.html",

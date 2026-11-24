@@ -1865,7 +1865,11 @@ html = r"""<!DOCTYPE html>
     .action-dock,
     .radio-dock,
     .vc-dock,
+<<<<<<< Updated upstream
     .rv-dock {
+=======
+    .ga-spec-wrap {
+>>>>>>> Stashed changes
       padding-bottom: clamp(16px, 4.4vh, 44px);
     }
     #tutor-view .stage-quiz .focal-space {
@@ -3711,13 +3715,13 @@ html = r"""<!DOCTYPE html>
   .vc-dots {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 5px;
   }
   .vc-dot {
     width: 6.5px;
     height: 6.5px;
     border-radius: 50%;
-    border: 1.3px solid rgba(28, 27, 24, 0.28);
+    border: 1.3px solid var(--hairline-strong);
     background: transparent;
   }
   .vc-dot.on {
@@ -3731,26 +3735,25 @@ html = r"""<!DOCTYPE html>
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 12px 0 14px;
+    padding: 8px 0 6px;
     position: relative;
   }
   .vc-card {
     position: relative;
     width: 100%;
     flex: 1;
-    max-height: 488px;
-    min-height: 264px;
-    background: var(--sheet);
-    border: 1px solid var(--hairline-strong);
-    border-radius: 12px;
-    padding: 24px 22px 22px;
+    min-height: 240px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 12px 4px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     text-align: center;
     touch-action: none;
-    cursor: grab;
+    cursor: pointer;
     will-change: transform, opacity;
   }
   .vc-card.dragging {
@@ -3761,12 +3764,12 @@ html = r"""<!DOCTYPE html>
     transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s ease;
   }
   .vc-card.fly-right {
-    transform: translate3d(122%, 10px, 0) rotate(9deg) !important;
+    transform: translate3d(122%, 10px, 0) rotate(8deg) !important;
     opacity: 0 !important;
     transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s ease !important;
   }
   .vc-card.fly-left {
-    transform: translate3d(-122%, 10px, 0) rotate(-9deg) !important;
+    transform: translate3d(-122%, 10px, 0) rotate(-8deg) !important;
     opacity: 0 !important;
     transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s ease !important;
   }
@@ -3778,7 +3781,7 @@ html = r"""<!DOCTYPE html>
 
   .vc-stamp {
     position: absolute;
-    top: 16px;
+    top: 8px;
     padding: 3px 10px;
     border-radius: 5px;
     font-size: 13px;
@@ -3786,78 +3789,92 @@ html = r"""<!DOCTYPE html>
     letter-spacing: 0.08em;
     opacity: 0;
     pointer-events: none;
+    background: var(--washi);
   }
   .vc-stamp.right {
-    left: 18px;
+    left: 4px;
     color: var(--moss);
     border: 1.5px solid var(--moss);
-    background: rgba(43, 95, 73, 0.06);
   }
   .vc-stamp.left {
-    right: 18px;
+    right: 4px;
     color: var(--bengara);
     border: 1.5px solid var(--bengara);
-    background: rgba(158, 62, 54, 0.06);
   }
   .vc-stamp.up {
     left: 50%;
     transform: translateX(-50%);
     color: var(--moss);
     border: 1.5px solid var(--moss);
-    background: rgba(43, 95, 73, 0.06);
   }
 
   .vc-cue {
-    font-size: 12.5px;
+    font-size: 12px;
     color: var(--ink-3);
-    letter-spacing: 0.06em;
-    margin-bottom: 16px;
-    min-height: 18px;
+    letter-spacing: 0.12em;
+    margin-bottom: 18px;
+    min-height: 17px;
+    transition: opacity 0.22s ease;
+  }
+  .vc-cue.quiet-hide {
+    opacity: 0;
+    pointer-events: none;
   }
   .vc-cue.ng {
     color: var(--bengara);
-    font-weight: 600;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    opacity: 1;
   }
   .vc-chunk {
     font-family: var(--serif-jp);
-    font-size: 30px;
+    font-size: 33px;
     font-weight: 500;
     color: var(--sumi);
-    line-height: 1.46;
-    letter-spacing: 0.02em;
+    line-height: 1.48;
+    letter-spacing: 0.04em;
     transition: filter 0.28s ease, opacity 0.28s ease;
   }
   .vc-chunk.ear-veil {
-    filter: blur(8px);
-    opacity: 0.34;
+    filter: blur(9px);
+    opacity: 0.24;
     user-select: none;
   }
   .vc-kana-front {
-    font-size: 21px;
-    font-weight: 600;
+    font-size: 20px;
+    font-weight: 500;
     color: var(--sumi);
-    line-height: 1.44;
-    margin-bottom: 10px;
-    transition: opacity 0.24s ease, font-size 0.24s ease;
+    line-height: 1.48;
+    letter-spacing: 0.02em;
+    margin-bottom: 14px;
+    max-height: 84px;
+    overflow: hidden;
+    transition: opacity 0.22s ease, max-height 0.26s ease, margin 0.26s ease;
   }
   .vc-kana-front.revealed {
-    opacity: 0.48;
-    font-size: 14px;
-    margin-bottom: 6px;
+    opacity: 0;
+    max-height: 0;
+    margin-bottom: 0;
+    pointer-events: none;
   }
   .vc-hl {
     font-weight: 600;
-    border-bottom: 2px solid rgba(43, 95, 73, 0.48);
-    padding-bottom: 2px;
+    border-bottom: 1.5px solid rgba(43, 95, 73, 0.36);
+    padding-bottom: 3px;
+  }
+  @media (prefers-color-scheme: dark) {
+    .vc-hl {
+      border-bottom-color: rgba(98, 173, 137, 0.40);
+    }
   }
   .vc-reveal {
-    margin-top: 20px;
-    min-height: 136px;
+    margin-top: 18px;
+    min-height: 142px;
     width: 100%;
-    max-width: 390px;
+    max-width: 344px;
     opacity: 0;
     transform: translateY(4px);
-    transition: opacity 0.22s ease, transform 0.22s ease;
+    transition: opacity 0.24s ease, transform 0.24s ease;
     pointer-events: none;
   }
   .vc-reveal.shown {
@@ -3866,108 +3883,181 @@ html = r"""<!DOCTYPE html>
     pointer-events: auto;
   }
   .vc-kana {
-    font-size: 19.5px;
+    font-size: 18.5px;
     font-weight: 500;
     color: var(--ink-2);
-    letter-spacing: 0.04em;
-    margin-bottom: 7px;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
   }
   .vc-zh {
-    font-size: 20.5px;
-    font-weight: 600;
-    color: var(--sumi);
-    line-height: 1.42;
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--ink-2);
+    line-height: 1.54;
+    letter-spacing: 0.02em;
   }
   .vc-zh.quiet {
-    font-size: 16.5px;
+    font-size: 15px;
     font-weight: 400;
-    color: var(--ink-2);
+    color: var(--ink-3);
   }
   .vc-hook {
-    margin-top: 12px;
-    padding-top: 11px;
-    border-top: 1px solid var(--hairline);
-    font-size: 14.5px;
-    color: var(--sumi);
-    line-height: 1.6;
-    letter-spacing: 0.01em;
-    cursor: pointer;
-    transition: opacity 0.16s ease;
+    position: relative;
+    margin: 22px auto 0;
+    padding-top: 18px;
+    max-width: 340px;
+    font-size: 13.8px;
+    color: var(--ink-2);
+    line-height: 1.72;
+    letter-spacing: 0.015em;
+    cursor: default;
   }
-  .vc-hook:active {
-    opacity: 0.62;
+  .vc-hook::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 28px;
+    height: 1px;
+    background: var(--hairline-strong);
+  }
+  .vc-hook.rv-hook {
+    margin: 10px 0 0;
+    padding-top: 10px;
+    max-width: none;
+    border-top: 1px solid var(--hairline);
+    text-align: left;
+  }
+  .vc-hook.rv-hook::before {
+    display: none;
   }
   .vc-hook-tag {
     display: inline-block;
-    margin-right: 6px;
-    font-size: 11.5px;
+    margin-right: 7px;
+    font-size: 11px;
     font-weight: 600;
     color: var(--ochre);
-    letter-spacing: 0.08em;
+    opacity: 0.88;
+    letter-spacing: 0.1em;
     vertical-align: 1px;
   }
   .vc-twin {
-    margin-top: 10px;
-    padding-top: 9px;
+    margin: 14px auto 0;
+    padding-top: 12px;
     border-top: 1px solid var(--hairline);
-    font-size: 14px;
+    max-width: 316px;
+    font-size: 13.5px;
     color: var(--ink-2);
-    line-height: 1.56;
+    line-height: 1.6;
   }
   .vc-twin.sub {
-    margin-top: 7px;
+    margin: 10px auto 0;
     padding-top: 0;
     border-top: none;
-    font-size: 12.8px;
+    max-width: 316px;
+    font-size: 12.4px;
     color: var(--ink-3);
-    line-height: 1.5;
+    opacity: 0.84;
+    line-height: 1.58;
   }
   @media (max-height: 700px) {
-    .vc-card { padding: 18px 18px 16px; }
-    .vc-cue { margin-bottom: 10px; }
-    .vc-chunk { font-size: 26px; }
-    .vc-reveal { margin-top: 14px; min-height: 118px; }
-    .vc-hook { margin-top: 9px; padding-top: 8px; font-size: 13.8px; line-height: 1.52; }
-    .vc-twin.sub { margin-top: 5px; font-size: 12.2px; }
+    .vc-card { padding: 8px 2px; }
+    .vc-cue { margin-bottom: 12px; }
+    .vc-chunk { font-size: 28px; }
+    .vc-reveal { margin-top: 14px; min-height: 116px; }
+    .vc-hook { margin-top: 16px; padding-top: 13px; font-size: 13.2px; line-height: 1.62; }
+    .vc-twin.sub { margin-top: 7px; font-size: 12px; }
+  }
+
+  /* Vocab Kanso Aux Row (簡素 · 上看下点: frameless thumb-zone secondary actions) */
+  .vc-aux-row {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+  .vc-aux-right {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+  .vc-aux-btn {
+    height: 46px;
+    min-height: 46px;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    color: var(--ink-3);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: manipulation;
+    transition: opacity 0.15s ease, color 0.18s ease;
+  }
+  .vc-aux-btn.seal {
+    padding: 0 22px 0 2px;
+  }
+  .vc-aux-btn.mic-btn {
+    padding: 0 14px;
+  }
+  .vc-aux-btn.replay {
+    padding: 0 2px 0 14px;
+    font-size: 14.5px;
+    color: var(--ink-2);
+  }
+  .vc-aux-btn:active {
+    opacity: 0.5;
+  }
+  @media (min-width: 860px) and (min-height: 521px) {
+    .vc-aux-btn:hover { color: var(--sumi); }
   }
 
   .vc-dock {
     flex-shrink: 0;
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding-top: 4px;
+    gap: 10px;
+    padding-top: 2px;
   }
   .vc-btn {
-    height: 48px;
+    height: 52px;
     border-radius: 8px;
-    font-size: 14.5px;
+    font-size: 15.5px;
     font-weight: 500;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.05em;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    touch-action: manipulation;
+    transition: opacity 0.15s ease, background 0.15s ease;
   }
   .vc-btn.ng {
-    flex: 1.15;
-    border: 1px solid rgba(158, 62, 54, 0.34);
+    flex: 1;
+    border: 1px solid var(--hairline-strong);
     color: var(--bengara);
-    font-weight: 600;
-    background: var(--sheet);
+    font-weight: 500;
+    background: transparent;
   }
   .vc-btn.mid {
-    flex: 0.78;
+    flex: 0.92;
     border: 1px solid var(--hairline-strong);
     color: var(--ink-2);
     background: transparent;
-    font-size: 13.5px;
+    font-size: 14.5px;
   }
   .vc-btn.ok {
-    flex: 1.15;
+    flex: 1.32;
     background: var(--sumi);
     color: var(--sheet);
     font-weight: 600;
   }
+  .vc-btn.ok:active { opacity: 0.86; }
+  .vc-btn.ng:active, .vc-btn.mid:active { background: var(--tap-bg); }
   .vc-btn.ga-solid {
     flex: 0.92;
     border: 1px solid rgba(43, 95, 73, 0.36);
@@ -3987,26 +4077,30 @@ html = r"""<!DOCTYPE html>
   .vc-subnav {
     flex-shrink: 0;
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
-    padding: 8px 0 7px;
+    padding: 2px 0 6px;
     border-bottom: 1px solid var(--hairline);
-    margin-bottom: 4px;
+    margin-bottom: 0;
   }
   .vc-subtabs {
     display: flex;
-    align-items: baseline;
-    gap: 22px;
+    align-items: center;
+    gap: 28px;
   }
   .vc-subtab {
-    font-size: 14.5px;
+    min-height: 40px;
+    font-size: 14px;
     font-weight: 500;
     color: var(--ink-3);
-    padding: 4px 0 5px;
-    letter-spacing: 0.04em;
+    padding: 8px 2px;
+    letter-spacing: 0.05em;
     position: relative;
     transition: color 0.18s ease;
     font-variant-numeric: tabular-nums;
+    display: inline-flex;
+    align-items: center;
+    touch-action: manipulation;
   }
   .vc-subtab.active {
     color: var(--sumi);
@@ -4017,7 +4111,7 @@ html = r"""<!DOCTYPE html>
     position: absolute;
     left: 0;
     right: 0;
-    bottom: -8px;
+    bottom: -7px;
     height: 1.5px;
     background: var(--sumi);
   }
@@ -9491,7 +9585,7 @@ function bindRadioReviewSwipe(cardEl) {
   let sx = 0, sy = 0, stMs = 0, tracking = false, axis = null;
   cardEl.addEventListener("touchstart", e => {
     if (rvAnimating || !e.touches || e.touches.length !== 1) return;
-    if (e.target && e.target.closest && e.target.closest("button, .w-tok, .vc-hook")) return;
+    if (e.target && e.target.closest && e.target.closest("button, .w-tok")) return;
     tracking = true;
     axis = null;
     sx = fpX(e.touches[0]);
@@ -9649,7 +9743,7 @@ function renderRadioReviewStage() {
           </div>
 
           <p class="rv-quote"><span class="rv-quote-spk">${escapeHtml(item.speaker || "主持")}</span>${annotateJapanese(item.context_line || "")}</p>
-          ${item.mnemonic ? `<div class="vc-hook" style="margin-top:4px;" title="轻点听记音联想" onclick="event.stopPropagation();playReviewHookAudio(getReviewItemById('${item.id}'))"><span class="vc-hook-tag">记音 ♪</span>${escapeHtml(item.mnemonic)}</div>` : ""}
+          ${item.mnemonic ? `<div class="vc-hook rv-hook" style="margin-top:4px;"><span class="vc-hook-tag">记音</span>${escapeHtml(item.mnemonic)}</div>` : ""}
           ${item.nuance ? `<p class="rv-note-line">${escapeHtml(item.nuance)}</p>` : ""}
           ${item.twin ? `<p class="rv-twin-line">${escapeHtml(item.twin)}</p>` : ""}
           ${item.ja_example && item.ja_example !== item.title ? `<div class="rv-ja-ex">${annotateJapanese(item.ja_example)}</div>` : ""}
@@ -9687,7 +9781,7 @@ function renderRadioReviewStage() {
         ${spPrompts.length ? `<button type="button" class="rv-spk-pill" onclick="openRadioSpeaking(0)">开口 ${spPrompts.length} 句 ›</button>` : ""}
       </div>
     </div>
-    <div class="rv-stage-card" id="rv-stage-card" onclick="if(!event.target.closest('button,.w-tok,.vc-hook'))revealRadioReviewCard()">
+    <div class="rv-stage-card" id="rv-stage-card" onclick="if(!event.target.closest('button,.w-tok'))revealRadioReviewCard()">
       <div class="tutor-stamp right" id="rv-st-right">懂了 · 过 →</div>
       <div class="tutor-stamp left" id="rv-st-left">← 重学这个</div>
 
@@ -9709,7 +9803,7 @@ function renderRadioReviewStage() {
         <div class="rv-reveal-area${rvRevealed ? " shown" : ""}" id="rv-reveal-area">
           ${kanaHTML ? `<div class="rv-kana-line">${kanaHTML}</div>` : ""}
           <div class="rv-zh-line">${escapeHtml(item.zh || "")}</div>
-          ${item.mnemonic ? `<div class="vc-hook" style="margin-bottom:8px;" title="轻点听记音联想" onclick="event.stopPropagation();playReviewHookAudio(getReviewItemById('${item.id}'))"><span class="vc-hook-tag">记音 ♪</span>${escapeHtml(item.mnemonic)}</div>` : ""}
+          ${item.mnemonic ? `<div class="vc-hook rv-hook" style="margin-bottom:8px;"><span class="vc-hook-tag">记音</span>${escapeHtml(item.mnemonic)}</div>` : ""}
           <p class="rv-quote"><span class="rv-quote-spk">${escapeHtml(item.speaker || "主持")}</span>${annotateJapanese(item.context_line || "")}</p>
         </div>
       </div>
@@ -11440,11 +11534,11 @@ function updateVocabSubNav() {
   if (bV) bV.classList.toggle("active", vocabSubMode === "vocab");
   if (bG) bG.classList.toggle("active", vocabSubMode === "ga");
   const cV = document.getElementById("vsub-vocab-cnt");
-  if (cV) cV.textContent = m.flashDone ? "✓" : `${m.flashSeen}/${m.flashTarget}`;
+  if (cV) cV.textContent = m.flashDone ? "✓" : "";
   const cG = document.getElementById("vsub-ga-cnt");
   if (cG) cG.textContent = ga.remaining === 0 ? "✓" : (ga.gaDone ? "✓" : `${ga.gaSeen}/${ga.gaTarget}`);
   const metaEl = document.getElementById("vc-submeta");
-  if (metaEl) metaEl.textContent = `全表 ${ga.audited}/${ga.total}`;
+  if (metaEl) metaEl.textContent = "";
 }
 
 function switchVocabSubMode(sub) {
@@ -11537,7 +11631,7 @@ function isKanaRecallGradCard(card) {
 }
 
 function shouldFadeVocabMnemonic(card) {
-  // Wang & Thomas (1995) / Crutcher (1990): fade spoken keyword crutch on 1/3 & 2/3 smooth passes (keep tappable!)
+  // Wang & Thomas (1995) / Crutcher (1990): fade spoken keyword crutch on 1/3 & 2/3 smooth passes
   if (!card || vcPendingLeft) return false;
   const sess = A.vocabSess;
   if (sess && Array.isArray(sess.failedWords) && sess.failedWords.includes(card.word)) return false;
@@ -11631,7 +11725,6 @@ function revealVocabCard(playAudioNow, forceFullBilingual) {
   const sess = A.vocabSess;
   if (!sess || !sess.queue.length) return;
   const card = getVocabCardSpec(sess.queue[0]);
-  const earFirst = isEarFirstGradCard(card);
   const kanaRecall = isKanaRecallGradCard(card);
   const fadeMn = !forceFullBilingual && shouldFadeVocabMnemonic(card);
   stopVocabAudioAndTimers();
@@ -11646,28 +11739,17 @@ function revealVocabCard(playAudioNow, forceFullBilingual) {
   const cueEl = document.getElementById("vc-cue-line");
   if (cueEl) {
     if (vcPendingLeft) {
-      cueEl.textContent = card.mode === "kanji_read"
-        ? "已标待练读音 · 顺口念一遍再滑"
-        : "已记入没记住 · 顺口念一遍再滑";
+      cueEl.textContent = "顺口念一遍再滑";
       cueEl.className = "vc-cue ng";
-    } else if (earFirst) {
-      cueEl.textContent = "耳听秒认右滑毕业 · 迟疑就左滑";
-      cueEl.className = "vc-cue";
-    } else if (kanaRecall) {
-      cueEl.textContent = "想出读音右滑毕业 · 卡壳就左滑";
-      cueEl.className = "vc-cue";
     } else {
-      cueEl.textContent = card.mode === "kanji_read"
-        ? "读音全准右滑 · 差一拍就左滑"
-        : "右滑记住 · 左滑没记住 · 上滑太熟";
-      cueEl.className = "vc-cue";
+      cueEl.className = "vc-cue quiet-hide";
     }
   }
 
   if (!playAudioNow) return;
   const myToken = ++vcToken;
   const needFull = !!forceFullBilingual || card.mode === "kanji_read" || kanaRecall;
-  // Wang & Thomas (1995): On 1/3 & 2/3 smooth passes, fade spoken mnemonic -> pure native Japanese word+phrase (tap '记音 ♪' anytime!)
+  // Wang & Thomas (1995): On 1/3 & 2/3 smooth passes, play crisp native Japanese word+phrase; on 0/3 play mnemonic early
   const targetUrl = (fadeMn && card.clean_audio)
     ? card.clean_audio
     : (needFull ? (card.full_audio || card.rev_audio) : card.rev_audio);
@@ -11688,11 +11770,25 @@ function replayVocabAudio(ev) {
   if (ev) ev.stopPropagation();
   const sess = A.vocabSess;
   if (!sess || !sess.queue.length) return;
+  const card = getVocabCardSpec(sess.queue[0]);
+  const earFirst = isEarFirstGradCard(card);
+  const kanaRecall = isKanaRecallGradCard(card);
   if (!vcRevealed) {
+    // Before reveal: replay ONLY the front audio on listening/kana fronts (don't spoil the answer!)
+    if (earFirst || (card.mode !== "kanji_read" && !kanaRecall)) {
+      stopVocabAudioAndTimers();
+      const myToken = ++vcToken;
+      const frontUrl = earFirst ? (card.word_audio || card.front_audio || card.full_audio) : (card.front_audio || card.word_audio);
+      if (frontUrl) {
+        playUrlOnWordPlayer(frontUrl, myToken, null, () => speakUtteranceLang(card.kana || card.word, "ja-JP", 0.98, null));
+      } else {
+        speakUtteranceLang(card.kana || card.word, "ja-JP", 0.98, null);
+      }
+      return;
+    }
     revealVocabCard(true, true);
     return;
   }
-  const card = getVocabCardSpec(sess.queue[0]);
   stopVocabAudioAndTimers();
   const myToken = ++vcToken;
   const fullUrl = card.full_audio || (card.mode === "kanji_read" ? card.rev_audio : "");
@@ -11710,34 +11806,7 @@ function replayVocabAudio(ev) {
 
 function playVocabHookAudio(ev) {
   if (ev) ev.stopPropagation();
-  const sess = A.vocabSess;
-  if (!sess || !sess.queue.length) return;
-  if (!vcRevealed) {
-    revealVocabCard(true, true);
-    return;
-  }
-  const card = getVocabCardSpec(sess.queue[0]);
-  stopVocabAudioAndTimers();
-  const myToken = ++vcToken;
-  const hookFallback = () => {
-    const hTxt = String(card.hook_spoken || card.reveal_spoken || "").trim();
-    const speakHook = () => {
-      if (vcToken !== myToken || !hTxt) return;
-      speakUtteranceLang(hTxt, "zh-CN", 1.04, null);
-    };
-    if (card.word_audio) {
-      playUrlOnWordPlayer(card.word_audio, myToken, () => {
-        if (vcToken === myToken) vcTimer = setTimeout(speakHook, 120);
-      }, () => speakUtteranceLang(card.kana || card.word, "ja-JP", 0.98, speakHook));
-    } else {
-      speakUtteranceLang(card.kana || card.word, "ja-JP", 0.98, speakHook);
-    }
-  };
-  if (card.hook_audio) {
-    playUrlOnWordPlayer(card.hook_audio, myToken, null, hookFallback);
-  } else {
-    hookFallback();
-  }
+  replayVocabAudio(ev);
 }
 
 function onVocabCardTapOrReplay() {
@@ -11746,9 +11815,8 @@ function onVocabCardTapOrReplay() {
   if (!sess || !sess.queue.length) return;
   if (!vcRevealed) {
     revealVocabCard(true, cardNeedsFullOnTap(sess.queue[0]));
-  } else {
-    replayVocabAudio();
   }
+  // Once revealed, audio has already spoken — do NOT redundantly restart speech on card/mnemonic tap!
 }
 
 function cardNeedsFullOnTap(surface) {
@@ -11846,11 +11914,13 @@ function triggerVocabAction(dir) {
       vcPendingLeft = true;
       const dotsWrap = document.getElementById("vc-meta-dots");
       if (dotsWrap) dotsWrap.innerHTML = renderStreakDotsHTML(0);
+      const auxEl = document.getElementById("vc-aux-row");
+      if (auxEl) auxEl.style.visibility = "hidden";
       const dockEl = document.getElementById("vc-dock-row");
       if (dockEl) {
         dockEl.innerHTML = `
           <button class="vc-btn mid" onclick="replayVocabAudio(event)">再听一遍</button>
-          <button class="vc-btn ok" onclick="acknowledgePendingLeft('left')">听清了 · 稍后再考 →</button>
+          <button class="vc-btn ok" onclick="acknowledgePendingLeft('left')">听清了，稍后再考</button>
         `;
       }
       revealVocabCard(true, true);
@@ -11923,30 +11993,36 @@ function triggerVocabAction(dir) {
 
 function bindVocabCardGestures(cardEl) {
   if (!cardEl) return;
-  let dragging = false;
+  let tracking = false;
+  let hasDragged = false;
   let activePid = null;
   let sx = 0, sy = 0, st = 0;
-  let tappedHook = false;
+  const DRAG_DEADZONE = 12;
 
   cardEl.addEventListener("pointerdown", e => {
     if (vcAnimating) return;
     if (typeof e.button === "number" && e.button !== 0) return;
-    dragging = true;
+    if (e.target && e.target.closest && e.target.closest("button")) return;
+    tracking = true;
+    hasDragged = false;
     activePid = e.pointerId;
     sx = fpX(e);
     sy = fpY(e);
     st = performance.now();
-    tappedHook = !!(e.target && e.target.closest && e.target.closest(".vc-hook"));
     cardEl.classList.remove("settling");
-    cardEl.classList.add("dragging");
     try { cardEl.setPointerCapture(e.pointerId); } catch (err) {}
   });
 
   cardEl.addEventListener("pointermove", e => {
-    if (!dragging || e.pointerId !== activePid) return;
+    if (!tracking || e.pointerId !== activePid) return;
     const dx = fpX(e) - sx;
     const dy = fpY(e) - sy;
-    cardEl.style.transform = `translate3d(${dx.toFixed(1)}px, ${(dy * 0.42).toFixed(1)}px, 0) rotate(${(dx * 0.038).toFixed(2)}deg)`;
+    if (!hasDragged) {
+      if (Math.hypot(dx, dy) < DRAG_DEADZONE) return;
+      hasDragged = true;
+      cardEl.classList.add("dragging");
+    }
+    cardEl.style.transform = `translate3d(${dx.toFixed(1)}px, ${(dy * 0.42).toFixed(1)}px, 0) rotate(${(dx * 0.036).toFixed(2)}deg)`;
 
     const stR = document.getElementById("vc-st-right");
     const stL = document.getElementById("vc-st-left");
@@ -11955,12 +12031,12 @@ function bindVocabCardGestures(cardEl) {
       if (stU) stU.style.opacity = String(Math.min(1, (-dy - 22) / 48));
       if (stR) stR.style.opacity = "0";
       if (stL) stL.style.opacity = "0";
-    } else if (dx > 16) {
-      if (stR) stR.style.opacity = String(Math.min(1, (dx - 14) / 50));
+    } else if (dx > 18) {
+      if (stR) stR.style.opacity = String(Math.min(1, (dx - 16) / 50));
       if (stL) stL.style.opacity = "0";
       if (stU) stU.style.opacity = "0";
-    } else if (dx < -16) {
-      if (stL) stL.style.opacity = String(Math.min(1, (-dx - 14) / 50));
+    } else if (dx < -18) {
+      if (stL) stL.style.opacity = String(Math.min(1, (-dx - 16) / 50));
       if (stR) stR.style.opacity = "0";
       if (stU) stU.style.opacity = "0";
     } else {
@@ -11971,12 +12047,13 @@ function bindVocabCardGestures(cardEl) {
   });
 
   function finishGesture(e, isCancel) {
-    if (!dragging || e.pointerId !== activePid) return;
-    dragging = false;
+    if (!tracking || e.pointerId !== activePid) return;
+    tracking = false;
     activePid = null;
     try { cardEl.releasePointerCapture(e.pointerId); } catch (err) {}
     if (isCancel) {
-      resetVocabCardTransform();
+      if (hasDragged) resetVocabCardTransform();
+      hasDragged = false;
       return;
     }
     const dx = fpX(e) - sx;
@@ -11985,15 +12062,13 @@ function bindVocabCardGestures(cardEl) {
     const vx = dx / dt;
     const vy = dy / dt;
 
-    if (Math.hypot(dx, dy) < 10 && dt < 460) {
-      resetVocabCardTransform();
-      if (vcRevealed && tappedHook) {
-        playVocabHookAudio();
-      } else {
-        onVocabCardTapOrReplay();
-      }
+    if (!hasDragged || (Math.hypot(dx, dy) < 20 && dt < 650)) {
+      if (hasDragged) resetVocabCardTransform();
+      hasDragged = false;
+      onVocabCardTapOrReplay();
       return;
     }
+    hasDragged = false;
 
     if (vcPendingLeft) {
       if (Math.abs(dx) >= 48 || (Math.abs(dx) >= 28 && Math.abs(vx) > 0.4)) {
@@ -12070,10 +12145,10 @@ function renderVocabStage() {
   const isRefresh = Array.isArray(sess.refreshWords) && sess.refreshWords.includes(word);
   const posNum = Math.min(Math.max(1, sess.total), (sess.cleared || 0) + 1);
   const leftLabel = isRequeued
-    ? `回炉巩固 · 顺口念一遍 · 余 ${sess.queue.length} 词`
+    ? `回炉 · 余 ${sess.queue.length}`
     : (isRefresh
-      ? `老词保鲜抽查 · ${posNum} / ${sess.total}`
-      : `今晚 ${posNum} / ${sess.total} 词${card.source ? " · " + card.source : ""}`);
+      ? `保鲜 · ${posNum} / ${sess.total}`
+      : `${posNum} / ${sess.total}${card.source ? " · " + card.source : ""}`);
   const isKanjiCard = card.mode === "kanji_read";
   const earFirst = isEarFirstGradCard(card);
   const kanaRecall = isKanaRecallGradCard(card);
@@ -12083,14 +12158,14 @@ function renderVocabStage() {
     : "";
   const quietZh = isKanjiCard && !card.zh_opaque;
   const initCue = earFirst
-    ? "终审盲听 · 凭耳认词，轻点看汉字"
+    ? "盲听认词"
     : (kanaRecall
-      ? "终审反考 · 看中文想日文读音，轻点核对"
-      : (isKanjiCard ? "默念读音 · 有一拍不准就左滑" : "听日文 · 想中文意思"));
+      ? "看意想音"
+      : (isKanjiCard ? "默念读音" : "听音想意"));
   const rightStampTxt = earFirst ? "听懂毕业" : (kanaRecall ? "想起毕业" : (isKanjiCard ? "读准了" : "记住"));
   const leftStampTxt = isKanjiCard ? "读音待练" : "没记住";
-  const leftBtnTxt = isKanjiCard ? "← 读音不准" : "← 没记住";
-  const rightBtnTxt = earFirst ? "听懂毕业 →" : (kanaRecall ? "想起毕业 →" : (isKanjiCard ? "读准了 →" : "记住 →"));
+  const leftBtnTxt = isKanjiCard ? "读音不准" : "没记住";
+  const rightBtnTxt = earFirst ? "听懂毕业" : (kanaRecall ? "想起毕业" : (isKanjiCard ? "读准了" : "记住"));
   const kanaFrontTxt = kanaRecall ? (cleanSpeakZh(card.zh) || card.zh) : "";
   const showVocabMic = JA_ASR.supported();
 
@@ -12099,8 +12174,6 @@ function renderVocabStage() {
       <span class="overline${isRequeued ? " warm" : ""}">${escapeHtml(leftLabel)}</span>
       <div class="vc-meta-right">
         <span id="vc-meta-dots" style="display:inline-flex;align-items:center;gap:6px;">${renderStreakDotsHTML(eff.streak)}</span>
-        ${showVocabMic ? `<button type="button" class="text-btn mic-btn" id="vc-mic-btn" onclick="toggleVocabMicCheck(event)">试读</button>` : ""}
-        <button class="text-btn" onclick="replayVocabAudio(event)">重听</button>
       </div>
     </div>
 
@@ -12110,23 +12183,30 @@ function renderVocabStage() {
         <div class="vc-stamp left" id="vc-st-left">${leftStampTxt}</div>
         <div class="vc-stamp up" id="vc-st-up">太熟封存</div>
 
-        <div class="vc-cue" id="vc-cue-line">${initCue}</div>
+        <div class="vc-cue${vcRevealed && !vcPendingLeft ? " quiet-hide" : ""}" id="vc-cue-line">${initCue}</div>
         ${kanaRecall ? `<div class="vc-kana-front${vcRevealed ? " revealed" : ""}" id="vc-kana-front">${escapeHtml(kanaFrontTxt)}</div>` : ""}
         <div class="vc-chunk${(earFirst || kanaRecall) && !vcRevealed ? " ear-veil" : ""}" id="vc-chunk-box">${renderChunkHighlightHTML(card.chunk_ja, card.target)}</div>
 
         <div class="vc-reveal${vcRevealed ? " shown" : ""}" id="vc-reveal-box">
           ${kanaHtml ? `<div class="vc-kana">${kanaHtml}</div>` : ""}
           <div class="vc-zh${quietZh ? " quiet" : ""}">${escapeHtml(card.zh)}</div>
-          ${card.mnemonic ? `<div class="vc-hook" title="轻点重听记音联想"><span class="vc-hook-tag">记音 ♪</span>${escapeHtml(card.mnemonic)}</div>` : ""}
+          ${card.mnemonic ? `<div class="vc-hook"><span class="vc-hook-tag">记音</span>${escapeHtml(card.mnemonic)}</div>` : ""}
           ${card.twin ? `<div class="vc-twin${card.mnemonic ? " sub" : ""}">${escapeHtml(card.twin)}</div>` : ""}
         </div>
         <div class="mic-feedback" id="vc-mic-feedback"></div>
       </div>
     </div>
 
+    <div class="vc-aux-row" id="vc-aux-row">
+      <button type="button" class="vc-aux-btn seal" id="vc-seal-btn" onclick="triggerVocabAction('up')">太熟</button>
+      <div class="vc-aux-right">
+        ${showVocabMic ? `<button type="button" class="vc-aux-btn mic-btn" id="vc-mic-btn" onclick="toggleVocabMicCheck(event)">试读</button>` : ""}
+        <button type="button" class="vc-aux-btn replay" id="vc-replay-btn" onclick="replayVocabAudio(event)">重听</button>
+      </div>
+    </div>
+
     <div class="vc-dock" id="vc-dock-row">
       <button class="vc-btn ng" onclick="triggerVocabAction('left')">${leftBtnTxt}</button>
-      <button class="vc-btn mid" onclick="triggerVocabAction('up')">↑ 太熟</button>
       <button class="vc-btn ok" onclick="triggerVocabAction('right')">${rightBtnTxt}</button>
     </div>
   `;
@@ -15545,8 +15625,8 @@ for (const k of vcKeys) {
 }
 sb.switchMode('vocab');
 const vcStageHtml = (els['vocab-stage-box'] && els['vocab-stage-box'].innerHTML) || '';
-if (!vcStageHtml.includes('vc-hook') || !vcStageHtml.includes('记音 ♪')) {
-  throw new Error('Self-test failed: vocab card did not render tappable .vc-hook pronunciation mnemonic!');
+if (!vcStageHtml.includes('vc-hook') || !vcStageHtml.includes('>记音<') || vcStageHtml.includes('记音 ♪')) {
+  throw new Error('Self-test failed: vocab card must render calm .vc-hook 记音 without redundant ♪ tap icon!');
 }
 // Self-test 5: Zen Body Human & Basketball-Aware Dynamic Coach + 47-Session Power Zone Engine
 const pNorm = sb.ZB._planToday();
@@ -16039,6 +16119,35 @@ if (rpEl.paused) throw new Error('Self-test 11 failed: radioPlayer paused on swi
 sb.switchMode('radio', false);
 if (!miniBarEl.classList.contains('hidden')) {
   throw new Error('Self-test 11 failed: radio-mini-bar should be hidden on radio tab!');
+}
+
+// Self-test 12: Zen Vocab Frameless Kanso Ergonomics & Zero Redundant Mnemonic Re-Speak
+sb.switchMode('vocab');
+sb.switchVocabSubMode('vocab');
+const zenVcHtml = (els['vocab-stage-box'] && els['vocab-stage-box'].innerHTML) || '';
+if (!zenVcHtml.includes('vc-aux-row') || !zenVcHtml.includes('id="vc-replay-btn"') || !zenVcHtml.includes('id="vc-seal-btn"')) {
+  throw new Error('Self-test 12 failed: vocab card missing Kanso thumb-zone vc-aux-row (太熟 / 重听)!');
+}
+if (zenVcHtml.includes('记音 ♪') || zenVcHtml.includes('↑ 太熟') || zenVcHtml.includes('—')) {
+  throw new Error('Self-test 12 failed: vocab card contains cluttered ♪ / ↑ 太熟 / em dash!');
+}
+const metaChunk = zenVcHtml.split('vc-deck-area')[0] || '';
+if (metaChunk.includes('<button')) {
+  throw new Error('Self-test 12 failed: top meta-bar on vocab screen must remain read-only (上看下点)!');
+}
+// Reveal card once -> tapping card afterwards must NOT re-trigger speech (vcToken stays stable)
+sb.revealVocabCard(true, false);
+const tokAfterReveal = vm.runInNewContext('vcToken', sb);
+sb.onVocabCardTapOrReplay();
+const tokAfterTap = vm.runInNewContext('vcToken', sb);
+if (tokAfterTap !== tokAfterReveal) {
+  throw new Error('Self-test 12 failed: tapping revealed vocab card/mnemonic redundantly restarted speech!');
+}
+// Explicit thumb-zone 重听 button MUST still replay audio cleanly
+sb.replayVocabAudio();
+const tokAfterReplay = vm.runInNewContext('vcToken', sb);
+if (tokAfterReplay <= tokAfterReveal) {
+  throw new Error('Self-test 12 failed: explicit thumb-zone 重听 did not advance vcToken to replay!');
 }
 """
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
