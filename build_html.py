@@ -5008,7 +5008,8 @@ if ("serviceWorker" in navigator) {
     if (swRefreshing) return;
     swRefreshing = true;
     const radioIdle = (typeof radioPlayer === "undefined") || radioPlayer.paused;
-    if (!activeKind && radioIdle) {
+    const radioSessionLive = (typeof radioHasPlayedOnce !== "undefined") && radioHasPlayedOnce;
+    if (document.visibilityState === "visible" && !activeKind && radioIdle && !radioSessionLive) {
       if (typeof reloadFreshEdition === "function") reloadFreshEdition();
       else location.reload();
     } else if (typeof pendingEditionReload !== "undefined") {
@@ -6597,6 +6598,9 @@ const wordPlayer = new Audio();
 wordPlayer.preload = "auto";
 const radioPlayer = new Audio();
 radioPlayer.preload = "metadata";
+radioPlayer.setAttribute("playsinline", "");
+radioPlayer.style.display = "none";
+try { if (document.body) document.body.appendChild(radioPlayer); } catch (e) {}
 
 const PARTICLE_FALLBACK = {
   "では": { kana: "では", pos: "复合助词", zh: "在……里面（范围或场所主题）" },
@@ -7022,6 +7026,11 @@ function syncAudioButtons() {
 
 // ================= TWO-COACH PODCAST ENGINE =================
 let radioInitialized = false;
+let radioHasPlayedOnce = false;
+let lastRadioPauseMs = 0;
+let lastMediaPosSyncMs = 0;
+let lastMediaTitle = "";
+let mediaSessionHandlersBound = false;
 let lastSavedSec = -1;
 let lastRenderedSegIdx = -1;
 let pendingRadioSeekSec = null;
@@ -7065,7 +7074,9 @@ function setRadioBufferingUI(on) {
 }
 
 function upgradeRadioToLocalBlobIfPaused() {
-  if (!cachedRadioBlobUrl || radioUsingLocalBlob || !radioInitialized) return false;
+  // Never replace src or call load() once playback has started in this session:
+  // destroying WebMediaPlayer tears down Chrome Android's MediaSession and breaks Pixel Buds resume.
+  if (radioHasPlayedOnce || !cachedRadioBlobUrl || radioUsingLocalBlob || !radioInitialized) return false;
   if (!radioPlayer.paused) return false;
   const keepT = (pendingRadioSeekSec !== null) ? pendingRadioSeekSec : (radioPlayer.currentTime || lastSavedSec || 0);
   radioUsingLocalBlob = true;
@@ -7251,29 +7262,99 @@ function ensureRadioReady() {
   if ("preservesPitch" in radioPlayer) radioPlayer.preservesPitch = true;
 }
 
-function setupMediaSession(segTitle) {
+function getCurrentRadioSegTitle() {
+  const segs = (DATA.radio && DATA.radio.segments) || [];
+  if (lastRenderedSegIdx >= 0 && segs[lastRenderedSegIdx] && segs[lastRenderedSegIdx].title) {
+    return segs[lastRenderedSegIdx].title;
+  }
+  const t = (pendingRadioSeekSec !== null) ? pendingRadioSeekSec : (radioPlayer.currentTime || 0);
+  for (let i = 0; i < segs.length; i++) {
+    if (t >= segs[i].start && t < segs[i].end && segs[i].title) return segs[i].title;
+  }
+  return (segs[0] && segs[0].title) || "锵锵三人 · 日本文化随身听";
+}
+
+function setMediaSessionPlaybackState(state) {
   if (!("mediaSession" in navigator)) return;
   try {
-    navigator.mediaSession.metadata = new MediaMetadata({
-      title: segTitle || "锵锵三人 · 日本文化随身听",
-      artist: DATA.radio.hosts || "文涛 · 文道 · 子东",
-      album: "JLPT N3"
+    navigator.mediaSession.playbackState = state;
+  } catch (e) {}
+}
+
+function updateMediaSessionPosition(force) {
+  if (!("mediaSession" in navigator) || typeof navigator.mediaSession.setPositionState !== "function") return;
+  const now = Date.now();
+  if (!force && (now - lastMediaPosSyncMs) < 4000) return;
+  try {
+    const dur = (radioPlayer.duration && isFinite(radioPlayer.duration) && radioPlayer.duration > 0)
+      ? radioPlayer.duration
+      : (DATA.radio && DATA.radio.duration_sec > 0 ? DATA.radio.duration_sec : 0);
+    if (!dur || !isFinite(dur) || dur <= 0) return;
+    const rawPos = (pendingRadioSeekSec !== null) ? pendingRadioSeekSec : (radioPlayer.currentTime || 0);
+    const pos = Math.max(0, Math.min(dur, isFinite(rawPos) ? rawPos : 0));
+    const rate = (radioPlayer.playbackRate && isFinite(radioPlayer.playbackRate) && radioPlayer.playbackRate > 0)
+      ? radioPlayer.playbackRate
+      : (radioSpeed > 0 ? radioSpeed : 1);
+    navigator.mediaSession.setPositionState({
+      duration: dur,
+      playbackRate: rate,
+      position: pos
     });
-    navigator.mediaSession.setActionHandler("play", () => toggleRadioPlay(true));
-    navigator.mediaSession.setActionHandler("pause", () => toggleRadioPlay(false));
-    navigator.mediaSession.setActionHandler("seekbackward", () => seekRadioBy(-15));
-    navigator.mediaSession.setActionHandler("seekforward", () => seekRadioBy(15));
-    navigator.mediaSession.setActionHandler("previoustrack", () => seekRadioBy(-15));
-    navigator.mediaSession.setActionHandler("nexttrack", () => seekRadioBy(15));
+    lastMediaPosSyncMs = now;
+  } catch (e) {}
+}
+
+function setupMediaSession(segTitle) {
+  if (!("mediaSession" in navigator)) return;
+  const title = segTitle || getCurrentRadioSegTitle();
+  try {
+    if (!navigator.mediaSession.metadata || lastMediaTitle !== title) {
+      let artwork = [];
+      try {
+        artwork = [
+          { src: new URL("./icon-192.png", location.href).href, sizes: "192x192", type: "image/png" },
+          { src: new URL("./icon-512.png", location.href).href, sizes: "512x512", type: "image/png" }
+        ];
+      } catch (e) {}
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: title,
+        artist: (DATA.radio && DATA.radio.hosts) || "文涛 · 文道 · 子东",
+        album: "JLPT N3",
+        artwork: artwork
+      });
+      lastMediaTitle = title;
+    }
+    if (!mediaSessionHandlersBound) {
+      const bind = (act, fn) => { try { navigator.mediaSession.setActionHandler(act, fn); } catch (e) {} };
+      bind("play", () => toggleRadioPlay(true));
+      bind("pause", () => toggleRadioPlay(false));
+      bind("seekbackward", details => seekRadioBy(-(details && details.seekOffset > 0 ? details.seekOffset : 15)));
+      bind("seekforward", details => seekRadioBy(details && details.seekOffset > 0 ? details.seekOffset : 15));
+      bind("previoustrack", () => seekRadioBy(-15));
+      bind("nexttrack", () => seekRadioBy(15));
+      bind("seekto", details => {
+        if (!details || typeof details.seekTime !== "number" || !isFinite(details.seekTime)) return;
+        ensureRadioReady();
+        applyRadioSeek(details.seekTime);
+        markRadioPosByUser(details.seekTime);
+        updateMediaSessionPosition(true);
+      });
+      mediaSessionHandlersBound = true;
+    }
   } catch (e) {}
 }
 
 function toggleRadioPlay(forcePlay) {
   const wantPlay = typeof forcePlay === "boolean" ? forcePlay : radioPlayer.paused;
   if (!wantPlay) {
-    // 0ms instant mute + pause so Android Chrome / Bluetooth audio stops immediately with zero pipeline tail
-    radioPlayer.muted = true;
+    // NEVER set radioPlayer.muted = true on pause: muting marks the <audio> element inaudible in
+    // Chromium's MediaSessionImpl, immediately tearing down Android MediaSession & breaking Pixel Buds resume!
+    radioPlayer.muted = false;
     radioPlayer.pause();
+    lastRadioPauseMs = Date.now();
+    setupMediaSession();
+    setMediaSessionPlaybackState("paused");
+    updateMediaSessionPosition(true);
     setRadioBufferingUI(false);
     syncRadioUI(false);
     return;
@@ -7283,8 +7364,11 @@ function toggleRadioPlay(forcePlay) {
   }
   ensureRadioReady();
   radioPlayer.muted = false;
+  radioPlayer.volume = 1;
   flushPendingRadioSeek();
   radioPlayer.playbackRate = radioSpeed;
+  setupMediaSession();
+  setMediaSessionPlaybackState("playing");
   syncRadioUI(true);
   if (radioBufTimer) clearTimeout(radioBufTimer);
   if (!radioUsingLocalBlob && radioPlayer.readyState < 3) {
@@ -7297,7 +7381,41 @@ function toggleRadioPlay(forcePlay) {
   }
   const p = radioPlayer.play();
   if (p && typeof p.then === "function") {
-    p.then(() => { flushPendingRadioSeek(); }).catch(() => { setRadioBufferingUI(false); syncRadioUI(false); });
+    p.then(() => {
+      radioHasPlayedOnce = true;
+      flushPendingRadioSeek();
+      setMediaSessionPlaybackState("playing");
+      updateMediaSessionPosition(true);
+    }).catch(err => {
+      // Only recover via reload if the underlying network stream errored (e.g., Wi-Fi -> 5G handoff)
+      if (radioPlayer.error && err && err.name !== "NotAllowedError" && err.name !== "AbortError") {
+        const recoverT = Math.max(0, Math.floor((pendingRadioSeekSec !== null ? pendingRadioSeekSec : (radioPlayer.currentTime || lastSavedSec || 0))));
+        radioPlayer.src = cachedRadioBlobUrl || DATA.radio.audio_url;
+        if (cachedRadioBlobUrl) radioUsingLocalBlob = true;
+        if (recoverT > 0) applyRadioSeek(recoverT);
+        try { radioPlayer.load(); } catch (e) {}
+        const p2 = radioPlayer.play();
+        if (p2 && typeof p2.then === "function") {
+          p2.then(() => {
+            radioHasPlayedOnce = true;
+            flushPendingRadioSeek();
+            setMediaSessionPlaybackState("playing");
+            updateMediaSessionPosition(true);
+          }).catch(() => {
+            setRadioBufferingUI(false);
+            setMediaSessionPlaybackState("paused");
+            syncRadioUI(false);
+          });
+          return;
+        }
+      }
+      setRadioBufferingUI(false);
+      setMediaSessionPlaybackState("paused");
+      syncRadioUI(false);
+    });
+  } else {
+    radioHasPlayedOnce = true;
+    updateMediaSessionPosition(true);
   }
 }
 
@@ -7319,6 +7437,7 @@ function seekRadioBy(delta) {
   const nextT = Math.max(0, Math.min(dur - 1, baseT + delta));
   applyRadioSeek(nextT);
   markRadioPosByUser(nextT);
+  if (radioHasPlayedOnce) updateMediaSessionPosition(true);
 }
 
 function jumpRadioChapter(startSec) {
@@ -7341,6 +7460,7 @@ function cycleRadioSpeed() {
   radioPlayer.defaultPlaybackRate = radioSpeed;
   radioPlayer.playbackRate = radioSpeed;
   document.getElementById("radio-spd-btn").textContent = `${radioSpeed}x`;
+  if (radioHasPlayedOnce) updateMediaSessionPosition(true);
   stampSpeeds();
 }
 
@@ -7440,14 +7560,24 @@ function syncRadioUI(optimisticPlaying) {
 }
 
 radioPlayer.addEventListener("play", () => {
+  radioHasPlayedOnce = true;
   radioPlayer.muted = false;
+  radioPlayer.volume = 1;
   flushPendingRadioSeek();
+  setupMediaSession();
+  setMediaSessionPlaybackState("playing");
+  updateMediaSessionPosition(true);
   syncRadioUI(true);
 });
 radioPlayer.addEventListener("playing", () => {
+  radioHasPlayedOnce = true;
   radioPlayer.muted = false;
+  radioPlayer.volume = 1;
   setRadioBufferingUI(false);
   flushPendingRadioSeek();
+  setupMediaSession();
+  setMediaSessionPlaybackState("playing");
+  updateMediaSessionPosition(true);
   syncRadioUI(true);
 });
 radioPlayer.addEventListener("waiting", () => {
@@ -7470,9 +7600,17 @@ radioPlayer.addEventListener("seeked", () => {
     radioSeekIssuedTarget = null;
   }
   updateRadioLiveDisplay(radioPlayer.currentTime || 0);
+  if (radioHasPlayedOnce) updateMediaSessionPosition(true);
 });
 radioPlayer.addEventListener("pause", () => {
+  lastRadioPauseMs = Date.now();
+  radioPlayer.muted = false;
   setRadioBufferingUI(false);
+  if (radioInitialized && radioHasPlayedOnce) {
+    setupMediaSession();
+    setMediaSessionPlaybackState("paused");
+    updateMediaSessionPosition(true);
+  }
   syncRadioUI(false);
   if (pendingRadioSeekSec !== null) return;
   const t = Math.floor(radioPlayer.currentTime || 0);
@@ -7498,6 +7636,8 @@ radioPlayer.addEventListener("ended", () => {
   pendingRadioSeekSec = null;
   radioSeekIssuedTarget = null;
   setRadioBufferingUI(false);
+  setMediaSessionPlaybackState("paused");
+  updateMediaSessionPosition(true);
   const dur = Math.ceil(radioPlayer.duration || DATA.radio.duration_sec || 2100);
   A.radioMaxSec = dur;
   A.radioPos = [0, nowUnixSec()];
@@ -7516,6 +7656,7 @@ radioPlayer.addEventListener("loadedmetadata", () => {
   } else {
     updateRadioLiveDisplay(radioPlayer.currentTime || 0);
   }
+  if (radioHasPlayedOnce) updateMediaSessionPosition(true);
   renderGreenBoard();
   updateRadioReviewEntryBadge();
 });
@@ -7525,6 +7666,9 @@ radioPlayer.addEventListener("timeupdate", () => {
   }
   const t = radioPlayer.currentTime || 0;
   updateRadioLiveDisplay(t);
+  if (!radioPlayer.paused) {
+    updateMediaSessionPosition(false);
+  }
   if (!radioPlayer.paused && Math.abs(t - lastSavedSec) >= 2) {
     lastSavedSec = t;
     A.radioPos = [Math.floor(t), nowUnixSec()];
@@ -12265,18 +12409,21 @@ function reloadFreshEdition() {
     go();
   }
 }
-function flushPendingEditionReload() {
+function flushPendingEditionReload(allowDuringActiveRadioSession) {
   if (!pendingEditionReload) return;
+  // Never reload while backgrounded/screen-off or right after pausing radio:
+  // reloading destroys the active Android MediaSession so Pixel Buds tap-to-resume fails!
+  if (document.visibilityState !== "visible") return;
+  if (!allowDuringActiveRadioSession && typeof radioHasPlayedOnce !== "undefined" && radioHasPlayedOnce && activeMode === "radio") return;
   if (!activeKind && radioPlayer.paused) {
     pendingEditionReload = false;
     reloadFreshEdition();
   }
 }
-radioPlayer.addEventListener("pause", () => setTimeout(flushPendingEditionReload, 400));
-radioPlayer.addEventListener("ended", () => setTimeout(flushPendingEditionReload, 400));
+radioPlayer.addEventListener("ended", () => setTimeout(() => flushPendingEditionReload(true), 400));
 if (typeof player !== "undefined" && player && player.addEventListener) {
-  player.addEventListener("pause", () => setTimeout(flushPendingEditionReload, 450));
-  player.addEventListener("ended", () => setTimeout(flushPendingEditionReload, 450));
+  player.addEventListener("pause", () => setTimeout(() => flushPendingEditionReload(false), 450));
+  player.addEventListener("ended", () => setTimeout(() => flushPendingEditionReload(false), 450));
 }
 
 function checkNewDailyEdition() {
@@ -12301,7 +12448,8 @@ function checkNewDailyEdition() {
           if (parts[0] === targetKey && (Date.now() - Number(parts[1] || 0)) < 20000) return;
           sessionStorage.setItem("n3_edition_reload", `${targetKey}@${Date.now()}`);
         } catch (e) {}
-        if (!activeKind && radioPlayer.paused) {
+        const radioSessionLive = typeof radioHasPlayedOnce !== "undefined" && radioHasPlayedOnce && activeMode === "radio";
+        if (document.visibilityState === "visible" && !activeKind && radioPlayer.paused && !radioSessionLive) {
           reloadFreshEdition();
         } else {
           pendingEditionReload = true;
@@ -12319,6 +12467,9 @@ setInterval(() => {
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") {
     tryLockPortrait();
+    if (pendingEditionReload && radioPlayer.paused && (!radioHasPlayedOnce || (Date.now() - lastRadioPauseMs) > 90000)) {
+      flushPendingEditionReload(true);
+    }
     checkNewDailyEdition();
     pullCloudSync(true);
     connectCloudSSE();
@@ -14649,6 +14800,33 @@ function makeEl(id) {
   };
 }
 const els = {}, store = {};
+let reloadCount = 0;
+function makeAudioEl() {
+  const a = makeEl('audio');
+  a.paused = true;
+  a.muted = false;
+  a.volume = 1;
+  a.duration = 3600;
+  a.currentTime = 0;
+  a.readyState = 4;
+  a.playbackRate = 1;
+  a.loadCount = 0;
+  a._ev = {};
+  a.addEventListener = function(k, fn) { (this._ev[k] = this._ev[k] || []).push(fn); };
+  a._emit = function(k) { (this._ev[k] || []).forEach(fn => fn()); };
+  a.play = function() { this.paused = false; this._emit('play'); this._emit('playing'); return Promise.resolve(); };
+  a.pause = function() { if (!this.paused) { this.paused = true; this._emit('pause'); } };
+  a.load = function() { this.loadCount += 1; };
+  return a;
+}
+const mediaSessionMock = {
+  metadata: null,
+  playbackState: 'none',
+  _handlers: {},
+  _posState: null,
+  setActionHandler(k, fn) { this._handlers[k] = fn; },
+  setPositionState(s) { this._posState = s; }
+};
 const sb = {
   console, Math, Date, JSON, Object, Array, String, Number, Boolean, Set, Map, RegExp, Error, Promise, URL, URLSearchParams, TextEncoder, TextDecoder,
   performance:{now:()=>Date.now()}, innerWidth:390, innerHeight:844, scrollTo:()=>{}, addEventListener:()=>{}, removeEventListener:()=>{},
@@ -14656,10 +14834,10 @@ const sb = {
   setTimeout:()=>1, clearTimeout:()=>{}, setInterval:()=>1, clearInterval:()=>{}, requestAnimationFrame:()=>1, cancelAnimationFrame:()=>{},
   localStorage:{getItem:k=>(k in store?store[k]:null), setItem:(k,v)=>{store[k]=String(v);}, removeItem:k=>{delete store[k];}},
   sessionStorage:{getItem:()=>null, setItem:()=>{}, removeItem:()=>{}},
-  navigator:{userAgent:'Mozilla/5.0 Mobile', serviceWorker:{register:()=>Promise.resolve({update:()=>Promise.resolve()}), getRegistration:()=>Promise.resolve(null), addEventListener:()=>{}}, mediaSession:{metadata:null, setActionHandler:()=>{}}, onLine:true, sendBeacon:()=>true},
-  MediaMetadata:function(x){Object.assign(this,x);}, Audio:function(){return makeEl('audio');}, EventSource:function(){return {addEventListener(){},close(){}};},
+  navigator:{userAgent:'Mozilla/5.0 Mobile', serviceWorker:{register:()=>Promise.resolve({update:()=>Promise.resolve()}), getRegistration:()=>Promise.resolve(null), addEventListener:()=>{}}, mediaSession:mediaSessionMock, onLine:true, sendBeacon:()=>true},
+  MediaMetadata:function(x){Object.assign(this,x);}, Audio:makeAudioEl, EventSource:function(){return {addEventListener(){},close(){}};},
   fetch:()=>Promise.resolve({ok:true, text:()=>Promise.resolve(''), json:()=>Promise.resolve({})}),
-  location:{href:'https://tango13ucla.github.io/n3-audio-tutor/', hostname:'tango13ucla.github.io', search:'', hash:'', reload:()=>{}},
+  location:{href:'https://tango13ucla.github.io/n3-audio-tutor/', hostname:'tango13ucla.github.io', search:'', hash:'', reload:()=>{reloadCount += 1;}},
   history:{replaceState:()=>{}, pushState:()=>{}}, screen:{orientation:{lock:()=>Promise.resolve()}}, matchMedia:()=>({matches:false, addEventListener:()=>{}}),
   document:{body:makeEl('body'), documentElement:makeEl('html'), visibilityState:'visible', getElementById:id=>(els[id]||(els[id]=makeEl(id))), querySelector:s=>makeEl(s), querySelectorAll:()=>[], createElement:t=>makeEl(t), addEventListener:()=>{}}
 };
@@ -15133,6 +15311,54 @@ const vcMicHtml = (els['vocab-stage-box'] && els['vocab-stage-box'].innerHTML) |
 if (!vcMicHtml.includes('vc-mic-btn') || !vcMicHtml.includes('试读') || vcMicHtml.includes('—')) {
   throw new Error('Self-test 9 failed: vocab card missing 试读 pronunciation mirror button or contains em dash');
 }
+// Self-test 10: Pixel Buds / Android Chrome MediaSession single-tap pause -> single-tap resume regression gate
+sb.switchMode('radio', false);
+const rpEl = vm.runInNewContext('radioPlayer', sb);
+if (!sb.document.body.children.includes(rpEl)) {
+  throw new Error('Self-test 10 failed: radioPlayer must be attached to document.body');
+}
+sb.toggleRadioPlay(true);
+if (rpEl.paused || rpEl.muted || mediaSessionMock.playbackState !== 'playing') {
+  throw new Error('Self-test 10 failed: play did not activate unmuted playing MediaSession: ' + JSON.stringify({paused:rpEl.paused, muted:rpEl.muted, state:mediaSessionMock.playbackState}));
+}
+if (!mediaSessionMock._handlers.play || !mediaSessionMock._handlers.pause || !mediaSessionMock._handlers.seekto) {
+  throw new Error('Self-test 10 failed: MediaSession play/pause/seekto handlers missing');
+}
+if (!mediaSessionMock.metadata || !Array.isArray(mediaSessionMock.metadata.artwork) || mediaSessionMock.metadata.artwork.length < 1) {
+  throw new Error('Self-test 10 failed: MediaSession metadata/artwork missing');
+}
+if (!mediaSessionMock._posState || !(mediaSessionMock._posState.duration > 0)) {
+  throw new Error('Self-test 10 failed: MediaSession setPositionState not populated');
+}
+// Simulate background cache blob finishing & SW pendingEditionReload while listening
+vm.runInNewContext('cachedRadioBlobUrl = "blob:mock-radio"; pendingEditionReload = true;', sb);
+const loadsBeforePause = rpEl.loadCount;
+const reloadsBeforePause = reloadCount;
+// First Pixel Buds tap -> MediaSession pause
+mediaSessionMock._handlers.pause();
+if (!rpEl.paused) throw new Error('Self-test 10 failed: first earbud tap did not pause radioPlayer');
+if (rpEl.muted) throw new Error('Self-test 10 failed: pausing MUST NEVER set radioPlayer.muted = true (kills Android MediaSession!)');
+if (mediaSessionMock.playbackState !== 'paused') {
+  throw new Error('Self-test 10 failed: MediaSession playbackState must be paused after pause, got ' + mediaSessionMock.playbackState);
+}
+sb.upgradeRadioToLocalBlobIfPaused();
+if (rpEl.loadCount !== loadsBeforePause) {
+  throw new Error('Self-test 10 failed: upgradeRadioToLocalBlobIfPaused called load() after playback started (kills MediaSession!)');
+}
+sb.flushPendingEditionReload();
+if (reloadCount !== reloadsBeforePause) {
+  throw new Error('Self-test 10 failed: flushPendingEditionReload reloaded page during active paused radio session!');
+}
+// Second Pixel Buds tap -> MediaSession play (even when screen is off / hidden!)
+sb.document.visibilityState = 'hidden';
+mediaSessionMock._handlers.play();
+if (rpEl.paused || rpEl.muted || mediaSessionMock.playbackState !== 'playing') {
+  throw new Error('Self-test 10 failed: second earbud tap did not resume radioPlayer cleanly: ' + JSON.stringify({paused:rpEl.paused, muted:rpEl.muted, state:mediaSessionMock.playbackState}));
+}
+if (rpEl.loadCount !== loadsBeforePause) {
+  throw new Error('Self-test 10 failed: resuming via Pixel Buds unexpectedly called load()');
+}
+sb.document.visibilityState = 'visible';
 """
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
 
