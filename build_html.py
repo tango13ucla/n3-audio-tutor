@@ -1865,11 +1865,8 @@ html = r"""<!DOCTYPE html>
     .action-dock,
     .radio-dock,
     .vc-dock,
-<<<<<<< Updated upstream
-    .rv-dock {
-=======
+    .rv-dock,
     .ga-spec-wrap {
->>>>>>> Stashed changes
       padding-bottom: clamp(16px, 4.4vh, 44px);
     }
     #tutor-view .stage-quiz .focal-space {
