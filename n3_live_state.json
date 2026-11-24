@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-23 20:13 PT",
+  "updated_at": "2026-11-23 20:53 PT",
   "exam_date": "2026-12-06",
   "days_left": 13,
   "target_score": "120+ / 180",
@@ -518,7 +518,7 @@
       "note": "9战7败后 G106✅→G160✅(11-08标「不用再考了」牢固，11-22抽查)",
       "exam_alert": "",
       "streak": 0,
-      "last_ng_date": "20261122",
+      "last_ng_date": "20261123",
       "audit_verdict": "blank",
       "audit_date": "20261122",
       "audit_ts": 1795419266
@@ -13297,7 +13297,7 @@
     "N3L-066": 1795418473,
     "N3L-284": 1795418642,
     "N3L-323": 1795418542,
-    "〜にちがいない": 1795419266,
+    "〜にちがいない": 1795493123,
     "〜はずがない": 1795419273,
     "〜べきだ": 1795419278,
     "〜わけにはいかない": 1795419285,
@@ -13314,7 +13314,7 @@
   "daily_rituals": {
     "date": "2026-11-23",
     "quiz_green": 0,
-    "radio_max_sec": 1048,
+    "radio_max_sec": 1934,
     "flash_seen": 0,
     "flash_target": 0,
     "flash_done": false,
@@ -13324,7 +13324,7 @@
     "ga_total_audited": 12
   },
   "study_date": "2026-11-23",
-  "_baked_epoch": 1795493609,
+  "_baked_epoch": 1795496019,
   "word_lookups": {
     "おく": {
       "count": 1,
