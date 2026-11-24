@@ -91,20 +91,18 @@
       "うちゅう": 1,
       "えいが": 1,
       "かいしゃ": 5,
-      "かがく": 6,
+      "かがく": 5,
       "かぞく": 1,
       "がくせい": 3,
-      "きおく": 1,
       "きしゃ": 1,
       "きょうじゅ": 2,
       "ぎじゅつ": 3,
       "くるま": 5,
       "けいさつ": 5,
-      "けいざい": 3,
+      "けいざい": 2,
       "けんちく": 4,
       "げんだい": 2,
       "こうじょう": 4,
-      "ざいりょう": 1,
       "しげん": 2,
       "しみん": 2,
       "しゃちょう": 4,
@@ -112,7 +110,7 @@
       "しんかんせん": 1,
       "しんぶん": 4,
       "じかん": 6,
-      "せかい": 10,
+      "せかい": 9,
       "せっけい": 1,
       "てんいん": 1,
       "でんしゃ": 2,
@@ -300,7 +298,7 @@
         "科学"
       ],
       "tier": "n4_existing",
-      "exposures": 11,
+      "exposures": 10,
       "days_seen": 2,
       "status": "learning",
       "first_date": "2026-11-22",
@@ -548,7 +546,7 @@
         "世界"
       ],
       "tier": "n4_existing",
-      "exposures": 24,
+      "exposures": 23,
       "days_seen": 2,
       "status": "learning",
       "first_date": "2026-11-22",
@@ -868,19 +866,6 @@
       "graduated_date": "",
       "last_date": "2026-11-23"
     },
-    "きおく": {
-      "kanji": "記憶",
-      "zh": [
-        "记忆"
-      ],
-      "tier": "n3_core",
-      "exposures": 1,
-      "days_seen": 1,
-      "status": "learning",
-      "first_date": "2026-11-23",
-      "graduated_date": "",
-      "last_date": "2026-11-23"
-    },
     "けいさつ": {
       "kanji": "警察",
       "zh": [
@@ -900,7 +885,7 @@
         "经济"
       ],
       "tier": "n3_core",
-      "exposures": 3,
+      "exposures": 2,
       "days_seen": 1,
       "status": "learning",
       "first_date": "2026-11-23",
@@ -914,19 +899,6 @@
       ],
       "tier": "n3_core",
       "exposures": 4,
-      "days_seen": 1,
-      "status": "learning",
-      "first_date": "2026-11-23",
-      "graduated_date": "",
-      "last_date": "2026-11-23"
-    },
-    "ざいりょう": {
-      "kanji": "材料",
-      "zh": [
-        "材料"
-      ],
-      "tier": "n3_core",
-      "exposures": 1,
       "days_seen": 1,
       "status": "learning",
       "first_date": "2026-11-23",

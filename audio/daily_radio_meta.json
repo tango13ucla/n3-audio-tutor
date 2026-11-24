@@ -3,10 +3,10 @@
   "radio_ver": "v41_qq_60m_wordguard_seamless_5hit",
   "display_date": "锵锵三人",
   "days_left": 13,
-  "script_sig": "9afaec8523200e",
-  "audio_url": "./audio/daily_radio.mp3?v=2026-11-23_9afaec",
-  "duration_sec": 3400.2,
-  "duration_label": "57 分钟",
+  "script_sig": "247aec6e345c22",
+  "audio_url": "./audio/daily_radio.mp3?v=2026-11-23_247aec",
+  "duration_sec": 3369.7,
+  "duration_label": "56 分钟",
   "hosts": "文涛 · 文道 · 子东",
   "immersion_365": {
     "day_of_365": 9,
@@ -20,8 +20,8 @@
   "immersion_vocab": {
     "graduation_threshold": 8,
     "locked_total": 6,
-    "learning_total": 66,
-    "today_new_count": 13,
+    "learning_total": 64,
+    "today_new_count": 11,
     "today_graduated": [
       {
         "kana": "スーパー",
@@ -65,15 +65,6 @@
         "status": "learning"
       },
       {
-        "kana": "けいざい",
-        "kanji": "経済",
-        "zh": "经济",
-        "hits_today": 3,
-        "total": 3,
-        "days_seen": 1,
-        "status": "learning"
-      },
-      {
         "kana": "しょうちょう",
         "kanji": "象徴",
         "zh": "象征",
@@ -88,6 +79,15 @@
         "zh": "未来",
         "hits_today": 3,
         "total": 3,
+        "days_seen": 1,
+        "status": "learning"
+      },
+      {
+        "kana": "けいざい",
+        "kanji": "経済",
+        "zh": "经济",
+        "hits_today": 2,
+        "total": 2,
         "days_seen": 1,
         "status": "learning"
       },
@@ -144,64 +144,40 @@
         "total": 1,
         "days_seen": 1,
         "status": "learning"
-      },
-      {
-        "kana": "きおく",
-        "kanji": "記憶",
-        "zh": "记忆",
-        "hits_today": 1,
-        "total": 1,
-        "days_seen": 1,
-        "status": "learning"
-      },
-      {
-        "kana": "ざいりょう",
-        "kanji": "材料",
-        "zh": "材料",
-        "hits_today": 1,
-        "total": 1,
-        "days_seen": 1,
-        "status": "learning"
       }
     ],
-    "today_total_inline_hits": 131
+    "today_total_inline_hits": 126
   },
   "chapters": [
     {
       "idx": 0,
       "title": "年収之壁",
-      "start": 0.0,
-      "img": "./img/qq_vol9_tower_of_the_sun.jpg"
+      "start": 0.0
     },
     {
       "idx": 1,
       "title": "太阳之塔",
-      "start": 551.8,
-      "img": "./img/qq_vol9_tower_of_the_sun.jpg"
+      "start": 551.8
     },
     {
       "idx": 2,
       "title": "生命之树",
-      "start": 1101.3,
-      "img": "./img/qq_vol9_tower_of_the_sun.jpg"
+      "start": 1101.3
     },
     {
       "idx": 3,
       "title": "怪人二十一面相",
-      "start": 1664.1,
-      "img": "./img/qq_vol9_otsu_night.jpg"
+      "start": 1664.1
     },
     {
       "idx": 4,
       "title": "狐狸眼之谜",
-      "start": 2184.4,
-      "img": "./img/qq_vol9_otsu_night.jpg"
+      "start": 2184.5
     },
     {
       "idx": 5,
       "title": "新能源暗战",
-      "start": 2707.0,
-      "img": "./img/qq_vol9_perovskite.jpg"
+      "start": 2707.1
     }
   ],
   "segments": [
@@ -263,7 +239,7 @@
       "title": "写信把警察戏耍得团团转：1984 格力高森永案与关西超市恐慌（上）",
       "ja_focus": "入浴している最中に襲われた。警察に対して挑発状を送り続け、被害は広がるばかりだった。",
       "start": 1664.1,
-      "end": 2184.4
+      "end": 2184.5
     },
     {
       "chapter": 4,
@@ -278,8 +254,8 @@
       ],
       "title": "就差几秒就能抓到狐狸眼男子：为什么整个日本至今难忘这桩悬案（下）",
       "ja_focus": "もう少しで犯人を捕まえられるところだったのに、最後の手紙を出したきり正体がわからずに時効を迎えた。",
-      "start": 2184.4,
-      "end": 2707.0
+      "start": 2184.5,
+      "end": 2707.1
     },
     {
       "chapter": 5,
@@ -294,11 +270,40 @@
       ],
       "title": "从日本看世界：薄如胶片的钙钛矿太阳能席卷全球，千叶地底为何藏着能源王牌",
       "ja_focus": "資源の少ない日本にとって、重いパネルのかわりに薄く曲がる電池を広げることは大きな希望だが、必ず勝てるとは限らない。",
-      "start": 2707.0,
-      "end": 3400.2
+      "start": 2707.1,
+      "end": 3369.7
     }
   ],
   "review_items": [
+    {
+      "id": "RVW-ひょうじゅん",
+      "kind": "vocab",
+      "key": "標準",
+      "point_id": "",
+      "title": "標準",
+      "kana": "ひょうじゅん",
+      "trap_hl": [
+        "ひょう"
+      ],
+      "trap_tag": "长音",
+      "zh": "标准",
+      "chapter_idx": 0,
+      "chapter_title": "年収之壁",
+      "story_cue": "一到十一月兼职员工集体请假停工",
+      "speaker": "文道",
+      "context_line": "一百零三万日元这条线，是一九九五年平成七年定下来的老標準（ひょうじゅん）！",
+      "ja_example": "標準（ひょうじゅん）",
+      "nuance": "本期播客出现 2 次 · 累计 2 次",
+      "twin": "",
+      "mnemonic": "“标(ひょう)”长 + “准(じゅん)”浊短 → ひょうじゅん",
+      "clip_start": 126.8,
+      "clip_end": 146.8,
+      "demo_audio": "",
+      "hook_audio": "",
+      "is_new_n2": false,
+      "status": "yellow",
+      "streak": 0
+    },
     {
       "id": "RVR-N3-G43",
       "kind": "grammar",
@@ -324,8 +329,7 @@
       "hook_audio": "",
       "is_new_n2": false,
       "status": "yellow",
-      "streak": 1,
-      "img": "./img/qq_vol9_tower_of_the_sun.jpg"
+      "streak": 1
     },
     {
       "id": "RVR-N3-G123",
@@ -352,38 +356,7 @@
       "hook_audio": "",
       "is_new_n2": false,
       "status": "yellow",
-      "streak": 1,
-      "img": "./img/qq_vol9_tower_of_the_sun.jpg"
-    },
-    {
-      "id": "RVW-けいざい",
-      "kind": "vocab",
-      "key": "経済",
-      "point_id": "",
-      "title": "経済",
-      "kana": "けいざい",
-      "trap_hl": [
-        "けい"
-      ],
-      "trap_tag": "长音",
-      "zh": "经济",
-      "chapter_idx": 0,
-      "chapter_title": "年収之壁",
-      "story_cue": "一到十一月兼职员工集体请假停工",
-      "speaker": "文涛",
-      "context_line": "地方知事干嘛跟着急眼？老百姓少交税、多去超市还有餐馆消费，地方経済（けいざい）不是也跟着热乎吗？",
-      "ja_example": "経済（けいざい）",
-      "nuance": "本期播客出现 3 次 · 累计 3 次",
-      "twin": "",
-      "mnemonic": "英文 “K(けい) Zai(ざい)” 算经济账，前长 けい + 济 浊音 ざい → けいざい",
-      "clip_start": 327.3,
-      "clip_end": 338.4,
-      "demo_audio": "",
-      "hook_audio": "",
-      "is_new_n2": false,
-      "status": "yellow",
-      "streak": 0,
-      "img": "./img/qq_vol9_tower_of_the_sun.jpg"
+      "streak": 1
     },
     {
       "id": "RVW-ほじょきん",
@@ -412,8 +385,7 @@
       "hook_audio": "",
       "is_new_n2": true,
       "status": "yellow",
-      "streak": 0,
-      "img": "./img/qq_vol9_tower_of_the_sun.jpg"
+      "streak": 0
     },
     {
       "id": "RVW-けんちく",
@@ -442,8 +414,7 @@
       "hook_audio": "",
       "is_new_n2": false,
       "status": "yellow",
-      "streak": 0,
-      "img": "./img/qq_vol9_tower_of_the_sun.jpg"
+      "streak": 0
     },
     {
       "id": "RVR-N3-G72",
@@ -470,8 +441,7 @@
       "hook_audio": "",
       "is_new_n2": false,
       "status": "red",
-      "streak": 0,
-      "img": "./img/qq_vol9_tower_of_the_sun.jpg"
+      "streak": 0
     },
     {
       "id": "RVW-しょうちょう",
@@ -494,14 +464,13 @@
       "nuance": "本期播客出现 3 次 · 累计 3 次",
       "twin": "",
       "mnemonic": "",
-      "clip_start": 1114.9,
-      "clip_end": 1134.9,
+      "clip_start": 1115.0,
+      "clip_end": 1135.0,
       "demo_audio": "",
       "hook_audio": "",
       "is_new_n2": true,
       "status": "yellow",
-      "streak": 0,
-      "img": "./img/qq_vol9_tower_of_the_sun.jpg"
+      "streak": 0
     },
     {
       "id": "RVR-N3-G28",
@@ -522,14 +491,13 @@
       "nuance": "名词＋によって ＝ 由于某客观原因／通过某手段；にとって ＝ 对某人而言。",
       "twin": "大雨によって乱れた：由于暴雨导致时刻表大乱 · 对比 私にとって大切だ：站在某人立场评价",
       "mnemonic": "",
-      "clip_start": 1411.6,
-      "clip_end": 1433.6,
+      "clip_start": 1411.7,
+      "clip_end": 1433.7,
       "demo_audio": "./audio/N3-G28_q.mp3",
       "hook_audio": "",
       "is_new_n2": false,
       "status": "yellow",
-      "streak": 1,
-      "img": "./img/qq_vol9_tower_of_the_sun.jpg"
+      "streak": 1
     },
     {
       "id": "RVR-N3-G32",
@@ -550,14 +518,13 @@
       "nuance": "正在干某事最投入的节骨眼上突然冒出意外状况（停电、来电话），用「Nの／Vている＋最中に（さいちゅうに）」。",
       "twin": "会議の最中に消えた：名词の／ている ＋ 最中に ＝ 正在兴头上突然被打断 · 对比 会議のあとで：开完会之后（无突发打断紧迫感）",
       "mnemonic": "",
-      "clip_start": 1738.5,
-      "clip_end": 1760.5,
+      "clip_start": 1738.6,
+      "clip_end": 1760.6,
       "demo_audio": "./audio/N3-G32_q.mp3",
       "hook_audio": "",
       "is_new_n2": false,
       "status": "yellow",
-      "streak": 2,
-      "img": "./img/qq_vol9_otsu_night.jpg"
+      "streak": 2
     },
     {
       "id": "RVR-N3-G47",
@@ -578,14 +545,13 @@
       "nuance": "前有「あと少しで・もう少しで・危うく」，表示险些出岔子但最后躲过去了，用「原形＋ところだった」。",
       "twin": "乗り遅れるところだった：あと少しで／もう少しで＋原形＋ところだった＝差点就误车（实际赶上了） · 对比 着くはずだった：本来理应到达（实际没到）",
       "mnemonic": "",
-      "clip_start": 2425.8,
-      "clip_end": 2449.5,
+      "clip_start": 2425.9,
+      "clip_end": 2449.6,
       "demo_audio": "./audio/N3-G47_q.mp3",
       "hook_audio": "",
       "is_new_n2": false,
       "status": "yellow",
-      "streak": 2,
-      "img": "./img/qq_vol9_otsu_night.jpg"
+      "streak": 2
     },
     {
       "id": "RVW-でんとう",
@@ -608,14 +574,13 @@
       "nuance": "本期播客出现 6 次 · 累计 6 次",
       "twin": "",
       "mnemonic": "“传(でん)”浊 + “统(とう)”长音 → でんとう",
-      "clip_start": 2770.8,
-      "clip_end": 2785.3,
+      "clip_start": 2771.0,
+      "clip_end": 2785.6,
       "demo_audio": "./audio/words/w_b1b503aca8.mp3",
       "hook_audio": "",
       "is_new_n2": false,
       "status": "yellow",
-      "streak": 0,
-      "img": "./img/qq_vol9_perovskite.jpg"
+      "streak": 0
     },
     {
       "id": "RVR-N3-G36",
@@ -636,14 +601,13 @@
       "nuance": "双方互换条件「作为…的交换回报」或「代替某人出场」，用「连体形＋かわりに」。",
       "twin": "教えてもらうかわりに教える：等价交换（他教我日语，作为回报我教他英语） · 对比 先生のおかげで合格した：多亏某人取得好结果",
       "mnemonic": "",
-      "clip_start": 2910.2,
-      "clip_end": 2932.2,
+      "clip_start": 2910.9,
+      "clip_end": 2932.9,
       "demo_audio": "./audio/N3-G36_q.mp3",
       "hook_audio": "",
       "is_new_n2": false,
       "status": "yellow",
-      "streak": 1,
-      "img": "./img/qq_vol9_perovskite.jpg"
+      "streak": 1
     }
   ],
   "speaking_prompts": [
@@ -670,8 +634,8 @@
       "model_ja": "体調が悪いので、今日は早めに帰らせてもらってもいいですか。",
       "model_zh": "我身体不太舒服，今天能让我早点回去吗？",
       "coaching_tip": "动作是「我自己回去」，求对方准许，必须用使役形「帰らせて」而不是「帰って」。",
-      "clip_start": 242.0,
-      "clip_end": 260.2,
+      "clip_start": 243.5,
+      "clip_end": 261.8,
       "demo_audio": "./audio/N3-G123_q.mp3",
       "is_new_n2": false
     },
@@ -693,40 +657,10 @@
       "model_ja": "もう少しで終電に乗り遅れるところだったよ。",
       "model_zh": "差一点就错过末班车了。",
       "coaching_tip": "动词原形接「ところだった」，注意浊音「だった」别滑成清音「たった」。",
-      "clip_start": 2413.2,
-      "clip_end": 2437.0,
+      "clip_start": 2425.9,
+      "clip_end": 2449.6,
       "demo_audio": "./audio/N3-G47_q.mp3",
       "is_new_n2": false
-    }
-  ],
-  "artwork_url": "./img/qq_vol9_tower_of_the_sun.jpg",
-  "story_arts": [
-    {
-      "title": "1970 大阪万博 · 太阳之塔",
-      "subtitle": "冈本太郎捅穿大屋顶的生命之树",
-      "img": "./img/qq_vol9_tower_of_the_sun.jpg",
-      "chapters": [
-        0,
-        1,
-        2
-      ]
-    },
-    {
-      "title": "1984 昭和五十九年 · 大津休憩所",
-      "subtitle": "怪人二十一面相与狐狸眼之谜",
-      "img": "./img/qq_vol9_otsu_night.jpg",
-      "chapters": [
-        3,
-        4
-      ]
-    },
-    {
-      "title": "日本看世界 · 次世代绿色技术",
-      "subtitle": "柔性钙钛矿太阳能薄膜与千叶地下碘矿",
-      "img": "./img/qq_vol9_perovskite.jpg",
-      "chapters": [
-        5
-      ]
     }
   ]
 }
