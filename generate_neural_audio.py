@@ -14,6 +14,7 @@ Synthesizes & stitches Studio Human-Teacher Neural TTS MP3 files (generate_neura
 from __future__ import annotations
 import asyncio
 import concurrent.futures
+import glob
 import hashlib
 import json
 import os
@@ -199,7 +200,7 @@ async def detect_voice_map() -> dict:
                 if cand_f in short_names:
                     f_ja_voice = cand_f
                     break
-            print(f"Quiz Zen v19 Direct voices: T={t_voice} (+8% brisk ZH / +0% JA), JF/JM=+0% normal native speed")
+            print(f"Quiz Zen v20 Natural voices: T={t_voice} (+8% brisk ZH / +0% JA), JF/JM=+0% normal native speed")
         except Exception as e:
             print(f"[info] list_voices fallback: {e}")
 
@@ -323,6 +324,8 @@ def synth_gemini_tts_sync(spk: str, text: str, out_mp3: str) -> bool:
 
 
 async def synth_raw_clip(spk: str, voice: str, rate: str, text: str, out_path: str, sem: asyncio.Semaphore) -> bool:
+    if os.path.exists(out_path) and os.path.getsize(out_path) > 0:
+        return True
     async with sem:
         if GEMINI_API_KEY and genai is not None and spk in ("T", "T_JA", "EXP_F_JA"):
             ok = await asyncio.to_thread(synth_gemini_tts_sync, spk, text, out_path)
@@ -464,7 +467,7 @@ async def main():
     can_synth = (edge_tts is not None) and (shutil.which("ffmpeg") is not None)
 
     voice_map = await detect_voice_map()
-    det_tag = f"gemini:{GEMINI_TTS_MODEL}:v19_direct" if (GEMINI_API_KEY and genai is not None) else "edge:Brian+8_0_v19_direct"
+    det_tag = f"gemini:{GEMINI_TTS_MODEL}:v20_natural" if (GEMINI_API_KEY and genai is not None) else "edge:Brian+8_0_v20_natural"
     sem = asyncio.Semaphore(16)
 
     card_meta_lookup = {}
@@ -542,12 +545,12 @@ async def main():
                     opt_files.append((c_label, o_fn))
                 listen_specs[qid] = {"stem_fn": stem_fn, "opt_spk": opt_spk, "opt_files": opt_files}
 
-        # Zen v19 Direct-to-Chinese Answer Audio: ZERO Japanese sentence/dialogue re-read!
+        # Zen v20 Natural Direct-to-Chinese Answer Audio: ZERO robotic filler ("考语法"), natural tutor reasoning!
         direct_turns = build_direct_exp_turns(qid, card, card_meta_lookup.get(qid))
         e_expanded = []
         for spk, val in direct_turns:
             e_expanded.extend(expand_exp_turn(spk, val, False))
-        e_sig = f"v19e_direct:{det_tag}:" + json.dumps(e_expanded, ensure_ascii=False)
+        e_sig = f"v20e_natural:{det_tag}:" + json.dumps(e_expanded, ensure_ascii=False)
         e_hash = hashlib.sha256(e_sig.encode("utf-8")).hexdigest()[:12]
         hashes_exp[qid] = e_hash
         e_file = f"{qid}_exp.mp3"
@@ -560,7 +563,8 @@ async def main():
     built_lp_ok = set()
 
     if can_synth and (not vocab_only) and (to_build_q or to_build_exp or to_build_lp):
-        tmpdir = tempfile.mkdtemp(prefix="n3_cards_v19_")
+        existing_v20 = sorted(glob.glob("/tmp/n3_cards_v20_*"))
+        tmpdir = existing_v20[-1] if existing_v20 else tempfile.mkdtemp(prefix="n3_cards_v20_")
         try:
             needed_clips = {}
             needed_pauses = set()
@@ -593,6 +597,8 @@ async def main():
 
             def _trim_one(item):
                 key, (raw_p, trim_p) = item
+                if os.path.exists(trim_p) and os.path.getsize(trim_p) > 0:
+                    return key, trim_p
                 if os.path.exists(raw_p) and os.path.getsize(raw_p) > 0:
                     trim_clip_silence(raw_p, trim_p)
                     return key, trim_p
