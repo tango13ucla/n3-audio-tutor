@@ -19,7 +19,6 @@ from __future__ import annotations
 import argparse
 import datetime
 import json
-import os
 import pathlib
 import re
 import subprocess
@@ -129,6 +128,23 @@ def collect_study_history(cutoff_study_day: str | None = None) -> tuple[
 
             if cid.startswith("GA-"):
                 if pt and choice in ("盘点:陌生", "盘点:易混", "盘点:不熟") and not contains_pii(pt):
+                    pts = missed_by_day.setdefault(sday, [])
+                    if pt not in pts:
+                        pts.append(pt)
+                continue
+
+            if cid.startswith("HES:") or choice == "犹豫过关":
+                continue
+
+            if cid.startswith("SPK:") or choice.startswith(("开口:", "试读:")):
+                if pt and not ok and not contains_pii(pt):
+                    pts = missed_by_day.setdefault(sday, [])
+                    if pt not in pts:
+                        pts.append(pt)
+                continue
+
+            if cid.startswith("RV:") or choice.startswith("听后复盘:"):
+                if pt and choice == "听后复盘:重学" and not contains_pii(pt):
                     pts = missed_by_day.setdefault(sday, [])
                     if pt not in pts:
                         pts.append(pt)
@@ -584,8 +600,6 @@ def run_morning_prepare() -> int:
         print(f"[morning-prepare] Auto-authored {added_chapters} validated Uchi/World chapters into {AUTO_SALON_JSON.name}")
 
     # 2. Check unseen quiz variants for active points
-    from adaptive_bank import EXTRA_PRIMARY_CARDS, VARIANT_CARDS
-    from tutor_data import TUTOR_ITEMS
     by_base: dict[str, list[str]] = {}
     existing_card_ids: set[str] = set()
     for vc in VARIANT_CARDS:

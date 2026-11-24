@@ -25,6 +25,7 @@ on:
       - 'vocab_cards.py'
       - 'run_brain_algorithm.py'
       - 'sync_cloud_store.py'
+      - 'tests_ci_guard.py'
       - 'audio/qq_real_*.wav'
       - '.github/workflows/daily-n3-brain.yml'
   schedule:
@@ -76,6 +77,9 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
+      - name: Run Fast Static & Practice-Log Regression Guard
+        run: python tests_ci_guard.py
 
       - name: Run 02:00 AM Night Summary or 04:00+ AM Full N3 Brain Refresh
         id: brain_step
@@ -193,8 +197,11 @@ jobs:
 
           # Stage 2 (>=04:00 AM PT): study_pt has flipped to the new day; flip immediately in pure cloud mode
           # unless the 04:05 AM PT morning-handoff bridge is already actively synthesizing today's edition.
-          expected_ver = "v40_qq_60m_seamless_codeswitch_5hit" if study_pt >= "2026-11-22" else "v36_qq_real_public_memory"
-          if meta_date != study_pt or (study_pt >= "2026-11-19" and radio_ver != expected_ver):
+          import re as _re_ver
+          expected_ver_num = 41 if study_pt >= "2026-11-23" else (40 if study_pt >= "2026-11-22" else 36)
+          _m_ver = _re_ver.match(r"^v(\d+)_", str(radio_ver or ""))
+          cur_ver_num = int(_m_ver.group(1)) if _m_ver else 0
+          if meta_date != study_pt or (study_pt >= "2026-11-19" and cur_ver_num < expected_ver_num):
               if ev == "schedule" and bridge_already_active():
                   print("noop|false")
               else:

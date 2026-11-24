@@ -227,6 +227,7 @@ def apply_practice_logs(state: dict, fallback_day_tag: str = "") -> int:
                 pt = str(rec.get("point", "")).strip()
                 choice = str(rec.get("choice", "")).strip()
                 src = str(rec.get("source", "")).strip()
+                is_correct = str(rec.get("correct", "")).lower() == "true" or rec.get("correct") is True
                 is_vocab_card = (
                     rec_id.startswith("FLASH-")
                     or rec_id.startswith("VC-")
@@ -416,8 +417,8 @@ def apply_practice_logs(state: dict, fallback_day_tag: str = "") -> int:
 
                 applied += 1
                 day_tag = _iso_to_day_tag(ts, fallback_day_tag)
-                ok = str(rec.get("correct", "")).lower() == "true"
-                again = str(rec.get("ask_again", "")).lower() == "true"
+                ok = is_correct
+                again = str(rec.get("ask_again", "")).lower() == "true" or rec.get("ask_again") is True
                 instant_seal = choice in ("记词:太熟", "闪卡:太熟", "Grok:不用再考")
 
                 if pt in g_map and not is_vocab_card:
