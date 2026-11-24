@@ -1839,7 +1839,8 @@ html = r"""<!DOCTYPE html>
 
     .action-dock,
     .radio-dock,
-    .vc-dock {
+    .vc-dock,
+    .rv-dock {
       padding-bottom: clamp(16px, 4.4vh, 44px);
     }
     #tutor-view .stage-quiz .focal-space {
@@ -3019,8 +3020,8 @@ html = r"""<!DOCTYPE html>
     flex: 1;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    padding: 18px 0 14px;
+    justify-content: flex-start;
+    padding: clamp(16px, 3.5vh, 28px) 0 14px;
     gap: 14px;
   }
   .rv-focal.is-relearn {
@@ -3077,7 +3078,15 @@ html = r"""<!DOCTYPE html>
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
   }
-  .rv-clip-btn.playing { color: var(--bengara); font-weight: 600; }
+  .rv-clip-btn.playing {
+    color: var(--bengara);
+    font-weight: 600;
+    animation: rvAudioPulse 1.2s ease-in-out infinite;
+  }
+  @keyframes rvAudioPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+  }
   .rv-clip-btn.quiet { color: var(--ink-3); font-size: 13.5px; }
   .rv-clip-btn:active { opacity: 0.55; }
 
@@ -3165,6 +3174,7 @@ html = r"""<!DOCTYPE html>
   .rv-dock {
     flex-shrink: 0;
     padding-top: 10px;
+    padding-bottom: 16px;
     display: flex;
     justify-content: flex-end;
     align-items: center;
@@ -3249,6 +3259,25 @@ html = r"""<!DOCTYPE html>
     align-items: center;
     gap: 10px;
   }
+  .rv-spk-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--moss);
+    background: var(--moss-soft);
+    border: 1px solid rgba(43, 95, 73, 0.22);
+    padding: 2.5px 8px;
+    border-radius: 12px;
+    line-height: 1.25;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: opacity 0.16s ease, transform 0.16s ease;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .rv-spk-pill:active { opacity: 0.65; transform: scale(0.97); }
   .spk-prompt-ja {
     margin: 2px 0 0;
     font-family: var(--serif-jp);
@@ -9627,7 +9656,7 @@ function renderRadioReviewStage() {
       <button type="button" class="text-btn" onclick="closeRadioReview()">← 随身听</button>
       <div class="rv-meta-right">
         <span class="overline${isTail ? " warm" : ""}">${progressTxt}</span>
-        ${spPrompts.length ? `<button type="button" class="text-btn" onclick="openRadioSpeaking(0)">开口 ${spPrompts.length} 句</button>` : ""}
+        ${spPrompts.length ? `<button type="button" class="rv-spk-pill" onclick="openRadioSpeaking(0)">开口 ${spPrompts.length} 句 ›</button>` : ""}
       </div>
     </div>
     <div class="rv-stage-card" id="rv-stage-card" onclick="if(!event.target.closest('button,.w-tok,.vc-hook'))revealRadioReviewCard()">
