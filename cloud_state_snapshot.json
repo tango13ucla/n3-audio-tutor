@@ -1,7 +1,7 @@
 {
   "v": 15,
   "app": "n3-zen",
-  "updatedAt": 1795551968,
+  "updatedAt": 1795563923,
   "dates": {
     "2026-11-14": {
       "resetAt": 0,
@@ -3429,16 +3429,25 @@
     },
     "2026-11-24": {
       "resetAt": 0,
-      "radioMaxSec": 74,
+      "radioMaxSec": 457,
       "radioPos": [
-        74,
-        1795551968
+        457,
+        1795562383
       ],
       "radioSig": "cfa80085",
       "greenAt": {},
       "retestAt": {},
       "learning": {},
-      "sched": {}
+      "sched": {},
+      "tappedWords": [
+        "会った"
+      ],
+      "flashProg": [
+        1,
+        24,
+        0,
+        1795562156
+      ]
     }
   },
   "masteryOverrides": {
@@ -4981,6 +4990,10 @@
     "〜きり": [
       "todo:20261123",
       1795503717
+    ],
+    "やっぱり": [
+      "done",
+      1795562155
     ]
   },
   "grammarAudit": {
@@ -5359,25 +5372,16 @@
       "contexts": [
         "VAR-V14"
       ]
+    },
+    "会った": {
+      "count": 1,
+      "last_ts": "2026-11-24T23:22:59.000Z",
+      "contexts": [
+        "N3-G80"
+      ]
     }
   },
   "records": [
-    {
-      "id": "VC-囲む",
-      "point": "囲む",
-      "choice": "记词:没记住",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-22T18:22:53.000Z"
-    },
-    {
-      "id": "VC-加える",
-      "point": "加える",
-      "choice": "记词:记住",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-22T18:22:56.000Z"
-    },
     {
       "id": "VC-恐ろしい",
       "point": "恐ろしい",
@@ -7761,6 +7765,22 @@
       "correct": "true",
       "ask_again": "false",
       "ts": "2026-11-24T07:37:49.000Z"
+    },
+    {
+      "id": "VC-やっぱり",
+      "point": "やっぱり",
+      "choice": "记词:太熟",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T23:15:55.000Z"
+    },
+    {
+      "id": "LK:会った",
+      "point": "N3-G80",
+      "choice": "会った",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-24T23:22:59.000Z"
     }
   ]
 }

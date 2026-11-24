@@ -1426,3 +1426,5 @@
 {"id": "G-20261114-08", "point": "〜さえ〜ば", "choice": "さえ", "correct": "true", "ask_again": "false", "ts": "2026-11-24T07:37:28.000Z"}
 {"id": "N3-G125", "point": "〜っぱなし", "choice": "っぱなし", "correct": "true", "ask_again": "false", "ts": "2026-11-24T07:37:37.000Z"}
 {"id": "N3-G15", "point": "〜ば〜ほど", "choice": "読めば", "correct": "true", "ask_again": "false", "ts": "2026-11-24T07:37:49.000Z"}
+{"id": "VC-やっぱり", "point": "やっぱり", "choice": "记词:太熟", "correct": "true", "ask_again": "false", "ts": "2026-11-24T23:15:55.000Z"}
+{"id": "LK:会った", "point": "N3-G80", "choice": "会った", "correct": "true", "ask_again": "false", "ts": "2026-11-24T23:22:59.000Z"}
