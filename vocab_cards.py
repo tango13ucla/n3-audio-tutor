@@ -589,6 +589,21 @@ VOCAB_CARDS = {
         "ja_speak": "のれん。しにせののれんをまもる。",
         "zh_speak": "门帘，老字号招牌。",
     },
+    "象徴": {
+        "mode": "kanji_read",
+        "chunk_ja": "平和の象徴",
+        "target": "象徴",
+        "kana": "しょうちょう",
+        "trap_hl": ["しょう", "ちょう"],
+        "trap_tag": "双长音",
+        "zh_opaque": False,
+        "pitch": "⓪",
+        "zh": "象征",
+        "twin": "同音对比：省庁(しょうちょう · 中央省厅) · 所長(しょちょう · 短音)",
+        "mnemonic": "英文 “Show(しょう) Torch(ちょう)” 高举火炬象征精神，前后双长音拉满 → しょうちょう",
+        "ja_speak": "しょうちょう。へいわのしょうちょう。",
+        "zh_speak": "",
+    },
 
     # ==================== PURE KANA VERBS & ADVERBS (kana_meaning) ====================
     "こっそり": {
@@ -2046,7 +2061,61 @@ SPOKEN_MNEMONIC_OVERRIDES: dict[str, str] = {
     "買い物": "买像中文开买，加物もの。",
     "について": "紧贴着某个主题聊，意思是关于。",
     "よろしい": "比いい更正式的行，餐厅店员高频敬语。",
+    "象徴": "英文 Show Torch，高举火炬象征精神，前后两个长音拉满。",
 }
+
+
+_IMMERSION_VOCAB_CACHE: dict[str, dict] | None = None
+
+
+def _lookup_immersion_vocab(word: str) -> dict:
+    """Lazy lookup against immersion_vocab_engine.IMMERSION_VOCAB_BANK (236+ podcast words)."""
+    global _IMMERSION_VOCAB_CACHE
+    if _IMMERSION_VOCAB_CACHE is None:
+        cache: dict[str, dict] = {}
+        try:
+            import immersion_vocab_engine as _ive
+            for row in getattr(_ive, "IMMERSION_VOCAB_BANK", []) or []:
+                kj = str(row.get("kanji") or "").strip()
+                kn = str(row.get("kana") or "").strip()
+                zh_list = row.get("zh") or []
+                zh_str = str(row.get("carrier") or (zh_list[0] if zh_list else "")).strip()
+                meta = {"kana": kn, "zh": zh_str, "kanji": kj}
+                if kj and kj not in cache:
+                    cache[kj] = meta
+                if kn and kn not in cache:
+                    cache[kn] = meta
+        except Exception:
+            pass
+        _IMMERSION_VOCAB_CACHE = cache
+    return _IMMERSION_VOCAB_CACHE.get(str(word or "").strip(), {})
+
+
+def _auto_pronunciation_mnemonic(word: str, kana: str, trap_hl: list[str], trap_tag: str, zh: str = "") -> str:
+    """Self-healing zero-em-dash phonological cue for any newly enrolled dynamic vocab word."""
+    w = str(word or "").strip()
+    k = str(kana or w).strip()
+    hl = "・".join(h for h in (trap_hl or []) if h)
+    tag = str(trap_tag or "").strip()
+    short_zh = re.sub(r"[（(][^）)]*[）)]", "", str(zh or "").split(" · ")[0]).strip(" ，。—")[:12]
+
+    if HAS_KANJI_RE.search(w) and k and k != w:
+        if tag in ("促音+半浊", "促音") and hl:
+            return f"中间顿拍踩稳{tag}「{hl}」，整体干脆读作 {k}"
+        if "长音" in tag and hl:
+            return f"拉满{tag}「{hl}」绝不读短，完整读音 {k}"
+        if "连浊" in tag or "浊音" in tag or "半浊" in tag:
+            if hl:
+                return f"盯准{tag}「{hl}」咬清气口，整体读作 {k}"
+        if "训读" in tag and hl:
+            return f"这是汉字{tag}词干「{hl}」，整体顺口读 {k}"
+        if tag == "短音" and hl:
+            return f"开头「{hl}」干脆短音绝不拖长，完整读作 {k}"
+        return f"按拍锁死读音 {k}，干脆连读不拖泥带水"
+
+    if short_zh:
+        return f"按拍念准「{k}」节奏，直接绑定核心义「{short_zh}」"
+    return f"按假名节拍念准「{k}」，开口脱口而出"
 
 
 def clean_mnemonic_for_speech(mnemonic: str, word: str = "") -> str:
@@ -2063,7 +2132,7 @@ def clean_mnemonic_for_speech(mnemonic: str, word: str = "") -> str:
     s = re.sub(r"[（(][^）)]*[）)]", "", s)
     s = s.replace("“", " ").replace("”", " ").replace('"', " ")
     s = s.replace("&", " and ").replace("+", "加").replace("＋", "加")
-    s = s.replace("→", "，").replace("・", " ").replace("〜", "").replace("~", "")
+    s = s.replace("→", "，").replace("・", " ").replace("〜", "").replace("~", "").replace("—", "，")
     s = s.replace("...", " ").replace("…", " ")
     s = re.sub(r"促音\s*っ", "促音", s)
     s = re.sub(r"长音\s*う", "长音", s)
@@ -2099,6 +2168,11 @@ def build_vocab_audio_spec(vc: dict) -> dict:
             chunk_ja = cand + "。"
 
     hook_spoken = clean_mnemonic_for_speech(str(vc.get("mnemonic") or ""), word=word)
+    if not hook_spoken:
+        auto_mn = _auto_pronunciation_mnemonic(
+            word, kana, list(vc.get("trap_hl") or []), str(vc.get("trap_tag") or ""), str(vc.get("zh") or "")
+        )
+        hook_spoken = clean_mnemonic_for_speech(auto_mn, word=word) or f"按拍读准 {kana or word}。"
 
     # Brief core meaning (only for pure-kana words or opaque/false-friend kanji; transparent kanji skip straight to hook!)
     brief_zh = ""
@@ -2273,7 +2347,7 @@ def analyze_kanji_reading_trap(word: str, kana: str, zh: str = "", head: str = "
 
 
 def build_dynamic_vocab_card(word: str, info: dict | None = None, fallback_note: str = "") -> dict:
-    """Builds a clean Dual-Mode card for any word in VOCAB_CARDS or tapped from SENTENCE_LEXICON."""
+    """Builds a clean Dual-Mode card for any word in VOCAB_CARDS, immersion bank, or tapped from SENTENCE_LEXICON."""
     if word in VOCAB_CARDS:
         c = dict(VOCAB_CARDS[word])
         c["word"] = word
@@ -2284,24 +2358,36 @@ def build_dynamic_vocab_card(word: str, info: dict | None = None, fallback_note:
             c["trap_hl"] = hl
             c["trap_tag"] = tag
             c["zh_opaque"] = opq
+        if not c.get("mnemonic"):
+            c["mnemonic"] = _auto_pronunciation_mnemonic(word, c.get("kana", word), c.get("trap_hl") or [], c.get("trap_tag") or "", c.get("zh") or "")
         return c
 
     info = info or {}
-    kana = str(info.get("kana") or word).strip()
+    imm_meta = _lookup_immersion_vocab(word)
+    kana = str(info.get("kana") or imm_meta.get("kana") or word).strip()
+    if kana == word and HAS_KANJI_RE.search(word):
+        try:
+            import pykakasi as _pk
+            _kks = _pk.kakasi()
+            _auto_k = "".join(str(x.get("hira") or "") for x in _kks.convert(word)).strip()
+            if _auto_k and _auto_k != word:
+                kana = _auto_k
+        except Exception:
+            pass
     pitch = str(info.get("pitch") or "").strip()
-    zh = str(info.get("zh") or "").strip()
+    zh = str(info.get("zh") or imm_meta.get("zh") or "").strip()
     tip = str(info.get("tip") or fallback_note or "").strip()
     head = str(info.get("head") or word).strip()
 
     is_kanji = bool(HAS_KANJI_RE.search(word)) and (kana != word)
     mode = "kanji_read" if is_kanji else "kana_meaning"
 
-    # Extract a clean Japanese micro-chunk from tip if available (e.g., "手すりにつかまる（抓紧扶手）")
-    chunk_ja = word
+    # Extract a clean Japanese micro-chunk from tip if available (capped <=10 chars for Zen card hygiene)
+    chunk_ja = word[:10]
     twin = tip
     if tip:
         first_seg = tip.split("／")[0].split("↔")[0].strip()
-        m_ja = re.match(r"^([\u3040-\u30ff\u4e00-\u9fffー０-９0-9A-Za-z]{3,18})(?:[（(]([^）)]+)[）)])?$", first_seg)
+        m_ja = re.match(r"^([\u3040-\u30ff\u4e00-\u9fffー０-９0-9A-Za-z]{3,10})(?:[（(]([^）)]+)[）)])?$", first_seg)
         if m_ja and word[:2] in m_ja.group(1):
             chunk_ja = m_ja.group(1)
             if m_ja.group(2) and m_ja.group(2) not in zh:
@@ -2315,7 +2401,12 @@ def build_dynamic_vocab_card(word: str, info: dict | None = None, fallback_note:
     if is_kanji:
         trap_hl, trap_tag, zh_opaque = analyze_kanji_reading_trap(word, kana, zh or fallback_note, head)
 
-    clean_zh_voice = re.sub(r"[（()）·/／↔≠＝〜~]", "，", zh).strip(" ，。")
+    mnemonic = get_pronunciation_mnemonic(word, head) or _auto_pronunciation_mnemonic(
+        word, kana, trap_hl, trap_tag, zh or fallback_note
+    )
+    mnemonic = mnemonic.replace("—", "，")
+
+    clean_zh_voice = re.sub(r"[（()）·/／↔≠＝〜~—]", "，", zh).strip(" ，。")
     zh_speak = (f"{clean_zh_voice}。" if clean_zh_voice else "") if (not is_kanji or zh_opaque) else ""
 
     return {
@@ -2329,8 +2420,8 @@ def build_dynamic_vocab_card(word: str, info: dict | None = None, fallback_note:
         "zh_opaque": zh_opaque,
         "pitch": pitch,
         "zh": zh or fallback_note,
-        "twin": twin,
-        "mnemonic": get_pronunciation_mnemonic(word, head),
+        "twin": twin.replace("—", "，"),
+        "mnemonic": mnemonic,
         "ja_speak": f"{kana}。",
         "zh_speak": zh_speak,
     }

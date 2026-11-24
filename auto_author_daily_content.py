@@ -144,7 +144,7 @@ def collect_study_history(cutoff_study_day: str | None = None) -> tuple[
                 continue
 
             if cid.startswith("RV:") or choice.startswith("听后复盘:"):
-                if pt and choice == "听后复盘:重学" and not contains_pii(pt):
+                if pt and choice in ("听后复盘:重学", "听后复盘:再过") and not contains_pii(pt):
                     pts = missed_by_day.setdefault(sday, [])
                     if pt not in pts:
                         pts.append(pt)

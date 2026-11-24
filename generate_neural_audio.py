@@ -758,6 +758,9 @@ async def main():
                         vc_all_cards[vw] = build_dynamic_vocab_card(vw, merged_words.get(vw, {}))
         except Exception:
             pass
+    for kw, _pitch, _desc in CORE_N3_KANA_VOCAB:
+        if kw and kw not in vc_all_cards:
+            vc_all_cards[kw] = build_dynamic_vocab_card(kw, merged_words.get(kw, {}), fallback_note=_desc)
 
     def _to_bilingual_turns(txt: str) -> list:
         txt = str(txt or "").strip()

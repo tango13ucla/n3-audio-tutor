@@ -283,11 +283,11 @@ def apply_practice_logs(state: dict, fallback_day_tag: str = "") -> int:
 
                 # Post-Listening 5-Min Contextual Review ("RV:<id>"):
                 # - "听后复盘:过": log episodic verification without falsely inflating cross-day 3/3 true green
-                # - "听后复盘:重学": prioritize into tomorrow's Quiz/Vocab + hold podcast pure-JA lock for 1 gentle re-bridge!
+                # - "听后复盘:重学" / "听后复盘:再过": prioritize into tomorrow's Quiz/Vocab + hold podcast pure-JA lock for 1 gentle re-bridge!
                 if rec_id.startswith("RV:") or choice.startswith("听后复盘:"):
                     day_tag_rv = _iso_to_day_tag(ts, fallback_day_tag)
                     day_iso_rv = f"{day_tag_rv[:4]}-{day_tag_rv[4:6]}-{day_tag_rv[6:8]}" if len(day_tag_rv) == 8 else ""
-                    if choice == "听后复盘:重学" and pt:
+                    if choice in ("听后复盘:重学", "听后复盘:再过") and pt:
                         applied += 1
                         rq = state.setdefault("radio_relearn_queue", {})
                         rq[pt] = max(str(rq.get(pt) or ""), day_tag_rv)

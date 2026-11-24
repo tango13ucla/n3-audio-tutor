@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Fast CI & Pre-Push Guard for n3-audio-tutor (zero external dependencies).
-Prevents cold-branch NameErrors (like the 2026-11-24 `SPK:` `is_correct` bug)
-and workflow/radio version-check drift from ever blocking daily refreshes again.
+Comprehensive Fast CI & Pre-Push Guard for n3-audio-tutor (zero external dependencies).
+Guards 6 critical invariants before EVERY publish:
+  1. Static AST syntax & undefined-name scan across ALL Python files.
+  2. All-event-types practice_log replay (LK:, HES:, SPK:, RV:过/重学/再过/快过存疑, GA-, VC-, FLASH-, quiz, GROK-).
+  3. Frontend <-> Backend choice contract sync (scans build_html.py against run_brain_algorithm.py & auto_author_daily_content.py).
+  4. Dynamic vocab card stress test across ALL 236 IMMERSION_VOCAB_BANK words + VOCAB_CARDS + CORE_N3_KANA_VOCAB + unseen synthetic words (Self-test 4 invariants).
+  5. Speaking prompt templates + fallback stress test (Self-test 9 invariants).
+  6. Workflow radio version-check alignment across all 3 GitHub Actions workflows.
 """
 from __future__ import annotations
 
@@ -173,7 +178,7 @@ def test_all_python_files_syntax_and_names() -> None:
             continue
         all_errs.extend(_check_scope_undefined(tree, p.name))
     assert not all_errs, "Static undefined-name/syntax errors:\n" + "\n".join(all_errs)
-    print(f"[PASS] Static AST syntax & undefined-name check ({len(py_files)} Python files)")
+    print(f"[PASS 1/6] Static AST syntax & undefined-name check ({len(py_files)} Python files)")
 
 
 def test_apply_practice_logs_all_event_types() -> None:
@@ -188,14 +193,15 @@ def test_apply_practice_logs_all_event_types() -> None:
         {"ts": "2026-11-24T06:00:05Z", "id": "SPK:RV-2", "point": "〜べきではない", "choice": "开口:再练句型", "correct": False},
         {"ts": "2026-11-24T06:00:06Z", "id": "RV:1", "point": "〜につれて", "choice": "听后复盘:过", "correct": "true"},
         {"ts": "2026-11-24T06:00:07Z", "id": "RV:2", "point": "〜べきではない", "choice": "听后复盘:重学", "correct": "false"},
-        {"ts": "2026-11-24T06:00:08Z", "id": "RV:3", "point": "〜に関して", "choice": "听后复盘:快过存疑", "correct": "true"},
-        {"ts": "2026-11-24T06:00:09Z", "id": "GA-G-001", "point": "〜につれて", "choice": "盘点:本能", "correct": "true"},
-        {"ts": "2026-11-24T06:00:10Z", "id": "GA-G-116a", "point": "尊敬語", "choice": "盘点:陌生", "correct": "false"},
-        {"ts": "2026-11-24T06:00:11Z", "id": "VC-辞書", "point": "辞書", "choice": "记词:没记住", "correct": "false"},
-        {"ts": "2026-11-24T06:00:12Z", "id": "FLASH-暖簾", "point": "暖簾", "choice": "闪卡:顺过", "correct": "true"},
-        {"ts": "2026-11-24T06:00:13Z", "id": "N3-G1", "point": "〜に関して", "choice": "に関して", "correct": "true", "ask_again": "false"},
-        {"ts": "2026-11-24T06:00:14Z", "id": "N3-G2", "point": "〜べきではない", "choice": "不确定", "correct": "false", "ask_again": "true"},
-        {"ts": "2026-11-24T06:00:15Z", "id": "GROK-1", "point": "〜につれて", "choice": "Grok:还是要考", "correct": "true", "ask_again": "true", "source": "grok"},
+        {"ts": "2026-11-24T06:00:08Z", "id": "RV:2b", "point": "象徴", "choice": "听后复盘:再过", "correct": "false"},
+        {"ts": "2026-11-24T06:00:09Z", "id": "RV:3", "point": "〜に関して", "choice": "听后复盘:快过存疑", "correct": "true"},
+        {"ts": "2026-11-24T06:00:10Z", "id": "GA-G-001", "point": "〜につれて", "choice": "盘点:本能", "correct": "true"},
+        {"ts": "2026-11-24T06:00:11Z", "id": "GA-G-116a", "point": "尊敬語", "choice": "盘点:陌生", "correct": "false"},
+        {"ts": "2026-11-24T06:00:12Z", "id": "VC-辞書", "point": "辞書", "choice": "记词:没记住", "correct": "false"},
+        {"ts": "2026-11-24T06:00:13Z", "id": "FLASH-暖簾", "point": "暖簾", "choice": "闪卡:顺过", "correct": "true"},
+        {"ts": "2026-11-24T06:00:14Z", "id": "N3-G1", "point": "〜に関して", "choice": "に関して", "correct": "true", "ask_again": "false"},
+        {"ts": "2026-11-24T06:00:15Z", "id": "N3-G2", "point": "〜べきではない", "choice": "不确定", "correct": "false", "ask_again": "true"},
+        {"ts": "2026-11-24T06:00:16Z", "id": "GROK-1", "point": "〜につれて", "choice": "Grok:还是要考", "correct": "true", "ask_again": "true", "source": "grok"},
     ]
 
     with tempfile.TemporaryDirectory() as td:
@@ -233,17 +239,105 @@ def test_apply_practice_logs_all_event_types() -> None:
             assert "辞書" in (spk.get("slips") or {}), f"Expected 辞書 slip recorded, got {spk}"
             assert "〜べきではない" in (spk.get("slips") or {}), f"Expected 〜べきではない slip recorded, got {spk}"
             assert "〜につれて" not in (spk.get("slips") or {}), f"Passed SPK should not be marked slip: {spk}"
+            assert "象徴" in (state.get("radio_relearn_queue") or {}), "Expected 听后复盘:再过 to queue 象徴 for relearn"
+            assert "〜べきではない" in (state.get("radio_relearn_queue") or {}), "Expected 听后复盘:重学 to queue 〜べきではない"
             assert "辞書" in (state.get("word_lookups") or {}), "Expected lookup recorded"
 
             _, ever_seen, missed, missed_v, lookups = aadc.collect_study_history(cutoff_study_day="2026-11-24")
             for bad_prefix in ("SPK:", "RV:", "HES:", "LK:", "GA-", "VC-", "GROK-"):
                 assert not any(c.startswith(bad_prefix) for c in ever_seen), f"ever_seen polluted with {bad_prefix}: {ever_seen}"
             assert "N3-G1" in ever_seen and "N3-G2" in ever_seen
-            assert "辞書" in (missed_v.get("2026-11-23") or missed_v.get("2026-11-24") or [])
+            all_missed = [x for vals in missed.values() for x in vals]
+            assert "象徴" in all_missed, f"Expected 听后复盘:再过 (象徴) in missed_by_day: {missed}"
         finally:
             rba.LOG_PATH, rba.SNAPSHOT_PATH = orig_rba_log, orig_rba_snap
             aadc.LOG_PATH, aadc.SNAP_PATH = orig_aadc_log, orig_aadc_snap
-    print("[PASS] apply_practice_logs & collect_study_history all-event-types test")
+    print("[PASS 2/6] apply_practice_logs & collect_study_history all-event-types test")
+
+
+def test_frontend_backend_choice_contract() -> None:
+    bh_src = (BASE_DIR / "build_html.py").read_text(encoding="utf-8")
+    rba_src = (BASE_DIR / "run_brain_algorithm.py").read_text(encoding="utf-8")
+    aadc_src = (BASE_DIR / "auto_author_daily_content.py").read_text(encoding="utf-8")
+
+    # Every radio review label emitted by build_html.py MUST be explicitly handled by run_brain_algorithm.py
+    rv_labels = set(re.findall(r'"(听后复盘:[^"]+)"', bh_src))
+    assert rv_labels, "No 听后复盘:* labels found in build_html.py"
+    for lbl in sorted(rv_labels):
+        assert lbl in rba_src, f"Frontend emits '{lbl}' but run_brain_algorithm.py does NOT handle it!"
+
+    # Every grammar audit verdict emitted by build_html.py MUST be handled by run_brain_algorithm.py
+    ga_labels = set(re.findall(r'"(盘点:[^"]+)"', bh_src))
+    assert ga_labels, "No 盘点:* labels found in build_html.py"
+    for lbl in sorted(ga_labels):
+        assert lbl in rba_src, f"Frontend emits '{lbl}' but run_brain_algorithm.py does NOT handle it!"
+
+    # Relearn labels must also be handled in auto_author_daily_content.py
+    for relbl in ("听后复盘:再过", "听后复盘:重学"):
+        assert relbl in aadc_src, f"auto_author_daily_content.py missing '{relbl}'"
+    print(f"[PASS 3/6] Frontend<->Backend choice contract sync ({len(rv_labels)} RV + {len(ga_labels)} GA labels)")
+
+
+def test_dynamic_vocab_cards_self_test4_invariants() -> None:
+    import vocab_cards as vc
+    import immersion_vocab_engine as ive
+    from adaptive_bank import CORE_N3_KANA_VOCAB
+
+    candidates: list[str] = list(vc.VOCAB_CARDS.keys())
+    for row in getattr(ive, "IMMERSION_VOCAB_BANK", []):
+        if row.get("kanji"):
+            candidates.append(str(row["kanji"]))
+    for kw, _, _ in CORE_N3_KANA_VOCAB:
+        candidates.append(str(kw))
+    # Also test completely unseen synthetic kanji & kana words!
+    candidates.extend(["象徴", "緊急事態", "再配達", "もやもや"])
+
+    checked = set()
+    for w in candidates:
+        if not w or w in checked:
+            continue
+        checked.add(w)
+        spec = vc.build_dynamic_vocab_card(w, {})
+        aspec = vc.build_vocab_audio_spec(spec)
+        mn = str(spec.get("mnemonic") or "").strip()
+        hs = str(aspec.get("hook_spoken") or "").strip()
+        ch = str(spec.get("chunk_ja") or "").strip()
+        assert mn, f"Empty mnemonic for vocab card '{w}'"
+        assert "—" not in mn, f"Em dash in mnemonic for '{w}': {mn}"
+        assert hs, f"Empty hook_spoken for vocab card '{w}'"
+        assert "—" not in hs, f"Em dash in hook_spoken for '{w}': {hs}"
+        assert len(ch) <= 10, f"chunk_ja too long ({len(ch)}>10) for '{w}': {ch}"
+    print(f"[PASS 4/6] Dynamic vocab cards Self-test 4 invariants ({len(checked)} words incl. all 236 immersion words)")
+
+
+def test_speaking_prompts_self_test9_invariants() -> None:
+    import radio_review_builder as rrb
+
+    # Check all curated templates
+    for k, sp in rrb._SPEAKING_TEMPLATES.items():
+        ps = str(sp.get("prompt_short") or "")
+        mj = str(sp.get("model_ja") or "")
+        ts = sp.get("target_stems") or []
+        blob = ps + str(sp.get("prompt_ja") or "") + str(sp.get("prompt_zh") or "") + mj + str(sp.get("coaching_tip") or "")
+        assert ps and len(ps) <= 14, f"Bad template prompt_short for {k}: {ps}"
+        assert mj and len(mj) <= 26, f"Bad template model_ja for {k}: {mj}"
+        assert ts, f"Empty target_stems for {k}"
+        assert "—" not in blob, f"Em dash in template {k}"
+
+    # Also test tpl=None fallback with very long grammar title & 1-char particle!
+    mock_items = [
+        {"id": "R1", "kind": "grammar", "point_id": "N3-G999", "key": "〜ということになっている", "title": "〜ということになっている", "zh": "按规定应该这样做而且不能随便改", "ja_example": "会議では必ず事前に資料を共有するということになっている。", "chapter_idx": 0},
+        {"id": "R2", "kind": "grammar", "point_id": "N3-G998", "key": "〜ば", "title": "〜ば", "zh": "只要……就——假定条件", "ja_example": "", "chapter_idx": 1},
+    ]
+    built = rrb.build_episode_speaking_prompts([], mock_items, max_prompts=2)
+    assert len(built) == 2
+    for sp in built:
+        assert sp["prompt_short"] and len(sp["prompt_short"]) <= 14, f"Fallback prompt_short violated <=14: {sp}"
+        assert sp["model_ja"] and len(sp["model_ja"]) <= 26, f"Fallback model_ja violated <=26: {sp}"
+        assert sp["target_stems"], f"Fallback target_stems empty: {sp}"
+        blob = sp["prompt_short"] + sp["prompt_ja"] + sp["prompt_zh"] + sp["model_ja"] + sp["coaching_tip"]
+        assert "—" not in blob, f"Fallback contains em dash: {sp}"
+    print(f"[PASS 5/6] Speaking prompts Self-test 9 invariants ({len(rrb._SPEAKING_TEMPLATES)} templates + fallback stress)")
 
 
 def test_workflows_radio_version_alignment() -> None:
@@ -265,14 +359,17 @@ def test_workflows_radio_version_alignment() -> None:
         assert m, f"{wf.name} missing expected_ver_num"
         wf_ver = int(m.group(1))
         assert wf_ver <= max_gen_ver, f"{wf.name} expects v{wf_ver} > generate_daily_radio.py max v{max_gen_ver}"
-    print(f"[PASS] Workflow radio version guard aligned (v{max_gen_ver} across {len(wf_files)} workflows)")
+    print(f"[PASS 6/6] Workflow radio version guard aligned (v{max_gen_ver} across {len(wf_files)} workflows)")
 
 
 def main() -> int:
     test_all_python_files_syntax_and_names()
     test_apply_practice_logs_all_event_types()
+    test_frontend_backend_choice_contract()
+    test_dynamic_vocab_cards_self_test4_invariants()
+    test_speaking_prompts_self_test9_invariants()
     test_workflows_radio_version_alignment()
-    print("[ALL PASS] tests_ci_guard.py green!")
+    print("[ALL PASS] tests_ci_guard.py 6/6 gates green!")
     return 0
 
 

@@ -1053,13 +1053,15 @@ def build_episode_speaking_prompts(
         else:
             t_stems = list(dict.fromkeys(stems))
             clean_pt = title.replace("〜", "").replace("~", "").strip()
-            prompt_short = zh or f"用「{title}」说一句"
+            prompt_short = _short_zh(zh or f"用{clean_pt}造短句", max_chars=12) or "试着开口说一句"
             prompt_ja = _clean_text(f"「{title}」で一言")
             prompt_zh = _clean_text(f"用「{title}」说个短句")
-            model_ja = _short_ja_example(ex_ja, t_stems, max_chars=20) or _clean_text(f"{clean_pt}を使って話します。")
+            raw_model = _short_ja_example(ex_ja, t_stems, max_chars=20) or _clean_text(f"{clean_pt}で話します。")
+            model_ja = raw_model[:24]
             model_zh = zh or "参考短句"
             tip = _short_zh(f"顺口带出「{title}」", max_chars=18)
 
+        safe_stems = [s for s in t_stems if len(s) >= 2] or [s for s in t_stems if s] or [title.replace("〜", "").replace("~", "").strip() or title]
         prompts.append({
             "id": f"SPK-{pid}",
             "point_id": pid,
@@ -1069,13 +1071,13 @@ def build_episode_speaking_prompts(
             "chapter_idx": int(it.get("chapter_idx", 0)),
             "chapter_title": ch_title,
             "story_cue": story_cue,
-            "prompt_short": prompt_short,
-            "prompt_ja": prompt_ja,
-            "prompt_zh": prompt_zh,
-            "target_stems": [s for s in t_stems if len(s) >= 2],
-            "model_ja": model_ja,
-            "model_zh": model_zh,
-            "coaching_tip": tip,
+            "prompt_short": prompt_short.replace("—", "")[:14],
+            "prompt_ja": prompt_ja.replace("—", ""),
+            "prompt_zh": prompt_zh.replace("—", ""),
+            "target_stems": safe_stems,
+            "model_ja": model_ja.replace("—", "")[:26],
+            "model_zh": model_zh.replace("—", ""),
+            "coaching_tip": tip.replace("—", ""),
             "clip_start": float(it.get("clip_start", 0.0)),
             "clip_end": float(it.get("clip_end", 14.0)),
             "demo_audio": str(it.get("demo_audio") or ""),
