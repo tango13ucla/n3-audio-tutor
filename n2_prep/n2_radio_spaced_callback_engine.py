@@ -54,10 +54,14 @@ def plan_n2_episode_pedagogy(
     day: int,
     recent_wrong_ids: list[str] | None = None,
     recent_lookup_ids: list[str] | None = None,
+    speaking_slip_points: list[str] | None = None,
+    confusion_pairs: dict | None = None,
 ) -> dict:
-    """Build the exact N2 teaching + non-intrusive callback brief for Study Day `day`."""
+    """Build the exact N2 teaching + non-intrusive callback brief for Study Day `day` (Adaptive v8.0 ready)."""
     wrong_set = set(recent_wrong_ids or [])
     lookup_set = set(recent_lookup_ids or [])
+    slip_set = set(speaking_slip_points or [])
+    conf_map = confusion_pairs or {}
 
     new_items = get_day_new_grammar(day)
     raw_due = get_day_callback_grammar(day)
@@ -69,8 +73,13 @@ def plan_n2_episode_pedagogy(
         if item["id"] in wrong_set:
             score += 100
             reason = "quiz_miss_rescue"
+        elif item["point"] in slip_set or item["id"] in slip_set:
+            score += 85
+            reason = "quiz_miss_rescue"
         elif item["id"] in lookup_set:
             score += 60
+        if item["point"] in conf_map:
+            score += 35
         # Balance recency: +1 day (30), +5 day (25), +14 day (20)
         score += {1: 30, 5: 25, 14: 20}.get(item["callback_delta"], 10)
         scored.append((score, reason, item))
@@ -79,6 +88,8 @@ def plan_n2_episode_pedagogy(
     selected_callbacks = []
     for _score, reason, item in scored[:MAX_CALLBACKS_PER_EPISODE]:
         rule = CALLBACK_DELIVERY_RULES[reason]
+        cp_obj = conf_map.get(item["point"])
+        cp_wrong = cp_obj.get("top_wrong") if isinstance(cp_obj, dict) else (cp_obj if isinstance(cp_obj, str) else "")
         selected_callbacks.append({
             "id": item["id"],
             "point": item["point"],
@@ -88,6 +99,7 @@ def plan_n2_episode_pedagogy(
             "delivery_mode": reason,
             "max_seconds": rule["max_seconds"],
             "delivery_rule": rule["style"],
+            "personal_confusion_wrong": cp_wrong,
         })
 
     try:
