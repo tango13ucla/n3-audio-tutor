@@ -3040,6 +3040,7 @@ async def main():
         prev_story_arts: list[dict] = []
         prev_jp_video: dict = {}
         prev_chap_imgs: dict[int, str] = {}
+        prev_spk_audios: dict[str, str] = {}
         need_visual_render = True
         if os.path.exists(RADIO_META_PATH):
             try:
@@ -3053,45 +3054,83 @@ async def main():
                     for ci, ch in enumerate(prev_meta.get("chapters") or []):
                         if isinstance(ch, dict) and ch.get("img"):
                             prev_chap_imgs[int(ch.get("idx", ci))] = str(ch["img"])
-                    if prev_jp_video.get("video_url") and prev_meta.get("script_sig") == script_sig:
+                    for psp in (prev_meta.get("speaking_prompts") or []):
+                        if isinstance(psp, dict) and psp.get("model_audio"):
+                            ma_url = str(psp["model_audio"])
+                            ma_rel = ma_url.split("?")[0].lstrip("./")
+                            ma_abs = os.path.join(BASE_DIR, ma_rel)
+                            if os.path.exists(ma_abs) and os.path.getsize(ma_abs) > 800:
+                                if psp.get("id"):
+                                    prev_spk_audios[str(psp["id"])] = ma_url
+                                if psp.get("model_ja"):
+                                    prev_spk_audios[str(psp["model_ja"])] = ma_url
+                    v_rel = str(prev_jp_video.get("video_url") or "").split("?")[0].lstrip("./")
+                    v_abs = os.path.join(BASE_DIR, v_rel) if v_rel else ""
+                    vtt_rel = str(prev_jp_video.get("vtt_url") or "").split("?")[0].lstrip("./")
+                    vtt_abs = os.path.join(BASE_DIR, vtt_rel) if vtt_rel else ""
+                    video_ok = (
+                        bool(v_abs)
+                        and os.path.exists(v_abs)
+                        and os.path.getsize(v_abs) > 40000
+                        and bool(vtt_abs)
+                        and os.path.exists(vtt_abs)
+                        and len(prev_jp_video.get("cues") or []) >= 10
+                        and len(prev_jp_video.get("target_words") or []) >= 8
+                    )
+                    spk_ok = all(
+                        bool(prev_spk_audios.get(str(sp.get("id") or "")) or prev_spk_audios.get(str(sp.get("model_ja") or "")))
+                        for sp in speaking_prompts
+                    )
+                    if video_ok and spk_ok and prev_meta.get("script_sig") == script_sig:
                         need_visual_render = False
             except Exception:
                 pass
 
         if need_visual_render and review_items:
-            try:
-                import radio_visual_studio as rvs
-                vis = rvs.build_episode_visuals(
-                    today_str=today_str,
-                    script_sig=script_sig,
-                    story_blocks=story_blocks,
-                    chapters_meta=chapters_meta,
-                    review_items=review_items,
-                    speaking_prompts=speaking_prompts,
-                    audio_mp3_path=RADIO_MP3_PATH,
-                    imm_vocab_report=public_vocab_meta,
-                )
-                if vis.get("artwork_url"):
-                    prev_art_url = vis["artwork_url"]
-                if vis.get("story_arts"):
-                    prev_story_arts = vis["story_arts"]
-                if vis.get("jp_video"):
-                    prev_jp_video = vis["jp_video"]
-            except Exception as exc:
-                print(f"[warn] radio_visual_studio skipped: {exc}")
-        elif prev_chap_imgs:
-            for ch in chapters_meta:
-                img_v = prev_chap_imgs.get(int(ch["idx"]))
-                if img_v:
-                    ch["img"] = img_v
-            for it in review_items:
-                img_v = prev_chap_imgs.get(int(it.get("chapter_idx", -1)))
-                if img_v:
-                    it["img"] = img_v
+            import radio_visual_studio as rvs
+            vis = await rvs.build_episode_visuals_async(
+                today_str=today_str,
+                script_sig=script_sig,
+                story_blocks=story_blocks,
+                chapters_meta=chapters_meta,
+                review_items=review_items,
+                speaking_prompts=speaking_prompts,
+                audio_mp3_path=RADIO_MP3_PATH,
+                imm_vocab_report=public_vocab_meta,
+            )
+            if vis.get("artwork_url"):
+                prev_art_url = vis["artwork_url"]
+            if vis.get("story_arts"):
+                prev_story_arts = vis["story_arts"]
+            if vis.get("jp_video"):
+                prev_jp_video = vis["jp_video"]
+            if any(not sp.get("model_audio") for sp in speaking_prompts):
+                ver_tag = f"{today_str}_{str(script_sig or 'v2')[:6]}_jp"
+                await rvs._synth_speaking_prompt_audios(speaking_prompts, ver_tag)
+            missing_spk = [sp.get("id") for sp in speaking_prompts if not sp.get("model_audio")]
+            if missing_spk:
+                raise RuntimeError(f"Speaking studio audio synthesis missing for {missing_spk}")
+            if not prev_jp_video.get("video_url"):
+                raise RuntimeError("Daily All-Japanese documentary video failed to synthesize")
+        else:
+            if prev_chap_imgs:
+                for ch in chapters_meta:
+                    img_v = prev_chap_imgs.get(int(ch["idx"]))
+                    if img_v:
+                        ch["img"] = img_v
+                for it in review_items:
+                    img_v = prev_chap_imgs.get(int(it.get("chapter_idx", -1)))
+                    if img_v:
+                        it["img"] = img_v
+                for sp in speaking_prompts:
+                    img_v = prev_chap_imgs.get(int(sp.get("chapter_idx", -1)))
+                    if img_v:
+                        sp["img"] = img_v
             for sp in speaking_prompts:
-                img_v = prev_chap_imgs.get(int(sp.get("chapter_idx", -1)))
-                if img_v:
-                    sp["img"] = img_v
+                if not sp.get("model_audio"):
+                    ma = prev_spk_audios.get(str(sp.get("id") or "")) or prev_spk_audios.get(str(sp.get("model_ja") or ""))
+                    if ma:
+                        sp["model_audio"] = ma
 
         meta_obj = {
             "date": today_str,
