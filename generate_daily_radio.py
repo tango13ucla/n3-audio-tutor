@@ -2408,6 +2408,7 @@ async def main():
             if txt0_clean and txt0_clean != txt0:
                 st_turns[0] = (spk0, f"哎，再说回眼跟前儿这笔账，{txt0_clean}")
         story_blocks.append({
+            "id": str(st.get("id") or ""),
             "chapter": ch_idx,
             "short_tab": st["short_tab"],
             "point_id": pids[0] if pids else "",

@@ -16801,35 +16801,39 @@ if (!firstItem || (hasPri0Unaud && firstItem.pri !== 0)) {
   throw new Error('Self-test 7 failed: GA batch must start with priority-0 blind spots when unaudited pri-0 exist!');
 }
 const gaHtml = (els['vocab-stage-box'] && els['vocab-stage-box'].innerHTML) || '';
-if (!gaHtml.includes('ga-stage') || !gaHtml.includes('ga-spec-rail') || !gaHtml.includes('陌生') || !gaHtml.includes('易混') || !gaHtml.includes('看懂') || !gaHtml.includes('本能') || gaHtml.includes('—')) {
-  throw new Error('Self-test 7 failed: GA open Zen stage or 4 stops missing, or contains em dash!');
-}
-for (const banned of ['vc-card', '光谱', '原账', '11月未测', '按住沿线', '这一秒的真实感觉', '脑中过一遍', 'vc-hook-tag', '今日 ']) {
-  if (gaHtml.includes(banned)) {
-    throw new Error('Self-test 7 failed: un-Zen box or waste word leaked in GA UI: ' + banned);
+if (expectedGaBatch > 0) {
+  if (!gaHtml.includes('ga-stage') || !gaHtml.includes('ga-spec-rail') || !gaHtml.includes('陌生') || !gaHtml.includes('易混') || !gaHtml.includes('看懂') || !gaHtml.includes('本能') || gaHtml.includes('—')) {
+    throw new Error('Self-test 7 failed: GA open Zen stage or 4 stops missing, or contains em dash!');
   }
-}
-if (gaHtml.includes(`id="ga-eyebrow">${firstItem.family}`)) {
-  throw new Error('Self-test 7 failed: unflipped GA card leaked semantic family on eyebrow: ' + firstItem.family);
-}
-if (!gaHtml.includes(`id="ga-head">${firstItem.front_name}</div>`)) {
-  throw new Error('Self-test 7 failed: unflipped GA card did not render clean front_name: ' + firstItem.front_name);
-}
-// Commit code=1 (陌生) before reveal -> reveals family & full name + unified Zen dock synchronously, sets todo mastery
-sb.commitGASpectrum(1);
-if (!els['ga-eyebrow'] || !String(els['ga-eyebrow'].textContent || '').includes(firstItem.family) || !els['ga-head'] || els['ga-head'].textContent !== firstItem.name) {
-  throw new Error('Self-test 7 failed: revealing GA card did not unveil family & full name: ' + JSON.stringify({eye: els['ga-eyebrow'] && els['ga-eyebrow'].textContent, head: els['ga-head'] && els['ga-head'].textContent}));
-}
-const gaEntry1 = vm.runInNewContext(`A.gaMap["${firstItem.gid}"]`, sb);
-const ov1 = vm.runInNewContext(`A.masteryOverrides[${JSON.stringify(firstItem.name)}]`, sb);
-if (!Array.isArray(gaEntry1) || gaEntry1[0] !== 1 || !String(ov1 || '').startsWith('todo:')) {
-  throw new Error('Self-test 7 failed: spectrum 1 did not set code=1 and todo mastery: ' + JSON.stringify({gaEntry1, ov1}));
-}
-// Undo writes CRDT code=0 tombstone cleanly
-sb.undoLastGA();
-const gaEntryUndo = vm.runInNewContext(`A.gaMap["${firstItem.gid}"]`, sb);
-if (!Array.isArray(gaEntryUndo) || gaEntryUndo[0] !== 0) {
-  throw new Error('Self-test 7 failed: undoLastGA did not write CRDT code=0 tombstone: ' + JSON.stringify(gaEntryUndo));
+  for (const banned of ['vc-card', '光谱', '原账', '11月未测', '按住沿线', '这一秒的真实感觉', '脑中过一遍', 'vc-hook-tag', '今日 ']) {
+    if (gaHtml.includes(banned)) {
+      throw new Error('Self-test 7 failed: un-Zen box or waste word leaked in GA UI: ' + banned);
+    }
+  }
+  if (gaHtml.includes(`id="ga-eyebrow">${firstItem.family}`)) {
+    throw new Error('Self-test 7 failed: unflipped GA card leaked semantic family on eyebrow: ' + firstItem.family);
+  }
+  if (!gaHtml.includes(`id="ga-head">${firstItem.front_name}</div>`)) {
+    throw new Error('Self-test 7 failed: unflipped GA card did not render clean front_name: ' + firstItem.front_name);
+  }
+  // Commit code=1 (陌生) before reveal -> reveals family & full name + unified Zen dock synchronously, sets todo mastery
+  sb.commitGASpectrum(1);
+  if (!els['ga-eyebrow'] || !String(els['ga-eyebrow'].textContent || '').includes(firstItem.family) || !els['ga-head'] || els['ga-head'].textContent !== firstItem.name) {
+    throw new Error('Self-test 7 failed: revealing GA card did not unveil family & full name: ' + JSON.stringify({eye: els['ga-eyebrow'] && els['ga-eyebrow'].textContent, head: els['ga-head'] && els['ga-head'].textContent}));
+  }
+  const gaEntry1 = vm.runInNewContext(`A.gaMap["${firstItem.gid}"]`, sb);
+  const ov1 = vm.runInNewContext(`A.masteryOverrides[${JSON.stringify(firstItem.name)}]`, sb);
+  if (!Array.isArray(gaEntry1) || gaEntry1[0] !== 1 || !String(ov1 || '').startsWith('todo:')) {
+    throw new Error('Self-test 7 failed: spectrum 1 did not set code=1 and todo mastery: ' + JSON.stringify({gaEntry1, ov1}));
+  }
+  // Undo writes CRDT code=0 tombstone cleanly
+  sb.undoLastGA();
+  const gaEntryUndo = vm.runInNewContext(`A.gaMap["${firstItem.gid}"]`, sb);
+  if (!Array.isArray(gaEntryUndo) || gaEntryUndo[0] !== 0) {
+    throw new Error('Self-test 7 failed: undoLastGA did not write CRDT code=0 tombstone: ' + JSON.stringify(gaEntryUndo));
+  }
+} else if (!gaHtml.includes('语法已全部盘完') || gaHtml.includes('—')) {
+  throw new Error('Self-test 7 failed: completed GA summary screen missing or contains em dash!');
 }
 // Verify atomic split child syncs to parent group & henkei mastery (G-116e なさる -> K-005 + 尊敬語特殊動詞组)
 sb.setLedgerGrammarSpectrum('G-116a', 4);

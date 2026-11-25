@@ -615,7 +615,10 @@ def test_generate_daily_radio_async_and_reuse_contract() -> None:
     assert "prev_spk_audios" in src and 'sp["model_audio"] = ma' in src, (
         "generate_daily_radio.py must preserve speaking_prompts model_audio across same-day re-runs!"
     )
-    print("[PASS 10/10] generate_daily_radio.py async visual invocation & same-day asset preservation verified")
+    assert '"id": str(st.get("id")' in src, (
+        "generate_daily_radio.py story_blocks must include story id so curated topics & JP video scripts match!"
+    )
+    print("[PASS 10/10] generate_daily_radio.py async visual invocation, story id & same-day asset preservation verified")
 
 
 def main() -> int:
