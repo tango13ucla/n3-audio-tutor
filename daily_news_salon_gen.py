@@ -324,7 +324,7 @@ def maybe_generate_live_news_story(
     if os.path.exists(cache_path):
         try:
             cached = json.load(open(cache_path, encoding="utf-8"))
-            if validate_generated_story(cached, require_light_explain=(imm_profile.get("ja_ratio", 0.14) < 0.45), min_chars=2200):
+            if validate_generated_story(cached, require_light_explain=(imm_profile.get("ja_ratio", 0.14) < 0.45), min_chars=1500):
                 return cached
         except Exception:
             pass
@@ -361,12 +361,12 @@ def maybe_generate_live_news_story(
         "三位老友：窦文涛(W，俗人真性情、爱自嘲好奇、绝不当报幕员)、"
         "梁文道(D，温厚会讲故事、把当日真实新闻放进日本社会背景与公共记忆里剥笋深聊)、"
         "许子东(X，冷幽默学者、一句话点破人情世故与社会真相)。\n"
-        "请从今日真实日本新闻里【只挑一两件最有冲突感、最反映日本当下世相的真新闻】彻底剥洋葱讲透（约 9 分钟，26 到 36 轮，约 2,500 到 2,800 字），绝不串烧报菜名、绝不泛泛而谈，故事性要让人听完牢牢记住！\n"
+        "请从今日真实日本新闻里【只挑一两件最有冲突感、最反映日本当下世相的真新闻】彻底剥洋葱讲透（适配 40 分钟节目第一幕：约 6 分钟，20 到 28 轮，约 1,750 到 2,000 字），绝不串烧报菜名、绝不泛泛而谈，故事性要让人听完牢牢记住！\n"
         "核心铁律：\n"
         "1. 【100% 真实新闻，严禁编造人物】：只能聊输入里的真实新闻与真实日本历史社会脉络，绝对不允许虚构任何假朋友、假同事、假邻居故事！\n"
         "2. 【开篇与收束自然衔接】：开篇第一轮 W 直接以『《锵锵三人行》，』切入今日最热日本新闻；最后两轮由 D/W 自然预告待会儿回来要深聊的今日两段日本真实公共记忆大故事（参考 companion_titles），以『待会儿回来，马上……！』收住悬念即可，不要自己抢说『先进广告』，把原版进广告口播留给系统由文涛统一喊出『咱们先去一下广告，《锵锵三人行》，广告之后见！』。\n"
         "3. 【约 1.35 倍自然语法讲解频率（本章约 5 个 N3 语法/词汇点，自然流畅绝不生硬说教）】：自然揉入 5 个目标 N3 表达；其中 3 个由 D/X 用一两句大白话点透意思、接续或易混双胞胎词，W 顺手接一句；另外 2 个在聊天现场一两句话顺嘴点睛带过，像老友聊天一样自然流畅，绝不变成念教材！\n"
-        "4. 【365 天 5 次累计毕业制 · 中日无缝融合】：参考输入里的 `immersion_vocab_ledger`：`locked_ja_words`（已累计听满 5 次毕业词）在顺口名词位直接用纯假名说出；新引入的 N3/N2 实用难读词（优先挑 `learning_in_progress` 与 `priority_to_introduce`）上段先『中文也就是纯假名』自然带出一次，下段起直接改用纯假名，绝不堆砌过简单的基础词！\n"
+        "4. 【365 天 8 次跨 3 天毕业制 · 中日无缝融合】：参考输入里的 `immersion_vocab_ledger`：`locked_ja_words`（已毕业词）在顺口名词位直接用纯假名说出；新引入的 N3/N2 实用难读词（优先挑 `learning_in_progress` 与 `priority_to_introduce`）上段先『中文也就是纯假名』自然带出一次，下段起直接改用纯假名，绝不堆砌过简单的基础词！\n"
         f"5. 当前处于 {ramp_days} 天双语计划第 {day_num} 天（阶段：{phase}），日语假名占比约 {max(ja_pct, 12)}%。\n"
         "6. 【语音合成硬铁律】：对白文本中凡出现日文词句，必须 100% 写成纯平假名或纯片假名（前后留空格或中文标点），严禁汉字紧贴假名，严禁夹杂单字中文孤岛，严禁破折号（—/——），严禁任何英文字母或阿拉伯数字（数字全写中文），严禁『哈哈』『噗』或考试倒计时。\n"
         "输出严格为 JSON：{\"short_tab\": \"今日时局\", \"title\": \"...\", \"ja_focus\": \"...(此处可正常写日文汉字假名供屏幕显示)\", "
@@ -397,13 +397,13 @@ def maybe_generate_live_news_story(
             "ja_focus": str(parsed.get("ja_focus") or ""),
             "turns": _sanitize_generated_turns(parsed.get("turns") or []),
         }
-        if validate_generated_story(story, require_light_explain=(imm_profile.get("ja_ratio", 0.14) < 0.45), min_chars=2200):
+        if validate_generated_story(story, require_light_explain=(imm_profile.get("ja_ratio", 0.14) < 0.45), min_chars=1500):
             os.makedirs(AUDIO_DIR, exist_ok=True)
             with open(cache_path, "w", encoding="utf-8") as f:
                 json.dump(story, f, ensure_ascii=False, indent=2)
-            print(f"[live-news] Generated validated 60m-tier NHK current-affairs roundtable: {story['title']}")
+            print(f"[live-news] Generated validated 40m-tier NHK current-affairs roundtable: {story['title']}")
             return story
-        print("[info] Generated live news story did not pass strict phonetic/depth gate; using curated 60m Uchi bank.")
+        print("[info] Generated live news story did not pass strict phonetic/depth gate; using curated 40m Uchi bank.")
     except Exception as e:
         print(f"[info] Failed to parse live news JSON: {e}")
     return None
@@ -417,10 +417,10 @@ def maybe_generate_live_world_finale_story(
     dry_test: bool = False,
 ) -> dict | None:
     """
-    Generates the mandatory final-1/5 (~12 min of 60m episode) 'World From Japan's Perspective' finale segment:
+    Generates the mandatory final-1/5 (~8 min of 40m episode) 'World From Japan's Perspective' finale segment:
     covers non-Japan global news across science, AI, medicine, space, energy, global economy,
     climate, tech & geopolitics through Japanese media/society's eyes, with ~1.35x natural N3 grammar
-    density and direct N5/simple-N4 inline Japanese vocabulary.
+    density and authentic multi-turn Phoenix TV closing banter under the real closing theme + next-show bumper.
     """
     if dry_test:
         return None
@@ -428,7 +428,7 @@ def maybe_generate_live_world_finale_story(
     if os.path.exists(cache_path):
         try:
             cached = json.load(open(cache_path, encoding="utf-8"))
-            if validate_generated_story(cached, require_light_explain=(imm_profile.get("ja_ratio", 0.14) < 0.45), min_chars=2900):
+            if validate_generated_story(cached, require_light_explain=(imm_profile.get("ja_ratio", 0.14) < 0.45), min_chars=2000):
                 return cached
         except Exception:
             pass
@@ -457,15 +457,15 @@ def maybe_generate_live_world_finale_story(
         vocab_brief = {}
 
     sys_prompt = (
-        "你是凤凰卫视《锵锵三人行》原班总撰稿，现在负责每天 60 分钟节目压轴的【最后五分之一板块：从日本的角度看世界】（约 12 分钟，30 到 42 轮，约 3,350 到 3,650 字）。\n"
+        "你是凤凰卫视《锵锵三人行》原班总撰稿，现在负责每天 40 分钟节目压轴的【最后五分之一板块：从日本的角度看世界】（约 8 分钟，24 到 34 轮，约 2,250 到 2,600 字）。\n"
         "核心定位：绝对不要锁死在日本本土，也绝对不要局限于文史哲！要让听众 365 天持续知道全世界正在发生什么重要大事，优先挑选【科学、前沿科技、人工智能、数学物理、国际医学、新能源材料、太空探索、全球财经、气候环境、国际地缘】等非文史哲广谱真新闻！\n"
         "独特视角：必须把一到两件最重磅的世界大事剥洋葱讲透，绝不走马观花报菜名，讲清楚『日本媒体、日本科学家、企业界或日本普通老百姓怎么看待这件世界大事？为什么日本人的反应跟欧美或中国不一样？』故事性要让人听完记得住！\n"
         "三位老友：窦文涛(W，好奇心强、爱把前沿科学或国际新闻拉回普通人生活直觉)、梁文道(D，视野开阔、从日本视角串联全球脉络)、许子东(X，犀利冷幽默、点破各国心态反差)。\n"
         "硬性铁律：\n"
         "1. 【100% 真实国际/科学新闻，严禁编造人物】：只聊输入里的真实世界/科学/科技/医疗/经济新闻，挑一到两件最重磅的彻底聊透，绝不泛泛而谈。\n"
-        "2. 【原版锵锵灵魂特色·无结尾的突然收束（聊着聊着突然就结束了）】：开篇第一轮由 W 自然承接前面日本往事把镜头拉出日本看世界（不出现『《锵锵三人行》』开场）；结尾必须坚决贯彻原版锵锵精髓：没有结尾！严禁整期总结回顾、严禁报菜名盘点（绝不出现『回顾今天整桌大餐』『今天学了什么』『不仅日语听得透亮』）、严禁任何刻板告别辞（严禁『一壶茶喝完』『茶香见底』『咱们明天见』）！三人还在兴致盎然地热聊、抖包袱、抬杠或探究一个意犹未尽的趣味细节时，最后一轮对话由 W 或嘉宾自然抛出观点或打趣，直接在最真实生动的聊天现场感中猝然收束，让片尾音乐直接在对白下漫入并渐强盖过对白收尾！\n"
+        "2. 【凤凰卫视原版《锵锵》真实收尾制式·音乐下持续神侃】：开篇第一轮由 W 自然承接前面日本往事把镜头拉出日本看世界（不出现『《锵锵三人行》』开场）；所有 N3 语法点拨必须在倒数第 7 轮之前全部讲完；【最后 6 到 7 轮】必须是总计 160 到 190 字的纯中文活络闲聊（严禁含任何日文假名，以免被片尾音乐与下期导视播音盖住）！三人完全不搞总结回顾、绝不出现『今天学了什么』『一壶茶喝完』『咱们明天见』，而是顺着话题某个幽默细节继续互相打趣抬杠、你一言我一语（每轮 15 到 35 字），聊到最后一句意犹未尽留半截『……』，让系统把原版二十余秒片尾曲与凤凰卫视下个节目播音无缝叠进这六七轮谈笑声里！\n"
         "3. 【约 1.35 倍自然语法讲解频率（本章约 6 个 N3 语法点，自然流畅绝不生硬）】：自然融入 6 个 N3 高频表达（优先参考目标清单）；3 到 4 个由 D/X 顺嘴用一两句大白话点破意思、接续或双胞胎辨析，另 2 到 3 个轻巧一句带过，保持聊天人味绝不变成枯燥上课。\n"
-        "4. 【365 天 5 次累计毕业制 · 中日无缝融合】：参考输入里的 `immersion_vocab_ledger`：`locked_ja_words`（已听满 5 次毕业词）在顺口名词位直接用纯假名说出；新引入的 N3/N2 实用难读词（优先挑 `learning_in_progress` 与 `priority_to_introduce`）上段先『中文也就是纯假名』带出一次，下段起直接改用纯假名，绝不堆砌过简单的基础词！\n"
+        "4. 【365 天 8 次跨 3 天毕业制 · 中日无缝融合】：参考输入里的 `immersion_vocab_ledger`：`locked_ja_words`（已毕业词）在顺口名词位直接用纯假名说出；新引入的 N3/N2 实用难读词（优先挑 `learning_in_progress` 与 `priority_to_introduce`）上段先『中文也就是纯假名』带出一次，下段起直接改用纯假名，绝不堆砌过简单的基础词！\n"
         f"5. 当前处于 {ramp_days} 天双语计划第 {day_num} 天（阶段：{phase}），日语假名占比约 {max(ja_pct, 12)}%。\n"
         "6. 【语音合成硬铁律】：对白文本中所有日文必须 100% 纯平假名或纯片假名（前后空格或标点隔开），严禁汉字紧贴假名，严禁单字中文孤岛，严禁破折号（—/——），严禁英文字母与阿拉伯数字（全写中文，如『人工智能』『量子』『百分之三十八』），严禁『哈哈』『噗』或考试倒计时。\n"
         "输出严格为 JSON：{\"short_tab\": \"日本看世界\", \"title\": \"...\", \"ja_focus\": \"...(此处可正常写日文汉字假名供屏幕显示)\", "
@@ -496,13 +496,13 @@ def maybe_generate_live_world_finale_story(
             "ja_focus": str(parsed.get("ja_focus") or ""),
             "turns": _sanitize_generated_turns(parsed.get("turns") or []),
         }
-        if validate_generated_story(story, require_light_explain=(imm_profile.get("ja_ratio", 0.14) < 0.45), min_chars=2900):
+        if validate_generated_story(story, require_light_explain=(imm_profile.get("ja_ratio", 0.14) < 0.45), min_chars=2000):
             os.makedirs(AUDIO_DIR, exist_ok=True)
             with open(cache_path, "w", encoding="utf-8") as f:
                 json.dump(story, f, ensure_ascii=False, indent=2)
-            print(f"[world-finale] Generated validated 60m-tier Japanese-angle world/science finale: {story['title']}")
+            print(f"[world-finale] Generated validated 40m-tier Japanese-angle world/science finale: {story['title']}")
             return story
-        print("[info] Generated world finale did not pass strict phonetic/depth gate; using curated 60m World-from-Japan finale.")
+        print("[info] Generated world finale did not pass strict phonetic/depth gate; using curated 40m World-from-Japan finale.")
     except Exception as e:
         print(f"[info] Failed to parse world finale JSON: {e}")
     return None

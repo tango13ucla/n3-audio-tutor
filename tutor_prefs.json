@@ -59,12 +59,13 @@
     ],
     "avoid_story_ids": [],
     "episode_minutes": [
-      57,
-      63
+      38,
+      42
     ],
     "perspective": "uchi_real_public_memory_and_world_from_japan",
     "story_structure": "4_act_jp_news_2_real_stories_plus_final_fifth_world_from_japan",
-    "teaching_balance": "natural_1_35x_grammar_inline_5hit_grad_60m",
+    "teaching_balance": "natural_1_35x_grammar_inline_8hit3d_40m",
+    "authentic_outro_with_next_program": true,
     "world_finale_share": 0.2,
     "world_finale_topics": [
       "科学",
@@ -77,11 +78,15 @@
       "气候与社会"
     ],
     "grammar_frequency_multiplier": 1.35,
-    "direct_inline_ja_level": "cumulative_5hit_n3_n2_graduation",
+    "direct_inline_ja_level": "cumulative_8hit3d_n3_n2_graduation",
     "vocab_graduation": {
       "enabled": true,
       "threshold_hits": 8,
+<<<<<<< Updated upstream
       "daily_new_budget": 5,
+=======
+      "daily_new_budget": 12,
+>>>>>>> Stashed changes
       "bridge_then_switch": true,
       "seamless_carrier_swap": true
     },

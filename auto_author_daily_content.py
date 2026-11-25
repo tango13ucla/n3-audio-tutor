@@ -309,7 +309,7 @@ def _author_trio_chapter(
         "三位老友：窦文涛(W，俗人真性情、好奇心重爱追问荒唐细节、绝不当报幕员)、"
         "梁文道(D，温厚会讲真实历史故事、用真实年份地点人物原话和命运反转层层推进，绝不堆砌白皮书统计数字)、"
         "许子东(X，冷幽默学者、一句话拆穿时代体面背后的人性与社会结构)。\n"
-        f"请围绕主题「{theme_desc}」【只讲透这一个 100% 真实发生过的日本历史事件或国民公共记忆】（约 9.5 分钟，26 到 36 轮，约 2,750 到 3,000 字，日语假名占比约 {max(ja_pct, 12)}%），严禁泛泛议论、严禁虚构不存在的虚构人物或编造故事，故事性要让人听完牢牢记住！\n"
+        f"请围绕主题「{theme_desc}」【只讲透这一个 100% 真实发生过的日本历史事件或国民公共记忆】（适配 40 分钟节目单场：约 6.3 分钟，20 到 28 轮，约 1,850 到 2,100 字，日语假名占比约 {max(ja_pct, 12)}%），严禁泛泛议论、严禁虚构不存在的虚构人物或编造故事，故事性要让人听完牢牢记住！\n"
         "硬性铁律：\n"
         "1. 【100% 真实公共记忆、绝对不要编】：所有人物、年份、地名、事件、公司与名言必须是真实日本公共记忆（日本人聊天一提就懂的文化暗号），让听众每天听，听满三年能像本地通一样无缝融入日本社会。\n"
         "2. 【约 1.35 倍自然语法讲解频率（每章约 5 到 6 个 N3 语法点，绝不生硬说教）】：自然融入 5 到 6 个 N3 表达（优先用给定目标）；3 个由 D/X 顺嘴用一两句大白话点明意思、接续或易混双胞胎词，W 顺手接一句；另 2 到 3 个在聊天现场一两句话自然点睛带过，像老友聊天一样顺畅，绝不变成背教科书。\n"
@@ -346,7 +346,7 @@ def _author_trio_chapter(
         }
         if pair_part in (1, 2):
             st_obj["pair_part"] = pair_part
-        if validate_generated_story(st_obj, require_light_explain=(ja_pct < 45), min_chars=2400) and not contains_pii(json.dumps(st_obj, ensure_ascii=False)):
+        if validate_generated_story(st_obj, require_light_explain=(ja_pct < 45), min_chars=1600) and not contains_pii(json.dumps(st_obj, ensure_ascii=False)):
             return st_obj
     except Exception:
         return None
@@ -407,12 +407,12 @@ def _author_world_finale_chapter(
     seed_key: str = "",
 ) -> dict | None:
     sys_p = (
-        "你是凤凰卫视《锵锵三人行》原班总撰稿，负责每天 60 分钟节目压轴的最后五分之一板块【日本看世界】（约 12 分钟，30 到 42 轮，约 3,350 到 3,650 字，不局限文史哲，主打科学/科技/医学/能源/全球财经/太空/国际新闻）。\n"
+        "你是凤凰卫视《锵锵三人行》原班总撰稿，负责每天 40 分钟节目压轴的最后五分之一板块【日本看世界】（约 8 分钟，24 到 34 轮，约 2,250 到 2,600 字，不局限文史哲，主打科学/科技/医学/能源/全球财经/太空/国际新闻）。\n"
         f"请围绕主题「{theme_desc}」从日本媒体与日本社会的视角，把这件世界大事剥洋葱讲透、故事性拉满（日语假名占比约 {max(ja_pct, 12)}%）。\n"
         "硬性铁律：\n"
         "1. 【约 1.35 倍自然语法频率】：自然融入 6 个 N3 语法表达（3 到 4 个顺嘴两句大白话点破意思与易混词，2 到 3 个自然一句带过），绝不生硬。\n"
         "2. 【直接夹入 N5 与简单 N4 日语词】：中文框架下在顺口处直接用纯假名夹入 せかい、かがく、ニュース、びょういん、くすり、かいしゃ、おかね、ねだん、でんしゃ、コンビニ、おにぎり、おでん 等熟词，不用翻译；日文词前后相邻中文片段至少 2 个汉字，绝不留单字孤岛。\n"
-        "3. 【原版锵锵灵魂特色·无结尾的突然收束（聊着聊着突然就结束了）】：严禁整期回顾、严禁报菜名盘点、严禁任何刻板告别辞（严禁『一壶茶喝完』『茶香见底』『咱们明天见』）！三人还在兴致盎然地热聊、抖包袱或探究一个意犹未尽的话茬时，最后一轮对话自然抛出观点或打趣，直接在最真实生动的聊天现场感中猝然收束，让片尾音乐直接在对白下漫入并渐强盖过对白收尾！\n"
+        "3. 【凤凰卫视原版《锵锵》真实收尾制式·音乐下持续神侃】：所有 N3 语法点拨必须在倒数第 7 轮之前全部讲完；【最后 6 到 7 轮】必须是总计 160 到 190 字的纯中文活络闲聊（严禁含任何日文假名）！严禁整期回顾、严禁报菜名盘点、严禁『一壶茶喝完』『茶香见底』『咱们明天见』，三人顺着话题幽默细节继续互相打趣抬杠，聊到最后一句意犹未尽留半截『……』，让系统将原版二十余秒片尾曲与凤凰卫视下个节目播音无缝叠进谈笑声里！\n"
         "4. 对白内所有日文纯假名、严禁汉字紧贴假名、严禁英文字母/阿拉伯数字/破折号/哈哈/噗/倒计时。\n"
         "输出 JSON：{\"short_tab\": \"五字标签\", \"title\": \"章节标题\", \"ja_focus\": \"日文原句\", \"turns\": [[\"W\", \"...\"], ...]}"
     )
@@ -441,7 +441,7 @@ def _author_world_finale_chapter(
             "ja_focus": str(parsed.get("ja_focus") or ""),
             "turns": [[str(s).strip(), str(t).strip()] for s, t in (parsed.get("turns") or [])],
         }
-        if validate_generated_story(st_obj, require_light_explain=(ja_pct < 45), min_chars=2900) and not contains_pii(json.dumps(st_obj, ensure_ascii=False)):
+        if validate_generated_story(st_obj, require_light_explain=(ja_pct < 45), min_chars=2000) and not contains_pii(json.dumps(st_obj, ensure_ascii=False)):
             return st_obj
     except Exception:
         return None

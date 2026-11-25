@@ -102,7 +102,7 @@ def radio_prefs(prefs: dict | None = None) -> dict:
     if isinstance(ep, list) and len(ep) >= 2:
         ep_bounds = (max(20, int(ep[0])), max(25, int(ep[1])))
     else:
-        ep_bounds = (57, 63)
+        ep_bounds = (38, 42)
     return {
         "prefer_tags": [str(t) for t in (r.get("prefer_tags") or [])],
         "avoid_story_ids": {str(s) for s in (r.get("avoid_story_ids") or [])},

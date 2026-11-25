@@ -729,7 +729,7 @@ def write_cloud_grok_brief(state: dict) -> None:
         "## 五、 Grok -> 云端大脑免中转直传通道（20:45 PT 归档时同步 POST）",
         f"- 除照常写入 Google Sheet《N3答题总账（Bot练习）》外，`0. JLPT 群` 每次归档可同步向 `{brief_obj['grok_cloud_ingest_url']}` 发送纯考点 JSON（严禁含任何姓名/邮箱等个人信息）：",
         '  `{"a":"n3g","r":[[表行号,"YYYY-MM-DD HH:MM","科目","题目ID","考点","对/错","还是要考/不用再考/快速题不问"]]}`',
-        "- 云端 GitHub Actions 每 4 小时及每日清晨自动拉取该通道并合成次日约 60 分钟《锵锵三人行》电台、每日靶向新卷与 24 词闪卡，彻底免除本地电脑中转依赖。",
+        "- 云端 GitHub Actions 每 4 小时及每日清晨自动拉取该通道并合成次日约 40 分钟《锵锵三人行》电台、每日靶向新卷与 24 词闪卡，彻底免除本地电脑中转依赖。",
         "",
     ]
     md_txt = "\n".join(lines)
