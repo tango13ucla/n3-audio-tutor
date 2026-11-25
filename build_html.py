@@ -5655,7 +5655,7 @@ html = r"""<!DOCTYPE html>
         </span>
         <div class="rmb-meta">
           <span class="rmb-title" id="rmb-title">锵锵三人行</span>
-          <span class="rmb-time" id="rmb-time">00:00 / 60:00</span>
+          <span class="rmb-time" id="rmb-time">00:00 / 40:00</span>
         </div>
       </div>
       <div class="rmb-actions">
@@ -14161,6 +14161,7 @@ window.ZB = (function() {
   const VAULT_KEY = "zenbody_vault_v1";
   const STATE_KEY = "zenbody_state_v1";
   const PEND_KEY = "zenbody_pending_push_v1";
+  const PROF_KEY = "zenbody_profile_v1";
   const SUB_ORDER = ["today", "pullup", "body", "ledger"];
   const PZ_PROGS = [
     { id: "dypz", name: "Discover Your Power Zones", short: "Discover PZ", total: 23, offset: 0, entry: "底栏 Programs → 英文原版 Discover Your Power Zones" },
@@ -14236,6 +14237,7 @@ window.ZB = (function() {
   ];
   let VAULT = null;
   let CKEY = null;
+  let PROF = null;
   let INITED = false;
   let GESTURES_BOUND = false;
   let SUBTAB = "today";
@@ -14360,6 +14362,21 @@ window.ZB = (function() {
         const p = JSON.parse(r);
         if (p && p.v === 1) ST = mergeS(defState(), p);
       }
+      const pr = localStorage.getItem(PROF_KEY);
+      if (pr) {
+        const po = JSON.parse(pr);
+        if (po && po.v === 1) PROF = po;
+      }
+    } catch (e) {}
+  }
+  async function applyEncryptedProfile(env) {
+    if (!CKEY || !env || !env.p) return;
+    try {
+      const pDec = await decWithKey(CKEY, env.p);
+      if (pDec && pDec.v === 1) {
+        PROF = pDec;
+        try { localStorage.setItem(PROF_KEY, JSON.stringify(PROF)); } catch (e) {}
+      }
     } catch (e) {}
   }
 
@@ -14455,6 +14472,7 @@ window.ZB = (function() {
           const dec = await decWithKey(CKEY, env.d);
           if (dec && dec.v === 1) { ST = mergeS(ST, dec); n++; }
         }
+        await applyEncryptedProfile(env);
       }
     } catch (e) {}
     try {
@@ -14692,8 +14710,9 @@ window.ZB = (function() {
     const progSub = cur.allDone
       ? "两套官方 Power Zone 项目已全部通关，按自己节奏保持稳态燃脂即可。"
       : `当前进度 ${cur.doneInProg} / ${cur.progTotal} 节（每周稳推 2–3 节，打球多的周 1–2 节就很好，约 8–10 周从容通关，绝不照官方 5 周硬追）。`;
+    const pzeCue = ((cur.kind === "pze" || cur.kind === "pze_long") && PROF && PROF.pze_media_tip) ? PROF.pze_media_tip : cur.cue;
     const items = [
-      { k: "今天骑这节", v: `${cur.title}（${cur.coach} · ${cur.min} 分钟）`, sub: cur.cue, cur: true },
+      { k: "今天骑这节", v: `${cur.title}（${cur.coach} · ${cur.min} 分钟）`, sub: pzeCue, cur: true },
       { k: "Bike+ 一步找到", v: cur.entry, sub: (opts.extraNote || "状态好就照这节骑；如果今天累了随时点「偏累」或「休息日」，不勉强。") + langTip }
     ];
     if (opts.vitalsLine) {
@@ -14726,7 +14745,7 @@ window.ZB = (function() {
     };
   }
 
-  function planFor(ymd) {
+  function planFor(ymd, planOpts) {
     const trip = tripOn(ymd), st = getDayState(ymd), bb = st.bb;
     const yestYmd = shiftD(ymd, -1), prev2Ymd = shiftD(ymd, -2);
     const bbY = bbOn(yestYmd), bb2 = bbOn(prev2Ymd);
@@ -15247,6 +15266,48 @@ window.ZB = (function() {
           cardioDone: z2Done, puTarget: Math.min(2, puStage().targetRounds || 2),
           state: st.mode, sub: st.sub, bb, pelo, wk, cur, next: cur, daysGap, stale: "none", isTravel: false
         };
+      }
+
+      // 6h. Late-Evening Sleep-First Protection (after 20:30 PT, defer hard/test/>=45m rides to protect deep sleep)
+      const checkLate = (planOpts && planOpts.ptHour != null) || ymd === todayYmd();
+      if (checkLate && (cur.kind === "hard" || cur.kind === "test" || cur.min >= 45)) {
+        const nowPT = (planOpts && planOpts.ptHour != null)
+          ? { hour: Number(planOpts.ptHour), minute: Number(planOpts.ptMinute || 0) }
+          : ptNow(0);
+        const cutH = (PROF && PROF.late_cutoff_h != null) ? Number(PROF.late_cutoff_h) : 20;
+        const cutM = (PROF && PROF.late_cutoff_m != null) ? Number(PROF.late_cutoff_m) : 30;
+        const isLate = (nowPT.hour > cutH || (nowPT.hour === cutH && nowPT.minute >= cutM) || nowPT.hour < 4);
+        if (isLate) {
+          const lightDone = !!(pelo && (pelo.status === "recovery" || pelo.status === "done"));
+          const lateWhy = (PROF && PROF.late_why)
+            ? PROF.late_why
+            : "晚间高强度或长时间训练会拉高交感神经兴奋度，影响入睡与深睡；把强课和长课留给白天或傍晚更利于减脂恢复。";
+          const z2Sub = (PROF && PROF.pze_media_tip)
+            ? PROF.pze_media_tip
+            : "全程坐姿低阻力轻松转腿，配《锵锵三人行》放松身心，骑完冲个温水澡好入睡。";
+          return {
+            tier: "yellow", tierText: "晚间护眠 · 强课长课顺延",
+            title: lightDone ? "20 min Zone 2 轻踩" : "已过晚八点半 · 早睡或 20 分轻踩",
+            shortLine: `${cur.code}（${cur.kind === "test" ? "FTP测试" : cur.min + "分"}）留给白天 · 今晚守住深睡`,
+            linkText: "安排 ›",
+            ctaText: restDone ? "已确认早睡 ✓" : (lightDone ? "已轻踩 20 分钟 ✓" : "好，今晚早睡"),
+            ctaDone: restDone || lightDone,
+            altAction: { label: lightDone ? "取消 20 分轻踩" : "想松腿 · 记 20 分 Zone 2", type: "light_ride", active: lightDone, min: 20 },
+            actionType: "rest",
+            isPZMain: false, pzCls: cur, rideMin: 20, altMin: 20,
+            guide: {
+              title: "晚间护眠 · 自动降档保护",
+              items: [
+                { k: "为什么建议顺延", v: `下节 ${cur.code} 属${cur.kind === "test" ? "全力 FTP 测试" : (cur.kind === "hard" ? "高心率强课" : cur.min + " 分钟长课")}`, sub: lateWhy, cur: true },
+                { k: "若还想微微出汗（可选）", v: "20 min Low Impact / Power Zone Endurance（Sam Yo 或 Matt Wilpers）", sub: z2Sub },
+                { k: "精力充足怎么切回", v: `若今晚状态极佳，点下方「精力足，今天照常骑 ${cur.code}」即可一键推主线`, sub: `当前进度 ${cur.doneInProg}/${cur.progTotal} 节，永远听你自己的体感。` }
+              ],
+              showSyllabus: true, canOverridePZ: true
+            },
+            cardioDone: restDone || lightDone, puTarget: Math.min(1, puStage().targetRounds || 1),
+            state: st.mode, sub: st.sub, bb, pelo, wk, cur, next: cur, daysGap, stale: "none", isTravel: false
+          };
+        }
       }
     }
 
@@ -15919,6 +15980,7 @@ window.ZB = (function() {
       showApp();
       const dec = await decWithKey(CKEY, env.d);
       if (dec && dec.v === 1) { ST = mergeS(ST, dec); saveLocal(); syncPUDefault(); }
+      await applyEncryptedProfile(env);
       render();
       positionSubBar(true);
       await pullCloud(true);
@@ -16036,7 +16098,11 @@ window.ZB = (function() {
     if (p.guide.showSyllabus) {
       links.push(`<button type="button" class="zb-btn-quiet" onclick="ZB.openPZList()">完整主线课表 ›</button>`);
     }
-    showGuideModal(p.guide.title, p.guide.items, links.join(""));
+    let items = (p.guide.items || []).slice();
+    if (!p.isTravel && (p.actionType === "rest" || p.tier === "red") && PROF && PROF.recovery_ritual && PROF.recovery_ritual.v) {
+      items.push(PROF.recovery_ritual);
+    }
+    showGuideModal(p.guide.title, items, links.join(""));
   }
 
   function openPZList(progHint) {
@@ -16098,6 +16164,19 @@ window.ZB = (function() {
     const pLo = Math.round((wt * 1.6) / 5) * 5;
     const pMid = Math.round((wt * 1.8) / 5) * 5;
     const pHi = Math.round((wt * 2.0) / 5) * 5;
+    const fill = s => String(s || "")
+      .replace(/\{wt\}/g, wt.toFixed(1))
+      .replace(/\{pLo\}/g, String(pLo))
+      .replace(/\{pMid\}/g, String(pMid))
+      .replace(/\{pHi\}/g, String(pHi));
+    if (PROF && Array.isArray(PROF.diet_items) && PROF.diet_items.length) {
+      const pTitle = fill(PROF.diet_title || "每日蛋白锚点 · 目标 {pLo}–{pHi}g");
+      const pItems = PROF.diet_items.map(it => ({
+        k: fill(it.k), v: fill(it.v), sub: fill(it.sub), cur: !!it.cur
+      }));
+      showGuideModal(pTitle, pItems);
+      return;
+    }
     showGuideModal(`每日蛋白锚点 · 目标 ${pLo}–${pHi}g`, [
       { k: "为什么必须吃够", v: `按你近期均重 ${wt.toFixed(1)} kg，减脂护肌甜点约 ${pMid}g / 天`, sub: "多项减脂随机试验（Longland 2016 / Morton 2018）证实：体脂往 14% 压时，每天吃够 1.6–2.0 g/kg 蛋白，掉的才主要是脂肪而不是肌肉。", cur: true },
       { k: "日常顺手凑够 145g 参考", v: "乳清蛋白 1 勺 ≈ 25g · 鸡胸/三文鱼/瘦牛 200g ≈ 45g", sub: "3 个全蛋 ≈ 20g · 一杯希腊酸奶 ≈ 18g · 一盒嫩豆腐/毛豆 ≈ 15g。早晚各 1 份高蛋白 + 午晚正餐有肉鱼，轻松过线。" },
@@ -16114,10 +16193,11 @@ window.ZB = (function() {
   return {
     onEnter, onResume, unlockPass, stopPacer, getSummary, syncCircle, getHorizonHTML,
     openPeloGuide, openPZList, openBandGuide, openProteinGuide, openGapsGuide,
-    _planToday() { return planFor(todayYmd()); },
-    _planOn(ymd) { return planFor(ymd); },
+    _planToday(opts) { return planFor(todayYmd(), opts); },
+    _planOn(ymd, opts) { return planFor(ymd, opts); },
     _puStage() { return puStage(); },
     _getState() { return ST; },
+    _setProfileForTest(p) { PROF = p || null; },
     onHorizonRightTap() {
       if (!CKEY) { if (typeof openSessionModal === "function") openSessionModal(); return; }
       if (SUBTAB !== "body") this.setTab("body");
@@ -16679,6 +16759,39 @@ if (!pzModalHtml.includes('第 1 章') || !pzModalHtml.includes('2–4 场球') 
   throw new Error('Self-test 5 failed: openPZList(0) missing chapter header or basketball pacing note or has em dash!');
 }
 sb.ZB.openPZList(1);
+// Late-evening sleep-first protection (20:30+ PT defers hard/test/>=45m rides; daytime keeps main ride)
+zst.pz = { idx: 6, ts: 0, last: '2026-12-01' }; // W2D1 30 min Power Zone Hip Hop Ride (hard)
+const pDayHard = sb.ZB._planOn('2026-12-03', { ptHour: 14, ptMinute: 0 });
+if (!pDayHard.isPZMain || pDayHard.tier !== 'green') {
+  throw new Error('Self-test 5 failed: daytime hard ride should stay main green: ' + JSON.stringify(pDayHard));
+}
+const pLateHard = sb.ZB._planOn('2026-12-03', { ptHour: 21, ptMinute: 15 });
+if (pLateHard.isPZMain || pLateHard.tier !== 'yellow' || pLateHard.actionType !== 'rest' || !pLateHard.altAction || pLateHard.altAction.type !== 'light_ride' || !pLateHard.guide.canOverridePZ) {
+  throw new Error('Self-test 5 failed: 21:15 PT hard ride must trigger yellow sleep guard with optional 20m light_ride & override: ' + JSON.stringify(pLateHard));
+}
+// Encrypted profile hook renders custom diet & recovery items cleanly when unlocked (zero plaintext PII in public HTML)
+sb.ZB._setProfileForTest({
+  v: 1,
+  late_cutoff_h: 20, late_cutoff_m: 30,
+  recovery_ritual: { k: '测试恢复', v: '冷热交替放松', sub: '拉伸髋臀' },
+  diet_title: '自定义蛋白 · 目标 {pLo}–{pHi}g',
+  diet_items: [{ k: '测试项', v: '均重 {wt} kg · {pMid}g', sub: '低糖稳态', cur: true }]
+});
+sb.ZB.openProteinGuide();
+const profDietHtml = (els['modal-content'] && els['modal-content'].innerHTML) || '';
+if (!profDietHtml.includes('自定义蛋白') || !profDietHtml.includes('低糖稳态') || profDietHtml.includes('{pMid}') || profDietHtml.includes('—')) {
+  throw new Error('Self-test 5 failed: encrypted profile diet guide did not interpolate cleanly: ' + profDietHtml);
+}
+sb.ZB.setState('rest');
+sb.ZB.openPeloGuide();
+const profRecHtml = (els['modal-content'] && els['modal-content'].innerHTML) || '';
+if (!profRecHtml.includes('冷热交替放松') || profRecHtml.includes('—')) {
+  throw new Error('Self-test 5 failed: encrypted profile recovery ritual did not render on rest guide!');
+}
+sb.ZB._setProfileForTest(null);
+zst.days = {};
+zst.pz = { idx: 1, ts: 0, last: _todayYmd };
+sb.ZB.setState('normal');
 sb.closeModal();
 // Self-test 6: Unified Frameless Zen Tinder Post-Listening Deck (vc-card + auto-play clip + 上看下点 + pendingLeft + Tail + Short Speaking + Triptych) & Ear-First 2/3 Vocab Graduation
 const rvItems = sb.getRadioReviewItems();

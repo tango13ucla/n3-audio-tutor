@@ -144,6 +144,34 @@ def fetch_live_world_from_japan_news(max_items: int = 10, timeout: float = 8.0) 
     return items
 
 
+# Zero-PII editorial taste scoring keywords (favors concrete institutional/cultural contrasts,
+# frontier AI/neuroscience/medicine/physics, global finance, regional craft/food, cinema/books & sports)
+_EDITORIAL_TASTE_JP_KEYWORDS: tuple[tuple[str, int], ...] = (
+    ("AI", 3), ("人工知能", 3), ("脳", 3), ("睡眠", 3), ("量子", 3), ("半導体", 3), ("宇宙", 3),
+    ("医療", 2), ("新薬", 2), ("がん", 2), ("遺伝子", 2), ("物理", 2), ("核融合", 3), ("電池", 2),
+    ("日銀", 3), ("金利", 2), ("円安", 2), ("株価", 2), ("インフレ", 2), ("投資", 2), ("経済", 1),
+    ("社会", 1), ("少子化", 2), ("人手不足", 2), ("地域", 2), ("京都", 2), ("大阪", 2), ("金沢", 2), ("北海道", 2),
+    ("映画", 3), ("ドラマ", 2), ("文学", 2), ("歌舞伎", 3), ("伝統", 2), ("工芸", 2), ("建築", 2), ("美術", 2),
+    ("食", 1), ("寿司", 2), ("そば", 2), ("魚", 2), ("バスケ", 3), ("NBA", 3), ("野球", 2), ("歴史", 2),
+)
+
+
+def rank_headlines_by_editorial_taste(items: list[dict], limit: int = 8) -> list[dict]:
+    """Re-order fetched Japanese headlines by depth & curiosity fit without dropping diversity."""
+    if not items:
+        return []
+    scored: list[tuple[int, int, dict]] = []
+    for idx, it in enumerate(items):
+        blob = f"{it.get('category', '')} {it.get('title', '')} {it.get('summary', '')}"
+        sc = 0
+        for kw, wt in _EDITORIAL_TASTE_JP_KEYWORDS:
+            if kw in blob:
+                sc += wt
+        scored.append((-sc, idx, it))
+    scored.sort(key=lambda x: (x[0], x[1]))
+    return [it for _, _, it in scored[:limit]]
+
+
 BANNED_CLASSROOM_RE = re.compile(
     r"第[一二三四]个语法|下面我们学习|请大家跟读|本课重点|今天我们来学习"
 )
@@ -329,7 +357,8 @@ def maybe_generate_live_news_story(
         except Exception:
             pass
 
-    headlines = fetch_live_nhk_news(max_items=6)
+    raw_headlines = fetch_live_nhk_news(max_items=10)
+    headlines = rank_headlines_by_editorial_taste(raw_headlines, limit=6)
     if not headlines:
         return None
 
@@ -362,6 +391,7 @@ def maybe_generate_live_news_story(
         "梁文道(D，温厚会讲故事、把当日真实新闻放进日本社会背景与公共记忆里剥笋深聊)、"
         "许子东(X，冷幽默学者、一句话点破人情世故与社会真相)。\n"
         "请从今日真实日本新闻里【只挑一两件最有冲突感、最反映日本当下世相的真新闻】彻底剥洋葱讲透（适配 40 分钟节目第一幕：约 6 分钟，20 到 28 轮，约 1,750 到 2,000 字），绝不串烧报菜名、绝不泛泛而谈，故事性要让人听完牢牢记住！\n"
+        "编辑品味：优先挑有具体制度反差、地方风土性格、财经科技暗流或真实市民烟火气的新闻；重具体细节与人情世故，文风克制有余味，不灌鸡汤不矫情。\n"
         "核心铁律：\n"
         "1. 【100% 真实新闻，严禁编造人物】：只能聊输入里的真实新闻与真实日本历史社会脉络，绝对不允许虚构任何假朋友、假同事、假邻居故事！\n"
         "2. 【开篇与收束自然衔接】：开篇第一轮 W 直接以『《锵锵三人行》，』切入今日最热日本新闻；最后两轮由 D/W 自然预告待会儿回来要深聊的今日两段日本真实公共记忆大故事（参考 companion_titles），以『待会儿回来，马上……！』收住悬念即可，不要自己抢说『先进广告』，把原版进广告口播留给系统由文涛统一喊出『咱们先去一下广告，《锵锵三人行》，广告之后见！』。\n"
@@ -433,7 +463,8 @@ def maybe_generate_live_world_finale_story(
         except Exception:
             pass
 
-    world_headlines = fetch_live_world_from_japan_news(max_items=10)
+    raw_world_headlines = fetch_live_world_from_japan_news(max_items=14)
+    world_headlines = rank_headlines_by_editorial_taste(raw_world_headlines, limit=10)
     if not world_headlines:
         return None
 
@@ -460,6 +491,7 @@ def maybe_generate_live_world_finale_story(
         "你是凤凰卫视《锵锵三人行》原班总撰稿，现在负责每天 40 分钟节目压轴的【最后五分之一板块：从日本的角度看世界】（约 8 分钟，24 到 34 轮，约 2,250 到 2,600 字）。\n"
         "核心定位：绝对不要锁死在日本本土，也绝对不要局限于文史哲！要让听众 365 天持续知道全世界正在发生什么重要大事，优先挑选【科学、前沿科技、人工智能、数学物理、国际医学、新能源材料、太空探索、全球财经、气候环境、国际地缘】等非文史哲广谱真新闻！\n"
         "独特视角：必须把一到两件最重磅的世界大事剥洋葱讲透，绝不走马观花报菜名，讲清楚『日本媒体、日本科学家、企业界或日本普通老百姓怎么看待这件世界大事？为什么日本人的反应跟欧美或中国不一样？』故事性要让人听完记得住！\n"
+        "编辑品味：重科学底层原理、真实制度反差与跨文明对照，文风冷静锋利克制有余味，不喊空口号、不灌鸡汤。\n"
         "三位老友：窦文涛(W，好奇心强、爱把前沿科学或国际新闻拉回普通人生活直觉)、梁文道(D，视野开阔、从日本视角串联全球脉络)、许子东(X，犀利冷幽默、点破各国心态反差)。\n"
         "硬性铁律：\n"
         "1. 【100% 真实国际/科学新闻，严禁编造人物】：只聊输入里的真实世界/科学/科技/医疗/经济新闻，挑一到两件最重磅的彻底聊透，绝不泛泛而谈。\n"

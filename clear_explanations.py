@@ -19,6 +19,7 @@ Core Principles:
      and inline Japanese inside "T" is written in pure Hiragana/Katakana for 100% authentic Japanese phonology.
 """
 
+from __future__ import annotations
 CARDS_75 = {
     # ==================== GRAMMAR PRIMARY (21) ====================
     "G-20261114-01": {

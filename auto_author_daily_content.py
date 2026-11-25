@@ -310,6 +310,7 @@ def _author_trio_chapter(
         "梁文道(D，温厚会讲真实历史故事、用真实年份地点人物原话和命运反转层层推进，绝不堆砌白皮书统计数字)、"
         "许子东(X，冷幽默学者、一句话拆穿时代体面背后的人性与社会结构)。\n"
         f"请围绕主题「{theme_desc}」【只讲透这一个 100% 真实发生过的日本历史事件或国民公共记忆】（适配 40 分钟节目单场：约 6.3 分钟，20 到 28 轮，约 1,850 到 2,100 字，日语假名占比约 {max(ja_pct, 12)}%），严禁泛泛议论、严禁虚构不存在的虚构人物或编造故事，故事性要让人听完牢牢记住！\n"
+        "编辑审美品味：重具体细节、重制度与人性的反差、重地道在地质感与跨国文化镜像，文风克制有余味，绝不灌鸡汤、绝不矫情抒情、绝不堆砌空泛口号。\n"
         "硬性铁律：\n"
         "1. 【100% 真实公共记忆、绝对不要编】：所有人物、年份、地名、事件、公司与名言必须是真实日本公共记忆（日本人聊天一提就懂的文化暗号），让听众每天听，听满三年能像本地通一样无缝融入日本社会。\n"
         "2. 【约 1.35 倍自然语法讲解频率（每章约 5 到 6 个 N3 语法点，绝不生硬说教）】：自然融入 5 到 6 个 N3 表达（优先用给定目标）；3 个由 D/X 顺嘴用一两句大白话点明意思、接续或易混双胞胎词，W 顺手接一句；另 2 到 3 个在聊天现场一两句话自然点睛带过，像老友聊天一样顺畅，绝不变成背教科书。\n"
@@ -354,25 +355,47 @@ def _author_trio_chapter(
 
 
 def _load_unused_public_memory_topics(used_ids: set[str], existing_titles: set[str]) -> list[tuple[str, str, list[str]]]:
+    ranked: list[tuple[int, int, tuple[str, str, list[str]]]] = []
+    seq = 0
     cat_path = BASE_DIR / "public_memory_catalog.json"
-    if not cat_path.exists():
-        return []
-    try:
-        raw_cat = json.loads(cat_path.read_text(encoding="utf-8"))
-        topics = raw_cat.get("topics") if isinstance(raw_cat, dict) else raw_cat
-        out = []
-        for tp in (topics or []):
-            tid = str(tp.get("id") or "")
-            tab = str(tp.get("short_tab") or "公共记忆")[:4]
-            title = str(tp.get("title") or "")
-            summary = str(tp.get("real_facts") or tp.get("summary") or "")
-            targets = list(tp.get("n3_targets") or [])
-            if not title or any(tid and tid in uid for uid in used_ids) or title in existing_titles:
-                continue
-            out.append((tab, f"{title}：{summary}", targets))
-        return out
-    except Exception:
-        return []
+    if cat_path.exists():
+        try:
+            raw_cat = json.loads(cat_path.read_text(encoding="utf-8"))
+            topics = raw_cat.get("topics") if isinstance(raw_cat, dict) else raw_cat
+            for tp in (topics or []):
+                tid = str(tp.get("id") or "")
+                tab = str(tp.get("short_tab") or "公共记忆")[:4]
+                title = str(tp.get("title") or "")
+                summary = str(tp.get("real_facts") or tp.get("summary") or "")
+                targets = list(tp.get("n3_targets") or [])
+                if not title or any(tid and tid in uid for uid in used_ids) or title in existing_titles:
+                    continue
+                prio = int(tp.get("priority", 2))
+                ranked.append((prio, seq, (tab, f"{title}：{summary}", targets)))
+                seq += 1
+        except Exception:
+            pass
+
+    # Also integrate curated cross-border Japan mirror catalog (high editorial fit for post-N3 / N2 phase)
+    cb_path = BASE_DIR / "n2_prep" / "cross_border_japan_catalog.json"
+    if cb_path.exists():
+        try:
+            cb_raw = json.loads(cb_path.read_text(encoding="utf-8"))
+            for pil in (cb_raw.get("pillars") or []):
+                for tp in (pil.get("topics") or []):
+                    tid = str(tp.get("id") or "")
+                    title = str(tp.get("title") or "")
+                    angle = str(tp.get("angle") or "")
+                    if not title or any(tid and tid in uid for uid in used_ids) or title in existing_titles:
+                        continue
+                    prio = int(tp.get("priority", 1))
+                    ranked.append((prio, seq, ("跨国镜像", f"{title}：{angle}", [])))
+                    seq += 1
+        except Exception:
+            pass
+
+    ranked.sort(key=lambda x: (x[0], x[1]))
+    return [item for _, _, item in ranked]
 
 
 def _load_unused_world_topics(used_ids: set[str], existing_titles: set[str]) -> list[tuple[str, str, list[str]]]:
@@ -382,8 +405,8 @@ def _load_unused_world_topics(used_ids: set[str], existing_titles: set[str]) -> 
     try:
         raw_cat = json.loads(cat_path.read_text(encoding="utf-8"))
         topics = raw_cat.get("topics") if isinstance(raw_cat, dict) else raw_cat
-        out = []
-        for tp in (topics or []):
+        ranked: list[tuple[int, int, tuple[str, str, list[str]]]] = []
+        for idx, tp in enumerate(topics or []):
             tid = str(tp.get("id") or "")
             tab = str(tp.get("short_tab") or "日本看世界")[:5]
             title = str(tp.get("title") or "")
@@ -391,8 +414,10 @@ def _load_unused_world_topics(used_ids: set[str], existing_titles: set[str]) -> 
             targets = list(tp.get("n3_targets") or [])
             if not title or any(tid and tid in uid for uid in used_ids) or title in existing_titles:
                 continue
-            out.append((tab, f"{title}（日本视角：{angle}）", targets))
-        return out
+            prio = int(tp.get("priority", 2))
+            ranked.append((prio, idx, (tab, f"{title}（日本视角：{angle}）", targets)))
+        ranked.sort(key=lambda x: (x[0], x[1]))
+        return [item for _, _, item in ranked]
     except Exception:
         return []
 
@@ -409,6 +434,7 @@ def _author_world_finale_chapter(
     sys_p = (
         "你是凤凰卫视《锵锵三人行》原班总撰稿，负责每天 40 分钟节目压轴的最后五分之一板块【日本看世界】（约 8 分钟，24 到 34 轮，约 2,250 到 2,600 字，不局限文史哲，主打科学/科技/医学/能源/全球财经/太空/国际新闻）。\n"
         f"请围绕主题「{theme_desc}」从日本媒体与日本社会的视角，把这件世界大事剥洋葱讲透、故事性拉满（日语假名占比约 {max(ja_pct, 12)}%）。\n"
+        "编辑审美品味：重硬核科学原理、制度结构反差与人类心理洞察，文风冷静锋利有余味，绝不喊口号不灌鸡汤。\n"
         "硬性铁律：\n"
         "1. 【约 1.35 倍自然语法频率】：自然融入 6 个 N3 语法表达（3 到 4 个顺嘴两句大白话点破意思与易混词，2 到 3 个自然一句带过），绝不生硬。\n"
         "2. 【直接夹入 N5 与简单 N4 日语词】：中文框架下在顺口处直接用纯假名夹入 せかい、かがく、ニュース、びょういん、くすり、かいしゃ、おかね、ねだん、でんしゃ、コンビニ、おにぎり、おでん 等熟词，不用翻译；日文词前后相邻中文片段至少 2 个汉字，绝不留单字孤岛。\n"
@@ -638,10 +664,11 @@ def run_morning_prepare() -> int:
             "你是 JLPT N3 命题专家。请为给定的每个考点编写 1 道全新日文例句二选一变式题（严禁与原句雷同）。\n"
             "要求：\n"
             "1. prompt 用（　　）挖空，choices 含 2 个自然选项，answer 必须在 choices 内，full_ja 为填入正确答案后的完整日文句。\n"
-            "2. q_before 与 q_after 为挖空前后的纯日文朗读片段（若考汉字读音则只给 q_before 不泄露目标词读音）。\n"
-            "3. exp_zh 为一段干脆利落的中文语音讲解：绝不重复朗读原日文句，也绝不用「这句是说……」复述整句翻译；"
-            "第一句直接点破本题考什么（语法题直接点明是什么语法和核心含义；活用/词汇/听力题直接点明考什么变形、读音或考点，不要生硬套「语法」二字），"
-            "随后直接解释本题与干扰项区别；里面穿插的日文必须 100% 写成纯假名且前后留空格（严禁汉字紧贴假名！）。\n"
+            "2. 例句场景自然鲜活，优先取材于成年人的真实生活与文化视野（如东京通勤与科技产品讨论、旧书店与读书会、电影院与舞台剧、荞麦面店与居酒屋、篮球赛与运动体能、古建筑与传统器物、财经与科学新闻），避免枯燥低幼的教科书流水账。\n"
+            "3. q_before 与 q_after 为挖空前后的纯日文朗读片段（若考汉字读音则只给 q_before 不泄露目标词读音）。\n"
+            "4. exp_zh 为一段干脆利落的中文语音讲解：绝不重复朗读原日文句，也绝不用「这句是说……」复述整句翻译；"
+            "第一句直接说人话切入本题核心逻辑与干扰项辨析（严禁机械开头「考语法」「考词汇」），"
+            "里面穿插的日文必须 100% 写成纯假名且前后留空格（严禁汉字紧贴假名！），严禁破折号。\n"
             "输出 JSON：{\"items\": [{\"variant_of\": \"...\", \"subject\": \"...\", \"point_key\": \"...\", \"prompt\": \"...\", "
             "\"choices\": [\"...\", \"...\"], \"answer\": \"...\", \"full_ja\": \"...\", \"zh_meaning\": \"...\", "
             "\"why_line\": \"...\", \"core_rule\": \"...\", \"option_notes\": {\"选项1\": \"...\", \"选项2\": \"...\"}, "
