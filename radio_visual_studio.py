@@ -992,10 +992,6 @@ async def _synth_speaking_prompt_audios(
     ver_tag: str,
 ) -> None:
     """Render real native Japanese studio MP3s (`audio/spk_0.mp3`, `audio/spk_1.mp3`) for speaking cards."""
-    try:
-        import edge_tts  # noqa: F401
-    except Exception:
-        return
     os.makedirs(AUDIO_DIR, exist_ok=True)
     for fn in os.listdir(AUDIO_DIR):
         if re.match(r"^spk_\d+\.mp3$", fn):
