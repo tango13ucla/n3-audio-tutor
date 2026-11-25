@@ -3685,6 +3685,19 @@
         1795590595,
         1795590595
       ]
+    },
+    "2026-11-25": {
+      "resetAt": 0,
+      "radioMaxSec": 0,
+      "radioPos": [
+        0,
+        0
+      ],
+      "radioSig": "",
+      "greenAt": {},
+      "retestAt": {},
+      "learning": {},
+      "sched": {}
     }
   },
   "masteryOverrides": {
