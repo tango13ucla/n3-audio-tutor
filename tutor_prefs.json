@@ -82,11 +82,7 @@
     "vocab_graduation": {
       "enabled": true,
       "threshold_hits": 8,
-<<<<<<< Updated upstream
       "daily_new_budget": 5,
-=======
-      "daily_new_budget": 12,
->>>>>>> Stashed changes
       "bridge_then_switch": true,
       "seamless_carrier_swap": true
     },

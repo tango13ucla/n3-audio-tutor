@@ -2633,17 +2633,12 @@ async def main():
     ad2_in_evs = turns_to_expanded_events(ad2_in_turns) if ad2_in_turns else []
     closing_evs = turns_to_expanded_events(closing_turns) if closing_turns else []
 
-<<<<<<< Updated upstream
-    if today_str >= "2026-11-25":
-        radio_ver_tag = "v42_qq_60m_ruminate_jpvideo"
-=======
     use_v42_ending = today_str >= "2026-11-25"
     next_program = pick_phoenix_next_program(study_dt) if use_v42_ending else None
     ann_evs = [("ANN", next_program["line"])] if next_program else []
 
     if use_v42_ending:
-        radio_ver_tag = "v42_qq_40m_real_outro_nextshow"
->>>>>>> Stashed changes
+        radio_ver_tag = "v42_qq_40m_ruminate_jpvideo_real_outro"
     elif today_str >= "2026-11-23":
         radio_ver_tag = "v41_qq_60m_wordguard_seamless_5hit"
     elif today_str >= "2026-11-22":
