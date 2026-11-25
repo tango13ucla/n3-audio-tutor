@@ -15285,10 +15285,24 @@ window.ZB = (function() {
           const z2Sub = (PROF && PROF.pze_media_tip)
             ? PROF.pze_media_tip
             : "全程坐姿低阻力轻松转腿，配《锵锵三人行》放松身心，骑完冲个温水澡好入睡。";
+          const lateDrift = (wk.pM === 0 && daysGap >= 3);
+          const lateDriftSub = (PROF && PROF.late_drift_nudge)
+            ? PROF.late_drift_nudge
+            : "护眠不是永远跳过：最近几天主线没推上，明天试着把 30 分钟挪到午休或傍晚前，把强课抢在天黑前拿下。";
+          const lateItems = [
+            { k: "为什么建议顺延", v: `下节 ${cur.code} 属${cur.kind === "test" ? "全力 FTP 测试" : (cur.kind === "hard" ? "高心率强课" : cur.min + " 分钟长课")}`, sub: lateWhy, cur: true },
+            { k: "若还想微微出汗（可选）", v: "20 min Low Impact / Power Zone Endurance（Sam Yo 或 Matt Wilpers）", sub: z2Sub },
+            { k: "精力充足怎么切回", v: `若今晚状态极佳，点下方「精力足，今天照常骑 ${cur.code}」即可一键推主线`, sub: `当前进度 ${cur.doneInProg}/${cur.progTotal} 节，永远听你自己的体感。` }
+          ];
+          if (lateDrift) {
+            lateItems.push({ k: "防停滞 · 明日抢在白天", v: `主线已隔 ${daysGap} 天，别连续拖到晚八点半后`, sub: lateDriftSub });
+          }
           return {
-            tier: "yellow", tierText: "晚间护眠 · 强课长课顺延",
+            tier: "yellow", tierText: lateDrift ? "晚间护眠 · 明日早点推主线" : "晚间护眠 · 强课长课顺延",
             title: lightDone ? "20 min Zone 2 轻踩" : "已过晚八点半 · 早睡或 20 分轻踩",
-            shortLine: `${cur.code}（${cur.kind === "test" ? "FTP测试" : cur.min + "分"}）留给白天 · 今晚守住深睡`,
+            shortLine: lateDrift
+              ? `${cur.code} 明天尽量午休或傍晚前拿下 · 今晚先守深睡`
+              : `${cur.code}（${cur.kind === "test" ? "FTP测试" : cur.min + "分"}）留给白天 · 今晚守住深睡`,
             linkText: "安排 ›",
             ctaText: restDone ? "已确认早睡 ✓" : (lightDone ? "已轻踩 20 分钟 ✓" : "好，今晚早睡"),
             ctaDone: restDone || lightDone,
@@ -15297,11 +15311,7 @@ window.ZB = (function() {
             isPZMain: false, pzCls: cur, rideMin: 20, altMin: 20,
             guide: {
               title: "晚间护眠 · 自动降档保护",
-              items: [
-                { k: "为什么建议顺延", v: `下节 ${cur.code} 属${cur.kind === "test" ? "全力 FTP 测试" : (cur.kind === "hard" ? "高心率强课" : cur.min + " 分钟长课")}`, sub: lateWhy, cur: true },
-                { k: "若还想微微出汗（可选）", v: "20 min Low Impact / Power Zone Endurance（Sam Yo 或 Matt Wilpers）", sub: z2Sub },
-                { k: "精力充足怎么切回", v: `若今晚状态极佳，点下方「精力足，今天照常骑 ${cur.code}」即可一键推主线`, sub: `当前进度 ${cur.doneInProg}/${cur.progTotal} 节，永远听你自己的体感。` }
-              ],
+              items: lateItems,
               showSyllabus: true, canOverridePZ: true
             },
             cardioDone: restDone || lightDone, puTarget: Math.min(1, puStage().targetRounds || 1),
@@ -16151,11 +16161,15 @@ window.ZB = (function() {
   function openBandGuide() {
     const stg = puStage();
     const bIdx = stg.idx === 0 ? 0 : (stg.idx === 1 ? 1 : 2);
-    showGuideModal("弹力带换绳与冲 5 连路线", [
+    const items = [
       { k: "阶段一 · 1 徒手起步", v: "黑带 25–65 lb（单膝约 10–15 kg）", sub: "每轮 1 个徒手 + 2 个单膝挂黑带 4 秒慢放，每日 2 轮。", cur: bIdx === 0 },
       { k: "阶段二 · 2 徒手过渡", v: "红细带 15–35 lb（单膝约 5–8 kg）", sub: "稳拉 2 个纯徒手后降档，每轮 2 徒手 + 1 红带慢放，每日 2 轮。", cur: bIdx === 1 },
       { k: "阶段三 · 3 连冲 5 连（不力竭多组法）", v: "彻底拆绳 0 lb · 留 1 下余力拉 3 轮", sub: "稳拉 3 个后不再每轮拉满力竭：平时每次轻松拉 2 个、隔 2 小时拉 3 轮（攒 6 下高质量纯拉），每两周满血测一次冲 4 连、5 连。", cur: bIdx === 2 }
-    ]);
+    ];
+    if (PROF && PROF.strength_stretch_note && PROF.strength_stretch_note.v) {
+      items.push(PROF.strength_stretch_note);
+    }
+    showGuideModal("弹力带换绳与冲 5 连路线", items);
   }
 
   function openProteinGuide() {
@@ -16769,14 +16783,27 @@ const pLateHard = sb.ZB._planOn('2026-12-03', { ptHour: 21, ptMinute: 15 });
 if (pLateHard.isPZMain || pLateHard.tier !== 'yellow' || pLateHard.actionType !== 'rest' || !pLateHard.altAction || pLateHard.altAction.type !== 'light_ride' || !pLateHard.guide.canOverridePZ) {
   throw new Error('Self-test 5 failed: 21:15 PT hard ride must trigger yellow sleep guard with optional 20m light_ride & override: ' + JSON.stringify(pLateHard));
 }
-// Encrypted profile hook renders custom diet & recovery items cleanly when unlocked (zero plaintext PII in public HTML)
+// Encrypted profile hook renders custom diet, recovery & strength-balance items cleanly when unlocked (zero plaintext PII in public HTML)
 sb.ZB._setProfileForTest({
   v: 1,
   late_cutoff_h: 20, late_cutoff_m: 30,
+  late_drift_nudge: '护眠不等于停滞测试提示',
   recovery_ritual: { k: '测试恢复', v: '冷热交替放松', sub: '拉伸髋臀' },
+  strength_stretch_note: { k: '力量短板测试', v: '推拉平衡加核心', sub: '冲4连5连' },
   diet_title: '自定义蛋白 · 目标 {pLo}–{pHi}g',
   diet_items: [{ k: '测试项', v: '均重 {wt} kg · {pMid}g', sub: '低糖稳态', cur: true }]
 });
+zst.days = {};
+zst.pz = { idx: 6, ts: 0, last: '2026-11-28' }; // 5-day gap + 0 main rides this week -> lateDrift nudge!
+const pLateDrift = sb.ZB._planOn('2026-12-03', { ptHour: 21, ptMinute: 15 });
+if (!pLateDrift.guide.items.some(it => String(it.sub || '').includes('护眠不等于停滞测试提示'))) {
+  throw new Error('Self-test 5 failed: lateDrift anti-stagnation nudge did not appear on 5-day gap at 21:15 PT: ' + JSON.stringify(pLateDrift.guide));
+}
+sb.ZB.openBandGuide();
+const profBandHtml = (els['modal-content'] && els['modal-content'].innerHTML) || '';
+if (!profBandHtml.includes('推拉平衡加核心') || profBandHtml.includes('—')) {
+  throw new Error('Self-test 5 failed: encrypted strength_stretch_note did not render on band guide!');
+}
 sb.ZB.openProteinGuide();
 const profDietHtml = (els['modal-content'] && els['modal-content'].innerHTML) || '';
 if (!profDietHtml.includes('自定义蛋白') || !profDietHtml.includes('低糖稳态') || profDietHtml.includes('{pMid}') || profDietHtml.includes('—')) {

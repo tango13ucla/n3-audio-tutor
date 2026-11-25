@@ -354,8 +354,32 @@ def _author_trio_chapter(
     return None
 
 
+def _interleave_taste_and_horizon(
+    entries: list[tuple[int, bool, int, tuple[str, str, list[str]]]],
+) -> list[tuple[str, str, list[str]]]:
+    """Within each priority tier, interleave 2 resonance topics with 1 growth-horizon topic (anti-echo-chamber)."""
+    by_prio: dict[int, list[tuple[bool, int, tuple[str, str, list[str]]]]] = {}
+    for prio, is_horizon, seq, payload in entries:
+        by_prio.setdefault(prio, []).append((is_horizon, seq, payload))
+    out: list[tuple[str, str, list[str]]] = []
+    for prio in sorted(by_prio.keys()):
+        bucket = sorted(by_prio[prio], key=lambda x: x[1])
+        taste = [p for is_h, _s, p in bucket if not is_h]
+        horizon = [p for is_h, _s, p in bucket if is_h]
+        ti = hi = 0
+        while ti < len(taste) or hi < len(horizon):
+            for _ in range(2):
+                if ti < len(taste):
+                    out.append(taste[ti])
+                    ti += 1
+            if hi < len(horizon):
+                out.append(horizon[hi])
+                hi += 1
+    return out
+
+
 def _load_unused_public_memory_topics(used_ids: set[str], existing_titles: set[str]) -> list[tuple[str, str, list[str]]]:
-    ranked: list[tuple[int, int, tuple[str, str, list[str]]]] = []
+    entries: list[tuple[int, bool, int, tuple[str, str, list[str]]]] = []
     seq = 0
     cat_path = BASE_DIR / "public_memory_catalog.json"
     if cat_path.exists():
@@ -371,7 +395,8 @@ def _load_unused_public_memory_topics(used_ids: set[str], existing_titles: set[s
                 if not title or any(tid and tid in uid for uid in used_ids) or title in existing_titles:
                     continue
                 prio = int(tp.get("priority", 2))
-                ranked.append((prio, seq, (tab, f"{title}：{summary}", targets)))
+                is_h = bool(tp.get("growth_horizon", False))
+                entries.append((prio, is_h, seq, (tab, f"{title}：{summary}", targets)))
                 seq += 1
         except Exception:
             pass
@@ -389,13 +414,13 @@ def _load_unused_public_memory_topics(used_ids: set[str], existing_titles: set[s
                     if not title or any(tid and tid in uid for uid in used_ids) or title in existing_titles:
                         continue
                     prio = int(tp.get("priority", 1))
-                    ranked.append((prio, seq, ("跨国镜像", f"{title}：{angle}", [])))
+                    is_h = bool(tp.get("growth_horizon", False))
+                    entries.append((prio, is_h, seq, ("跨国镜像", f"{title}：{angle}", [])))
                     seq += 1
         except Exception:
             pass
 
-    ranked.sort(key=lambda x: (x[0], x[1]))
-    return [item for _, _, item in ranked]
+    return _interleave_taste_and_horizon(entries)
 
 
 def _load_unused_world_topics(used_ids: set[str], existing_titles: set[str]) -> list[tuple[str, str, list[str]]]:
@@ -405,7 +430,7 @@ def _load_unused_world_topics(used_ids: set[str], existing_titles: set[str]) -> 
     try:
         raw_cat = json.loads(cat_path.read_text(encoding="utf-8"))
         topics = raw_cat.get("topics") if isinstance(raw_cat, dict) else raw_cat
-        ranked: list[tuple[int, int, tuple[str, str, list[str]]]] = []
+        entries: list[tuple[int, bool, int, tuple[str, str, list[str]]]] = []
         for idx, tp in enumerate(topics or []):
             tid = str(tp.get("id") or "")
             tab = str(tp.get("short_tab") or "日本看世界")[:5]
@@ -415,9 +440,9 @@ def _load_unused_world_topics(used_ids: set[str], existing_titles: set[str]) -> 
             if not title or any(tid and tid in uid for uid in used_ids) or title in existing_titles:
                 continue
             prio = int(tp.get("priority", 2))
-            ranked.append((prio, idx, (tab, f"{title}（日本视角：{angle}）", targets)))
-        ranked.sort(key=lambda x: (x[0], x[1]))
-        return [item for _, _, item in ranked]
+            is_h = bool(tp.get("growth_horizon", False))
+            entries.append((prio, is_h, idx, (tab, f"{title}（日本视角：{angle}）", targets)))
+        return _interleave_taste_and_horizon(entries)
     except Exception:
         return []
 
@@ -434,7 +459,7 @@ def _author_world_finale_chapter(
     sys_p = (
         "你是凤凰卫视《锵锵三人行》原班总撰稿，负责每天 40 分钟节目压轴的最后五分之一板块【日本看世界】（约 8 分钟，24 到 34 轮，约 2,250 到 2,600 字，不局限文史哲，主打科学/科技/医学/能源/全球财经/太空/国际新闻）。\n"
         f"请围绕主题「{theme_desc}」从日本媒体与日本社会的视角，把这件世界大事剥洋葱讲透、故事性拉满（日语假名占比约 {max(ja_pct, 12)}%）。\n"
-        "编辑审美品味：重硬核科学原理、制度结构反差与人类心理洞察，文风冷静锋利有余味，绝不喊口号不灌鸡汤。\n"
+        "编辑审美品味（知己与拓界并重）：既重底层科学原理、制度反差与人类心理，也敢拆解容易被宏大叙事忽略的微观工艺、生命机制与反直觉细节，文风冷静锋利有余味，绝不喊口号不灌鸡汤。\n"
         "硬性铁律：\n"
         "1. 【约 1.35 倍自然语法频率】：自然融入 6 个 N3 语法表达（3 到 4 个顺嘴两句大白话点破意思与易混词，2 到 3 个自然一句带过），绝不生硬。\n"
         "2. 【直接夹入 N5 与简单 N4 日语词】：中文框架下在顺口处直接用纯假名夹入 せかい、かがく、ニュース、びょういん、くすり、かいしゃ、おかね、ねだん、でんしゃ、コンビニ、おにぎり、おでん 等熟词，不用翻译；日文词前后相邻中文片段至少 2 个汉字，绝不留单字孤岛。\n"
@@ -664,7 +689,7 @@ def run_morning_prepare() -> int:
             "你是 JLPT N3 命题专家。请为给定的每个考点编写 1 道全新日文例句二选一变式题（严禁与原句雷同）。\n"
             "要求：\n"
             "1. prompt 用（　　）挖空，choices 含 2 个自然选项，answer 必须在 choices 内，full_ja 为填入正确答案后的完整日文句。\n"
-            "2. 例句场景自然鲜活，优先取材于成年人的真实生活与文化视野（如东京通勤与科技产品讨论、旧书店与读书会、电影院与舞台剧、荞麦面店与居酒屋、篮球赛与运动体能、古建筑与传统器物、财经与科学新闻），避免枯燥低幼的教科书流水账。\n"
+            "2. 例句场景自然鲜活，兼顾真实成人视野（东京职场与报联相/敬语、科技产品、医学健康、美术馆与建筑、荞麦面与居酒屋、篮球与体能、制造与财经），并在干扰项里刻意打磨『形态接续、纯假名副词/拟态词微差、使役与授受视角』等最容易凭大意猜错的细节，绝不出低幼送分题。\n"
             "3. q_before 与 q_after 为挖空前后的纯日文朗读片段（若考汉字读音则只给 q_before 不泄露目标词读音）。\n"
             "4. exp_zh 为一段干脆利落的中文语音讲解：绝不重复朗读原日文句，也绝不用「这句是说……」复述整句翻译；"
             "第一句直接说人话切入本题核心逻辑与干扰项辨析（严禁机械开头「考语法」「考词汇」），"
