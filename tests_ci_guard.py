@@ -257,6 +257,20 @@ def test_apply_practice_logs_all_event_types() -> None:
             assert "N3-G1" in ever_seen and "N3-G2" in ever_seen
             all_missed = [x for vals in missed.values() for x in vals]
             assert "象徴" in all_missed, f"Expected 听后复盘:再过 (象徴) in missed_by_day: {missed}"
+
+            # Adaptive v7.0: verify auto-decay of stale scars once mastered green/later-clean + confusion_pairs extraction!
+            state["radio_relearn_queue"]["〜かわりに"] = "20261123"
+            state["hesitant_points"]["〜かわりに"] = "20261123"
+            state["grammar_points"].append({"id": "G-099", "name": "〜かわりに", "status": "green", "streak": 3, "last_ok_date": "20261124"})
+            with open(log_file, "a", encoding="utf-8") as af:
+                af.write(json.dumps({"ts": "2026-11-25T06:00:01Z", "id": "SPK:RV-2", "point": "〜べきではない", "choice": "开口:自然达标", "correct": "true"}, ensure_ascii=False) + "\n")
+                af.write(json.dumps({"ts": "2026-11-25T06:00:02Z", "id": "N3-G2", "point": "〜べきではない", "choice": "わけではない", "correct": "false", "ask_again": "false"}, ensure_ascii=False) + "\n")
+            rba.apply_practice_logs(state, "20261125")
+            assert "〜かわりに" not in (state.get("radio_relearn_queue") or {}), "Green point must auto-decay from radio_relearn_queue!"
+            assert "〜かわりに" not in (state.get("hesitant_points") or {}), "Green point must auto-decay from hesitant_points!"
+            assert "〜べきではない" not in ((state.get("speaking_practice") or {}).get("slips") or {}), "Redeemed SPK pass must clear slip!"
+            cp = state.get("confusion_pairs") or {}
+            assert (cp.get("〜べきではない") or {}).get("top_wrong") == "わけではない", f"Expected confusion_pairs to track real wrong choice, got {cp}"
         finally:
             rba.LOG_PATH, rba.SNAPSHOT_PATH = orig_rba_log, orig_rba_snap
             aadc.LOG_PATH, aadc.SNAP_PATH = orig_aadc_log, orig_aadc_snap

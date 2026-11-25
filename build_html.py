@@ -330,30 +330,52 @@ def resolve_point_streak(point_key: str) -> int:
 
 RECENT_GENERIC_LABELS = {"口语听辨", "高频假名副词", "核心词汇", "语法", "活用"}
 recent_weak_keys = set()
+recent_weak_vocab_keys = set()
 log_path = os.path.join(BASE_DIR, "practice_log.jsonl")
 if os.path.exists(log_path):
     try:
         _latest_outcome_by_key = {}
+        _latest_vocab_outcome = {}
         with open(log_path, encoding="utf-8") as lf:
-            for ln in [x.strip() for x in lf if x.strip()][-200:]:
+            for ln in [x.strip() for x in lf if x.strip()][-300:]:
                 rec = json.loads(ln)
                 rec_qid = str(rec.get("id", "")).strip()
-                if not rec_qid or rec_qid.startswith(("LK:", "VC-")):
+                if not rec_qid or rec_qid.startswith(("LK:", "HES:", "GA-")):
                     continue
                 is_miss = (
                     str(rec.get("correct", "")).lower() == "false"
                     or str(rec.get("ask_again", "")).lower() == "true"
-                    or str(rec.get("choice", "")).strip() == "不确定"
+                    or str(rec.get("choice", "")).strip() in ("不确定", "记词:没记住", "闪卡:没记住", "听后复盘:重学", "听后复盘:再过")
                 )
                 pt_lbl = str(rec.get("point", "")).strip()
+                if rec_qid.startswith(("VC-", "FLASH-")):
+                    vw_lbl = pt_lbl or rec_qid[3:]
+                    if vw_lbl:
+                        _latest_vocab_outcome[vw_lbl] = is_miss
+                    continue
                 _latest_outcome_by_key[rec_qid] = is_miss
                 if pt_lbl and pt_lbl not in RECENT_GENERIC_LABELS:
                     _latest_outcome_by_key[pt_lbl] = is_miss
         for _k, _was_miss in _latest_outcome_by_key.items():
             if _was_miss:
                 recent_weak_keys.add(_k)
+        for _vw, _was_miss in _latest_vocab_outcome.items():
+            if _was_miss:
+                recent_weak_vocab_keys.add(_vw)
     except Exception:
         pass
+
+_speaking_slip_keys = set(((live_state.get("speaking_practice") or {}).get("slips") or {}).keys())
+_radio_fast_skip_keys = set((live_state.get("radio_fast_skip_points") or {}).keys())
+_confusion_pairs_raw = live_state.get("confusion_pairs") or {}
+_radio_today_keys = set()
+_radio_today_pids = set()
+for _rv_it in (radio_meta.get("review_items") or []):
+    if isinstance(_rv_it, dict):
+        if _rv_it.get("key"):
+            _radio_today_keys.add(str(_rv_it["key"]).strip())
+        if _rv_it.get("point_id"):
+            _radio_today_pids.add(str(_rv_it["point_id"]).strip())
 
 
 def weakness_multiplier(status: str, qid: str = "", point_key: str = "") -> float:
@@ -369,6 +391,12 @@ def weakness_multiplier(status: str, qid: str = "", point_key: str = "") -> floa
             base += 0.35
         if (qid and qid in MEMORY_FOCUS) or (point_key and point_key in MEMORY_FOCUS):
             base += 0.28
+        if (qid and qid in _speaking_slip_keys) or (point_key and point_key in _speaking_slip_keys):
+            base += 0.30
+        if (qid and qid in _radio_today_pids) or (point_key and point_key in _radio_today_keys):
+            base += 0.24
+        if (qid and qid in _radio_fast_skip_keys) or (point_key and point_key in _radio_fast_skip_keys):
+            base += 0.15
     return base
 
 
@@ -736,12 +764,14 @@ _radio_relearn_points = set((live_state.get("radio_relearn_queue") or {}).keys()
 
 def _is_active_miss(p: dict) -> bool:
     st = resolve_point_status(p["point_key"])
+    if st == "green":
+        return False
     qid = p["id"]
     pk = p["point_key"]
     if pk in _radio_relearn_points or qid in _radio_relearn_points:
         return True
-    if st == "green":
-        return False
+    if pk in _speaking_slip_keys or qid in _speaking_slip_keys:
+        return True
     if st in ("red", "orange"):
         return True
     return (qid in recent_weak_keys) or (pk in recent_weak_keys)
@@ -768,28 +798,32 @@ def _spaced_wave_key(p: dict, allow_miss_top: bool = True):
     is_miss = _is_active_miss(p)
     is_hesitant = (pk in _hesitant_points) or (qid in _hesitant_points)
     in_focus = 1 if (qid in MEMORY_FOCUS or pk in MEMORY_FOCUS) else 0
+    in_radio_today = 1 if (qid in _radio_today_pids or pk in _radio_today_keys) else 0
     g_obj = g_state_map.get(pk) or {}
     ga_verdict = str(g_obj.get("audit_verdict") or "")
     if st == "green":
         return (5, -dsl, -p["exam_weight"], qid)
     if ga_verdict in ("blank", "weak") and allow_miss_top:
         # Spectrum 1 (陌生): absolute P0 priority — teach first then quiz!
-        return (0, -(p["roi_score"] + 0.6), -p["exam_weight"], qid)
+        return (0, -(p["roi_score"] + 0.65 + (0.20 if in_radio_today else 0.0)), -p["exam_weight"], qid)
     if (is_miss or ga_verdict == "confuse") and allow_miss_top:
-        # Spectrum 2 (易混) or recent miss: contrast quiz battle!
-        return (0, -(p["roi_score"] + (0.35 if ga_verdict == "confuse" else 0.0)), -p["exam_weight"], qid)
+        # Spectrum 2 (易混) or recent miss / speaking slip: contrast quiz battle!
+        return (0, -(p["roi_score"] + (0.35 if ga_verdict == "confuse" else 0.0) + (0.20 if in_radio_today else 0.0)), -p["exam_weight"], qid)
+    if in_radio_today and dsl >= 1:
+        # Today's 40-min podcast just warmed up this non-green point -> immediate listen-then-quiz synergy!
+        return (1, -1, -p["exam_weight"], -p["roi_score"], qid)
     if ga_verdict == "passive" and dsl >= 1:
         # Spectrum 3 (看懂): streak=2, single clean quiz verification turns True Green!
-        return (1, -p["exam_weight"], -1, -p["roi_score"], qid)
+        return (1, 0, -p["exam_weight"], -p["roi_score"], qid)
     if dsl >= 999:
         # Tier 1: Brand-new unseen syllabus point — rollout systematically by exam ROI!
-        return (1, -p["exam_weight"], -in_focus, -p["roi_score"], qid)
+        return (1, 1 - in_focus, -p["exam_weight"], -p["roi_score"], qid)
     min_gap = _expanding_min_gap(streak, is_hesitant)
     if dsl >= min_gap and not is_miss:
         # Tier 2: Spaced-repetition due (expanding 1d -> 2d -> 3-4d confirmation gap; hesitant points resurface slightly sooner)
         return (2, -dsl, streak, -p["exam_weight"], -in_focus, qid)
     if is_miss:
-        # Tier 3: Overflow active misses beyond the 50% per-subject miss cap
+        # Tier 3: Overflow active misses beyond per-subject miss cap
         return (3, -p["roi_score"], -p["exam_weight"], qid)
     # Tier 4: Recently practiced yellow — only used when fresh & due are exhausted
     return (4, streak, -p["exam_weight"], -p["roi_score"], qid)
@@ -819,6 +853,23 @@ def select_balanced_spaced_deck(candidates: list[dict], cap: int) -> list[dict]:
         chosen_ids.add(p["id"])
     if len(chosen) >= cap:
         return chosen[:cap]
+
+    # Step B1 (Listen-Then-Quiz Synergy, Adaptive Engine v7.0):
+    # Pull up to 5 non-green points taught in TODAY's 40-min 《锵锵》 into today's Quiz deck
+    # so what his ears just warmed up on gets verified immediately in active testing!
+    if cap >= 25 and (_radio_today_keys or _radio_today_pids):
+        radio_synergy = [
+            p for p in candidates
+            if p["id"] not in chosen_ids
+            and resolve_point_status(p["point_key"]) != "green"
+            and (p["id"] in _radio_today_pids or p["point_key"] in _radio_today_keys)
+        ]
+        radio_synergy.sort(key=lambda p: _spaced_wave_key(p, allow_miss_top=True))
+        for p in radio_synergy[:5]:
+            if len(chosen) >= cap:
+                break
+            chosen.append(p)
+            chosen_ids.add(p["id"])
 
     # Step B2 (Green Freshness Maintenance Guard, FSRS DSR / Bjork):
     # Reserve up to 3 silent maintenance slots for 3/3 true-green items unseen for >= 8 days (sprint)
@@ -856,13 +907,15 @@ def select_balanced_spaced_deck(candidates: list[dict], cap: int) -> list[dict]:
         if p["id"] not in chosen_ids:
             rem_by_subj.setdefault(p["subject"], []).append(p)
 
-    # First pass: fill each subject quota using ONLY non-green candidates, capping active misses at 50% of quota
+    # First pass: fill each subject quota using ONLY non-green candidates.
+    # During the final <=14d sprint, expand miss_cap to 75% so audited blank/confuse blind spots clear before exam day!
+    miss_ratio = 0.75 if _days_to_exam <= 14 else 0.55
     for subj in ("语法", "听力", "活用", "词汇"):
         q = quotas.get(subj, 0)
         if q <= 0:
             continue
         non_green = [p for p in rem_by_subj.get(subj, []) if resolve_point_status(p["point_key"]) != "green"]
-        miss_cap = max(1, q // 2)
+        miss_cap = max(1, int(round(q * miss_ratio)))
         misses = [p for p in non_green if _is_active_miss(p)]
         misses.sort(key=lambda p: _spaced_wave_key(p, allow_miss_top=True))
         picked_subj: list[dict] = []
@@ -1426,11 +1479,57 @@ seeded_ga = {
     for gk, gv in (cloud_snap.get("grammarAudit") or {}).items()
     if isinstance(gv, list) and len(gv) >= 2 and int(gv[1] or 0) >= MIN_REAL_TS
 }
-recent_weak_words = [
-    it["name"]
-    for it in vocab_items
-    if it["tier"] != "done" and (it["name"] in recent_weak_keys or it["name"] in MEMORY_FOCUS)
+_focus_vocab_set = set(w for w in (MEMORY_PREFS.get("focus_vocab") or []) if isinstance(w, str))
+_lookup_words_set = set((live_state.get("word_lookups") or {}).keys())
+_radio_imm = radio_meta.get("immersion_vocab") or {}
+_radio_vocab_ordered = []
+for _rv_entry in (
+    list(_radio_imm.get("rumination_words") or [])
+    + list(_radio_imm.get("today_spotlight") or [])
+):
+    _kj = str(_rv_entry.get("kanji") or "").strip()
+    if _kj and _kj not in _radio_vocab_ordered:
+        _radio_vocab_ordered.append(_kj)
+for _rv_it in (radio_meta.get("review_items") or []):
+    if isinstance(_rv_it, dict) and _rv_it.get("kind") == "vocab":
+        _vk = str(_rv_it.get("key") or "").strip()
+        if _vk and _vk not in _radio_vocab_ordered:
+            _radio_vocab_ordered.append(_vk)
+
+_all_vocab_item_names = {it["name"]: it for it in vocab_items}
+radio_focus_vocab = [
+    w for w in _radio_vocab_ordered
+    if w in _all_vocab_item_names and _all_vocab_item_names[w]["tier"] != "done"
 ]
+
+_weak_vocab_priority = (
+    list(recent_weak_vocab_keys)
+    + list(_focus_vocab_set)
+    + list(_radio_relearn_points)
+    + list(_speaking_slip_keys)
+    + [w for w in _lookup_words_set if w in _all_vocab_item_names]
+    + list(recent_weak_keys)
+    + list(MEMORY_FOCUS)
+)
+recent_weak_words = []
+for _w in _weak_vocab_priority:
+    if _w in _all_vocab_item_names and _all_vocab_item_names[_w]["tier"] != "done" and _w not in recent_weak_words:
+        recent_weak_words.append(_w)
+for it in vocab_items:
+    if it["tier"] != "done" and it["name"] not in recent_weak_words and (
+        it["name"] in recent_weak_vocab_keys
+        or it["name"] in recent_weak_keys
+        or it["name"] in _focus_vocab_set
+        or it["name"] in MEMORY_FOCUS
+    ):
+        recent_weak_words.append(it["name"])
+
+confusion_pairs_payload = {}
+for _cp_k, _cp_v in _confusion_pairs_raw.items():
+    if isinstance(_cp_v, dict) and _cp_v.get("top_wrong"):
+        _tw = clean_zen_text(str(_cp_v["top_wrong"]))
+        if _tw and len(_tw) <= 20:
+            confusion_pairs_payload[str(_cp_k)] = _tw
 
 vocab_base_done = sum(1 for it in vocab_items if it["tier"] == "done")
 vocab_daily_count = tutor_prefs.vocab_daily_count(MEMORY_PREFS, day=plan_date_str)
@@ -1498,6 +1597,8 @@ payload = json.dumps({
     "true_green_epoch": TRUE_GREEN_EPOCH,
     "baked_epoch": baked_epoch,
     "recent_weak_words": recent_weak_words,
+    "radio_focus_vocab": radio_focus_vocab,
+    "confusion_pairs": confusion_pairs_payload,
     "cloud_sync": {
         "ntfy_topic": cloud_cfg.get("ntfy_topic", ""),
         "seeded_day": seeded_day,
@@ -9340,6 +9441,7 @@ let radioReviewOpen = false;
 let rvMode = "triage"; // "video" | "triage" | "tail" | "speak" | "done"
 let rvRevealed = false;
 let rvRevealedAt = 0;
+let rvShownAt = 0;
 let rvPendingLeft = false;
 let rvActiveItemId = "";
 let rvAnimating = false;
@@ -9933,11 +10035,13 @@ function advanceRadioReviewPointer() {
     rvActiveItemId = items[st.triageIdx].id;
     rvRevealed = false;
     rvRevealedAt = 0;
+    rvShownAt = performance.now();
   } else if (st.tailQueue && st.tailQueue.length > 0) {
     rvMode = "tail";
     rvActiveItemId = st.tailQueue[0];
     rvRevealed = false;
     rvRevealedAt = 0;
+    rvShownAt = performance.now();
   } else {
     // Clearing focus cards immediately seals Enso Ring #2 so skipping speech never blocks check-in!
     const wasDone = !!st.done;
@@ -10314,7 +10418,11 @@ function handleRadioReviewPass() {
   const st = ensureRadioReviewState(false);
   const item = getReviewItemById(rvActiveItemId);
   if (!item) return;
-  const isVerified = !!(rvRevealed && rvRevealedAt > 0 && (performance.now() - rvRevealedAt) >= 800);
+  const nowP = performance.now();
+  const isVerified = !!(
+    (rvRevealed && rvRevealedAt > 0 && (nowP - rvRevealedAt) >= 800)
+    || (!rvRevealed && rvShownAt > 0 && (nowP - rvShownAt) >= 1200)
+  );
 
   animateRvCardAndRun("fly-right", () => {
     st.updatedAt = nowUnixSec();
@@ -10784,8 +10892,28 @@ function revealWithoutGuess() {
   ps.status = "learning";
   ps.wrongCount = (ps.wrongCount || 0) + 1;
   ps.passStreak = 0;
-  ps.reqPasses = (activeQuizObj.is_listening && p.variants && p.variants.length > 0) ? 2 : 1;
-  ps.retryCardId = activeQuizObj.id;
+  const hasVars = !!(p.variants && p.variants.length > 0);
+  if (activeQuizObj.is_listening) {
+    ps.reqPasses = hasVars ? 2 : 1;
+    ps.retryCardId = activeQuizObj.id;
+  } else if (hasVars) {
+    // Transfer-learning retry: test a DIFFERENT sentence variant 3 steps later instead of 15s echo memory on same sentence!
+    ps.reqPasses = 1;
+    ps.retryCardId = "";
+    if (ps.useVariant) {
+      if (p.variants.length > 1) {
+        ps.variantIdx = ((ps.variantIdx || 0) + 1) % p.variants.length;
+      } else {
+        ps.useVariant = false;
+      }
+    } else {
+      ps.useVariant = true;
+      ps.variantIdx = (ps.variantIdx || 0) % p.variants.length;
+    }
+  } else {
+    ps.reqPasses = 1;
+    ps.retryCardId = activeQuizObj.id;
+  }
   ps.dueStep = A.step + 3;
   // Rohrer & Taylor (2007) / Pan (2015): delay same-family contrast by 4 cards instead of immediate blocking!
   A.hotFamily = p.family;
@@ -10876,8 +11004,27 @@ function submitAnswer(val) {
     ps.status = "learning";
     ps.wrongCount = (ps.wrongCount || 0) + 1;
     ps.passStreak = 0;
-    ps.reqPasses = (activeQuizObj.is_listening && p.variants && p.variants.length > 0) ? 2 : 1;
-    ps.retryCardId = activeQuizObj.id;
+    const hasVarsW = !!(p.variants && p.variants.length > 0);
+    if (activeQuizObj.is_listening) {
+      ps.reqPasses = hasVarsW ? 2 : 1;
+      ps.retryCardId = activeQuizObj.id;
+    } else if (hasVarsW) {
+      ps.reqPasses = 1;
+      ps.retryCardId = "";
+      if (ps.useVariant) {
+        if (p.variants.length > 1) {
+          ps.variantIdx = ((ps.variantIdx || 0) + 1) % p.variants.length;
+        } else {
+          ps.useVariant = false;
+        }
+      } else {
+        ps.useVariant = true;
+        ps.variantIdx = (ps.variantIdx || 0) % p.variants.length;
+      }
+    } else {
+      ps.reqPasses = 1;
+      ps.retryCardId = activeQuizObj.id;
+    }
     ps.dueStep = A.step + 3;
     A.hotFamily = p.family;
     A.hotFamilyDueStep = A.step + 4;
@@ -11270,6 +11417,8 @@ function renderTutor() {
   const stillNeedsVariantPass = isCorrect && ps.status !== "green";
   let overCls = "overline ng";
   let overTxt = "";
+  const hasVariantTransfer = !q.is_listening && !!(p.variants && p.variants.length > 0);
+  const retryCopy = hasVariantTransfer ? "3 题后换句复考" : "3 题后乱序重考";
   if (isCorrect && stillNeedsVariantPass) {
     overCls = "overline warm";
     overTxt = q.is_listening && ansIdx > 0
@@ -11283,12 +11432,12 @@ function renderTutor() {
     overCls = "overline warm";
     overTxt = q.is_listening && ansIdx > 0
       ? `未过关（记 0/3） · 正解 ${ansIdx} · 3 题后乱序重考`
-      : "未过关（记 0/3） · 3 题后乱序重考";
+      : `未过关（记 0/3） · ${retryCopy}`;
   } else {
     overCls = "overline ng";
     overTxt = q.is_listening && ansIdx > 0
       ? `答错未过（记 0/3） · 误选 ${pickedIdx || ""} · 正解 ${ansIdx} · 3 题后乱序重考`
-      : `答错未过（记 0/3） · 误选「${pickedVal}」 · 3 题后乱序重考`;
+      : `答错未过（记 0/3） · 误选「${pickedVal}」 · ${retryCopy}`;
   }
 
   const notesMap = q.opt_notes || {};
@@ -11323,10 +11472,10 @@ function renderTutor() {
   }).join("");
 
   const fullyPassed = isCorrect && !stillNeedsVariantPass;
-  const leftStampLabel = fullyPassed ? "← 稍后再考" : "← 3 题后重考";
+  const leftStampLabel = fullyPassed ? "← 稍后再考" : `← ${retryCopy}`;
   const leftStampTone = fullyPassed ? "" : " moss-tone";
-  const rightStampLabel = fullyPassed ? "下一题 →" : (stillNeedsVariantPass ? "3 题后复考 →" : "未过 · 3 题后重考 →");
-  const mainBtnLabel = fullyPassed ? "下一题 →" : (stillNeedsVariantPass ? "继续（3 题后复考） →" : "未过 · 3 题后重考 →");
+  const rightStampLabel = fullyPassed ? "下一题 →" : (stillNeedsVariantPass ? "3 题后复考 →" : `未过 · ${retryCopy} →`);
+  const mainBtnLabel = fullyPassed ? "下一题 →" : (stillNeedsVariantPass ? "继续（3 题后复考） →" : `未过 · ${retryCopy} →`);
   const _twinTitleMap = {
     "VAR-G05": "〜ついでに（顺便做另一件事）",
     "VAR-G10": "〜はずがない（按理绝不可能）",
@@ -11341,6 +11490,11 @@ function renderTutor() {
       ? q.answer
       : (p.point || "")
   );
+  const confWrong = (DATA.confusion_pairs && (DATA.confusion_pairs[p.point_key] || DATA.confusion_pairs[p.point])) || "";
+  const _ansStr = String(q.answer || "").trim();
+  const confHintHTML = (confWrong && confWrong !== _ansStr && (!_ansStr || (!_ansStr.includes(confWrong) && !confWrong.includes(_ansStr))) && !q.is_listening)
+    ? `<div class="res-cue"><span class="cue-tag">常混</span><span class="cue-txt">历史易误选「${escapeHtml(confWrong)}」，注意和正解区分</span></div>`
+    : "";
 
   box.innerHTML = `
     <div class="tutor-stamp right" id="tutor-st-right">${rightStampLabel}</div>
@@ -11360,6 +11514,7 @@ function renderTutor() {
       <div class="result-divider"></div>
       ${resPointTitle ? `<div class="res-point-head"><span class="res-point-subj">${escapeHtml(p.subject || "")}</span><span>${escapeHtml(resPointTitle)}</span></div>` : ""}
       ${q.why_line ? `<div class="res-cue"><span class="cue-tag">要点</span><span class="cue-txt">${escapeHtml(q.why_line)}</span></div>` : ""}
+      ${confHintHTML}
       <div class="opt-breakdown${q.is_listening ? " is-listen" : ""}">${optRowsHTML}</div>
     </div>
 
@@ -12081,28 +12236,44 @@ function curateVocabBatch(limitCnt) {
     staleDone.slice(0, 2).forEach(x => tryAdd(x.name, true, true));
   }
 
-  // 1) Recently missed words (from tutor or Grok practice)
+  // 1) Today's podcast spotlight/rumination vocab + Recently missed/looked-up words (full cross-module loop!)
+  const radioFocusVocab = Array.isArray(DATA.radio_focus_vocab) ? DATA.radio_focus_vocab : [];
+  radioFocusVocab.slice(0, Math.min(4, maxN)).forEach(sw => tryAdd(sw, false, false));
+
   const recentWeak = Array.isArray(DATA.recent_weak_words) ? DATA.recent_weak_words : [];
   recentWeak.slice(0, Math.min(8, maxN)).forEach(sw => tryAdd(sw, false, false));
 
-  // 2) Cross-day due 2/3 & 1/3 reviews (lastDate !== TODAY_TAG) so words graduate to true green steadily,
-  //    while always reserving room for fresh 0/3 words each day
+  // 2) True Expanding FSRS-lite cross-day spacing for 2/3 & 1/3 reviews:
+  //    - 1/3 -> due after >=1d; 2/3 -> due after >=2d (or >=3d when >10d to exam); hesitant -> -1d!
+  //    - Prevents rote next-day 2/3->3/3 false green while always reserving room for fresh 0/3 words each day.
+  const daysToExam = Number(DATA.days_to_exam || 14);
   const dueWip2 = [];
   const dueWip1 = [];
+  const earlyWip = [];
   const todoPool = [];
   vItems.forEach(it => {
     const eff = getEffectiveMastery(it.key, it.name);
     if (eff.tier === "todo") {
       todoPool.push(it.name);
     } else if (eff.tier === "wip" && eff.lastDate !== TODAY_TAG) {
-      if ((eff.streak || 0) >= 2) dueWip2.push(it.name);
-      else dueWip1.push(it.name);
+      const ld = eff.lastDate || getEffectiveItemLastDate(it);
+      const ds = ld ? daysSinceTag(ld) : 99;
+      const isHes = isItemHesitant(it);
+      const streakV = eff.streak || 0;
+      const minGap = daysToExam <= 4
+        ? 1
+        : (streakV >= 2 ? Math.max(1, (daysToExam > 10 ? 3 : 2) - (isHes ? 1 : 0)) : 1);
+      if (ds >= minGap) {
+        if (streakV >= 2) dueWip2.push({ name: it.name, ds });
+        else dueWip1.push({ name: it.name, ds });
+      } else {
+        earlyWip.push({ name: it.name, ds });
+      }
     }
   });
-  const rot = (parseInt(TODAY_TAG.slice(-2), 10) || 0) * 5;
-  const dueWip = [];
-  for (let i = 0; i < dueWip2.length; i++) dueWip.push(dueWip2[(i + rot) % dueWip2.length]);
-  for (let i = 0; i < dueWip1.length; i++) dueWip.push(dueWip1[(i + rot) % dueWip1.length]);
+  dueWip2.sort((a, b) => b.ds - a.ds || a.name.localeCompare(b.name));
+  dueWip1.sort((a, b) => b.ds - a.ds || a.name.localeCompare(b.name));
+  const dueWip = dueWip2.map(x => x.name).concat(dueWip1.map(x => x.name));
 
   const freshReserve = Math.min(Math.max(8, Math.floor(maxN * 0.42)), todoPool.length);
   const reviewTarget = Math.max(0, maxN - freshReserve);
@@ -12116,7 +12287,9 @@ function curateVocabBatch(limitCnt) {
   // 4) Any leftover due cross-day reviews (anti-interference enforced)
   dueWip.forEach(nm => tryAdd(nm, false, false));
 
-  // 5) Any remaining wip words (anti-interference enforced, then relaxed fallback if pool tiny)
+  // 5) Fallback to non-due early wip only if batch still under maxN (anti-interference enforced, then relaxed)
+  earlyWip.sort((a, b) => b.ds - a.ds || a.name.localeCompare(b.name));
+  earlyWip.forEach(x => tryAdd(x.name, false, false));
   vItems.forEach(it => {
     const eff = getEffectiveMastery(it.key, it.name);
     if (eff.tier === "wip") tryAdd(it.name, false, false);
@@ -12124,6 +12297,7 @@ function curateVocabBatch(limitCnt) {
   if (out.length < maxN) {
     todoPool.forEach(nm => tryAdd(nm, false, true));
     dueWip.forEach(nm => tryAdd(nm, false, true));
+    earlyWip.forEach(x => tryAdd(x.name, false, true));
     vItems.forEach(it => {
       const eff = getEffectiveMastery(it.key, it.name);
       if (eff.tier === "wip") tryAdd(it.name, false, true);
@@ -17363,6 +17537,42 @@ if (!jpvModHtml.includes('<video') || !jpvModHtml.includes('<track kind="subtitl
 }
 sb.closeModal();
 sb.closeRadioReview();
+
+// Self-test 14: Adaptive Engine v7.0 Closed-Loop Invariants (Blind-Front Review Pass + Transfer-Variant Retry + Confusion Cue + Vocab Spacing)
+// 14.1 Blind-front radio review pass after >=1.2s MUST record verified "听后复盘:过" (not 快过存疑!)
+sb.openRadioReview(true);
+vm.runInNewContext('rvShownAt = performance.now() - 1800; rvRevealed = false;', sb);
+const origSetTimeout14 = sb.setTimeout;
+sb.setTimeout = (fn) => { fn(); return 1; };
+sb.handleRadioReviewPass();
+sb.setTimeout = origSetTimeout14;
+const lastRvRec14 = vm.runInNewContext('loadOutbox().slice().reverse().find(x => String(x[0]||"").startsWith("RV:"))', sb);
+if (!lastRvRec14 || lastRvRec14[2] !== '听后复盘:过') {
+  throw new Error('Self-test 14 failed: >=1.2s blind-front radio review pass must emit 听后复盘:过, got: ' + JSON.stringify(lastRvRec14));
+}
+sb.closeRadioReview();
+// 14.2 Non-listening wrong answer on a point with variants MUST rotate to a DIFFERENT variant card on retry (transfer learning!)
+const varPt14 = vm.runInNewContext('DATA.points.find(p => p.primary && !p.primary.is_listening && Array.isArray(p.variants) && p.variants.length > 0)', sb);
+if (varPt14) {
+  sb.setupCurrentTurn(varPt14.id);
+  vm.runInNewContext('viewStage = "quiz";', sb);
+  const beforeId14 = vm.runInNewContext('activeQuizObj.id', sb);
+  const wrongOpt14 = vm.runInNewContext('activeQuizObj.choices.find(c => c !== activeQuizObj.answer)', sb);
+  sb.submitAnswer(wrongOpt14);
+  const retryId14 = vm.runInNewContext(`getQuizForPoint(getPointById(${JSON.stringify(varPt14.id)}), A.pts[${JSON.stringify(varPt14.id)}]).id`, sb);
+  if (retryId14 === beforeId14) {
+    throw new Error('Self-test 14 failed: non-listening wrong answer with variants must rotate to a different card, stayed on ' + beforeId14);
+  }
+}
+// 14.3 DATA exposes confusion_pairs & radio_focus_vocab cleanly (zero em-dashes)
+const cpMap14 = vm.runInNewContext('DATA.confusion_pairs', sb);
+const rfv14 = vm.runInNewContext('DATA.radio_focus_vocab', sb);
+if (!cpMap14 || typeof cpMap14 !== 'object' || !Array.isArray(rfv14)) {
+  throw new Error('Self-test 14 failed: DATA.confusion_pairs or DATA.radio_focus_vocab missing');
+}
+for (const v of Object.values(cpMap14)) {
+  if (String(v || '').includes('—')) throw new Error('Self-test 14 failed: em dash inside confusion_pairs: ' + v);
+}
 """
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
 

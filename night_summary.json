@@ -1,7 +1,7 @@
 {
   "closed_study_day": "2026-11-24",
-  "summarized_at_pt": "2026-11-25T08:36:37-08:00",
-  "day_events_count": 149,
+  "summarized_at_pt": "2026-11-25T11:50:20-08:00",
+  "day_events_count": 193,
   "missed_or_unsure_points": [
     "〜気味",
     "〜ということだ",
@@ -28,7 +28,11 @@
     "T-034",
     "〜てばかりいる",
     "K-014",
-    "そっくり"
+    "そっくり",
+    "N3L-009",
+    "N3L-012",
+    "N3L-368",
+    "K-001"
   ],
   "missed_vocab_words": [
     "象徴",
@@ -43,6 +47,128 @@
     "納得",
     "世間",
     "表情"
+  ],
+  "top_confusion_pairs": [
+    {
+      "point": "ついてない",
+      "wrong_choice": "たまらない",
+      "count": 5,
+      "last_date": "20261123"
+    },
+    {
+      "point": "T-034",
+      "wrong_choice": "届って",
+      "count": 4,
+      "last_date": "20261124"
+    },
+    {
+      "point": "K-014",
+      "wrong_choice": "お聞きになり",
+      "count": 4,
+      "last_date": "20261124"
+    },
+    {
+      "point": "T-001",
+      "wrong_choice": "開けて",
+      "count": 4,
+      "last_date": "20261124"
+    },
+    {
+      "point": "K-008",
+      "wrong_choice": "お知り",
+      "count": 4,
+      "last_date": "20261123"
+    },
+    {
+      "point": "からから",
+      "wrong_choice": "がらがら",
+      "count": 4,
+      "last_date": "20261122"
+    },
+    {
+      "point": "〜ところだ",
+      "wrong_choice": "ばかり",
+      "count": 3,
+      "last_date": "20261121"
+    },
+    {
+      "point": "〜ようとする",
+      "wrong_choice": "たばかりだ",
+      "count": 3,
+      "last_date": "20261120"
+    },
+    {
+      "point": "〜てたまらない",
+      "wrong_choice": "かまわない",
+      "count": 3,
+      "last_date": "20261118"
+    },
+    {
+      "point": "はっきり",
+      "wrong_choice": "ぼんやり",
+      "count": 3,
+      "last_date": "20261118"
+    },
+    {
+      "point": "〜にしては",
+      "wrong_choice": "にとって",
+      "count": 3,
+      "last_date": "20261117"
+    },
+    {
+      "point": "そっくり",
+      "wrong_choice": "うっかり",
+      "count": 2,
+      "last_date": "20261124"
+    },
+    {
+      "point": "〜きる／〜きれない",
+      "wrong_choice": "やすい",
+      "count": 2,
+      "last_date": "20261124"
+    },
+    {
+      "point": "〜てばかりいる",
+      "wrong_choice": "たばかりで",
+      "count": 2,
+      "last_date": "20261124"
+    },
+    {
+      "point": "〜たものだ",
+      "wrong_choice": "だところだ",
+      "count": 2,
+      "last_date": "20261124"
+    },
+    {
+      "point": "組む",
+      "wrong_choice": "ぐんで",
+      "count": 2,
+      "last_date": "20261123"
+    },
+    {
+      "point": "K-006",
+      "wrong_choice": "いただいた",
+      "count": 2,
+      "last_date": "20261123"
+    },
+    {
+      "point": "V-041",
+      "wrong_choice": "歩かせた",
+      "count": 2,
+      "last_date": "20261121"
+    },
+    {
+      "point": "〜っぽい",
+      "wrong_choice": "らしく",
+      "count": 2,
+      "last_date": "20261121"
+    },
+    {
+      "point": "〜ことから",
+      "wrong_choice": "にもかかわらず",
+      "count": 2,
+      "last_date": "20261121"
+    }
   ],
   "looked_up_expressions": [
     "N3-G80"
@@ -140,5 +266,5 @@
       "last_ts": "2026-11-24T23:22:59.000Z"
     }
   ],
-  "ever_seen_cards_count": 421
+  "ever_seen_cards_count": 425
 }

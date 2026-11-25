@@ -211,12 +211,37 @@ def run_night_summary(target_closed_day: str | None = None) -> int:
     prefs["daily_load"] = {"2026-12-06": {"load": "off", "why": "exam_day"}}
     prefs.setdefault("load_caps", {"normal": 60, "light": 25, "off": 10})
     prefs.setdefault("grammar_audit_daily_count", 39)
+    grammar_names = {str(p.get("name") or "") for p in (st_live.get("grammar_points") or []) if p.get("name")}
+    relearn_all = [
+        k for k in (st_live.get("radio_relearn_queue") or {}).keys()
+        if k and k not in green_keys and not contains_pii(k)
+    ]
+    spk_slip_all = [
+        k for k in ((st_live.get("speaking_practice") or {}).get("slips") or {}).keys()
+        if k and k not in green_keys and not contains_pii(k)
+    ]
+    relearn_grammar = [k for k in relearn_all + spk_slip_all if k.startswith("〜") or k in grammar_names]
+    relearn_vocab = [k for k in relearn_all + spk_slip_all if not k.startswith("〜") and k not in grammar_names]
+
     prev_focus = [p for p in prefs.get("focus_points", []) if isinstance(p, str)]
     merged_focus: list[str] = []
-    for p in audit_blank_keys + audit_confuse_keys + missed_today + missed_vocab_today + prev_focus:
+    # Prioritize live mistakes + active radio/speaking grammar slips first, then self-audited blank/confuse blind spots
+    for p in missed_today + relearn_grammar + audit_blank_keys + audit_confuse_keys + prev_focus:
         if p and p not in green_keys and not contains_pii(p) and p not in merged_focus:
             merged_focus.append(p)
-    prefs["focus_points"] = merged_focus[:40]
+    prefs["focus_points"] = merged_focus[:50]
+
+    # Dedicated vocab focus slot so 36+ grammar audit items NEVER evict failed vocab cards, lookups, or radio relearn words!
+    prev_focus_vocab = [
+        w for w in prefs.get("focus_vocab", [])
+        if isinstance(w, str) and not w.startswith("〜") and w not in grammar_names
+    ]
+    merged_vocab: list[str] = []
+    for w in missed_vocab_today + relearn_vocab + prev_focus_vocab:
+        if w and w not in green_keys and not w.startswith("〜") and w not in grammar_names and not contains_pii(w) and w not in merged_vocab:
+            merged_vocab.append(w)
+    prefs["focus_vocab"] = merged_vocab[:28]
+
     prefs["ui"] = {"orientation": "portrait"}
     prefs["generated_at"] = now_pt.strftime("%Y-%m-%dT%H:%M%z")
     prefs_txt = json.dumps(prefs, ensure_ascii=False, indent=2) + "\n"
@@ -250,12 +275,23 @@ def run_night_summary(target_closed_day: str | None = None) -> int:
     assert_zero_pii_text(ledger_txt, "lookup_weakness_ledger.md")
     ledger_path.write_text(ledger_txt, encoding="utf-8")
 
+    conf_pairs = st_live.get("confusion_pairs") or {}
+    top_conf = [
+        {"point": k, "wrong_choice": v.get("top_wrong", ""), "count": int(v.get("total", 1)), "last_date": v.get("last_date", "")}
+        for k, v in sorted(
+            conf_pairs.items(),
+            key=lambda kv: (-int((kv[1] or {}).get("total") or 0), -int(str((kv[1] or {}).get("last_date") or "0") or 0)),
+        )[:20]
+        if isinstance(v, dict) and v.get("top_wrong") and not contains_pii(k) and not contains_pii(str(v.get("top_wrong") or ""))
+    ]
+
     summary_obj = {
         "closed_study_day": closed_study_day,
         "summarized_at_pt": now_pt.isoformat(timespec="seconds"),
         "day_events_count": len(day_events),
         "missed_or_unsure_points": missed_today[:30],
         "missed_vocab_words": missed_vocab_today[:20],
+        "top_confusion_pairs": top_conf,
         "looked_up_expressions": looked_up_today[:25],
         "looked_up_words_count": len(sorted_lookups),
         "top_looked_up_words": [
@@ -270,7 +306,7 @@ def run_night_summary(target_closed_day: str | None = None) -> int:
     print(
         f"[night-summary] Closed {closed_study_day} at {now_pt.strftime('%H:%M PT')}: "
         f"events={len(day_events)}, missed_quiz={len(missed_today)}, "
-        f"missed_vocab={len(missed_vocab_today)}, lookups={len(looked_up_today)}"
+        f"missed_vocab={len(missed_vocab_today)}, lookups={len(looked_up_today)}, confusions={len(top_conf)}"
     )
     return 0
 
@@ -699,7 +735,20 @@ def run_morning_prepare() -> int:
             "\"why_line\": \"...\", \"core_rule\": \"...\", \"option_notes\": {\"选项1\": \"...\", \"选项2\": \"...\"}, "
             "\"q_before\": \"...\", \"q_after\": \"...\", \"exp_zh\": \"...\"}]}"
         )
-        raw_v = _call_chat_llm(sys_v, json.dumps({"points": batch}, ensure_ascii=False))
+        conf_map = {}
+        try:
+            _st_conf = json.loads((BASE_DIR / "n3_live_state.json").read_text(encoding="utf-8"))
+            conf_map = _st_conf.get("confusion_pairs") or {}
+        except Exception:
+            conf_map = {}
+        batch_enriched = []
+        for p_it in batch:
+            row = dict(p_it)
+            c_info = conf_map.get(str(row.get("point_key") or ""))
+            if isinstance(c_info, dict) and c_info.get("top_wrong"):
+                row["learner_frequent_wrong_choice"] = c_info["top_wrong"]
+            batch_enriched.append(row)
+        raw_v = _call_chat_llm(sys_v, json.dumps({"points": batch_enriched}, ensure_ascii=False))
         if raw_v:
             try:
                 items = (json.loads(raw_v).get("items") or [])

@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-25 11:12 PT",
+  "updated_at": "2026-11-25 11:50 PT",
   "exam_date": "2026-12-06",
   "days_left": 11,
   "target_score": "120+ / 180",
@@ -14154,7 +14154,7 @@
   "daily_rituals": {
     "date": "2026-11-25",
     "quiz_green": 0,
-    "radio_max_sec": 144,
+    "radio_max_sec": 636,
     "flash_seen": 0,
     "flash_target": 0,
     "flash_done": false,
@@ -14164,7 +14164,7 @@
     "ga_total_audited": 89
   },
   "study_date": "2026-11-25",
-  "_baked_epoch": 1795633956,
+  "_baked_epoch": 1795636221,
   "word_lookups": {
     "おく": {
       "count": 1,
@@ -14296,22 +14296,13 @@
   "hesitant_points": {
     "K-007": "20261122",
     "ぼろぼろ": "20261123",
-    "〜べきではない": "20261123",
     "〜とともに": "20261123",
-    "〜に関して": "20261123",
-    "〜ようにする": "20261123",
-    "〜しかない": "20261123",
     "〜たものだ": "20261123",
-    "〜向け": "20261123",
-    "〜といっても": "20261123",
     "〜わけにはいかない": "20261123",
     "〜ば〜のに": "20261123",
     "こっそり": "20261124",
     "〜だけでなく": "20261124",
-    "〜てばかりいる": "20261124",
-    "〜ことだ（忠告）": "20261124",
-    "〜がたい": "20261124",
-    "V-031": "20261124"
+    "〜てばかりいる": "20261124"
   },
   "radio_fast_skip_points": {
     "標準": "20261123",
@@ -14324,8 +14315,6 @@
     "〜しかない": "20261124",
     "裁判": "20261124",
     "〜うえで": "20261124",
-    "〜さえ": "20261124",
-    "〜ようになる": "20261124",
     "辞書": "20261124",
     "〜につれて": "20261124"
   },
@@ -14334,7 +14323,6 @@
     "象徴": "20261123",
     "〜による／によって": "20261123",
     "ところだった": "20261123",
-    "〜かわりに": "20261123",
     "〜だらけ": "20261124"
   },
   "speaking_practice": {
@@ -14346,6 +14334,481 @@
         "last_date": "20261123",
         "last_note": "开口:再练目标句型"
       }
+    }
+  },
+  "confusion_pairs": {
+    "消える vs 消す": {
+      "top_wrong": "消した",
+      "top_count": 1,
+      "total": 1,
+      "counts": {
+        "消した": 1
+      },
+      "last_date": "20261113"
+    },
+    "〜にしては": {
+      "top_wrong": "にとって",
+      "top_count": 2,
+      "total": 3,
+      "counts": {
+        "にとって": 2,
+        "によって": 1
+      },
+      "last_date": "20261117"
+    },
+    "〜がちだ": {
+      "top_wrong": "ひきがち",
+      "top_count": 1,
+      "total": 1,
+      "counts": {
+        "ひきがち": 1
+      },
+      "last_date": "20261114"
+    },
+    "からから": {
+      "top_wrong": "がらがら",
+      "top_count": 3,
+      "total": 4,
+      "counts": {
+        "がらがら": 3,
+        "ばらばら": 1
+      },
+      "last_date": "20261122"
+    },
+    "慰める": {
+      "top_wrong": "なぐさめた",
+      "top_count": 2,
+      "total": 2,
+      "counts": {
+        "なぐさめた": 2
+      },
+      "last_date": "20261115"
+    },
+    "〜てたまらない": {
+      "top_wrong": "かまわない",
+      "top_count": 2,
+      "total": 3,
+      "counts": {
+        "かまわない": 2,
+        "ことはない": 1
+      },
+      "last_date": "20261118"
+    },
+    "ついてない": {
+      "top_wrong": "たまらない",
+      "top_count": 4,
+      "total": 5,
+      "counts": {
+        "たまらない": 4,
+        "かまわない": 1
+      },
+      "last_date": "20261123"
+    },
+    "K-002": {
+      "top_wrong": "申します",
+      "top_count": 1,
+      "total": 1,
+      "counts": {
+        "申します": 1
+      },
+      "last_date": "20261117"
+    },
+    "〜ように言う": {
+      "top_wrong": "ことに",
+      "top_count": 1,
+      "total": 1,
+      "counts": {
+        "ことに": 1
+      },
+      "last_date": "20261117"
+    },
+    "〜にしたがって": {
+      "top_wrong": "ついでに",
+      "top_count": 1,
+      "total": 1,
+      "counts": {
+        "ついでに": 1
+      },
+      "last_date": "20261117"
+    },
+    "組む": {
+      "top_wrong": "ぐんで",
+      "top_count": 1,
+      "total": 2,
+      "counts": {
+        "ぐむ": 1,
+        "ぐんで": 1
+      },
+      "last_date": "20261123"
+    },
+    "はっきり": {
+      "top_wrong": "ぼんやり",
+      "top_count": 3,
+      "total": 3,
+      "counts": {
+        "ぼんやり": 3
+      },
+      "last_date": "20261118"
+    },
+    "まるで〜のように": {
+      "top_wrong": "のために",
+      "top_count": 1,
+      "total": 2,
+      "counts": {
+        "ために": 1,
+        "のために": 1
+      },
+      "last_date": "20261120"
+    },
+    "〜ところだ": {
+      "top_wrong": "ばかり",
+      "top_count": 3,
+      "total": 3,
+      "counts": {
+        "ばかり": 3
+      },
+      "last_date": "20261121"
+    },
+    "V-028": {
+      "top_wrong": "着れる",
+      "top_count": 1,
+      "total": 1,
+      "counts": {
+        "着れる": 1
+      },
+      "last_date": "20261120"
+    },
+    "V-041": {
+      "top_wrong": "歩かせた",
+      "top_count": 1,
+      "total": 2,
+      "counts": {
+        "待たせた": 1,
+        "歩かせた": 1
+      },
+      "last_date": "20261121"
+    },
+    "V-085": {
+      "top_wrong": "帰て",
+      "top_count": 1,
+      "total": 1,
+      "counts": {
+        "帰て": 1
+      },
+      "last_date": "20261120"
+    },
+    "T-021": {
+      "top_wrong": "上げて",
+      "top_count": 1,
+      "total": 1,
+      "counts": {
+        "上げて": 1
+      },
+      "last_date": "20261120"
+    },
+    "T-034": {
+      "top_wrong": "届って",
+      "top_count": 2,
+      "total": 4,
+      "counts": {
+        "届って": 2,
+        "届いて": 1,
+        "届けた": 1
+      },
+      "last_date": "20261124"
+    },
+    "K-008": {
+      "top_wrong": "お知り",
+      "top_count": 2,
+      "total": 4,
+      "counts": {
+        "お知り": 2,
+        "存じており": 1,
+        "存じております": 1
+      },
+      "last_date": "20261123"
+    },
+    "K-014": {
+      "top_wrong": "お聞きになり",
+      "top_count": 2,
+      "total": 4,
+      "counts": {
+        "お聞きになり": 2,
+        "いらっしゃい": 1,
+        "いらっしゃっ": 1
+      },
+      "last_date": "20261124"
+    },
+    "〜させてもらう": {
+      "top_wrong": "れ",
+      "top_count": 1,
+      "total": 1,
+      "counts": {
+        "れ": 1
+      },
+      "last_date": "20261120"
+    },
+    "〜に基づいて": {
+      "top_wrong": "に対して",
+      "top_count": 1,
+      "total": 1,
+      "counts": {
+        "に対して": 1
+      },
+      "last_date": "20261120"
+    },
+    "〜っぽい": {
+      "top_wrong": "らしく",
+      "top_count": 1,
+      "total": 2,
+      "counts": {
+        "らしい": 1,
+        "らしく": 1
+      },
+      "last_date": "20261121"
+    },
+    "〜につれて": {
+      "top_wrong": "によって",
+      "top_count": 1,
+      "total": 1,
+      "counts": {
+        "によって": 1
+      },
+      "last_date": "20261120"
+    },
+    "〜ようとする": {
+      "top_wrong": "たばかりだ",
+      "top_count": 3,
+      "total": 3,
+      "counts": {
+        "たばかりだ": 3
+      },
+      "last_date": "20261120"
+    },
+    "〜うえで": {
+      "top_wrong": "あいだに",
+      "top_count": 1,
+      "total": 1,
+      "counts": {
+        "あいだに": 1
+      },
+      "last_date": "20261120"
+    },
+    "そっくり": {
+      "top_wrong": "うっかり",
+      "top_count": 2,
+      "total": 2,
+      "counts": {
+        "うっかり": 2
+      },
+      "last_date": "20261124"
+    },
+    "K-005": {
+      "top_wrong": "いたし",
+      "top_count": 1,
+      "total": 1,
+      "counts": {
+        "いたし": 1
+      },
+      "last_date": "20261121"
+    },
+    "〜てもかまわない": {
+      "top_wrong": "てたまらない",
+      "top_count": 1,
+      "total": 1,
+      "counts": {
+        "てたまらない": 1
+      },
+      "last_date": "20261121"
+    },
+    "少しも〜ない": {
+      "top_wrong": "下がった",
+      "top_count": 1,
+      "total": 1,
+      "counts": {
+        "下がった": 1
+      },
+      "last_date": "20261121"
+    },
+    "〜ちゃう／じゃう": {
+      "top_wrong": "といた",
+      "top_count": 1,
+      "total": 1,
+      "counts": {
+        "といた": 1
+      },
+      "last_date": "20261121"
+    },
+    "〜ことから": {
+      "top_wrong": "にもかかわらず",
+      "top_count": 2,
+      "total": 2,
+      "counts": {
+        "にもかかわらず": 2
+      },
+      "last_date": "20261121"
+    },
+    "〜というより": {
+      "top_wrong": "にしたがって",
+      "top_count": 1,
+      "total": 1,
+      "counts": {
+        "にしたがって": 1
+      },
+      "last_date": "20261121"
+    },
+    "〜にかけて": {
+      "top_wrong": "について",
+      "top_count": 1,
+      "total": 1,
+      "counts": {
+        "について": 1
+      },
+      "last_date": "20261121"
+    },
+    "貯める": {
+      "top_wrong": "ちょめた",
+      "top_count": 1,
+      "total": 1,
+      "counts": {
+        "ちょめた": 1
+      },
+      "last_date": "20261121"
+    },
+    "K-006": {
+      "top_wrong": "いただいた",
+      "top_count": 2,
+      "total": 2,
+      "counts": {
+        "いただいた": 2
+      },
+      "last_date": "20261123"
+    },
+    "〜たとたん": {
+      "top_wrong": "うちに",
+      "top_count": 1,
+      "total": 1,
+      "counts": {
+        "うちに": 1
+      },
+      "last_date": "20261123"
+    },
+    "〜ばかりか": {
+      "top_wrong": "だけでなくても",
+      "top_count": 1,
+      "total": 1,
+      "counts": {
+        "だけでなくても": 1
+      },
+      "last_date": "20261123"
+    },
+    "〜にちがいない": {
+      "top_wrong": "はずがない",
+      "top_count": 1,
+      "total": 1,
+      "counts": {
+        "はずがない": 1
+      },
+      "last_date": "20261123"
+    },
+    "A-042": {
+      "top_wrong": "よさそう",
+      "top_count": 1,
+      "total": 1,
+      "counts": {
+        "よさそう": 1
+      },
+      "last_date": "20261123"
+    },
+    "〜きる／〜きれない": {
+      "top_wrong": "やすい",
+      "top_count": 2,
+      "total": 2,
+      "counts": {
+        "やすい": 2
+      },
+      "last_date": "20261124"
+    },
+    "〜たとえ〜ても": {
+      "top_wrong": "たら",
+      "top_count": 1,
+      "total": 1,
+      "counts": {
+        "たら": 1
+      },
+      "last_date": "20261123"
+    },
+    "〜気味": {
+      "top_wrong": "だらけ",
+      "top_count": 1,
+      "total": 1,
+      "counts": {
+        "だらけ": 1
+      },
+      "last_date": "20261123"
+    },
+    "〜ほど〜ない": {
+      "top_wrong": "より",
+      "top_count": 1,
+      "total": 1,
+      "counts": {
+        "より": 1
+      },
+      "last_date": "20261124"
+    },
+    "ぼろぼろ": {
+      "top_wrong": "ばらばら",
+      "top_count": 1,
+      "total": 1,
+      "counts": {
+        "ばらばら": 1
+      },
+      "last_date": "20261124"
+    },
+    "〜てばかりいる": {
+      "top_wrong": "たばかりで",
+      "top_count": 2,
+      "total": 2,
+      "counts": {
+        "たばかりで": 2
+      },
+      "last_date": "20261124"
+    },
+    "K-001": {
+      "top_wrong": "参ります",
+      "top_count": 1,
+      "total": 1,
+      "counts": {
+        "参ります": 1
+      },
+      "last_date": "20261124"
+    },
+    "〜たものだ": {
+      "top_wrong": "だところだ",
+      "top_count": 2,
+      "total": 2,
+      "counts": {
+        "だところだ": 2
+      },
+      "last_date": "20261124"
+    },
+    "〜わけにはいかない": {
+      "top_wrong": "わけではない",
+      "top_count": 1,
+      "total": 1,
+      "counts": {
+        "わけではない": 1
+      },
+      "last_date": "20261124"
+    },
+    "T-001": {
+      "top_wrong": "開けて",
+      "top_count": 4,
+      "total": 4,
+      "counts": {
+        "開けて": 4
+      },
+      "last_date": "20261124"
     }
   }
 }

@@ -1,7 +1,7 @@
 {
   "schema": "n3-grok-cloud-brief/1",
   "study_date": "2026-11-25",
-  "updated_at": "2026-11-25 11:12 PT",
+  "updated_at": "2026-11-25 11:50 PT",
   "days_left": 11,
   "grok_cloud_ingest_url": "https://ntfy.sh/n3grok_9c71e4b2a85f13d06e24ab891f03",
   "grammar": {
@@ -179,6 +179,83 @@
     "passive": 27,
     "instinct": 26
   },
+  "top_confusion_pairs": [
+    {
+      "point": "ついてない",
+      "wrong_choice": "たまらない",
+      "count": 5
+    },
+    {
+      "point": "K-008",
+      "wrong_choice": "お知り",
+      "count": 4
+    },
+    {
+      "point": "K-014",
+      "wrong_choice": "お聞きになり",
+      "count": 4
+    },
+    {
+      "point": "T-001",
+      "wrong_choice": "開けて",
+      "count": 4
+    },
+    {
+      "point": "T-034",
+      "wrong_choice": "届って",
+      "count": 4
+    },
+    {
+      "point": "からから",
+      "wrong_choice": "がらがら",
+      "count": 4
+    },
+    {
+      "point": "〜てたまらない",
+      "wrong_choice": "かまわない",
+      "count": 3
+    },
+    {
+      "point": "〜ところだ",
+      "wrong_choice": "ばかり",
+      "count": 3
+    },
+    {
+      "point": "〜にしては",
+      "wrong_choice": "にとって",
+      "count": 3
+    },
+    {
+      "point": "〜ようとする",
+      "wrong_choice": "たばかりだ",
+      "count": 3
+    },
+    {
+      "point": "はっきり",
+      "wrong_choice": "ぼんやり",
+      "count": 3
+    },
+    {
+      "point": "K-006",
+      "wrong_choice": "いただいた",
+      "count": 2
+    },
+    {
+      "point": "V-041",
+      "wrong_choice": "歩かせた",
+      "count": 2
+    },
+    {
+      "point": "〜きる／〜きれない",
+      "wrong_choice": "やすい",
+      "count": 2
+    },
+    {
+      "point": "〜ことから",
+      "wrong_choice": "にもかかわらず",
+      "count": 2
+    }
+  ],
   "henkei": {
     "red": [
       "K-001 いる／行く／来る → いらっしゃる",

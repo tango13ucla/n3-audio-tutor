@@ -265,20 +265,25 @@ def apply_practice_logs(state: dict, fallback_day_tag: str = "") -> int:
                     continue
 
                 # Real Spoken Voice Active Output & Pronunciation Mirror ("SPK:<id>"):
-                # Never falsely inflates 3/3 true green; records spoken reps & flags pronunciation/grammar slips for reinforcement!
+                # Never falsely inflates 3/3 true green; records spoken reps, clears redeemed slips on pass,
+                # and flags pronunciation/grammar slips for cross-module reinforcement!
                 if rec_id.startswith("SPK:") or choice.startswith(("开口:", "试读:")):
                     day_tag_s = _iso_to_day_tag(ts, fallback_day_tag)
                     spk_st = state.setdefault("speaking_practice", {"total_reps": 0, "last_date": "", "slips": {}})
                     spk_st["total_reps"] = int(spk_st.get("total_reps") or 0) + 1
                     spk_st["last_date"] = max(str(spk_st.get("last_date") or ""), day_tag_s)
+                    slips = spk_st.setdefault("slips", {})
                     if not is_correct and pt:
-                        slips = spk_st.setdefault("slips", {})
                         cur_sl = slips.get(pt) or {"count": 0, "last_date": "", "last_note": ""}
                         slips[pt] = {
                             "count": int(cur_sl.get("count") or 0) + 1,
                             "last_date": max(str(cur_sl.get("last_date") or ""), day_tag_s),
                             "last_note": choice[:48],
                         }
+                    elif is_correct and pt and pt in slips:
+                        prev_d = str((slips.get(pt) or {}).get("last_date") or "")
+                        if not prev_d or day_tag_s >= prev_d:
+                            slips.pop(pt, None)
                     continue
 
                 # Post-Listening 5-Min Contextual Review ("RV:<id>"):
@@ -587,7 +592,132 @@ def apply_practice_logs(state: dict, fallback_day_tag: str = "") -> int:
             pass
 
     state["_processed_log_ts"] = sorted(seen_ts)[-5000:]
+    reconcile_adaptive_telemetry(state, fallback_day_tag)
     return applied
+
+
+def reconcile_adaptive_telemetry(state: dict, fallback_day_tag: str = "") -> None:
+    """
+    Adaptive Engine v7.0 Closed-Loop Hygiene:
+    1. Auto-decay `radio_relearn_queue`, `hesitant_points`, `radio_fast_skip_points`, and resolved `speaking_practice.slips`
+       once the learner cleanly passes on a later study date or reaches True Green (3/3) — zero permanent stale scars!
+    2. Build active `confusion_pairs` from real wrong quiz choices in `practice_log.jsonl` (excluding "不确定")
+       so Quiz, Speaking, Auto-Authoring, and Grok target the EXACT distractor he actually confuses!
+    """
+    item_by_key: dict[str, dict] = {}
+    for p in state.get("grammar_points", []):
+        if p.get("name"):
+            item_by_key[p["name"]] = p
+    for p in state.get("henkei_points", []):
+        if p.get("id"):
+            item_by_key[p["id"]] = p
+        if p.get("name"):
+            item_by_key[p["name"]] = p
+    for p in state.get("listening_points", []):
+        if p.get("id"):
+            item_by_key[p["id"]] = p
+        if p.get("name"):
+            item_by_key[p["name"]] = p
+    for p in state.get("vocab_tracked", []):
+        if p.get("word"):
+            item_by_key[p["word"]] = p
+
+    def _is_green_or_later_clean_pass(key: str, ref_day: str) -> bool:
+        it = item_by_key.get(key)
+        if not it:
+            return False
+        if it.get("status") == "green":
+            return True
+        ok_d = str(it.get("last_ok_date") or "").replace("-", "")[:8]
+        ng_d = str(it.get("last_ng_date") or "").replace("-", "")[:8]
+        ref_clean = str(ref_day or "").replace("-", "")[:8]
+        return bool(ok_d and ref_clean and ok_d > ref_clean and (not ng_d or ok_d > ng_d))
+
+    # 1) Auto-decay radio_relearn_queue
+    rq = state.get("radio_relearn_queue")
+    if isinstance(rq, dict):
+        for k in list(rq.keys()):
+            if _is_green_or_later_clean_pass(k, str(rq.get(k) or "")):
+                rq.pop(k, None)
+
+    # 2) Auto-decay hesitant_points once green or answered fast on a later study date
+    hes = state.get("hesitant_points")
+    if isinstance(hes, dict):
+        for k in list(hes.keys()):
+            if _is_green_or_later_clean_pass(k, str(hes.get(k) or "")):
+                hes.pop(k, None)
+
+    # 3) Auto-decay radio_fast_skip_points once green, verified, or passed cleanly later
+    rv_ok = state.get("radio_verified_points") or {}
+    rv_fast = state.get("radio_fast_skip_points")
+    if isinstance(rv_fast, dict):
+        for k in list(rv_fast.keys()):
+            f_day = str(rv_fast.get(k) or "").replace("-", "")[:8]
+            v_day = str(rv_ok.get(k) or "").replace("-", "")[:8]
+            if _is_green_or_later_clean_pass(k, f_day) or (v_day and f_day and v_day >= f_day):
+                rv_fast.pop(k, None)
+
+    # 4) Rebuild active `confusion_pairs` (real wrong option selections, never "不确定", retired once green)
+    conf_counts: dict[str, dict[str, int]] = {}
+    conf_last_day: dict[str, str] = {}
+    skip_choice_prefixes = ("记词:", "闪卡:", "盘点:", "听后复盘:", "开口:", "试读:", "Grok:")
+    if os.path.exists(LOG_PATH):
+        try:
+            with open(LOG_PATH, encoding="utf-8") as lf:
+                for line in lf:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        rec = json.loads(line)
+                    except Exception:
+                        continue
+                    rec_id = str(rec.get("id") or rec.get("question_id") or "").strip()
+                    if not rec_id or rec_id.startswith(("LK:", "HES:", "SPK:", "RV:", "GA-", "VC-", "FLASH-", "GROK-", "N3L-", "N3-L", "L-")):
+                        continue
+                    is_ok = str(rec.get("correct", "")).lower() == "true" or rec.get("correct") is True
+                    if is_ok:
+                        continue
+                    pt = str(rec.get("point") or "").strip()
+                    ch = str(rec.get("choice") or "").strip()
+                    if not pt or not ch or ch == "不确定" or ch.startswith(skip_choice_prefixes) or len(ch) > 14 or "。" in ch:
+                        continue
+                    if pt in SKIP_VOCAB_ENROLL or pt.startswith("N3L-"):
+                        continue
+                    # Must contain at least one kana character (filters out old Chinese translation choices)
+                    if not re.search(r"[\u3040-\u30ff]", ch):
+                        continue
+                    # Ignore self-echo (normalized without 〜 / punctuation / trailing だ)
+                    pt_norm = re.sub(r"[〜～\-－（）\(\)・／/\s]", "", pt)
+                    ch_norm = re.sub(r"[〜～\-－（）\(\)・／/\s]", "", ch)
+                    if (
+                        ch == pt
+                        or ch_norm == pt_norm
+                        or (pt_norm.rstrip("だ") and ch_norm.rstrip("だ") == pt_norm.rstrip("だ"))
+                        or (len(ch_norm) >= 3 and ch_norm in pt_norm)
+                    ):
+                        continue
+                    d_tag = _iso_to_day_tag(str(rec.get("ts") or ""), fallback_day_tag)
+                    cm = conf_counts.setdefault(pt, {})
+                    cm[ch] = cm.get(ch, 0) + 1
+                    conf_last_day[pt] = max(conf_last_day.get(pt, ""), d_tag)
+        except Exception:
+            pass
+
+    active_conf: dict[str, dict] = {}
+    for pt, cmap in conf_counts.items():
+        it = item_by_key.get(pt)
+        if it and it.get("status") == "green":
+            continue
+        best_ch, best_n = max(cmap.items(), key=lambda kv: (kv[1], kv[0]))
+        active_conf[pt] = {
+            "top_wrong": best_ch,
+            "top_count": best_n,
+            "total": sum(cmap.values()),
+            "counts": dict(sorted(cmap.items(), key=lambda kv: (-kv[1], kv[0]))[:4]),
+            "last_date": conf_last_day.get(pt, ""),
+        }
+    state["confusion_pairs"] = active_conf
 
 
 def recompute_summary(state: dict) -> None:
@@ -663,6 +793,16 @@ def write_cloud_grok_brief(state: dict) -> None:
             ga_counts[av] += 1
     ga_audited = sum(ga_counts.values())
 
+    conf_raw = state.get("confusion_pairs") or {}
+    top_conf = [
+        {"point": k, "wrong_choice": v.get("top_wrong", ""), "count": int(v.get("total", 1))}
+        for k, v in sorted(
+            conf_raw.items(),
+            key=lambda kv: (-int((kv[1] or {}).get("total") or 0), kv[0]),
+        )[:15]
+        if isinstance(v, dict) and v.get("top_wrong")
+    ]
+
     brief_obj = {
         "schema": "n3-grok-cloud-brief/1",
         "study_date": state.get("study_date", ""),
@@ -675,6 +815,7 @@ def write_cloud_grok_brief(state: dict) -> None:
             "total": len(state.get("grammar_points", [])),
             **ga_counts,
         },
+        "top_confusion_pairs": top_conf,
         "henkei": h_b,
         "listening": l_b,
         "vocab": v_b,
@@ -692,6 +833,12 @@ def write_cloud_grok_brief(state: dict) -> None:
         if ga_audited > 0
         else ""
     )
+    conf_line = (
+        "- **高频真实错因对（优先做对比辨析）**："
+        + "；".join(f"{c['point']} 易误选「{c['wrong_choice']}」" for c in top_conf[:8])
+        if top_conf
+        else ""
+    )
 
     lines = [
         "# JLPT N3 中央大脑云端实时教务指令单（Zero-PII Cloud Live Brief）",
@@ -700,6 +847,7 @@ def write_cloud_grok_brief(state: dict) -> None:
         f"- **云端自动合流更新时间**：`{brief_obj['updated_at']}`",
         "- **跨日 3/3 真掌握铁律**：同一天答对多次最多推进 `+1` 格；跨 3 个不同学习日答对（或明确点击「不用再考了 / 太熟 / 本能」）才进入 🟢 已过关免考名单。",
         *( [ga_line] if ga_line else [] ),
+        *( [conf_line] if conf_line else [] ),
         "",
         "## 一、 语法 Bot（1. JLPT 语法）今日优先级",
         f"- **🔴 P0 急需攻克（0/3，优先出正式题）**：{join_or_none(g_b['red'])}",

@@ -1156,6 +1156,24 @@ def _match_speaking_template(title: str, key: str) -> dict[str, Any] | None:
     return None
 
 
+def _load_speaking_adaptive_signals() -> tuple[set[str], set[str]]:
+    """Load unresolved speaking slips & active confusion-pair grammar keys from n3_live_state.json (zero-PII)."""
+    slips: set[str] = set()
+    confs: set[str] = set()
+    if os.path.exists(STATE_PATH):
+        try:
+            st = json.load(open(STATE_PATH, encoding="utf-8"))
+            for k in ((st.get("speaking_practice") or {}).get("slips") or {}).keys():
+                if k:
+                    slips.add(str(k).strip())
+            for k in (st.get("confusion_pairs") or {}).keys():
+                if k:
+                    confs.add(str(k).strip())
+        except Exception:
+            pass
+    return slips, confs
+
+
 def build_episode_speaking_prompts(
     story_blocks: list[dict],
     review_items: list[dict],
@@ -1163,11 +1181,14 @@ def build_episode_speaking_prompts(
 ) -> list[dict]:
     """
     Build 2 crisp episode-anchored speaking prompt cards directly tied to today's
-    60-minute 《锵锵》 stories & target grammar points (works for N3 & N2).
+    40-minute 《锵锵》 stories, unresolved speaking slips, and active confusion pairs (works for N3 & N2).
     """
     grammar_items = [it for it in (review_items or []) if it.get("kind") == "grammar"]
     if not grammar_items:
         return []
+
+    spk_slips, active_confs = _load_speaking_adaptive_signals()
+    mastery_map = _load_mastery_status()
 
     scored: list[tuple[float, dict, dict | None]] = []
     for it in grammar_items:
@@ -1177,6 +1198,10 @@ def build_episode_speaking_prompts(
         sc = 0.0
         if it.get("is_new_n2"):
             sc += 120.0
+        if key in spk_slips or title in spk_slips:
+            sc += 75.0
+        if key in active_confs or title in active_confs:
+            sc += 45.0
         if tpl is not None:
             sc += 60.0
         if it.get("status") in ("red", "orange"):
@@ -1194,11 +1219,69 @@ def build_episode_speaking_prompts(
             sc += 28.0
         scored.append((sc, it, tpl))
 
+    # Rescue slot: if learner has an unresolved speaking slip or active confusion pair with a gold template
+    # that did NOT happen to appear in today's pre-authored stories, allow slot #2 to bring it back for redemption!
+    in_episode_keys = {str(it.get("key") or it.get("title") or "") for it in grammar_items}
+    rescue_candidates: list[tuple[float, dict, dict]] = []
+    for cand_key in list(spk_slips) + list(active_confs):
+        if not cand_key or cand_key in in_episode_keys:
+            continue
+        st_val, _streak = mastery_map.get(cand_key, ("red", 0))
+        if st_val == "green" and cand_key not in spk_slips:
+            continue
+        tpl = _match_speaking_template(cand_key, cand_key)
+        if tpl is None:
+            continue
+        r_sc = 115.0 if cand_key in spk_slips else 95.0
+        if st_val in ("red", "orange"):
+            r_sc += 25.0
+        synth_it = {
+            "id": f"RVR-SLIP-{abs(hash(cand_key)) % 9999}",
+            "kind": "grammar",
+            "key": cand_key,
+            "point_id": f"SLIP-{len(rescue_candidates) + 1}",
+            "title": cand_key,
+            "zh": str(tpl.get("prompt_short") or ""),
+            "chapter_idx": 99,
+            "chapter_title": "昨日错点补练" if cand_key in active_confs else "开口回炉",
+            "story_cue": "把上次卡壳的句型亲口说顺",
+            "ja_example": str(tpl.get("model_ja") or ""),
+            "clip_start": 0.0,
+            "clip_end": 12.0,
+            "demo_audio": "",
+            "is_new_n2": False,
+            "img": str((grammar_items[0] or {}).get("img") or ""),
+        }
+        rescue_candidates.append((r_sc, synth_it, tpl))
+    rescue_candidates.sort(key=lambda x: (-x[0], x[1]["key"]))
+
     scored.sort(key=lambda x: (-x[0], x[1].get("chapter_idx", 0), x[1].get("id", "")))
 
     picked: list[tuple[dict, dict | None]] = []
     used_chapters: set[int] = set()
     used_keys: set[str] = set()
+
+    # Slot 1 ALWAYS comes from today's episode so speaking stays anchored to what he just heard;
+    # if an unresolved speaking slip exists outside today's episode, reserve slot 2 for direct oral redemption!
+    if scored:
+        _sc0, it0, tpl0 = scored[0]
+        picked.append((it0, tpl0))
+        used_chapters.add(int(it0.get("chapter_idx", -1)))
+        used_keys.add(str(it0.get("key") or it0.get("title") or ""))
+
+    if max_prompts >= 2 and rescue_candidates:
+        for _rsc, rit, rtpl in rescue_candidates:
+            rk = str(rit.get("key") or "")
+            if rk and rk not in used_keys:
+                # Only preempt slot 2 if today's 2nd best episode item isn't already a red/orange slip itself
+                ep_second_is_slip = len(scored) >= 2 and (
+                    str(scored[1][1].get("key") or "") in spk_slips
+                    or scored[1][1].get("status") in ("red", "orange")
+                )
+                if not ep_second_is_slip or rk in spk_slips:
+                    picked.append((rit, rtpl))
+                    used_keys.add(rk)
+                    break
 
     for _sc, it, tpl in scored:
         if len(picked) >= max_prompts:

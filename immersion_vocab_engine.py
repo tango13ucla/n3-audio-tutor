@@ -66,6 +66,8 @@ DUAL_VERB_NOUN_KANAS = {
     "とうし", "ぎろん", "ひはん", "せんたく", "はんだん", "かいけつ", "かいかく", "しょうひ",
     "せいさん", "じっけん", "はつめい", "かいはつ", "ちりょう", "きょうそう", "ごかい",
     "こうかい", "よやく", "やくそく", "へんか", "せいこう", "しっぱい", "けいかく", "とうけい",
+    "なっとく", "じまん", "きたい", "かんしゃ", "そうぞう", "ひょうか", "かくにん", "れんらく",
+    "そうだん", "せつめい", "あんない", "しゅちょう",
 }
 VERB_USE_AFTER_RE = re.compile(r"^[了着过出到完起下开掉把去来地给进回住成上得一这那各两三四五六七八九十百千万]")
 VERB_USE_BEFORE_RE = re.compile(r"[在正要会能敢肯想愿爱总老刚已曾没别该应必须试图努力早就才更越最]")
@@ -315,6 +317,31 @@ IMMERSION_VOCAB_BANK: list[dict] = [
     _e("たいど", "態度", ["态度"], "n3_core", "态度"),
     _e("きもち", "気持ち", ["心情"], "n3_core", "心情"),
 
+    # --- Tier 1e: Learner High-Priority Failed Vocab & Reading Traps (Adaptive Engine v7.0) ---
+    _e("せけん", "世間", ["世间", "社会舆论"], "n3_core", "世间"),
+    _e("なっとく", "納得", ["信服", "心服"], "n3_core", "信服"),
+    _e("ひょうじょう", "表情", ["表情"], "n3_core", "表情"),
+    _e("じまん", "自慢", ["炫耀", "自豪"], "n3_core", "炫耀"),
+    _e("つごう", "都合", ["方便", "档期"], "n3_core", "档期", forbid_before=r"[不最很太挺]"),
+    _e("むだん", "無断", ["擅自"], "n3_core", "擅自"),
+    _e("よゆう", "余裕", ["余地", "从容"], "n3_core", "余地"),
+    _e("きたい", "期待", ["期待"], "n3_core", "期待"),
+    _e("かんしゃ", "感謝", ["感谢", "感激"], "n3_core", "感谢"),
+    _e("ふまん", "不満", ["不满"], "n3_core", "不满", forbid_after=r"[足意]"),
+    _e("じょうきょう", "状況", ["状况", "局势"], "n3_core", "状况"),
+    _e("くふう", "工夫", ["巧思", "门道"], "n3_core", "巧思"),
+    _e("じじょう", "事情", ["实情", "隐情"], "n3_core", "实情"),
+    _e("そうぞう", "想像", ["想象"], "n3_core", "想象", forbid_after=r"[力]"),
+    _e("ひょうか", "評価", ["评价"], "n3_core", "评价"),
+    _e("かくにん", "確認", ["确认"], "n3_core", "确认"),
+    _e("れんらく", "連絡", ["联系", "联络"], "n3_core", "联系"),
+    _e("そうだん", "相談", ["商量", "咨询"], "n3_core", "商量"),
+    _e("せつめい", "説明", ["解释", "说明"], "n3_core", "解释", forbid_after=r"[书]"),
+    _e("あんない", "案内", ["引导", "带路"], "n3_core", "引导"),
+    _e("きちょう", "貴重", ["珍贵", "宝贵"], "n3_core", "珍贵", forbid_after=r"[品]"),
+    _e("しゅちょう", "主張", ["主张"], "n3_core", "主张"),
+    _e("しゅるい", "種類", ["种类"], "n3_core", "种类"),
+
     # --- Tier 2: Pre-existing N4/N5 Inline Words (tracked for ledger & carrier-swap, NOT consuming new-word budget) ---
     _e("せかい", "世界", ["世界"], "n4_existing", "世界", forbid_before=r"[全第一二三]"),
     _e("かいしゃ", "会社", ["公司"], "n4_existing", "公司", forbid_before=r"[大总分母子跨国]"),
@@ -433,25 +460,36 @@ def get_carrier_zh(ja_kana: str) -> str:
 
 
 def _load_active_weak_words() -> set[str]:
-    """Reads non-green tracked vocab words & recent lookup words (zero-PII) to prioritize them."""
+    """Reads non-green tracked vocab, recent lookups, speaking slips & last night's missed vocab (zero-PII)."""
     weak: set[str] = set()
-    if not os.path.exists(STATE_PATH):
-        return weak
-    try:
-        st = json.load(open(STATE_PATH, encoding="utf-8"))
-        for v in st.get("vocab_tracked") or []:
-            if v.get("status") != "green":
-                w = str(v.get("word") or "").strip()
-                k = str(v.get("kana") or "").strip()
-                if w:
-                    weak.add(w)
+    if os.path.exists(STATE_PATH):
+        try:
+            st = json.load(open(STATE_PATH, encoding="utf-8"))
+            for v in st.get("vocab_tracked") or []:
+                if v.get("status") != "green":
+                    w = str(v.get("word") or "").strip()
+                    k = str(v.get("kana") or "").strip()
+                    if w:
+                        weak.add(w)
+                    if k:
+                        weak.add(k)
+            for k in (st.get("word_lookups") or {}).keys():
                 if k:
-                    weak.add(k)
-        for k in (st.get("word_lookups") or {}).keys():
-            if k:
-                weak.add(str(k).strip())
-    except Exception:
-        pass
+                    weak.add(str(k).strip())
+            for k in ((st.get("speaking_practice") or {}).get("slips") or {}).keys():
+                if k:
+                    weak.add(str(k).strip())
+        except Exception:
+            pass
+    ns_path = os.path.join(BASE_DIR, "night_summary.json")
+    if os.path.exists(ns_path):
+        try:
+            ns = json.load(open(ns_path, encoding="utf-8"))
+            for w in (ns.get("missed_vocab_words") or []):
+                if w:
+                    weak.add(str(w).strip())
+        except Exception:
+            pass
     return weak
 
 

@@ -1,7 +1,7 @@
 {
   "v": 15,
   "app": "n3-zen",
-  "updatedAt": 1795633838,
+  "updatedAt": 1795636194,
   "dates": {
     "2026-11-14": {
       "resetAt": 0,
@@ -3688,16 +3688,24 @@
     },
     "2026-11-25": {
       "resetAt": 0,
-      "radioMaxSec": 144,
+      "radioMaxSec": 636,
       "radioPos": [
-        144,
-        1795633837
+        636,
+        1795636193
       ],
       "radioSig": "85e09336",
       "greenAt": {},
       "retestAt": {},
       "learning": {},
-      "sched": {},
+      "sched": {
+        "N3-G55": [
+          0,
+          1,
+          0,
+          0,
+          1795635924436
+        ]
+      },
       "speeds": [
         1.0,
         1.0,
