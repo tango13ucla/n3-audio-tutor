@@ -2334,12 +2334,98 @@ async def main():
         if "锵锵三人行" in last_line_txt and imm_profile["ja_ratio"] < 0.65:
             closing_turns = []
 
-    # Szpunar, Khan & Schacter (2013, PNAS) Interpolated Oral Micro-Checks (every ~15 min before ad breaks):
-    # Pure audio-only 10s recall cue + 2.6s retrieval pause + answer reveal — halves mind-wandering with zero screen tap!
-    if today_str >= "2026-11-23" and imm_profile["ja_ratio"] < 0.65:
+    # Szpunar, Khan & Schacter (2013, PNAS) + Active Cross-Day Rumination ("反刍小回声"):
+    # Pure audio-only recall cues + mental retrieval pauses + spoken Japanese confirmation with crisp memory hooks.
+    # For 2026-11-25+ (v42): 3 anchor slots across the 60m episode (before Ad 1, before Ad 2, and entering World Finale)
+    # actively ruminate ALL 6 daily focus + yesterday carryover/relearn words so zero words vanish after 1 flash!
+    if today_str >= "2026-11-25" and imm_profile["ja_ratio"] < 0.65:
+        _rum_pool = list(imm_vocab_report.get("rumination_words") or [])
+        _today_cnts = imm_vocab_report.get("_today_counts")
+        if not isinstance(_today_cnts, dict):
+            _today_cnts = {}
+            imm_vocab_report["_today_counts"] = _today_cnts
+
+        def _rum_hook_suffix(kanji_w: str) -> str:
+            try:
+                import vocab_cards as _vc_mod
+                mn = str(_vc_mod.get_pronunciation_mnemonic(kanji_w, kanji_w) or "").strip()
+                if mn:
+                    short_mn = re.split(r"[；;。]", mn)[0].strip()
+                    if 4 <= len(short_mn) <= 22:
+                        return f"，{short_mn}"
+            except Exception:
+                pass
+            return ""
+
+        def _build_rumination_slot(pair: list[dict], slot_idx: int) -> list[tuple[str, object]]:
+            if not pair:
+                return []
+            for it in pair:
+                _k = str(it.get("kana") or "").strip()
+                if _k:
+                    _today_cnts[_k] = int(_today_cnts.get(_k, 0)) + 2
+            w1 = pair[0]
+            k1, zh1, kj1 = w1["kana"], w1["zh"], w1.get("kanji", w1["zh"])
+            h1 = _rum_hook_suffix(kj1)
+            if len(pair) == 1:
+                return [
+                    ("W", f"对了，顺嘴反刍一个词：咱们刚才提的「{zh1}」，日语怎么念来着？心里默念两秒。"),
+                    ("PAUSE", 2.8),
+                    ("D", f"没错，就是{{{{{zh1}|{k1}}}}}！再来一遍，{{{{{zh1}|{k1}}}}}{h1}。"),
+                ]
+            w2 = pair[1]
+            k2, zh2, kj2 = w2["kana"], w2["zh"], w2.get("kanji", w2["zh"])
+            is_carry2 = "昨日" in str(w2.get("reason") or "") or "重点" in str(w2.get("reason") or "")
+            if slot_idx == 0:
+                lead2 = f"再顺手反刍一个这两天刚学过的「{zh2}」" if is_carry2 else f"还有刚才的「{zh2}」"
+                return [
+                    ("W", f"进广告前花十秒给耳朵反刍俩词：刚才聊到的「{zh1}」，{lead2}，日语各自怎么念？心里过一遍。"),
+                    ("PAUSE", 3.2),
+                    ("D", f"好记吧，「{zh1}」是{{{{{zh1}|{k1}}}}}，「{zh2}」是{{{{{zh2}|{k2}}}}}！待会儿故事里咱还用得上{{{{{zh1}|{k1}}}}}和{{{{{zh2}|{k2}}}}}。"),
+                ]
+            if slot_idx == 1:
+                lead2 = f"顺带把前两天的「{zh2}」也捞回来" if is_carry2 else f"连着「{zh2}」一块儿"
+                return [
+                    ("W", f"进第二段广告前再来个十秒反刍：故事里反复提到的「{zh1}」，{lead2}，日语读音一下能蹦出来吗？"),
+                    ("PAUSE", 3.2),
+                    ("X", f"对喽，{{{{{zh1}|{k1}}}}}，还有{{{{{zh2}|{k2}}}}}！耳朵这么一反刍，{{{{{zh1}|{k1}}}}}跟{{{{{zh2}|{k2}}}}}就焊死在脑子里了。"),
+                ]
+            return [
+                ("W", f"切进最后五分之一世界大新闻前，顺嘴再过最后俩词：「{zh1}」跟「{zh2}」，心里默念两秒。"),
+                ("PAUSE", 2.8),
+                ("D", f"清清楚楚，{{{{{zh1}|{k1}}}}}和{{{{{zh2}|{k2}}}}}！行，咱们马上把镜头转向世界。"),
+            ]
+
+        # Pair each slot with 1 today-focus word + 1 carryover/relearn word
+        _focus_l = [x for x in _rum_pool if x.get("reason") == "今日聚焦"]
+        _carry_l = [x for x in _rum_pool if x.get("reason") != "今日聚焦"]
+        _slots_pairs: list[list[dict]] = [[], [], []]
+        for s_i in range(3):
+            if s_i < len(_focus_l):
+                _slots_pairs[s_i].append(_focus_l[s_i])
+            if s_i < len(_carry_l):
+                _slots_pairs[s_i].append(_carry_l[s_i])
+        # Fill any leftover slots cleanly
+        _used_ks = {x["kana"] for grp in _slots_pairs for x in grp}
+        _rem_rum = [x for x in _rum_pool if x["kana"] not in _used_ks]
+        for grp in _slots_pairs:
+            while len(grp) < 2 and _rem_rum:
+                grp.append(_rem_rum.pop(0))
+
+        _mc1 = _build_rumination_slot(_slots_pairs[0], 0)
+        if _mc1:
+            ad1_out_turns = _mc1 + (ad1_out_turns if ad1_out_turns else [("W", "好，《锵锵三人行》，广告之后见！")])
+        _mc2 = _build_rumination_slot(_slots_pairs[1], 1)
+        if _mc2:
+            ad2_out_turns = _mc2 + (ad2_out_turns if ad2_out_turns else [("W", "咱们再去一下广告，《锵锵三人行》，广告之后见！")])
+        _mc3 = _build_rumination_slot(_slots_pairs[2], 2)
+        if _mc3 and len(story_blocks) >= 2 and story_blocks[-1].get("is_world_finale"):
+            # Prepend to World Finale opening (keeps authentic sudden ending at the very end 100% untouched!)
+            story_blocks[-1]["raw_turns"] = _mc3 + list(story_blocks[-1]["raw_turns"])
+            story_blocks[-1]["events"] = turns_to_expanded_events(story_blocks[-1]["raw_turns"])
+    elif today_str >= "2026-11-23" and imm_profile["ja_ratio"] < 0.65:
         _mc_used: set[str] = set()
         def _build_micro_check_turns(act_slice: list[dict], variant_idx: int) -> list[tuple[str, object]]:
-            # Pick a spotlight or bridged word actually spoken inside this Act slice
             found_k = ""
             found_zh = ""
             for _b in act_slice:
@@ -2385,7 +2471,9 @@ async def main():
     ad2_in_evs = turns_to_expanded_events(ad2_in_turns) if ad2_in_turns else []
     closing_evs = turns_to_expanded_events(closing_turns) if closing_turns else []
 
-    if today_str >= "2026-11-23":
+    if today_str >= "2026-11-25":
+        radio_ver_tag = "v42_qq_60m_ruminate_jpvideo"
+    elif today_str >= "2026-11-23":
         radio_ver_tag = "v41_qq_60m_wordguard_seamless_5hit"
     elif today_str >= "2026-11-22":
         radio_ver_tag = "v40_qq_60m_seamless_codeswitch_5hit"
@@ -2751,10 +2839,11 @@ async def main():
         except Exception as exc:
             print(f"[warn] review_items extraction skipped: {exc}")
 
-        # Auto-generate real documentary posters, per-card MP4 clips & synchronized VTT subtitles!
-        # Preserve manually crafted same-date artwork only if it already has valid MP4 video clips.
+        # Auto-generate real documentary posters, Daily All-Japanese Short Video (`video/daily_jp_story.mp4`),
+        # exact TTS-timed Japanese/Chinese subtitles, and studio neural speaking model MP3s!
         prev_art_url = ""
         prev_story_arts: list[dict] = []
+        prev_jp_video: dict = {}
         prev_chap_imgs: dict[int, str] = {}
         need_visual_render = True
         if os.path.exists(RADIO_META_PATH):
@@ -2764,11 +2853,12 @@ async def main():
                     prev_art_url = str(prev_meta.get("artwork_url") or "")
                     if isinstance(prev_meta.get("story_arts"), list):
                         prev_story_arts = prev_meta["story_arts"]
+                    if isinstance(prev_meta.get("jp_video"), dict):
+                        prev_jp_video = prev_meta["jp_video"]
                     for ci, ch in enumerate(prev_meta.get("chapters") or []):
                         if isinstance(ch, dict) and ch.get("img"):
                             prev_chap_imgs[int(ch.get("idx", ci))] = str(ch["img"])
-                    prev_vids = sum(1 for x in (prev_meta.get("review_items") or []) if isinstance(x, dict) and x.get("video_url"))
-                    if prev_vids >= max(1, len(review_items) // 2) and prev_meta.get("script_sig") == script_sig:
+                    if prev_jp_video.get("video_url") and prev_meta.get("script_sig") == script_sig:
                         need_visual_render = False
             except Exception:
                 pass
@@ -2784,11 +2874,14 @@ async def main():
                     review_items=review_items,
                     speaking_prompts=speaking_prompts,
                     audio_mp3_path=RADIO_MP3_PATH,
+                    imm_vocab_report=public_vocab_meta,
                 )
                 if vis.get("artwork_url"):
                     prev_art_url = vis["artwork_url"]
                 if vis.get("story_arts"):
                     prev_story_arts = vis["story_arts"]
+                if vis.get("jp_video"):
+                    prev_jp_video = vis["jp_video"]
             except Exception as exc:
                 print(f"[warn] radio_visual_studio skipped: {exc}")
         elif prev_chap_imgs:
@@ -2826,6 +2919,8 @@ async def main():
             meta_obj["artwork_url"] = prev_art_url
         if prev_story_arts:
             meta_obj["story_arts"] = prev_story_arts
+        if prev_jp_video:
+            meta_obj["jp_video"] = prev_jp_video
         with open(RADIO_META_PATH, "w", encoding="utf-8") as f:
             json.dump(meta_obj, f, ensure_ascii=False, indent=2)
         save_today_stories(today_str, [st["id"] for st in selected_stories])

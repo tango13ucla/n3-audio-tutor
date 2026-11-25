@@ -178,7 +178,7 @@ def test_all_python_files_syntax_and_names() -> None:
             continue
         all_errs.extend(_check_scope_undefined(tree, p.name))
     assert not all_errs, "Static undefined-name/syntax errors:\n" + "\n".join(all_errs)
-    print(f"[PASS 1/6] Static AST syntax & undefined-name check ({len(py_files)} Python files)")
+    print(f"[PASS 1/7] Static AST syntax & undefined-name check ({len(py_files)} Python files)")
 
 
 def test_apply_practice_logs_all_event_types() -> None:
@@ -262,7 +262,7 @@ def test_apply_practice_logs_all_event_types() -> None:
             aadc.LOG_PATH, aadc.SNAP_PATH = orig_aadc_log, orig_aadc_snap
             if orig_ledger is not None:
                 ive.LEDGER_PATH = orig_ledger
-    print("[PASS 2/6] apply_practice_logs & collect_study_history all-event-types test")
+    print("[PASS 2/7] apply_practice_logs & collect_study_history all-event-types test")
 
 
 def test_frontend_backend_choice_contract() -> None:
@@ -285,7 +285,7 @@ def test_frontend_backend_choice_contract() -> None:
     # Relearn labels must also be handled in auto_author_daily_content.py
     for relbl in ("听后复盘:再过", "听后复盘:重学"):
         assert relbl in aadc_src, f"auto_author_daily_content.py missing '{relbl}'"
-    print(f"[PASS 3/6] Frontend<->Backend choice contract sync ({len(rv_labels)} RV + {len(ga_labels)} GA labels)")
+    print(f"[PASS 3/7] Frontend<->Backend choice contract sync ({len(rv_labels)} RV + {len(ga_labels)} GA labels)")
 
 
 def test_dynamic_vocab_cards_self_test4_invariants() -> None:
@@ -317,7 +317,7 @@ def test_dynamic_vocab_cards_self_test4_invariants() -> None:
         assert hs, f"Empty hook_spoken for vocab card '{w}'"
         assert "—" not in hs, f"Em dash in hook_spoken for '{w}': {hs}"
         assert len(ch) <= 10, f"chunk_ja too long ({len(ch)}>10) for '{w}': {ch}"
-    print(f"[PASS 4/6] Dynamic vocab cards Self-test 4 invariants ({len(checked)} words incl. all 236 immersion words)")
+    print(f"[PASS 4/7] Dynamic vocab cards Self-test 4 invariants ({len(checked)} words incl. all 236 immersion words)")
 
 
 def test_speaking_prompts_self_test9_invariants() -> None:
@@ -347,7 +347,7 @@ def test_speaking_prompts_self_test9_invariants() -> None:
         assert sp["target_stems"], f"Fallback target_stems empty: {sp}"
         blob = sp["prompt_short"] + sp["prompt_ja"] + sp["prompt_zh"] + sp["model_ja"] + sp["coaching_tip"]
         assert "—" not in blob, f"Fallback contains em dash: {sp}"
-    print(f"[PASS 5/6] Speaking prompts Self-test 9 invariants ({len(rrb._SPEAKING_TEMPLATES)} templates + fallback stress)")
+    print(f"[PASS 5/7] Speaking prompts Self-test 9 invariants ({len(rrb._SPEAKING_TEMPLATES)} templates + fallback stress)")
 
 
 def test_workflows_radio_version_alignment() -> None:
@@ -369,7 +369,25 @@ def test_workflows_radio_version_alignment() -> None:
         assert m, f"{wf.name} missing expected_ver_num"
         wf_ver = int(m.group(1))
         assert wf_ver <= max_gen_ver, f"{wf.name} expects v{wf_ver} > generate_daily_radio.py max v{max_gen_ver}"
-    print(f"[PASS 6/6] Workflow radio version guard aligned (v{max_gen_ver} across {len(wf_files)} workflows)")
+    print(f"[PASS 6/7] Workflow radio version guard aligned (v{max_gen_ver} across {len(wf_files)} workflows)")
+
+
+def test_workflows_stage_video_and_img_assets() -> None:
+    wf_dir = BASE_DIR / ".github" / "workflows"
+    wf_files = sorted(wf_dir.glob("*.yml"))
+    for wf in wf_files:
+        txt = wf.read_text(encoding="utf-8")
+        # Every git-push staging block must preserve video/ and img/ across git reset --hard origin/main
+        assert "STAGE_DIR/video" in txt or '"$STAGE_DIR/video"' in txt, (
+            f"{wf.name} does not stage video/ into STAGE_DIR before git reset --hard!"
+        )
+        assert "STAGE_DIR/img" in txt or '"$STAGE_DIR/img"' in txt, (
+            f"{wf.name} does not stage img/ into STAGE_DIR before git reset --hard!"
+        )
+        assert "git add -A video/" in txt or "video/ img/" in txt, (
+            f"{wf.name} does not git add video/ and img/ in commit step!"
+        )
+    print(f"[PASS 7/7] Workflow video/ & img/ staging guard verified across {len(wf_files)} workflows")
 
 
 def main() -> int:
@@ -379,9 +397,11 @@ def main() -> int:
     test_dynamic_vocab_cards_self_test4_invariants()
     test_speaking_prompts_self_test9_invariants()
     test_workflows_radio_version_alignment()
-    print("[ALL PASS] tests_ci_guard.py 6/6 gates green!")
+    test_workflows_stage_video_and_img_assets()
+    print("[ALL PASS] tests_ci_guard.py 7/7 gates green!")
     return 0
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

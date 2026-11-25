@@ -962,7 +962,79 @@ _SPEAKING_TEMPLATES: dict[str, dict[str, Any]] = {
         "model_zh": "尽管下大雨还是聚集起来了。",
         "coaching_tip": "名词直接接「にもかかわらず」",
     },
+    "しかない": {
+        "prompt_short": "没办法只好合作",
+        "prompt_ja": "ほかに方法がないので協力する",
+        "prompt_zh": "别无选择，只好互相合作",
+        "target_stems": ["しかない", "しか無い", "しかありません", "しかなかった", "しかなく"],
+        "model_ja": "お互いに協力するしかないです。",
+        "model_zh": "只好互相配合了。",
+        "coaching_tip": "动词原形直接接「しかない」",
+    },
+    "ようになる": {
+        "prompt_short": "渐渐能听懂日语",
+        "prompt_ja": "前より日本語が聞き取れる",
+        "prompt_zh": "慢慢变得能听懂日语了",
+        "target_stems": ["ようになる", "ようになった", "ようになります", "ようになりました", "ようになって"],
+        "model_ja": "少しずつ聞き取れるようになりました。",
+        "model_zh": "渐渐变得能听懂了。",
+        "coaching_tip": "可能形 ＋ ようになる",
+    },
+    "さえ": {
+        "prompt_short": "忙到连午饭没空吃",
+        "prompt_ja": "忙しくて昼ご飯も食べられない",
+        "prompt_zh": "忙得连吃午饭的时间都没有",
+        "target_stems": ["さえ"],
+        "model_ja": "昼ご飯を食べる時間さえないです。",
+        "model_zh": "连吃午饭的时间都没有。",
+        "coaching_tip": "名词直接接「さえ」举极端例子",
+    },
+    "だらけ": {
+        "prompt_short": "房间里满是灰尘",
+        "prompt_ja": "部屋にほこりがたくさんある",
+        "prompt_zh": "房间里满是灰尘",
+        "target_stems": ["だらけ"],
+        "model_ja": "この部屋はほこりだらけです。",
+        "model_zh": "这房间满是灰尘。",
+        "coaching_tip": "名词 ＋ だらけ，多带嫌弃语气",
+    },
 }
+
+
+def _expand_conjugation_stems(stems: list[str]) -> list[str]:
+    """Expand dictionary-form grammar stems to natural spoken conjugations & Kanji/Kana variants."""
+    out: list[str] = []
+    for raw in stems:
+        s = str(raw or "").strip()
+        if not s:
+            continue
+        out.append(s)
+        if s.endswith("なる"):
+            base = s[:-2]
+            out.extend([base + "なった", base + "なります", base + "なりました", base + "なって"])
+        elif s.endswith("する"):
+            base = s[:-2]
+            out.extend([base + "した", base + "します", base + "しました", base + "して"])
+        elif s.endswith("ない"):
+            base = s[:-2]
+            out.extend([base + "ありません", base + "なかった", base + "ありませんでした", base + "なく"])
+        elif s.endswith("だ"):
+            base = s[:-1]
+            out.extend([base + "です", base + "だった", base + "でした", base + "ですね", base + "だね"])
+        elif s.endswith("もらう"):
+            base = s[:-3]
+            out.extend([base + "もらえ", base + "もらった", base + "もらいます", base + "いただき", base + "いただけ"])
+        if "うえで" in s:
+            out.append(s.replace("うえで", "上で"))
+        if "上で" in s:
+            out.append(s.replace("上で", "うえで"))
+        if "につれて" in s:
+            out.extend([s.replace("につれて", "に連れて"), s.replace("につれて", "につれ")])
+        if "かわりに" in s:
+            out.append(s.replace("かわりに", "代わりに"))
+        if "とともに" in s:
+            out.append(s.replace("とともに", "と共に"))
+    return list(dict.fromkeys(x for x in out if x))
 
 
 def _match_speaking_template(title: str, key: str) -> dict[str, Any] | None:
@@ -1045,7 +1117,7 @@ def build_episode_speaking_prompts(
         stems = _strip_point_stem(title) + _strip_point_stem(key)
 
         if tpl is not None:
-            t_stems = list(dict.fromkeys(list(tpl["target_stems"]) + stems))
+            t_stems = _expand_conjugation_stems(list(tpl["target_stems"]) + stems)
             prompt_short = _clean_text(tpl.get("prompt_short") or tpl["prompt_zh"])
             prompt_ja = _clean_text(tpl["prompt_ja"])
             prompt_zh = _clean_text(tpl["prompt_zh"])
@@ -1053,7 +1125,7 @@ def build_episode_speaking_prompts(
             model_zh = _clean_text(tpl["model_zh"])
             tip = _clean_text(tpl["coaching_tip"])
         else:
-            t_stems = list(dict.fromkeys(stems))
+            t_stems = _expand_conjugation_stems(stems)
             clean_pt = title.replace("〜", "").replace("~", "").strip()
             prompt_short = _short_zh(zh or f"用{clean_pt}造短句", max_chars=12) or "试着开口说一句"
             prompt_ja = _clean_text(f"「{title}」で一言")
@@ -1168,7 +1240,7 @@ if __name__ == "__main__":
             if it["id"] in existing_timings:
                 it["clip_start"], it["clip_end"] = existing_timings[it["id"]]
 
-    speaking_prompts = meta.get("speaking_prompts") or build_episode_speaking_prompts(blocks_imm, items, max_prompts=2)
+    speaking_prompts = build_episode_speaking_prompts(blocks_imm, items, max_prompts=2)
     chapters_meta = meta.get("chapters") or []
 
     try:
@@ -1181,11 +1253,14 @@ if __name__ == "__main__":
             review_items=items,
             speaking_prompts=speaking_prompts,
             audio_mp3_path=mp3_path,
+            imm_vocab_report=meta.get("immersion_vocab") or rep,
         )
         if vis.get("artwork_url"):
             meta["artwork_url"] = vis["artwork_url"]
         if vis.get("story_arts"):
             meta["story_arts"] = vis["story_arts"]
+        if vis.get("jp_video"):
+            meta["jp_video"] = vis["jp_video"]
     except Exception as exc:
         print(f"[warn] radio_visual_studio failed during backfill: {exc}")
 
@@ -1194,7 +1269,11 @@ if __name__ == "__main__":
     meta["speaking_prompts"] = speaking_prompts
     with open(meta_path, "w", encoding="utf-8") as f:
         json.dump(meta, f, ensure_ascii=False, indent=2)
-    vids = sum(1 for x in items if x.get("video_url"))
-    print(f"Enriched {meta_path}: review_items={len(items)} (videos={vids}), speaking_prompts={len(speaking_prompts)}, story_arts={len(meta.get('story_arts') or [])} (script_sig preserved: {meta.get('script_sig')})")
+    jpv = meta.get("jp_video") or {}
+    print(
+        f"Enriched {meta_path}: review_items={len(items)}, speaking_prompts={len(speaking_prompts)}, "
+        f"jp_video={jpv.get('duration_label', 'none')} ({len(jpv.get('target_words') or [])} words), "
+        f"story_arts={len(meta.get('story_arts') or [])} (script_sig preserved: {meta.get('script_sig')})"
+    )
 
 

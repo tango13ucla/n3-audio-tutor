@@ -200,7 +200,7 @@ jobs:
           # Stage 2 (>=04:00 AM PT): study_pt has flipped to the new day; flip immediately in pure cloud mode
           # unless the 04:05 AM PT morning-handoff bridge is already actively synthesizing today's edition.
           import re as _re_ver
-          expected_ver_num = 41 if study_pt >= "2026-11-23" else (40 if study_pt >= "2026-11-22" else 36)
+          expected_ver_num = 42 if study_pt >= "2026-11-25" else (41 if study_pt >= "2026-11-23" else (40 if study_pt >= "2026-11-22" else 36))
           _m_ver = _re_ver.match(r"^v(\d+)_", str(radio_ver or ""))
           cur_ver_num = int(_m_ver.group(1)) if _m_ver else 0
           if meta_date != study_pt or (study_pt >= "2026-11-19" and cur_ver_num < expected_ver_num):
@@ -349,6 +349,8 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           STAGE_DIR=$(mktemp -d)
           cp -a audio "$STAGE_DIR/"
+          [ -d video ] && cp -a video "$STAGE_DIR/" || true
+          [ -d img ] && cp -a img "$STAGE_DIR/" || true
           for f in n3_live_state.json practice_log.jsonl cloud_sync_config.json cloud_state_snapshot.json tutor_prefs.json night_summary.json lookup_weakness_ledger.md qq_corpus_knowledge.json grok_daily_brief.md grok_daily_brief.json brain_plan_*.json; do
             [ -f "$f" ] && cp -a "$f" "$STAGE_DIR/" || true
           done
@@ -356,6 +358,8 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
             cp -a "$STAGE_DIR/audio/." audio/
+            if [ -d "$STAGE_DIR/video" ]; then rm -rf video && cp -a "$STAGE_DIR/video" ./; fi
+            if [ -d "$STAGE_DIR/img" ]; then mkdir -p img && cp -a "$STAGE_DIR/img/." img/; fi
             for sf in "$STAGE_DIR"/*.json "$STAGE_DIR"/*.jsonl "$STAGE_DIR"/*.md; do
               [ -f "$sf" ] && cp -a "$sf" ./ || true
             done
@@ -363,6 +367,8 @@ jobs:
               python build_html.py
             fi
             git add n3_live_state.json practice_log.jsonl cloud_sync_config.json cloud_state_snapshot.json tutor_prefs.json grok_daily_brief.md grok_daily_brief.json brain_plan_*.json index.html sw.js audio/
+            [ -d video ] && git add -A video/ || true
+            [ -d img ] && git add -A img/ || true
             [ -f night_summary.json ] && git add night_summary.json || true
             [ -f lookup_weakness_ledger.md ] && git add lookup_weakness_ledger.md || true
             [ -f qq_corpus_knowledge.json ] && git add qq_corpus_knowledge.json || true
@@ -465,6 +471,8 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           STAGE_DIR=$(mktemp -d)
           cp -a audio "$STAGE_DIR/"
+          [ -d video ] && cp -a video "$STAGE_DIR/" || true
+          [ -d img ] && cp -a img "$STAGE_DIR/" || true
           for f in n3_live_state.json practice_log.jsonl cloud_sync_config.json cloud_state_snapshot.json tutor_prefs.json night_summary.json lookup_weakness_ledger.md qq_corpus_knowledge.json grok_daily_brief.md grok_daily_brief.json brain_plan_*.json; do
             [ -f "$f" ] && cp -a "$f" "$STAGE_DIR/" || true
           done
@@ -472,11 +480,15 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
             cp -a "$STAGE_DIR/audio/." audio/
+            if [ -d "$STAGE_DIR/video" ]; then rm -rf video && cp -a "$STAGE_DIR/video" ./; fi
+            if [ -d "$STAGE_DIR/img" ]; then mkdir -p img && cp -a "$STAGE_DIR/img/." img/; fi
             for sf in "$STAGE_DIR"/*.json "$STAGE_DIR"/*.jsonl "$STAGE_DIR"/*.md; do
               [ -f "$sf" ] && cp -a "$sf" ./ || true
             done
             python build_html.py
             git add n3_live_state.json practice_log.jsonl cloud_sync_config.json cloud_state_snapshot.json tutor_prefs.json grok_daily_brief.md grok_daily_brief.json brain_plan_*.json index.html sw.js audio/
+            [ -d video ] && git add -A video/ || true
+            [ -d img ] && git add -A img/ || true
             [ -f night_summary.json ] && git add night_summary.json || true
             [ -f lookup_weakness_ledger.md ] && git add lookup_weakness_ledger.md || true
             [ -f qq_corpus_knowledge.json ] && git add qq_corpus_knowledge.json || true

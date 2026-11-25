@@ -37,7 +37,9 @@ STATE_PATH = os.path.join(BASE_DIR, "n3_live_state.json")
 
 GRADUATION_THRESHOLD = 8
 MIN_GRADUATION_DAYS = 3
-DAILY_NEW_BUDGET = 12
+DAILY_NEW_BUDGET = 5
+BRIDGE_UNTIL_PRIOR_HITS = 6
+BRIDGE_UNTIL_PRIOR_DAYS = 2
 MAX_INLINE_PER_SENTENCE = 3
 
 # Protected spans that must NEVER be partially rewritten (titles, quotes, proper names)
@@ -532,11 +534,13 @@ def load_ledger(salon_stories: list[dict] | None = None, today_str: str = "") ->
         try:
             data = json.load(open(LEDGER_PATH, encoding="utf-8"))
             if isinstance(data, dict) and isinstance(data.get("daily_counts"), dict):
-                # Upgrade legacy 5-hit/2-day ledgers cleanly to evidence-based 8-hit/3-day standard
+                # Upgrade legacy 5-hit/2-day ledgers cleanly to evidence-based 8-hit/3-day & focused 5-new/day standard
                 if int(data.get("graduation_threshold") or 0) < GRADUATION_THRESHOLD:
                     data["graduation_threshold"] = GRADUATION_THRESHOLD
                 if int(data.get("min_graduation_days") or 0) < MIN_GRADUATION_DAYS:
                     data["min_graduation_days"] = MIN_GRADUATION_DAYS
+                if int(data.get("daily_new_budget") or 99) > DAILY_NEW_BUDGET:
+                    data["daily_new_budget"] = DAILY_NEW_BUDGET
                 return data
         except Exception:
             pass
@@ -810,7 +814,9 @@ def apply_immersion_to_stories(
         if c >= 1 and k not in locked_set and k in VOCAB_BY_KANA
     } | {k for k in active_holds if k in VOCAB_BY_KANA}
 
-    # Score candidate brand-new words (`prior_E == 0`) that actually appear in today's stories!
+    # Score candidate brand-new words (`prior_E == 0`) that actually appear frequently in today's stories!
+    # Strict anti-dilution rule: prefer words appearing >= 3 times (so he hears bridge + multiple natural echoes,
+    # never 12 diluted 1-hit words that leave zero impression!).
     new_candidates: list[tuple[float, str]] = []
     for k, hit_cnt in ep_zh_hits.items():
         if k in locked_set or k in learning_set:
@@ -818,42 +824,44 @@ def apply_immersion_to_stories(
         ent = VOCAB_BY_KANA.get(k)
         if not ent or ent["tier"] == "n4_existing":
             continue
-        if hit_cnt < 2 and k not in user_prio and ent["kanji"] not in weak_words and k not in weak_words:
-            # Prefer words that appear >= 2 times in today's episode so he gets bridge -> direct switch!
+        is_prio = (k in user_prio or ent["tier"] == "user_priority" or ent["kanji"] in weak_words or k in weak_words)
+        if hit_cnt < 2 and not is_prio:
             continue
-        if ep_bridgeable_hits.get(k, 0) == 0 and hit_cnt < 2:
+        if ep_bridgeable_hits.get(k, 0) == 0 and not is_prio:
             continue
         score = 0.0
         if k in user_prio or ent["tier"] == "user_priority":
             score += 120.0
         if k in weak_words or ent["kanji"] in weak_words:
             score += 65.0
-        if hit_cnt >= 4:
-            score += 42.0
+        if hit_cnt >= 5:
+            score += 68.0
+        elif hit_cnt == 4:
+            score += 56.0
         elif hit_cnt == 3:
-            score += 36.0
+            score += 44.0
         elif hit_cnt == 2:
-            score += 24.0
-        if ep_bridgeable_hits.get(k, 0) >= 1:
-            score += 12.0
-        # Slight boost for pronunciation-tricky readings (long vowels, sokuon, dakuten, yoon)
+            score += 18.0
+        if ep_bridgeable_hits.get(k, 0) >= 2:
+            score += 20.0
+        elif ep_bridgeable_hits.get(k, 0) == 1:
+            score += 10.0
         if re.search(r"[っゃゅょがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽー]", k) or re.search(r"(?:おう|えい|うう|ゆう|しょう|ちょう|きゅう|じゅう|りゅう)", k):
             score += 8.0
-        # Deterministic tie-breaker by kana so rebuilds are 100% reproducible
         new_candidates.append((score, k))
 
     new_candidates.sort(key=lambda x: (-x[0], x[1]))
     today_new_set = {k for _, k in new_candidates[:new_budget]}
     active_set = locked_set | learning_set | today_new_set
 
-    # Pass 2: Transform turns sequentially across the episode so early paragraphs introduce
-    # (Chinese + Japanese bridge, or plain Chinese in tight modifier) and later paragraphs switch to direct Japanese!
+    # Pass 2: Transform turns sequentially across the episode.
+    # Anti-Confusion Guarantee: NEVER silently swap a new or early-learning word to bare Japanese
+    # before it has received at least one explicit `{zh}也就是{{zh|kana}}` anchor in this episode!
     ep_ja_delivered: dict[str, int] = {}
     ep_bridged: set[str] = set()
     ep_seen_zh: dict[str, int] = {}
     today_final_counts: dict[str, int] = dict(existing_ja_hits)
 
-    # Split a turn into sentences so we respect `MAX_INLINE_PER_SENTENCE` cleanly
     sent_re = re.compile(r"[^。！？]+[。！？]+[”』」）]*|[^。！？]+$")
 
     new_blocks = []
@@ -878,7 +886,6 @@ def apply_immersion_to_stories(
             turn_bridge_used = False
 
             for sent in sentences:
-                # Skip sentences containing a full Japanese demo after colon `：`
                 if "：" in sent and len(JA_KANA_TOKEN_RE.findall(sent.split("：", 1)[1])) >= 1:
                     rebuilt_sents.append(sent)
                     continue
@@ -904,33 +911,32 @@ def apply_immersion_to_stories(
                         continue
 
                     prior_e = prior_counts.get(k, 0)
+                    prior_d = prior_days.get(k, 0)
                     deliv = ep_ja_delivered.get(k, 0)
                     seen_plain = ep_seen_zh.get(k, 0)
                     is_clean = _is_clean_bridge_slot(sent, m.end())
 
                     replacement = None
-                    needs_relearn_bridge = (k in active_holds and deliv == 0)
-                    if not needs_relearn_bridge and (k in locked_set or (prior_e >= 3 and prior_days.get(k, 0) >= 1) or deliv >= 1):
-                        # Already locked, or well into multi-day learning, or already introduced earlier in THIS episode -> DIRECT JAPANESE!
+                    needs_bridge_today = (
+                        k in active_holds
+                        or k in today_new_set
+                        or (k not in locked_set and (prior_e < BRIDGE_UNTIL_PRIOR_HITS or prior_d < BRIDGE_UNTIL_PRIOR_DAYS))
+                    )
+                    if not needs_bridge_today or k in ep_bridged:
+                        # Already graduated, well-reinforced across days, OR already clearly bridged earlier in THIS episode -> DIRECT JAPANESE!
                         replacement = f"{{{{{zh_hit}|{k}}}}}"
                         ep_ja_delivered[k] = deliv + 1
                         today_final_counts[k] = today_final_counts.get(k, 0) + 1
                     elif k in learning_set or k in today_new_set:
-                        # First introduction in this episode (or gentle post-review relearn rescue):
+                        # Must explicitly bridge BEFORE any bare direct swap so the ear actually catches the word!
                         if is_clean and not turn_bridge_used and k not in used_kana_in_sent:
-                            # Natural paired bridge: `{zh}也就是{{zh|kana}}` (e.g., `预算也就是よさん`)!
                             replacement = f"{zh_hit}也就是{{{{{zh_hit}|{k}}}}}"
                             turn_bridge_used = True
                             ep_bridged.add(k)
                             ep_ja_delivered[k] = deliv + 1
                             today_final_counts[k] = today_final_counts.get(k, 0) + 1
-                        elif seen_plain >= 1:
-                            # We already said it in plain Chinese in an earlier paragraph -> switch directly to Japanese now!
-                            replacement = f"{{{{{zh_hit}|{k}}}}}"
-                            ep_ja_delivered[k] = deliv + 1
-                            today_final_counts[k] = today_final_counts.get(k, 0) + 1
                         else:
-                            # Tight modifier slot on 1st mention -> leave as plain Chinese first ("上段先用中文讲")!
+                            # Tight modifier or bridge already spent in this turn -> leave plain Chinese until a clean bridge slot!
                             ep_seen_zh[k] = seen_plain + 1
                             continue
 
@@ -955,7 +961,7 @@ def apply_immersion_to_stories(
         b_copy["raw_turns"] = new_turns
         new_blocks.append(b_copy)
 
-    # Compute cross-day graduation report
+    # Compute cross-day graduation report & active rumination ("反刍") target words
     newly_graduated = []
     today_spotlight = []
     for k, cnt in sorted(today_final_counts.items(), key=lambda x: (-x[1], x[0])):
@@ -968,7 +974,7 @@ def apply_immersion_to_stories(
         ent = VOCAB_BY_KANA.get(k) or {}
         if not was_locked and now_locked:
             newly_graduated.append({"kana": k, "kanji": ent.get("kanji", k), "zh": ent.get("carrier", k), "total": tot, "days_seen": tot_d})
-        if (k in today_new_set or k in active_holds) and ep_ja_delivered.get(k, 0) > 0:
+        if (k in today_new_set or k in active_holds or (k in ep_bridged and ent.get("tier") != "n4_existing")) and ep_ja_delivered.get(k, 0) > 0:
             today_spotlight.append({
                 "kana": k,
                 "kanji": ent.get("kanji", k),
@@ -996,13 +1002,101 @@ def apply_immersion_to_stories(
     locked_total = sum(1 for w in words_meta.values() if w.get("status") == "locked_ja")
     learning_total = sum(1 for w in words_meta.values() if w.get("status") == "learning")
 
+    # Build 6-word Rumination ("反刍") Queue: 3 today's core focus words + 3 carryover/relearn words from recent days
+    rumination_words: list[dict] = []
+    rum_seen: set[str] = set()
+    # 1) Carryover & relearn-hold words from yesterday / recent days so words NEVER vanish overnight!
+    carry_cands: list[tuple[float, str]] = []
+    for k, wm in words_meta.items():
+        ent = VOCAB_BY_KANA.get(k)
+        if not ent or ent.get("tier") == "n4_existing":
+            continue
+        if wm.get("status") == "locked_ja" and k not in active_holds:
+            continue
+        prev = prior_counts.get(k, 0)
+        if prev <= 0 and k not in active_holds:
+            continue
+        sc = 0.0
+        if k in active_holds:
+            sc += 180.0
+        if k in user_prio or ent.get("tier") == "user_priority":
+            sc += 90.0
+        if k in weak_words or ent.get("kanji") in weak_words:
+            sc += 45.0
+        # Prefer words heard in the last 1-2 days that still need reinforcement (1..7 hits)
+        last_d = str(wm.get("last_date") or "")
+        if last_d and last_d < today_str:
+            sc += 35.0
+        if today_final_counts.get(k, 0) == 0:
+            sc += 25.0  # Especially rescue words that didn't occur naturally in today's script!
+        sc += max(0.0, 20.0 - abs(prev - 3) * 3.0)
+        carry_cands.append((sc, k))
+    carry_cands.sort(key=lambda x: (-x[0], x[1]))
+
+    # 2) Today's top focus words (highest frequency in today's episode first so ears lock onto repeated anchors!)
+    focus_cands = sorted(
+        today_spotlight,
+        key=lambda x: (
+            -int(x.get("hits_today") or 0) * 14
+            - (25 if x["kana"] in user_prio else 0),
+            x["kana"],
+        ),
+    )
+
+    # Interleave: up to 3 today focus + up to 3 yesterday carryover/relearn = 6 tight rumination anchors!
+    for it in focus_cands[:3]:
+        k = it["kana"]
+        if k in rum_seen:
+            continue
+        rum_seen.add(k)
+        rumination_words.append({
+            "kana": k,
+            "kanji": it["kanji"],
+            "zh": it["zh"],
+            "hits_today": int(it.get("hits_today") or 1),
+            "total": int(it.get("total") or 1),
+            "reason": "今日聚焦",
+        })
+    for _sc, k in carry_cands:
+        if len(rumination_words) >= 6:
+            break
+        if k in rum_seen:
+            continue
+        ent = VOCAB_BY_KANA[k]
+        wm = words_meta.get(k) or {}
+        rum_seen.add(k)
+        rumination_words.append({
+            "kana": k,
+            "kanji": ent.get("kanji", k),
+            "zh": ent.get("carrier", k),
+            "hits_today": int(today_final_counts.get(k, 0)),
+            "total": int(wm.get("exposures") or prior_counts.get(k, 0)),
+            "reason": "重点反刍" if k in active_holds else "昨日反刍",
+        })
+    for it in focus_cands[3:]:
+        if len(rumination_words) >= 6:
+            break
+        k = it["kana"]
+        if k in rum_seen:
+            continue
+        rum_seen.add(k)
+        rumination_words.append({
+            "kana": k,
+            "kanji": it["kanji"],
+            "zh": it["zh"],
+            "hits_today": int(it.get("hits_today") or 1),
+            "total": int(it.get("total") or 1),
+            "reason": "今日聚焦",
+        })
+
     report = {
         "graduation_threshold": threshold,
         "locked_total": locked_total,
         "learning_total": learning_total,
         "today_new_count": len(today_spotlight),
         "today_graduated": newly_graduated[:15],
-        "today_spotlight": today_spotlight[:15],
+        "today_spotlight": today_spotlight[:12],
+        "rumination_words": rumination_words[:6],
         "today_total_inline_hits": sum(today_final_counts.values()),
         "_today_counts": dict(today_final_counts),
     }

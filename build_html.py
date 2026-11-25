@@ -1436,6 +1436,45 @@ vocab_base_done = sum(1 for it in vocab_items if it["tier"] == "done")
 vocab_daily_count = tutor_prefs.vocab_daily_count(MEMORY_PREFS, day=plan_date_str)
 ga_daily_target = tutor_prefs.grammar_audit_daily_count(MEMORY_PREFS, day=plan_date_str)
 
+asr_kana_map = {
+    "辞書": "じしょ", "自署": "じしょ", "地所": "じしょ", "事情": "じじょう", "事象": "じしょう",
+    "裁判": "さいばん", "再版": "さいばん", "再販": "さいはん", "細判": "さいばん",
+    "象徴": "しょうちょう", "省庁": "しょうちょう", "消長": "しょうちょう", "所長": "しょちょう", "署長": "しょちょう",
+    "官僚": "かんりょう", "完了": "かんりょう", "管領": "かんれい",
+    "予算": "よさん", "余算": "よさん", "洋三": "ようさん", "養蚕": "ようさん", "与三": "よさん",
+    "書類": "しょるい", "種類": "しゅるい", "出張": "しゅっちょう", "主張": "しゅちょう", "首相": "しゅしょう",
+    "伝統": "でんとう", "電灯": "でんとう", "転倒": "てんとう",
+    "利益": "りえき", "市場": "しじょう", "試乗": "しじょう", "至上": "しじょう", "史上": "しじょう",
+    "印象": "いんしょう", "建築": "けんちく", "経済": "けいざい", "構造": "こうぞう", "危機": "きき", "機器": "きき",
+    "設計": "せっけい", "世間": "せけん", "整形": "せいけい", "研究": "けんきゅう", "台風": "たいふう",
+    "図書館": "としょかん", "博物館": "はくぶつかん", "補助金": "ほじょきん",
+    "鍵": "かぎ", "柿": "かき", "夏季": "かき", "下記": "かき", "牡蠣": "かき",
+    "合格": "ごうかく", "広告": "こうこく", "降格": "こうかく", "広角": "こうかく",
+    "読解": "どっかい", "妖怪": "ようかい", "了解": "りょうかい",
+    "現金": "げんきん", "景気": "けいき", "平均": "へいきん", "原因": "げんいん",
+    "上で": "うえで", "しか無い": "しかない", "代わりに": "かわりに", "と共に": "とともに",
+    "に連れて": "につれて", "お陰で": "おかげで", "最中": "さいちゅう", "気味": "ぎみ",
+    "次第": "しだい", "限り": "かぎり", "限らない": "かぎらない", "関して": "かんして",
+    "対して": "たいして", "基づいて": "もとづいて", "従って": "したがって", "伴って": "ともなって",
+    "確認": "かくにん", "返事": "へんじ", "試験": "しけん", "近づく": "ちかづく", "緊張": "きんちょう",
+    "協力": "きょうりょく", "時間": "じかん", "昼ご飯": "ひるごはん", "部屋": "へや",
+    "計画": "けいかく", "会議": "かいぎ", "電話": "でんわ", "技術": "ぎじゅつ", "進歩": "しんぽ",
+    "感想": "かんそう", "運動": "うんどう", "東京": "とうきょう", "約束": "やくそく",
+    "許す": "ゆるす", "許せない": "ゆるせない", "加える": "くわえる", "組む": "くむ", "指示": "しじ",
+}
+for _vw, _vc in vocab_cards_payload.items():
+    if isinstance(_vc, dict) and _vc.get("kana"):
+        asr_kana_map.setdefault(str(_vw), str(_vc["kana"]))
+        if _vc.get("target"):
+            asr_kana_map.setdefault(str(_vc["target"]), str(_vc["kana"]))
+try:
+    import immersion_vocab_engine as _ive_asr
+    for _ie in _ive_asr.IMMERSION_VOCAB_BANK:
+        if _ie.get("kanji") and _ie.get("kana"):
+            asr_kana_map.setdefault(str(_ie["kanji"]), str(_ie["kana"]))
+except Exception:
+    pass
+
 payload = json.dumps({
     "plan_date": plan_date_str,
     "exam_date": "2026-12-06",
@@ -1444,6 +1483,7 @@ payload = json.dumps({
     "radio": radio_meta,
     "points": ordered_points,
     "words": rich_words,
+    "asr_kana": asr_kana_map,
     "vocab_cards": vocab_cards_payload,
     "vocab_twins": vocab_twins_map,
     "grammar_audit": {
@@ -3316,16 +3356,181 @@ html = r"""<!DOCTYPE html>
   }
   .rv-spk-model {
     font-family: var(--serif-jp);
-    font-size: 19px;
+    font-size: 21px;
     font-weight: 500;
     color: var(--sumi);
-    line-height: 1.56;
+    line-height: 1.58;
+    text-wrap: balance;
+    transition: filter 0.22s ease, opacity 0.22s ease;
+  }
+  .rv-spk-model.veiled {
+    filter: blur(8px);
+    opacity: 0.22;
+    user-select: none;
+    cursor: pointer;
+  }
+  .rv-spk-zh-sub {
+    margin-top: 8px;
+    font-size: 14.5px;
+    color: var(--ink-2);
+    line-height: 1.5;
   }
   .rv-spk-tip {
     margin-top: 10px;
     font-size: 13px;
     color: var(--ink-3);
     line-height: 1.54;
+  }
+
+  /* Dedicated All-Japanese Daily Short Video Theater (Decoupled from Grammar Flashcards) */
+  .jpv-stage {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 4px 0 12px;
+  }
+  .jpv-title-ja {
+    font-family: var(--serif-jp);
+    font-size: 17.5px;
+    font-weight: 500;
+    color: var(--sumi);
+    line-height: 1.42;
+    text-align: center;
+    text-wrap: balance;
+    margin: 0 0 10px;
+  }
+  .jpv-frame {
+    position: relative;
+    width: min(100%, calc(min(33vh, 240px) * 16 / 9));
+    max-width: 520px;
+    aspect-ratio: 16 / 9;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #141311;
+    border: 1px solid var(--hairline);
+    flex-shrink: 0;
+    cursor: pointer;
+    user-select: none;
+  }
+  .jpv-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    background: transparent;
+  }
+  .jpv-frame.is-paused .rv-cinema-pause-badge {
+    opacity: 1;
+  }
+  .jpv-sub-stage {
+    width: 100%;
+    max-width: 520px;
+    min-height: 68px;
+    margin: 12px auto 0;
+    padding: 0 4px;
+    text-align: center;
+    transition: opacity 0.2s ease;
+  }
+  .jpv-sub-stage.sub-hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .jpv-sub-ja {
+    font-family: var(--serif-jp);
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--sumi);
+    line-height: 1.62;
+    letter-spacing: 0.02em;
+    text-wrap: balance;
+    min-height: 30px;
+  }
+  .jpv-sub-ja .jpv-hl {
+    color: var(--moss);
+    font-weight: 600;
+  }
+  .jpv-sub-zh {
+    margin-top: 5px;
+    font-size: 13.5px;
+    color: var(--ink-3);
+    line-height: 1.48;
+    text-wrap: balance;
+    min-height: 19px;
+  }
+  .jpv-sub-stage.ja-only .jpv-sub-zh {
+    display: none;
+  }
+  .jpv-words-wrap {
+    width: 100%;
+    max-width: 520px;
+    margin: 10px auto 0;
+    padding-top: 10px;
+    border-top: 1px solid var(--hairline);
+  }
+  .jpv-words-head {
+    font-size: 11.5px;
+    color: var(--ink-3);
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .jpv-word-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 8px;
+  }
+  .jpv-chip {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--hairline-strong);
+    background: transparent;
+    color: var(--ink-2);
+    font-family: var(--serif-jp);
+    font-size: 13.5px;
+    line-height: 1.25;
+    touch-action: manipulation;
+    transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+  }
+  .jpv-chip:active { background: var(--tap-bg); }
+  .jpv-chip.is-now {
+    color: var(--moss);
+    background: var(--moss-soft);
+    border-color: var(--moss-border);
+    font-weight: 600;
+  }
+  .jpv-chip-cnt {
+    font-family: var(--sans);
+    font-size: 10.5px;
+    color: var(--ink-3);
+    opacity: 0.78;
+  }
+  .jpv-chip.is-now .jpv-chip-cnt {
+    color: var(--moss);
+    opacity: 0.9;
+  }
+  .chap-link.chap-jpv {
+    color: var(--ink-2);
+    font-weight: 500;
+  }
+  .chap-link.chap-jpv.is-ready {
+    color: var(--moss);
+    background: var(--moss-soft);
+    font-weight: 600;
+  }
+  .vc-aux-btn.is-on {
+    color: var(--moss);
+    font-weight: 600;
   }
   @keyframes rvAudioPulse {
     0%, 100% { opacity: 1; }
@@ -4040,6 +4245,7 @@ html = r"""<!DOCTYPE html>
   .vc-aux-btn {
     height: 46px;
     min-height: 46px;
+    padding: 0 11px;
     border: none;
     border-radius: 0;
     background: transparent;
@@ -7983,10 +8189,11 @@ function openStoryArtModal(idx, overrideMedia) {
   const modal = document.getElementById("app-modal");
   const content = document.getElementById("modal-content");
   if (!modal || !content) return;
+  const isJpStoryVid = !!(art.video_url && String(art.video_url).includes("daily_jp_story"));
   const mediaHTML = art.video_url
     ? `<video class="story-modal-video" id="story-modal-video" controls playsinline autoplay poster="${escapeHtml(art.img || "")}">
          <source src="${escapeHtml(art.video_url)}" type="video/mp4" />
-         ${art.vtt_url ? `<track kind="subtitles" src="${escapeHtml(art.vtt_url)}" srclang="zh" label="同步字幕" default />` : ""}
+         ${art.vtt_url ? `<track kind="subtitles" src="${escapeHtml(art.vtt_url)}" srclang="${isJpStoryVid ? "ja" : "zh"}" label="${isJpStoryVid ? "日中字幕" : "同步字幕"}" default />` : ""}
        </video>`
     : `<img src="${escapeHtml(art.img || "")}" alt="${escapeHtml(art.title || "")}" class="story-modal-img" />`;
   content.innerHTML = `
@@ -7995,7 +8202,7 @@ function openStoryArtModal(idx, overrideMedia) {
         ${mediaHTML}
       </div>
       <div class="story-modal-body">
-        <span class="overline">${art.video_url ? "片段影像 · 含字幕" : "今日故事"}</span>
+        <span class="overline">${art.video_url ? (isJpStoryVid ? "全日语短片 · 日中字幕" : "片段影像 · 含字幕") : "今日故事"}</span>
         <h3 class="story-modal-title">${escapeHtml(art.title || "")}</h3>
         <p class="story-modal-sub">${escapeHtml(art.subtitle || "")}</p>
         <button type="button" class="vc-btn ok" style="width:100%;margin-top:14px;" onclick="closeModal()">关闭</button>
@@ -8178,9 +8385,17 @@ function updateChapterStripFade(stripEl) {
 
 function renderRadioChapters(activeChapIdx) {
   const chaps = DATA.radio.chapters || [];
+  const jpVid = (DATA.radio && DATA.radio.jp_video && DATA.radio.jp_video.video_url) ? DATA.radio.jp_video : null;
   const rvMeta = getReviewClosingChapMeta();
-  const closingHTML = rvMeta
-    ? `<span class="chap-sep" aria-hidden="true"></span><button type="button" class="chap-link chap-review${rvMeta.cls}" id="radio-review-chap" onclick="openRadioReview()">${escapeHtml(rvMeta.label)}</button>`
+  const tailBtns = [];
+  if (jpVid) {
+    tailBtns.push(`<button type="button" class="chap-link chap-jpv${rvMeta && rvMeta.needsClose ? " is-ready" : ""}" id="radio-jpv-chap" onclick="openRadioJpVideo()">日语短片</button>`);
+  }
+  if (rvMeta) {
+    tailBtns.push(`<button type="button" class="chap-link chap-review${rvMeta.cls}" id="radio-review-chap" onclick="openRadioReview()">${escapeHtml(rvMeta.label)}</button>`);
+  }
+  const closingHTML = tailBtns.length
+    ? `<span class="chap-sep" aria-hidden="true"></span>${tailBtns.join("")}`
     : "";
   const strip = document.getElementById("radio-chap-pills");
   if (!strip) return;
@@ -8634,22 +8849,85 @@ const JA_ASR = (() => {
     return s;
   }
 
+  let silenceTimer = null;
+  let commitFn = null;
+
+  function lookupKanaToken(tok) {
+    if (!tok) return "";
+    if (EXTRA_KANA[tok]) return toHira(EXTRA_KANA[tok]);
+    try {
+      if (typeof DATA !== "undefined" && DATA) {
+        if (DATA.asr_kana && DATA.asr_kana[tok]) return toHira(DATA.asr_kana[tok]);
+        if (DATA.vocab_cards && DATA.vocab_cards[tok] && DATA.vocab_cards[tok].kana) return toHira(DATA.vocab_cards[tok].kana);
+        if (DATA.words && DATA.words[tok] && DATA.words[tok].kana) return toHira(DATA.words[tok].kana);
+      }
+    } catch (e) {}
+    return "";
+  }
+
   function resolveKana(raw) {
     const clean = String(raw || "").replace(/[、。！？.,!?・「」『』（）()【】\s〜~～…・]/g, "");
     if (!clean) return "";
     if (!/[\u4e00-\u9faf\u3400-\u4dbf]/.test(clean)) return toHira(clean);
-    if (EXTRA_KANA[clean]) return toHira(EXTRA_KANA[clean]);
-    try {
-      if (typeof DATA !== "undefined" && DATA) {
-        if (DATA.words && DATA.words[clean] && DATA.words[clean].kana) {
-          return toHira(DATA.words[clean].kana);
-        }
-        if (DATA.vocab_cards && DATA.vocab_cards[clean] && DATA.vocab_cards[clean].kana) {
-          return toHira(DATA.vocab_cards[clean].kana);
+    const direct = lookupKanaToken(clean);
+    if (direct) return direct;
+    // Greedy longest-match Kanji->Kana conversion so multi-word phrases & homophone compounds convert cleanly!
+    let out = "";
+    let i = 0;
+    while (i < clean.length) {
+      let matched = false;
+      const maxL = Math.min(6, clean.length - i);
+      for (let len = maxL; len >= 1; len--) {
+        const sub = clean.slice(i, i + len);
+        if (/[\u4e00-\u9faf\u3400-\u4dbf]/.test(sub)) {
+          const k = lookupKanaToken(sub);
+          if (k) {
+            out += k;
+            i += len;
+            matched = true;
+            break;
+          }
         }
       }
-    } catch (e) {}
-    return toHira(clean);
+      if (!matched) {
+        out += toHira(clean[i]);
+        i += 1;
+      }
+    }
+    return toHira(out);
+  }
+
+  function expandGrammarStems(rawStems) {
+    const out = [];
+    const push = (s) => { const v = String(s || "").trim(); if (v && !out.includes(v)) out.push(v); };
+    (Array.isArray(rawStems) ? rawStems : []).forEach(st => {
+      const s = String(st || "").replace(/[〜~～]/g, "").trim();
+      if (!s) return;
+      push(s);
+      push(toHira(s));
+      const rk = resolveKana(s);
+      if (rk) push(rk);
+      if (s.endsWith("なる")) {
+        const b = s.slice(0, -2);
+        ["なった", "なります", "なりました", "なって"].forEach(x => push(b + x));
+      } else if (s.endsWith("する")) {
+        const b = s.slice(0, -2);
+        ["した", "します", "しました", "して"].forEach(x => push(b + x));
+      } else if (s.endsWith("ない")) {
+        const b = s.slice(0, -2);
+        ["ありません", "なかった", "なく"].forEach(x => push(b + x));
+      } else if (s.endsWith("だ")) {
+        const b = s.slice(0, -1);
+        ["です", "だった", "でした", "ですね"].forEach(x => push(b + x));
+      }
+      if (s.includes("うえで")) push(s.replace("うえで", "上で"));
+      if (s.includes("上で")) push(s.replace("上で", "うえで"));
+      if (s.includes("につれて")) { push(s.replace("につれて", "に連れて")); push(s.replace("につれて", "につれ")); }
+      if (s.includes("しかない")) push(s.replace("しかない", "しか無い"));
+      if (s.includes("かわりに")) push(s.replace("かわりに", "代わりに"));
+      if (s.includes("とともに")) push(s.replace("とともに", "と共に"));
+    });
+    return out;
   }
 
   function levenshtein(a, b) {
@@ -8693,6 +8971,7 @@ const JA_ASR = (() => {
     const tgtWordH = toHira(targetWord || "");
     const tgtKanaH = toHira(targetKana || resolveKana(targetWord || ""));
     const tgtChunkH = toHira(targetChunk || "");
+    const tgtChunkK = resolveKana(targetChunk || "");
     const bestRaw = alts[0];
 
     for (let i = 0; i < alts.length; i++) {
@@ -8702,7 +8981,8 @@ const JA_ASR = (() => {
       if (
         (tgtWordH && (aH === tgtWordH || aH.includes(tgtWordH))) ||
         (tgtKanaH && (aH === tgtKanaH || aK === tgtKanaH || (tgtKanaH.length >= 2 && (aH.includes(tgtKanaH) || aK.includes(tgtKanaH))))) ||
-        (tgtChunkH && tgtChunkH.length >= 3 && (aH === tgtChunkH || aH.includes(tgtChunkH)))
+        (tgtChunkH && tgtChunkH.length >= 3 && (aH === tgtChunkH || aH.includes(tgtChunkH))) ||
+        (tgtChunkK && tgtChunkK.length >= 3 && (aK === tgtChunkK || aK.includes(tgtChunkK)))
       ) {
         return {
           ok: true,
@@ -8759,15 +9039,17 @@ const JA_ASR = (() => {
         verdict: "没听到清晰语音，靠近一点再说一句就行。"
       };
     }
-    const stems = Array.isArray(prompt && prompt.target_stems) ? prompt.target_stems : [];
-    const stemHiras = stems.map(s => toHira(s)).filter(Boolean);
+    const rawStems = Array.isArray(prompt && prompt.target_stems) ? prompt.target_stems : [];
+    const stems = expandGrammarStems(rawStems.length ? rawStems : [prompt && prompt.title]);
+    const modelKana = resolveKana((prompt && prompt.model_ja) || "");
 
     let chosen = alts[0];
     let usedTarget = false;
     for (let i = 0; i < alts.length; i++) {
       const a = alts[i];
       const aH = toHira(a);
-      const hit = stems.some(s => s && a.includes(s)) || stemHiras.some(sh => sh && aH.includes(sh));
+      const aK = resolveKana(a);
+      const hit = stems.some(s => s && (a.includes(s) || aH.includes(s) || aK.includes(s)));
       if (hit) {
         chosen = a;
         usedTarget = true;
@@ -8775,11 +9057,27 @@ const JA_ASR = (() => {
       }
     }
 
+    // Also allow high phonetic shadowing match against `model_ja` when ASR picks alternate Kanji
+    if (!usedTarget && modelKana && modelKana.length >= 6) {
+      for (let i = 0; i < alts.length; i++) {
+        const aK = resolveKana(alts[i]);
+        if (aK.length >= Math.floor(modelKana.length * 0.65)) {
+          const dist = levenshtein(aK, modelKana);
+          const sim = 1 - (dist / Math.max(aK.length, modelKana.length));
+          if (sim >= 0.74) {
+            chosen = alts[i];
+            usedTarget = true;
+            break;
+          }
+        }
+      }
+    }
+
     const traps = detectSpokenTraps(chosen);
     // Also detect voicing slip on target stem itself (e.g. ところたった instead of ところだった)
     if (!usedTarget && stems.length) {
-      const chosenNoDak = stripDakuten(toHira(chosen));
-      if (stemHiras.some(sh => sh.length >= 4 && chosenNoDak.includes(stripDakuten(sh)))) {
+      const chosenNoDak = stripDakuten(resolveKana(chosen));
+      if (stems.some(sh => sh.length >= 4 && chosenNoDak.includes(stripDakuten(resolveKana(sh))))) {
         if (!traps.some(t => t.includes("清音") || t.includes("浊音"))) {
           traps.push(`目标句型「${prompt.title || ""}」的清浊音差了一拍，注意听清浊再说一遍。`);
         }
@@ -8803,7 +9101,7 @@ const JA_ASR = (() => {
         usedTarget: true,
         heard: chosen,
         traps: [],
-        verdict: "用对了，很自然"
+        verdict: "顺口过关"
       };
     }
     if (usedTarget && traps.length > 0) {
@@ -8838,12 +9136,28 @@ const JA_ASR = (() => {
       clearTimeout(safetyTimer);
       safetyTimer = null;
     }
+    if (silenceTimer) {
+      clearTimeout(silenceTimer);
+      silenceTimer = null;
+    }
+    commitFn = null;
     active = false;
     activeTag = "";
     if (rec) {
       try { rec.onresult = null; rec.onerror = null; rec.onend = null; rec.abort(); } catch (e) {}
       rec = null;
     }
+  }
+
+  function finishNow() {
+    if (typeof commitFn === "function") {
+      const fn = commitFn;
+      commitFn = null;
+      fn();
+      return true;
+    }
+    stop();
+    return false;
   }
 
   function start(tag, handlers) {
@@ -8865,12 +9179,16 @@ const JA_ASR = (() => {
     try { if ("speechSynthesis" in window) window.speechSynthesis.cancel(); } catch (e) {}
 
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const isSentenceMode = !!(handlers && handlers.sentenceMode);
+    const silenceMs = isSentenceMode ? 2100 : 1200;
+    const maxCapMs = isSentenceMode ? 12500 : 7500;
     try {
       rec = new SR();
       rec.lang = "ja-JP";
       rec.interimResults = true;
       rec.maxAlternatives = 5;
-      rec.continuous = false;
+      // Continuous capture prevents Android Chrome from chopping you off when pausing 0.6s mid-sentence!
+      rec.continuous = true;
     } catch (e) {
       if (handlers && handlers.onError) handlers.onError("语音识别初始化失败，请稍后重试。");
       return false;
@@ -8878,38 +9196,70 @@ const JA_ASR = (() => {
 
     active = true;
     activeTag = String(tag || "");
-    let gotFinal = false;
-    let lastInterim = "";
+    let committed = false;
+    let latestAlts = [];
+
+    function commitCaptured() {
+      if (committed) return;
+      committed = true;
+      const doneCb = handlers && handlers.onFinal;
+      const endCb = handlers && handlers.onEnd;
+      const captured = latestAlts.slice();
+      stop();
+      if (captured.length && doneCb) {
+        doneCb(captured);
+      } else if (endCb) {
+        endCb();
+      }
+    }
+    commitFn = commitCaptured;
 
     rec.onresult = (ev) => {
-      if (!active || !ev || !ev.results) return;
-      const alts = [];
-      let isFinal = false;
-      for (let i = ev.resultIndex || 0; i < ev.results.length; i++) {
+      if (!active || committed || !ev || !ev.results) return;
+      // Assemble complete utterance across all continuous segments (primary + up to 5 alternatives of tail)
+      let prefixFinal = "";
+      const tailAlts = [];
+      for (let i = 0; i < ev.results.length; i++) {
         const res = ev.results[i];
-        if (res && res.isFinal) isFinal = true;
-        if (res && res.length) {
+        if (!res || !res.length) continue;
+        if (i < ev.results.length - 1) {
+          prefixFinal += String((res[0] && res[0].transcript) || "").trim();
+        } else {
           for (let j = 0; j < res.length; j++) {
             const tr = String((res[j] && res[j].transcript) || "").trim();
-            if (tr && !alts.includes(tr)) alts.push(tr);
+            if (tr && !tailAlts.includes(tr)) tailAlts.push(tr);
           }
         }
       }
-      if (!alts.length) return;
-      lastInterim = alts[0];
-      if (isFinal) {
-        gotFinal = true;
-        const doneCb = handlers && handlers.onFinal;
-        stop();
-        if (doneCb) doneCb(alts);
-      } else if (handlers && handlers.onInterim) {
-        handlers.onInterim(alts[0]);
+      const combined = [];
+      if (tailAlts.length) {
+        tailAlts.forEach(t => {
+          const full = (prefixFinal + t).trim();
+          if (full && !combined.includes(full)) combined.push(full);
+        });
+      } else if (prefixFinal) {
+        combined.push(prefixFinal.trim());
       }
+      if (!combined.length) return;
+      latestAlts = combined;
+      if (handlers && handlers.onInterim) {
+        handlers.onInterim(combined[0]);
+      }
+      // Reset smart silence auto-finish timer whenever speech progresses!
+      if (silenceTimer) clearTimeout(silenceTimer);
+      silenceTimer = setTimeout(() => {
+        commitCaptured();
+      }, silenceMs);
     };
 
     rec.onerror = (ev) => {
-      if (!active) return;
+      if (!active || committed) return;
       const code = String((ev && ev.error) || "");
+      // If we already captured real speech before a minor timeout/no-speech event, commit it cleanly!
+      if (latestAlts.length && (code === "no-speech" || code === "aborted")) {
+        commitCaptured();
+        return;
+      }
       const errMap = {
         "not-allowed": "请允许浏览器使用麦克风权限，点地址栏左侧图标打开即可。",
         "service-not-allowed": "请允许浏览器使用麦克风权限，点地址栏左侧图标打开即可。",
@@ -8920,33 +9270,25 @@ const JA_ASR = (() => {
       };
       const msg = (code in errMap) ? errMap[code] : "没听清，再试一次就行。";
       const errCb = handlers && handlers.onError;
+      committed = true;
       stop();
       if (msg && errCb) errCb(msg);
     };
 
     rec.onend = () => {
-      const wasActive = active;
-      const endCb = handlers && handlers.onEnd;
-      const finalCb = handlers && handlers.onFinal;
-      const fallbackTxt = lastInterim;
-      stop();
-      if (wasActive && !gotFinal && fallbackTxt && finalCb) {
-        finalCb([fallbackTxt]);
-      } else if (wasActive && endCb) {
-        endCb();
-      }
+      if (!active || committed) return;
+      commitCaptured();
     };
 
     safetyTimer = setTimeout(() => {
-      if (active && rec) {
-        try { rec.stop(); } catch (e) { stop(); }
-      }
-    }, 10500);
+      commitCaptured();
+    }, maxCapMs);
 
     try {
       rec.start();
       return true;
     } catch (e) {
+      committed = true;
       stop();
       if (handlers && handlers.onError) handlers.onError("麦克风启动失败，再点一次试试。");
       return false;
@@ -8958,11 +9300,13 @@ const JA_ASR = (() => {
     isActive: (tag) => active && (!tag || activeTag === tag),
     start,
     stop,
+    finishNow,
     toHira,
     stripDakuten,
     stripSokuon,
     collapseLongVowels,
     resolveKana,
+    expandGrammarStems,
     detectSpokenTraps,
     analyzePronunciation,
     analyzeSpokenOutput
@@ -8987,29 +9331,39 @@ function pushSpokenRecord(idTag, pointKey, label, isOk) {
   scheduleCloudPush(220);
 }
 
-// ================= POST-LISTENING FRAMELESS ZEN TINDER REVIEW ("听后复盘") =================
-// Unified with v56 Kanso "记词": frameless open canvas, read-only top meta-bar (上看下点),
-// 12px drag deadzone Tinder swipe, thumb-zone frameless aux row, auto-play podcast clip,
-// and concise 1-phrase speaking cards at the tail of the same deck.
+// ================= POST-LISTENING DECOUPLED ALL-JAPANESE VIDEO + ZEN TINDER REVIEW + 2-STEP SPEAKING =================
+// Cleanly separates three distinct cognitive tasks:
+// 1) "日语短片" (rvMode="video"): ~90s ALL-JAPANESE documentary retelling today's stories & weaving in today's words (2x!)
+// 2) "重点过点" (rvMode="triage"/"tail"): Quiet frameless Zen Tinder deck for rapid active recall (zero Chinese video clutter)
+// 3) "开口跟读" (rvMode="speak"): Natural 2-step Listen & Shadow (studio neural Japanese audio) -> Optional 脱稿说 challenge
 let radioReviewOpen = false;
-let rvMode = "triage"; // "triage" | "tail" | "speak" | "done"
+let rvMode = "triage"; // "video" | "triage" | "tail" | "speak" | "done"
 let rvRevealed = false;
 let rvRevealedAt = 0;
 let rvPendingLeft = false;
 let rvActiveItemId = "";
 let rvAnimating = false;
 let rvClipPlayer = null;
-let rvVideoEl = null;
 let rvClipEndSec = 0;
 let rvClipPlayingKey = "";
-let rvSubEnabled = (() => {
-  try { return localStorage.getItem("n3_rv_sub") !== "0"; } catch (e) { return true; }
+let jpvVideoEl = null;
+let jpvLastCueIdx = -2;
+let jpvSpeed = 1.0;
+let jpvWordCycleMap = {};
+let jpvSubMode = (() => {
+  try {
+    const v = localStorage.getItem("n3_jpv_sub_mode");
+    return (v === "bi" || v === "ja" || v === "off") ? v : "bi";
+  } catch (e) { return "bi"; }
 })();
-let rvCurrentVideoItem = null;
-let rvLastSubIdx = -2;
 let rvSpeakIdx = 0;
 let rvSpeakPassedSession = false;
-let rvSpeakState = { listening: false, interim: "", result: null, revealedModel: false, errorMsg: "" };
+let rvSpeakAutoPlayedId = "";
+let rvSpeakState = { listening: false, interim: "", result: null, blindMode: false, errorMsg: "" };
+
+function getRadioJpVideo() {
+  return (DATA.radio && DATA.radio.jp_video && DATA.radio.jp_video.video_url) ? DATA.radio.jp_video : null;
+}
 
 function getRadioReviewItems() {
   const arr = (DATA.radio && Array.isArray(DATA.radio.review_items)) ? DATA.radio.review_items : [];
@@ -9086,6 +9440,10 @@ function updateRadioReviewEntryBadge() {
     chapBtn.textContent = meta.label;
     chapBtn.className = "chap-link chap-review" + meta.cls;
   }
+  const jpvBtn = document.getElementById("radio-jpv-chap");
+  if (jpvBtn) {
+    jpvBtn.className = "chap-link chap-jpv" + (meta && meta.needsClose ? " is-ready" : "");
+  }
   const cta = document.getElementById("radio-review-cta");
   if (cta) {
     const showCta = !!(meta && meta.needsClose);
@@ -9099,164 +9457,314 @@ function updateRadioReviewEntryBadge() {
   }
 }
 
-function formatReviewSubTextHTML(item, cue) {
-  if (!cue || !cue.txt) return "";
-  const spk = cue.spk ? `<span class="rv-sub-spk">${escapeHtml(cue.spk)}：</span>` : "";
-  const raw = String(cue.txt || "");
-  // Annotate ONLY genuine Japanese kana/mixed spans (leave plain Chinese prose untouched & gap-free)
-  const jaRunRe = /([ぁ-んァ-ヶー][ぁ-んァ-ヶー・一-龥、。！？]*|[一-龥]{1,4}[ぁ-んァ-ヶー][ぁ-んァ-ヶー・一-龥]*)/g;
-  let body = "";
-  let last = 0;
-  let m;
-  while ((m = jaRunRe.exec(raw)) !== null) {
-    if (m.index > last) body += escapeHtml(raw.slice(last, m.index));
-    body += annotateJapanese(m[0]);
-    last = m.index + m[0].length;
-  }
-  if (last < raw.length) body += escapeHtml(raw.slice(last));
-  // Softly highlight & keep unbroken the target grammar/vocab stem inside the live subtitle
-  const stems = [];
-  if (item) {
-    const cleanT = String(item.title || "").replace(/[〜~～（(][^）)]*[）)]?/g, "").replace(/[〜~～]/g, "").trim();
-    if (cleanT.length >= 2) stems.push(cleanT);
-    if (item.kana && String(item.kana).length >= 2) stems.push(String(item.kana).trim());
-  }
-  for (let i = 0; i < stems.length; i++) {
-    const st = escapeHtml(stems[i]);
-    if (st && body.includes(st)) {
-      body = body.replace(st, `<span class="rv-sub-hl">${st}</span>`);
-      break;
+// ---------- Dedicated All-Japanese Daily Documentary Video Theater ("今日日语短片") ----------
+function formatJpVideoLineHTML(cue) {
+  if (!cue || !cue.ja) return "";
+  const raw = String(cue.ja || "");
+  const hits = Array.isArray(cue.hits) ? cue.hits.filter(w => w && w.length >= 2) : [];
+  if (!hits.length) return annotateJapanese(raw);
+  // Split raw Japanese around target words cleanly so each target word renders highlighted & tappable!
+  const sorted = hits.slice().sort((a, b) => b.length - a.length);
+  let out = "";
+  let i = 0;
+  while (i < raw.length) {
+    let matched = "";
+    for (let j = 0; j < sorted.length; j++) {
+      if (raw.startsWith(sorted[j], i)) {
+        matched = sorted[j];
+        break;
+      }
+    }
+    if (matched) {
+      out += `<span class="jpv-hl">${annotateJapanese(matched)}</span>`;
+      i += matched.length;
+    } else {
+      let nextPos = raw.length;
+      for (let j = 0; j < sorted.length; j++) {
+        const p = raw.indexOf(sorted[j], i + 1);
+        if (p !== -1 && p < nextPos) nextPos = p;
+      }
+      out += annotateJapanese(raw.slice(i, nextPos));
+      i = nextPos;
     }
   }
-  return `${spk}${body}`;
+  return out;
 }
 
-function syncReviewSubtitle(item, curSec) {
-  const subEl = document.getElementById("rv-sub-line");
-  const fillEl = document.getElementById("rv-cinema-fill");
-  const cues = (item && Array.isArray(item.subtitles)) ? item.subtitles : [];
-  const dur = Math.max(1, Number((rvVideoEl && rvVideoEl.duration && isFinite(rvVideoEl.duration)) ? rvVideoEl.duration : (item && item.clip_dur) || 16));
+function syncJpVideoCue(curSec) {
+  const jpv = getRadioJpVideo();
+  if (!jpv) return;
+  const cues = Array.isArray(jpv.cues) ? jpv.cues : [];
+  const dur = Math.max(1, Number((jpvVideoEl && jpvVideoEl.duration && isFinite(jpvVideoEl.duration)) ? jpvVideoEl.duration : (jpv.duration_sec || 80)));
   const t = Math.max(0, Number(curSec || 0));
-  if (fillEl) {
-    fillEl.style.width = `${Math.max(0, Math.min(100, (t / dur) * 100)).toFixed(1)}%`;
-  }
-  if (!subEl) return;
-  if (!cues.length) {
-    const fallback = (item && (item.context_line || item.ja_example)) || "";
-    if (rvLastSubIdx !== -1) {
-      rvLastSubIdx = -1;
-      subEl.innerHTML = fallback ? formatReviewSubTextHTML(item, { spk: item.speaker || "", txt: fallback }) : "";
+  const fillEl = document.getElementById("jpv-rail-fill");
+  if (fillEl) fillEl.style.width = `${Math.max(0, Math.min(100, (t / dur) * 100)).toFixed(1)}%`;
+  const timeEl = document.getElementById("jpv-time-lbl");
+  if (timeEl) timeEl.textContent = `${formatMMSS(t)} / ${jpv.duration_label || formatMMSS(dur)}`;
+
+  let idx = -1;
+  for (let i = 0; i < cues.length; i++) {
+    if (t >= Number(cues[i].s || 0) - 0.15 && t <= Number(cues[i].e || 999) + 0.55) {
+      idx = i;
     }
+  }
+  if (idx === -1 && cues.length) {
+    idx = t < Number(cues[0].s || 0) ? 0 : cues.length - 1;
+  }
+  if (idx !== jpvLastCueIdx && cues[idx]) {
+    jpvLastCueIdx = idx;
+    const cue = cues[idx];
+    const jaEl = document.getElementById("jpv-sub-ja");
+    const zhEl = document.getElementById("jpv-sub-zh");
+    if (jaEl) jaEl.innerHTML = formatJpVideoLineHTML(cue);
+    if (zhEl) zhEl.textContent = cue.zh || "";
+    const activeHits = new Set(Array.isArray(cue.hits) ? cue.hits : []);
+    document.querySelectorAll(".jpv-chip").forEach(chEl => {
+      const w = chEl.getAttribute("data-word") || "";
+      chEl.classList.toggle("is-now", activeHits.has(w));
+    });
+  }
+}
+
+function ensureJpVideoEl() {
+  if (!jpvVideoEl) {
+    jpvVideoEl = document.createElement("video");
+    jpvVideoEl.className = "jpv-video";
+    jpvVideoEl.id = "jpv-video-el";
+    jpvVideoEl.playsInline = true;
+    jpvVideoEl.preload = "auto";
+    jpvVideoEl.setAttribute("playsinline", "");
+    jpvVideoEl.setAttribute("webkit-playsinline", "");
+    jpvVideoEl.addEventListener("timeupdate", () => {
+      if (rvMode === "video") syncJpVideoCue(jpvVideoEl.currentTime || 0);
+    });
+    jpvVideoEl.addEventListener("play", () => {
+      const fr = document.getElementById("jpv-frame");
+      if (fr) fr.classList.remove("is-paused");
+    });
+    jpvVideoEl.addEventListener("pause", () => {
+      const fr = document.getElementById("jpv-frame");
+      if (fr) fr.classList.add("is-paused");
+    });
+    jpvVideoEl.addEventListener("ended", () => {
+      const fillEl = document.getElementById("jpv-rail-fill");
+      if (fillEl) fillEl.style.width = "100%";
+      const fr = document.getElementById("jpv-frame");
+      if (fr) fr.classList.add("is-paused");
+    });
+  }
+  return jpvVideoEl;
+}
+
+function toggleJpVideoPlay(ev) {
+  if (ev && ev.target && ev.target.closest && ev.target.closest("button")) return;
+  const v = ensureJpVideoEl();
+  if (!v) return;
+  if (!v.paused && v.muted) {
+    v.muted = false;
     return;
   }
-  let idx = 0;
-  for (let i = 0; i < cues.length; i++) {
-    if (t >= Number(cues[i].s || 0) - 0.15) idx = i;
-  }
-  if (idx !== rvLastSubIdx) {
-    rvLastSubIdx = idx;
-    subEl.innerHTML = formatReviewSubTextHTML(item, cues[idx]);
-  }
-}
-
-function ensureRvVideoEl() {
-  if (!rvVideoEl) {
-    rvVideoEl = document.createElement("video");
-    rvVideoEl.className = "rv-cinema-video";
-    rvVideoEl.id = "rv-video-el";
-    rvVideoEl.playsInline = true;
-    rvVideoEl.preload = "auto";
-    rvVideoEl.setAttribute("playsinline", "");
-    rvVideoEl.setAttribute("webkit-playsinline", "");
-    rvVideoEl.addEventListener("timeupdate", () => {
-      if (rvCurrentVideoItem) syncReviewSubtitle(rvCurrentVideoItem, rvVideoEl.currentTime || 0);
-    });
-    rvVideoEl.addEventListener("play", () => {
-      const box = document.getElementById("rv-cinema-box");
-      if (box) box.classList.remove("is-paused");
-    });
-    rvVideoEl.addEventListener("pause", () => {
-      const box = document.getElementById("rv-cinema-box");
-      if (box) box.classList.add("is-paused");
-    });
-    rvVideoEl.addEventListener("ended", () => {
-      const fillEl = document.getElementById("rv-cinema-fill");
-      if (fillEl) fillEl.style.width = "100%";
-      rvClipPlayingKey = "";
-      const box = document.getElementById("rv-cinema-box");
-      if (box) box.classList.add("is-paused");
-      syncRvAudioButtons();
-    });
-  }
-  return rvVideoEl;
-}
-
-function toggleReviewSubtitles(ev) {
-  if (ev && ev.stopPropagation) ev.stopPropagation();
-  rvSubEnabled = !rvSubEnabled;
-  try { localStorage.setItem("n3_rv_sub", rvSubEnabled ? "1" : "0"); } catch (e) {}
-  const box = document.getElementById("rv-cinema-box");
-  if (box) box.classList.toggle("sub-off", !rvSubEnabled);
-  const pill = document.getElementById("rv-sub-toggle");
-  if (pill) {
-    pill.classList.toggle("off", !rvSubEnabled);
-    pill.textContent = rvSubEnabled ? "字幕" : "字幕关";
-  }
-}
-
-function onReviewCinemaTap(ev) {
-  if (ev && ev.target && ev.target.closest) {
-    if (ev.target.closest("button")) return;
-    if (ev.target.closest(".w-tok")) {
-      if (rvVideoEl && !rvVideoEl.paused) {
-        rvVideoEl.pause();
-        rvClipPlayingKey = "";
-        syncRvAudioButtons();
-      }
-      return;
-    }
-  }
-  const item = getReviewItemById(rvActiveItemId);
-  if (!item) return;
-  if (rvVideoEl && item.video_url) {
-    if (!rvVideoEl.paused && rvVideoEl.muted) {
-      rvVideoEl.muted = false;
-      rvClipPlayingKey = "clip_1";
-      syncRvAudioButtons();
-      return;
-    }
-    if (!rvVideoEl.paused) {
-      rvVideoEl.pause();
-      rvClipPlayingKey = "";
-      syncRvAudioButtons();
-    } else {
-      playReviewPodcastClip(item, 1.0, "clip_1", true);
-    }
+  if (!v.paused) {
+    v.pause();
   } else {
-    playReviewPodcastClip(item, 1.0, "clip_1");
+    if (v.ended) v.currentTime = 0;
+    v.muted = false;
+    v.playbackRate = jpvSpeed;
+    try {
+      const pr = v.play();
+      if (pr && typeof pr.catch === "function") pr.catch(() => {});
+    } catch (e) {}
   }
 }
 
-function openReviewItemCinema(ev) {
+function toggleJpVideoSpeed(ev) {
   if (ev && ev.stopPropagation) ev.stopPropagation();
-  const item = getReviewItemById(rvActiveItemId);
-  if (!item) return;
+  jpvSpeed = (jpvSpeed === 1.0) ? 0.85 : 1.0;
+  if (jpvVideoEl) jpvVideoEl.playbackRate = jpvSpeed;
+  const btn = document.getElementById("jpv-spd-btn");
+  if (btn) btn.textContent = `${jpvSpeed}x`;
+}
+
+function cycleJpVideoSubMode(ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  const order = ["bi", "ja", "off"];
+  jpvSubMode = order[(order.indexOf(jpvSubMode) + 1) % order.length];
+  try { localStorage.setItem("n3_jpv_sub_mode", jpvSubMode); } catch (e) {}
+  const stEl = document.getElementById("jpv-sub-stage");
+  if (stEl) {
+    stEl.classList.toggle("ja-only", jpvSubMode === "ja");
+    stEl.classList.toggle("sub-hidden", jpvSubMode === "off");
+  }
+  const btn = document.getElementById("jpv-sub-btn");
+  if (btn) btn.textContent = jpvSubMode === "bi" ? "日中字幕" : (jpvSubMode === "ja" ? "纯日字幕" : "无字幕");
+}
+
+function seekJpVideoToWord(word) {
+  const jpv = getRadioJpVideo();
+  if (!jpv) return;
+  const entry = (jpv.target_words || []).find(x => x && x.word === word);
+  if (!entry) return;
+  const times = (Array.isArray(entry.times) && entry.times.length) ? entry.times : [Number(entry.first_sec || 0)];
+  const curIdx = Number(jpvWordCycleMap[word] || 0);
+  const targetSec = Math.max(0, Number(times[curIdx % times.length] || 0) - 0.15);
+  jpvWordCycleMap[word] = (curIdx + 1) % times.length;
+  const v = ensureJpVideoEl();
+  if (v) {
+    try { v.currentTime = targetSec; } catch (e) {}
+    v.muted = false;
+    v.playbackRate = jpvSpeed;
+    try {
+      const pr = v.play();
+      if (pr && typeof pr.catch === "function") pr.catch(() => {});
+    } catch (e) {}
+    jpvLastCueIdx = -2;
+    syncJpVideoCue(targetSec);
+  }
+}
+
+function openJpVideoFullscreen(ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  const jpv = getRadioJpVideo();
+  if (!jpv) return;
   openStoryArtModal(-1, {
-    title: `${item.chapter_title || ""} · ${stripGrammarSpoilerTitle(item.title || "")}`,
-    subtitle: item.full_context || item.context_line || item.story_cue || "",
-    img: item.img || "",
-    video_url: item.video_url || "",
-    vtt_url: item.vtt_url || ""
+    title: jpv.title_ja || "今日日语短片",
+    subtitle: jpv.title_zh || "",
+    img: jpv.poster_url || "",
+    video_url: jpv.video_url || "",
+    vtt_url: jpv.vtt_url || ""
   });
+}
+
+function openRadioJpVideo() {
+  const jpv = getRadioJpVideo();
+  if (!jpv) return;
+  if (radioInitialized && !radioPlayer.paused) {
+    radioPlayer.pause();
+    syncRadioUI(false);
+  }
+  JA_ASR.stop();
+  stopRadioReviewAudio();
+  ensureRadioReviewState(false);
+  radioReviewOpen = true;
+  rvPendingLeft = false;
+  rvMode = "video";
+  jpvLastCueIdx = -2;
+  const pStage = document.getElementById("radio-player-stage");
+  const rStage = document.getElementById("radio-review-stage");
+  if (pStage) pStage.classList.add("hidden");
+  if (rStage) rStage.classList.remove("hidden");
+  renderRadioReviewStage();
+}
+
+function renderRadioJpVideoStage(host) {
+  const jpv = getRadioJpVideo();
+  if (!jpv) {
+    closeRadioReview();
+    return;
+  }
+  const st = ensureRadioReviewState(false);
+  const cues = Array.isArray(jpv.cues) ? jpv.cues : [];
+  const initCue = cues[0] || { ja: jpv.title_ja || "", zh: jpv.title_zh || "", hits: [] };
+  const words = Array.isArray(jpv.target_words) ? jpv.target_words : [];
+  const subLabel = jpvSubMode === "bi" ? "日中字幕" : (jpvSubMode === "ja" ? "纯日字幕" : "无字幕");
+  const subStageCls = jpvSubMode === "ja" ? " ja-only" : (jpvSubMode === "off" ? " sub-hidden" : "");
+  const chipsHTML = words.length
+    ? `<div class="jpv-words-wrap">
+         <div class="jpv-words-head">
+           <span>本片收录词汇 · 点词跳播</span>
+           <span>${words.length} 词</span>
+         </div>
+         <div class="jpv-word-chips">
+           ${words.map(w => `
+             <button type="button" class="jpv-chip" data-word="${escapeHtml(w.word)}" onclick="seekJpVideoToWord('${escapeHtml(w.word)}')">
+               <span>${escapeHtml(w.word)}</span>
+               ${Number(w.hits || 1) >= 2 ? `<span class="jpv-chip-cnt">×${Number(w.hits)}</span>` : ""}
+             </button>
+           `).join("")}
+         </div>
+       </div>`
+    : "";
+
+  host.innerHTML = `
+    <div class="meta-bar">
+      <span class="overline ok">今日日语短片 · 全日语</span>
+      <span class="overline" id="jpv-time-lbl">00:00 / ${escapeHtml(jpv.duration_label || "01:30")}</span>
+    </div>
+
+    <div class="jpv-stage">
+      <h2 class="jpv-title-ja">${escapeHtml(jpv.title_ja || "今日の日本ストーリー")}</h2>
+      <div class="jpv-frame is-paused" id="jpv-frame" onclick="toggleJpVideoPlay(event)">
+        <div class="rv-cinema-slot" id="jpv-slot">
+          ${jpv.poster_url ? `<img class="rv-cinema-poster" src="${escapeHtml(jpv.poster_url)}" alt="" />` : ""}
+        </div>
+        <div class="rv-cinema-ctrls">
+          <button type="button" class="rv-cinema-pill" id="jpv-spd-btn" onclick="toggleJpVideoSpeed(event)">${jpvSpeed}x</button>
+          <button type="button" class="rv-cinema-pill" onclick="openJpVideoFullscreen(event)" aria-label="全屏播放">⤢</button>
+        </div>
+        <div class="rv-cinema-pause-badge" aria-hidden="true">▶</div>
+        <div class="rv-cinema-rail"><div class="rv-cinema-fill" id="jpv-rail-fill"></div></div>
+      </div>
+
+      <div class="jpv-sub-stage${subStageCls}" id="jpv-sub-stage" onclick="if(event.target && event.target.closest && event.target.closest('.w-tok') && jpvVideoEl && !jpvVideoEl.paused) jpvVideoEl.pause()">
+        <div class="jpv-sub-ja" id="jpv-sub-ja">${formatJpVideoLineHTML(initCue)}</div>
+        <div class="jpv-sub-zh" id="jpv-sub-zh">${escapeHtml(initCue.zh || "")}</div>
+      </div>
+
+      ${lexBoxHTML("rv-inline-lex")}
+      ${chipsHTML}
+    </div>
+
+    <div class="vc-aux-row">
+      <button type="button" class="vc-aux-btn seal" onclick="closeRadioReview()">随身听</button>
+      <div class="vc-aux-right">
+        <button type="button" class="vc-aux-btn" id="jpv-sub-btn" onclick="cycleJpVideoSubMode(event)">${subLabel}</button>
+        <button type="button" class="vc-aux-btn replay" onclick="if(jpvVideoEl){jpvVideoEl.currentTime=0;jpvVideoEl.muted=false;jpvVideoEl.play().catch(()=>{});}">重播</button>
+      </div>
+    </div>
+
+    <div class="vc-dock">
+      <button type="button" class="vc-btn mid" onclick="closeRadioReview()">回随身听</button>
+      <button type="button" class="vc-btn ok" onclick="${st.done ? "openRadioSpeaking(0)" : "openRadioReview(false)"}">${st.done ? "开口跟读 2 句" : "去重点过点"}</button>
+    </div>
+  `;
+
+  const slot = document.getElementById("jpv-slot");
+  if (slot) {
+    const v = ensureJpVideoEl();
+    if (v.parentNode !== slot) {
+      slot.innerHTML = "";
+      slot.appendChild(v);
+    }
+    const wantSrc = jpv.video_url;
+    if (v.getAttribute && v.getAttribute("data-src") !== wantSrc) {
+      if (jpv.poster_url) v.poster = jpv.poster_url;
+      v.src = wantSrc;
+      if (v.setAttribute) v.setAttribute("data-src", wantSrc);
+      try { v.load(); } catch (e) {}
+    } else if (v.ended) {
+      v.currentTime = 0;
+    }
+    v.muted = false;
+    v.playbackRate = jpvSpeed;
+    jpvLastCueIdx = -2;
+    syncJpVideoCue(v.currentTime || 0);
+    try {
+      const pr = v.play();
+      if (pr && typeof pr.catch === "function") {
+        pr.catch(() => {
+          const fr = document.getElementById("jpv-frame");
+          if (fr) fr.classList.add("is-paused");
+        });
+      }
+    } catch (e) {}
+  }
 }
 
 function stopRadioReviewAudio() {
   rvClipPlayingKey = "";
   rvClipEndSec = 0;
   try {
-    if (rvVideoEl) {
-      rvVideoEl.pause();
-    }
+    if (jpvVideoEl) jpvVideoEl.pause();
   } catch (e) {}
   try {
     if (rvClipPlayer) {
@@ -9273,8 +9781,6 @@ function stopRadioReviewAudio() {
   try {
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
   } catch (e) {}
-  const box = document.getElementById("rv-cinema-box");
-  if (box) box.classList.add("is-paused");
   syncRvAudioButtons();
 }
 
@@ -9294,8 +9800,7 @@ function syncRvAudioButtons() {
 function playReviewPodcastClip(item, rateVal, toggleKey, forcePlay) {
   if (!item) return;
   const key = toggleKey || `clip_${rateVal}`;
-  const videoActive = !!(item.video_url && rvVideoEl && !rvVideoEl.paused);
-  if (!forcePlay && rvClipPlayingKey === key && (videoActive || (rvClipPlayer && !rvClipPlayer.paused))) {
+  if (!forcePlay && rvClipPlayingKey === key && rvClipPlayer && !rvClipPlayer.paused) {
     stopRadioReviewAudio();
     return;
   }
@@ -9305,51 +9810,6 @@ function playReviewPodcastClip(item, rateVal, toggleKey, forcePlay) {
     syncRadioUI(false);
   }
 
-  // Primary Path: Native self-contained MP4 documentary video + muxed podcast audio + synced subtitles!
-  const slot = document.getElementById("rv-cinema-slot");
-  if (item.video_url && slot) {
-    const v = ensureRvVideoEl();
-    rvCurrentVideoItem = item;
-    rvLastSubIdx = -2;
-    if (v.parentNode !== slot) {
-      slot.innerHTML = "";
-      slot.appendChild(v);
-    }
-    const wantSrc = item.video_url;
-    const sameSrc = (v.getAttribute && v.getAttribute("data-src") === wantSrc);
-    if (!sameSrc) {
-      if (item.img) v.poster = item.img;
-      v.src = wantSrc;
-      if (v.setAttribute) v.setAttribute("data-src", wantSrc);
-      try { v.load(); } catch (e) {}
-    } else if (v.ended || (v.duration && isFinite(v.duration) && (v.currentTime || 0) >= v.duration - 0.35)) {
-      v.currentTime = 0;
-    }
-    v.muted = false;
-    v.playbackRate = rateVal || 1.0;
-    rvClipPlayingKey = key;
-    const box = document.getElementById("rv-cinema-box");
-    if (box) box.classList.remove("is-paused");
-    syncReviewSubtitle(item, v.currentTime || 0);
-    syncRvAudioButtons();
-    try {
-      const pr = v.play();
-      if (pr && typeof pr.catch === "function") {
-        pr.catch(() => {
-          // If browser blocks unmuted autoplay, still roll visual video muted so user sees cinema immediately
-          try {
-            v.muted = true;
-            const pr2 = v.play();
-            if (pr2 && typeof pr2.catch === "function") pr2.catch(() => {});
-          } catch (e2) {}
-          if (box) box.classList.add("is-paused");
-        });
-      }
-    } catch (e) {}
-    return;
-  }
-
-  // Fallback Path: Direct daily_radio.mp3 audio slice (when an episode has no MP4 clips)
   const srcUrl = cachedRadioBlobUrl || (DATA.radio && DATA.radio.audio_url) || "";
   if (!srcUrl) return;
   if (!rvClipPlayer) {
@@ -9494,7 +9954,8 @@ function advanceRadioReviewPointer() {
     const allSpoken = prompts.length > 0 && prompts.every(x => spokenSet.has(x.id));
     if (prompts.length > 0 && !rvSpeakPassedSession && !allSpoken && rvSpeakIdx < prompts.length) {
       rvMode = "speak";
-      rvSpeakState = { listening: false, interim: "", result: null, revealedModel: false, errorMsg: "" };
+      rvSpeakAutoPlayedId = "";
+      rvSpeakState = { listening: false, interim: "", result: null, blindMode: false, errorMsg: "" };
     } else {
       rvMode = "done";
     }
@@ -9517,7 +9978,8 @@ function openRadioReview(forceRestart) {
   if (forceRestart) {
     rvSpeakIdx = 0;
     rvSpeakPassedSession = false;
-    rvSpeakState = { listening: false, interim: "", result: null, revealedModel: false, errorMsg: "" };
+    rvSpeakAutoPlayedId = "";
+    rvSpeakState = { listening: false, interim: "", result: null, blindMode: false, errorMsg: "" };
   }
   radioReviewOpen = true;
   const pStage = document.getElementById("radio-player-stage");
@@ -9563,15 +10025,17 @@ function openRadioSpeaking(startIdx) {
   if (rStage) rStage.classList.remove("hidden");
   rvMode = "speak";
   rvSpeakPassedSession = false;
+  rvSpeakAutoPlayedId = "";
   rvSpeakIdx = Math.max(0, Math.min(prompts.length, Number(startIdx || 0)));
-  rvSpeakState = { listening: false, interim: "", result: null, revealedModel: false, errorMsg: "" };
+  rvSpeakState = { listening: false, interim: "", result: null, blindMode: false, errorMsg: "" };
   renderRadioReviewStage();
 }
 
-function playSpeakingPromptAudio(prompt, which) {
+function playSpeakingPromptAudio(prompt, rateVal, toggleKey, forcePlay) {
   if (!prompt) return;
-  const key = which === "model" ? "spk_model" : "spk_q";
-  if (rvClipPlayingKey === key) {
+  const spd = Number(rateVal || 1.0);
+  const key = toggleKey || (spd < 0.95 ? "spk_slow" : "spk_model");
+  if (!forcePlay && rvClipPlayingKey === key) {
     stopRadioReviewAudio();
     return;
   }
@@ -9579,38 +10043,69 @@ function playSpeakingPromptAudio(prompt, which) {
   stopRadioReviewAudio();
   rvClipPlayingKey = key;
   syncRvAudioButtons();
-  const text = which === "model" ? (prompt.model_ja || "") : (prompt.prompt_ja || prompt.model_ja || "");
+  const text = prompt.model_ja || prompt.prompt_ja || "";
+  const audioUrl = prompt.model_audio || prompt.demo_audio || "";
   const doneCb = () => {
     if (rvClipPlayingKey === key) {
       rvClipPlayingKey = "";
       syncRvAudioButtons();
     }
   };
-  speakUtteranceLang(text, "ja-JP", 0.94, doneCb);
+  // Prefer studio native Japanese neural MP3 (`audio/spk_*.mp3`) over browser speechSynthesis!
+  if (audioUrl) {
+    warmAudio(audioUrl).then(resolved => {
+      if (rvClipPlayingKey !== key) return;
+      try {
+        wordPlayer.onended = doneCb;
+        wordPlayer.onerror = () => speakUtteranceLang(text, "ja-JP", spd < 0.95 ? 0.80 : 0.94, doneCb);
+        wordPlayer.src = resolved || audioUrl;
+        wordPlayer.currentTime = 0;
+        wordPlayer.playbackRate = spd;
+        if ("preservesPitch" in wordPlayer) wordPlayer.preservesPitch = true;
+        const pr = wordPlayer.play();
+        if (pr && typeof pr.catch === "function") {
+          pr.catch(() => {
+            if (rvClipPlayingKey === key) {
+              rvClipPlayingKey = "";
+              syncRvAudioButtons();
+            }
+          });
+        }
+      } catch (e) {
+        speakUtteranceLang(text, "ja-JP", spd < 0.95 ? 0.80 : 0.94, doneCb);
+      }
+    });
+  } else {
+    speakUtteranceLang(text, "ja-JP", spd < 0.95 ? 0.80 : 0.94, doneCb);
+  }
 }
 
-function revealSpeakingModelNow() {
-  rvSpeakState.revealedModel = true;
-  const el = document.getElementById("rv-reveal-box");
-  if (el) el.classList.add("shown");
-  const cueEl = document.getElementById("rv-cue-line");
-  if (cueEl) cueEl.classList.add("quiet-hide");
-  const p = getActiveSpeakingPrompt();
-  if (p) playSpeakingPromptAudio(p, "model");
+function toggleSpeakingBlindMode(forceBlind) {
+  const next = typeof forceBlind === "boolean" ? forceBlind : !rvSpeakState.blindMode;
+  rvSpeakState.blindMode = next;
+  rvSpeakState.result = null;
+  rvSpeakState.errorMsg = "";
+  renderRadioReviewStage();
 }
 
 function toggleRadioSpeakingMic() {
   const prompt = getActiveSpeakingPrompt();
   if (!prompt) return;
   if (rvSpeakState.listening || JA_ASR.isActive("rv_speak")) {
-    JA_ASR.stop();
-    rvSpeakState.listening = false;
-    renderRadioReviewStage();
+    // Commit everything spoken so far instead of throwing it away!
+    JA_ASR.finishNow();
     return;
   }
-  rvSpeakState = { listening: true, interim: "", result: null, revealedModel: rvSpeakState.revealedModel, errorMsg: "" };
+  rvSpeakState = {
+    listening: true,
+    interim: "",
+    result: null,
+    blindMode: !!rvSpeakState.blindMode,
+    errorMsg: ""
+  };
   renderRadioReviewStage();
   const started = JA_ASR.start("rv_speak", {
+    sentenceMode: true,
     onInterim: (txt) => {
       rvSpeakState.interim = txt;
       const el = document.getElementById("rv-mic-feedback");
@@ -9622,7 +10117,7 @@ function toggleRadioSpeakingMic() {
       rvSpeakState.errorMsg = "";
       const res = JA_ASR.analyzeSpokenOutput(alts, prompt);
       rvSpeakState.result = res;
-      rvSpeakState.revealedModel = true;
+      if (!res.ok) rvSpeakState.blindMode = false;
       const st = ensureRadioReviewState(false);
       if (!Array.isArray(st.spokenIds)) st.spokenIds = [];
       if (!st.spokenIds.includes(prompt.id)) st.spokenIds.push(prompt.id);
@@ -9654,7 +10149,8 @@ function nextRadioSpeakingPrompt() {
   stopRadioReviewAudio();
   const prompts = getRadioSpeakingPrompts();
   rvSpeakIdx += 1;
-  rvSpeakState = { listening: false, interim: "", result: null, revealedModel: false, errorMsg: "" };
+  rvSpeakAutoPlayedId = "";
+  rvSpeakState = { listening: false, interim: "", result: null, blindMode: false, errorMsg: "" };
   if (rvSpeakIdx >= prompts.length) {
     rvSpeakPassedSession = true;
     rvMode = "done";
@@ -9672,15 +10168,21 @@ function toggleReviewMicCheck() {
   const btn = document.getElementById("rv-mic-btn");
   const fb = document.getElementById("rv-mic-feedback");
   if (JA_ASR.isActive("rv_item")) {
-    JA_ASR.stop();
-    if (btn) { btn.classList.remove("listening"); btn.innerHTML = "试读"; }
-    if (fb && fb.textContent === "请读出日语…") fb.textContent = "";
+    JA_ASR.finishNow();
     return;
   }
   stopRadioReviewAudio();
-  if (btn) { btn.classList.add("listening"); btn.innerHTML = `<span class="mic-dot"></span>聆听中`; }
-  if (fb) { fb.className = "mic-feedback"; fb.textContent = "请读出日语…"; }
+  // On grammar cards, reveal the actual Japanese example sentence first so he knows what sentence to shadow!
+  if (item.kind !== "vocab" && !rvRevealed) {
+    revealRadioReviewCard();
+  }
+  const cueSample = item.kind === "vocab"
+    ? (item.title || "")
+    : (item.ja_example || item.title || "").slice(0, 22);
+  if (btn) { btn.classList.add("listening"); btn.innerHTML = `<span class="mic-dot"></span>完成`; }
+  if (fb) { fb.className = "mic-feedback"; fb.textContent = cueSample ? `请读「${cueSample}」…` : "请读出日语…"; }
   JA_ASR.start("rv_item", {
+    sentenceMode: item.kind !== "vocab",
     onInterim: (txt) => {
       const f = document.getElementById("rv-mic-feedback");
       if (f) { f.className = "mic-feedback"; f.textContent = `听到：${txt}`; }
@@ -9693,7 +10195,8 @@ function toggleReviewMicCheck() {
         ? JA_ASR.analyzePronunciation(alts, item.title, item.kana, item.ja_example)
         : JA_ASR.analyzeSpokenOutput(alts, {
             title: item.title,
-            target_stems: [String(item.title || "").replace(/[〜~～]/g, "").trim()].filter(Boolean)
+            model_ja: item.ja_example || "",
+            target_stems: JA_ASR.expandGrammarStems([item.title, item.key])
           });
       if (!rvRevealed) revealRadioReviewCard();
       if (f) {
@@ -9731,12 +10234,12 @@ function resetRvCardTransform() {
 
 function revealRadioReviewCard() {
   if (rvMode === "speak") {
-    if (!rvSpeakState.revealedModel) {
-      revealSpeakingModelNow();
+    if (rvSpeakState.blindMode) {
+      toggleSpeakingBlindMode(false);
     }
     return;
   }
-  if (rvMode === "done" || rvRevealed) return;
+  if (rvMode === "done" || rvMode === "video" || rvRevealed) return;
   rvRevealed = true;
   rvRevealedAt = performance.now();
   const item = getReviewItemById(rvActiveItemId);
@@ -9837,22 +10340,16 @@ function handleRadioReviewRelearn() {
     return;
   }
   if (rvMode === "speak") {
-    if (!rvSpeakState.revealedModel) {
-      resetRvCardTransform();
-      revealSpeakingModelNow();
-      return;
-    }
-    animateRvCardAndRun("fly-left", () => {
-      rvSpeakState = { listening: false, interim: "", result: null, revealedModel: false, errorMsg: "" };
-      renderRadioReviewStage();
-    });
+    resetRvCardTransform();
+    toggleSpeakingBlindMode(false);
+    const p = getActiveSpeakingPrompt();
+    if (p) playSpeakingPromptAudio(p, 0.85, "spk_slow", true);
     return;
   }
   const st = ensureRadioReviewState(false);
   const item = getReviewItemById(rvActiveItemId);
   if (!item) return;
 
-  // Match v56 "记词" Tinder flow: swiping left before revealing flips gently in place on the open canvas!
   if (!rvRevealed) {
     resetRvCardTransform();
     rvPendingLeft = true;
@@ -9884,13 +10381,12 @@ function finishRadioRelearnStep() {
 }
 
 function bindRadioReviewCardGestures(cardEl) {
-  if (!cardEl || rvMode === "done") return;
+  if (!cardEl || rvMode === "done" || rvMode === "video") return;
   let tracking = false;
   let hasDragged = false;
   let activePid = null;
   let sx = 0, sy = 0, st = 0;
   let tappedArt = false;
-  let tappedCinema = false;
   let tappedTok = false;
   const DRAG_DEADZONE = 12;
 
@@ -9905,7 +10401,6 @@ function bindRadioReviewCardGestures(cardEl) {
     sy = fpY(e);
     st = performance.now();
     tappedArt = !!(e.target && e.target.closest && e.target.closest(".rv-art-vignette"));
-    tappedCinema = !!(e.target && e.target.closest && e.target.closest(".rv-cinema"));
     tappedTok = !!(e.target && e.target.closest && e.target.closest(".w-tok"));
     cardEl.classList.remove("settling");
     try { cardEl.setPointerCapture(e.pointerId); } catch (err) {}
@@ -9954,7 +10449,6 @@ function bindRadioReviewCardGestures(cardEl) {
       if (hasDragged) resetRvCardTransform();
       hasDragged = false;
       if (tappedTok) return;
-      if (tappedCinema) return;
       if (tappedArt) {
         const ch = Number(cardEl.getAttribute("data-art-ch") || 0);
         const aIdx = getStoryArtIdxForChapter(ch);
@@ -10000,8 +10494,9 @@ function renderRadioSpeakingCard(host) {
   }
   const p = prompts[rvSpeakIdx];
   const canRec = JA_ASR.supported();
-  const s = rvSpeakState || { listening: false, interim: "", result: null, revealedModel: false, errorMsg: "" };
+  const s = rvSpeakState || { listening: false, interim: "", result: null, blindMode: false, errorMsg: "" };
   const isLast = rvSpeakIdx + 1 >= prompts.length;
+  const isBlind = !!s.blindMode;
   const artSrc = p.img || "";
   const artHTML = artSrc
     ? `<div class="rv-art-vignette"><img class="rv-art-vignette-img" src="${escapeHtml(artSrc)}" alt="" /></div>`
@@ -10010,7 +10505,7 @@ function renderRadioSpeakingCard(host) {
   let fbCls = "mic-feedback";
   let fbTxt = "";
   if (s.listening) {
-    fbTxt = s.interim ? `听到：${s.interim}` : "请开口说一句日语…";
+    fbTxt = s.interim ? `听到：${s.interim}` : (isBlind ? "请脱稿说一句日语…" : "请跟着示范念一遍…");
   } else if (s.errorMsg) {
     fbCls += " ng";
     fbTxt = s.errorMsg;
@@ -10020,50 +10515,52 @@ function renderRadioSpeakingCard(host) {
       ? `✓ ${s.result.verdict}${s.result.heard ? " · " + s.result.heard : ""}`
       : `听到「${s.result.heard || ""}」· ${s.result.verdict}`;
   } else if (!canRec) {
-    fbTxt = "轻点看示范，顺口跟读一句即可";
+    fbTxt = "听一遍示范，顺口跟读即可";
   }
 
   let dockHTML = "";
   if (!canRec) {
     dockHTML = `
-      <button type="button" class="vc-btn mid" onclick="playSpeakingPromptAudio(getActiveSpeakingPrompt(), 'model')">听示范</button>
-      <button type="button" class="vc-btn ok" onclick="handleRadioReviewPass()">${isLast ? "完成" : "下一张"}</button>
+      <button type="button" class="vc-btn mid" onclick="playSpeakingPromptAudio(getActiveSpeakingPrompt(), 1.0, 'spk_model', true)">听示范</button>
+      <button type="button" class="vc-btn ok" onclick="handleRadioReviewPass()">${isLast ? "完成" : "下一句"}</button>
     `;
   } else if (s.listening) {
     dockHTML = `
-      <button type="button" class="vc-btn listening" onclick="toggleRadioSpeakingMic()"><span class="mic-dot"></span>聆听中 · 点此结束</button>
+      <button type="button" class="vc-btn listening" onclick="toggleRadioSpeakingMic()"><span class="mic-dot"></span>聆听中 · 说完点此结束</button>
+    `;
+  } else if (s.result && s.result.ok && !isBlind) {
+    dockHTML = `
+      <button type="button" class="vc-btn mid" onclick="toggleSpeakingBlindMode(true)">脱稿挑战</button>
+      <button type="button" class="vc-btn ok" onclick="handleRadioReviewPass()">${isLast ? "完成" : "下一句"}</button>
     `;
   } else if (s.result) {
     dockHTML = `
-      <button type="button" class="vc-btn mid" onclick="toggleRadioSpeakingMic()">再说</button>
-      <button type="button" class="vc-btn ok" onclick="handleRadioReviewPass()">${isLast ? "完成" : "下一张"}</button>
+      <button type="button" class="vc-btn mid" onclick="toggleRadioSpeakingMic()">再读一遍</button>
+      <button type="button" class="vc-btn ok" onclick="handleRadioReviewPass()">${isLast ? "完成" : "下一句"}</button>
     `;
   } else {
     dockHTML = `
       <button type="button" class="vc-btn ng" onclick="handleRadioReviewPass()">跳过</button>
-      <button type="button" class="vc-btn ok" onclick="toggleRadioSpeakingMic()">开口说一句</button>
+      <button type="button" class="vc-btn ok" onclick="toggleRadioSpeakingMic()">${isBlind ? "脱稿说一句" : "跟读一遍"}</button>
     `;
   }
 
   host.innerHTML = `
     <div class="meta-bar">
-      <span class="overline warm">开口 · ${rvSpeakIdx + 1} / ${prompts.length}</span>
-      <span class="overline">${escapeHtml(p.chapter_title || "")}</span>
+      <span class="overline warm">${isBlind ? "脱稿" : "跟读"} · ${rvSpeakIdx + 1} / ${prompts.length}</span>
+      <span class="overline">${escapeHtml(p.title || "")}</span>
     </div>
 
     <div class="vc-deck-area">
       <div class="vc-card" id="rv-card" data-art-ch="${Number(p.chapter_idx || 0)}">
         <div class="vc-stamp right" id="rv-st-right">过了</div>
-        <div class="vc-stamp left" id="rv-st-left">再练</div>
+        <div class="vc-stamp left" id="rv-st-left">慢听</div>
 
         ${artHTML}
-        <div class="vc-cue${s.revealedModel ? " quiet-hide" : ""}" id="rv-cue-line">用「${escapeHtml(p.title || "")}」</div>
-        <div class="rv-spk-prompt">${escapeHtml(p.prompt_short || p.prompt_zh || p.title || "")}</div>
-
-        <div class="vc-reveal${s.revealedModel ? " shown" : ""}" id="rv-reveal-box">
-          <div class="rv-spk-model">${annotateJapanese(p.model_ja || "")}</div>
-          ${p.coaching_tip ? `<div class="rv-spk-tip">${escapeHtml(p.coaching_tip)}</div>` : ""}
-        </div>
+        <div class="vc-cue" id="rv-cue-line">${isBlind ? `用「${escapeHtml(p.title || "")}」` : "先听示范，再顺口跟读"}</div>
+        <div class="rv-spk-model${isBlind ? " veiled" : ""}" id="rv-spk-model">${annotateJapanese(p.model_ja || "")}</div>
+        <div class="rv-spk-zh-sub">${escapeHtml(p.prompt_short || p.model_zh || "")}</div>
+        ${!isBlind && p.coaching_tip ? `<div class="rv-spk-tip">${escapeHtml(p.coaching_tip)}</div>` : ""}
         <div class="${fbCls}" id="rv-mic-feedback">${escapeHtml(fbTxt)}</div>
       </div>
     </div>
@@ -10073,7 +10570,9 @@ function renderRadioSpeakingCard(host) {
     <div class="vc-aux-row">
       <button type="button" class="vc-aux-btn seal" onclick="closeRadioReview()">随身听</button>
       <div class="vc-aux-right">
-        <button type="button" class="vc-aux-btn replay" data-rv-aud="spk_model" data-lbl-idle="示范" data-lbl-play="暂停" onclick="playSpeakingPromptAudio(getActiveSpeakingPrompt(), 'model')">示范</button>
+        <button type="button" class="vc-aux-btn${isBlind ? " is-on" : ""}" id="rv-blind-btn" onclick="toggleSpeakingBlindMode()">${isBlind ? "看句" : "脱稿"}</button>
+        <button type="button" class="vc-aux-btn" data-rv-aud="spk_slow" data-lbl-idle="0.85x" data-lbl-play="暂停" onclick="playSpeakingPromptAudio(getActiveSpeakingPrompt(), 0.85, 'spk_slow')">0.85x</button>
+        <button type="button" class="vc-aux-btn replay" data-rv-aud="spk_model" data-lbl-idle="示范" data-lbl-play="暂停" onclick="playSpeakingPromptAudio(getActiveSpeakingPrompt(), 1.0, 'spk_model')">示范</button>
       </div>
     </div>
 
@@ -10081,6 +10580,11 @@ function renderRadioSpeakingCard(host) {
   `;
   bindRadioReviewCardGestures(document.getElementById("rv-card"));
   syncRvAudioButtons();
+  // Auto-play real studio native Japanese audio once on first entry to this card (only in shadowing mode!)
+  if (!isBlind && !s.listening && !s.result && rvSpeakAutoPlayedId !== p.id) {
+    rvSpeakAutoPlayedId = p.id;
+    playSpeakingPromptAudio(p, 1.0, "spk_model", true);
+  }
 }
 
 function renderRadioReviewStage() {
@@ -10089,6 +10593,11 @@ function renderRadioReviewStage() {
   const items = getRadioReviewItems();
   const st = ensureRadioReviewState(false);
 
+  if (rvMode === "video") {
+    renderRadioJpVideoStage(host);
+    return;
+  }
+
   if (rvMode === "speak") {
     renderRadioSpeakingCard(host);
     return;
@@ -10096,6 +10605,7 @@ function renderRadioReviewStage() {
 
   if (rvMode === "done" || !rvActiveItemId) {
     const rmDone = computeDaily120Metrics();
+    const jpVid = getRadioJpVideo();
     const relearnedItems = (st.relearnIds || []).map(id => getReviewItemById(id)).filter(Boolean);
     const relearnNamesHTML = relearnedItems.length
       ? `<div class="rv-done-list">${relearnedItems.map(x => `<span>${escapeHtml(x.title)}</span>`).join("")}</div>`
@@ -10112,12 +10622,14 @@ function renderRadioReviewStage() {
         ${renderReviewStoryGalleryHTML()}
         <p class="logic-line">${relearnedItems.length
           ? "刚才回炉的重点已顺手记入明日队列。"
-          : "听完顺手滑一遍，印象最牢。"}</p>
+          : (jpVid ? "再花一分半看一遍全日语短片，今天学过的词就牢了。" : "听完顺手滑一遍，印象最牢。")}</p>
         ${relearnNamesHTML}
       </div>
       <div class="vc-dock">
-        <button type="button" class="vc-btn mid" onclick="openRadioReview(true)">重过一遍</button>
-        <button type="button" class="vc-btn ok" onclick="closeRadioReview()">回到随身听</button>
+        <button type="button" class="vc-btn mid" onclick="closeRadioReview()">回到随身听</button>
+        ${jpVid
+          ? `<button type="button" class="vc-btn ok" onclick="openRadioJpVideo()">看今日日语短片</button>`
+          : `<button type="button" class="vc-btn ok" onclick="openRadioReview(true)">重过一遍</button>`}
       </div>
     `;
     return;
@@ -10136,26 +10648,9 @@ function renderRadioReviewStage() {
     : (item.kana && item.kana !== item.title ? escapeHtml(item.kana) : "");
   const showMic = JA_ASR.supported();
   const artSrc = item.img || "";
-  const firstCue = (Array.isArray(item.subtitles) && item.subtitles.length)
-    ? item.subtitles[0]
-    : (item.context_line ? { spk: item.speaker || "", txt: item.context_line } : null);
-  const initSubHTML = firstCue ? formatReviewSubTextHTML(item, firstCue) : "";
-  const visualHTML = item.video_url
-    ? `<div class="rv-cinema${rvSubEnabled ? "" : " sub-off"}" id="rv-cinema-box" onclick="onReviewCinemaTap(event)">
-         <div class="rv-cinema-slot" id="rv-cinema-slot">
-           ${artSrc ? `<img class="rv-cinema-poster" src="${escapeHtml(artSrc)}" alt="" />` : ""}
-         </div>
-         <div class="rv-cinema-ctrls">
-           <button type="button" class="rv-cinema-pill${rvSubEnabled ? "" : " off"}" id="rv-sub-toggle" onclick="toggleReviewSubtitles(event)">${rvSubEnabled ? "字幕" : "字幕关"}</button>
-           <button type="button" class="rv-cinema-pill" onclick="openReviewItemCinema(event)" aria-label="全屏播放">⤢</button>
-         </div>
-         <div class="rv-cinema-pause-badge" aria-hidden="true">▶</div>
-         <div class="rv-sub-scrim"><div class="rv-sub-line" id="rv-sub-line">${initSubHTML}</div></div>
-         <div class="rv-cinema-rail"><div class="rv-cinema-fill" id="rv-cinema-fill"></div></div>
-       </div>`
-    : (artSrc
-      ? `<div class="rv-art-vignette"><img class="rv-art-vignette-img" src="${escapeHtml(artSrc)}" alt="" /></div>`
-      : "");
+  const visualHTML = artSrc
+    ? `<div class="rv-art-vignette"><img class="rv-art-vignette-img" src="${escapeHtml(artSrc)}" alt="" /></div>`
+    : "";
   const showShortEx = !!(
     !item.mnemonic &&
     item.ja_example &&
@@ -10163,6 +10658,7 @@ function renderRadioReviewStage() {
     !String(item.ja_example).startsWith(String(item.title || "") + "（")
   );
   const cueTxt = isTail ? "再过一遍" : (item.kind === "vocab" ? "默念读音" : "默念意思");
+  const jpVid = getRadioJpVideo();
 
   host.innerHTML = `
     <div class="meta-bar">
@@ -10192,10 +10688,10 @@ function renderRadioReviewStage() {
     ${lexBoxHTML("rv-inline-lex")}
 
     <div class="vc-aux-row">
-      <button type="button" class="vc-aux-btn seal" onclick="closeRadioReview()">随身听</button>
+      <button type="button" class="vc-aux-btn seal" onclick="${jpVid ? "openRadioJpVideo()" : "closeRadioReview()"}">${jpVid ? "日语短片" : "随身听"}</button>
       <div class="vc-aux-right">
         ${showMic ? `<button type="button" class="vc-aux-btn mic-btn" id="rv-mic-btn" onclick="toggleReviewMicCheck()">试读</button>` : ""}
-        <button type="button" class="vc-aux-btn replay" data-rv-aud="clip_1" data-lbl-idle="${item.video_url ? "重播" : "原声"}" data-lbl-play="暂停" onclick="playReviewPodcastClip(getReviewItemById('${item.id}'), 1.0, 'clip_1')">${item.video_url ? "重播" : "原声"}</button>
+        <button type="button" class="vc-aux-btn replay" data-rv-aud="clip_1" data-lbl-idle="原声" data-lbl-play="暂停" onclick="playReviewPodcastClip(getReviewItemById('${item.id}'), 1.0, 'clip_1')">原声</button>
       </div>
     </div>
 
@@ -12614,15 +13110,20 @@ function toggleVocabMicCheck(ev) {
   const btn = document.getElementById("vc-mic-btn");
   const fb = document.getElementById("vc-mic-feedback");
   if (JA_ASR.isActive("vc_word")) {
-    JA_ASR.stop();
+    JA_ASR.finishNow();
     if (btn) { btn.classList.remove("listening"); btn.innerHTML = "试读"; }
-    if (fb && fb.textContent === "请读出这个日语词…") fb.textContent = "";
     return;
   }
   stopVocabAudioAndTimers();
+  const targetSurface = card.target || card.word;
+  const chunkSurface = (card.chunk_ja && card.chunk_ja !== targetSurface) ? card.chunk_ja : "";
+  const waitPrompt = vcRevealed
+    ? (chunkSurface ? `请读「${targetSurface}」或「${chunkSurface}」…` : `请读「${targetSurface}」…`)
+    : "请读出这个词的日语读音…";
   if (btn) { btn.classList.add("listening"); btn.innerHTML = `<span class="mic-dot"></span>聆听中`; }
-  if (fb) { fb.className = "mic-feedback"; fb.textContent = "请读出这个日语词…"; }
+  if (fb) { fb.className = "mic-feedback"; fb.textContent = waitPrompt; }
   JA_ASR.start("vc_word", {
+    sentenceMode: false,
     onInterim: (txt) => {
       const f = document.getElementById("vc-mic-feedback");
       if (f) { f.className = "mic-feedback"; f.textContent = `听到：${txt}`; }
@@ -12631,13 +13132,21 @@ function toggleVocabMicCheck(ev) {
       const b = document.getElementById("vc-mic-btn");
       const f = document.getElementById("vc-mic-feedback");
       if (b) { b.classList.remove("listening"); b.innerHTML = "试读"; }
-      const res = JA_ASR.analyzePronunciation(alts, card.target || card.word, card.kana, card.chunk_ja);
+      const res = JA_ASR.analyzePronunciation(alts, targetSurface, card.kana, card.chunk_ja);
       if (!vcRevealed) revealVocabCard(false, false);
       if (f) {
         f.className = "mic-feedback " + (res.ok ? "ok" : "ng");
         f.textContent = res.ok
           ? `✓ 读准了 · ${res.heard}`
           : `听到「${res.heard}」· ${res.verdict}`;
+      }
+      if (!res.ok) {
+        // Immediately play crisp native pronunciation once on miss so he hears the exact beat & accent
+        const corrUrl = card.clean_audio || card.word_audio || card.front_audio || "";
+        if (corrUrl) {
+          const myToken = ++vcToken;
+          playUrlOnWordPlayer(corrUrl, myToken, null, () => {});
+        }
       }
       pushSpokenRecord(`W-${card.word}`, card.key || card.word, res.ok ? "试读:准确" : `试读:${res.verdict.slice(0, 18)}`, res.ok);
     },
@@ -12649,7 +13158,9 @@ function toggleVocabMicCheck(ev) {
     },
     onEnd: () => {
       const b = document.getElementById("vc-mic-btn");
+      const f = document.getElementById("vc-mic-feedback");
       if (b) { b.classList.remove("listening"); b.innerHTML = "试读"; }
+      if (f && f.textContent === waitPrompt) f.textContent = "";
     }
   });
 }
@@ -16457,7 +16968,7 @@ const pktRv = sb.buildCompactPacket();
 if (!Array.isArray(pktRv.rv) || pktRv.rv[0] !== 1 || Buffer.byteLength(JSON.stringify(pktRv), 'utf8') > 3750) {
   throw new Error('Self-test 8 failed: compact sync packet missing rv completion bit or oversized');
 }
-// Self-test 9: Crisp Short-Phrase Speaking Cards inside Frameless Zen Tinder Deck & Pronunciation Mirror
+// Self-test 9: 2-Step Shadowing-First Speaking Cards (Real Studio Audio + Homophone & Conjugation-Tolerant ASR)
 const spPrompts = sb.getRadioSpeakingPrompts();
 if (!Array.isArray(spPrompts) || spPrompts.length < 2) {
   throw new Error('Self-test 9 failed: expected >=2 speaking_prompts, got ' + (spPrompts && spPrompts.length));
@@ -16465,6 +16976,9 @@ if (!Array.isArray(spPrompts) || spPrompts.length < 2) {
 for (const sp of spPrompts) {
   if (!sp.prompt_short || !sp.model_ja || !Array.isArray(sp.target_stems) || !sp.target_stems.length) {
     throw new Error('Self-test 9 failed: incomplete speaking prompt ' + JSON.stringify(sp));
+  }
+  if (!sp.model_audio) {
+    throw new Error('Self-test 9 failed: speaking prompt missing real studio model_audio ' + sp.id);
   }
   if (String(sp.prompt_short).length > 14 || String(sp.model_ja).length > 26) {
     throw new Error('Self-test 9 failed: speaking prompt too long (must stay crisp Zen short phrase): ' + JSON.stringify({short: sp.prompt_short, model: sp.model_ja}));
@@ -16477,6 +16991,10 @@ const asr = sb.window.JA_ASR;
 if (!asr) throw new Error('Self-test 9 failed: window.JA_ASR missing');
 const pExact = asr.analyzePronunciation(['予算'], '予算', 'よさん', '予算を組む');
 if (!pExact.ok) throw new Error('Self-test 9 failed: exact kanji match 予算 should pass: ' + JSON.stringify(pExact));
+const pHomo = asr.analyzePronunciation(['自署'], '辞書', 'じしょ', '辞書を引く');
+if (!pHomo.ok) throw new Error('Self-test 9 failed: identical-reading homophone 自署 vs 辞書 should pass: ' + JSON.stringify(pHomo));
+const pChunk = asr.analyzePronunciation(['予算を組む'], '予算', 'よさん', '予算を組む');
+if (!pChunk.ok) throw new Error('Self-test 9 failed: reading full card chunk 予算を組む should pass: ' + JSON.stringify(pChunk));
 const pLong = asr.analyzePronunciation(['洋三'], '予算', 'よさん', '予算を組む');
 if (pLong.ok || pLong.kind !== 'length') throw new Error('Self-test 9 failed: 洋三 vs 予算 should detect long-vowel slip: ' + JSON.stringify(pLong));
 const pSok = asr.analyzePronunciation(['主張'], '出張', 'しゅっちょう', '海外出張');
@@ -16485,9 +17003,13 @@ const pDak = asr.analyzePronunciation(['柿'], '鍵', 'かぎ', '家の鍵');
 if (pDak.ok || pDak.kind !== 'voicing') throw new Error('Self-test 9 failed: 柿 vs 鍵 should detect voicing slip: ' + JSON.stringify(pDak));
 const pNear = asr.analyzePronunciation(['種類'], '書類', 'しょるい', '書類を出す');
 if (pNear.ok || pNear.kind !== 'near') throw new Error('Self-test 9 failed: 種類 vs 書類 should detect near-miss: ' + JSON.stringify(pNear));
-// Spoken grammar, honest miss feedback & habit trap checks
+// Spoken grammar, conjugation-tolerant stem matching, honest miss feedback & habit trap checks
 const sOk = asr.analyzeSpokenOutput(['早めに帰らせてもらえますか'], { title: '〜させてもらう', target_stems: ['させてもら', '帰らせ'] });
 if (!sOk.ok || sOk.traps.length !== 0) throw new Error('Self-test 9 failed: valid short させてもらう should pass cleanly: ' + JSON.stringify(sOk));
+const sUeKanji = asr.analyzeSpokenOutput(['よく考えた上で決めます'], { title: '〜うえで', target_stems: ['うえで'], model_ja: 'よく考えたうえで決めます。' });
+if (!sUeKanji.ok) throw new Error('Self-test 9 failed: kanji 上で should match 〜うえで stem: ' + JSON.stringify(sUeKanji));
+const sYouNiPast = asr.analyzeSpokenOutput(['少し話せるようになった'], { title: '〜ようになる', target_stems: ['ようになる'], model_ja: '日本語が話せるようになった。' });
+if (!sYouNiPast.ok) throw new Error('Self-test 9 failed: conjugated ようになった should match 〜ようになる: ' + JSON.stringify(sYouNiPast));
 const sMiss = asr.analyzeSpokenOutput(['東京が'], { title: '〜させてもらう', target_stems: ['させてもら', '帰らせ'] });
 if (sMiss.ok || String(sMiss.verdict).includes('听懂意思了')) throw new Error('Self-test 9 failed: partial miss must never falsely claim 听懂意思了: ' + JSON.stringify(sMiss));
 const sCaus = asr.analyzeSpokenOutput(['早めに帰っていただけませんか'], { title: '〜させてもらう', target_stems: ['させてもら', '帰らせ'] });
@@ -16508,12 +17030,17 @@ const spFallbackHtml = (els['radio-review-stage'] && els['radio-review-stage'].i
 if (!spFallbackHtml.includes('vc-card') || !spFallbackHtml.includes('vc-aux-row') || !spFallbackHtml.includes('听示范') || spFallbackHtml.includes('—')) {
   throw new Error('Self-test 9 failed: speaking fallback Zen card broken or contains em dash');
 }
-// Supported SpeechRecognition render inside unified frameless vc-card & 记词 试读
+// Supported SpeechRecognition render: Step 1 Shadowing-first (visible model_ja + 跟读一遍) -> Step 2 optional 脱稿 challenge
 sb.window.webkitSpeechRecognition = function() {};
 sb.openRadioSpeaking(0);
 const spMicHtml = (els['radio-review-stage'] && els['radio-review-stage'].innerHTML) || '';
-if (!spMicHtml.includes('vc-card') || !spMicHtml.includes('开口说一句') || !spMicHtml.includes('跳过') || spMicHtml.includes('—')) {
-  throw new Error('Self-test 9 failed: speaking mic Zen card missing core controls or contains em dash');
+if (!spMicHtml.includes('vc-card') || !spMicHtml.includes('跟读一遍') || !spMicHtml.includes('脱稿') || !spMicHtml.includes('0.85x') || spMicHtml.includes('rv-spk-model veiled') || spMicHtml.includes('—')) {
+  throw new Error('Self-test 9 failed: Step 1 shadowing speaking card broken or veiled model prematurely: ' + spMicHtml.slice(0, 260));
+}
+sb.toggleSpeakingBlindMode(true);
+const spBlindHtml = (els['radio-review-stage'] && els['radio-review-stage'].innerHTML) || '';
+if (!spBlindHtml.includes('rv-spk-model veiled') || !spBlindHtml.includes('脱稿说一句') || !spBlindHtml.includes('看句')) {
+  throw new Error('Self-test 9 failed: Step 2 脱稿 blind challenge mode did not activate cleanly');
 }
 sb.closeRadioReview();
 sb.switchMode('vocab');
@@ -16621,7 +17148,7 @@ if (tokAfterReplay <= tokAfterReveal) {
   throw new Error('Self-test 12 failed: explicit thumb-zone 重听 did not advance vcToken to replay!');
 }
 
-// Self-test 13: Dark-Mode Papercut Hygiene & Post-Listening Documentary Video + Synced Subtitles
+// Self-test 13: Dark-Mode Hygiene + Decoupled Grammar Flashcards + Dedicated All-Japanese Daily Short Video Theater
 if (html.includes('--hairline-2') || html.includes('rgba(255, 255, 255, 0.94)')) {
   throw new Error('Self-test 13 failed: broken --hairline-2 or hardcoded white mini-bar background regressed!');
 }
@@ -16639,26 +17166,59 @@ sb.switchMode('radio', false);
 if (els['app-shell'].classList.contains('has-mini-bar')) {
   throw new Error('Self-test 13 failed: #app-shell kept has-mini-bar class on radio tab!');
 }
+// Grammar/vocab flashcards MUST be cleanly decoupled from legacy Chinese video clips
 const rvWithVid = (sb.getRadioReviewItems() || []).filter(x => x && x.video_url);
 if (rvWithVid.length > 0) {
-  sb.openRadioReview(true);
-  const rvCinHtml = (els['radio-review-stage'] && els['radio-review-stage'].innerHTML) || '';
-  if (!rvCinHtml.includes('rv-cinema') || !rvCinHtml.includes('rv-sub-line') || !rvCinHtml.includes('rv-sub-toggle')) {
-    throw new Error('Self-test 13 failed: video-backed review card missing .rv-cinema / .rv-sub-line / subtitle toggle!');
-  }
-  sb.toggleReviewSubtitles();
-  if (!els['rv-cinema-box'].classList.contains('sub-off')) {
-    throw new Error('Self-test 13 failed: toggleReviewSubtitles did not toggle sub-off class!');
-  }
-  sb.toggleReviewSubtitles();
-  sb.openReviewItemCinema();
-  const cinModHtml = (els['modal-content'] && els['modal-content'].innerHTML) || '';
-  if (!cinModHtml.includes('<video') || !cinModHtml.includes('<track kind="subtitles"')) {
-    throw new Error('Self-test 13 failed: cinema modal missing native <video> and WebVTT <track> subtitles!');
-  }
-  sb.closeModal();
-  sb.closeRadioReview();
+  throw new Error('Self-test 13 failed: legacy video_url still coupled to grammar flashcards! count=' + rvWithVid.length);
 }
+sb.openRadioReview(true);
+const rvCleanHtml = (els['radio-review-stage'] && els['radio-review-stage'].innerHTML) || '';
+if (rvCleanHtml.includes('rv-cinema')) {
+  throw new Error('Self-test 13 failed: decoupled flashcard still rendered legacy .rv-cinema!');
+}
+sb.closeRadioReview();
+// Dedicated All-Japanese Daily Short Video Theater
+const jpv = sb.getRadioJpVideo();
+if (!jpv || !jpv.video_url || !jpv.vtt_url || !Array.isArray(jpv.cues) || jpv.cues.length < 10 || !Array.isArray(jpv.target_words) || jpv.target_words.length < 8) {
+  throw new Error('Self-test 13 failed: DATA.radio.jp_video missing or incomplete: ' + JSON.stringify(jpv && {url: jpv.video_url, cues: jpv.cues && jpv.cues.length, words: jpv.target_words && jpv.target_words.length}));
+}
+sb.renderRadioChapters(0);
+const chapHtml13 = (els['radio-chap-pills'] && els['radio-chap-pills'].innerHTML) || '';
+if (!chapHtml13.includes('id="radio-jpv-chap"') || !chapHtml13.includes('日语短片')) {
+  throw new Error('Self-test 13 failed: chapter bar missing decoupled 日语短片 tab!');
+}
+sb.openRadioJpVideo();
+const jpvHtml = (els['radio-review-stage'] && els['radio-review-stage'].innerHTML) || '';
+if (!jpvHtml.includes('jpv-frame') || !jpvHtml.includes('jpv-sub-ja') || !jpvHtml.includes('jpv-chip') || !jpvHtml.includes('日中字幕') || jpvHtml.includes('—')) {
+  throw new Error('Self-test 13 failed: All-Japanese Short Video Theater missing core controls or contains em dash!');
+}
+// Cycle subtitle modes: bi -> ja -> off -> bi
+sb.cycleJpVideoSubMode();
+if (!els['jpv-sub-stage'].classList.contains('ja-only')) {
+  throw new Error('Self-test 13 failed: cycleJpVideoSubMode bi->ja did not set ja-only!');
+}
+sb.cycleJpVideoSubMode();
+if (!els['jpv-sub-stage'].classList.contains('sub-hidden')) {
+  throw new Error('Self-test 13 failed: cycleJpVideoSubMode ja->off did not set sub-hidden!');
+}
+sb.cycleJpVideoSubMode();
+if (els['jpv-sub-stage'].classList.contains('ja-only') || els['jpv-sub-stage'].classList.contains('sub-hidden')) {
+  throw new Error('Self-test 13 failed: cycleJpVideoSubMode off->bi did not restore bilingual subtitles!');
+}
+// Speed toggle 1x -> 0.85x -> 1x & word-jump seek
+sb.toggleJpVideoSpeed();
+if (els['jpv-spd-btn'].textContent !== '0.85x') {
+  throw new Error('Self-test 13 failed: toggleJpVideoSpeed did not switch to 0.85x!');
+}
+sb.toggleJpVideoSpeed();
+sb.seekJpVideoToWord(jpv.target_words[0].word);
+sb.openJpVideoFullscreen();
+const jpvModHtml = (els['modal-content'] && els['modal-content'].innerHTML) || '';
+if (!jpvModHtml.includes('<video') || !jpvModHtml.includes('<track kind="subtitles"') || !jpvModHtml.includes('srclang="ja"')) {
+  throw new Error('Self-test 13 failed: fullscreen JP video modal missing native <video> and ja WebVTT <track>!');
+}
+sb.closeModal();
+sb.closeRadioReview();
 """
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
 
