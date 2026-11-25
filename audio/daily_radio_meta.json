@@ -1,15 +1,15 @@
 {
-  "date": "2026-11-24",
-  "radio_ver": "v41_qq_60m_wordguard_seamless_5hit",
+  "date": "2026-11-25",
+  "radio_ver": "v42_qq_40m_ruminate_jpvideo_real_outro",
   "display_date": "锵锵三人",
-  "days_left": 12,
-  "script_sig": "cfa80085bb77cb",
-  "audio_url": "./audio/daily_radio.mp3?v=2026-11-24_cfa800",
-  "duration_sec": 3273.1,
-  "duration_label": "55 分钟",
+  "days_left": 11,
+  "script_sig": "85e09336753b3b",
+  "audio_url": "./audio/daily_radio.mp3?v=2026-11-25_85e093",
+  "duration_sec": 2370.5,
+  "duration_label": "40 分钟",
   "hosts": "文涛 · 文道 · 子东",
   "immersion_365": {
-    "day_of_365": 10,
+    "day_of_365": 11,
     "post_n3_day": 0,
     "ramp_days": 700,
     "phase": "n3_sprint",
@@ -19,802 +19,789 @@
   },
   "immersion_vocab": {
     "graduation_threshold": 8,
-    "locked_total": 18,
-    "learning_total": 66,
-    "today_new_count": 13,
+    "locked_total": 28,
+    "learning_total": 61,
+    "today_new_count": 7,
     "today_graduated": [
       {
-        "kana": "せかい",
-        "kanji": "世界",
-        "zh": "世界",
-        "total": 34,
-        "days_seen": 3
-      },
-      {
-        "kana": "かぞく",
-        "kanji": "家族",
-        "zh": "家人",
-        "total": 11,
-        "days_seen": 3
-      },
-      {
-        "kana": "じかん",
-        "kanji": "時間",
-        "zh": "时间",
+        "kana": "くるま",
+        "kanji": "車",
+        "zh": "汽车",
         "total": 17,
-        "days_seen": 3
+        "days_seen": 4
       },
       {
-        "kana": "でんしゃ",
-        "kanji": "電車",
-        "zh": "电车",
-        "total": 16,
-        "days_seen": 3
-      },
-      {
-        "kana": "テレビ",
-        "kanji": "テレビ",
-        "zh": "电视",
-        "total": 13,
-        "days_seen": 3
-      },
-      {
-        "kana": "しんかんせん",
-        "kanji": "新幹線",
-        "zh": "新干线",
+        "kana": "こうじょう",
+        "kanji": "工場",
+        "zh": "工厂",
         "total": 9,
         "days_seen": 3
       },
       {
-        "kana": "しんぶん",
-        "kanji": "新聞",
-        "zh": "报纸",
-        "total": 16,
-        "days_seen": 3
-      },
-      {
-        "kana": "コンビニ",
-        "kanji": "コンビニ",
-        "zh": "便利店",
+        "kana": "びょういん",
+        "kanji": "病院",
+        "zh": "医院",
         "total": 8,
         "days_seen": 3
       },
       {
-        "kana": "ニュース",
-        "kanji": "ニュース",
-        "zh": "新闻",
-        "total": 13,
+        "kana": "スマホ",
+        "kanji": "スマホ",
+        "zh": "手机",
+        "total": 10,
         "days_seen": 3
       },
       {
-        "kana": "かがく",
-        "kanji": "科学",
-        "zh": "科学",
+        "kana": "ぎじゅつ",
+        "kanji": "技術",
+        "zh": "技术",
+        "total": 10,
+        "days_seen": 4
+      },
+      {
+        "kana": "よさん",
+        "kanji": "予算",
+        "zh": "预算",
+        "total": 8,
+        "days_seen": 3
+      },
+      {
+        "kana": "コーヒー",
+        "kanji": "コーヒー",
+        "zh": "咖啡",
+        "total": 10,
+        "days_seen": 4
+      },
+      {
+        "kana": "でんとう",
+        "kanji": "伝統",
+        "zh": "传统",
         "total": 11,
         "days_seen": 3
       },
       {
-        "kana": "きしゃ",
-        "kanji": "記者",
-        "zh": "记者",
+        "kana": "れきし",
+        "kanji": "歴史",
+        "zh": "历史",
         "total": 8,
+        "days_seen": 4
+      },
+      {
+        "kana": "おんがく",
+        "kanji": "音楽",
+        "zh": "音乐",
+        "total": 10,
         "days_seen": 3
+      },
+      {
+        "kana": "ねだん",
+        "kanji": "値段",
+        "zh": "价格",
+        "total": 8,
+        "days_seen": 4
       }
     ],
     "today_spotlight": [
       {
-        "kana": "さいばん",
-        "kanji": "裁判",
-        "zh": "审判",
+        "kana": "たいふう",
+        "kanji": "台風",
+        "zh": "台风",
+        "hits_today": 6,
+        "total": 6,
+        "days_seen": 1,
+        "status": "learning"
+      },
+      {
+        "kana": "こうぞう",
+        "kanji": "構造",
+        "zh": "结构",
         "hits_today": 4,
-        "total": 4,
-        "days_seen": 1,
-        "status": "learning"
-      },
-      {
-        "kana": "りえき",
-        "kanji": "利益",
-        "zh": "利润",
-        "hits_today": 3,
-        "total": 3,
-        "days_seen": 1,
-        "status": "learning"
-      },
-      {
-        "kana": "ルール",
-        "kanji": "ルール",
-        "zh": "规则",
-        "hits_today": 3,
-        "total": 3,
-        "days_seen": 1,
-        "status": "learning"
-      },
-      {
-        "kana": "かんけい",
-        "kanji": "関係",
-        "zh": "关系",
-        "hits_today": 2,
-        "total": 2,
-        "days_seen": 1,
-        "status": "learning"
-      },
-      {
-        "kana": "こくみん",
-        "kanji": "国民",
-        "zh": "国民",
-        "hits_today": 2,
-        "total": 2,
-        "days_seen": 1,
-        "status": "learning"
-      },
-      {
-        "kana": "コスト",
-        "kanji": "コスト",
-        "zh": "成本",
-        "hits_today": 2,
-        "total": 2,
-        "days_seen": 1,
-        "status": "learning"
-      },
-      {
-        "kana": "いんしょう",
-        "kanji": "印象",
-        "zh": "印象",
-        "hits_today": 1,
-        "total": 2,
+        "total": 5,
         "days_seen": 2,
         "status": "learning"
       },
       {
-        "kana": "きぎょう",
-        "kanji": "企業",
-        "zh": "企业",
-        "hits_today": 1,
-        "total": 1,
+        "kana": "けんきゅう",
+        "kanji": "研究",
+        "zh": "研究",
+        "hits_today": 3,
+        "total": 3,
         "days_seen": 1,
         "status": "learning"
       },
       {
-        "kana": "さんぎょう",
-        "kanji": "産業",
-        "zh": "产业",
-        "hits_today": 1,
-        "total": 1,
+        "kana": "きおく",
+        "kanji": "記憶",
+        "zh": "记忆",
+        "hits_today": 2,
+        "total": 2,
         "days_seen": 1,
         "status": "learning"
       },
       {
-        "kana": "じしょ",
-        "kanji": "辞書",
-        "zh": "字典",
+        "kana": "しみん",
+        "kanji": "市民",
+        "zh": "市民",
+        "hits_today": 2,
+        "total": 4,
+        "days_seen": 2,
+        "status": "learning"
+      },
+      {
+        "kana": "せっけい",
+        "kanji": "設計",
+        "zh": "设计",
+        "hits_today": 2,
+        "total": 7,
+        "days_seen": 4,
+        "status": "learning"
+      },
+      {
+        "kana": "きき",
+        "kanji": "危機",
+        "zh": "危机",
         "hits_today": 1,
         "total": 1,
         "days_seen": 1,
         "status": "learning"
+      }
+    ],
+    "rumination_words": [
+      {
+        "kana": "たいふう",
+        "kanji": "台風",
+        "zh": "台风",
+        "hits_today": 6,
+        "total": 6,
+        "reason": "今日聚焦"
+      },
+      {
+        "kana": "こうぞう",
+        "kanji": "構造",
+        "zh": "结构",
+        "hits_today": 4,
+        "total": 5,
+        "reason": "今日聚焦"
+      },
+      {
+        "kana": "けんきゅう",
+        "kanji": "研究",
+        "zh": "研究",
+        "hits_today": 3,
+        "total": 3,
+        "reason": "今日聚焦"
+      },
+      {
+        "kana": "しょうちょう",
+        "kanji": "象徴",
+        "zh": "象征",
+        "hits_today": 0,
+        "total": 3,
+        "reason": "重点反刍"
       },
       {
         "kana": "はっけん",
         "kanji": "発見",
         "zh": "发现",
-        "hits_today": 1,
+        "hits_today": 0,
         "total": 1,
-        "days_seen": 1,
-        "status": "learning"
+        "reason": "重点反刍"
       },
       {
-        "kana": "ほうりつ",
-        "kanji": "法律",
-        "zh": "法律",
-        "hits_today": 1,
+        "kana": "じしょ",
+        "kanji": "辞書",
+        "zh": "字典",
+        "hits_today": 0,
         "total": 1,
-        "days_seen": 1,
-        "status": "learning"
-      },
-      {
-        "kana": "データ",
-        "kanji": "データ",
-        "zh": "数据",
-        "hits_today": 1,
-        "total": 1,
-        "days_seen": 1,
-        "status": "learning"
+        "reason": "昨日反刍"
       }
     ],
-    "today_total_inline_hits": 130
+    "today_total_inline_hits": 128
   },
   "chapters": [
     {
       "idx": 0,
-      "title": "快递再配达",
+      "title": "百年百货",
       "start": 0.0,
-      "img": "./img/ch_0.jpg?v=2026-11-24_cfa800_jp"
+      "img": "./img/ch_0.jpg?v=2026-11-25_85e093_jp"
     },
     {
       "idx": 1,
-      "title": "黑猫宅急便",
-      "start": 514.8,
-      "img": "./img/ch_1.jpg?v=2026-11-24_cfa800_jp"
+      "title": "卫生纸骚动",
+      "start": 381.9,
+      "img": "./img/ch_1.jpg?v=2026-11-25_85e093_jp"
     },
     {
       "idx": 2,
-      "title": "硬刚运输省",
-      "start": 1035.3,
-      "img": "./img/ch_2.jpg?v=2026-11-24_cfa800_jp"
+      "title": "省油逆袭",
+      "start": 744.3,
+      "img": "./img/ch_2.jpg?v=2026-11-25_85e093_jp"
     },
     {
       "idx": 3,
-      "title": "任天堂红白机",
-      "start": 1607.2,
-      "img": "./img/ch_3.jpg?v=2026-11-24_cfa800_jp"
+      "title": "东京塔传奇",
+      "start": 1147.2,
+      "img": "./img/ch_3.jpg?v=2026-11-25_85e093_jp"
     },
     {
       "idx": 4,
-      "title": "超级马里奥",
-      "start": 2138.6,
-      "img": "./img/ch_4.jpg?v=2026-11-24_cfa800_jp"
+      "title": "红白铁塔",
+      "start": 1514.4,
+      "img": "./img/ch_4.jpg?v=2026-11-25_85e093_jp"
     },
     {
       "idx": 5,
-      "title": "全球股市潮",
-      "start": 2677.7,
-      "img": "./img/ch_5.jpg?v=2026-11-24_cfa800_jp"
+      "title": "国际医学报",
+      "start": 1880.4,
+      "img": "./img/ch_5.jpg?v=2026-11-25_85e093_jp"
     }
   ],
   "segments": [
     {
       "chapter": 0,
-      "point_id": "N3-G43",
+      "point_id": "N3-G85",
       "point_ids": [
-        "N3-G43",
-        "N3-G44",
-        "N3-G51",
-        "N3-G33",
-        "N3-G109"
+        "N3-G85",
+        "N3-G67",
+        "N3-G64",
+        "N3-G55",
+        "N3-V22"
       ],
-      "title": "货车司机加班上限生效后：日本为什么拼命劝大家接受把包裹直接放门口",
-      "ja_focus": "新しい法律に基づいて労働時間を減らそうとしているため、事前に置き配を指定しておくしかない。",
+      "title": "银座新宿百货免税柜台排长队，地方百年百货店却接连闭店：日本城市商业的百年分水岭",
+      "ja_focus": "都心の百貨店が賑わう一方で、地方の老舗は閉店が続いている。昔は日曜ごとに家族で行ったものだ。",
       "start": 0.0,
-      "end": 514.8
+      "end": 381.9
     },
     {
       "chapter": 1,
-      "point_id": "N3-G54",
+      "point_id": "N3-G32",
       "point_ids": [
-        "N3-G54",
-        "N3-G61",
-        "N3-G68",
-        "N3-G63",
-        "N3-G124"
+        "N3-G32",
+        "N3-G39",
+        "N3-G50",
+        "N3-G129",
+        "N3-G40",
+        "N3-V23"
       ],
-      "title": "开张第一天全国只接到十一个包裹：小仓昌男怎么靠黑猫宅急便改写日本生活（上）",
-      "ja_focus": "激しい反対にもかかわらず個人向け配送を始め、十分な準備をしたうえで地域ごとに網を広げた。",
-      "start": 514.8,
-      "end": 1035.3
+      "title": "一条传言买空全国超市：1973 石油危机大阪主妇抢购卫生纸的真实一夜（上）",
+      "ja_focus": "高度成長の最中に危機が起きた。紙がなくなるという噂が広がったことから、不安は大きくなるばかりで、売り切れないうちに買い急いでしまった。",
+      "start": 381.9,
+      "end": 744.3
     },
     {
       "chapter": 2,
-      "point_id": "G-20261114-03",
+      "point_id": "N3-G105",
       "point_ids": [
-        "G-20261114-03",
-        "N3-G53",
-        "N3-G34",
-        "N3-G82",
-        "N3-V26",
-        "N3-G106"
+        "N3-G105",
+        "N3-G41",
+        "N3-G91",
+        "N3-G45",
+        "N3-G28",
+        "N3-G52"
       ],
-      "title": "为拿一张跨县牌照把政府告上法庭：黑猫怎么发明了滑雪板与冷链快递（下）",
-      "ja_focus": "利用者の目線に立ったからこそ、スキー便ばかりでなくクール宅急便まで生まれ、運輸大臣さえ訴えた。",
-      "start": 1035.3,
-      "end": 1607.2
+      "title": "逼出来的节能神话：1973 石油危机如何让日本小汽车打爆底特律（下）",
+      "ja_focus": "厳しい危機にありながらも、徹底した省エネ技術によって、世界中で選ばれるようになった。",
+      "start": 744.3,
+      "end": 1147.2
     },
     {
       "chapter": 3,
-      "point_id": "G-20261114-06",
+      "point_id": "N3-G71",
       "point_ids": [
-        "G-20261114-06",
-        "N3-G77",
-        "N3-G52",
-        "N3-G64",
-        "N3-V25"
+        "N3-G71",
+        "N3-G95",
+        "N3-G46",
+        "N3-G81",
+        "N3-G63",
+        "N3-G28"
       ],
-      "title": "京都百年花札老店怎么成了游戏霸主：山内溥一万四千八百日元的生死赌注（上）",
-      "ja_focus": "子供でも買えるように価格を抑え、安い値段にしては驚くほど性能が高く、どの家でも遊ぶようになった。",
-      "start": 1607.2,
-      "end": 2138.6
+      "title": "比巴黎铁塔高却少用一半钢材：1958 东京塔与美军废坦克钢材的秘密（上）",
+      "ja_focus": "耐震の父として知られる内藤氏はコンピューターを使わずに計算しきった。当時これほど大胆な計画はなかった。",
+      "start": 1147.2,
+      "end": 1514.4
     },
     {
       "chapter": 4,
-      "point_id": "N3-G86",
+      "point_id": "N3-G47",
       "point_ids": [
-        "N3-G86",
-        "N3-G95",
-        "N3-G34",
-        "N3-G56",
-        "N3-G117",
-        "N3-G91"
+        "N3-G47",
+        "N3-G73",
+        "N3-G61",
+        "N3-G124",
+        "N3-G53",
+        "G-20261114-03"
       ],
-      "title": "四十千字节里装进整个童年：宫本茂与超级马里奥如何救活全球游戏产业（下）",
-      "ja_focus": "スーパーマリオを中心にゲームの世界は想像できないほど広がり、誰でも遊びやすい名作となった。",
-      "start": 2138.6,
-      "end": 2677.7
+      "title": "三百米高空抛接红热铆钉：东京塔为什么永远是东京人心头最暖的那盏灯（下）",
+      "ja_focus": "風が強い日によっては作業が止まることもあった。五年ごとに手塗りで塗り直す。人の手で組み上げたからこそ、今も温もりを感じる。",
+      "start": 1514.4,
+      "end": 1880.4
     },
     {
       "chapter": 5,
-      "point_id": "N3-G55",
+      "point_id": "N3-G65",
       "point_ids": [
-        "N3-G55",
         "N3-G65",
-        "N3-G57",
+        "N3-G127",
+        "N3-G34",
         "N3-G74",
-        "N3-G66",
-        "N3-G98"
+        "N3-G77",
+        "N3-G76"
       ],
-      "title": "从日本看世界：纳斯达克单周蒸发四兆美元与 AI 巨震，美韩日散户的三种心跳",
-      "ja_focus": "株価が下がるにつれて不安が増える一方だ。話題の銘柄だからといって必ず儲かるとは限らない。感情で投資すべきではない。",
-      "start": 2677.7,
-      "end": 3273.1
+      "title": "从日本看世界：美国失守麻疹消除国认证与法国二十年脑科学研究，孤独真的会伤脑吗",
+      "ja_focus": "科学が進んだ国でも必ずしも安心とは限らない。データをみてはじめて孤独の怖さが分かった。人とつながりを保つようにすることだ。",
+      "start": 1880.4,
+      "end": 2370.5
     }
   ],
   "review_items": [
     {
-      "id": "RVR-N3-G33",
+      "id": "RVR-N3-G67",
       "kind": "grammar",
-      "key": "〜しかない",
-      "point_id": "N3-G33",
-      "title": "〜しかない",
+      "key": "〜一方で",
+      "point_id": "N3-G67",
+      "title": "〜一方で",
       "kana": "",
       "trap_hl": [],
       "trap_tag": "",
-      "zh": "别无选择只好…",
+      "zh": "一方面A，另一方面B",
       "chapter_idx": 0,
-      "chapter_title": "快递再配达",
-      "story_cue": "货车司机加班上限生效后",
-      "speaker": "子东",
-      "context_line": "这里头『没办法只好这么办』，正是 しかない： おたがいにきょうりょくするしかない！",
-      "ja_example": "事前に置き配を指定しておくしかない。",
-      "nuance": "走投无路「别无他法、只好…」用「动词原形＋しかない」；「原形＋ことはない」则是劝人不必做某事。",
-      "twin": "歩いて帰るしかない：原形 ＋ しかない ＝ 没别的招，只好走回去 · 对比 急ぐことはない：原形 ＋ ことはない ＝ 没必要着急",
+      "chapter_title": "百年百货",
+      "story_cue": "银座新宿百货免税柜台排长队，地方百年百货店却接连闭店",
+      "speaker": "文道",
+      "context_line": "一点不差： としんのデパートがにぎわういっぽうで、ちほうのしにせはへいてんがつづいている！牢记别跟放句尾、表单一方向加剧的 いっぽうだ 弄混，加 で 放句中才是双面对比！",
+      "full_context": "一点不差： としんのデパートがにぎわういっぽうで、ちほうのしにせはへいてんがつづいている！牢记别跟放句尾、表单一方向加剧的 いっぽうだ 弄混，加 で 放句中才是双面对比！",
+      "ja_example": "都心の百貨店が賑わう一方で。",
+      "nuance": "把同一事物的正反两面（或两个不同群体的相反特征）并列对比，句中用「〜一方で」。",
+      "twin": "楽な一方で問題もある：一件事同时具备利弊两面（句中对比） · 对比 増える一方だ：句尾单向趋势持续加剧",
       "mnemonic": "",
-      "clip_start": 341.8,
-      "clip_end": 359.6,
-      "demo_audio": "./audio/N3-G33_q.mp3",
+      "clip_start": 169.0,
+      "clip_end": 185.4,
+      "demo_audio": "./audio/N3-G67_q.mp3",
+      "hook_audio": "",
+      "is_new_n2": false,
+      "status": "yellow",
+      "streak": 2,
+      "img": "./img/ch_0.jpg?v=2026-11-25_85e093_jp"
+    },
+    {
+      "id": "RVW-こうぞう",
+      "kind": "vocab",
+      "key": "構造",
+      "point_id": "",
+      "title": "構造",
+      "kana": "こうぞう",
+      "trap_hl": [
+        "こう"
+      ],
+      "trap_tag": "长音",
+      "zh": "结构",
+      "chapter_idx": 0,
+      "chapter_title": "百年百货",
+      "story_cue": "银座新宿百货免税柜台排长队，地方百年百货店却接连闭店",
+      "speaker": "子东",
+      "context_line": "雪上加霜的是，老百货大楼动辄盖了五六十年，翻修空调电梯和抗震構造（こうぞう）就是几十亿日元无底洞，欧美大牌也纷纷撤柜死守银座。老城区步行街的人气，就这么一点一点冷清下去。",
+      "full_context": "雪上加霜的是，老百货大楼动辄盖了五六十年，翻修空调电梯和抗震構造（こうぞう）就是几十亿日元无底洞，欧美大牌也纷纷撤柜死守银座。老城区步行街的人气，就这么一点一点冷清下去。",
+      "ja_example": "構造（こうぞう）",
+      "nuance": "本期播客出现 4 次 · 累计 5 次",
+      "twin": "",
+      "mnemonic": "英文 “Co(こう) Zone(ぞう)” 核心架构，前后双长音 こう・ぞう（造必浊）",
+      "clip_start": 242.5,
+      "clip_end": 260.7,
+      "demo_audio": "",
+      "hook_audio": "",
+      "is_new_n2": true,
+      "status": "yellow",
+      "streak": 0,
+      "img": "./img/ch_0.jpg?v=2026-11-25_85e093_jp"
+    },
+    {
+      "id": "RVR-N3-G32",
+      "kind": "grammar",
+      "key": "〜最中に",
+      "point_id": "N3-G32",
+      "title": "〜最中に",
+      "kana": "",
+      "trap_hl": [],
+      "trap_tag": "",
+      "zh": "正酣时突发打断",
+      "chapter_idx": 1,
+      "chapter_title": "卫生纸骚动",
+      "story_cue": "一条传言买空全国超市",
+      "speaker": "文涛",
+      "context_line": "正在顺风顺水狂飙最紧要关头突遭横祸，日语最精准的正是 さいちゅうに： こうどせいちょうのさいちゅうに、ききがおきた！",
+      "full_context": "正在顺风顺水狂飙最紧要关头突遭横祸，日语最精准的正是 さいちゅうに： こうどせいちょうのさいちゅうに、ききがおきた！",
+      "ja_example": "高度成長の最中に危機が起きた。",
+      "nuance": "正在干某事最投入的节骨眼上突然冒出意外状况（停电、来电话），用「Nの／Vている＋最中に（さいちゅうに）」。",
+      "twin": "会議の最中に消えた：名词の／ている ＋ 最中に ＝ 正在兴头上突然被打断 · 对比 会議のあとで：开完会之后（无突发打断紧迫感）",
+      "mnemonic": "",
+      "clip_start": 439.3,
+      "clip_end": 451.1,
+      "demo_audio": "./audio/N3-G32_q.mp3",
+      "hook_audio": "",
+      "is_new_n2": false,
+      "status": "yellow",
+      "streak": 2,
+      "img": "./img/ch_1.jpg?v=2026-11-25_85e093_jp"
+    },
+    {
+      "id": "RVW-きき",
+      "kind": "vocab",
+      "key": "危機",
+      "point_id": "",
+      "title": "危機",
+      "kana": "きき",
+      "trap_hl": [
+        "き"
+      ],
+      "trap_tag": "短音",
+      "zh": "危机",
+      "chapter_idx": 1,
+      "chapter_title": "卫生纸骚动",
+      "story_cue": "一条传言买空全国超市",
+      "speaker": "文涛",
+      "context_line": "可 れきし 偏在绝境埋反转！谁料这场狼狈抢纸危機（きき），反倒逼出日本制造打爆底特律的起跑枪？下半场直奔本田实验室和美国加油站！",
+      "full_context": "可 れきし 偏在绝境埋反转！谁料这场狼狈抢纸危機（きき），反倒逼出日本制造打爆底特律的起跑枪？下半场直奔本田实验室和美国加油站！",
+      "ja_example": "危機（きき）",
+      "nuance": "本期播客出现 1 次 · 累计 1 次",
+      "twin": "",
+      "mnemonic": "",
+      "clip_start": 730.3,
+      "clip_end": 744.3,
+      "demo_audio": "./audio/words/w_0b344fa096.mp3",
+      "hook_audio": "",
+      "is_new_n2": true,
+      "status": "yellow",
+      "streak": 0,
+      "img": "./img/ch_1.jpg?v=2026-11-25_85e093_jp"
+    },
+    {
+      "id": "RVR-N3-G28",
+      "kind": "grammar",
+      "key": "〜による／によって",
+      "point_id": "N3-G28",
+      "title": "〜による／によって",
+      "kana": "",
+      "trap_hl": [],
+      "trap_tag": "",
+      "zh": "由于某客观原因／通过某手段",
+      "chapter_idx": 2,
+      "chapter_title": "省油逆袭",
+      "story_cue": "逼出来的节能神话",
+      "speaker": "文道",
+      "context_line": "听好这句示范： きびしいききにありながらも、てっていしたしょうエネぎじゅつによって、せかいじゅうでえらばれるようになった！",
+      "full_context": "听好这句示范： きびしいききにありながらも、てっていしたしょうエネぎじゅつによって、せかいじゅうでえらばれるようになった！ ながらも 表身处逆境依然做到，别跟表同时的 ながら 弄混； によって 表核心手段； ようになる 是水到渠成的自然转变！",
+      "ja_example": "大雨によって乱れた",
+      "nuance": "名词＋によって ＝ 由于某客观原因／通过某手段；にとって ＝ 对某人而言。",
+      "twin": "大雨によって乱れた：由于暴雨导致时刻表大乱 · 对比 私にとって大切だ：站在某人立场评价",
+      "mnemonic": "",
+      "clip_start": 1034.2,
+      "clip_end": 1054.4,
+      "demo_audio": "./audio/N3-G28_q.mp3",
       "hook_audio": "",
       "is_new_n2": false,
       "status": "red",
       "streak": 0,
-      "full_context": "面对这么严峻的人手缺口，老派极致手递手服务就算再让人怀念，面对现实也别无选择，只好大家一起退一步互相配合！这里头『没办法只好这么办』，正是 しかない： おたがいにきょうりょくするしかない！",
-      "img": "./img/ch_0.jpg?v=2026-11-24_cfa800_jp",
-      "clip_dur": 17.8
+      "img": "./img/ch_2.jpg?v=2026-11-25_85e093_jp"
     },
     {
-      "id": "RVW-さいばん",
-      "kind": "vocab",
-      "key": "裁判",
-      "point_id": "",
-      "title": "裁判",
-      "kana": "さいばん",
-      "trap_hl": [
-        "ば"
-      ],
-      "trap_tag": "连浊",
-      "zh": "审判",
-      "chapter_idx": 0,
-      "chapter_title": "快递再配达",
-      "story_cue": "货车司机加班上限生效后",
-      "speaker": "子东",
-      "context_line": "…到十一个包裹，后面还敢为了跨县牌照直接把日本政府告上裁判（さいばん），硬生生造出了今天满大街跑的黑猫 たっきゅうびん！",
-      "ja_example": "裁判（さいばん）",
-      "nuance": "本期播客出现 4 次 · 累计 4 次",
-      "twin": "",
-      "mnemonic": "日剧《白色巨塔》法庭高频 “Sign(さい) Ban(ばん)” 宣判，判 浊音 ばん → さいばん",
-      "clip_start": 407.2,
-      "clip_end": 427.2,
-      "demo_audio": "",
-      "hook_audio": "",
-      "is_new_n2": false,
-      "status": "yellow",
-      "streak": 0,
-      "full_context": "直到一九七六年，一个名叫小仓昌男的硬汉 しゃちょう，冒着把祖业干倒闭的惊天风险，主动砍掉三越百货这种躺着赚钱的大客户，开张第一天全东京只接到十一个包裹，后面还敢为了跨县牌照直接把日本政府告上裁判（さいばん），硬生生造出了今天满大街跑的黑猫 たっきゅうびん！",
-      "img": "./img/ch_0.jpg?v=2026-11-24_cfa800_jp",
-      "clip_dur": 20.0
-    },
-    {
-      "id": "RVR-N3-G54",
+      "id": "RVR-N3-G81",
       "kind": "grammar",
-      "key": "〜うえで",
-      "point_id": "N3-G54",
-      "title": "〜うえで",
+      "key": "〜きる／〜きれない",
+      "point_id": "N3-G81",
+      "title": "〜きる／〜きれない",
       "kana": "",
       "trap_hl": [],
       "trap_tag": "",
-      "zh": "在做好A之后再B",
-      "chapter_idx": 1,
-      "chapter_title": "黑猫宅急便",
-      "story_cue": "开张第一天全国只接到十一个包裹",
-      "speaker": "文涛",
-      "context_line": "这里头在充分筹备的基础上再启动服务，正是日语里最稳妥的句型 うえで： じゅうぶんなじゅんびをしたうえで、サービスをかいしした！",
-      "ja_example": "十分な準備をしたうえで地域ごとに網を広げた。",
-      "nuance": "把前项作为慎重前提彻底完成后，再做后项郑重决定或动作，用「た形／名词の＋うえで」。",
-      "twin": "確認したうえでサインする：た形＋うえで＝先彻底核对完，再郑重签字 · 对比 確認しているあいだに：正在核对的期间里（动作同时发生）",
-      "mnemonic": "",
-      "clip_start": 716.5,
-      "clip_end": 735.2,
-      "demo_audio": "./audio/N3-G54_q.mp3",
-      "hook_audio": "",
-      "is_new_n2": false,
-      "status": "yellow",
-      "streak": 1,
-      "full_context": "这里头在充分筹备的基础上再启动服务，正是日语里最稳妥的句型 うえで： じゅうぶんなじゅんびをしたうえで、サービスをかいしした！记住它强调前一步是后一步的必要前提，比普通表示先后的 あとで 分量重得多！",
-      "img": "./img/ch_1.jpg?v=2026-11-24_cfa800_jp",
-      "clip_dur": 18.7
-    },
-    {
-      "id": "RVR-N3-G82",
-      "kind": "grammar",
-      "key": "〜さえ",
-      "point_id": "N3-G82",
-      "title": "〜さえ",
-      "kana": "",
-      "trap_hl": [],
-      "trap_tag": "",
-      "zh": "连最基本的…都…极端举例",
-      "chapter_idx": 2,
-      "chapter_title": "硬刚运输省",
-      "story_cue": "为拿一张跨县牌照把政府告上法庭",
-      "speaker": "文涛",
-      "context_line": "顺嘴抓一个用来举出最极端例子、意思『甚至连……都……』的超级强调助词 さえ！",
-      "ja_example": "運輸大臣さえ訴えた。",
-      "nuance": "举出最起码、最极端的例子表示「连…都（没有/做不到）」，用「〜さえ」。",
-      "twin": "時間さえなかった：名词＋さえ＝连吃午饭这点起码的时间都没有 · 对比 今度こそ勝つ：名词＋こそ＝正是这一次要赢（正面强调）",
-      "mnemonic": "",
-      "clip_start": 1156.3,
-      "clip_end": 1178.3,
-      "demo_audio": "./audio/N3-G82_q.mp3",
-      "hook_audio": "",
-      "is_new_n2": false,
-      "status": "yellow",
-      "streak": 1,
-      "full_context": "好家伙，连运输大臣都敢告！顺嘴抓一个用来举出最极端例子、意思『甚至连……都……』的超级强调助词 さえ！名词直接接 さえ，比如甚至连运输大臣都告上法庭： うんゆだいじんさえ、さいばんにうったえた！平时忙到连吃午饭的时间都没有，也是 ひるごはんをたべるじかんさえない！",
-      "img": "./img/ch_2.jpg?v=2026-11-24_cfa800_jp",
-      "clip_dur": 22.0
-    },
-    {
-      "id": "RVR-N3-G52",
-      "kind": "grammar",
-      "key": "〜ようになる",
-      "point_id": "N3-G52",
-      "title": "〜ようになる",
-      "kana": "",
-      "trap_hl": [],
-      "trap_tag": "",
-      "zh": "变得能够／养成新习惯",
+      "zh": "彻底做完／多到做不完",
       "chapter_idx": 3,
-      "chapter_title": "任天堂红白机",
-      "story_cue": "京都百年花札老店怎么成了游戏霸主",
+      "chapter_title": "东京塔传奇",
+      "story_cue": "比巴黎铁塔高却少用一半钢材",
       "speaker": "文涛",
-      "context_line": "…：刻意努力做到是 ようにする，水到渠成变成新常态是 ようになる： こどもでもかえるようにかかくをおさえ、どのいえでもたのしむようになった！",
-      "ja_example": "聞き取れるようになった",
-      "nuance": "能力、习惯或状态自然而然发生从无到有的转变，用「动词原形／可能形＋ようになる」。",
-      "twin": "聞き取れるようになった：可能形＋ようになる＝从听不懂自然演变成听得懂 · 对比 毎日聞くことにした：原形＋ことにする＝自己主动拍板立规矩",
+      "context_line": "不用电脑纯靠手算全部算完！一举撞上两个提气句型：书面干练否定 ずに，以及彻底干到底的 きる！",
+      "full_context": "不用电脑纯靠手算全部算完！一举撞上两个提气句型：书面干练否定 ずに，以及彻底干到底的 きる！",
+      "ja_example": "とても食べきれない。",
+      "nuance": "表示彻底做到头用「ます干＋きる」；因量太大或程度太深「实在做不完/数不清」，用「ます干＋きれない」。",
+      "twin": "食べきれない：ます干＋きれない＝量太大根本吃不完 · 对比 食べやすい：ます干＋やすい＝很容易入口、方便吃",
       "mnemonic": "",
-      "clip_start": 1916.7,
-      "clip_end": 1939.8,
-      "demo_audio": "./audio/N3-G52_q.mp3",
+      "clip_start": 1317.1,
+      "clip_end": 1328.4,
+      "demo_audio": "./audio/N3-G81_q.mp3",
       "hook_audio": "",
       "is_new_n2": false,
-      "status": "yellow",
-      "streak": 1,
-      "full_context": "太清晰了！再把山内溥为了普通 こども 也买得起刻意压低成本，跟后来家家户户客厅自然而然都玩上红白机这两句并一块儿复习：刻意努力做到是 ようにする，水到渠成变成新常态是 ようになる： こどもでもかえるようにかかくをおさえ、どのいえでもたのしむようになった！",
-      "img": "./img/ch_3.jpg?v=2026-11-24_cfa800_jp",
-      "clip_dur": 23.1
-    },
-    {
-      "id": "RVR-N3-G86",
-      "kind": "grammar",
-      "key": "〜だらけ",
-      "point_id": "N3-G86",
-      "title": "〜だらけ",
-      "kana": "",
-      "trap_hl": [],
-      "trap_tag": "",
-      "zh": "满是令人不快的脏污错误",
-      "chapter_idx": 4,
-      "chapter_title": "超级马里奥",
-      "story_cue": "四十千字节里装进整个童年",
-      "speaker": "子东",
-      "context_line": "顺嘴抓一个极传神、日语里专门形容『满是某种糟糕玩意儿』的后缀 だらけ！",
-      "ja_example": "白いズボンが泥だらけになってしまった。",
-      "nuance": "形容表面密密麻麻布满让人皱眉的东西（泥、灰尘、血、伤、错字、窟窿），用「名词＋だらけ」。",
-      "twin": "泥だらけのズボン：名词＋だらけ＝沾满泥巴（布满脏乱差/伤痕/错字） · 对比 野菜ばかり食べる：光吃蔬菜（数量单一重复）",
-      "mnemonic": "",
-      "clip_start": 2190.6,
-      "clip_end": 2212.6,
-      "demo_audio": "./audio/N3-G86_q.mp3",
-      "hook_audio": "",
-      "is_new_n2": false,
-      "status": "yellow",
-      "streak": 1,
-      "full_context": "当年美国货架上全是粗制滥造的劣质货、满是错误漏洞！顺嘴抓一个极传神、日语里专门形容『满是某种糟糕玩意儿』的后缀 だらけ！名词直接接 だらけ，比如满是错误、漏洞百出就是 まちがいだらけ；满屋子垃圾就是 ゴミだらけ；当年美国市场满街劣质游戏就是 くだらないゲームだらけ！记住它几乎总带嫌弃和负面情绪，绝不说『满是幸福』！",
-      "img": "./img/ch_4.jpg?v=2026-11-24_cfa800_jp",
-      "clip_dur": 22.0
-    },
-    {
-      "id": "RVW-じしょ",
-      "kind": "vocab",
-      "key": "辞書",
-      "point_id": "",
-      "title": "辞書",
-      "kana": "じしょ",
-      "trap_hl": [
-        "じ",
-        "しょ"
-      ],
-      "trap_tag": "浊+短音",
-      "zh": "字典",
-      "chapter_idx": 4,
-      "chapter_title": "超级马里奥",
-      "story_cue": "四十千字节里装进整个童年",
-      "speaker": "子东",
-      "context_line": "而最让全 せかい 游戏学院奉为教科书顶点的，是超级马里奥第一关一开场那神奇的十秒钟！八十年代的游戏说明书动辄厚得像辞書（じしょ），可宫本茂在第一关没写哪怕一个字的教学提示！",
-      "ja_example": "辞書（じしょ）",
-      "nuance": "本期播客出现 1 次 · 累计 1 次",
-      "twin": "",
-      "mnemonic": "查字典想“寄(じ)书(しょ)”，两拍干脆短音绝不拉长（对比 辞典 じてん）",
-      "clip_start": 2332.1,
-      "clip_end": 2350.0,
-      "demo_audio": "./audio/words/w_7eb609b364.mp3",
-      "hook_audio": "",
-      "is_new_n2": false,
-      "status": "yellow",
+      "status": "red",
       "streak": 0,
-      "full_context": "而最让全 せかい 游戏学院奉为教科书顶点的，是超级马里奥第一关一开场那神奇的十秒钟！八十年代的游戏说明书动辄厚得像辞書（じしょ），可宫本茂在第一关没写哪怕一个字的教学提示！",
-      "img": "./img/ch_4.jpg?v=2026-11-24_cfa800_jp",
-      "clip_dur": 17.9
+      "img": "./img/ch_3.jpg?v=2026-11-25_85e093_jp"
     },
     {
-      "id": "RVR-N3-G55",
+      "id": "RVR-N3-G47",
       "kind": "grammar",
-      "key": "〜につれて",
-      "point_id": "N3-G55",
-      "title": "〜につれて",
+      "key": "ところだった",
+      "point_id": "N3-G47",
+      "title": "ところだった",
       "kana": "",
       "trap_hl": [],
       "trap_tag": "",
-      "zh": "随着一方渐变另一方同步变",
-      "chapter_idx": 5,
-      "chapter_title": "全球股市潮",
-      "story_cue": "从日本看世界",
-      "speaker": "子东",
-      "context_line": "你看『随着担忧不断扩散，卖单跟着同步放大』，又是高频老熟人 につれて： ふあんがひろがるにつれて、うりがふえた！",
-      "ja_example": "株価が下がるにつれて不安が増える一方だ。",
-      "nuance": "随着前项单向渐进变化，后项自然跟着同步变化，用「动词原形／变化名词＋につれて」。",
-      "twin": "近づくにつれて冷たくなる：动词原形＋につれて＝越往山顶走空气越冷（同步渐变） · 对比 場所によって気温が違う：因地点不同气温各异（个体差异）",
+      "zh": "差一点就险些…",
+      "chapter_idx": 4,
+      "chapter_title": "红白铁塔",
+      "story_cue": "三百米高空抛接红热铆钉",
+      "speaker": "文道",
+      "context_line": "好几次真在强风里差一点出大事！日语形容千钧一发、差点酿祸幸亏没事，正是动词辞书形加 ところだった： つよいかぜでおちるところだった！",
+      "full_context": "好几次真在强风里差一点出大事！日语形容千钧一发、差点酿祸幸亏没事，正是动词辞书形加 ところだった： つよいかぜでおちるところだった！",
+      "ja_example": "乗り遅れるところだった",
+      "nuance": "前有「あと少しで・もう少しで・危うく」，表示险些出岔子但最后躲过去了，用「原形＋ところだった」。",
+      "twin": "乗り遅れるところだった：あと少しで／もう少しで＋原形＋ところだった＝差点就误车（实际赶上了） · 对比 着くはずだった：本来理应到达（实际没到）",
       "mnemonic": "",
-      "clip_start": 2793.4,
-      "clip_end": 2815.4,
-      "demo_audio": "./audio/N3-G55_q.mp3",
+      "clip_start": 1605.9,
+      "clip_end": 1620.2,
+      "demo_audio": "./audio/N3-G47_q.mp3",
+      "hook_audio": "",
+      "is_new_n2": false,
+      "status": "red",
+      "streak": 0,
+      "img": "./img/ch_4.jpg?v=2026-11-25_85e093_jp"
+    },
+    {
+      "id": "RVR-N3-G65",
+      "kind": "grammar",
+      "key": "〜とは限らない",
+      "point_id": "N3-G65",
+      "title": "〜とは限らない",
+      "kana": "",
+      "trap_hl": [],
+      "trap_tag": "",
+      "zh": "未必总是…不一定都…",
+      "chapter_idx": 5,
+      "chapter_title": "国际医学报",
+      "story_cue": "从日本看世界",
+      "speaker": "文涛",
+      "context_line": "打破绝对判断的黄金搭档正是 かならずしも 配上 とはかぎらない： かがくがすすんだくにでも、かならずしもあんぜんとはかぎらない！",
+      "full_context": "打破绝对判断的黄金搭档正是 かならずしも 配上 とはかぎらない： かがくがすすんだくにでも、かならずしもあんぜんとはかぎらない！再记一句有钱也未必幸福： おかねがあっても、かならずしもしあわせとはかぎらない！",
+      "ja_example": "科学が進んだ国でも必ずしも安心とは限らない。",
+      "nuance": "打破刻板印象「未必全都如此、不一定就…」，常与「必ず・みんな・いつも」呼应，用「〜とは限らない」。",
+      "twin": "高いからおいしいとは限らない：必ず／いつも＋とは限らない＝未必就一定好吃 · 对比 おいしいにちがいない：必定好吃（强烈确信）",
+      "mnemonic": "",
+      "clip_start": 2021.5,
+      "clip_end": 2039.8,
+      "demo_audio": "./audio/N3-G65_q.mp3",
       "hook_audio": "",
       "is_new_n2": false,
       "status": "yellow",
-      "streak": 1,
-      "full_context": "这一问直接戳中要害！泡沫和恐惧永远是连体婴，随着大模型烧钱规模越来越恐怖、投资者心里越发打鼓，一旦盈利速度比预期慢半拍，华尔街立刻翻脸踩踏抛售！你看『随着担忧不断扩散，卖单跟着同步放大』，又是高频老熟人 につれて： ふあんがひろがるにつれて、うりがふえた！",
-      "img": "./img/ch_5.jpg?v=2026-11-24_cfa800_jp",
-      "clip_dur": 22.0
+      "streak": 2,
+      "img": "./img/ch_5.jpg?v=2026-11-25_85e093_jp"
     }
   ],
   "speaking_prompts": [
     {
-      "id": "SPK-N3-G33",
-      "point_id": "N3-G33",
-      "key": "〜しかない",
-      "title": "〜しかない",
-      "zh": "别无选择只好…",
-      "chapter_idx": 0,
-      "chapter_title": "快递再配达",
-      "story_cue": "货车司机加班上限生效后",
-      "prompt_short": "没办法只好合作",
-      "prompt_ja": "ほかに方法がないので協力する",
-      "prompt_zh": "别无选择，只好互相合作",
+      "id": "SPK-N3-G47",
+      "point_id": "N3-G47",
+      "key": "ところだった",
+      "title": "ところだった",
+      "zh": "差一点就险些…",
+      "chapter_idx": 4,
+      "chapter_title": "红白铁塔",
+      "story_cue": "三百米高空抛接红热铆钉",
+      "prompt_short": "差点错过末班车",
+      "prompt_ja": "終電に遅れそうになった",
+      "prompt_zh": "差一点没赶上末班车",
       "target_stems": [
-        "しかない",
-        "しかありません",
-        "しかなかった",
-        "しかありませんでした",
-        "しかなく",
-        "しか無い"
+        "ところだった",
+        "ところでした"
       ],
-      "model_ja": "お互いに協力するしかないです。",
-      "model_zh": "只好互相配合了。",
-      "coaching_tip": "动词原形直接接「しかない」",
-      "clip_start": 341.8,
-      "clip_end": 359.6,
-      "demo_audio": "./audio/N3-G33_q.mp3",
+      "model_ja": "もう少しで乗り遅れるところだった。",
+      "model_zh": "差一点就误车了。",
+      "coaching_tip": "注意浊音「だった」别清化",
+      "clip_start": 1605.9,
+      "clip_end": 1620.2,
+      "demo_audio": "./audio/N3-G47_q.mp3",
       "is_new_n2": false,
-      "img": "./img/ch_0.jpg?v=2026-11-24_cfa800_jp",
-      "model_audio": "./audio/spk_0.mp3?v=2026-11-24_cfa800_jp"
+      "img": "./img/ch_4.jpg?v=2026-11-25_85e093_jp",
+      "model_audio": "./audio/spk_0.mp3?v=2026-11-25_85e093_jp"
     },
     {
-      "id": "SPK-N3-G54",
-      "point_id": "N3-G54",
-      "key": "〜うえで",
-      "title": "〜うえで",
-      "zh": "在做好A之后再B",
-      "chapter_idx": 1,
-      "chapter_title": "黑猫宅急便",
-      "story_cue": "开张第一天全国只接到十一个包裹",
-      "prompt_short": "确认完之后再回复",
-      "prompt_ja": "よく確認してから返事する",
-      "prompt_zh": "确认完内容后再回复",
+      "id": "SPK-N3-G28",
+      "point_id": "N3-G28",
+      "key": "〜による／によって",
+      "title": "〜による／によって",
+      "zh": "由于某客观原因／通过某手段",
+      "chapter_idx": 2,
+      "chapter_title": "省油逆袭",
+      "story_cue": "逼出来的节能神话",
+      "prompt_short": "因人而异感想不同",
+      "prompt_ja": "人それぞれ感想が違う",
+      "prompt_zh": "看的人不同，感想也不同",
       "target_stems": [
-        "うえで",
-        "上で"
+        "によって",
+        "による",
+        "により",
+        "によっては"
       ],
-      "model_ja": "確認したうえで、お返事します。",
-      "model_zh": "确认完之后再回复。",
-      "coaching_tip": "动词た形 ＋ うえで",
-      "clip_start": 716.5,
-      "clip_end": 735.2,
-      "demo_audio": "./audio/N3-G54_q.mp3",
+      "model_ja": "見る人によって感想が違います。",
+      "model_zh": "看的人不同感想也不同。",
+      "coaching_tip": "因人而异用「人によって」",
+      "clip_start": 1034.2,
+      "clip_end": 1054.4,
+      "demo_audio": "./audio/N3-G28_q.mp3",
       "is_new_n2": false,
-      "img": "./img/ch_1.jpg?v=2026-11-24_cfa800_jp",
-      "model_audio": "./audio/spk_1.mp3?v=2026-11-24_cfa800_jp"
+      "img": "./img/ch_2.jpg?v=2026-11-25_85e093_jp",
+      "model_audio": "./audio/spk_1.mp3?v=2026-11-25_85e093_jp"
     }
   ],
-  "artwork_url": "./img/ch_0.jpg?v=2026-11-24_cfa800_jp",
+  "next_program": {
+    "lead_in": "接下来为您播出",
+    "show": "凤凰子夜快车",
+    "line": "接下来为您播出，凤凰子夜快车。"
+  },
+  "artwork_url": "./img/ch_0.jpg?v=2026-11-25_85e093_jp",
   "story_arts": [
     {
       "chapters": [
         0
       ],
-      "img": "./img/ch_0.jpg?v=2026-11-24_cfa800_jp",
-      "title": "快递再配达",
-      "subtitle": "货车司机加班上限生效后：日本为什么拼命劝大家接受把包裹直接放门口"
+      "img": "./img/ch_0.jpg?v=2026-11-25_85e093_jp",
+      "title": "百年百货",
+      "subtitle": "银座新宿百货免税柜台排长队，地方百年百货店却接连闭店：日本城市商业的百年分水岭"
     },
     {
       "chapters": [
         1
       ],
-      "img": "./img/ch_1.jpg?v=2026-11-24_cfa800_jp",
-      "title": "黑猫宅急便",
-      "subtitle": "开张第一天全国只接到十一个包裹：小仓昌男怎么靠黑猫宅急便改写日本生活（上）"
+      "img": "./img/ch_1.jpg?v=2026-11-25_85e093_jp",
+      "title": "卫生纸骚动",
+      "subtitle": "一条传言买空全国超市：1973 石油危机大阪主妇抢购卫生纸的真实一夜（上）"
     },
     {
       "chapters": [
         2
       ],
-      "img": "./img/ch_2.jpg?v=2026-11-24_cfa800_jp",
-      "title": "硬刚运输省",
-      "subtitle": "为拿一张跨县牌照把政府告上法庭：黑猫怎么发明了滑雪板与冷链快递（下）"
+      "img": "./img/ch_2.jpg?v=2026-11-25_85e093_jp",
+      "title": "省油逆袭",
+      "subtitle": "逼出来的节能神话：1973 石油危机如何让日本小汽车打爆底特律（下）"
     },
     {
       "chapters": [
         3
       ],
-      "img": "./img/ch_3.jpg?v=2026-11-24_cfa800_jp",
-      "title": "任天堂红白机",
-      "subtitle": "京都百年花札老店怎么成了游戏霸主：山内溥一万四千八百日元的生死赌注（上）"
+      "img": "./img/ch_3.jpg?v=2026-11-25_85e093_jp",
+      "title": "东京塔传奇",
+      "subtitle": "比巴黎铁塔高却少用一半钢材：1958 东京塔与美军废坦克钢材的秘密（上）"
     },
     {
       "chapters": [
         4
       ],
-      "img": "./img/ch_4.jpg?v=2026-11-24_cfa800_jp",
-      "title": "超级马里奥",
-      "subtitle": "四十千字节里装进整个童年：宫本茂与超级马里奥如何救活全球游戏产业（下）"
+      "img": "./img/ch_4.jpg?v=2026-11-25_85e093_jp",
+      "title": "红白铁塔",
+      "subtitle": "三百米高空抛接红热铆钉：东京塔为什么永远是东京人心头最暖的那盏灯（下）"
     },
     {
       "chapters": [
         5
       ],
-      "img": "./img/ch_5.jpg?v=2026-11-24_cfa800_jp",
-      "title": "全球股市潮",
-      "subtitle": "从日本看世界：纳斯达克单周蒸发四兆美元与 AI 巨震，美韩日散户的三种心跳"
+      "img": "./img/ch_5.jpg?v=2026-11-25_85e093_jp",
+      "title": "国际医学报",
+      "subtitle": "从日本看世界：美国失守麻疹消除国认证与法国二十年脑科学研究，孤独真的会伤脑吗"
     }
   ],
   "jp_video": {
-    "title_ja": "黒猫宅急便の挑戦と、マリオ誕生の秘密",
-    "title_zh": "黑猫宅急便的豪赌与马里奥诞生之谜",
-    "video_url": "./video/daily_jp_story.mp4?v=2026-11-24_cfa800_jp",
-    "vtt_url": "./video/daily_jp_story.vtt?v=2026-11-24_cfa800_jp",
-    "poster_url": "./img/ch_1.jpg?v=2026-11-24_cfa800_jp",
-    "duration_sec": 92.12,
-    "duration_label": "01:32",
+    "title_ja": "今日の日本ストーリー",
+    "title_zh": "卫生纸骚动 · 省油逆袭",
+    "video_url": "./video/daily_jp_story.mp4?v=2026-11-25_85e093_jp",
+    "vtt_url": "./video/daily_jp_story.vtt?v=2026-11-25_85e093_jp",
+    "poster_url": "./img/ch_1.jpg?v=2026-11-25_85e093_jp",
+    "duration_sec": 80.84,
+    "duration_label": "01:21",
     "shot_count": 11,
     "target_words": [
       {
-        "word": "ルール",
-        "kana": "ルール",
-        "zh": "规则",
-        "source": "播客",
-        "hits": 3,
-        "first_sec": 10.95,
-        "times": [
-          10.95,
-          18.82,
-          84.76
-        ]
-      },
-      {
-        "word": "利益",
-        "kana": "りえき",
-        "zh": "利润",
+        "word": "危機",
+        "kana": "きき",
+        "zh": "危机",
         "source": "播客",
         "hits": 2,
-        "first_sec": 18.82,
+        "first_sec": 14.31,
         "times": [
-          18.82,
-          77.81
+          14.31,
+          25.5
         ]
       },
       {
-        "word": "官僚",
-        "kana": "かんりょう",
-        "zh": "官僚",
+        "word": "台風",
+        "kana": "たいふう",
+        "zh": "台风",
+        "source": "今日聚焦",
+        "hits": 2,
+        "first_sec": 48.77,
+        "times": [
+          48.77,
+          52.75
+        ]
+      },
+      {
+        "word": "構造",
+        "kana": "こうぞう",
+        "zh": "结构",
+        "source": "今日聚焦",
+        "hits": 2,
+        "first_sec": 48.77,
+        "times": [
+          48.77,
+          52.75
+        ]
+      },
+      {
+        "word": "家族",
+        "kana": "かぞく",
+        "zh": "家人",
         "source": "播客",
-        "hits": 2,
-        "first_sec": 29.17,
-        "times": [
-          29.17,
-          35.43
-        ]
-      },
-      {
-        "word": "裁判",
-        "kana": "さいばん",
-        "zh": "审判",
-        "source": "播客",
-        "hits": 2,
-        "first_sec": 35.43,
-        "times": [
-          35.43,
-          40.79
-        ]
-      },
-      {
-        "word": "象徴",
-        "kana": "しょうちょう",
-        "zh": "象征",
-        "source": "反刍",
-        "hits": 2,
-        "first_sec": 40.79,
-        "times": [
-          40.79,
-          71.82
-        ]
-      },
-      {
-        "word": "市場",
-        "kana": "しじょう",
-        "zh": "市场",
-        "source": "播客",
-        "hits": 2,
-        "first_sec": 54.7,
-        "times": [
-          54.7,
-          77.81
-        ]
-      },
-      {
-        "word": "辞書",
-        "kana": "じしょ",
-        "zh": "字典",
-        "source": "播客",
-        "hits": 2,
-        "first_sec": 60.35,
-        "times": [
-          60.35,
-          66.13
-        ]
-      },
-      {
-        "word": "わけ",
-        "kana": "わけ",
-        "zh": "理由、原因；道理 · 迟到的原因",
-        "source": "记词",
         "hits": 1,
-        "first_sec": 0.85,
+        "first_sec": 11.11,
         "times": [
-          0.85
+          11.11
+        ]
+      },
+      {
+        "word": "不安",
+        "kana": "ふあん",
+        "zh": "不安",
+        "source": "播客",
+        "hits": 1,
+        "first_sec": 17.43,
+        "times": [
+          17.43
+        ]
+      },
+      {
+        "word": "世界",
+        "kana": "せかい",
+        "zh": "世界",
+        "source": "播客",
+        "hits": 1,
+        "first_sec": 25.5,
+        "times": [
+          25.5
+        ]
+      },
+      {
+        "word": "技術",
+        "kana": "ぎじゅつ",
+        "zh": "技术",
+        "source": "播客",
+        "hits": 1,
+        "first_sec": 25.5,
+        "times": [
+          25.5
+        ]
+      },
+      {
+        "word": "計画",
+        "kana": "けいかく",
+        "zh": "计划",
+        "source": "播客",
+        "hits": 1,
+        "first_sec": 38.67,
+        "times": [
+          38.67
         ]
       },
       {
@@ -823,42 +810,42 @@
         "zh": "清清楚楚、明确果断 · 明确说出来",
         "source": "记词",
         "hits": 1,
-        "first_sec": 18.82,
+        "first_sec": 52.75,
         "times": [
-          18.82
+          52.75
         ]
       },
       {
-        "word": "書類",
-        "kana": "しょるい",
-        "zh": "文件",
-        "source": "记词",
+        "word": "研究",
+        "kana": "けんきゅう",
+        "zh": "研究",
+        "source": "今日聚焦",
         "hits": 1,
-        "first_sec": 29.17,
+        "first_sec": 58.47,
         "times": [
-          29.17
+          58.47
         ]
       },
       {
-        "word": "予算",
-        "kana": "よさん",
-        "zh": "预算",
-        "source": "记词",
+        "word": "象徴",
+        "kana": "しょうちょう",
+        "zh": "象征",
+        "source": "重点反刍",
         "hits": 1,
-        "first_sec": 47.34,
+        "first_sec": 58.47,
         "times": [
-          47.34
+          58.47
         ]
       },
       {
-        "word": "だんだん",
-        "kana": "だんだん",
-        "zh": "渐渐",
-        "source": "记词",
+        "word": "ニュース",
+        "kana": "ニュース",
+        "zh": "新闻",
+        "source": "播客",
         "hits": 1,
-        "first_sec": 66.13,
+        "first_sec": 58.47,
         "times": [
-          66.13
+          58.47
         ]
       }
     ],
@@ -866,170 +853,179 @@
     "cues": [
       {
         "s": 0.85,
-        "e": 4.92,
+        "e": 4.77,
         "v": "M",
         "ch": 0,
-        "ja": "日本の宅配便は、最初から便利だったわけではありません。",
-        "zh": "日本的快递，并不是一开始就这么方便的。",
-        "hits": [
-          "わけ"
-        ]
-      },
-      {
-        "s": 5.28,
-        "e": 10.27,
-        "v": "F",
-        "ch": 0,
-        "ja": "今は人手不足で、お互いに協力するしかないと言われていますね。",
-        "zh": "现在因为人手不足，大家只好互相配合。",
+        "ja": "今日の物語を、やさしい日本語で振り返ってみましょう。",
+        "zh": "让我们用清晰自然的日语，重温今天的故事。",
         "hits": []
       },
       {
-        "s": 10.95,
-        "e": 18.46,
+        "s": 5.13,
+        "e": 10.75,
+        "v": "F",
+        "ch": 0,
+        "ja": "都心の百貨店が賑わう一方で、地方の老舗は閉店が続いている。",
+        "zh": "百年百货：重温今日关键日语表达。",
+        "hits": []
+      },
+      {
+        "s": 11.11,
+        "e": 13.63,
         "v": "M",
-        "ch": 1,
-        "ja": "一九七六年、ヤマト運輸の小倉昌男は、厳しい反対の中で新しいルールを作りました。",
-        "zh": "1976年，大和运输的小仓昌男在强烈反对中立下了新规则。",
+        "ch": 0,
+        "ja": "昔は日曜ごとに家族で行ったものだ。",
+        "zh": "百年百货：重温今日关键日语表达。",
         "hits": [
-          "ルール"
+          "家族"
         ]
       },
       {
-        "s": 18.82,
-        "e": 23.04,
+        "s": 14.31,
+        "e": 17.07,
         "v": "F",
         "ch": 1,
-        "ja": "利益よりサービスを優先する、はっきりしたルールですね。",
-        "zh": "服务优先于利润，真是条清晰明白的规矩。",
+        "ja": "高度成長の最中に危機が起きた。",
+        "zh": "卫生纸骚动：重温今日关键日语表达。",
         "hits": [
-          "利益",
-          "ルール",
+          "危機"
+        ]
+      },
+      {
+        "s": 17.43,
+        "e": 24.82,
+        "v": "M",
+        "ch": 1,
+        "ja": "紙がなくなるという噂が広がったことから、不安は大きくなるばかりで、売り切れないうちに買い急いでしまった。",
+        "zh": "卫生纸骚动：重温今日关键日语表达。",
+        "hits": [
+          "不安"
+        ]
+      },
+      {
+        "s": 25.5,
+        "e": 32.65,
+        "v": "F",
+        "ch": 2,
+        "ja": "厳しい危機にありながらも、徹底した省エネ技術によって、世界中で選ばれるようになった。",
+        "zh": "省油逆袭：重温今日关键日语表达。",
+        "hits": [
+          "危機",
+          "世界",
+          "技術"
+        ]
+      },
+      {
+        "s": 33.33,
+        "e": 38.31,
+        "v": "M",
+        "ch": 3,
+        "ja": "耐震の父として知られる内藤氏はコンピューターを使わずに計算しきった。",
+        "zh": "东京塔传奇：重温今日关键日语表达。",
+        "hits": []
+      },
+      {
+        "s": 38.67,
+        "e": 41.65,
+        "v": "F",
+        "ch": 3,
+        "ja": "当時これほど大胆な計画はなかった。",
+        "zh": "东京塔传奇：重温今日关键日语表达。",
+        "hits": [
+          "計画"
+        ]
+      },
+      {
+        "s": 42.33,
+        "e": 45.53,
+        "v": "M",
+        "ch": 4,
+        "ja": "風が強い日によっては作業が止まることもあった。",
+        "zh": "红白铁塔：重温今日关键日语表达。",
+        "hits": []
+      },
+      {
+        "s": 45.89,
+        "e": 48.09,
+        "v": "F",
+        "ch": 4,
+        "ja": "五年ごとに手塗りで塗り直す。",
+        "zh": "红白铁塔：重温今日关键日语表达。",
+        "hits": []
+      },
+      {
+        "s": 48.77,
+        "e": 52.07,
+        "v": "F",
+        "ch": 1,
+        "ja": "今日のキーワードは、台風と構造ですね。",
+        "zh": "今天的关键词是「台風」和「構造」。",
+        "hits": [
+          "台風",
+          "構造"
+        ]
+      },
+      {
+        "s": 52.75,
+        "e": 57.79,
+        "v": "M",
+        "ch": 3,
+        "ja": "物語の中で台風や構造が出てくると、内容がはっきり分かります。",
+        "zh": "在故事里听到「台風」和「構造」，意思一下就清楚了。",
+        "hits": [
+          "台風",
+          "構造",
           "はっきり"
         ]
       },
       {
-        "s": 23.4,
-        "e": 28.49,
-        "v": "M",
-        "ch": 1,
-        "ja": "十分な準備をしたうえで始めたのに、初日の荷物はたった十一個でした。",
-        "zh": "明明做了充分准备才开张，第一天却只接到十一个包裹。",
-        "hits": []
-      },
-      {
-        "s": 29.17,
-        "e": 35.07,
+        "s": 58.47,
+        "e": 63.68,
         "v": "F",
         "ch": 2,
-        "ja": "さらに、省庁の官僚が長い間、書類の許可を出さなかったそうですね。",
-        "zh": "而且听说省厅的官僚很长时间都不肯批复文件许可。",
+        "ja": "さらに研究や象徴も、ニュースでよく使われる大切な言葉です。",
+        "zh": "另外「研究」和「象徴」也是新闻里高频出现的重要词。",
         "hits": [
-          "官僚",
-          "書類"
+          "研究",
+          "象徴",
+          "ニュース"
         ]
       },
       {
-        "s": 35.43,
-        "e": 40.43,
-        "v": "M",
-        "ch": 2,
-        "ja": "小倉は運輸大臣さえ裁判に訴え、官僚の厚い壁と戦いました。",
-        "zh": "小仓甚至把运输大臣告上法庭，正面硬刚官僚的高墙。",
-        "hits": [
-          "裁判",
-          "官僚"
-        ]
-      },
-      {
-        "s": 40.79,
-        "e": 46.66,
-        "v": "F",
-        "ch": 2,
-        "ja": "長い裁判の末に、黒猫は日本の便利な暮らしの象徴になったのですね。",
-        "zh": "经过漫长的审判，黑猫最终成了日本便利生活的象征。",
-        "hits": [
-          "裁判",
-          "象徴"
-        ]
-      },
-      {
-        "s": 47.34,
-        "e": 54.34,
-        "v": "M",
-        "ch": 3,
-        "ja": "一方、一九八三年には、京都の任天堂が限られた予算でファミコンを生みました。",
-        "zh": "另一边，1983年京都的任天堂用有限的预算造出了红白机。",
-        "hits": [
-          "予算"
-        ]
-      },
-      {
-        "s": 54.7,
-        "e": 59.67,
-        "v": "F",
-        "ch": 3,
-        "ja": "当時の海外の市場は、質の低いゲームだらけだったと聞きました。",
-        "zh": "听说当时海外市场里满是粗制滥造的游戏。",
-        "hits": [
-          "市場"
-        ]
-      },
-      {
-        "s": 60.35,
-        "e": 65.77,
+        "s": 64.36,
+        "e": 68.81,
         "v": "M",
         "ch": 4,
-        "ja": "昔は辞書のように分厚い説明書が必要でしたが、マリオには文字がありません。",
-        "zh": "以前游戏都需要厚如字典的说明书，马里奥却连一个字都没写。",
+        "ja": "現場の変化を見るうえでは、発見と辞書にも注目したいですね。",
+        "zh": "看清现场变化时，「発見」和「辞書」同样值得留意。",
         "hits": [
-          "辞書"
-        ]
-      },
-      {
-        "s": 66.13,
-        "e": 71.46,
-        "v": "F",
-        "ch": 4,
-        "ja": "辞書を読まなくても、遊びながらだんだん操作できるようになる工夫ですね。",
-        "zh": "不用翻字典，边玩就能渐渐学会操作的设计巧思。",
-        "hits": [
+          "発見",
           "辞書",
-          "だんだん"
+          "現場",
+          "変化"
         ]
       },
       {
-        "s": 71.82,
-        "e": 77.13,
-        "v": "M",
-        "ch": 4,
-        "ja": "こうして日本のゲームは、新しいものづくりの象徴として世界へ広がりました。",
-        "zh": "就这样，日本游戏作为新一代匠心的象征走向了世界。",
-        "hits": [
-          "象徴"
-        ]
-      },
-      {
-        "s": 77.81,
-        "e": 84.4,
+        "s": 69.49,
+        "e": 73.11,
         "v": "F",
         "ch": 5,
-        "ja": "今はＡＩ投資が膨らむにつれて、世界の市場も利益の行方を厳しく見ています。",
-        "zh": "如今随着AI投资不断膨胀，全球市场也在严密审视利润的去向。",
+        "ja": "最後に記憶や市民も合わせて押さえておきましょう。",
+        "zh": "最后也顺手把「記憶」和「市民」一并记牢。",
         "hits": [
-          "利益",
-          "市場"
+          "記憶",
+          "市民"
         ]
       },
       {
-        "s": 84.76,
-        "e": 90.57,
+        "s": 73.47,
+        "e": 79.29,
         "v": "M",
         "ch": 5,
-        "ja": "時代が変わっても、人の心を動かす工夫こそが、次のルールを作るのですね。",
-        "zh": "无论时代怎么变，打动人心的巧思才会定下下一个时代的规则。",
+        "ja": "毎日少しずつ日本語で物語を聞くことで、言葉が自然に身についていきます。",
+        "zh": "每天用日语看一小段故事，这些词就会自然扎进脑子里。",
         "hits": [
-          "ルール"
+          "つい"
         ]
       }
     ]

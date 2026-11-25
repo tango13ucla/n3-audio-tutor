@@ -105,7 +105,15 @@
       "uchi10_s3a_nintendo_part1",
       "uchi10_s3b_nintendo_part2",
       "uchi10_s4_world_ai_markets"
+    ],
+    "2026-11-25": [
+      "uchi11_s1_news_fallback",
+      "uchi11_s2a_oilshock_part1",
+      "uchi11_s2b_oilshock_part2",
+      "uchi11_s3a_tokyotower_part1",
+      "uchi11_s3b_tokyotower_part2",
+      "uchi11_s4_world_global_health"
     ]
   },
-  "last_date": "2026-11-24"
+  "last_date": "2026-11-25"
 }

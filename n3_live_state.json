@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-11-25 02:02 PT",
+  "updated_at": "2026-11-25 08:36 PT",
   "exam_date": "2026-12-06",
-  "days_left": 12,
+  "days_left": 11,
   "target_score": "120+ / 180",
   "mocks": [
     {
@@ -14115,8 +14115,8 @@
     "ga_done": false,
     "ga_total_audited": 89
   },
-  "study_date": "2026-11-24",
-  "_baked_epoch": 1795600936,
+  "study_date": "2026-11-25",
+  "_baked_epoch": 1795624600,
   "word_lookups": {
     "おく": {
       "count": 1,
