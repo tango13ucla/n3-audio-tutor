@@ -2683,7 +2683,28 @@
     "ほっとする": "./audio/words/w_7d88757140.mp3",
     "じっと": "./audio/words/w_b54efe3ba1.mp3",
     "さっと": "./audio/words/w_5e06a598a4.mp3",
-    "象徴": "./audio/words/w_e5017e70a4.mp3"
+    "象徴": "./audio/words/w_e5017e70a4.mp3",
+    "長引く": "./audio/words/w_581e29c5f8.mp3",
+    "最低限": "./audio/words/w_121606c7c2.mp3",
+    "滞在": "./audio/words/w_c88f286377.mp3",
+    "素振り": "./audio/words/w_cfa967d33e.mp3",
+    "活躍": "./audio/words/w_3f5f4cccd6.mp3",
+    "欠航": "./audio/words/w_d0c9690b69.mp3",
+    "下書き": "./audio/words/w_11082165a9.mp3",
+    "勘違い": "./audio/words/w_2705b1742c.mp3",
+    "外気": "./audio/words/w_f929d0e943.mp3",
+    "くしゃみ": "./audio/words/w_c630b88119.mp3",
+    "絶品": "./audio/words/w_333c394ef9.mp3",
+    "手がける": "./audio/words/w_8f5a7a287f.mp3",
+    "解釈": "./audio/words/w_0c2733301b.mp3",
+    "鍵盤": "./audio/words/w_85c482df7a.mp3",
+    "再開発": "./audio/words/w_e55331caa0.mp3",
+    "先方": "./audio/words/w_ca79acb782.mp3",
+    "銭湯": "./audio/words/w_2b7f5c7f5a.mp3",
+    "面影": "./audio/words/w_98fbb0b6b7.mp3",
+    "省略": "./audio/words/w_b5c3e0ec81.mp3",
+    "語り合う": "./audio/words/w_577ca6fa90.mp3",
+    "誤字": "./audio/words/w_bffae3481c.mp3"
   },
   "vocab_cards": {
     "書類": {
@@ -8758,6 +8779,237 @@
     "q_audio": "./audio/N3-G158_q.mp3?v=cd582d15",
     "exp_audio": "./audio/N3-G158_exp.mp3?v=9f7d8e79",
     "spoken_text": "好不容易早起做了便当，结果忘在家里没带出来。 后半句带「のに」表示事与愿违，前面需要一个副词来突出早起做便当这番心血白费了。 副词呼应铁律：「せっかく〜のに」＝ 好不容易却白费了。"
+  },
+  "VAR12-01_q.mp3": "496299167c2a",
+  "VAR12-01_exp.mp3": "3d6728908eb8",
+  "meta:VAR12-01": {
+    "q_audio": "./audio/VAR12-01_q.mp3?v=49629916",
+    "exp_audio": "./audio/VAR12-01_exp.mp3?v=3d672890",
+    "spoken_text": "会议拖长了肚子好饿，去附近便利店买点面包之类的吧。 随口提议买点面包之类垫垫肚子，不确定具体买什么。 名詞 ＋ か何か：举一例表「……什么的、……之类的」。"
+  },
+  "VAR12-02_q.mp3": "6147cfe7722a",
+  "VAR12-02_exp.mp3": "dae61f2f54d0",
+  "meta:VAR12-02": {
+    "q_audio": "./audio/VAR12-02_q.mp3?v=6147cfe7",
+    "exp_audio": "./audio/VAR12-02_exp.mp3?v=dae61f2f",
+    "spoken_text": "临时出差来不及准备，只带了最起码的文件过来。 句尾是否定「没能带来」，强调数量少得可怜，只带了底线文件。 だけしか 必与否定呼应，比单用 しか 语气更强调「仅仅只有」。"
+  },
+  "VAR12-03_q.mp3": "0275b58649c2",
+  "VAR12-03_exp.mp3": "2a61c4e2d011",
+  "meta:VAR12-03": {
+    "q_audio": "./audio/VAR12-03_q.mp3?v=0275b586",
+    "exp_audio": "./audio/VAR12-03_exp.mp3?v=2a61c4e2",
+    "spoken_text": "如果一次性把新功能全加进去，用户可能会搞不清怎么操作。 产品上线忌讳一股脑儿全堆上来，强调「一次性同时」。 一度に 表示动作「一次性、同时集中发生」。"
+  },
+  "VAR12-04_q.mp3": "11d63d6b355b",
+  "VAR12-04_exp.mp3": "d3edd3cefe64",
+  "meta:VAR12-04": {
+    "q_audio": "./audio/VAR12-04_q.mp3?v=11d63d6b",
+    "exp_audio": "./audio/VAR12-04_exp.mp3?v=d3edd3ce",
+    "spoken_text": "在京都逗留期间，抽空逛了两家一直想去的古老美术馆。 后项「逛了两家美术馆」是期间内做完的具体事件，不是全程持续动作。 持续动作选 あいだ；期间内完成某事必须加 に 用 あいだに。"
+  },
+  "VAR12-05_q.mp3": "edbb09b2895f",
+  "VAR12-05_exp.mp3": "4fb56178ba07",
+  "meta:VAR12-05": {
+    "q_audio": "./audio/VAR12-05_q.mp3?v=edbb09b2",
+    "exp_audio": "./audio/VAR12-05_exp.mp3?v=4fb56178",
+    "spoken_text": "他每天那么认真地练习挥棒，下场比赛肯定会大放异彩。 前半句给出扎实依据「のだから」，后半句顺势给出强烈肯定判断。 简体 ＋ にちがいない：有根据地断定「一定……、准没错」。"
+  },
+  "VAR12-06_q.mp3": "45948dd08890",
+  "VAR12-06_exp.mp3": "a6ddd17d036d",
+  "meta:VAR12-06": {
+    "q_audio": "./audio/VAR12-06_q.mp3?v=45948dd0",
+    "exp_audio": "./audio/VAR12-06_exp.mp3?v=a6ddd17d",
+    "spoken_text": "最近老是半夜光顾着刷手机，早上怎么也起不来。 「最近」暗示反复习惯，老是干这一件让人后悔的事，别跟「たばかり」弄混。 反复老做某事用 てばかりいる；动作刚结束才是 たばかり。"
+  },
+  "VAR12-07_q.mp3": "f101ddd0399c",
+  "VAR12-07_exp.mp3": "4e85748bd7ab",
+  "meta:VAR12-07": {
+    "q_audio": "./audio/VAR12-07_q.mp3?v=f101ddd0",
+    "exp_audio": "./audio/VAR12-07_exp.mp3?v=4e85748b",
+    "spoken_text": "好不容易提前两周订好的荞麦面馆，却因为临时加班去不了了。 付出努力却落空的遗憾感，必须用「せっかく」配「のに」。 せっかく ＋ 努力/机会 ＋ のに：好不容易……却白费了。"
+  },
+  "VAR12-08_q.mp3": "246d87533a4a",
+  "VAR12-08_exp.mp3": "34b2b162dcd1",
+  "meta:VAR12-08": {
+    "q_audio": "./audio/VAR12-08_q.mp3?v=246d8753",
+    "exp_audio": "./audio/VAR12-08_exp.mp3?v=34b2b162",
+    "spoken_text": "既然末班航班都取消了，今晚只好在机场附近住一晚了。 别无他法、只能硬着头皮接受唯一选择。 V原形 ＋ しかない：只好……；V原形 ＋ ことはない：没必要……。"
+  },
+  "VAR12-09_q.mp3": "ba6b4535c311",
+  "VAR12-09_exp.mp3": "08a4f4fbaef5",
+  "meta:VAR12-09": {
+    "q_audio": "./audio/VAR12-09_q.mp3?v=ba6b4535",
+    "exp_audio": "./audio/VAR12-09_exp.mp3?v=08a4f4fb",
+    "spoken_text": "这份企划书草稿还不完美也没关系，能先分享出来看看吗？ 职场常用宽容放行句「还不完善也不要紧」。 〜てもかまわない / 〜なくてもかまわない：没关系、不介意。"
+  },
+  "VAR12-10_q.mp3": "f31bb671ba1a",
+  "VAR12-10_exp.mp3": "5aeb1a5aa962",
+  "meta:VAR12-10": {
+    "q_audio": "./audio/VAR12-10_q.mp3?v=f31bb671",
+    "exp_audio": "./audio/VAR12-10_exp.mp3?v=5aeb1a5a",
+    "spoken_text": "那本书只读了开头十页，之后就一直搁在书架上没动过。 后面跟着「ずっと〜ままだ」表状态一直停滞，锁定「たきり」。 Vた ＋ きり：做完那一次之后，就再无下文。"
+  },
+  "VAR12-11_q.mp3": "2243fc9f2516",
+  "VAR12-11_exp.mp3": "c0ced9119439",
+  "meta:VAR12-11": {
+    "q_audio": "./audio/VAR12-11_q.mp3?v=2243fc9f",
+    "exp_audio": "./audio/VAR12-11_exp.mp3?v=c0ced911",
+    "spoken_text": "每天坚持听四十分钟，总觉得对新闻的语速稍微适应了一点。 形容说不清道不明、隐约摸到门槛的主观直觉，不是铁板钉钉的断言。 简体 ＋ ような気がする：总觉得好像……。"
+  },
+  "VAR12-12_q.mp3": "ab802abbe5a7",
+  "VAR12-12_exp.mp3": "cc116ad805dc",
+  "meta:VAR12-12": {
+    "q_audio": "./audio/VAR12-12_q.mp3?v=ab802abb",
+    "exp_audio": "./audio/VAR12-12_exp.mp3?v=cc116ad8",
+    "spoken_text": "要是连下属的细枝末节都要逐一插嘴干涉，本人就没法成长。 带着「没完没了件件都要管」的嫌弃语气，直接锁定「いちいち」。 いちいち：每一件小事都要逐一追究，常配抱怨或劝诫。"
+  },
+  "VAR12-13_q.mp3": "0ead4fec59e5",
+  "VAR12-13_exp.mp3": "f9d330c5577d",
+  "meta:VAR12-13": {
+    "q_audio": "./audio/VAR12-13_q.mp3?v=0ead4fec",
+    "exp_audio": "./audio/VAR12-13_exp.mp3?v=f9d330c5",
+    "spoken_text": "「昨天跑了挺多，腿不疼吗？」「嗯，倒也没什么事儿。」 「別に」作副词必须和否定形式呼应，表达「并没有特别……」。 別に 必配否定：別に〜ない（也没什么、并不怎么）。"
+  },
+  "VAR12-14_q.mp3": "46a6f98a4485",
+  "VAR12-14_exp.mp3": "082fac545fd1",
+  "meta:VAR12-14": {
+    "q_audio": "./audio/VAR12-14_q.mp3?v=46a6f98a",
+    "exp_audio": "./audio/VAR12-14_exp.mp3?v=082fac54",
+    "spoken_text": "运动出完一身大汗后，果然还是用冷水洗把脸最痛快。 「やっぱり」+ 个人生活经验力推最佳选择，直接锁定「に限る」。 に限る＝最好莫过于；とは限らない＝未必；に限らず＝不仅限于。"
+  },
+  "VAR12-15_q.mp3": "d5f1fb9fe495",
+  "VAR12-15_exp.mp3": "78d0392ba515",
+  "meta:VAR12-15": {
+    "q_audio": "./audio/VAR12-15_q.mp3?v=d5f1fb9f",
+    "exp_audio": "./audio/VAR12-15_exp.mp3?v=78d0392b",
+    "spoken_text": "仅仅因为把截止日期记错了一天，好不容易准备的申请就没赶上。 小失误酿成大遗憾，突出「就因为这一个原因」的痛悔。 ばかりに：只因为……（负面后果、极度懊悔）。"
+  },
+  "VAR12-16_q.mp3": "7e23609a2559",
+  "VAR12-16_exp.mp3": "1b6e7f7b40df",
+  "meta:VAR12-16": {
+    "q_audio": "./audio/VAR12-16_q.mp3?v=7e23609a",
+    "exp_audio": "./audio/VAR12-16_exp.mp3?v=1b6e7f7b",
+    "spoken_text": "刚泡完热水澡走到冷空气里，一瞬间喷嚏就打个不停。 前半句动作刚完成，下一秒立刻蹦出意料之外的自然反应。 Vた ＋ とたん（に）：刚一……瞬间就……（后项多为非意志变化）。"
+  },
+  "VAR12-17_q.mp3": "e8ca9e2e2c3e",
+  "VAR12-17_exp.mp3": "02f8edba3e30",
+  "meta:VAR12-17": {
+    "q_audio": "./audio/VAR12-17_q.mp3?v=e8ca9e2e",
+    "exp_audio": "./audio/VAR12-17_exp.mp3?v=02f8edba",
+    "spoken_text": "这家老旅馆不仅安静沉稳，而且当地的时令鱼料理也堪称一绝。 前后两项都是夸赞，属于「好上加好」的累加，别跟「うえで」混。 うえに＝而且（累加）；うえで＝做完……之后再（前提步骤）。"
+  },
+  "VAR12-18_q.mp3": "a993f649d2ca",
+  "VAR12-18_exp.mp3": "05ed4ed74c84",
+  "meta:VAR12-18": {
+    "q_audio": "./audio/VAR12-18_q.mp3?v=a993f649",
+    "exp_audio": "./audio/VAR12-18_exp.mp3?v=05ed4ed7",
+    "spoken_text": "那位建筑师不仅负责美术馆设计，连家具和照明细节都亲自操刀。 后半句出现「〜まで」表示递进延伸，前面用「だけでなく」搭桥。 N／简体 ＋ だけでなく（＋ も／まで）：不仅……而且还……。"
+  },
+  "VAR12-19_q.mp3": "125bda3774b3",
+  "VAR12-19_exp.mp3": "5d351a85479e",
+  "meta:VAR12-19": {
+    "q_audio": "./audio/VAR12-19_q.mp3?v=125bda37",
+    "exp_audio": "./audio/VAR12-19_exp.mp3?v=5d351a85",
+    "spoken_text": "哪怕是同一段历史事件，从哪个国家立场去看，解读也会大不相同。 看到句尾「異なる／違う」和前面的疑问词「どの〜か」，秒锁「によって」。 によって＝因……而异；にとって＝对……而言；について＝关于……。"
+  },
+  "VAR12-20_q.mp3": "a37e151f27b1",
+  "VAR12-20_exp.mp3": "e522b67259e4",
+  "meta:VAR12-20": {
+    "q_audio": "./audio/VAR12-20_q.mp3?v=a37e151f",
+    "exp_audio": "./audio/VAR12-20_exp.mp3?v=e522b672",
+    "spoken_text": "工作告一段落，时隔三年再次碰了碰钢琴琴键。 强调「隔了三年再次做」，不是「每三年固定做一次」。 ぶりに＝时隔……（久别重逢）；おきに／ごとに＝每隔固定周期。"
+  },
+  "VAR12-21_q.mp3": "546b0e7efa73",
+  "VAR12-21_exp.mp3": "49811b4d67a2",
+  "meta:VAR12-21": {
+    "q_audio": "./audio/VAR12-21_q.mp3?v=546b0e7e",
+    "exp_audio": "./audio/VAR12-21_exp.mp3?v=49811b4d",
+    "spoken_text": "随着城市再开发的推进，充满老味道的小商店街正接连消失。 前面是「進む」，后面是「次々と消える」，典型同步伴随变化。 〜とともに：随着……一并变化（偏正式书面，可接名词或动词原形）。"
+  },
+  "VAR12-22_q.mp3": "a7d0d71f0ce4",
+  "VAR12-22_exp.mp3": "98bd14191458",
+  "meta:VAR12-22": {
+    "q_audio": "./audio/VAR12-22_q.mp3?v=a7d0d71f",
+    "exp_audio": "./audio/VAR12-22_exp.mp3?v=98bd1419",
+    "spoken_text": "据对方负责人的通知说，下周的商谈延期到周五了。 句首出现「〜によると」，句尾需要传闻转述表达来收口。 〜によると ＋ ……ということだ：据……说（比 そうだ 更书面正式）。"
+  },
+  "VAR12-23_q.mp3": "139ff84e5fe4",
+  "VAR12-23_exp.mp3": "bbaa38fd182e",
+  "meta:VAR12-23": {
+    "q_audio": "./audio/VAR12-23_q.mp3?v=139ff84e",
+    "exp_audio": "./audio/VAR12-23_exp.mp3?v=bbaa38fd",
+    "spoken_text": "仅仅一晚上就把三百页专业书全读完，实在太勉强了。 难的不是「好不好读（やすい）」，而是「能不能从头到尾彻底读完（きる）」。 Vます干 ＋ きる（彻底完成）／きれない（做不完）；やすい（容易）。"
+  },
+  "VAR12-24_q.mp3": "94b8d288d6e6",
+  "VAR12-24_exp.mp3": "8a1cfeaf1de1",
+  "meta:VAR12-24": {
+    "q_audio": "./audio/VAR12-24_q.mp3?v=94b8d288",
+    "exp_audio": "./audio/VAR12-24_exp.mp3?v=8a1cfeaf",
+    "spoken_text": "即使不能立刻看到结果，每天坚持下去本身才有意义。 看到句首「たとえ」，条件反射去找后半句的「〜ても／でも」。 たとえ……ても：哪怕……也……（绝不配 たら／なら）。"
+  },
+  "VAR12-25_q.mp3": "1809b5d52d9b",
+  "VAR12-25_exp.mp3": "16bcc4b771e9",
+  "meta:VAR12-25": {
+    "q_audio": "./audio/VAR12-25_q.mp3?v=1809b5d5",
+    "exp_audio": "./audio/VAR12-25_exp.mp3?v=16bcc4b7",
+    "spoken_text": "假如明年起在东京生活的话，你想住在哪一带街区呢？ 句首有「もし」，设想一个未来的假设前提并在此基础上提问。 もし ＋ 简体 ＋ としたら：假如……的话（重在设想条件）。"
+  },
+  "VAR12-26_q.mp3": "b6b023fb6f71",
+  "VAR12-26_exp.mp3": "fc95188a92db",
+  "meta:VAR12-26": {
+    "q_audio": "./audio/VAR12-26_q.mp3?v=b6b023fb",
+    "exp_audio": "./audio/VAR12-26_exp.mp3?v=fc95188a",
+    "spoken_text": "这片街区以古老钱汤为代表，林立着好几座留有昭和风貌的建筑。 先举一个最有代表性的具体例子，再引出后面同类事物。 代表名詞 ＋ をはじめ：以……为首（列举同类代表）。"
+  },
+  "VAR12-27_q.mp3": "a0fde20ad673",
+  "VAR12-27_exp.mp3": "aa482b2f8531",
+  "meta:VAR12-27": {
+    "q_audio": "./audio/VAR12-27_q.mp3?v=a0fde20a",
+    "exp_audio": "./audio/VAR12-27_exp.mp3?v=aa482b2f",
+    "spoken_text": "这周连续加班，感觉稍微有点缺觉，今晚还是早点休息吧。 「少し」+ 身体轻微不适/偏离常态的苗头，最地道的就是「気味（ぎみ）」。 風邪気味／疲れ気味／寝不足気味：隐约有点……苗头（读 ぎみ）。"
+  },
+  "VAR12-28_q.mp3": "ae74a57f6dd2",
+  "VAR12-28_exp.mp3": "8aaf43be4962",
+  "meta:VAR12-28": {
+    "q_audio": "./audio/VAR12-28_q.mp3?v=ae74a57f",
+    "exp_audio": "./audio/VAR12-28_exp.mp3?v=8aaf43be",
+    "spoken_text": "实际去现场一看，并没有照片里看起来那么拥挤。 比较句后面是否定「していなかった」，千万别习惯性选「より」！ 否定比较必用 ほど〜ない；肯定比较才用 より。"
+  },
+  "VAR12-29_q.mp3": "97872cef627c",
+  "VAR12-29_exp.mp3": "a1d875b463ec",
+  "meta:VAR12-29": {
+    "q_audio": "./audio/VAR12-29_q.mp3?v=97872cef",
+    "exp_audio": "./audio/VAR12-29_exp.mp3?v=a1d875b4",
+    "spoken_text": "无论多赶时间，唯独安全确认千万不能省。 「決して（けっして）」是铁杆否定副词，句尾必须落在否定或禁止上。 決して ＋ 否定／てはいけない：绝对不……、千万不可……。"
+  },
+  "VAR12-30_q.mp3": "8ba3eebec84d",
+  "VAR12-30_exp.mp3": "c0e8244d419f",
+  "meta:VAR12-30": {
+    "q_audio": "./audio/VAR12-30_q.mp3?v=8ba3eebe",
+    "exp_audio": "./audio/VAR12-30_exp.mp3?v=c0e8244d",
+    "spoken_text": "这是和重要客户的约定，实在不能因私事临时取消。 重点区分：道义心理上「绝不能做」用 わけにはいかない；「并不是」才是 わけではない。 わけにはいかない＝实在不能；わけではない＝并不是；ことはない＝没必要。"
+  },
+  "VAR12-31_q.mp3": "80332f9fd55c",
+  "VAR12-31_exp.mp3": "07e56ecf3368",
+  "meta:VAR12-31": {
+    "q_audio": "./audio/VAR12-31_q.mp3?v=80332f9f",
+    "exp_audio": "./audio/VAR12-31_exp.mp3?v=07e56ecf",
+    "spoken_text": "上大学那会儿，每次一考完试总爱和朋友聊到天亮。 看到「〜のころは」+「よく／たびに」怀旧往事，秒选「たものだ」，绝不选「たところだ」。 Vた ＋ ものだ＝怀念过去常做；Vた ＋ ところだ＝刚刚做完。"
+  },
+  "VAR12-32_q.mp3": "b44bbeceef52",
+  "VAR12-32_exp.mp3": "e792306befd8",
+  "meta:VAR12-32": {
+    "q_audio": "./audio/VAR12-32_q.mp3?v=b44bbece",
+    "exp_audio": "./audio/VAR12-32_exp.mp3?v=e792306b",
+    "spoken_text": "因为把旧草稿原封不动发出去了，整封邮件满是错别字。 错字、灰尘、伤痕、借债等让人头疼的东西密密麻麻铺满，就用「だらけ」。 間違いだらけ／誤字だらけ／ほこりだらけ：满是……（负面嫌弃）。"
+  },
+  "VAR12-33_q.mp3": "078346d1ee41",
+  "VAR12-33_exp.mp3": "86e0f50d239c",
+  "meta:VAR12-33": {
+    "q_audio": "./audio/VAR12-33_q.mp3?v=078346d1",
+    "exp_audio": "./audio/VAR12-33_exp.mp3?v=86e0f50d",
+    "spoken_text": "部长，您周末在家都做些什么运动呀？ 主语是部长（尊长），动作是「する」，抬高对方必选「なさる」。 する 尊敬语＝なさる（ます形 なさいます）；谦让语＝いたす。"
   },
   "VAR11-01_q.mp3": "165bf277f917",
   "VAR11-01_exp.mp3": "8654c23ce5ae",
