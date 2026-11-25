@@ -1648,3 +1648,6 @@
 {"id": "VAR-H15", "point": "T-001", "choice": "開けて", "correct": "false", "ask_again": "false", "ts": "2026-11-25T07:59:08.000Z"}
 {"id": "VAR-H15", "point": "T-001", "choice": "開けて", "correct": "false", "ask_again": "false", "ts": "2026-11-25T07:59:10.000Z"}
 {"id": "VAR-H15", "point": "T-001", "choice": "開いて", "correct": "true", "ask_again": "false", "ts": "2026-11-25T07:59:12.000Z"}
+{"id": "N3-V25", "point": "せっかく", "choice": "せっかく", "correct": "true", "ask_again": "false", "ts": "2026-11-25T20:35:14.000Z"}
+{"id": "HES:VAR11-58", "point": "〜ようとする", "choice": "犹豫过关", "correct": "true", "ask_again": "false", "ts": "2026-11-25T20:36:00.000Z"}
+{"id": "VAR11-58", "point": "〜ようとする", "choice": "切ろうとしたとき", "correct": "true", "ask_again": "false", "ts": "2026-11-25T20:36:00.000Z"}
