@@ -106,7 +106,8 @@
         {
           "id": "cb_18_paris_japonisme_monet",
           "title": "巴黎莫奈花园里的日本桥：江户廉价包装纸浮世绘，怎么掀翻了整个欧洲印象派画坛",
-          "angle": "梵高临摹歌川广重、德彪西听着北斋《神奈川冲浪里》写交响诗《大海》。"
+          "angle": "梵高临摹歌川广重、德彪西听着北斋《神奈川冲浪里》写交响诗《大海》。",
+          "priority": 3
         },
         {
           "id": "cb_19_france_manga_capital",
@@ -147,7 +148,8 @@
         {
           "id": "cb_25_detroit_toyota_nummi",
           "title": "加州弗里蒙特的 NUMMI 工厂：丰田把通用全美最差、天天吸毒罢工的烂厂一年改造成标杆",
-          "angle": "如今特斯拉弗里蒙特工厂的前身，安灯拉绳背后管理信任的跨文化奇迹。"
+          "angle": "如今特斯拉弗里蒙特工厂的前身，安灯拉绳背后管理信任的跨文化奇迹。",
+          "growth_horizon": true
         },
         {
           "id": "cb_26_kurosawa_to_star_wars",
@@ -183,22 +185,26 @@
         {
           "id": "cb_31_deep_sea_rare_earth_minamitorishima",
           "title": "南鸟岛六千米深海稀土泥：海洋工程、关键矿产与全球供应链暗战",
-          "angle": "深海采矿技术瓶颈、生态争议与美中日在稀土精炼上的百年算盘。"
+          "angle": "深海采矿技术瓶颈、生态争议与美中日在稀土精炼上的百年算盘。",
+          "growth_horizon": true
         },
         {
           "id": "cb_32_ips_cells_yamanaka_longevity",
           "title": "山中伸弥的四个转录因子与全球抗衰老长寿医学赛跑：细胞重编程离临床还有几步",
-          "angle": "京都大学冷板凳突破到硅谷百亿美元长寿初创公司临床瓶颈。"
+          "angle": "京都大学冷板凳突破到硅谷百亿美元长寿初创公司临床瓶颈。",
+          "growth_horizon": true
         },
         {
           "id": "cb_33_blue_led_nakamura_patent",
           "title": "德岛小厂工程师中村修二点亮蓝光 LED：改变人类夜间照明史的物理奇迹与二百亿日元专利战",
-          "angle": "氮化镓材料工艺突破、诺贝尔物理奖与日本企业职务发明制度改革。"
+          "angle": "氮化镓材料工艺突破、诺贝尔物理奖与日本企业职务发明制度改革。",
+          "growth_horizon": true
         },
         {
           "id": "cb_34_hayabusa_asteroid_engineering",
           "title": "隼鸟号小行星采样七年万里归途：四台离子引擎全坏后，工程师怎么拼出一台「半残发动机」飞回地球",
-          "angle": "深空轨道力学、极限工程韧性与日本JAXA用小预算做大科学的智慧。"
+          "angle": "深空轨道力学、极限工程韧性与日本JAXA用小预算做大科学的智慧。",
+          "growth_horizon": true
         },
         {
           "id": "cb_35_yen_carry_trade_global_markets",
@@ -208,27 +214,32 @@
         {
           "id": "cb_36_lithium_battery_yoshino_ev",
           "title": "吉野彰发明锂电池却把动力电池霸权交给了中韩：基础科研强国为何总在规模制造战掉队",
-          "angle": "从实验室化学突破到超级工厂良率与供应链整合的全球工业规律。"
+          "angle": "从实验室化学突破到超级工厂良率与供应链整合的全球工业规律。",
+          "growth_horizon": true
         },
         {
           "id": "cb_37_tsunami_seismic_engineering",
           "title": "从高层免震阻尼器到提前十秒响起的紧急地震速报：人类对抗地球板块运动的工程极限",
-          "angle": "P波与S波时间差算法、东京晴空塔「心柱」灵感源自法隆寺五重塔。"
+          "angle": "P波与S波时间差算法、东京晴空塔「心柱」灵感源自法隆寺五重塔。",
+          "growth_horizon": true
         },
         {
           "id": "cb_38_semiconductor_materials_chokepoint",
           "title": "光刻胶、硅晶圆与氟化氢：为什么芯片制造最隐蔽的咽喉握在一批百年日本化工老厂手里",
-          "angle": "信越化学、东京应化、味之素ABF载板薄膜——卖味精的怎么成了AI芯片不可替代的底座。"
+          "angle": "信越化学、东京应化、味之素ABF载板薄膜——卖味精的怎么成了AI芯片不可替代的底座。",
+          "growth_horizon": true
         },
         {
           "id": "cb_39_super_kamiokande_neutrino",
           "title": "岐阜神冈矿山地下一千米五万吨超纯水：日本物理学家怎么抓住每秒穿透人体千亿次的幽灵粒子",
-          "angle": "小柴昌俊、梶田隆章两代诺奖、滨松光子光电倍增管工艺与人类仰望宇宙的纯粹好奇。"
+          "angle": "小柴昌俊、梶田隆章两代诺奖、滨松光子光电倍增管工艺与人类仰望宇宙的纯粹好奇。",
+          "growth_horizon": true
         },
         {
           "id": "cb_40_aging_robotics_care_future",
           "title": "老龄化先行三十年的地球实验室：日本照护保险、AI看护机器人给中欧美提前写的答案与坑",
-          "angle": "全人类都将面对人口拐点，看日本长护险财政账与科技辅助养老的真实边界。"
+          "angle": "全人类都将面对人口拐点，看日本长护险财政账与科技辅助养老的真实边界。",
+          "growth_horizon": true
         },
         {
           "id": "cb_41_cantopop_taiwan_cinema_japan_echo",

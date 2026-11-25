@@ -468,6 +468,16 @@ CURATED_JP_VIDEO_SCRIPTS: dict[str, dict[str, Any]] = {
     },
 }
 
+try:
+    from jp_video_scripts_extra import (
+        EXTRA_CURATED_JP_VIDEO_SCRIPTS as _EXTRA_JP_VIDS,
+        EXTRA_CURATED_VISUAL_TOPICS as _EXTRA_VIS_TOPICS,
+    )
+    CURATED_VISUAL_TOPICS.update(_EXTRA_VIS_TOPICS)
+    CURATED_JP_VIDEO_SCRIPTS.update(_EXTRA_JP_VIDS)
+except ImportError:
+    pass
+
 
 def _find_ffmpeg() -> str:
     exe = shutil.which("ffmpeg")

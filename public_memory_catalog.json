@@ -1204,7 +1204,7 @@
         "〜をもとに",
         "〜からこそ"
       ],
-      "priority": 1,
+      "priority": 3,
       "growth_horizon": true
     },
     {
@@ -1219,7 +1219,7 @@
         "〜によって",
         "〜てはじめて"
       ],
-      "priority": 1,
+      "priority": 3,
       "growth_horizon": true
     },
     {
@@ -1234,7 +1234,7 @@
         "〜にわたって",
         "〜ようにする"
       ],
-      "priority": 1,
+      "priority": 3,
       "growth_horizon": true
     },
     {
@@ -1248,6 +1248,36 @@
         "〜うえで",
         "〜にもかかわらず",
         "〜ことにする"
+      ],
+      "priority": 3,
+      "growth_horizon": true
+    },
+    {
+      "id": "pm_95_ozawa_seiji_classical_music",
+      "pillar": "艺术史与古典音乐",
+      "short_tab": "小泽征尔指挥台",
+      "title": "骑小摩托闯欧洲的小泽征尔与维也纳新年音乐会：日本如何花百年时间长成亚洲最深厚的古典音乐土壤",
+      "year": 2002,
+      "real_facts": "小泽征尔师从斋藤秀雄与卡拉扬、执掌波士顿交响乐团二十九年并在二零零二年成为首位执棒维也纳新年音乐会的亚洲指挥，背后是日本遍布地方城市的一流声学音乐厅与全民合唱管弦教育",
+      "n3_targets": [
+        "〜にわたって",
+        "〜にもかかわらず",
+        "〜末に"
+      ],
+      "priority": 1,
+      "growth_horizon": true
+    },
+    {
+      "id": "pm_96_japan_satoyama_cedar_ecology",
+      "pillar": "生态治理与林业史",
+      "short_tab": "杉木林与花粉史",
+      "title": "战后狂种千万亩日本柳杉换来全国四成国民花粉症？从「里山」共生智慧看日本森林生态的意外反转",
+      "year": 1955,
+      "real_facts": "战后为重建房屋与防止水土流失，日本林野厅大力号召种植生长迅速的柳杉与扁柏，却因后来进口廉价木材导致大片人工林无人砍伐疏林，数十年后进入盛花期引发全民春季花粉症与林政反思",
+      "n3_targets": [
+        "〜せいで",
+        "〜結果",
+        "〜一方で"
       ],
       "priority": 1,
       "growth_horizon": true

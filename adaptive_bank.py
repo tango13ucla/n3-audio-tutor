@@ -955,6 +955,17 @@ VARIANT_CARDS.extend(NEW_VARIANT_CARDS)
 EXTRA_WORDS.update(NEW_EXTRA_WORDS)
 
 try:
+    from wave11_precision_variants import WAVE11_VARIANT_CARDS as _W11_VARS
+    _seen_w11 = {str(v.get("id") or "") for v in VARIANT_CARDS}
+    for _wv in _W11_VARS:
+        _wid = str(_wv.get("id") or "")
+        if _wid and _wid not in _seen_w11:
+            VARIANT_CARDS.append(_wv)
+            _seen_w11.add(_wid)
+except ImportError:
+    pass
+
+try:
     import json as _json_ab, os as _os_ab
     _auto_v_ab = _os_ab.path.join(_os_ab.path.dirname(_os_ab.path.abspath(__file__)), "audio", "auto_generated_variants.json")
     if _os_ab.path.exists(_auto_v_ab):

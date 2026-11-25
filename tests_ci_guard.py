@@ -614,7 +614,16 @@ def test_all_future_volumes_jp_video_invariants() -> None:
     healed_ja = "\n".join(ln["ja"] for ln in healed["lines"])
     healed_hits = [we["word"] for we in word_entries if we["word"] in healed_ja]
     assert len(healed_hits) >= 8, f"Stingy LLM heal failed (<8 words): {healed_hits}"
-    print(f"[PASS 9/10] All {checked_vols} future volumes + stingy-LLM JP video Self-test 13 invariants (>=10 cues, >=8 words)")
+    for c_sid, c_raw in sorted(rvs.CURATED_JP_VIDEO_SCRIPTS.items()):
+        c_lines = c_raw.get("lines") or []
+        assert 10 <= len(c_lines) <= 18, f"Curated {c_sid}: expected 10..18 cues, got {len(c_lines)}"
+        c_blob = str(c_raw.get("title_ja", "")) + str(c_raw.get("title_zh", "")) + "".join(str(x.get("ja", "")) + str(x.get("zh", "")) for x in c_lines)
+        assert "—" not in c_blob, f"Curated {c_sid}: em dash leaked"
+        c_ja = "\n".join(str(x.get("ja", "")) for x in c_lines)
+        c_hits = [we["word"] for we in word_entries if we["word"] in c_ja]
+        assert len(c_hits) >= 8, f"Curated {c_sid}: only {len(c_hits)} native target word hits (<8): {c_hits}"
+
+    print(f"[PASS 9/10] All {checked_vols} future volumes + {len(rvs.CURATED_JP_VIDEO_SCRIPTS)} curated JP videos + stingy-LLM Self-test 13 invariants (>=10 cues, >=8 words)")
 
 
 def test_generate_daily_radio_async_and_reuse_contract() -> None:

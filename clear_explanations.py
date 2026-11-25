@@ -1045,6 +1045,33 @@ import re as _re
 CARDS_75.update(NEW_CARDS_AUDIO)
 
 try:
+    from wave11_precision_variants import WAVE11_VARIANT_CARDS as _W11_CE
+    for _wv in _W11_CE:
+        _cid = str(_wv.get("id") or "")
+        if _cid and _cid not in CARDS_75:
+            _qt = []
+            if _wv.get("q_before"):
+                _qt.append(("JF", str(_wv["q_before"])))
+            if _wv.get("q_after"):
+                if _qt:
+                    _qt.append(("PAUSE", 0.32))
+                _qt.append(("JF", str(_wv["q_after"])))
+            if not _qt:
+                _qt = [("JF", str(_wv.get("full_ja") or ""))]
+            CARDS_75[_cid] = {
+                "q_turns": _qt,
+                "full_ja": str(_wv.get("full_ja") or ""),
+                "zh_meaning": str(_wv.get("zh_meaning") or ""),
+                "why_line": str(_wv.get("why_line") or ""),
+                "form_line": str(_wv.get("core_rule") or ""),
+                "exp_turns": [
+                    ("T", str(_wv.get("exp_zh") or "")),
+                ],
+            }
+except ImportError:
+    pass
+
+try:
     import json as _json_ce, os as _os_ce
     _auto_v_path = _os_ce.path.join(_os_ce.path.dirname(_os_ce.path.abspath(__file__)), "audio", "auto_generated_variants.json")
     if _os_ce.path.exists(_auto_v_path):

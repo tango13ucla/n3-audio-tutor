@@ -576,7 +576,7 @@
         "〜につれて",
         "〜わけではない"
       ],
-      "priority": 1,
+      "priority": 3,
       "growth_horizon": true
     },
     {
@@ -591,7 +591,7 @@
         "〜だけでなく",
         "〜によって"
       ],
-      "priority": 1,
+      "priority": 3,
       "growth_horizon": true
     },
     {
@@ -606,7 +606,7 @@
         "〜にわたって",
         "〜ざるを得ない"
       ],
-      "priority": 1,
+      "priority": 3,
       "growth_horizon": true
     },
     {
@@ -620,6 +620,36 @@
         "〜によって",
         "〜ことから",
         "〜につれて"
+      ],
+      "priority": 3,
+      "growth_horizon": true
+    },
+    {
+      "id": "wfj_47_crispr_rna_gene_medicine",
+      "pillar": "国际医学与生命科学",
+      "short_tab": "基因编辑与核酸药",
+      "title": "基因编辑与小干扰核酸药物重塑心血管与遗传病治疗：打一针管半年的精准医学离普通人还有多远",
+      "japan_angle": "全球制药界正从传统化学小分子迈向基因剪刀与核酸递送，日本药企与监管机构在罕见病审批、医保定价与生物伦理之间展开艰难平衡",
+      "n3_targets": [
+        "〜につれて",
+        "〜によって",
+        "〜一方で",
+        "〜とは限らない"
+      ],
+      "priority": 1,
+      "growth_horizon": true
+    },
+    {
+      "id": "wfj_48_florence_dome_vs_horyuji_wood",
+      "pillar": "东西方建筑与工程史",
+      "short_tab": "百花穹顶与法隆寺",
+      "title": "佛罗伦萨圣母百花大教堂无脚手架穹顶对照奈良法隆寺千年五重塔：石材力学与木构榫卯的两种文明极限",
+      "japan_angle": "布鲁内莱斯基用人字砖双壳穹顶破解百年建筑死局，而日本法隆寺靠柔韧扁柏榫卯与心柱扛过一千三百年强震，折射东西方截然不同的永恒观",
+      "n3_targets": [
+        "〜に対して",
+        "〜にもかかわらず",
+        "〜おかげで",
+        "〜からこそ"
       ],
       "priority": 1,
       "growth_horizon": true
