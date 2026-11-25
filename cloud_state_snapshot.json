@@ -1,7 +1,7 @@
 {
   "v": 15,
   "app": "n3-zen",
-  "updatedAt": 1795563923,
+  "updatedAt": 1795586565,
   "dates": {
     "2026-11-14": {
       "resetAt": 0,
@@ -3429,16 +3429,24 @@
     },
     "2026-11-24": {
       "resetAt": 0,
-      "radioMaxSec": 457,
+      "radioMaxSec": 1074,
       "radioPos": [
-        457,
-        1795562383
+        1074,
+        1795586565
       ],
       "radioSig": "cfa80085",
       "greenAt": {},
       "retestAt": {},
       "learning": {},
-      "sched": {},
+      "sched": {
+        "N3-G33": [
+          0,
+          1,
+          0,
+          0,
+          1795585994076
+        ]
+      },
       "tappedWords": [
         "会った"
       ],
