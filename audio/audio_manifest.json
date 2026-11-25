@@ -2704,7 +2704,24 @@
     "面影": "./audio/words/w_98fbb0b6b7.mp3",
     "省略": "./audio/words/w_b5c3e0ec81.mp3",
     "語り合う": "./audio/words/w_577ca6fa90.mp3",
-    "誤字": "./audio/words/w_bffae3481c.mp3"
+    "誤字": "./audio/words/w_bffae3481c.mp3",
+    "申す": "./audio/words/w_1847274071.mp3",
+    "差し上げる": "./audio/words/w_79c1d21d18.mp3",
+    "式典": "./audio/words/w_0bd8c85331.mp3",
+    "参る": "./audio/words/w_576ca90aac.mp3",
+    "お目にかかる": "./audio/words/w_e75f6752ca.mp3",
+    "お召しになる": "./audio/words/w_bc85336a52.mp3",
+    "先約": "./audio/words/w_7fc6160730.mp3",
+    "存じ上げる": "./audio/words/w_2e6bddf1e6.mp3",
+    "切らす": "./audio/words/w_af49fa5ace.mp3",
+    "おかまいなく": "./audio/words/w_b927aab9cd.mp3",
+    "前日": "./audio/words/w_e1e3664a59.mp3",
+    "翌日": "./audio/words/w_40b8fbe539.mp3",
+    "切り上げる": "./audio/words/w_12a2c984ec.mp3",
+    "手ぶら": "./audio/words/w_fa6c808826.mp3",
+    "なまる": "./audio/words/w_b5506c5ed4.mp3",
+    "野外": "./audio/words/w_eaf3fc6744.mp3",
+    "ご遠慮ください": "./audio/words/w_16a478b64c.mp3"
   },
   "vocab_cards": {
     "書類": {
@@ -4470,6 +4487,94 @@
   "VAR9-47_opt0.mp3": "d1d37d4ea14a",
   "VAR9-47_opt1.mp3": "88c53d12a877",
   "VAR9-47_opt2.mp3": "628a51199333",
+  "N3-L33_stem.mp3": "6c6b2154c62d",
+  "N3-L33_opt0.mp3": "f646dd3304d7",
+  "N3-L33_opt1.mp3": "5c32bdecbfc8",
+  "N3-L33_opt2.mp3": "7428aed71e68",
+  "N3-L34_stem.mp3": "f1b6afb71333",
+  "N3-L34_opt0.mp3": "5faaf9380611",
+  "N3-L34_opt1.mp3": "543d003a50bc",
+  "N3-L34_opt2.mp3": "5e79e49c43c9",
+  "N3-L35_stem.mp3": "92a36fa0c480",
+  "N3-L35_opt0.mp3": "b46f348e2c6a",
+  "N3-L35_opt1.mp3": "95b62351fb3e",
+  "N3-L35_opt2.mp3": "4502789d0379",
+  "N3-L36_stem.mp3": "1e843d0a71c7",
+  "N3-L36_opt0.mp3": "ba97ee0b71b1",
+  "N3-L36_opt1.mp3": "e37638388b03",
+  "N3-L36_opt2.mp3": "02bcb03318a9",
+  "N3-L37_stem.mp3": "a5621e5c7d21",
+  "N3-L37_opt0.mp3": "4c8b0bd3d3b9",
+  "N3-L37_opt1.mp3": "415eb9473a26",
+  "N3-L37_opt2.mp3": "99510ab9ce71",
+  "N3-L38_stem.mp3": "16700022a585",
+  "N3-L38_opt0.mp3": "4641e6a09ec6",
+  "N3-L38_opt1.mp3": "593abc72a64e",
+  "N3-L38_opt2.mp3": "6c6a715e15ff",
+  "N3-L39_stem.mp3": "6cf66ba65565",
+  "N3-L39_opt0.mp3": "322bac791659",
+  "N3-L39_opt1.mp3": "359a5ea2aef2",
+  "N3-L39_opt2.mp3": "3e73d3456d01",
+  "N3-L40_stem.mp3": "953621e35c8a",
+  "N3-L40_opt0.mp3": "671a21e46e07",
+  "N3-L40_opt1.mp3": "4abd2b23a1b0",
+  "N3-L40_opt2.mp3": "c588260b0a74",
+  "N3-L41_stem.mp3": "48eb267c4635",
+  "N3-L41_opt0.mp3": "dd4823708916",
+  "N3-L41_opt1.mp3": "f2ea06a9b36a",
+  "N3-L41_opt2.mp3": "ca357934071c",
+  "N3-L42_stem.mp3": "016bf983fca7",
+  "N3-L42_opt0.mp3": "852a9f3a69fe",
+  "N3-L42_opt1.mp3": "2910ef2cc093",
+  "N3-L42_opt2.mp3": "5d9a13591080",
+  "N3-L43_stem.mp3": "c35c2aee0cfa",
+  "N3-L43_opt0.mp3": "ffcbefeca4aa",
+  "N3-L43_opt1.mp3": "c9ca56c65474",
+  "N3-L43_opt2.mp3": "63bf7e773dcd",
+  "N3-L44_stem.mp3": "6fab9f253ce6",
+  "N3-L44_opt0.mp3": "09a6629922ac",
+  "N3-L44_opt1.mp3": "787fc1a514b4",
+  "N3-L44_opt2.mp3": "6e8e5e737989",
+  "N3-L45_stem.mp3": "286ada1bed2d",
+  "N3-L45_opt0.mp3": "5f6dd5d39e21",
+  "N3-L45_opt1.mp3": "a4c15b35e9b8",
+  "N3-L45_opt2.mp3": "3f7679c2b788",
+  "N3-L46_stem.mp3": "2ba3c6f5e9d0",
+  "N3-L46_opt0.mp3": "6d0f431e9aff",
+  "N3-L46_opt1.mp3": "f94ace2ffef1",
+  "N3-L46_opt2.mp3": "280704ea260b",
+  "N3-L47_stem.mp3": "f13bd71969a5",
+  "N3-L47_opt0.mp3": "26ad0139e239",
+  "N3-L47_opt1.mp3": "ec346426cc7c",
+  "N3-L47_opt2.mp3": "b7c66b3d9a58",
+  "N3-L48_stem.mp3": "d405ad209db5",
+  "N3-L48_opt0.mp3": "8dcaa57cddd4",
+  "N3-L48_opt1.mp3": "a4f154a1c5fc",
+  "N3-L48_opt2.mp3": "91fc8e5adf64",
+  "N3-L49_stem.mp3": "e344283ba9b5",
+  "N3-L49_opt0.mp3": "e05079bfeb34",
+  "N3-L49_opt1.mp3": "804f9e517328",
+  "N3-L49_opt2.mp3": "81a8ba27f189",
+  "N3-L50_stem.mp3": "87d1d59f119a",
+  "N3-L50_opt0.mp3": "1c603e023149",
+  "N3-L50_opt1.mp3": "ed39fd59401e",
+  "N3-L50_opt2.mp3": "d679adf50510",
+  "N3-L51_stem.mp3": "c393221a94c0",
+  "N3-L51_opt0.mp3": "76529491f980",
+  "N3-L51_opt1.mp3": "d3deda1fe90b",
+  "N3-L51_opt2.mp3": "24723173db6e",
+  "N3-L52_stem.mp3": "5a7d64d1e8c9",
+  "N3-L52_opt0.mp3": "eda4961d86d9",
+  "N3-L52_opt1.mp3": "58ba4ff9a8d1",
+  "N3-L52_opt2.mp3": "2c1747b2ebf3",
+  "N3-L53_stem.mp3": "89f37b6b8774",
+  "N3-L53_opt0.mp3": "5a80c83f65c3",
+  "N3-L53_opt1.mp3": "4accc43674e6",
+  "N3-L53_opt2.mp3": "9e1b8dcb8a68",
+  "N3-L54_stem.mp3": "4ae2d8803ea1",
+  "N3-L54_opt0.mp3": "5f48ebb1dc09",
+  "N3-L54_opt1.mp3": "f1492a6ef543",
+  "N3-L54_opt2.mp3": "b8edcf3dfee7",
   "G-20261114-01_q.mp3": "aec3cb11fd34",
   "G-20261114-01_exp.mp3": "f89474e0c1f3",
   "meta:G-20261114-01": {
@@ -9010,6 +9115,656 @@
     "q_audio": "./audio/VAR12-33_q.mp3?v=078346d1",
     "exp_audio": "./audio/VAR12-33_exp.mp3?v=86e0f50d",
     "spoken_text": "部长，您周末在家都做些什么运动呀？ 主语是部长（尊长），动作是「する」，抬高对方必选「なさる」。 する 尊敬语＝なさる（ます形 なさいます）；谦让语＝いたす。"
+  },
+  "N3-H36_q.mp3": "735f8a344450",
+  "N3-H36_exp.mp3": "e909e3e3e96f",
+  "meta:N3-H36": {
+    "q_audio": "./audio/N3-H36_q.mp3?v=735f8a34",
+    "exp_audio": "./audio/N3-H36_exp.mp3?v=e909e3e3",
+    "spoken_text": "部长在今天的典礼上穿着深蓝色的西装。 主语是部长、宾语是西装，考「着る（穿）」的尊敬语「お召しになる」。 尊敬语中「穿」是「お召しになる」，「吃喝」才是「召し上がる」。"
+  },
+  "N3-H37_q.mp3": "527e3c41c291",
+  "N3-H37_exp.mp3": "5bbe8661f995",
+  "meta:N3-H37": {
+    "q_audio": "./audio/N3-H37_q.mp3?v=527e3c41",
+    "exp_audio": "./audio/N3-H37_exp.mp3?v=5bbe8661",
+    "spoken_text": "明天下午两点，我方将前往贵公司。 主语是己方「私ども」，表达前往对方公司，用谦让语「参ります」。 自己或己方团队「去、来」，降低己方用谦让语「参ります」，绝不能对自己用「いらっしゃいます」。"
+  },
+  "N3-H38_q.mp3": "f35fda3cd8de",
+  "N3-H38_exp.mp3": "f0f98d363d82",
+  "meta:N3-H38": {
+    "q_audio": "./audio/N3-H38_q.mp3?v=f35fda3c",
+    "exp_audio": "./audio/N3-H38_exp.mp3?v=f0f98d36",
+    "spoken_text": "初次见面，我是从东京分公司过来的田中。 自报姓名「田中と＿＿」是谦让语铁律，用「申します」。 自我介绍「我叫……」，固定用「〜と申します」；「おっしゃる」只能说别人。"
+  },
+  "N3-H39_q.mp3": "d5631ddbe11f",
+  "N3-H39_exp.mp3": "4e507804ac09",
+  "meta:N3-H39": {
+    "q_audio": "./audio/N3-H39_q.mp3?v=d5631ddb",
+    "exp_audio": "./audio/N3-H39_exp.mp3?v=4e507804",
+    "spoken_text": "现在负责这件事的佐藤暂时离席了。 商务内外坐标铁律：对外人提本公司同事，用丁重谦让「ております」。 对外人说自家同事或上司（身内），一律放低姿态用丁重谦让「〜ております」。"
+  },
+  "N3-H40_q.mp3": "957f4e623035",
+  "N3-H40_exp.mp3": "8a87713831c6",
+  "meta:N3-H40": {
+    "q_audio": "./audio/N3-H40_q.mp3?v=957f4e62",
+    "exp_audio": "./audio/N3-H40_exp.mp3?v=8a877138",
+    "spoken_text": "最新资料一准备好，就由我通过邮件发给您。 主语是「私から」，谦让句型「お送り＋いたします」表我方发给您。 「お＋动词ます干＋いたします」是最常用的己方谦让句型；「なさる」是「する」的尊敬语。"
+  },
+  "N3-H41_q.mp3": "12f115627f89",
+  "N3-H41_exp.mp3": "ff4224b52e97",
+  "meta:N3-H41": {
+    "q_audio": "./audio/N3-H41_q.mp3?v=12f11562",
+    "exp_audio": "./audio/N3-H41_exp.mp3?v=ff4224b5",
+    "spoken_text": "非常抱歉，关于那件事我不太清楚详情。 说自己不清楚不能用尊敬语「ご存じ」，要用谦让语「存じ上げません」。 自己知道/不知道用「存じております／存じません（存じ上げません）」；问尊长知不知道才用「ご存じですか」。"
+  },
+  "N3-H42_q.mp3": "b92ac81b07ed",
+  "N3-H42_exp.mp3": "eda281f6c483",
+  "meta:N3-H42": {
+    "q_audio": "./audio/N3-H42_q.mp3?v=b92ac81b",
+    "exp_audio": "./audio/N3-H42_exp.mp3?v=eda281f6",
+    "spoken_text": "下次去东京出差时，真希望能拜见一下老师。 己方拜见老师，用「会う」的专属谦让语「お目にかかる」。 自己去见尊长或客户，用谦让语「お目にかかる」；「お目にかける」则是「给尊长看」。"
+  },
+  "N3-H43_q.mp3": "812cfbc4a587",
+  "N3-H43_exp.mp3": "e35eb21a5689",
+  "meta:N3-H43": {
+    "q_audio": "./audio/N3-H43_q.mp3?v=812cfbc4",
+    "exp_audio": "./audio/N3-H43_exp.mp3?v=e35eb21a",
+    "spoken_text": "在您百忙之中承蒙您耐心说明，真是非常感谢。 对方帮自己说明、自己表示感谢，用承蒙对方的谦让语「ご説明いただき」。 感谢对方为我们做了某事，用「お／ご〜いただく」（承蒙您……）；自己给对方才用「差し上げる」。"
+  },
+  "N3-H44_q.mp3": "3682f35f7287",
+  "N3-H44_exp.mp3": "49aba265ada7",
+  "meta:N3-H44": {
+    "q_audio": "./audio/N3-H44_q.mp3?v=3682f35f",
+    "exp_audio": "./audio/N3-H44_exp.mp3?v=49aba265",
+    "spoken_text": "给刚刚出院的恩师送了一束当季花束。 对象标「恩師に」，己方送给尊长用谦让语「差し上げました」。 己方送物给尊长用「差し上げる」；从尊长处收到用「いただく」；尊长主语赐予我方用「くださる」。"
+  },
+  "N3-H45_q.mp3": "289608f51981",
+  "N3-H45_exp.mp3": "4ad851a25b16",
+  "meta:N3-H45": {
+    "q_audio": "./audio/N3-H45_q.mp3?v=289608f5",
+    "exp_audio": "./audio/N3-H45_exp.mp3?v=4ad851a2",
+    "spoken_text": "社长已经到达机场了吗？ 主语是「社長は」，询问尊长的动作必须用尊敬语公式「お＋ます干＋になる」。 「お＋ます干＋になる」抬高主语（尊敬）；「お＋ます干＋する／いたす」压低自己（谦让），一字之差方向全反。"
+  },
+  "N3-H46_q.mp3": "0bce76c1da57",
+  "N3-H46_exp.mp3": "314e83f84912",
+  "meta:N3-H46": {
+    "q_audio": "./audio/N3-H46_q.mp3?v=0bce76c1",
+    "exp_audio": "./audio/N3-H46_exp.mp3?v=314e83f8",
+    "spoken_text": "著名的建筑师预定下周在这所大学发表特别演讲。 主语是「有名な建築家が」、宾语是「特別講演を」，用「する」的轻尊敬语「される」。 带「を」宾语且主语为名家/尊长时，「される」常作简洁自然的尊敬语（不表被动）。"
+  },
+  "N3-H47_q.mp3": "0eef1e3695c8",
+  "N3-H47_exp.mp3": "387766344483",
+  "meta:N3-H47": {
+    "q_audio": "./audio/N3-H47_q.mp3?v=0eef1e36",
+    "exp_audio": "./audio/N3-H47_exp.mp3?v=38776634",
+    "spoken_text": "大家全都入座了，咱们差不多开始开会吧。 看准助词「会議を」和人称提议「ましょう」，必须配他动词「始めましょう」。 前面是「会議を」标宾语，后接「ましょう」提议人为开启，必选他动词「始めましょう」。"
+  },
+  "N3-H48_q.mp3": "3d45a285a710",
+  "N3-H48_exp.mp3": "9c9ac4ffd768",
+  "meta:N3-H48": {
+    "q_audio": "./audio/N3-H48_q.mp3?v=3d45a285",
+    "exp_audio": "./audio/N3-H48_exp.mp3?v=9c9ac4ff",
+    "spoken_text": "由于站前再开发，这座小镇的风景和十年前相比彻底变了。 主语是「景色は」，客观描述面貌变化，选自动词「変わった」。 事物自然演变、面貌改变用自动词「変わる」；人刻意改动某物带「を」才用他动词「変える」。"
+  },
+  "N3-H49_q.mp3": "b667a212a027",
+  "N3-H49_exp.mp3": "607cc1c09849",
+  "meta:N3-H49": {
+    "q_audio": "./audio/N3-H49_q.mp3?v=b667a212",
+    "exp_audio": "./audio/N3-H49_exp.mp3?v=607cc1c0",
+    "spoken_text": "因为强震，厨房的杯子掉在地上碎掉了。 主语是「コップが」且前接自动词「落ちて」，并列必选自动词「割れて」。 杯子/玻璃掉地上碎了，主语是「コップが」，用自动词「割れる（割れて）」。"
+  },
+  "N3-H50_q.mp3": "f100f569081a",
+  "N3-H50_exp.mp3": "763abc351119",
+  "meta:N3-H50": {
+    "q_audio": "./audio/N3-H50_q.mp3?v=f100f569",
+    "exp_audio": "./audio/N3-H50_exp.mp3?v=763abc35",
+    "spoken_text": "启动新企划之前，首先有必要广泛收集用户的声音。 宾语标「利用者の声を」，表主动去收集，必选他动词「集める」。 前面是「利用者の声を」表主动收集对象，配他动词「集める」。"
+  },
+  "N3-H51_q.mp3": "cb4789e902ee",
+  "N3-H51_exp.mp3": "7865181f621b",
+  "meta:N3-H51": {
+    "q_audio": "./audio/N3-H51_q.mp3?v=cb4789e9",
+    "exp_audio": "./audio/N3-H51_exp.mp3?v=7865181f",
+    "spoken_text": "从昨天就在找的钥匙，终于在沙发底下找到了。 主语是「鍵が」，东西自己出现被找到用自动词「見つかった」。 日语说「找到了！」最常用「物が＋見つかる」；前面标「を」才用「見つける」。"
+  },
+  "N3-H52_q.mp3": "5a924a163b0b",
+  "N3-H52_exp.mp3": "4744130d7f16",
+  "meta:N3-H52": {
+    "q_audio": "./audio/N3-H52_q.mp3?v=5a924a16",
+    "exp_audio": "./audio/N3-H52_exp.mp3?v=4744130d",
+    "spoken_text": "下个月出差的日程，刚才终于定下来了。 主语是「日程が」，客观交代日程敲定，选自动词「決まりました」。 通知别人「日期/人选定下来了」，客观陈述用「〜が決まる」；人主动拍板标「を」用「決める」。"
+  },
+  "N3-H53_q.mp3": "bbc643d8e174",
+  "N3-H53_exp.mp3": "1b146817fd90",
+  "meta:N3-H53": {
+    "q_audio": "./audio/N3-H53_q.mp3?v=bbc643d8",
+    "exp_audio": "./audio/N3-H53_exp.mp3?v=1b146817",
+    "spoken_text": "送去修理的手表，隔了一周修得完好如初送回来了。 主语是「腕時計が」，表示东西已经修好恢复正常，选自动词「直って」。 东西「修好了」用自动词「直る（直って）」；人去「修东西」才用他动词「直す（直して）」。"
+  },
+  "N3-H54_q.mp3": "abe3df52d8d9",
+  "N3-H54_exp.mp3": "52415fa7be07",
+  "meta:N3-H54": {
+    "q_audio": "./audio/N3-H54_q.mp3?v=abe3df52",
+    "exp_audio": "./audio/N3-H54_exp.mp3?v=52415fa7",
+    "spoken_text": "这支钢笔很轻，写很长时间手也不容易累。 「〜にくい」前只接动词ます词干，「疲れる」去「る」得「疲れにくい」。 「〜やすい／〜にくい」一律接动词ます形去ます后的词干（疲れます → 疲れにくい）。"
+  },
+  "N3-H55_q.mp3": "d000ca249f60",
+  "N3-H55_exp.mp3": "cb19aa8a091f",
+  "meta:N3-H55": {
+    "q_audio": "./audio/N3-H55_q.mp3?v=d000ca24",
+    "exp_audio": "./audio/N3-H55_exp.mp3?v=cb19aa8a",
+    "spoken_text": "果酱瓶的盖子太紧了，怎么用力都打不开。 主语是「ふたが」，描述盖子打不开的状态用自动词否定「開かない」。 说门/盖子「打不开」，主语标「が」最地道用自动词「開かない」；「開けれない」是口语ら抜き错形。"
+  },
+  "N3-L33_q.mp3": "9ddd1a27b27c",
+  "N3-L33_exp.mp3": "b708b7a8afde",
+  "meta:N3-L33": {
+    "q_audio": "./audio/N3-L33_q.mp3?v=9ddd1a27",
+    "exp_audio": "./audio/N3-L33_exp.mp3?v=b708b7a8",
+    "spoken_text": "场景：部长帮忙的工作顺利结束了。对部长该怎么说？ 1. 托您的福，顺利完成了。 2. 哪里，您也辛苦努力了。 3. 不，请别放在心上。 对上司表达感谢与归功，标准礼貌语是「おかげさまで」。 发话表现题考上下级礼仪：感谢上司帮忙完成工作，首选「おかげさまで（托您的福）」。",
+    "listen_parts": {
+      "stem": "./audio/N3-L33_stem.mp3?v=6c6b2154",
+      "nums": [
+        "./audio/num_JM_1.mp3",
+        "./audio/num_JM_2.mp3",
+        "./audio/num_JM_3.mp3"
+      ],
+      "opts": {
+        "おかげさまで、無事に終わりました。": "./audio/N3-L33_opt0.mp3?v=f646dd33",
+        "こちらこそ、よく頑張りましたね。": "./audio/N3-L33_opt1.mp3?v=5c32bdec",
+        "いえ、ぜんぜん気にしないでください。": "./audio/N3-L33_opt2.mp3?v=7428aed7"
+      }
+    }
+  },
+  "N3-L34_q.mp3": "2aa2691c2d49",
+  "N3-L34_exp.mp3": "afd944b47550",
+  "meta:N3-L34": {
+    "q_audio": "./audio/N3-L34_q.mp3?v=2aa2691c",
+    "exp_audio": "./audio/N3-L34_exp.mp3?v=afd944b4",
+    "spoken_text": "场景：开会迟到了约五分钟。走进会议室该说什么？ 1. 迟到了，非常抱歉。 2. 电车晚点没办法呀。 3. 没让您等吧？ 迟到进门第一句必选诚恳道歉「遅れてしまい、大変申し訳ありません」。 商务场合迟到，先直接致歉「遅れてしまい、申し訳ありません／お待たせしてすみません」。",
+    "listen_parts": {
+      "stem": "./audio/N3-L34_stem.mp3?v=f1b6afb7",
+      "nums": [
+        "./audio/num_JF_1.mp3",
+        "./audio/num_JF_2.mp3",
+        "./audio/num_JF_3.mp3"
+      ],
+      "opts": {
+        "遅れてしまい、大変申し訳ありません。": "./audio/N3-L34_opt0.mp3?v=5faaf938",
+        "電車が遅れたんだから、仕方ないですよ。": "./audio/N3-L34_opt1.mp3?v=543d003a",
+        "お待たせしませんでしたか。": "./audio/N3-L34_opt2.mp3?v=5e79e49c"
+      }
+    }
+  },
+  "N3-L35_q.mp3": "d96126d381b6",
+  "N3-L35_exp.mp3": "c61e7dba6803",
+  "meta:N3-L35": {
+    "q_audio": "./audio/N3-L35_q.mp3?v=d96126d3",
+    "exp_audio": "./audio/N3-L35_exp.mp3?v=c61e7dba",
+    "spoken_text": "场景：想请课长看自己写的企划书。对课长怎么说？ 1. 这份文件能否请您确认一下？ 2. 我说了请确认。 3. 快点确认好哦。 请求上司审阅，用「ご＋汉词＋いただけますか」最规范得体。 请上司确认文件，首选「ご確認いただけますか／ご覧いただけますでしょうか」。",
+    "listen_parts": {
+      "stem": "./audio/N3-L35_stem.mp3?v=92a36fa0",
+      "nums": [
+        "./audio/num_JM_1.mp3",
+        "./audio/num_JM_2.mp3",
+        "./audio/num_JM_3.mp3"
+      ],
+      "opts": {
+        "この書類、一度ご確認いただけますか。": "./audio/N3-L35_opt0.mp3?v=b46f348e",
+        "この書類、確認してくださいませんかと言いました。": "./audio/N3-L35_opt1.mp3?v=95b62351",
+        "この書類、早く確認しておいてね。": "./audio/N3-L35_opt2.mp3?v=4502789d"
+      }
+    }
+  },
+  "N3-L36_q.mp3": "340f36b472b5",
+  "N3-L36_exp.mp3": "603a957da564",
+  "meta:N3-L36": {
+    "q_audio": "./audio/N3-L36_q.mp3?v=340f36b4",
+    "exp_audio": "./audio/N3-L36_exp.mp3?v=603a957d",
+    "spoken_text": "场景：想问美术馆工作人员能不能拍展品照片。该怎么说？ 1. 请问可以拍这边的照片吗？ 2. 我让您拍好吗？ 3. 请不要拍照。 礼貌询问许可，固定用「〜てもよろしいでしょうか」。 在公共场所或店里礼貌征求许可，首选「〜てもよろしいでしょうか」。",
+    "listen_parts": {
+      "stem": "./audio/N3-L36_stem.mp3?v=1e843d0a",
+      "nums": [
+        "./audio/num_JF_1.mp3",
+        "./audio/num_JF_2.mp3",
+        "./audio/num_JF_3.mp3"
+      ],
+      "opts": {
+        "すみません、こちらの写真を撮ってもよろしいでしょうか。": "./audio/N3-L36_opt0.mp3?v=ba97ee0b",
+        "すみません、こちらの写真を撮らせてあげましょうか。": "./audio/N3-L36_opt1.mp3?v=e3763838",
+        "すみません、こちらの写真を撮らないでください。": "./audio/N3-L36_opt2.mp3?v=02bcb033"
+      }
+    }
+  },
+  "N3-L37_q.mp3": "d79ec3a4239c",
+  "N3-L37_exp.mp3": "1a4995692acf",
+  "meta:N3-L37": {
+    "q_audio": "./audio/N3-L37_q.mp3?v=d79ec3a4",
+    "exp_audio": "./audio/N3-L37_exp.mp3?v=1a499569",
+    "spoken_text": "女：「你的日语真的进步好多啊。」 1. 不不，还差得远呢。 2. 是啊，因为我真的很厉害。 3. 对不起，下次我注意。 被夸奖时，日语习惯先谦虚一句「いいえ、まだまだですよ」。 即时应答题中被人夸奖，地道日式回答是谦虚否认「いいえ、まだまだです／そんなことないです」。",
+    "listen_parts": {
+      "stem": "./audio/N3-L37_stem.mp3?v=a5621e5c",
+      "nums": [
+        "./audio/num_JM_1.mp3",
+        "./audio/num_JM_2.mp3",
+        "./audio/num_JM_3.mp3"
+      ],
+      "opts": {
+        "いいえ、まだまだですよ。": "./audio/N3-L37_opt0.mp3?v=4c8b0bd3",
+        "ええ、本当に上手ですから。": "./audio/N3-L37_opt1.mp3?v=415eb947",
+        "すみません、次から気をつけます。": "./audio/N3-L37_opt2.mp3?v=99510ab9"
+      }
+    }
+  },
+  "N3-L38_q.mp3": "0875e0aac6e1",
+  "N3-L38_exp.mp3": "4bf6a4d70e8b",
+  "meta:N3-L38": {
+    "q_audio": "./audio/N3-L38_q.mp3?v=0875e0aa",
+    "exp_audio": "./audio/N3-L38_exp.mp3?v=4bf6a4d7",
+    "spoken_text": "男：「改天关于跳槽的事，能找你聊一聊出出主意吗？」 1. 好啊，如果不嫌弃我随时欢迎。 2. 不用商量也行。 3. 那个是我想找你商量。 听懂「相談に乗る（听人倾诉商量）」，自然答应说「私でよければいつでもどうぞ」。 对方说「相談に乗ってもらえませんか（能听我聊聊吗）」，谦虚应允常用「私でよければ（如果我能帮上忙的话）」。",
+    "listen_parts": {
+      "stem": "./audio/N3-L38_stem.mp3?v=16700022",
+      "nums": [
+        "./audio/num_JF_1.mp3",
+        "./audio/num_JF_2.mp3",
+        "./audio/num_JF_3.mp3"
+      ],
+      "opts": {
+        "ええ、私でよければいつでもどうぞ。": "./audio/N3-L38_opt0.mp3?v=4641e6a0",
+        "いいえ、相談しなくてもいいですよ。": "./audio/N3-L38_opt1.mp3?v=593abc72",
+        "あ、それは私が相談したいんです。": "./audio/N3-L38_opt2.mp3?v=6c6a715e"
+      }
+    }
+  },
+  "N3-L39_q.mp3": "69096e48759a",
+  "N3-L39_exp.mp3": "bfbde69e4673",
+  "meta:N3-L39": {
+    "q_audio": "./audio/N3-L39_q.mp3?v=69096e48",
+    "exp_audio": "./audio/N3-L39_exp.mp3?v=bfbde69e",
+    "spoken_text": "女：「总觉得天突然暗下来了呢。」 1. 是啊，说不定要下雨了。 2. 不，刚才一直在下。 3. 是啊，没忘带伞就好了。 顺着「急に暗くなってきた（天突然暗了）」做合乎情理的推测「雨になるかもしれませんね」。 即时应答听到天气/现状感叹「〜てきましたね」，顺应给出同方向推测或共鸣最自然。",
+    "listen_parts": {
+      "stem": "./audio/N3-L39_stem.mp3?v=6cf66ba6",
+      "nums": [
+        "./audio/num_JM_1.mp3",
+        "./audio/num_JM_2.mp3",
+        "./audio/num_JM_3.mp3"
+      ],
+      "opts": {
+        "ええ、雨になるかもしれませんね。": "./audio/N3-L39_opt0.mp3?v=322bac79",
+        "いいえ、さっきまで降っていましたよ。": "./audio/N3-L39_opt1.mp3?v=359a5ea2",
+        "ええ、傘を忘れなければよかったですね。": "./audio/N3-L39_opt2.mp3?v=3e73d345"
+      }
+    }
+  },
+  "N3-L40_q.mp3": "eea3772f6b9a",
+  "N3-L40_exp.mp3": "0940cc35a159",
+  "meta:N3-L40": {
+    "q_audio": "./audio/N3-L40_q.mp3?v=eea3772f",
+    "exp_audio": "./audio/N3-L40_exp.mp3?v=0940cc35",
+    "spoken_text": "男：「不好意思，能再给我一杯冰水吗？」 1. 好的明白了，马上为您端来。 2. 哪里请多关照。 3. 不，您不拿吗？ 接受请求的标准敬语回应：「かしこまりました」＋谦让语「お持ちします」。 接受客户或上司委托时，固定用「かしこまりました（好的，明白了）」＋谦让行动「すぐお持ちします」。",
+    "listen_parts": {
+      "stem": "./audio/N3-L40_stem.mp3?v=953621e3",
+      "nums": [
+        "./audio/num_JF_1.mp3",
+        "./audio/num_JF_2.mp3",
+        "./audio/num_JF_3.mp3"
+      ],
+      "opts": {
+        "はい、かしこまりました。すぐお持ちします。": "./audio/N3-L40_opt0.mp3?v=671a21e4",
+        "はい、こちらこそよろしくお願いします。": "./audio/N3-L40_opt1.mp3?v=4abd2b23",
+        "いいえ、お持ちになりませんか。": "./audio/N3-L40_opt2.mp3?v=c588260b"
+      }
+    }
+  },
+  "N3-L41_q.mp3": "cdd212af9816",
+  "N3-L41_exp.mp3": "36a170c02500",
+  "meta:N3-L41": {
+    "q_audio": "./audio/N3-L41_q.mp3?v=cdd212af",
+    "exp_audio": "./audio/N3-L41_exp.mp3?v=36a170c0",
+    "spoken_text": "男：「这周六大家聚餐，你能来吗？」 女：「唔，周六我有点事先约好的事……下次一定叫我哦。」 「ちょっと先約があって…また今度」是日语最经典的委婉拒绝＝去不了。 听力听到「うーん、ちょっと…＋また今度」，99% 是礼貌拒绝（去不了），绝不是「稍微去一下」。",
+    "listen_parts": {
+      "stem": "./audio/N3-L41_stem.mp3?v=48eb267c",
+      "nums": [
+        "./audio/num_JM_1.mp3",
+        "./audio/num_JM_2.mp3",
+        "./audio/num_JM_3.mp3"
+      ],
+      "opts": {
+        "土曜日の食事会には行けない": "./audio/N3-L41_opt0.mp3?v=dd482370",
+        "土曜日の食事会に少し遅れて行く": "./audio/N3-L41_opt1.mp3?v=f2ea06a9",
+        "土曜日の食事会をとても楽しみにしている": "./audio/N3-L41_opt2.mp3?v=ca357934"
+      }
+    }
+  },
+  "N3-L42_q.mp3": "73c45c57e9e8",
+  "N3-L42_exp.mp3": "3ba7560efeb2",
+  "meta:N3-L42": {
+    "q_audio": "./audio/N3-L42_q.mp3?v=73c45c57",
+    "exp_audio": "./audio/N3-L42_exp.mp3?v=3ba7560e",
+    "spoken_text": "女：「请问如果还有空位的话，能帮我换成靠窗的座位吗？」 男：「我去确认一下，请稍等。」 「〜ていただけないでしょうか」是委婉请求「能否请您……」，不是否定。 「〜ていただけないでしょうか」虽然带「ない」，却是极礼貌的「请问能否请您帮我……」。",
+    "listen_parts": {
+      "stem": "./audio/N3-L42_stem.mp3?v=016bf983",
+      "nums": [
+        "./audio/num_JF_1.mp3",
+        "./audio/num_JF_2.mp3",
+        "./audio/num_JF_3.mp3"
+      ],
+      "opts": {
+        "窓側の席に変えてほしいと頼んでいる": "./audio/N3-L42_opt0.mp3?v=852a9f3a",
+        "窓側の席は使わないほうがいいと言っている": "./audio/N3-L42_opt1.mp3?v=2910ef2c",
+        "窓側の席をすでに予約したと報告している": "./audio/N3-L42_opt2.mp3?v=5d9a1359"
+      }
+    }
+  },
+  "N3-L43_q.mp3": "132e6c0c7b79",
+  "N3-L43_exp.mp3": "537bcaa4fe48",
+  "meta:N3-L43": {
+    "q_audio": "./audio/N3-L43_q.mp3?v=132e6c0c",
+    "exp_audio": "./audio/N3-L43_exp.mp3?v=537bcaa4",
+    "spoken_text": "男：「请问这件白衬衫我想试穿一下，有M号吗？」 女：「非常抱歉，白色M号刚好断货了，深蓝色的话还有。」 男：「那我可以试一下那个吗？」 听懂「切らしている（卖断货）」和结尾转折「じゃあ、そっち（那试深蓝）」。 购物对话必听懂「切らしている（断货）」和结尾「じゃあ、そっち（那试另一件）」。",
+    "listen_parts": {
+      "stem": "./audio/N3-L43_stem.mp3?v=c35c2aee",
+      "nums": [
+        "./audio/num_JM_1.mp3",
+        "./audio/num_JM_2.mp3",
+        "./audio/num_JM_3.mp3"
+      ],
+      "opts": {
+        "別の色のシャツを持ってきてもらう": "./audio/N3-L43_opt0.mp3?v=ffcbefec",
+        "今見た白いシャツをそのまま買う": "./audio/N3-L43_opt1.mp3?v=c9ca56c6",
+        "サイズが合わないので店を出る": "./audio/N3-L43_opt2.mp3?v=63bf7e77"
+      }
+    }
+  },
+  "N3-L44_q.mp3": "bccd9e733d24",
+  "N3-L44_exp.mp3": "63880ee09a37",
+  "meta:N3-L44": {
+    "q_audio": "./audio/N3-L44_q.mp3?v=bccd9e73",
+    "exp_audio": "./audio/N3-L44_exp.mp3?v=63880ee0",
+    "spoken_text": "女：「各位来宾请注意。音乐厅场内请勿饮食及拍照。饮品请在大厅享用。」 广播最高频反义陷阱：「ご遠慮ください」＝请勿禁止，不是请别客气。 「ご遠慮ください」＝请勿、禁止；「ご遠慮なく」才是「请别客气、随便用」。",
+    "listen_parts": {
+      "stem": "./audio/N3-L44_stem.mp3?v=6fab9f25",
+      "nums": [
+        "./audio/num_JM_1.mp3",
+        "./audio/num_JM_2.mp3",
+        "./audio/num_JM_3.mp3"
+      ],
+      "opts": {
+        "会場の中で飲食してはいけない": "./audio/N3-L44_opt0.mp3?v=09a66299",
+        "会場の中で飲み物なら飲んでもいい": "./audio/N3-L44_opt1.mp3?v=787fc1a5",
+        "会場の中で遠慮せず自由に食べていい": "./audio/N3-L44_opt2.mp3?v=6e8e5e73"
+      }
+    }
+  },
+  "N3-L45_q.mp3": "e4ab78910a37",
+  "N3-L45_exp.mp3": "8d6b54883d93",
+  "meta:N3-L45": {
+    "q_audio": "./audio/N3-L45_q.mp3?v=e4ab7891",
+    "exp_audio": "./audio/N3-L45_exp.mp3?v=8d6b5488",
+    "spoken_text": "女：「让您久等了。部长正在等您，请您直接前往五楼的会议室。」 男：「好的，谢谢。」 听懂口语敬语「いらしてください（请前往）」与「そのまま（直接）」。 听到「〜へいらしてください」，就是礼貌地请您「直接前往……」。",
+    "listen_parts": {
+      "stem": "./audio/N3-L45_stem.mp3?v=286ada1b",
+      "nums": [
+        "./audio/num_JF_1.mp3",
+        "./audio/num_JF_2.mp3",
+        "./audio/num_JF_3.mp3"
+      ],
+      "opts": {
+        "五階の会議室へ直接行く": "./audio/N3-L45_opt0.mp3?v=5f6dd5d3",
+        "一階の受付で名前を書いて待つ": "./audio/N3-L45_opt1.mp3?v=a4c15b35",
+        "電話で担当者にもう一度連絡する": "./audio/N3-L45_opt2.mp3?v=3f7679c2"
+      }
+    }
+  },
+  "N3-L46_q.mp3": "7bfab9a24e4e",
+  "N3-L46_exp.mp3": "09b176a1d3e9",
+  "meta:N3-L46": {
+    "q_audio": "./audio/N3-L46_q.mp3?v=7bfab9a2",
+    "exp_audio": "./audio/N3-L46_exp.mp3?v=09b176a1",
+    "spoken_text": "男：「这副眼镜调整镜片需要一点时间，能交给您是在明天傍晚五点以后。」 女：「啊这样啊，那我明天六点左右再来取。」 听懂「お渡しできる（能交付）」在明天五点后，女生回应明天六点「伺います（再来）」。 店员说「お渡しできるのは〜（能交付给您是在……）」＋客人说「伺います（我来取）」＝约定取货时间。",
+    "listen_parts": {
+      "stem": "./audio/N3-L46_stem.mp3?v=2ba3c6f5",
+      "nums": [
+        "./audio/num_JM_1.mp3",
+        "./audio/num_JM_2.mp3",
+        "./audio/num_JM_3.mp3"
+      ],
+      "opts": {
+        "明日の夕方に眼鏡を取りに来る": "./audio/N3-L46_opt0.mp3?v=6d0f431e",
+        "今日の夜に眼鏡を郵送してもらう": "./audio/N3-L46_opt1.mp3?v=f94ace2f",
+        "今すぐここで眼鏡を受け取る": "./audio/N3-L46_opt2.mp3?v=280704ea"
+      }
+    }
+  },
+  "N3-L47_q.mp3": "20f819066920",
+  "N3-L47_exp.mp3": "2f109a010bbe",
+  "meta:N3-L47": {
+    "q_audio": "./audio/N3-L47_q.mp3?v=20f81906",
+    "exp_audio": "./audio/N3-L47_exp.mp3?v=2f109a01",
+    "spoken_text": "男：「那么首先请看大家手头资料的第三页，上面印着去年的销售额图表。」 听懂「お手元（手边）」＋「ご覧ください（请看）」。 会议和发表最高频指令「お手元の資料をご覧ください（请看手头资料）」。",
+    "listen_parts": {
+      "stem": "./audio/N3-L47_stem.mp3?v=f13bd719",
+      "nums": [
+        "./audio/num_JF_1.mp3",
+        "./audio/num_JF_2.mp3",
+        "./audio/num_JF_3.mp3"
+      ],
+      "opts": {
+        "手元の資料の三ページを見る": "./audio/N3-L47_opt0.mp3?v=26ad0139",
+        "前のスクリーンだけを見てメモを取らない": "./audio/N3-L47_opt1.mp3?v=ec346426",
+        "資料の最後のページを先に読む": "./audio/N3-L47_opt2.mp3?v=b7c66b3d"
+      }
+    }
+  },
+  "N3-L48_q.mp3": "a2babaa59b99",
+  "N3-L48_exp.mp3": "d9481033cab9",
+  "meta:N3-L48": {
+    "q_audio": "./audio/N3-L48_q.mp3?v=a2babaa5",
+    "exp_audio": "./audio/N3-L48_exp.mp3?v=d9481033",
+    "spoken_text": "男：「定下来下周能见到大阪分公司的社长了。」 女：「那太好了呢，准备工作已经在推进了吗？」 听懂「お目にかかる＝见面」，不和「お目にかける＝给看」混淆。 听力绝不能混：「お目にかかる＝见面（会う）」，「お目にかける＝展示给对方看（見せる）」。",
+    "listen_parts": {
+      "stem": "./audio/N3-L48_stem.mp3?v=d405ad20",
+      "nums": [
+        "./audio/num_JM_1.mp3",
+        "./audio/num_JM_2.mp3",
+        "./audio/num_JM_3.mp3"
+      ],
+      "opts": {
+        "社長と直接会う約束をする": "./audio/N3-L48_opt0.mp3?v=8dcaa57c",
+        "社長に新しい商品を見せる": "./audio/N3-L48_opt1.mp3?v=a4f154a1",
+        "社長にメールで断りの連絡をする": "./audio/N3-L48_opt2.mp3?v=91fc8e5a"
+      }
+    }
+  },
+  "N3-L49_q.mp3": "97655109f609",
+  "N3-L49_exp.mp3": "aa863e42513d",
+  "meta:N3-L49": {
+    "q_audio": "./audio/N3-L49_q.mp3?v=97655109",
+    "exp_audio": "./audio/N3-L49_exp.mp3?v=aa863e42",
+    "spoken_text": "女：「从车站走到会场大概需要多久？」 男：「嗯，正常走有十五分钟就足够到了哦。」 「十五分もあれば着く」＝最多十五分钟就够了，不是超过十五分钟。 听力听到「时间＋もあれば（着きます／終わります）」，强调「最多只要这么点时间就绰绰有余」。",
+    "listen_parts": {
+      "stem": "./audio/N3-L49_stem.mp3?v=e344283b",
+      "nums": [
+        "./audio/num_JF_1.mp3",
+        "./audio/num_JF_2.mp3",
+        "./audio/num_JF_3.mp3"
+      ],
+      "opts": {
+        "十五分あれば十分着く": "./audio/N3-L49_opt0.mp3?v=e05079bf",
+        "十五分以上は確実にかかる": "./audio/N3-L49_opt1.mp3?v=804f9e51",
+        "あと十五分で閉まってしまう": "./audio/N3-L49_opt2.mp3?v=81a8ba27"
+      }
+    }
+  },
+  "N3-L50_q.mp3": "b03168bcf1d1",
+  "N3-L50_exp.mp3": "ae90ee4271ac",
+  "meta:N3-L50": {
+    "q_audio": "./audio/N3-L50_q.mp3?v=b03168bc",
+    "exp_audio": "./audio/N3-L50_exp.mp3?v=ae90ee42",
+    "spoken_text": "男：「明天集合是十点在车站前对吧？」 女：「嗯，不过周末好像会很挤，要不要提前十五分钟左右碰面？」 男：「行，那九点四十五分咯。」 原定十点＋「十五分早めに（提前15分）」→ 最终确认九点四十五分。 听力时间题出现「〜分早めに（提前……分钟）」，立刻做减法并抓结尾确认时刻。",
+    "listen_parts": {
+      "stem": "./audio/N3-L50_stem.mp3?v=87d1d59f",
+      "nums": [
+        "./audio/num_JM_1.mp3",
+        "./audio/num_JM_2.mp3",
+        "./audio/num_JM_3.mp3"
+      ],
+      "opts": {
+        "九時四十五分に駅で会う": "./audio/N3-L50_opt0.mp3?v=1c603e02",
+        "十時に駅で会う": "./audio/N3-L50_opt1.mp3?v=ed39fd59",
+        "十時十五分に駅で会う": "./audio/N3-L50_opt2.mp3?v=d679adf5"
+      }
+    }
+  },
+  "N3-L51_q.mp3": "dfb7a9344b94",
+  "N3-L51_exp.mp3": "da094a15a3bc",
+  "meta:N3-L51": {
+    "q_audio": "./audio/N3-L51_q.mp3?v=dfb7a934",
+    "exp_audio": "./audio/N3-L51_exp.mp3?v=da094a15",
+    "spoken_text": "女：「报告截止日是周五发表那天来着吗？」 男：「不对，老师要提前过目，定的是发表前一天的傍晚前交哦。」 发表在周五，截止是「前日の夕方」→ 往前推一天是周四傍晚。 日期推算高频词：「前日（ぜんじつ）＝前一天」，「当日＝当天」，「翌日（よくじつ）＝次日」。",
+    "listen_parts": {
+      "stem": "./audio/N3-L51_stem.mp3?v=c393221a",
+      "nums": [
+        "./audio/num_JF_1.mp3",
+        "./audio/num_JF_2.mp3",
+        "./audio/num_JF_3.mp3"
+      ],
+      "opts": {
+        "木曜日の夕方までに提出する": "./audio/N3-L51_opt0.mp3?v=76529491",
+        "金曜日の朝に提出する": "./audio/N3-L51_opt1.mp3?v=d3deda1f",
+        "土曜日に提出する": "./audio/N3-L51_opt2.mp3?v=24723173"
+      }
+    }
+  },
+  "N3-L52_q.mp3": "f3dd2abc8817",
+  "N3-L52_exp.mp3": "b204707b276d",
+  "meta:N3-L52": {
+    "q_audio": "./audio/N3-L52_q.mp3?v=f3dd2abc",
+    "exp_audio": "./audio/N3-L52_exp.mp3?v=b204707b",
+    "spoken_text": "男：「前阵子一起去的京都乌冬面馆，叫啥名字来着？」 女：「啊，叫松叶呀，真好吃对吧。」 句尾「〜だったっけ」表达「叫什么来着？」，即以前知道但一时想不起来。 句尾听到「〜たっけ／〜だったっけ」，必表「以前知道但忘了，边回想边问对方」。",
+    "listen_parts": {
+      "stem": "./audio/N3-L52_stem.mp3?v=5a7d64d1",
+      "nums": [
+        "./audio/num_JM_1.mp3",
+        "./audio/num_JM_2.mp3",
+        "./audio/num_JM_3.mp3"
+      ],
+      "opts": {
+        "店の名前を思い出せずに聞いている": "./audio/N3-L52_opt0.mp3?v=eda4961d",
+        "店の名前を相手に教えている": "./audio/N3-L52_opt1.mp3?v=58ba4ff9",
+        "その店には行ったことがないと言っている": "./audio/N3-L52_opt2.mp3?v=2c1747b2"
+      }
+    }
+  },
+  "N3-L53_q.mp3": "98741d346738",
+  "N3-L53_exp.mp3": "63c9b5f184fb",
+  "meta:N3-L53": {
+    "q_audio": "./audio/N3-L53_q.mp3?v=98741d34",
+    "exp_audio": "./audio/N3-L53_exp.mp3?v=63c9b5f1",
+    "spoken_text": "女：「啊，我这就泡茶，请稍等一下哦。」 男：「不不，请千万别客气张罗了，我马上就告辞。」 「おかまいなく」是拜访做客高频惯用语，意为「别费心招待了」。 做客时对方说要泡茶/端点心，回答「どうぞおかまいなく」就是「请千万别客气、不用麻烦招待了」。",
+    "listen_parts": {
+      "stem": "./audio/N3-L53_stem.mp3?v=89f37b6b",
+      "nums": [
+        "./audio/num_JF_1.mp3",
+        "./audio/num_JF_2.mp3",
+        "./audio/num_JF_3.mp3"
+      ],
+      "opts": {
+        "お茶を用意しなくていいと遠慮している": "./audio/N3-L53_opt0.mp3?v=5a80c83f",
+        "すぐにお茶を出してほしいと頼んでいる": "./audio/N3-L53_opt1.mp3?v=4accc436",
+        "もう帰るので玄関まで送ってほしいと言っている": "./audio/N3-L53_opt2.mp3?v=9e1b8dcb"
+      }
+    }
+  },
+  "N3-L54_q.mp3": "28b5388f5000",
+  "N3-L54_exp.mp3": "2fd66ee31e1b",
+  "meta:N3-L54": {
+    "q_audio": "./audio/N3-L54_q.mp3?v=28b5388f",
+    "exp_audio": "./audio/N3-L54_exp.mp3?v=2fd66ee3",
+    "spoken_text": "女：「新开的餐厅怎么样？有点贵吗？」 男：「不，不是那样，味道和价格我都很满意，就是离车站太远走起来太费劲了。」 「そうじゃなくて」否掉价格，真正结论在后面「駅から遠すぎる」。 听力听到「いや、そうじゃなくて…」，前面提的理由全作废，竖起耳朵听后面真正的不满或结论。",
+    "listen_parts": {
+      "stem": "./audio/N3-L54_stem.mp3?v=4ae2d880",
+      "nums": [
+        "./audio/num_JF_1.mp3",
+        "./audio/num_JF_2.mp3",
+        "./audio/num_JF_3.mp3"
+      ],
+      "opts": {
+        "店の場所が遠すぎることを気にしている": "./audio/N3-L54_opt0.mp3?v=5f48ebb1",
+        "料理の値段が高すぎることを気にしている": "./audio/N3-L54_opt1.mp3?v=f1492a6e",
+        "料理の味が薄すぎることを気にしている": "./audio/N3-L54_opt2.mp3?v=b8edcf3d"
+      }
+    }
+  },
+  "VAR13-01_q.mp3": "69167797b4b7",
+  "VAR13-01_exp.mp3": "a939a9c694ed",
+  "meta:VAR13-01": {
+    "q_audio": "./audio/VAR13-01_q.mp3?v=69167797",
+    "exp_audio": "./audio/VAR13-01_exp.mp3?v=a939a9c6",
+    "spoken_text": "难得人家大老远跑来一趟，总不能就那样让人空手回去。 完整语序：そのまま → 手ぶらで → 帰す（★）→ わけには（いかない）。 「动词辞书形＋わけにはいかない」锁定「帰す」必须紧贴在「わけには」前面（第 3 位 ★）。"
+  },
+  "VAR13-02_q.mp3": "5580f62ccb95",
+  "VAR13-02_exp.mp3": "fd25dc663ae5",
+  "meta:VAR13-02": {
+    "q_audio": "./audio/VAR13-02_q.mp3?v=5580f62c",
+    "exp_audio": "./audio/VAR13-02_exp.mp3?v=fd25dc66",
+    "spoken_text": "按他来日本才半年来说，敬语用得非常地道。 完整语序：半年 → にしては → 敬語の（★）→ 使い方が。 「まだ半年＋にしては」收束前半句，后半句主语「敬語の＋使い方が」相连，第 3 位 ★ 是「敬語の」。"
+  },
+  "VAR13-03_q.mp3": "1829d67abf1e",
+  "VAR13-03_exp.mp3": "9d4ba02a67df",
+  "meta:VAR13-03": {
+    "q_audio": "./audio/VAR13-03_q.mp3?v=1829d67a",
+    "exp_audio": "./audio/VAR13-03_exp.mp3?v=9d4ba02a",
+    "spoken_text": "最近忙翻了，别说去旅行，连休息的时间都挤不出来。 完整语序：行く → どころか → 休む（★）→ 時間（すら取れない）。 「旅行に行く＋どころか」接更轻底线「休む＋時間すら」，第 3 位 ★ 必是「休む」。"
+  },
+  "VAR13-04_q.mp3": "6a4dd6d6e9b6",
+  "VAR13-04_exp.mp3": "b73368bef997",
+  "meta:VAR13-04": {
+    "q_audio": "./audio/VAR13-04_q.mp3?v=6a4dd6d6",
+    "exp_audio": "./audio/VAR13-04_exp.mp3?v=b73368be",
+    "spoken_text": "那款新产品不仅功能出色，连设计都非常漂亮。 完整语序：優れている → ばかりか → デザイン（★）→ まで。 「機能が優れている＋ばかりか」递进引出「デザイン＋まで」，第 3 位 ★ 是「デザイン」。"
+  },
+  "VAR13-05_q.mp3": "c021da2182c7",
+  "VAR13-05_exp.mp3": "36d044626670",
+  "meta:VAR13-05": {
+    "q_audio": "./audio/VAR13-05_q.mp3?v=c021da21",
+    "exp_audio": "./audio/VAR13-05_exp.mp3?v=36d04462",
+    "spoken_text": "休息日老在家里躺着不动的话，身体会变僵硬退化的。 完整语序：ごろごろ → して → ばかり（★）→ いると。 固定构型「动词て形＋ばかり＋いる」锁定「して → ばかり（★）→ いると」。"
+  },
+  "VAR13-06_q.mp3": "8ba6a981e9b8",
+  "VAR13-06_exp.mp3": "342a7aa647c0",
+  "meta:VAR13-06": {
+    "q_audio": "./audio/VAR13-06_q.mp3?v=8ba6a981",
+    "exp_audio": "./audio/VAR13-06_exp.mp3?v=342a7aa6",
+    "spoken_text": "他每晚都学到那么晚，肯定能考过的。 完整语序：勉強して → いた → のだから（★）→ きっと。 「勉強していた＋のだから」收束理由句，副词「きっと」领起后半句「合格するにちがいない」。"
+  },
+  "VAR13-07_q.mp3": "3d498700afc3",
+  "VAR13-07_exp.mp3": "e5485f6347dc",
+  "meta:VAR13-07": {
+    "q_audio": "./audio/VAR13-07_q.mp3?v=3d498700",
+    "exp_audio": "./audio/VAR13-07_exp.mp3?v=e5485f63",
+    "spoken_text": "他做的菜好吃到一点儿也不输给专门店里吃到的。 完整语序：食べる → もの → にも（★）→ 少しも（負けないほど）。 「専門店で食べるもの＋にも」作对比对象，「少しも」呼应后方否定「負けない」。"
+  },
+  "VAR13-08_q.mp3": "e73dcf8a3db7",
+  "VAR13-08_exp.mp3": "6eb3d5b2cdc8",
+  "meta:VAR13-08": {
+    "q_audio": "./audio/VAR13-08_q.mp3?v=e73dcf8a",
+    "exp_audio": "./audio/VAR13-08_exp.mp3?v=6eb3d5b2",
+    "spoken_text": "因为临时有急事，今天能让我早点结束工作回去吗？ 完整语序：早めに → 仕事を → 切り上げて（★）→ 帰らせて（いただけませんか）。 「仕事を切り上げて＋帰らせて＋いただけませんか」一气呵成，第 3 位 ★ 是「切り上げて」。"
+  },
+  "VAR13-09_q.mp3": "5acf8179f32e",
+  "VAR13-09_exp.mp3": "c858eb9733f9",
+  "meta:VAR13-09": {
+    "q_audio": "./audio/VAR13-09_q.mp3?v=5acf8179",
+    "exp_audio": "./audio/VAR13-09_exp.mp3?v=c858eb97",
+    "spoken_text": "随着越来越接近山顶，气温不断降了下来。 完整语序：近づく → に → したがって（★）→ どんどん。 「动词辞书形＋に＋したがって」表伴随变化，副词「どんどん」修饰后句「気温が下がってきた」。"
+  },
+  "VAR13-10_q.mp3": "fc12ac4ab997",
+  "VAR13-10_exp.mp3": "addfdac6658b",
+  "meta:VAR13-10": {
+    "q_audio": "./audio/VAR13-10_q.mp3?v=fc12ac4a",
+    "exp_audio": "./audio/VAR13-10_exp.mp3?v=addfdac6",
+    "spoken_text": "尽管下着大雨，户外音乐会还是按原计划举行了。 完整语序：いる → にもかかわらず → 野外の（★）→ 音楽会は。 「降っている＋にもかかわらず」转折收前半句，后半句主语「野外の＋音楽会は」自然相连。"
   },
   "VAR11-01_q.mp3": "165bf277f917",
   "VAR11-01_exp.mp3": "8654c23ce5ae",
