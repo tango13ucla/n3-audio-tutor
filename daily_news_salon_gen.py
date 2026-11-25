@@ -295,10 +295,44 @@ def validate_generated_story(st: dict, require_light_explain: bool = True, min_c
     return True
 
 
+def _discover_gemini_models(api_key: str) -> list[str]:
+    """Query /v1beta/models so Gemini 3.x / 2.5 upgrades work without hardcoded 404s."""
+    try:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
+        req = urllib.request.Request(url, headers={"User-Agent": "n3-audio-tutor/8.0"})
+        with urllib.request.urlopen(req, timeout=12.0) as resp:
+            data = json.loads(resp.read().decode("utf-8", errors="replace"))
+        cands: list[tuple[tuple[int, int, int], str]] = []
+        for m in data.get("models") or []:
+            name = str(m.get("name") or "")
+            methods = m.get("supportedGenerationMethods") or []
+            if "generateContent" not in methods:
+                continue
+            short = name.replace("models/", "")
+            if not short.startswith("gemini-") or any(
+                bad in short for bad in ("embedding", "tts", "image", "audio", "robotics", "computer-use")
+            ):
+                continue
+            vm = re.search(r"gemini-(\d+)(?:\.(\d+))?", short)
+            maj = int(vm.group(1)) if vm else 0
+            mnr = int(vm.group(2)) if (vm and vm.group(2)) else 0
+            tier = 3 if "-pro" in short else (2 if "-flash" in short and "lite" not in short else 1)
+            if "exp" in short or "preview" in short:
+                tier -= 1
+            cands.append(((maj, mnr, tier), short))
+        cands.sort(key=lambda x: x[0], reverse=True)
+        out: list[str] = []
+        for _, short in cands:
+            if short not in out:
+                out.append(short)
+        return out[:6]
+    except Exception:
+        return []
+
+
 def _call_chat_llm(system_prompt: str, user_prompt: str) -> str | None:
     openai_key = (os.environ.get("OPENAI_API_KEY") or "").strip()
     gemini_key = (os.environ.get("GEMINI_API_KEY") or "").strip()
-    gh_models_token = (os.environ.get("GITHUB_MODELS_TOKEN") or "").strip()
 
     if openai_key:
         url = "https://api.openai.com/v1/chat/completions"
@@ -322,7 +356,7 @@ def _call_chat_llm(system_prompt: str, user_prompt: str) -> str | None:
                     },
                     method="POST",
                 )
-                with urllib.request.urlopen(req, timeout=38.0) as resp:
+                with urllib.request.urlopen(req, timeout=45.0) as resp:
                     raw_body = resp.read().decode("utf-8", errors="replace").strip()
                 if not raw_body:
                     continue
@@ -335,20 +369,38 @@ def _call_chat_llm(system_prompt: str, user_prompt: str) -> str | None:
                 print(f"[info] live news LLM endpoint ({model}) skipped: {e}")
 
     if gemini_key:
-        for g_model in ("gemini-2.5-pro", "gemini-2.5-flash"):
+        discovered = _discover_gemini_models(gemini_key)
+        preferred = (os.environ.get("GEMINI_MODEL") or "").strip()
+        model_order: list[str] = []
+        for m in [preferred, "gemini-3.5-flash", "gemini-3.8-flash", "gemini-3.5-pro", *discovered, "gemini-2.5-pro", "gemini-2.5-flash"]:
+            if m and m not in model_order:
+                model_order.append(m)
+        for g_model in model_order[:7]:
             try:
                 url = f"https://generativelanguage.googleapis.com/v1beta/models/{g_model}:generateContent?key={gemini_key}"
                 payload = json.dumps({
-                    "contents": [{"parts": [{"text": system_prompt + "\n\n" + user_prompt}]}],
-                    "generationConfig": {"responseMimeType": "application/json", "temperature": 0.65},
+                    "systemInstruction": {"parts": [{"text": system_prompt}]},
+                    "contents": [{"role": "user", "parts": [{"text": user_prompt}]}],
+                    "generationConfig": {"responseMimeType": "application/json", "temperature": 0.6},
                 }).encode("utf-8")
-                req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"}, method="POST")
-                with urllib.request.urlopen(req, timeout=38.0) as resp:
+                req = urllib.request.Request(
+                    url,
+                    data=payload,
+                    headers={"Content-Type": "application/json", "User-Agent": "n3-audio-tutor/8.0"},
+                    method="POST",
+                )
+                with urllib.request.urlopen(req, timeout=65.0) as resp:
                     raw_body = resp.read().decode("utf-8", errors="replace").strip()
                 if not raw_body:
                     continue
                 data = json.loads(raw_body)
-                content = _strip_json_fence(data["candidates"][0]["content"]["parts"][0]["text"])
+                cands = data.get("candidates") or []
+                if not cands:
+                    continue
+                parts = ((cands[0].get("content") or {}).get("parts")) or []
+                # Skip Gemini 3.x thinking parts cleanly
+                raw_txt = "".join(str(p.get("text") or "") for p in parts if not p.get("thought")).strip()
+                content = _strip_json_fence(raw_txt)
                 if content:
                     json.loads(content)
                     return content

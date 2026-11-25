@@ -38,6 +38,7 @@ from vocab_cards import (
     get_pronunciation_mnemonic,
 )
 import tutor_prefs
+from exam_choice_enricher import enrich_card_choices
 
 MEMORY_PREFS = tutor_prefs.load_prefs()
 MEMORY_FOCUS = tutor_prefs.focus_set(MEMORY_PREFS)
@@ -419,10 +420,21 @@ for vc in VARIANT_CARDS:
     q_rel = meta.get("q_audio", "")
     exp_rel = meta.get("exp_audio", "")
     if has_mp3_pair(q_rel, exp_rel):
+        _v_subj = vc.get("subject", "文法")
+        _v_is_l = _v_subj == "聴解"
+        _v_raw_choices = c75.get("choices") or vc["choices"]
+        _v_choices = enrich_card_choices(
+            _v_raw_choices,
+            vc["answer"],
+            is_listening=_v_is_l,
+            point_key=str(vc.get("point_key") or vc.get("variant_of") or ""),
+            subject=_v_subj,
+            confusion_pairs=_confusion_pairs_raw,
+        )
         v_obj = {
             "id": vid,
-            "prompt": c75.get("prompt_clean") or clean_prompt(vc["prompt"], vc["subject"] == "聴解"),
-            "choices": c75.get("choices") or vc["choices"],
+            "prompt": c75.get("prompt_clean") or clean_prompt(vc["prompt"], _v_is_l),
+            "choices": _v_choices,
             "answer": vc["answer"],
             "full_ja": c75.get("full_ja") or vc["full_ja"],
             "zh_meaning": c75.get("zh_meaning", ""),
@@ -432,7 +444,7 @@ for vc in VARIANT_CARDS:
             "q_audio": q_rel,
             "exp_audio": exp_rel,
             "listen_parts": meta.get("listen_parts"),
-            "is_listening": vc["subject"] == "聴解",
+            "is_listening": _v_is_l,
         }
         variants_by_base.setdefault(vc["variant_of"], []).append(v_obj)
 
@@ -447,13 +459,21 @@ def build_base_point(q: dict, subject: str, fallback_point_label: str) -> dict:
     fallback_opts = [strip_opt_prefix(o) for o in q.get("options", []) if o != "不知道"]
     fallback_ans = strip_opt_prefix(q.get("answer", ""))
 
-    choices = c75.get("choices") or t_item.get("choices") or fallback_opts
+    raw_choices = c75.get("choices") or t_item.get("choices") or fallback_opts
     answer = t_item.get("answer") or fallback_ans
     raw_prompt = c75.get("prompt_clean") or t_item.get("prompt_display") or re.sub(r"\s*\[[A-Z0-9-]+\]", "", str(q.get("stem", ""))).strip()
     prompt_display = clean_prompt(raw_prompt, is_listening)
     full_ja = c75.get("full_ja") or t_item.get("full_ja") or raw_prompt
 
     point_key = t_item.get("point_key") or fallback_point_label
+    choices = enrich_card_choices(
+        raw_choices,
+        answer,
+        is_listening=is_listening,
+        point_key=point_key,
+        subject=subject,
+        confusion_pairs=_confusion_pairs_raw,
+    )
     if point_key in l_state_map:
         display_point = l_state_map[point_key].get("name") or fallback_point_label
     elif point_key in h_state_map:
@@ -576,7 +596,14 @@ for ext in EXTRA_PRIMARY_CARDS:
         "primary": {
             "id": qid,
             "prompt": c75.get("prompt_clean") or clean_prompt(ext["prompt"], is_l),
-            "choices": c75.get("choices") or ext["choices"],
+            "choices": enrich_card_choices(
+                c75.get("choices") or ext["choices"],
+                ext["answer"],
+                is_listening=is_l,
+                point_key=ext["point_key"],
+                subject=ext["subject"],
+                confusion_pairs=_confusion_pairs_raw,
+            ),
             "answer": ext["answer"],
             "full_ja": full_ja,
             "zh_meaning": c75.get("zh_meaning", ""),
@@ -889,9 +916,22 @@ def select_balanced_spaced_deck(candidates: list[dict], cap: int) -> list[dict]:
             chosen.append(p)
             chosen_ids.add(p["id"])
 
-    # Step C: Exam-ROI Balanced Subject Quotas (29G/11L/10H/10V for cap=60, 24G/10L/8H/8V for cap=50)
+    # Step C: Pre-Exam Countdown Phase Subject Quotas (Adaptive Engine v8.0)
+    # D-10..D-1 (final 10 days before JLPT): shift 5 slots from already-100%-covered Grammar
+    # into Listening & Henkei (24G/14L/12H/10V) so all 4 real exam pillars finish sharp!
     remaining_cap = cap - len(chosen)
-    if remaining_cap == 60:
+    if 1 <= _days_to_exam <= 10:
+        if remaining_cap == 60:
+            quotas = {"语法": 24, "听力": 14, "活用": 12, "词汇": 10}
+        elif remaining_cap == 50:
+            quotas = {"语法": 20, "听力": 12, "活用": 10, "词汇": 8}
+        else:
+            q_g = max(1, round(remaining_cap * 0.40))
+            q_l = max(1, round(remaining_cap * 0.24))
+            q_h = max(1, round(remaining_cap * 0.20))
+            q_v = max(0, remaining_cap - q_g - q_l - q_h)
+            quotas = {"语法": q_g, "听力": q_l, "活用": q_h, "词汇": q_v}
+    elif remaining_cap == 60:
         quotas = {"语法": 29, "听力": 11, "活用": 10, "词汇": 10}
     elif remaining_cap == 50:
         quotas = {"语法": 24, "听力": 10, "活用": 8, "词汇": 8}
@@ -908,8 +948,10 @@ def select_balanced_spaced_deck(candidates: list[dict], cap: int) -> list[dict]:
             rem_by_subj.setdefault(p["subject"], []).append(p)
 
     # First pass: fill each subject quota using ONLY non-green candidates.
-    # During the final <=14d sprint, expand miss_cap to 75% so audited blank/confuse blind spots clear before exam day!
-    miss_ratio = 0.75 if _days_to_exam <= 14 else 0.55
+    # During D-14..D-4 sprint: 75% miss_cap clears blind spots; during D-3..D-1 final 72h polish:
+    # 85% miss_cap + prioritize near-green (1/3 & 2/3) & confusion_pairs over zero-seen low-yield traps!
+    miss_ratio = 0.85 if 1 <= _days_to_exam <= 3 else (0.75 if _days_to_exam <= 14 else 0.55)
+    _final_72h = 1 <= _days_to_exam <= 3
     for subj in ("语法", "听力", "活用", "词汇"):
         q = quotas.get(subj, 0)
         if q <= 0:
@@ -924,7 +966,14 @@ def select_balanced_spaced_deck(candidates: list[dict], cap: int) -> list[dict]:
             picked_subj.append(p)
             picked_ids_subj.add(p["id"])
         rest = [p for p in non_green if p["id"] not in picked_ids_subj]
-        rest.sort(key=lambda p: _spaced_wave_key(p, allow_miss_top=False))
+        if _final_72h:
+            def _final_polish_key(p: dict) -> tuple:
+                st = resolve_point_status(p["point_key"])
+                is_near = 0 if st == "yellow" else (1 if p["point_key"] in _confusion_pairs_raw or p["point_key"] in _speaking_slip_keys else (2 if st == "red" else 3))
+                return (is_near, *_spaced_wave_key(p, allow_miss_top=False))
+            rest.sort(key=_final_polish_key)
+        else:
+            rest.sort(key=lambda p: _spaced_wave_key(p, allow_miss_top=False))
         for p in rest:
             if len(picked_subj) >= q:
                 break
@@ -2382,6 +2431,27 @@ html = r"""<!DOCTYPE html>
     transition: border-color 0.16s ease, background 0.16s ease;
   }
   .zen-choice:active { background: var(--tap-bg); }
+  .choice-list.grid-2x2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .choice-list.grid-2x2 .zen-choice {
+    min-height: 58px;
+    padding: 12px 14px;
+    font-size: 19.5px;
+    line-height: 1.32;
+    gap: 6px;
+  }
+  .choice-list.compact-4 {
+    gap: 9px;
+  }
+  .choice-list.compact-4 .zen-choice {
+    min-height: 50px;
+    padding: 10px 18px;
+    font-size: 19px;
+    line-height: 1.35;
+  }
 
   .listen-num-grid {
     display: grid;
@@ -7322,6 +7392,11 @@ function computeDaily120Metrics() {
   };
 }
 
+let sessionMissStreak = 0;
+let sessionFastStreak = 0;
+let sessionTwinKey = "";
+let sessionTwinDueStep = 0;
+
 function selectNextPointId(forcedId) {
   if (forcedId && A.pts[forcedId]) return forcedId;
   const remaining = DATA.points.filter(p => A.pts[p.id].status !== "green");
@@ -7344,6 +7419,21 @@ function selectNextPointId(forcedId) {
     return dueQuizzes[0].id;
   }
 
+  // Adaptive Engine v8.0: Spaced Confusion-Twin Contrast Interleaving (5-6 cards after a miss)
+  if (sessionTwinKey && A.step >= sessionTwinDueStep) {
+    const twinHits = pool.filter(p => {
+      if (A.pts[p.id].dueStep > A.step) return false;
+      const pk = String(p.point_key || "");
+      const pt = String(p.point || "");
+      return pk === sessionTwinKey || pt === sessionTwinKey || pk.includes(sessionTwinKey) || pt.includes(sessionTwinKey);
+    });
+    if (twinHits.length) {
+      sessionTwinKey = "";
+      sessionTwinDueStep = 0;
+      return twinHits[0].id;
+    }
+  }
+
   if (A.hotFamily && A.step >= (A.hotFamilyDueStep || 0)) {
     const famSiblings = pool.filter(p => p.family === A.hotFamily && A.pts[p.id].dueStep <= A.step);
     if (famSiblings.length) {
@@ -7357,11 +7447,26 @@ function selectNextPointId(forcedId) {
   if (ready.length) {
     const lastPt = A.lastPointId ? getPointById(A.lastPointId) : null;
     const lastFam = (lastPt && lastPt.family) || "";
+    const needConfidence = sessionMissStreak >= 2;
+    const needChallenge = !needConfidence && sessionFastStreak >= 4;
+    const confMap = DATA.confusion_pairs || {};
+    const _pacingBonus = (ptObj) => {
+      const ms = (typeof getEffectiveMastery === "function") ? getEffectiveMastery(ptObj.point_key, ptObj.point) : null;
+      const stCount = ms ? Number(ms.streak || 0) : 0;
+      if (needConfidence) {
+        return stCount >= 2 ? 1.15 : (stCount === 1 ? 0.45 : -0.35);
+      }
+      if (needChallenge) {
+        const isConf = !!(confMap[ptObj.point_key] || confMap[ptObj.point]);
+        return (stCount === 0 ? 0.85 : 0) + (isConf ? 0.55 : 0);
+      }
+      return 0;
+    };
     ready.sort((a, b) => {
       const penA = (lastFam && a.family === lastFam) ? -0.4 : 0;
       const penB = (lastFam && b.family === lastFam) ? -0.4 : 0;
-      const ma = (a.modality === "memorize" ? 0.25 : (a.modality === "both" ? 0.12 : 0)) + (A.pts[a.id].audioPrimed ? 0.10 : 0) + penA;
-      const mb = (b.modality === "memorize" ? 0.25 : (b.modality === "both" ? 0.12 : 0)) + (A.pts[b.id].audioPrimed ? 0.10 : 0) + penB;
+      const ma = (a.modality === "memorize" ? 0.25 : (a.modality === "both" ? 0.12 : 0)) + (A.pts[a.id].audioPrimed ? 0.10 : 0) + penA + _pacingBonus(a);
+      const mb = (b.modality === "memorize" ? 0.25 : (b.modality === "both" ? 0.12 : 0)) + (A.pts[b.id].audioPrimed ? 0.10 : 0) + penB + _pacingBonus(b);
       return (b.roi_score + mb) - (a.roi_score + ma);
     });
     return ready[0].id;
@@ -8487,6 +8592,7 @@ function updateChapterStripFade(stripEl) {
 function renderRadioChapters(activeChapIdx) {
   const chaps = DATA.radio.chapters || [];
   const jpVid = (DATA.radio && DATA.radio.jp_video && DATA.radio.jp_video.video_url) ? DATA.radio.jp_video : null;
+  const spkList = (DATA.radio && Array.isArray(DATA.radio.speaking_prompts)) ? DATA.radio.speaking_prompts : [];
   const rvMeta = getReviewClosingChapMeta();
   const tailBtns = [];
   if (jpVid) {
@@ -8494,6 +8600,9 @@ function renderRadioChapters(activeChapIdx) {
   }
   if (rvMeta) {
     tailBtns.push(`<button type="button" class="chap-link chap-review${rvMeta.cls}" id="radio-review-chap" onclick="openRadioReview()">${escapeHtml(rvMeta.label)}</button>`);
+  }
+  if (spkList.length > 0) {
+    tailBtns.push(`<button type="button" class="chap-link chap-jpv" id="radio-spk-chap" onclick="openRadioSpeaking(0)">开口2句</button>`);
   }
   const closingHTML = tailBtns.length
     ? `<span class="chap-sep" aria-hidden="true"></span>${tailBtns.join("")}`
@@ -10918,6 +11027,10 @@ function revealWithoutGuess() {
   // Rohrer & Taylor (2007) / Pan (2015): delay same-family contrast by 4 cards instead of immediate blocking!
   A.hotFamily = p.family;
   A.hotFamilyDueStep = A.step + 4;
+  sessionMissStreak += 1;
+  sessionFastStreak = 0;
+  const _twinUnsure = (DATA.confusion_pairs && (DATA.confusion_pairs[p.point_key] || DATA.confusion_pairs[p.point])) || "";
+  if (_twinUnsure) { sessionTwinKey = _twinUnsure; sessionTwinDueStep = A.step + 5; }
   A.step += 1;
   A.lastPointId = p.id;
   recomputeStatusesFromCRDT(A);
@@ -10944,9 +11057,15 @@ function submitAnswer(val) {
   const ps = A.pts[p.id];
   const isCorrect = (val === activeQuizObj.answer);
   const hadWrongToday = (ps.wrongCount || 0) > 0 || ((ps.retestAt || 0) > (A.resetAt || 0));
-  lastAnswerHesitant = !!(isCorrect && !activeQuizObj.is_listening && thinkMs >= 14000 && thinkMs < 90000);
+  lastAnswerHesitant = !!(isCorrect && !activeQuizObj.is_listening && thinkMs >= 12000 && thinkMs < 90000);
 
   if (isCorrect) {
+    sessionMissStreak = 0;
+    if (!activeQuizObj.is_listening && thinkMs > 0 && thinkMs < 5000) {
+      sessionFastStreak += 1;
+    } else if (lastAnswerHesitant) {
+      sessionFastStreak = 0;
+    }
     if (!A.hesitantKeys || typeof A.hesitantKeys !== "object") A.hesitantKeys = {};
     if (lastAnswerHesitant) {
       A.hesitantKeys[p.point_key] = 1;
@@ -11028,6 +11147,10 @@ function submitAnswer(val) {
     ps.dueStep = A.step + 3;
     A.hotFamily = p.family;
     A.hotFamilyDueStep = A.step + 4;
+    sessionMissStreak += 1;
+    sessionFastStreak = 0;
+    const _twinWrong = (!activeQuizObj.is_listening && String(val || "").trim()) || (DATA.confusion_pairs && (DATA.confusion_pairs[p.point_key] || DATA.confusion_pairs[p.point])) || "";
+    if (_twinWrong && _twinWrong.length <= 12) { sessionTwinKey = _twinWrong; sessionTwinDueStep = A.step + 5; }
     A.step += 1;
     A.lastPointId = p.id;
     recomputeStatusesFromCRDT(A);
@@ -11355,6 +11478,9 @@ function renderTutor() {
     else if (useRecallVeil) label += " · 终审盲考";
     else if (ps.audioPrimed) label += " · 随身听已聊";
 
+    const _is4Choices = !activeQuizObj.is_listening && currentChoices.length >= 4;
+    const _maxChoiceLen = _is4Choices ? Math.max(...currentChoices.map(c => String(c || "").length)) : 0;
+    const _choiceGridCls = _is4Choices ? (_maxChoiceLen <= 9 ? " grid-2x2" : " compact-4") : "";
     const controlsHTML = activeQuizObj.is_listening
       ? `<div class="listen-num-grid">
           ${currentChoices.map((c, cIdx) => `
@@ -11363,7 +11489,7 @@ function renderTutor() {
         </div>`
       : `<div class="choice-veil-wrap">
           ${useRecallVeil ? `<button type="button" class="recall-veil-overlay" id="quiz-recall-veil" onclick="revealQuizChoicesNow()"><span class="recall-veil-title">读完题，先在心里想答案</span><span class="recall-veil-sub">想好轻点这里看选项</span></button>` : ""}
-          <div class="choice-list${useRecallVeil ? " recall-veiled" : ""}" id="quiz-choice-list">
+          <div class="choice-list${_choiceGridCls}${useRecallVeil ? " recall-veiled" : ""}" id="quiz-choice-list">
             ${currentChoices.map((c, cIdx) => `
               <button class="zen-choice" onclick="submitAnswer(currentChoices[${cIdx}])">
                 <span>${escapeHtml(c)}</span>
@@ -11976,6 +12102,7 @@ document.addEventListener("keydown", e => {
     else if (e.key === "1" && currentChoices[0]) { e.preventDefault(); if (!quizChoicesRevealed) { revealQuizChoicesNow(); return; } submitAnswer(currentChoices[0]); }
     else if (e.key === "2" && currentChoices[1]) { e.preventDefault(); if (!quizChoicesRevealed) { revealQuizChoicesNow(); return; } submitAnswer(currentChoices[1]); }
     else if (e.key === "3" && currentChoices[2]) { e.preventDefault(); if (!quizChoicesRevealed) { revealQuizChoicesNow(); return; } submitAnswer(currentChoices[2]); }
+    else if (e.key === "4" && currentChoices[3]) { e.preventDefault(); if (!quizChoicesRevealed) { revealQuizChoicesNow(); return; } submitAnswer(currentChoices[3]); }
     else if (e.key === "0") { e.preventDefault(); revealWithoutGuess(); }
     return;
   }
@@ -13938,7 +14065,9 @@ function renderDashboard() {
     const totalStale = pillarMeta.reduce((s, x) => s + x.staleDone, 0);
     const totalHes = pillarMeta.reduce((s, x) => s + x.hesCnt, 0);
     const dLeft = Number(DATA.days_to_exam || 14);
+    const activeConfCnt = Object.keys(DATA.confusion_pairs || {}).length;
     const extras = [];
+    if (activeConfCnt > 0) extras.push(`<span class="nw">常混 ${activeConfCnt} 组</span>`);
     if (totalHes > 0) extras.push(`<span class="nw">略生 ${totalHes} 项</span>`);
     if (totalStale > 0) extras.push(`<span class="nw">待保鲜 ${totalStale} 项</span>`);
     const extraStr = extras.length ? `，${extras.join("，")}` : "";
@@ -17572,6 +17701,46 @@ if (!cpMap14 || typeof cpMap14 !== 'object' || !Array.isArray(rfv14)) {
 }
 for (const v of Object.values(cpMap14)) {
   if (String(v || '').includes('—')) throw new Error('Self-test 14 failed: em dash inside confusion_pairs: ' + v);
+}
+
+// Self-test 15 (Adaptive Engine v8.0 — 100/100 Mastery System):
+// 15.1 Zero 2-choice non-listening cards in today's deck (all 3-4 choice exam fidelity) & listening stays 3-choice
+const twoChoiceBad15 = vm.runInNewContext(`
+  DATA.points.filter(p => p.primary && !p.primary.is_listening && (p.primary.choices || []).length < 3).map(p => p.id)
+`, sb);
+if (twoChoiceBad15.length > 0) {
+  throw new Error('Self-test 15 failed: non-listening cards still have <3 choices: ' + JSON.stringify(twoChoiceBad15));
+}
+const fourChoiceCnt15 = vm.runInNewContext(`
+  DATA.points.filter(p => p.primary && !p.primary.is_listening && (p.primary.choices || []).length >= 4).length
+`, sb);
+if (fourChoiceCnt15 < 20) {
+  throw new Error('Self-test 15 failed: expected >=20 4-choice exam cards in deck, got ' + fourChoiceCnt15);
+}
+const badListen15 = vm.runInNewContext(`
+  DATA.points.filter(p => p.primary && p.primary.is_listening && (p.primary.choices || []).length !== 3).map(p => p.id)
+`, sb);
+if (badListen15.length > 0) {
+  throw new Error('Self-test 15 failed: listening cards must stay 3-choice for 1/2/3 audio sync: ' + JSON.stringify(badListen15));
+}
+// 15.2 Radio chapter strip exposes 1-tap 开口2句 entry when speaking_prompts exist
+vm.runInNewContext('renderRadioChapters(0);', sb);
+const spkChapHtml15 = vm.runInNewContext('(document.getElementById("radio-chap-pills") && document.getElementById("radio-chap-pills").innerHTML) || ""', sb);
+const hasSpkPrompts15 = vm.runInNewContext('Array.isArray(DATA.radio && DATA.radio.speaking_prompts) && DATA.radio.speaking_prompts.length > 0', sb);
+if (hasSpkPrompts15 && !spkChapHtml15.includes('openRadioSpeaking(0)')) {
+  throw new Error('Self-test 15 failed: 1-tap 开口2句 entry missing from radio chapter strip');
+}
+// 15.3 Live intra-session pacing hooks (sessionMissStreak / sessionFastStreak / sessionTwinKey) active
+const pacingOk15 = vm.runInNewContext(`(() => {
+  sessionMissStreak = 2; sessionFastStreak = 0;
+  const pick1 = selectNextPointId();
+  sessionMissStreak = 0; sessionFastStreak = 4;
+  const pick2 = selectNextPointId();
+  sessionFastStreak = 0;
+  return !!(pick1 && pick2);
+})()`, sb);
+if (!pacingOk15) {
+  throw new Error('Self-test 15 failed: live intra-session adaptive pacing failed to pick next point');
 }
 """
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
