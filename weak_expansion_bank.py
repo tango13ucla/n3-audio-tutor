@@ -866,9 +866,9 @@ except ImportError:
     pass
 
 try:
-    from weak_expansion_wave11 import WAVE11_EXTRA_WORDS, WAVE11_VARIANT_CARDS
-    NEW_VARIANT_CARDS.extend(WAVE11_VARIANT_CARDS)
-    NEW_EXTRA_WORDS.update(WAVE11_EXTRA_WORDS)
+    from weak_expansion_wave12 import WAVE12_EXTRA_WORDS, WAVE12_VARIANT_CARDS
+    NEW_VARIANT_CARDS.extend(WAVE12_VARIANT_CARDS)
+    NEW_EXTRA_WORDS.update(WAVE12_EXTRA_WORDS)
 except ImportError:
     pass
 

@@ -585,8 +585,8 @@ except ImportError:
     pass
 
 try:
-    from weak_expansion_wave11 import WAVE11_CARDS_AUDIO
-    NEW_CARDS_AUDIO.update(WAVE11_CARDS_AUDIO)
+    from weak_expansion_wave12 import WAVE12_CARDS_AUDIO
+    NEW_CARDS_AUDIO.update(WAVE12_CARDS_AUDIO)
 except ImportError:
     pass
 
