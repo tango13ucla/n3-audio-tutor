@@ -1428,3 +1428,32 @@
 {"id": "N3-G15", "point": "〜ば〜ほど", "choice": "読めば", "correct": "true", "ask_again": "false", "ts": "2026-11-24T07:37:49.000Z"}
 {"id": "VC-やっぱり", "point": "やっぱり", "choice": "记词:太熟", "correct": "true", "ask_again": "false", "ts": "2026-11-24T23:15:55.000Z"}
 {"id": "LK:会った", "point": "N3-G80", "choice": "会った", "correct": "true", "ask_again": "false", "ts": "2026-11-24T23:22:59.000Z"}
+{"id": "GROK-719", "point": "〜しだい", "correct": false, "ask_again": false, "source": "grok", "ts": "2026-11-22T21:25:01-08:00"}
+{"id": "GROK-720", "point": "N3L-004", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-22T21:26:01-08:00"}
+{"id": "GROK-721", "point": "N3L-004", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-22T21:27:01-08:00"}
+{"id": "GROK-722", "point": "N3L-004", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-22T21:27:02-08:00"}
+{"id": "GROK-723", "point": "わざわざ", "correct": true, "ask_again": true, "source": "grok", "ts": "2026-11-22T21:27:03-08:00"}
+{"id": "GROK-724", "point": "N3L-004", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-22T21:28:01-08:00"}
+{"id": "GROK-725", "point": "N3L-248", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-22T21:29:01-08:00", "choice": "Grok:不用再考"}
+{"id": "GROK-725-2", "point": "N3L-264", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-22T21:29:02-08:00", "choice": "Grok:不用再考"}
+{"id": "GROK-726", "point": "せっかく", "correct": false, "ask_again": false, "source": "grok", "ts": "2026-11-22T21:29:03-08:00"}
+{"id": "GROK-727", "point": "ぴったり", "correct": false, "ask_again": false, "source": "grok", "ts": "2026-11-22T21:30:01-08:00"}
+{"id": "GROK-728", "point": "かわいがる", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-22T21:31:01-08:00"}
+{"id": "GROK-729", "point": "N3L-007", "correct": false, "ask_again": false, "source": "grok", "ts": "2026-11-22T21:31:02-08:00"}
+{"id": "GROK-730", "point": "N3L-007", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-22T21:31:03-08:00"}
+{"id": "GROK-731", "point": "N3L-007", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-22T21:32:01-08:00"}
+{"id": "GROK-732", "point": "N3L-087", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-22T21:32:02-08:00", "choice": "Grok:不用再考"}
+{"id": "GROK-733", "point": "ぶらぶら", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-22T21:32:03-08:00"}
+{"id": "GROK-734", "point": "N3L-007", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-22T21:33:01-08:00"}
+{"id": "GROK-735", "point": "ついてない", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-22T21:33:02-08:00"}
+{"id": "GROK-736", "point": "N3L-009", "correct": false, "ask_again": false, "source": "grok", "ts": "2026-11-22T21:33:03-08:00"}
+{"id": "GROK-737", "point": "からから", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-22T21:33:04-08:00"}
+{"id": "GROK-738", "point": "加える", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-22T21:34:01-08:00"}
+{"id": "GROK-739", "point": "N3L-009", "correct": false, "ask_again": false, "source": "grok", "ts": "2026-11-22T21:35:01-08:00"}
+{"id": "GROK-740", "point": "ぎりぎり", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-22T21:35:02-08:00"}
+{"id": "GROK-741", "point": "N3L-007", "correct": false, "ask_again": false, "source": "grok", "ts": "2026-11-22T21:36:01-08:00"}
+{"id": "GROK-742", "point": "N3L-009", "correct": false, "ask_again": false, "source": "grok", "ts": "2026-11-22T21:36:02-08:00"}
+{"id": "GROK-743", "point": "N3L-012", "correct": false, "ask_again": false, "source": "grok", "ts": "2026-11-22T21:37:01-08:00"}
+{"id": "GROK-744", "point": "N3L-012", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-22T21:39:01-08:00"}
+{"id": "GROK-745", "point": "N3L-085", "correct": false, "ask_again": false, "source": "grok", "ts": "2026-11-22T21:39:02-08:00"}
+{"id": "GROK-746", "point": "ぼんやり", "correct": true, "ask_again": false, "source": "grok", "ts": "2026-11-22T21:40:01-08:00"}

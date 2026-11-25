@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-24 19:38 PT",
+  "updated_at": "2026-11-24 21:16 PT",
   "exam_date": "2026-12-06",
   "days_left": 12,
   "target_score": "120+ / 180",
@@ -79,9 +79,9 @@
         "gray": 0
       },
       "green": 49,
-      "yellow": 80,
+      "yellow": 79,
       "orange": 3,
-      "red": 24,
+      "red": 25,
       "gray": 0
     },
     "henkei": {
@@ -117,8 +117,8 @@
         "red": 5,
         "gray": 379
       },
-      "green": 18,
-      "yellow": 20,
+      "green": 21,
+      "yellow": 17,
       "orange": 0,
       "red": 4,
       "gray": 361,
@@ -136,11 +136,11 @@
         "red": 23,
         "gray": 0
       },
-      "green": 54,
-      "yellow": 22,
-      "red": 56,
+      "green": 52,
+      "yellow": 21,
+      "red": 58,
       "total": 132,
-      "orange": 0,
+      "orange": 1,
       "gray": 0
     }
   },
@@ -833,13 +833,13 @@
       "pool": "核心136点",
       "family": "2. 時間・局面・順序",
       "meaning": "一……就立即,连用形＋しだい",
-      "status": "yellow",
+      "status": "red",
       "history": "Q389(10-24)✅？ Q411(10-24)E",
       "note": "答错退出",
       "exam_alert": "⚠️ 曾被语法Bot误判N2屏蔽",
-      "streak": 2,
+      "streak": 0,
       "last_ok_date": "20261117",
-      "last_ng_date": "20261115"
+      "last_ng_date": "20261122"
     },
     {
       "id": "G-050",
@@ -5231,11 +5231,11 @@
       "meaning": "「〜ている」的て形",
       "trap": "听成「待って」，丢失「保持状态」",
       "is_core165": true,
-      "status": "red",
+      "status": "yellow",
       "note": "未测",
-      "streak": 0,
+      "streak": 1,
       "last_ng_date": "20261121",
-      "last_ok_date": "20261118"
+      "last_ok_date": "20261122"
     },
     {
       "id": "N3L-005",
@@ -5275,11 +5275,11 @@
       "meaning": "请事先做好(依赖)",
       "trap": "依赖句的关键动作就在这里，听漏则答错",
       "is_core165": true,
-      "status": "yellow",
+      "status": "red",
       "note": "快速/微题最新答错（依赖句的关键动作就在这里，听漏则答错）",
-      "streak": 2,
+      "streak": 0,
       "last_ok_date": "20261123",
-      "last_ng_date": "20261117"
+      "last_ng_date": "20261122"
     },
     {
       "id": "N3L-008",
@@ -5303,10 +5303,10 @@
       "meaning": "完了/遗憾/不小心",
       "trap": "ちゃう 很快，易漏掉「结果不好」的语气",
       "is_core165": true,
-      "status": "yellow",
+      "status": "red",
       "note": "未测",
-      "streak": 2,
-      "last_ng_date": "20261117",
+      "streak": 0,
+      "last_ng_date": "20261122",
       "last_ok_date": "20261123"
     },
     {
@@ -5346,10 +5346,10 @@
       "meaning": "…了(理由/道歉)",
       "trap": "理由句，后面往往是请求/道歉",
       "is_core165": true,
-      "status": "yellow",
+      "status": "red",
       "note": "未测",
-      "streak": 2,
-      "last_ng_date": "20261118",
+      "streak": 0,
+      "last_ng_date": "20261122",
       "last_ok_date": "20261123"
     },
     {
@@ -6318,7 +6318,7 @@
       "status": "red",
       "note": "2026-11-14 10:09 Grok听力：错(不知道)（未问（答错不问））",
       "streak": 0,
-      "last_ng_date": "20261121",
+      "last_ng_date": "20261122",
       "last_ok_date": "20261116"
     },
     {
@@ -6345,10 +6345,10 @@
       "meaning": "顺序标记",
       "trap": "まず被后文推翻的情况多",
       "is_core165": true,
-      "status": "yellow",
+      "status": "green",
       "note": "11-13 09:19 正式题答对，你点了「还是要考」",
-      "streak": 2,
-      "last_ok_date": "20261123",
+      "streak": 3,
+      "last_ok_date": "20261122",
       "last_ng_date": "20261118"
     },
     {
@@ -8441,10 +8441,11 @@
       "meaning": "其实(重要信息)",
       "trap": "实は后=答案",
       "is_core165": false,
-      "status": "red",
+      "status": "green",
       "note": "未测",
-      "streak": 0,
-      "last_ng_date": "20261121"
+      "streak": 3,
+      "last_ng_date": "20261121",
+      "last_ok_date": "20261122"
     },
     {
       "id": "N3L-249",
@@ -8652,10 +8653,11 @@
       "meaning": "也考虑过…但",
       "trap": "主旨在でも之后",
       "is_core165": false,
-      "status": "red",
+      "status": "green",
       "note": "未测",
-      "streak": 0,
-      "last_ng_date": "20261121"
+      "streak": 3,
+      "last_ng_date": "20261121",
+      "last_ok_date": "20261122"
     },
     {
       "id": "N3L-265",
@@ -10504,27 +10506,27 @@
     {
       "word": "ついてない",
       "category": "3. 纯假名和语动词/副词",
-      "status": "red",
-      "seen": 21,
+      "status": "yellow",
+      "seen": 22,
       "wrong": 10,
-      "streak": 0,
+      "streak": 1,
       "due": "2026-11-14",
       "classroom_note": "课堂实错(6/28 课上忘词)：倒霉、点背、手气差（今日は本当についてない）",
       "note": "课堂实错(6/28 课上忘词)：倒霉、运气差",
-      "last_ok_date": "20261121",
+      "last_ok_date": "20261122",
       "last_ng_date": "20261123"
     },
     {
       "word": "ぎりぎり",
       "category": "1. 拟声拟态（〜っ〜り家族）",
       "status": "green",
-      "seen": 15,
+      "seen": 16,
       "wrong": 4,
       "streak": 3,
       "due": "2026-11-14",
       "classroom_note": "课堂实错(6/28 & 8/23 课上忘词)：卡着死线勉强赶上（電車にぎりぎり間に合った）",
       "note": "课堂实错(6/28 & 8/23 课上忘词)：卡点勉强赶上",
-      "last_ok_date": "20261121",
+      "last_ok_date": "20261122",
       "last_ng_date": "20261118"
     },
     {
@@ -10659,12 +10661,12 @@
       "word": "かわいがる",
       "category": "3. 纯假名和语动词/副词",
       "status": "green",
-      "seen": 14,
+      "seen": 15,
       "wrong": 4,
       "streak": 3,
       "due": "2026-10-28",
       "note": "累计见 3 次｜错 2 次｜当前连对 0",
-      "last_ok_date": "20261118",
+      "last_ok_date": "20261122",
       "last_ng_date": "20261116"
     },
     {
@@ -10681,14 +10683,14 @@
     {
       "word": "ぴったり",
       "category": "1. 拟声拟态（〜っ〜り家族）",
-      "status": "green",
-      "seen": 11,
-      "wrong": 3,
-      "streak": 3,
+      "status": "red",
+      "seen": 12,
+      "wrong": 4,
+      "streak": 0,
       "due": "2026-11-11",
       "note": "累计见 2 次｜错 2 次｜当前连对 0",
       "last_ok_date": "20261118",
-      "last_ng_date": "20261115"
+      "last_ng_date": "20261122"
     },
     {
       "word": "ぐったり",
@@ -10833,10 +10835,10 @@
     {
       "word": "からから",
       "category": "2. 叠词副词（ABAB家族）",
-      "status": "yellow",
-      "seen": 16,
+      "status": "red",
+      "seen": 17,
       "wrong": 7,
-      "streak": 1,
+      "streak": 0,
       "due": "2026-10-29",
       "note": "累计见 2 次｜错 1 次｜当前连对 1",
       "last_ok_date": "20261123",
@@ -10846,12 +10848,12 @@
       "word": "ぶらぶら",
       "category": "2. 叠词副词（ABAB家族）",
       "status": "green",
-      "seen": 16,
+      "seen": 17,
       "wrong": 4,
       "streak": 3,
       "due": "2026-11-11",
       "note": "累计见 4 次｜错 1 次｜当前连对 1",
-      "last_ok_date": "20261123",
+      "last_ok_date": "20261122",
       "last_ng_date": "20261118"
     },
     {
@@ -10881,7 +10883,7 @@
       "word": "加える",
       "category": "4. 汉字词读音（连浊/长短音/训读）与搭配",
       "status": "green",
-      "seen": 23,
+      "seen": 24,
       "wrong": 9,
       "streak": 3,
       "due": "2026-10-30",
@@ -11180,23 +11182,24 @@
     {
       "word": "せっかく",
       "category": "高频假名副词",
-      "status": "green",
-      "seen": 7,
-      "wrong": 1,
-      "streak": 3,
+      "status": "red",
+      "seen": 8,
+      "wrong": 2,
+      "streak": 0,
       "classroom_note": "声调 ⓪ · 好不容易、难得特意（せっかく来たのに）",
-      "last_ok_date": "20261118"
+      "last_ok_date": "20261118",
+      "last_ng_date": "20261122"
     },
     {
       "word": "わざわざ",
       "category": "高频假名副词",
-      "status": "yellow",
-      "seen": 13,
+      "status": "orange",
+      "seen": 14,
       "wrong": 6,
-      "streak": 2,
+      "streak": 0,
       "classroom_note": "声调 ① · 专程费心跑一趟（わざわざ行く）",
       "last_ok_date": "20261121",
-      "last_ng_date": "20261117"
+      "last_ng_date": "20261122"
     },
     {
       "word": "やっと",
@@ -11253,12 +11256,12 @@
       "word": "ぼんやり",
       "category": "高频假名与副词",
       "status": "green",
-      "seen": 23,
+      "seen": 24,
       "wrong": 14,
       "streak": 3,
       "classroom_note": "",
       "last_ng_date": "20261121",
-      "last_ok_date": "20261121"
+      "last_ok_date": "20261122"
     },
     {
       "word": "しといて",
@@ -13116,6 +13119,35 @@
     "2026-11-22T18:30:28.000Z|VC-任せる|任せる|记词:没记住",
     "2026-11-22T18:30:33.000Z|VC-ぼろぼろ|ぼろぼろ|记词:没记住",
     "2026-11-22T18:31:13.000Z|VAR8-19|〜べきではない|ばかりだ",
+    "2026-11-22T21:25:01-08:00|GROK-719|〜しだい|",
+    "2026-11-22T21:26:01-08:00|GROK-720|N3L-004|",
+    "2026-11-22T21:27:01-08:00|GROK-721|N3L-004|",
+    "2026-11-22T21:27:02-08:00|GROK-722|N3L-004|",
+    "2026-11-22T21:27:03-08:00|GROK-723|わざわざ|",
+    "2026-11-22T21:28:01-08:00|GROK-724|N3L-004|",
+    "2026-11-22T21:29:01-08:00|GROK-725|N3L-248|Grok:不用再考",
+    "2026-11-22T21:29:02-08:00|GROK-725-2|N3L-264|Grok:不用再考",
+    "2026-11-22T21:29:03-08:00|GROK-726|せっかく|",
+    "2026-11-22T21:30:01-08:00|GROK-727|ぴったり|",
+    "2026-11-22T21:31:01-08:00|GROK-728|かわいがる|",
+    "2026-11-22T21:31:02-08:00|GROK-729|N3L-007|",
+    "2026-11-22T21:31:03-08:00|GROK-730|N3L-007|",
+    "2026-11-22T21:32:01-08:00|GROK-731|N3L-007|",
+    "2026-11-22T21:32:02-08:00|GROK-732|N3L-087|Grok:不用再考",
+    "2026-11-22T21:32:03-08:00|GROK-733|ぶらぶら|",
+    "2026-11-22T21:33:01-08:00|GROK-734|N3L-007|",
+    "2026-11-22T21:33:02-08:00|GROK-735|ついてない|",
+    "2026-11-22T21:33:03-08:00|GROK-736|N3L-009|",
+    "2026-11-22T21:33:04-08:00|GROK-737|からから|",
+    "2026-11-22T21:34:01-08:00|GROK-738|加える|",
+    "2026-11-22T21:35:01-08:00|GROK-739|N3L-009|",
+    "2026-11-22T21:35:02-08:00|GROK-740|ぎりぎり|",
+    "2026-11-22T21:36:01-08:00|GROK-741|N3L-007|",
+    "2026-11-22T21:36:02-08:00|GROK-742|N3L-009|",
+    "2026-11-22T21:37:01-08:00|GROK-743|N3L-012|",
+    "2026-11-22T21:39:01-08:00|GROK-744|N3L-012|",
+    "2026-11-22T21:39:02-08:00|GROK-745|N3L-085|",
+    "2026-11-22T21:40:01-08:00|GROK-746|ぼんやり|",
     "2026-11-23T01:21:11.000Z|N3-G59|〜てもかまわない|てもかまわない",
     "2026-11-23T01:21:19.000Z|N3-V34|そっくり|そっくり",
     "2026-11-23T01:21:25.000Z|N3-V11|こっそり|こっそり",
@@ -13460,7 +13492,7 @@
     "2026-11-13T22:33:31.544371-08:00",
     "2026-11-13T22:40:32.759071-08:00"
   ],
-  "_grok_ledger_row_cursor": 719,
+  "_grok_ledger_row_cursor": 747,
   "_master_sheet_styled_v3": true,
   "_applied_override_ts": {
     "T-002": 1794762957,
@@ -13738,7 +13770,7 @@
     "ga_total_audited": 51
   },
   "study_date": "2026-11-24",
-  "_baked_epoch": 1795577896,
+  "_baked_epoch": 1795583775,
   "word_lookups": {
     "おく": {
       "count": 1,
