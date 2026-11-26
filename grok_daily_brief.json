@@ -1,7 +1,7 @@
 {
   "schema": "n3-grok-cloud-brief/1",
   "study_date": "2026-11-25",
-  "updated_at": "2026-11-25 23:42 PT",
+  "updated_at": "2026-11-25 23:54 PT",
   "days_left": 11,
   "grok_cloud_ingest_url": "https://ntfy.sh/n3grok_9c71e4b2a85f13d06e24ab891f03",
   "grammar": {
@@ -182,23 +182,13 @@
   },
   "top_confusion_pairs": [
     {
-      "point": "〜わけがない",
-      "wrong_choice": "わけではない",
-      "count": 17
+      "point": "K-008",
+      "wrong_choice": "お知り",
+      "count": 4
     },
     {
       "point": "K-014",
       "wrong_choice": "お聞きになり",
-      "count": 5
-    },
-    {
-      "point": "はっきり",
-      "wrong_choice": "ぼんやり",
-      "count": 5
-    },
-    {
-      "point": "K-008",
-      "wrong_choice": "お知り",
       "count": 4
     },
     {
@@ -214,6 +204,11 @@
     {
       "point": "からから",
       "wrong_choice": "がらがら",
+      "count": 4
+    },
+    {
+      "point": "はっきり",
+      "wrong_choice": "ぼんやり",
       "count": 4
     },
     {
@@ -254,6 +249,11 @@
     {
       "point": "V-028",
       "wrong_choice": "着れる",
+      "count": 2
+    },
+    {
+      "point": "V-041",
+      "wrong_choice": "歩かせた",
       "count": 2
     }
   ],
