@@ -1866,3 +1866,8 @@
 {"id": "VC-都合", "point": "都合", "choice": "记词:记住", "correct": "true", "ask_again": "false", "ts": "2026-11-26T20:15:15.000Z"}
 {"id": "VC-象徴", "point": "象徴", "choice": "记词:没记住", "correct": "false", "ask_again": "false", "ts": "2026-11-26T20:15:20.000Z"}
 {"id": "VC-任せる", "point": "任せる", "choice": "记词:记住", "correct": "true", "ask_again": "false", "ts": "2026-11-26T20:15:37.000Z"}
+{"id": "VC-慰める", "point": "慰める", "choice": "记词:记住", "correct": "true", "ask_again": "false", "ts": "2026-11-26T21:15:02.000Z"}
+{"id": "VC-うろうろ", "point": "うろうろ", "choice": "记词:没记住", "correct": "false", "ask_again": "false", "ts": "2026-11-26T21:15:08.000Z"}
+{"id": "VC-はっきり", "point": "はっきり", "choice": "记词:记住", "correct": "true", "ask_again": "false", "ts": "2026-11-26T21:15:13.000Z"}
+{"id": "VC-象徴", "point": "象徴", "choice": "记词:没记住", "correct": "false", "ask_again": "false", "ts": "2026-11-26T21:15:22.000Z"}
+{"id": "VC-ぎっしり", "point": "ぎっしり", "choice": "记词:记住", "correct": "true", "ask_again": "false", "ts": "2026-11-26T21:15:29.000Z"}
