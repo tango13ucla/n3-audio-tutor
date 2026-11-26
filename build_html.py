@@ -41,6 +41,7 @@ from vocab_cards import (
 )
 import tutor_prefs
 from exam_choice_enricher import enrich_card_choices
+from option_notes_catalog import ensure_complete_opt_notes
 
 MEMORY_PREFS = tutor_prefs.load_prefs()
 MEMORY_FOCUS = tutor_prefs.focus_set(MEMORY_PREFS)
@@ -275,15 +276,39 @@ except Exception:
     pass
 
 
-def build_opt_notes(card_id: str, raw_notes: dict | None) -> dict:
+def build_opt_notes(
+    card_id: str,
+    raw_notes: dict | None,
+    *,
+    choices: list[str] | None = None,
+    answer: str = "",
+    subject: str = "",
+    point_key: str = "",
+    why_line: str = "",
+    form_line: str = "",
+    is_listening: bool = False,
+) -> dict:
     if card_id in LISTENING_OPT_NOTES:
-        return dict(LISTENING_OPT_NOTES[card_id])
-    out = {}
-    for k, v in (raw_notes or {}).items():
-        cleaned = clean_zen_text(v)
-        if cleaned:
-            out[str(k)] = cleaned
-    return out
+        base = dict(LISTENING_OPT_NOTES[card_id])
+    else:
+        base = {}
+        for k, v in (raw_notes or {}).items():
+            cleaned = clean_zen_text(v)
+            if cleaned:
+                base[str(k)] = cleaned
+    if choices:
+        return ensure_complete_opt_notes(
+            card_id,
+            choices,
+            answer,
+            base,
+            subject=subject,
+            point_key=point_key,
+            why_line=why_line,
+            form_line=form_line,
+            is_listening=is_listening,
+        )
+    return base
 
 
 def clean_ja_head(s: str) -> str:
@@ -433,6 +458,8 @@ for vc in VARIANT_CARDS:
             subject=_v_subj,
             confusion_pairs=_confusion_pairs_raw,
         )
+        _v_why = c75.get("why_line", "")
+        _v_form = c75.get("form_line") or clean_zen_text(vc["core_rule"])
         v_obj = {
             "id": vid,
             "prompt": c75.get("prompt_clean") or clean_prompt(vc["prompt"], _v_is_l),
@@ -440,9 +467,19 @@ for vc in VARIANT_CARDS:
             "answer": vc["answer"],
             "full_ja": c75.get("full_ja") or vc["full_ja"],
             "zh_meaning": c75.get("zh_meaning", ""),
-            "why_line": c75.get("why_line", ""),
-            "form_line": c75.get("form_line") or clean_zen_text(vc["core_rule"]),
-            "opt_notes": build_opt_notes(vid, vc.get("option_notes")),
+            "why_line": _v_why,
+            "form_line": _v_form,
+            "opt_notes": build_opt_notes(
+                vid,
+                vc.get("option_notes"),
+                choices=_v_choices,
+                answer=vc["answer"],
+                subject=_v_subj,
+                point_key=str(vc.get("point_key") or vc.get("variant_of") or ""),
+                why_line=_v_why,
+                form_line=_v_form,
+                is_listening=_v_is_l,
+            ),
             "q_audio": q_rel,
             "exp_audio": exp_rel,
             "listen_parts": meta.get("listen_parts"),
@@ -490,10 +527,20 @@ def build_base_point(q: dict, subject: str, fallback_point_label: str) -> dict:
     modality = MODALITY_MAP.get(qid, "listen" if is_listening else "both")
 
     raw_micro = t_item.get("micro_lesson") or {}
-    opt_notes = build_opt_notes(qid, t_item.get("option_notes"))
     why_line = c75.get("why_line", "")
     form_line = c75.get("form_line") or clean_zen_text(raw_micro.get("hook") or "")
     zh_meaning = c75.get("zh_meaning", "")
+    opt_notes = build_opt_notes(
+        qid,
+        t_item.get("option_notes"),
+        choices=choices,
+        answer=answer,
+        subject=subject,
+        point_key=point_key,
+        why_line=why_line,
+        form_line=form_line,
+        is_listening=is_listening,
+    )
 
     left_m = raw_micro.get("left") or {}
     right_m = raw_micro.get("right") or {}
@@ -579,6 +626,16 @@ for ext in EXTRA_PRIMARY_CARDS:
     tl = {"ja": clean_ja_head(ext["teach_left"]["ja"]), "sub": clean_zen_text(ext["teach_left"]["sub"]).rstrip("。")}
     tr = {"ja": clean_ja_head(ext["teach_right"]["ja"]), "sub": clean_zen_text(ext["teach_right"]["sub"]).rstrip("。")}
     full_ja = c75.get("full_ja") or ext["full_ja"]
+    _ext_choices = enrich_card_choices(
+        c75.get("choices") or ext["choices"],
+        ext["answer"],
+        is_listening=is_l,
+        point_key=ext["point_key"],
+        subject=ext["subject"],
+        confusion_pairs=_confusion_pairs_raw,
+    )
+    _ext_why = c75.get("why_line", "")
+    _ext_form = c75.get("form_line") or clean_zen_text(ext["core_rule"])
     raw_points.append({
         "id": qid,
         "subject": SUBJ_CN.get(ext["subject"], ext["subject"]),
@@ -598,20 +655,23 @@ for ext in EXTRA_PRIMARY_CARDS:
         "primary": {
             "id": qid,
             "prompt": c75.get("prompt_clean") or clean_prompt(ext["prompt"], is_l),
-            "choices": enrich_card_choices(
-                c75.get("choices") or ext["choices"],
-                ext["answer"],
-                is_listening=is_l,
-                point_key=ext["point_key"],
-                subject=ext["subject"],
-                confusion_pairs=_confusion_pairs_raw,
-            ),
+            "choices": _ext_choices,
             "answer": ext["answer"],
             "full_ja": full_ja,
             "zh_meaning": c75.get("zh_meaning", ""),
-            "why_line": c75.get("why_line", ""),
-            "form_line": c75.get("form_line") or clean_zen_text(ext["core_rule"]),
-            "opt_notes": build_opt_notes(qid, ext.get("option_notes")),
+            "why_line": _ext_why,
+            "form_line": _ext_form,
+            "opt_notes": build_opt_notes(
+                qid,
+                ext.get("option_notes"),
+                choices=_ext_choices,
+                answer=ext["answer"],
+                subject=ext["subject"],
+                point_key=ext["point_key"],
+                why_line=_ext_why,
+                form_line=_ext_form,
+                is_listening=is_l,
+            ),
             "q_audio": q_rel,
             "exp_audio": exp_rel,
             "listen_parts": meta.get("listen_parts"),
@@ -2795,14 +2855,16 @@ html = r"""<!DOCTYPE html>
     background: var(--bengara-soft);
   }
   .opt-desc {
-    margin-top: 2.5px;
+    margin-top: 3px;
     font-size: 14.5px;
     line-height: 1.56;
     color: var(--ink-2);
     letter-spacing: 0.01em;
+    text-wrap: pretty;
   }
   .opt-row.dim .opt-desc {
-    color: var(--ink-3);
+    color: var(--ink-2);
+    opacity: 0.84;
   }
 
   /* Tappable Japanese words + Fixed-Geometry Zen Meaning Card (Tap anywhere on card to replay pronunciation) */
@@ -12073,7 +12135,7 @@ function renderTutor() {
     return `<div class="${rowCls}">
       <span class="opt-mark">${markTxt}</span>
       <div class="opt-body">
-        <div class="opt-head"><span class="opt-ja">${annotateJapanese(opt)}</span>${badgeHTML}</div>
+        <div class="opt-head"><span class="opt-ja" lang="ja">${annotateJapanese(opt)}</span>${badgeHTML}</div>
         ${descTxt ? `<div class="opt-desc">${escapeHtml(descTxt)}</div>` : ""}
       </div>
     </div>`;
@@ -18082,6 +18144,7 @@ if (!roiEl || !roiEl.innerHTML.includes('临门') || roiEl.innerHTML.includes('�
 }
 // 8.6 Quiz 2/3 recall veil is self-paced tap-to-reveal (zero auto-timer rush, full-area overlay)
 const qPt = vm.runInNewContext('DATA.points.find(p => p.primary && !p.primary.is_listening)', sb);
+vm.runInNewContext(`if (A.pts[${JSON.stringify(qPt.id)}]) { A.pts[${JSON.stringify(qPt.id)}].wrongCount = 0; A.pts[${JSON.stringify(qPt.id)}].greenAt = 0; A.pts[${JSON.stringify(qPt.id)}].retestAt = 0; }`, sb);
 sb.setMasteryTier(qPt.point_key, 'wip2:20261121', Math.floor(Date.now() / 1000) + 60);
 sb.setupCurrentTurn(qPt.id);
 vm.runInNewContext('viewStage = "quiz";', sb);
@@ -18636,11 +18699,44 @@ if (pt20) {
     throw new Error('Self-test 20 failed: unrelated cloud sync jumped options or rebuilt active quiz DOM: ' + JSON.stringify({cBefore20, cAfter20}));
   }
 }
+
+// Self-test 21: 100% Complete Option Explanations Guard (zero blank choices across all primary + variant cards)
+const missingOptNotes21 = [];
+const dashOptNotes21 = [];
+for (const pt21 of (data20.points || [])) {
+  const cards21 = [pt21.primary, ...(pt21.variants || [])].filter(Boolean);
+  for (const c21 of cards21) {
+    const nm21 = c21.opt_notes || {};
+    for (const ch21 of (c21.choices || [])) {
+      const desc21 = String(nm21[ch21] || '').trim();
+      if (desc21.length < 6) missingOptNotes21.push(`${c21.id}:${ch21}`);
+      if (desc21.includes('—')) dashOptNotes21.push(`${c21.id}:${ch21}`);
+    }
+  }
+}
+if (missingOptNotes21.length > 0) {
+  throw new Error('Self-test 21 failed: choices missing opt_notes explanation: ' + missingOptNotes21.slice(0, 12).join(', '));
+}
+if (dashOptNotes21.length > 0) {
+  throw new Error('Self-test 21 failed: opt_notes contains banned em dash: ' + dashOptNotes21.slice(0, 8).join(', '));
+}
+const g38Pt21 = (data20.points || []).find(p => p && p.id === 'N3-G38') || (data20.points || []).find(p => p && p.primary && !p.primary.is_listening && (p.primary.choices || []).length >= 4);
+if (g38Pt21) {
+  sb.setupCurrentTurn(g38Pt21.id);
+  const wrong21 = (g38Pt21.primary.choices || []).find(c => c !== g38Pt21.primary.answer) || g38Pt21.primary.answer;
+  vm.runInNewContext(`activeQuizObj = DATA.points.find(p => p.id === ${JSON.stringify(g38Pt21.id)}).primary; currentChoices = activeQuizObj.choices.slice(); lastPicked = ${JSON.stringify(wrong21)}; viewStage = "result";`, sb);
+  sb.renderTutor();
+  const resHtml21 = (els['voice-card'] && els['voice-card'].innerHTML) || '';
+  const descMatches21 = resHtml21.match(/class="opt-desc"/g) || [];
+  if (descMatches21.length !== (g38Pt21.primary.choices || []).length) {
+    throw new Error('Self-test 21 failed: expected ' + g38Pt21.primary.choices.length + ' rendered .opt-desc blocks on ' + g38Pt21.id + ', got ' + descMatches21.length);
+  }
+}
 """
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
 
 sw_path = os.path.join(BASE_DIR, "sw.js")
-SW_CACHE_NAME = "n3-studio-tutor-v72"
+SW_CACHE_NAME = "n3-studio-tutor-v73"
 if os.path.exists(sw_path):
     with open(sw_path, encoding="utf-8") as sf:
         sw_src = sf.read()

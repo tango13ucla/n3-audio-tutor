@@ -698,7 +698,97 @@ def test_full_bank_4choice_and_immersion_mnemonics() -> None:
         if not vocab_cards.get_pronunciation_mnemonic(it.get("kanji") or it.get("kana") or "", it.get("kana") or "")
     ]
     assert not missing_mn, f"Immersion words missing bilingual pronunciation mnemonics: {missing_mn[:10]}"
-    print(f"[PASS 11/11] 100% 4-choice across all {len(seen_ids)} cards (0 holdouts) + 100% bilingual mnemonics across {len(ive.IMMERSION_VOCAB_BANK)} immersion words")
+    print(f"[PASS 11/12] 100% 4-choice across all {len(seen_ids)} cards (0 holdouts) + 100% bilingual mnemonics across {len(ive.IMMERSION_VOCAB_BANK)} immersion words")
+
+
+def test_full_bank_100pct_option_notes() -> None:
+    """Gate 12: 100% of ALL options across ALL 587+ cards must have non-empty, zero-dash, non-generic Chinese opt_notes."""
+    import clear_explanations
+    import exam_choice_enricher as ece
+    import option_notes_catalog as onc
+    import tutor_data
+    import wave11_precision_variants
+    import weak_expansion_bank
+    import weak_expansion_wave2
+    import weak_expansion_wave3
+    import weak_expansion_wave4
+    import weak_expansion_wave5
+    import weak_expansion_wave6
+    import weak_expansion_wave7
+    import weak_expansion_wave8
+    import weak_expansion_wave9
+    import weak_expansion_wave10
+    import weak_expansion_wave12
+    import weak_expansion_wave13
+
+    mods = [
+        weak_expansion_bank, weak_expansion_wave2, weak_expansion_wave3, weak_expansion_wave4,
+        weak_expansion_wave5, weak_expansion_wave6, weak_expansion_wave7, weak_expansion_wave8,
+        weak_expansion_wave9, weak_expansion_wave10, wave11_precision_variants, weak_expansion_wave12,
+        weak_expansion_wave13,
+    ]
+    l_notes: dict[str, dict[str, str]] = {}
+    for mod in mods:
+        for attr in dir(mod):
+            if "LISTENING_OPT_NOTES" in attr and isinstance(getattr(mod, attr), dict):
+                l_notes.update(getattr(mod, attr))
+
+    all_cards: dict[str, dict] = {}
+    for qid, it in tutor_data.TUTOR_ITEMS.items():
+        all_cards[qid] = {
+            "id": qid,
+            "subject": "聴解" if qid.startswith("Q-") else ("活用" if qid.startswith("H-") else ("語彙" if qid.startswith("V-") else "文法")),
+            "point_key": it.get("point_key", ""),
+            "choices": it.get("choices") or [],
+            "answer": it.get("answer", ""),
+            "opt_notes": dict(l_notes.get(qid) or it.get("option_notes") or {}),
+        }
+    for mod in mods:
+        for attr in dir(mod):
+            val = getattr(mod, attr)
+            if isinstance(val, list) and val and isinstance(val[0], dict) and "id" in val[0] and "choices" in val[0]:
+                for q in val:
+                    qid = str(q["id"])
+                    if qid not in all_cards:
+                        all_cards[qid] = {
+                            "id": qid,
+                            "subject": q.get("subject", "文法"),
+                            "point_key": q.get("point_key") or q.get("variant_of") or "",
+                            "choices": q.get("choices") or [],
+                            "answer": q.get("answer", ""),
+                            "opt_notes": dict(l_notes.get(qid) or q.get("option_notes") or {}),
+                        }
+
+    missing: list[str] = []
+    dashes: list[str] = []
+    generic: list[str] = []
+    total_opts = 0
+    for qid, c in all_cards.items():
+        is_l = (c["subject"] in ("聴解", "听力")) or qid.startswith(("Q-", "N3-L")) or "-L" in qid
+        c75 = clear_explanations.CARDS_75.get(qid, {})
+        raw_ch = c75.get("choices") or c["choices"]
+        enr_ch = ece.enrich_card_choices(
+            raw_ch, c["answer"], is_listening=is_l, point_key=c["point_key"], subject=c["subject"]
+        )
+        notes = onc.ensure_complete_opt_notes(
+            qid, enr_ch, c["answer"], c["opt_notes"],
+            subject=c["subject"], point_key=c["point_key"],
+            why_line=c75.get("why_line", ""), form_line=c75.get("form_line", ""),
+            is_listening=is_l,
+        )
+        for o in enr_ch:
+            total_opts += 1
+            txt = str(notes.get(o) or "").strip()
+            if len(txt) < 6:
+                missing.append(f"{qid}:{o}")
+            if "—" in txt:
+                dashes.append(f"{qid}:{o}")
+            if "词义、接续或语态与本题语境不符" in txt:
+                generic.append(f"{qid}:{o}")
+    assert not missing, f"Options missing Chinese opt_notes ({len(missing)}): {missing[:10]}"
+    assert not dashes, f"Options containing banned em dash ({len(dashes)}): {dashes[:10]}"
+    assert not generic, f"Existing bank options hitting generic fallback ({len(generic)}): {generic[:10]}"
+    print(f"[PASS 12/12] 100% curated zero-dash option explanations across all {len(all_cards)} cards / {total_opts} options (0 blank, 0 generic)")
 
 
 def main() -> int:
@@ -713,7 +803,8 @@ def main() -> int:
     test_all_future_volumes_jp_video_invariants()
     test_generate_daily_radio_async_and_reuse_contract()
     test_full_bank_4choice_and_immersion_mnemonics()
-    print("[ALL PASS] tests_ci_guard.py 11/11 gates green!")
+    test_full_bank_100pct_option_notes()
+    print("[ALL PASS] tests_ci_guard.py 12/12 gates green!")
     return 0
 
 
