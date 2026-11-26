@@ -42,6 +42,7 @@ from vocab_cards import (
 import tutor_prefs
 from exam_choice_enricher import enrich_card_choices
 from option_notes_catalog import ensure_complete_opt_notes
+from grammar_audit_cards import GA_CANONICAL_EXAMPLES, build_grammar_audit_spec
 
 MEMORY_PREFS = tutor_prefs.load_prefs()
 MEMORY_FOCUS = tutor_prefs.focus_set(MEMORY_PREFS)
@@ -1374,6 +1375,7 @@ def _clean_ga_meaning(gid: str, raw: str) -> str:
 grammar_items = []
 grammar_audit_items = []
 ga_split_map = {}
+ga_audio_manifest = audio_manifest.get("ga_cards", {})
 _ga_vmap = {"blank": 1, "weak": 1, "confuse": 2, "fuzzy": 2, "passive": 3, "instinct": 4, "solid": 4}
 for g_idx, p in enumerate(live_state.get("grammar_points", [])):
     nm = p.get("name", "")
@@ -1386,8 +1388,9 @@ for g_idx, p in enumerate(live_state.get("grammar_points", [])):
     card_ref = all_grammar_cards_by_key.get(nm) or {}
     prim_ref = card_ref.get("primary") or {}
     teach_ref = card_ref.get("teach") or {}
-    ex_ja = str(prim_ref.get("full_ja") or teach_ref.get("example_ja") or "").strip()
-    ex_zh = str(prim_ref.get("zh_meaning") or teach_ref.get("zh_meaning") or "").strip()
+    can_ex = GA_CANONICAL_EXAMPLES.get(gid)
+    ex_ja = str((can_ex[0] if can_ex else "") or prim_ref.get("full_ja") or teach_ref.get("example_ja") or "").strip()
+    ex_zh = str((can_ex[1] if can_ex else "") or prim_ref.get("zh_meaning") or teach_ref.get("zh_meaning") or "").strip()
     rule_txt = clean_zen_text(prim_ref.get("form_line") or prim_ref.get("why_line") or p.get("exam_alert") or p.get("note") or "")
     if len(rule_txt) > 96:
         rule_txt = rule_txt[:95].rstrip("，、； ") + "…"
@@ -1397,11 +1400,21 @@ for g_idx, p in enumerate(live_state.get("grammar_points", [])):
     verdict_code = _ga_vmap.get(verdict_raw, 0)
     g_pid = point_id_by_key.get(nm, "")
 
+    # Resolve clean meaning & studio audio for the top-level ledger grammar row too
+    _g_aud_entry = ga_audio_manifest.get(gid) or {}
+    if not _g_aud_entry and gid in GA_ATOMIC_SPLITS and GA_ATOMIC_SPLITS[gid]:
+        _g_aud_entry = ga_audio_manifest.get(GA_ATOMIC_SPLITS[gid][0][0]) or {}
+    _g_spec_top = build_grammar_audit_spec({
+        "gid": gid, "name": nm, "meaning": meaning_clean, "rule": rule_txt, "ex_ja": ex_ja,
+    }) if gid not in GA_ATOMIC_SPLITS else None
+    _ledger_sub = _g_spec_top["meaning"] if _g_spec_top else meaning_clean
+    _ledger_audio = str(_g_aud_entry.get("ex") or _g_aud_entry.get("pat") or _g_aud_entry.get("rev") or "")
+
     grammar_items.append({
         "gid": gid,
         "key": nm,
         "name": nm,
-        "sub": meaning_clean,
+        "sub": _ledger_sub,
         "family": fam_clean,
         "tier": tier,
         "mstate": mstate,
@@ -1411,7 +1424,8 @@ for g_idx, p in enumerate(live_state.get("grammar_points", [])):
         "nov_tested": nov_tested,
         "audit_code": verdict_code,
         "point_id": g_pid,
-        "note": clean_zen_text(p.get("exam_alert") or p.get("note", "")),
+        "audio": _ledger_audio,
+        "note": clean_zen_text((_g_spec_top["cue"] if _g_spec_top else "") or p.get("exam_alert") or p.get("note", "")),
     })
 
     # Blind-Spot-First priority group for atomic 1-by-1 Grammar Self-Audit:
@@ -1438,6 +1452,19 @@ for g_idx, p in enumerate(live_state.get("grammar_points", [])):
             s_code = int(s_rec.get("code") or _ga_vmap.get(str(s_rec.get("verdict") or ""), 0))
             s_ts = int(s_rec.get("ts") or 0)
             s_date = str(s_rec.get("date") or "")
+            s_can = GA_CANONICAL_EXAMPLES.get(s_gid)
+            s_ex_ja_eff = (s_can[0] if s_can else "") or s_ex_ja
+            s_ex_zh_eff = (s_can[1] if s_can else "") or s_ex_zh
+            s_spec = build_grammar_audit_spec({
+                "gid": s_gid, "name": s_name, "meaning": clean_zen_text(s_meaning),
+                "rule": clean_zen_text(s_rule), "ex_ja": s_ex_ja_eff,
+            })
+            s_ga_aud = ga_audio_manifest.get(s_gid) or {}
+            s_fallback_aud = _ga_audio_url_for_sub(s_gid, exp_aud)
+            s_pat_aud = str(s_ga_aud.get("pat") or "")
+            s_ex_aud = str(s_ga_aud.get("ex") or s_fallback_aud or "")
+            s_hook_aud = str(s_ga_aud.get("hook") or "")
+            s_rev_aud = str(s_ga_aud.get("rev") or "")
             grammar_audit_items.append({
                 "gid": s_gid,
                 "parent_gid": gid,
@@ -1445,12 +1472,19 @@ for g_idx, p in enumerate(live_state.get("grammar_points", [])):
                 "henkei_key": s_hk,
                 "name": s_name,
                 "front_name": clean_grammar_front_name(s_name),
-                "meaning": clean_zen_text(s_meaning),
+                "meaning": s_spec["meaning"],
                 "family": fam_clean,
-                "rule": clean_zen_text(s_rule),
-                "ex_ja": s_ex_ja,
-                "ex_zh": s_ex_zh,
-                "audio": _ga_audio_url_for_sub(s_gid, exp_aud),
+                "rule": s_spec["cue"],
+                "hl": s_spec["hl"],
+                "pat_ja": s_spec["pat_ja"],
+                "hook_zh": s_spec["hook_zh"],
+                "ex_ja": s_ex_ja_eff,
+                "ex_zh": s_ex_zh_eff,
+                "pat_audio": s_pat_aud,
+                "ex_audio": s_ex_aud,
+                "hook_audio": s_hook_aud,
+                "rev_audio": s_rev_aud,
+                "audio": s_rev_aud or s_ex_aud or s_fallback_aud,
                 "sys_tier": tier,
                 "sys_streak": streak,
                 "nov_tested": nov_tested,
@@ -1461,16 +1495,32 @@ for g_idx, p in enumerate(live_state.get("grammar_points", [])):
             })
         ga_split_map[gid] = child_gids
     else:
+        g_spec = build_grammar_audit_spec({
+            "gid": gid, "name": nm, "meaning": meaning_clean,
+            "rule": rule_txt, "ex_ja": ex_ja,
+        })
+        g_ga_aud = ga_audio_manifest.get(gid) or {}
+        g_pat_aud = str(g_ga_aud.get("pat") or "")
+        g_ex_aud = str(g_ga_aud.get("ex") or "")
+        g_hook_aud = str(g_ga_aud.get("hook") or "")
+        g_rev_aud = str(g_ga_aud.get("rev") or "")
         grammar_audit_items.append({
             "gid": gid,
             "name": nm,
             "front_name": clean_grammar_front_name(nm),
-            "meaning": meaning_clean,
+            "meaning": g_spec["meaning"],
             "family": fam_clean,
-            "rule": rule_txt,
+            "rule": g_spec["cue"],
+            "hl": g_spec["hl"],
+            "pat_ja": g_spec["pat_ja"],
+            "hook_zh": g_spec["hook_zh"],
             "ex_ja": ex_ja,
             "ex_zh": ex_zh,
-            "audio": exp_aud,
+            "pat_audio": g_pat_aud,
+            "ex_audio": g_ex_aud,
+            "hook_audio": g_hook_aud,
+            "rev_audio": g_rev_aud,
+            "audio": g_rev_aud or g_ex_aud or exp_aud,
             "sys_tier": tier,
             "sys_streak": streak,
             "nov_tested": nov_tested,
@@ -1907,6 +1957,41 @@ try:
             asr_kana_map.setdefault(str(_ie["kanji"]), str(_ie["kana"]))
 except Exception:
     pass
+
+# Enrich radio review cards with clean Jobs x Zen distilled text & studio 3-beat audio links (zero mutation to script_sig!)
+_ga_by_name_enrich = {}
+for _git in grammar_audit_items:
+    _ga_by_name_enrich.setdefault(_git["name"], _git)
+    _ga_by_name_enrich.setdefault(_git["front_name"], _git)
+for _rv in (radio_meta.get("review_items") or []):
+    if not isinstance(_rv, dict):
+        continue
+    _rtitle = str(_rv.get("title") or "").strip()
+    _rkind = str(_rv.get("kind") or "").strip()
+    if _rkind == "vocab":
+        _vref = vocab_cards_payload.get(_rtitle) or {}
+        if _vref:
+            _rv["zh_card"] = _vref.get("zh_card") or distill_card_zh(_rv.get("zh", ""), _rtitle, _rtitle)
+            _rv["mnemonic_card"] = _vref.get("mnemonic_card") or distill_card_mnemonic(_rv.get("mnemonic", ""), bool(_rv.get("trap_tag")))
+            _rv["rev_audio"] = _vref.get("rev_audio") or ""
+            _rv["hook_audio"] = _vref.get("hook_audio") or ""
+            _rv["word_audio"] = _vref.get("word_audio") or _rv.get("demo_audio") or ""
+            _rv["phrase_audio"] = _vref.get("phrase_audio") or _rv.get("word_audio") or ""
+        else:
+            _rv["zh_card"] = distill_card_zh(_rv.get("zh", ""), _rtitle, _rtitle)
+            _rv["mnemonic_card"] = distill_card_mnemonic(_rv.get("mnemonic", ""), bool(_rv.get("trap_tag")))
+    else:
+        _gref = _ga_by_name_enrich.get(_rtitle) or _ga_by_name_enrich.get(clean_grammar_front_name(_rtitle)) or {}
+        if _gref:
+            _rv["zh_card"] = _gref.get("meaning") or _rv.get("zh") or ""
+            _rv["rule_card"] = _gref.get("rule") or ""
+            _rv["hl"] = _gref.get("hl") or []
+            _rv["pat_audio"] = _gref.get("pat_audio") or ""
+            _rv["ex_audio"] = _gref.get("ex_audio") or _rv.get("demo_audio") or ""
+            _rv["hook_audio"] = _gref.get("hook_audio") or ""
+            _rv["rev_audio"] = _gref.get("rev_audio") or ""
+        else:
+            _rv["zh_card"] = str(_rv.get("zh") or "").replace("—", "，").strip()
 
 payload = json.dumps({
     "plan_date": plan_date_str,
@@ -2622,6 +2707,7 @@ html = r"""<!DOCTYPE html>
     font-weight: 400;
     color: var(--ink-3);
     line-height: 1.62;
+    text-wrap: balance;
   }
 
   /* -------- QUIZ VIEW (Kyoto Zen Retreat Sans + Clean Single-Column Stack) -------- */
@@ -3286,6 +3372,25 @@ html = r"""<!DOCTYPE html>
   }
 
   /* Right-Hand Ergonomic Kyoto Temple Stone Buttons */
+  .tutor-aux-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 16px;
+    padding: 0 2px 8px;
+    min-height: 28px;
+  }
+  .tutor-aux-row:empty { display: none; }
+  .tutor-aux-row .rate-btn {
+    padding: 4px 2px;
+    font-size: 13.5px;
+    color: var(--ink-3);
+    letter-spacing: 0.04em;
+  }
+  .tutor-aux-row .rate-btn.active {
+    color: var(--moss);
+    font-weight: 500;
+  }
   .dock-row {
     display: flex;
     align-items: center;
@@ -3928,16 +4033,24 @@ html = r"""<!DOCTYPE html>
   }
   .rv-card-ex {
     position: relative;
-    margin: 14px auto 0;
-    padding-top: 12px;
-    max-width: 332px;
+    margin: 16px auto 0;
+    padding-top: 14px;
+    max-width: 348px;
     font-family: var(--sans-jp);
-    font-size: 16.5px;
+    font-size: 18px;
     font-weight: 400;
-    line-height: 1.66;
+    line-height: 1.7;
     letter-spacing: 0.02em;
     color: var(--ink-2);
     text-wrap: balance;
+    word-break: auto-phrase;
+    overflow-wrap: break-word;
+  }
+  .rv-card-ex .vc-hl {
+    color: var(--sumi);
+    font-weight: 500;
+    border-bottom: 1.5px solid var(--moss-border);
+    padding-bottom: 1px;
   }
   .rv-card-ex::before {
     content: "";
@@ -3945,7 +4058,7 @@ html = r"""<!DOCTYPE html>
     top: 0;
     left: 50%;
     transform: translateX(-50%);
-    width: 28px;
+    width: 30px;
     height: 1px;
     background: var(--hairline-strong);
   }
@@ -3959,10 +4072,10 @@ html = r"""<!DOCTYPE html>
   }
   .rv-spk-model {
     font-family: var(--sans-jp);
-    font-size: 20.5px;
+    font-size: 23.5px;
     font-weight: 400;
     color: var(--sumi);
-    line-height: 1.66;
+    line-height: 1.62;
     letter-spacing: 0.02em;
     text-wrap: balance;
     word-break: auto-phrase;
@@ -3976,16 +4089,18 @@ html = r"""<!DOCTYPE html>
     cursor: pointer;
   }
   .rv-spk-zh-sub {
-    margin-top: 8px;
-    font-size: 14.5px;
+    margin-top: 10px;
+    font-size: 16px;
     color: var(--ink-2);
-    line-height: 1.5;
+    line-height: 1.54;
+    text-wrap: balance;
   }
   .rv-spk-tip {
-    margin-top: 10px;
-    font-size: 13px;
+    margin-top: 12px;
+    font-size: 14px;
     color: var(--ink-3);
-    line-height: 1.54;
+    line-height: 1.58;
+    text-wrap: balance;
   }
 
   /* Dedicated All-Japanese Daily Short Video Theater (Decoupled from Grammar Flashcards) */
@@ -4160,33 +4275,49 @@ html = r"""<!DOCTYPE html>
     font-family: var(--sans-jp);
   }
   #radio-review-stage .vc-card {
-    padding: 6px 2px;
+    padding: 8px 4px;
   }
   #radio-review-stage .vc-cue {
-    margin-bottom: 8px;
+    margin-bottom: 10px;
   }
   #radio-review-stage .vc-chunk {
-    font-size: 28px;
-    line-height: 1.38;
+    font-size: clamp(30px, 8.2vw, 36px);
+    line-height: 1.32;
+    letter-spacing: 0.03em;
+  }
+  #radio-review-stage .vc-chunk.len-long {
+    font-size: clamp(23px, 6.2vw, 27px);
   }
   #radio-review-stage .vc-reveal {
-    margin-top: 10px;
-    min-height: 92px;
+    margin-top: 14px;
+    min-height: 104px;
+  }
+  #radio-review-stage .vc-kana {
+    font-size: 21px;
+  }
+  #radio-review-stage .vc-zh {
+    font-size: 19.5px;
   }
   #radio-review-stage .vc-hook {
-    margin-top: 12px;
-    padding-top: 10px;
-    font-size: 13px;
-    line-height: 1.58;
+    margin-top: 16px;
+    padding-top: 16px;
+    font-size: 16.5px;
+    line-height: 1.66;
+    max-width: 352px;
   }
   @media (max-height: 740px) {
     .rv-cinema { max-width: 288px; margin-bottom: 10px; }
     .rv-sub-line { font-size: 11.8px; }
-    #radio-review-stage .vc-chunk { font-size: 25px; }
-    #radio-review-stage .vc-reveal { min-height: 78px; }
+    #radio-review-stage .vc-chunk { font-size: 27px; }
+    #radio-review-stage .vc-chunk.len-long { font-size: 22px; }
+    #radio-review-stage .vc-reveal { min-height: 84px; margin-top: 10px; }
+    #radio-review-stage .vc-kana { font-size: 18px; }
+    #radio-review-stage .vc-zh { font-size: 17.5px; }
+    #radio-review-stage .vc-hook { font-size: 15px; margin-top: 12px; padding-top: 12px; }
+    .rv-card-ex { font-size: 16px; margin-top: 12px; padding-top: 10px; }
     .rv-art-vignette { width: 158px; height: 74px; margin-bottom: 12px; }
     .rv-spk-prompt { font-size: 24px; }
-    .rv-spk-model { font-size: 17.5px; }
+    .rv-spk-model { font-size: 19.5px; }
   }
 
   @keyframes micPulse {
@@ -5097,7 +5228,7 @@ html = r"""<!DOCTYPE html>
   }
   .ga-canvas {
     width: 100%;
-    max-width: 396px;
+    max-width: 404px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -5105,16 +5236,20 @@ html = r"""<!DOCTYPE html>
   }
   .ga-head {
     font-family: var(--sans-jp);
-    font-size: clamp(30px, 8vw, 38px);
+    font-size: clamp(32px, 8.8vw, 40px);
     font-weight: 300;
     color: var(--sumi);
-    line-height: 1.4;
-    letter-spacing: 0.055em;
+    line-height: 1.34;
+    letter-spacing: 0.04em;
     word-break: keep-all;
+    max-width: 100%;
   }
+  .ga-head.len-8 { font-size: clamp(28px, 7.6vw, 34px); letter-spacing: 0.03em; }
+  .ga-head.len-9 { font-size: clamp(25px, 6.8vw, 31px); letter-spacing: 0.02em; }
+  .ga-head.len-long { font-size: clamp(22px, 5.8vw, 27px); letter-spacing: 0.015em; }
   .ga-reveal {
-    margin-top: 22px;
-    min-height: 168px;
+    margin-top: 24px;
+    min-height: 186px;
     width: 100%;
     opacity: 0;
     transform: translateY(5px);
@@ -5127,46 +5262,54 @@ html = r"""<!DOCTYPE html>
     pointer-events: auto;
   }
   .ga-meaning {
-    font-size: 18px;
+    font-size: 21.5px;
     font-weight: 400;
     color: var(--sumi);
-    line-height: 1.54;
+    line-height: 1.48;
     letter-spacing: 0.025em;
     text-wrap: balance;
   }
   .ga-rule {
-    margin: 9px auto 0;
-    max-width: 344px;
-    font-size: 13.5px;
-    color: var(--ink-3);
-    line-height: 1.64;
+    margin: 12px auto 0;
+    max-width: 356px;
+    font-size: 15.5px;
+    color: var(--ink-2);
+    line-height: 1.66;
     text-wrap: balance;
   }
   .ga-divider {
-    width: 28px;
+    width: 32px;
     height: 1px;
     background: var(--hairline-strong);
-    margin: 18px auto 16px;
+    margin: 20px auto 18px;
   }
   .ga-ex {
-    max-width: 356px;
+    max-width: 368px;
     margin: 0 auto;
     text-align: center;
   }
   .ga-ex-ja {
     font-family: var(--sans-jp);
-    font-size: 16.5px;
+    font-size: 19px;
     font-weight: 400;
     color: var(--sumi);
-    line-height: 1.7;
+    line-height: 1.72;
     letter-spacing: 0.02em;
     text-wrap: balance;
+    word-break: auto-phrase;
+    overflow-wrap: break-word;
+  }
+  .ga-ex-ja .vc-hl {
+    color: var(--sumi);
+    font-weight: 500;
+    border-bottom: 1.5px solid var(--moss-border);
+    padding-bottom: 1px;
   }
   .ga-ex-zh {
-    margin-top: 5px;
-    font-size: 13px;
+    margin-top: 8px;
+    font-size: 14.5px;
     color: var(--ink-3);
-    line-height: 1.54;
+    line-height: 1.56;
     text-wrap: balance;
   }
   .ga-summary-grid {
@@ -5265,12 +5408,16 @@ html = r"""<!DOCTYPE html>
     transition: opacity 0.15s ease, transform 0.15s ease !important;
   }
   @media (max-height: 700px) {
-    .ga-head { font-size: 27px; }
-    .ga-reveal { margin-top: 14px; min-height: 134px; }
-    .ga-meaning { font-size: 16.5px; }
-    .ga-rule { margin-top: 6px; font-size: 12.8px; }
-    .ga-divider { margin: 12px auto 11px; }
-    .ga-ex-ja { font-size: 14.8px; }
+    .ga-head { font-size: 31px; }
+    .ga-head.len-8 { font-size: 27px; }
+    .ga-head.len-9 { font-size: 25px; }
+    .ga-head.len-long { font-size: 22px; }
+    .ga-reveal { margin-top: 16px; min-height: 146px; }
+    .ga-meaning { font-size: 18.5px; }
+    .ga-rule { margin-top: 8px; font-size: 14px; }
+    .ga-divider { margin: 14px auto 12px; }
+    .ga-ex-ja { font-size: 16.5px; }
+    .ga-ex-zh { font-size: 13.5px; }
   }
 
   /* Quiet inline 4-step controls inside Zen Ledger ("总表 → 语法") */
@@ -8679,6 +8826,15 @@ syncStampReady = true;
 // ================= AUDIO PLAYERS & COMPLETE LEXICON =================
 const player = new Audio();
 player.preload = "auto";
+player.setAttribute("playsinline", "");
+player.style.position = "fixed";
+player.style.bottom = "-9999px";
+player.style.left = "-9999px";
+player.style.width = "1px";
+player.style.height = "1px";
+player.style.opacity = "0.001";
+player.style.pointerEvents = "none";
+try { if (document.body) document.body.appendChild(player); } catch (e) {}
 const wordPlayer = new Audio();
 wordPlayer.preload = "auto";
 wordPlayer.setAttribute("playsinline", "");
@@ -8691,24 +8847,38 @@ wordPlayer.style.opacity = "0.001";
 wordPlayer.style.pointerEvents = "none";
 try { if (document.body) document.body.appendChild(wordPlayer); } catch (e) {}
 let wordPlayerUnlocked = false;
+let mainPlayerUnlocked = false;
 const SILENT_WAV_URI = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
-function unlockWordPlayerOnce() {
-  if (wordPlayerUnlocked) return;
-  wordPlayerUnlocked = true;
+function unlockSinglePlayerOnce(el, onOk, onFail) {
   try {
-    if (!wordPlayer.src) {
-      wordPlayer.src = SILENT_WAV_URI;
-      const pr = wordPlayer.play();
+    if (!el.src) {
+      el.src = SILENT_WAV_URI;
+      const pr = el.play();
       if (pr && typeof pr.then === "function") {
         pr.then(() => {
-          if (wordPlayer.src === SILENT_WAV_URI) {
-            try { wordPlayer.pause(); } catch (e) {}
+          if (el.src === SILENT_WAV_URI) {
+            try { el.pause(); } catch (e) {}
           }
-        }).catch(() => { wordPlayerUnlocked = false; });
+          onOk();
+        }).catch(onFail);
+      } else {
+        onOk();
       }
+    } else {
+      onOk();
     }
   } catch (e) {
-    wordPlayerUnlocked = false;
+    onFail();
+  }
+}
+function unlockWordPlayerOnce() {
+  if (!wordPlayerUnlocked) {
+    wordPlayerUnlocked = true;
+    unlockSinglePlayerOnce(wordPlayer, () => {}, () => { wordPlayerUnlocked = false; });
+  }
+  if (!mainPlayerUnlocked) {
+    mainPlayerUnlocked = true;
+    unlockSinglePlayerOnce(player, () => {}, () => { mainPlayerUnlocked = false; });
   }
 }
 try {
@@ -9053,7 +9223,8 @@ function stepListeningSequence(seq) {
     if (audioBlobMap.has(url)) {
       startResolvedClip(audioBlobMap.get(url), "q", seq);
     } else {
-      warmAudio(url).then(resolved => startResolvedClip(resolved || url, "q", seq));
+      warmAudio(url);
+      startResolvedClip(url, "q", seq);
     }
   };
   if (item.waitMs > 0) {
@@ -9119,11 +9290,9 @@ function playMainClip(url, kind, toggleIfSame) {
     startResolvedClip(audioBlobMap.get(url), kind, seq);
     return;
   }
-  activeKind = kind;
-  syncAudioButtons();
-  warmAudio(url).then(resolvedUrl => {
-    startResolvedClip(resolvedUrl || url, kind, seq);
-  });
+  // Synchronous direct playback preserves mobile user-gesture activation; warm blob in background for instant replays
+  warmAudio(url);
+  startResolvedClip(url, kind, seq);
 }
 
 player.addEventListener("play", () => {
@@ -9149,11 +9318,19 @@ function syncAudioButtons() {
     qBtn.classList.toggle("playing", onQ);
     qBtn.textContent = onQ ? "暂停" : "读题";
   }
+  const qOrigBtn = document.getElementById("res-orig-btn");
+  if (qOrigBtn) {
+    qOrigBtn.classList.toggle("playing", onQ && qPlaybackRate >= 0.95);
+    qOrigBtn.textContent = (onQ && qPlaybackRate >= 0.95) ? "暂停" : "原题";
+  }
   const qSlowBtn = document.getElementById("q-slow-btn");
   if (qSlowBtn) {
     const onSlow = onQ && qPlaybackRate < 0.95;
+    qSlowBtn.classList.toggle("playing", onSlow);
     qSlowBtn.textContent = onSlow ? "暂停 0.85x" : "0.85x 慢听";
   }
+  const resJaEl = document.getElementById("res-ja-box");
+  if (resJaEl) resJaEl.classList.toggle("vc-speaking", onQ);
   const onExp = (activeKind === "exp" || activeKind === "teach") && !player.paused;
   const repBtn = document.getElementById("exp-replay-btn");
   if (repBtn) {
@@ -9165,6 +9342,8 @@ function syncAudioButtons() {
     dockRepBtn.classList.toggle("playing", onExp);
     dockRepBtn.textContent = onExp ? "暂停" : "讲解";
   }
+  const whyCueEl = document.getElementById("res-why-cue");
+  if (whyCueEl) whyCueEl.classList.toggle("vc-speaking", onExp);
 }
 
 // ================= TWO-COACH PODCAST ENGINE =================
@@ -9326,6 +9505,16 @@ function primeDailyAudioBundle() {
   };
   // Priority 1: Speaking prompts, review clips, story images & video captions
   ((DATA.radio && DATA.radio.speaking_prompts) || []).forEach(sp => addU(sp && sp.model_audio));
+  ((DATA.radio && DATA.radio.review_items) || []).forEach(rv => {
+    if (!rv) return;
+    addU(rv.rev_audio);
+    addU(rv.hook_audio);
+    addU(rv.word_audio);
+    addU(rv.phrase_audio);
+    addU(rv.pat_audio);
+    addU(rv.ex_audio);
+    addU(rv.demo_audio);
+  });
   ((DATA.radio && DATA.radio.story_arts) || []).forEach(a => addU(a && a.img));
   if (DATA.radio && DATA.radio.jp_video) {
     addU(DATA.radio.jp_video.vtt_url);
@@ -9358,6 +9547,20 @@ function primeDailyAudioBundle() {
       addU(c.word_audio);
       addU(c.front_audio);
     }
+  });
+  // Priority 4: Active Grammar Audit 3-beat studio cards (prioritize current session queue first)
+  const gaItemsAll = (DATA.grammar_audit && DATA.grammar_audit.items) || [];
+  const gaQueueIds = (A.gaSess && Array.isArray(A.gaSess.queue)) ? A.gaSess.queue : [];
+  const gaPriorityList = gaQueueIds
+    .map(g => (typeof GA_BY_GID !== "undefined" ? GA_BY_GID[g] : null))
+    .filter(Boolean)
+    .concat(gaItemsAll.slice(0, 60));
+  gaPriorityList.forEach(it => {
+    if (!it) return;
+    addU(it.rev_audio);
+    addU(it.ex_audio);
+    addU(it.pat_audio);
+    addU(it.hook_audio);
   });
   if (!urls.length) return;
   caches.open(DAILY_OFFLINE_AUDIO_CACHE).then(async cache => {
@@ -11248,9 +11451,24 @@ function renderRadioJpVideoStage(host) {
   }
 }
 
+function clearRvSpeakingZones() {
+  ["rv-head", "rv-kana-box", "rv-zh-box", "rv-hook-box", "rv-ex-box", "rv-spk-model"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove("vc-speaking");
+  });
+}
+
+function setRvSpeakingZone(elId) {
+  clearRvSpeakingZones();
+  if (!elId) return;
+  const el = document.getElementById(elId);
+  if (el) el.classList.add("vc-speaking");
+}
+
 function stopRadioReviewAudio() {
   rvClipPlayingKey = "";
   rvClipEndSec = 0;
+  clearRvSpeakingZones();
   try {
     if (jpvVideoEl) jpvVideoEl.pause();
   } catch (e) {}
@@ -11350,43 +11568,68 @@ function playReviewPodcastClip(item, rateVal, toggleKey, forcePlay) {
   }
 }
 
-function playReviewDemoSentence(item) {
+function playReviewZoneAudio(item, zone) {
   if (!item) return;
-  if (rvClipPlayingKey === "demo") {
-    stopRadioReviewAudio();
-    return;
-  }
   stopRadioReviewAudio();
-  rvClipPlayingKey = "demo";
+  if (radioInitialized && !radioPlayer.paused) {
+    radioPlayer.pause();
+    syncRadioUI(false);
+  }
+  const myToken = ++vcToken;
+  const key = "zone_" + (zone || "full");
+  rvClipPlayingKey = key;
   syncRvAudioButtons();
-  const demoUrl = item.demo_audio || "";
-  const speakText = item.ja_example || item.kana || item.title || "";
+  const isVocab = item.kind === "vocab";
+  let targetUrl = "";
+  let fallbackJa = item.ja_example || item.kana || item.title || "";
+  let zoneElId = "";
+  if (zone === "head") {
+    zoneElId = "rv-head";
+    targetUrl = isVocab
+      ? (item.phrase_audio || item.word_audio || item.rev_audio || item.demo_audio || "")
+      : (item.pat_audio || item.ex_audio || item.demo_audio || "");
+    fallbackJa = item.kana || item.title || "";
+  } else if (zone === "kana") {
+    zoneElId = "rv-kana-box";
+    targetUrl = item.word_audio || item.phrase_audio || item.demo_audio || "";
+    fallbackJa = item.kana || item.title || "";
+  } else if (zone === "zh") {
+    zoneElId = "rv-zh-box";
+    targetUrl = isVocab
+      ? (item.phrase_audio || item.word_audio || item.rev_audio || "")
+      : (item.hook_audio || item.rev_audio || item.ex_audio || item.demo_audio || "");
+  } else if (zone === "hook") {
+    zoneElId = "rv-hook-box";
+    targetUrl = item.hook_audio || item.rev_audio || item.word_audio || "";
+  } else if (zone === "ex") {
+    zoneElId = "rv-ex-box";
+    targetUrl = item.ex_audio || item.demo_audio || item.phrase_audio || "";
+    fallbackJa = item.ja_example || item.title || "";
+  } else {
+    targetUrl = item.rev_audio || item.ex_audio || item.phrase_audio || item.demo_audio || item.word_audio || "";
+  }
+  if (zoneElId) setRvSpeakingZone(zoneElId);
   const doneCb = () => {
-    if (rvClipPlayingKey === "demo") {
+    if (vcToken === myToken && rvClipPlayingKey === key) {
       rvClipPlayingKey = "";
+      clearRvSpeakingZones();
       syncRvAudioButtons();
     }
   };
-  if (demoUrl) {
-    warmAudio(demoUrl).then(resolved => {
-      if (rvClipPlayingKey !== "demo") return;
-      try {
-        wordPlayer.onended = doneCb;
-        wordPlayer.onerror = () => speakUtteranceLang(speakText, "ja-JP", 0.96, doneCb);
-        wordPlayer.src = resolved || demoUrl;
-        wordPlayer.currentTime = 0;
-        wordPlayer.playbackRate = 1.0;
-        const pr = wordPlayer.play();
-        if (pr && typeof pr.catch === "function") {
-          pr.catch(() => speakUtteranceLang(speakText, "ja-JP", 0.96, doneCb));
-        }
-      } catch (e) {
-        speakUtteranceLang(speakText, "ja-JP", 0.96, doneCb);
-      }
-    });
+  if (targetUrl) {
+    playUrlOnWordPlayer(targetUrl, myToken, doneCb, () => speakUtteranceLang(fallbackJa, "ja-JP", 0.96, doneCb));
   } else {
-    speakUtteranceLang(speakText, "ja-JP", 0.96, doneCb);
+    speakUtteranceLang(fallbackJa, "ja-JP", 0.96, doneCb);
   }
+}
+
+function playReviewDemoSentence(item) {
+  if (!item) return;
+  if (rvClipPlayingKey === "demo" || rvClipPlayingKey === "zone_ex") {
+    stopRadioReviewAudio();
+    return;
+  }
+  playReviewZoneAudio(item, "ex");
 }
 
 function pushRadioReviewRecord(item, actionLabel, isOk) {
@@ -11532,39 +11775,44 @@ function playSpeakingPromptAudio(prompt, rateVal, toggleKey, forcePlay) {
   JA_ASR.stop();
   stopRadioReviewAudio();
   rvClipPlayingKey = key;
+  setRvSpeakingZone("rv-spk-model");
   syncRvAudioButtons();
   const text = prompt.model_ja || prompt.prompt_ja || "";
   const audioUrl = prompt.model_audio || prompt.demo_audio || "";
   const doneCb = () => {
     if (rvClipPlayingKey === key) {
       rvClipPlayingKey = "";
+      clearRvSpeakingZones();
       syncRvAudioButtons();
     }
   };
-  // Prefer studio native Japanese neural MP3 (`audio/spk_*.mp3`) over browser speechSynthesis!
+  // Prefer studio native Japanese neural MP3 (`audio/spk_*.mp3`) synchronously (zero mobile gesture drop!)
   if (audioUrl) {
-    warmAudio(audioUrl).then(resolved => {
-      if (rvClipPlayingKey !== key) return;
-      try {
-        wordPlayer.onended = doneCb;
-        wordPlayer.onerror = () => speakUtteranceLang(text, "ja-JP", spd < 0.95 ? 0.80 : 0.94, doneCb);
-        wordPlayer.src = resolved || audioUrl;
-        wordPlayer.currentTime = 0;
-        wordPlayer.playbackRate = spd;
-        if ("preservesPitch" in wordPlayer) wordPlayer.preservesPitch = true;
-        const pr = wordPlayer.play();
-        if (pr && typeof pr.catch === "function") {
-          pr.catch(() => {
-            if (rvClipPlayingKey === key) {
-              rvClipPlayingKey = "";
-              syncRvAudioButtons();
-            }
-          });
-        }
-      } catch (e) {
-        speakUtteranceLang(text, "ja-JP", spd < 0.95 ? 0.80 : 0.94, doneCb);
+    const playSrc = audioBlobMap.has(audioUrl) ? audioBlobMap.get(audioUrl) : audioUrl;
+    if (!audioBlobMap.has(audioUrl)) warmAudio(audioUrl);
+    try {
+      wordPlayer.onended = doneCb;
+      wordPlayer.onerror = () => speakUtteranceLang(text, "ja-JP", spd < 0.95 ? 0.80 : 0.94, doneCb);
+      if (wordPlayer.src === playSrc) {
+        try { wordPlayer.currentTime = 0; } catch (e) {}
+      } else {
+        wordPlayer.src = playSrc;
       }
-    });
+      wordPlayer.playbackRate = spd;
+      if ("preservesPitch" in wordPlayer) wordPlayer.preservesPitch = true;
+      const pr = wordPlayer.play();
+      if (pr && typeof pr.catch === "function") {
+        pr.catch(() => {
+          if (rvClipPlayingKey === key) {
+            rvClipPlayingKey = "";
+            clearRvSpeakingZones();
+            syncRvAudioButtons();
+          }
+        });
+      }
+    } catch (e) {
+      speakUtteranceLang(text, "ja-JP", spd < 0.95 ? 0.80 : 0.94, doneCb);
+    }
   } else {
     speakUtteranceLang(text, "ja-JP", spd < 0.95 ? 0.80 : 0.94, doneCb);
   }
@@ -11747,6 +11995,28 @@ function resetRvCardTransform() {
   });
 }
 
+function renderGrammarHighlightHTML(exJa, hlList) {
+  const src = String(exJa || "");
+  if (!src) return "";
+  const terms = Array.isArray(hlList) ? hlList.filter(t => typeof t === "string" && t.length >= 2) : [];
+  if (!terms.length) return escapeHtml(src);
+  // Highlight the first matching exact term without overlapping
+  let best = null;
+  for (const t of terms) {
+    const idx = src.indexOf(t);
+    if (idx >= 0) {
+      best = { idx, len: t.length };
+      break;
+    }
+  }
+  if (!best) return escapeHtml(src);
+  return (
+    escapeHtml(src.slice(0, best.idx)) +
+    `<span class="vc-hl">${escapeHtml(src.slice(best.idx, best.idx + best.len))}</span>` +
+    escapeHtml(src.slice(best.idx + best.len))
+  );
+}
+
 function revealRadioReviewCard() {
   if (rvMode === "speak") {
     if (rvSpeakState.blindMode) {
@@ -11759,11 +12029,18 @@ function revealRadioReviewCard() {
   rvRevealedAt = performance.now();
   const item = getReviewItemById(rvActiveItemId);
   const headEl = document.getElementById("rv-head");
-  if (headEl && item) headEl.textContent = item.title || "";
+  if (headEl && item) {
+    headEl.textContent = item.title || "";
+    headEl.classList.add("vc-live");
+  }
   const cueEl = document.getElementById("rv-cue-line");
   if (cueEl && !rvPendingLeft) cueEl.classList.add("quiet-hide");
   const el = document.getElementById("rv-reveal-box");
   if (el) el.classList.add("shown");
+  // If podcast context clip already finished (silent), smoothly auto-play the card's studio pronunciation on flip!
+  if (item && (!rvClipPlayingKey || (rvClipPlayingKey === "clip_1" && (!rvClipPlayer || rvClipPlayer.paused)))) {
+    playReviewZoneAudio(item, "full");
+  }
 }
 
 function animateRvCardAndRun(dirCls, fn) {
@@ -11903,11 +12180,42 @@ function finishRadioRelearnStep() {
   }
 }
 
+function onRadioReviewCardTap(targetEl) {
+  if (rvAnimating) return;
+  if (rvMode === "speak") {
+    const p = getActiveSpeakingPrompt();
+    if (!p) return;
+    if (rvSpeakState && rvSpeakState.blindMode) {
+      toggleSpeakingBlindMode(false);
+      playSpeakingPromptAudio(p, 1.0, "spk_model", true);
+      return;
+    }
+    const spkZone = (targetEl && typeof targetEl.closest === "function") ? targetEl.closest("[data-rv-zone]") : null;
+    if (spkZone) {
+      playSpeakingPromptAudio(p, 1.0, "spk_model", true);
+    }
+    return;
+  }
+  if (!rvRevealed) {
+    revealRadioReviewCard();
+    return;
+  }
+  // Direct Manipulation (Steve Jobs): touch any revealed text block to hear THAT exact audio; empty space stays calm
+  const zoneEl = (targetEl && typeof targetEl.closest === "function") ? targetEl.closest("[data-rv-zone]") : null;
+  if (!zoneEl) return;
+  const zone = (zoneEl.dataset && zoneEl.dataset.rvZone) || (zoneEl.getAttribute && zoneEl.getAttribute("data-rv-zone")) || "";
+  const item = getReviewItemById(rvActiveItemId);
+  if (item && zone) {
+    playReviewZoneAudio(item, zone);
+  }
+}
+
 function bindRadioReviewCardGestures(cardEl) {
   if (!cardEl || rvMode === "done" || rvMode === "video") return;
   let tracking = false;
   let hasDragged = false;
   let activePid = null;
+  let downTarget = null;
   let sx = 0, sy = 0, st = 0;
   let tappedArt = false;
   let tappedTok = false;
@@ -11920,6 +12228,7 @@ function bindRadioReviewCardGestures(cardEl) {
     tracking = true;
     hasDragged = false;
     activePid = e.pointerId;
+    downTarget = e.target || null;
     sx = fpX(e);
     sy = fpY(e);
     st = performance.now();
@@ -11957,6 +12266,8 @@ function bindRadioReviewCardGestures(cardEl) {
     if (!tracking || e.pointerId !== activePid) return;
     tracking = false;
     activePid = null;
+    const tapTarget = downTarget;
+    downTarget = null;
     try { cardEl.releasePointerCapture(e.pointerId); } catch (err) {}
     if (isCancel) {
       if (hasDragged) resetRvCardTransform();
@@ -11978,7 +12289,7 @@ function bindRadioReviewCardGestures(cardEl) {
         if (aIdx >= 0) openStoryArtModal(aIdx);
         return;
       }
-      revealRadioReviewCard();
+      onRadioReviewCardTap(tapTarget);
       return;
     }
     hasDragged = false;
@@ -12015,6 +12326,7 @@ function renderRadioSpeakingCard(host) {
     renderRadioReviewStage();
     return;
   }
+  prompts.forEach(sp => { if (sp && sp.model_audio) warmAudio(sp.model_audio); });
   const p = prompts[rvSpeakIdx];
   const canRec = JA_ASR.supported();
   const isQuiet = !!rvSpeakQuietMode;
@@ -12093,9 +12405,9 @@ function renderRadioSpeakingCard(host) {
         <div class="vc-stamp left" id="rv-st-left">慢听</div>
 
         ${artHTML}
-        <div class="vc-cue" id="rv-cue-line">${cueLineTxt}</div>
-        <div class="rv-spk-model${isBlind ? " veiled" : ""}" lang="ja" id="rv-spk-model">${annotateJapanese(p.model_ja || "")}</div>
-        <div class="rv-spk-zh-sub">${escapeHtml(p.prompt_short || p.model_zh || "")}</div>
+        ${(isBlind || isQuiet) ? `<div class="vc-cue" id="rv-cue-line">${cueLineTxt}</div>` : ""}
+        <div class="rv-spk-model${isBlind ? " veiled" : ""} vc-tap-zone vc-live" lang="ja" id="rv-spk-model" data-rv-zone="spk">${annotateJapanese(p.model_ja || "")}</div>
+        <div class="rv-spk-zh-sub vc-tap-zone vc-live" data-rv-zone="spk">${escapeHtml(p.prompt_short || p.model_zh || "")}</div>
         ${!isBlind && p.coaching_tip ? `<div class="rv-spk-tip">${escapeHtml(p.coaching_tip)}</div>` : ""}
         <div class="${fbCls}" id="rv-mic-feedback">${escapeHtml(fbTxt)}</div>
       </div>
@@ -12175,6 +12487,11 @@ function renderRadioReviewStage() {
   const item = getReviewItemById(rvActiveItemId);
   if (!item) return;
 
+  // Warm current review card studio MP3s for instant 0ms direct-touch speech
+  [item.rev_audio, item.hook_audio, item.word_audio, item.phrase_audio, item.pat_audio, item.ex_audio, item.demo_audio].forEach(u => {
+    if (u) warmAudio(u);
+  });
+
   const isTail = rvMode === "tail";
   const leftLabel = isTail
     ? `回炉 · 余 ${st.tailQueue.length}`
@@ -12188,12 +12505,17 @@ function renderRadioReviewStage() {
   const visualHTML = artSrc
     ? `<div class="rv-art-vignette"><img class="rv-art-vignette-img" src="${escapeHtml(artSrc)}" alt="" /></div>`
     : "";
+  const zhShow = item.zh_card || item.zh || "";
+  const mnShow = item.mnemonic_card || item.mnemonic || "";
   const showShortEx = !!(
-    !item.mnemonic &&
+    !mnShow &&
     item.ja_example &&
     item.ja_example !== item.title &&
     !String(item.ja_example).startsWith(String(item.title || "") + "（")
   );
+  const headShow = rvRevealed ? item.title : stripGrammarSpoilerTitle(item.title);
+  const headLen = String(headShow || "").length;
+  const headLenCls = headLen >= 10 ? " len-long" : (headLen === 9 ? " len-9" : (headLen === 8 ? " len-8" : ""));
   const cueTxt = isTail ? "再过一遍" : (item.kind === "vocab" ? "默念读音" : "默念意思");
   const jpVid = getRadioJpVideo();
 
@@ -12210,13 +12532,13 @@ function renderRadioReviewStage() {
 
         ${visualHTML}
         <div class="vc-cue${rvRevealed && !rvPendingLeft ? " quiet-hide" : (isTail ? " ng" : "")}" id="rv-cue-line">${cueTxt}</div>
-        <div class="vc-chunk" lang="ja" id="rv-head">${escapeHtml(rvRevealed ? item.title : stripGrammarSpoilerTitle(item.title))}</div>
+        <div class="vc-chunk${headLenCls} vc-tap-zone${rvRevealed ? " vc-live" : ""}" lang="ja" data-rv-zone="head" id="rv-head">${escapeHtml(headShow)}</div>
 
         <div class="vc-reveal${rvRevealed ? " shown" : ""}" id="rv-reveal-box">
-          ${kanaHTML ? `<div class="vc-kana">${kanaHTML}</div>` : ""}
-          <div class="vc-zh">${escapeHtml(item.zh || "")}</div>
-          ${item.mnemonic ? `<div class="vc-hook"><span class="vc-hook-tag">记音</span>${formatZenNoteHTML(item.mnemonic)}</div>` : ""}
-          ${showShortEx ? `<div class="rv-card-ex">${annotateJapanese(item.ja_example)}</div>` : ""}
+          ${kanaHTML ? `<div class="vc-kana vc-tap-zone vc-live" id="rv-kana-box" data-rv-zone="kana">${kanaHTML}</div>` : ""}
+          <div class="vc-zh vc-tap-zone vc-live" id="rv-zh-box" data-rv-zone="zh">${escapeHtml(zhShow)}</div>
+          ${mnShow ? `<div class="vc-hook vc-tap-zone vc-live" id="rv-hook-box" data-rv-zone="hook">${formatZenNoteHTML(mnShow)}</div>` : ""}
+          ${showShortEx ? `<div class="rv-card-ex vc-tap-zone vc-live" lang="ja" id="rv-ex-box" data-rv-zone="ex">${item.hl && item.hl.length ? renderGrammarHighlightHTML(item.ja_example, item.hl) : annotateJapanese(item.ja_example)}</div>` : ""}
         </div>
         <div class="mic-feedback" id="rv-mic-feedback"></div>
       </div>
@@ -12750,9 +13072,6 @@ function renderTutor() {
       <div class="tutor-stamp left moss-tone" id="tutor-st-left">开始做题</div>
       <div class="meta-bar">
         <span class="overline warm">${escapeHtml(p.subject)} · 考点梳理</span>
-        <div class="quiet-actions">
-          <button class="text-btn" id="ans-spd-btn" onclick="cycleExpSpeed()">${expSpeed}x</button>
-        </div>
       </div>
 
       <div class="focal-space">
@@ -12769,11 +13088,14 @@ function renderTutor() {
             <div class="zp-sub">${escapeHtml(p.teach.right.sub)}</div>
           </div>` : ""}
         </div>
-        <div class="example-line" lang="ja">${annotateJapanese(p.teach.example_ja)}</div>
-        ${p.teach.zh_meaning ? `<p class="example-zh">${escapeHtml(p.teach.zh_meaning)}</p>` : ""}
+        <div class="example-line vc-tap-zone vc-live" lang="ja" onclick="if(!event.target.closest('.w-tok'))playMainClip('${p.teach.audio}','teach',true)">${annotateJapanese(p.teach.example_ja)}</div>
+        ${p.teach.zh_meaning ? `<p class="example-zh vc-tap-zone vc-live" onclick="playMainClip('${p.teach.audio}','teach',true)">${escapeHtml(p.teach.zh_meaning)}</p>` : ""}
       </div>
 
       <div class="action-dock">
+        <div class="tutor-aux-row">
+          <button class="rate-btn" id="ans-spd-btn" onclick="cycleExpSpeed()">${expSpeed}x</button>
+        </div>
         <div class="dock-row">
           <button class="dock-replay-btn" id="dock-exp-btn" onclick="playMainClip('${p.teach.audio}', 'teach', true)">讲解</button>
           <button class="sumi-btn" onclick="completeTeachCard()"><span>开始做题</span><span class="desk-hint">滚轮下滑 · Enter</span></button>
@@ -12881,8 +13203,8 @@ function renderTutor() {
   if (isCorrect && stillNeedsVariantPass) {
     overCls = "overline warm";
     overTxt = q.is_listening && ansIdx > 0
-      ? `首轮订正答对 · 正解 ${ansIdx} · 3 题后再过变式题即通关`
-      : `首轮订正答对 · 3 题后再过变式题即通关`;
+      ? `首轮订正答对 · 正解 ${ansIdx} · 3 题后变式通关`
+      : `首轮订正答对 · 3 题后变式通关`;
   } else if (isCorrect) {
     overCls = "overline ok";
     const hesTag = lastAnswerHesitant ? " · 略犹豫" : "";
@@ -12890,13 +13212,13 @@ function renderTutor() {
   } else if (isUnsure) {
     overCls = "overline warm";
     overTxt = q.is_listening && ansIdx > 0
-      ? `未过关（记 0/3） · 正解 ${ansIdx} · 3 题后乱序重考`
-      : `未过关（记 0/3） · ${retryCopy}`;
+      ? `未过关（记 0/3） · 正解 ${ansIdx} · 3 题后重考`
+      : `未过关 · 记 0/3 · ${retryCopy}`;
   } else {
     overCls = "overline ng";
     overTxt = q.is_listening && ansIdx > 0
-      ? `答错未过（记 0/3） · 误选 ${pickedIdx || ""} · 正解 ${ansIdx} · 3 题后乱序重考`
-      : `答错未过（记 0/3） · 误选「${pickedVal}」 · ${retryCopy}`;
+      ? `答错 · 正解 ${ansIdx} · 3 题后乱序重考`
+      : `答错 · 记 0/3 · ${retryCopy}`;
   }
 
   const notesMap = q.opt_notes || {};
@@ -12960,24 +13282,26 @@ function renderTutor() {
     <div class="tutor-stamp left${leftStampTone}" id="tutor-st-left">${leftStampLabel}</div>
     <div class="meta-bar">
       <span class="${overCls}">${escapeHtml(overTxt)}</span>
-      <div class="quiet-actions">
-        ${q.is_listening ? `<button class="text-btn" id="q-slow-btn" onclick="playQuizQuestionAudio(activeQuizObj, true, 0.85)">0.85x 慢听</button>` : ""}
-        <button class="text-btn" onclick="playQuizQuestionAudio(activeQuizObj, true, 1.0)">原题</button>
-        <button class="text-btn" id="ans-spd-btn" onclick="cycleExpSpeed()">${expSpeed}x</button>
-      </div>
     </div>
 
     <div class="focal-space">
-      ${(q.is_listening && renderDialogueHTML(q.full_ja, q.answer, q.zh_meaning)) || `<div class="result-ja" lang="ja">${annotateSentenceWithAnswer(q.full_ja, q.answer)}</div>
-      ${q.zh_meaning ? `<p class="result-zh">${escapeHtml(q.zh_meaning)}</p>` : ""}`}
+      <div class="vc-tap-zone vc-live" id="res-ja-box" onclick="if(!event.target.closest('.w-tok'))playQuizQuestionAudio(activeQuizObj, true, 1.0)">
+        ${(q.is_listening && renderDialogueHTML(q.full_ja, q.answer, q.zh_meaning)) || `<div class="result-ja" lang="ja">${annotateSentenceWithAnswer(q.full_ja, q.answer)}</div>
+        ${q.zh_meaning ? `<p class="result-zh">${escapeHtml(q.zh_meaning)}</p>` : ""}`}
+      </div>
       <div class="result-divider"></div>
       ${resPointTitle ? `<div class="res-point-head"><span class="res-point-subj">${escapeHtml(p.subject || "")}</span><span>${escapeHtml(resPointTitle)}</span></div>` : ""}
-      ${q.why_line ? `<div class="res-cue"><span class="cue-tag">要点</span><span class="cue-txt">${escapeHtml(q.why_line)}</span></div>` : ""}
+      ${q.why_line ? `<div class="res-cue vc-tap-zone vc-live" id="res-why-cue" onclick="playMainClip(activeQuizObj.exp_audio, 'exp', true)"><span class="cue-tag">要点</span><span class="cue-txt">${escapeHtml(q.why_line)}</span></div>` : ""}
       ${confHintHTML}
       <div class="opt-breakdown${q.is_listening ? " is-listen" : ""}">${optRowsHTML}</div>
     </div>
 
     <div class="action-dock">
+      <div class="tutor-aux-row">
+        ${q.is_listening ? `<button class="rate-btn" id="q-slow-btn" onclick="playQuizQuestionAudio(activeQuizObj, true, 0.85)">0.85x 慢听</button>` : ""}
+        <button class="rate-btn" id="res-orig-btn" onclick="playQuizQuestionAudio(activeQuizObj, true, 1.0)">原题</button>
+        <button class="rate-btn" id="ans-spd-btn" onclick="cycleExpSpeed()">${expSpeed}x</button>
+      </div>
       <div class="dock-row">
         <button class="dock-replay-btn" id="dock-exp-btn" onclick="playMainClip(activeQuizObj.exp_audio, 'exp', true)">讲解</button>
         ${fullyPassed ? `<button class="ghost-btn" onclick="advanceNext(true)">再考</button>` : ""}
@@ -13024,23 +13348,29 @@ function playWordAudio(surface, pauseMainIfNeeded) {
     player.pause();
     syncAudioButtons();
   }
-  if (info.audio) {
-    wordPlayer.src = info.audio;
-    wordPlayer.currentTime = 0;
-    wordPlayer.playbackRate = 1.0;
-    wordPlayer.play().catch(() => speakJapaneseFallback(info.kana || surface));
+  const vcRef = DATA.vocab_cards && DATA.vocab_cards[surface];
+  const url = (vcRef && (vcRef.word_audio || vcRef.phrase_audio)) || info.audio || "";
+  if (url) {
+    const myToken = ++vcToken;
+    playUrlOnWordPlayer(url, myToken, null, () => speakJapaneseFallback(info.kana || surface));
   } else {
     speakJapaneseFallback(info.kana || surface);
   }
 }
 
-function playDirectUrl(url) {
-  if (!url) return;
-  if (!player.paused) player.pause();
-  wordPlayer.src = url;
-  wordPlayer.currentTime = 0;
-  wordPlayer.playbackRate = 1.0;
-  wordPlayer.play().catch(() => {});
+function playDirectUrl(url, fallbackJa) {
+  if (!url) {
+    if (fallbackJa) speakJapaneseFallback(fallbackJa);
+    return;
+  }
+  if (!player.paused) {
+    player.pause();
+    syncAudioButtons();
+  }
+  const myToken = ++vcToken;
+  playUrlOnWordPlayer(url, myToken, null, () => {
+    if (fallbackJa) speakJapaneseFallback(fallbackJa);
+  });
 }
 
 function getLookupContextId() {
@@ -13878,7 +14208,7 @@ function recordFlashProgress(seenCnt, totalCnt, markDoneNow) {
 }
 
 function clearVocabSpeakingZones() {
-  ["vc-chunk-box", "vc-kana-box", "vc-zh-box", "vc-hook-box"].forEach(id => {
+  ["vc-chunk-box", "vc-kana-box", "vc-zh-box", "vc-hook-box", "ga-head", "ga-meaning-box", "ga-rule-box", "ga-ex-box"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.classList.remove("vc-speaking");
   });
@@ -13992,12 +14322,13 @@ function playUrlOnWordPlayer(url, myToken, onDone, onFail) {
     }
   };
 
-  // Synchronous 0ms start when already cached in audioBlobMap (preserves mobile user-gesture activation!)
+  // Synchronous 0ms start (preserves mobile user-gesture activation on BOTH cached blobs AND cold URLs!)
   if (audioBlobMap.has(url)) {
     startResolved(audioBlobMap.get(url));
     return;
   }
-  warmAudio(url).then(startResolved);
+  warmAudio(url);
+  startResolved(url);
 }
 
 function playBilingualFallback(card, includePhrase, myToken, onDone) {
@@ -15028,6 +15359,24 @@ function applyGASpectrumVerdict(gid, code, stampSec) {
   return { gid, prevGa, msTargetKey, prevMs, prevMsTs, hkKey, prevHkMs, prevHkMsTs, newTs: stamp, recTs: rec.ts };
 }
 
+function warmUpcomingGACards() {
+  const sess = A.gaSess;
+  if (!sess || !Array.isArray(sess.queue)) return;
+  sess.queue.slice(0, 4).forEach(gid => {
+    const it = GA_BY_GID[gid];
+    if (!it) return;
+    if (it.rev_audio) warmAudio(it.rev_audio);
+    if (it.ex_audio) warmAudio(it.ex_audio);
+    if (it.pat_audio) warmAudio(it.pat_audio);
+    if (it.hook_audio) warmAudio(it.hook_audio);
+  });
+}
+
+function getGAHeadLenCls(txt) {
+  const n = String(txt || "").length;
+  return n >= 10 ? " len-long" : (n === 9 ? " len-9" : (n === 8 ? " len-8" : ""));
+}
+
 function enterGrammarAuditSubMode() {
   ensureGASession(false);
   gaRevealed = false;
@@ -15066,37 +15415,90 @@ function syncGARevealedCardHeader(item, markedCode) {
   const eyeEl = document.getElementById("ga-eyebrow");
   if (eyeEl) {
     const sp = markedCode ? GA_SPECTRUM[markedCode] : null;
-    eyeEl.textContent = sp ? `${item.family} · ${sp.label}` : item.family;
+    eyeEl.textContent = sp ? `${item.family} · ${sp.label}` : "";
     eyeEl.className = "ga-meta-fam" + (sp ? " " + sp.cls : "");
   }
   const headEl = document.getElementById("ga-head");
-  if (headEl) headEl.textContent = item.name;
+  if (headEl) {
+    headEl.textContent = item.name;
+    headEl.className = `ga-head${getGAHeadLenCls(item.name)} vc-tap-zone vc-live`;
+  }
 }
 
-function playGAAudio(ev) {
-  if (ev) ev.stopPropagation();
+function playGAZoneAudio(zone, ev, activeElId) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
   const sess = A.gaSess;
   if (!sess || !sess.queue.length) return;
   const item = GA_BY_GID[sess.queue[0]];
   if (!item) return;
   stopVocabAudioAndTimers();
-  if (item.audio) {
-    playDirectUrl(item.audio);
-  } else if (item.ex_ja) {
-    speakJapaneseFallback(item.ex_ja);
+  if (!player.paused) {
+    player.pause();
+    syncAudioButtons();
+  }
+  const myToken = ++vcToken;
+  const doneClear = () => {
+    if (vcToken === myToken) clearVocabSpeakingZones();
+  };
+
+  if (zone === "pat") {
+    setVocabSpeakingZone("ga-head");
+    const u = item.pat_audio || item.ex_audio || item.audio;
+    const fb = item.pat_ja || getGAFrontName(item);
+    if (u) playUrlOnWordPlayer(u, myToken, doneClear, () => speakUtteranceLang(fb, "ja-JP", 0.98, doneClear));
+    else speakUtteranceLang(fb, "ja-JP", 0.98, doneClear);
+    return;
+  }
+
+  if (zone === "hook") {
+    setVocabSpeakingZone(activeElId || "ga-rule-box");
+    const u = item.hook_audio || item.rev_audio || item.audio;
+    const fbZh = item.hook_zh || item.meaning || "";
+    if (u) playUrlOnWordPlayer(u, myToken, doneClear, () => speakUtteranceLang(fbZh, "zh-CN", 1.02, doneClear));
+    else speakUtteranceLang(fbZh, "zh-CN", 1.02, doneClear);
+    return;
+  }
+
+  if (zone === "ex") {
+    setVocabSpeakingZone("ga-ex-box");
+    const u = item.ex_audio || item.audio;
+    const fb = item.ex_ja || item.pat_ja || getGAFrontName(item);
+    if (u) playUrlOnWordPlayer(u, myToken, doneClear, () => speakUtteranceLang(fb, "ja-JP", 0.96, doneClear));
+    else speakUtteranceLang(fb, "ja-JP", 0.96, doneClear);
+    return;
+  }
+
+  // Full 3-Beat Master: Core Cue -> Grammar Pattern -> Full Example Sentence
+  const fullUrl = item.rev_audio || item.ex_audio || item.audio;
+  const fbJa = item.ex_ja || item.pat_ja || getGAFrontName(item);
+  if (fullUrl) {
+    playUrlOnWordPlayer(fullUrl, myToken, doneClear, () => speakUtteranceLang(fbJa, "ja-JP", 0.96, doneClear));
   } else {
-    speakJapaneseFallback(getGAFrontName(item));
+    speakUtteranceLang(fbJa, "ja-JP", 0.96, doneClear);
   }
 }
 
-function onGACardTapOrAudio() {
+function playGAAudio(ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  const sess = A.gaSess;
+  if (!sess || !sess.queue.length) return;
+  if (!gaRevealed) {
+    const item = GA_BY_GID[sess.queue[0]];
+    gaRevealed = true;
+    syncGARevealedCardHeader(item, 0);
+    const revEl = document.getElementById("ga-reveal-box");
+    if (revEl) revEl.classList.add("shown");
+    const audBtn = document.getElementById("ga-aud-btn");
+    if (audBtn) audBtn.style.display = "";
+  }
+  playGAZoneAudio("full");
+}
+
+function onGACardTapOrAudio(ev) {
   if (gaAnimating) return;
   const sess = A.gaSess;
   if (!sess || !sess.queue.length) return;
-  if (gaPendingNext) {
-    advancePendingGA();
-    return;
-  }
+  const targetEl = (ev && ev.target) ? ev.target : (ev && typeof ev.closest === "function" ? ev : null);
   if (!gaRevealed) {
     gaRevealed = true;
     const item = GA_BY_GID[sess.queue[0]];
@@ -15105,8 +15507,16 @@ function onGACardTapOrAudio() {
     if (revEl) revEl.classList.add("shown");
     const audBtn = document.getElementById("ga-aud-btn");
     if (audBtn) audBtn.style.display = "";
-  } else {
-    playGAAudio();
+    // Auto-play full 3-beat studio audio immediately on flip (0ms, matching Vocab cards!)
+    playGAZoneAudio("full");
+    return;
+  }
+  // Direct Manipulation (Steve Jobs): touch any text zone to hear THAT exact audio; empty background stays calm & silent
+  const zoneEl = (targetEl && typeof targetEl.closest === "function") ? targetEl.closest("[data-ga-zone]") : null;
+  if (!zoneEl) return;
+  const zone = (zoneEl.dataset && zoneEl.dataset.gaZone) || (zoneEl.getAttribute && zoneEl.getAttribute("data-ga-zone")) || "";
+  if (zone === "pat" || zone === "hook" || zone === "ex") {
+    playGAZoneAudio(zone, null, zoneEl.id || "");
   }
 }
 
@@ -15166,7 +15576,7 @@ function commitGASpectrum(code) {
   }
   scheduleCloudPush(100);
 
-  // If user chose 陌生(1) or 易混(2) BEFORE flipping, unfold meaning & example on open canvas with unified Zen dock
+  // If user chose 陌生(1) or 易混(2) BEFORE flipping, unfold meaning & example on open canvas + auto-play 3-beat studio audio!
   if (!gaRevealed && (code === 1 || code === 2)) {
     gaRevealed = true;
     gaPendingNext = true;
@@ -15180,11 +15590,12 @@ function commitGASpectrum(code) {
     if (specWrap) {
       specWrap.innerHTML = `
         <div class="dock-row">
-          <button class="dock-replay-btn" onclick="playGAAudio(event)">听</button>
+          <button class="dock-replay-btn" onclick="playGAAudio(event)">重听</button>
           <button class="sumi-btn" onclick="advancePendingGA()">下一条 →</button>
         </div>
       `;
     }
+    playGAZoneAudio("full");
     renderGreenBoard();
     updateVocabSubNav();
     return;
@@ -15373,26 +15784,29 @@ function renderGrammarAuditStage() {
     return;
   }
 
+  warmUpcomingGACards();
   const gid = sess.queue[0];
   const item = GA_BY_GID[gid];
   if (!item) return;
   const canUndo = Array.isArray(sess.undoStack) && sess.undoStack.length > 0;
-  const eyeText = gaRevealed ? item.family : "";
+  const spMark = (gaPendingNext && gaPendingCode && GA_SPECTRUM[gaPendingCode]) ? GA_SPECTRUM[gaPendingCode] : null;
+  const eyeText = spMark ? `${item.family} · ${spMark.label}` : "";
   const headText = gaRevealed ? item.name : getGAFrontName(item);
+  const headLenCls = getGAHeadLenCls(headText);
 
   box.innerHTML = `
     <div class="ga-meta-bar">
-      <span class="ga-meta-fam" id="ga-eyebrow">${escapeHtml(eyeText)}</span>
+      <span class="ga-meta-fam${spMark ? " " + spMark.cls : ""}" id="ga-eyebrow">${escapeHtml(eyeText)}</span>
     </div>
 
-    <div class="ga-stage" onclick="onGACardTapOrAudio()">
+    <div class="ga-stage" onclick="onGACardTapOrAudio(event)">
       <div class="ga-canvas" id="ga-card">
-        <div class="ga-head" lang="ja" id="ga-head">${escapeHtml(headText)}</div>
+        <div class="ga-head${headLenCls} vc-tap-zone${gaRevealed ? " vc-live" : ""}" lang="ja" data-ga-zone="pat" id="ga-head">${escapeHtml(headText)}</div>
 
         <div class="ga-reveal${gaRevealed ? " shown" : ""}" id="ga-reveal-box">
-          <div class="ga-meaning">${escapeHtml(item.meaning)}</div>
-          ${item.rule ? `<div class="ga-rule">${escapeHtml(item.rule)}</div>` : ""}
-          ${item.ex_ja ? `<div class="ga-divider"></div><div class="ga-ex"><div class="ga-ex-ja">${escapeHtml(item.ex_ja)}</div>${item.ex_zh ? `<div class="ga-ex-zh">${escapeHtml(item.ex_zh)}</div>` : ""}</div>` : ""}
+          <div class="ga-meaning vc-tap-zone vc-live" id="ga-meaning-box" data-ga-zone="hook">${escapeHtml(item.meaning)}</div>
+          ${item.rule ? `<div class="ga-rule vc-tap-zone vc-live" lang="ja" id="ga-rule-box" data-ga-zone="hook">${formatZenNoteHTML(item.rule)}</div>` : ""}
+          ${item.ex_ja ? `<div class="ga-divider"></div><div class="ga-ex vc-tap-zone vc-live" id="ga-ex-box" data-ga-zone="ex"><div class="ga-ex-ja" lang="ja">${renderGrammarHighlightHTML(item.ex_ja, item.hl)}</div>${item.ex_zh ? `<div class="ga-ex-zh">${escapeHtml(item.ex_zh)}</div>` : ""}</div>` : ""}
         </div>
       </div>
     </div>
@@ -15400,24 +15814,31 @@ function renderGrammarAuditStage() {
     <div class="vc-aux-row" id="ga-aux-row" style="min-height:46px;">
       ${canUndo ? `<button type="button" class="vc-aux-btn seal" onclick="undoLastGA(event)">撤销</button>` : `<span></span>`}
       <div class="vc-aux-right">
-        <button type="button" class="vc-aux-btn replay" id="ga-aud-btn" style="${gaRevealed ? "" : "display:none;"}" onclick="playGAAudio(event)">听</button>
+        <button type="button" class="vc-aux-btn replay" id="ga-aud-btn" style="${(gaRevealed && !gaPendingNext) ? "" : "display:none;"}" onclick="playGAAudio(event)">重听</button>
       </div>
     </div>
 
     <div class="ga-spec-wrap" id="ga-spec-wrap">
-      <div class="ga-spec-rail" id="ga-spec-rail">
-        <div class="ga-spec-line"></div>
-        <div class="ga-spec-stops">
-          <div class="ga-spec-stop s1" id="ga-stop-1"><span class="ga-spec-dot"></span><span class="ga-spec-name">陌生</span></div>
-          <div class="ga-spec-stop s2" id="ga-stop-2"><span class="ga-spec-dot"></span><span class="ga-spec-name">易混</span></div>
-          <div class="ga-spec-stop s3" id="ga-stop-3"><span class="ga-spec-dot"></span><span class="ga-spec-name">看懂</span></div>
-          <div class="ga-spec-stop s4" id="ga-stop-4"><span class="ga-spec-dot"></span><span class="ga-spec-name">本能</span></div>
+      ${gaPendingNext ? `
+        <div class="dock-row">
+          <button class="dock-replay-btn" onclick="playGAAudio(event)">重听</button>
+          <button class="sumi-btn" onclick="advancePendingGA()">下一条 →</button>
         </div>
-      </div>
+      ` : `
+        <div class="ga-spec-rail" id="ga-spec-rail">
+          <div class="ga-spec-line"></div>
+          <div class="ga-spec-stops">
+            <div class="ga-spec-stop s1" id="ga-stop-1"><span class="ga-spec-dot"></span><span class="ga-spec-name">陌生</span></div>
+            <div class="ga-spec-stop s2" id="ga-stop-2"><span class="ga-spec-dot"></span><span class="ga-spec-name">易混</span></div>
+            <div class="ga-spec-stop s3" id="ga-stop-3"><span class="ga-spec-dot"></span><span class="ga-spec-name">看懂</span></div>
+            <div class="ga-spec-stop s4" id="ga-stop-4"><span class="ga-spec-dot"></span><span class="ga-spec-name">本能</span></div>
+          </div>
+        </div>
+      `}
     </div>
   `;
 
-  bindGASpectrumGestures();
+  if (!gaPendingNext) bindGASpectrumGestures();
 }
 
 function setLedgerGrammarSpectrum(gid, code, ev) {
@@ -16119,8 +16540,10 @@ function togglePtNote(i) {
 }
 
 function speakLedgerItem(name, audioUrl) {
-  if (audioUrl) {
-    playDirectUrl(audioUrl);
+  const vcRef = DATA.vocab_cards && DATA.vocab_cards[name];
+  const preferred = (dashMod === "vocab" && vcRef && (vcRef.phrase_audio || vcRef.word_audio)) || audioUrl || "";
+  if (preferred) {
+    playDirectUrl(preferred, name);
   } else if (DATA.words[name]) {
     playWordAudio(name, true);
   } else {
@@ -19909,7 +20332,7 @@ const nonListenUnder4 = vm.runInNewContext(`(() => {
 if (nonListenUnder4.length > 0) {
   throw new Error('Self-test 17 failed: non-listening cards with <4 choices remain: ' + nonListenUnder4.join(', '));
 }
-for (const jaMark of ['id="radio-live-ja" lang="ja"', 'class="jpv-title-ja" lang="ja"', 'class="jpv-sub-ja" lang="ja"', 'class="example-line" lang="ja"', 'class="quiz-ja" lang="ja"', 'class="result-ja" lang="ja"', 'lang="ja" id="rv-spk-model"', 'lang="ja" id="vc-chunk-box"', 'lang="ja" id="ga-head"']) {
+for (const jaMark of ['id="radio-live-ja" lang="ja"', 'class="jpv-title-ja" lang="ja"', 'class="jpv-sub-ja" lang="ja"', 'class="example-line vc-tap-zone vc-live" lang="ja"', 'class="quiz-ja" lang="ja"', 'class="result-ja" lang="ja"', 'lang="ja" id="rv-spk-model"', 'lang="ja" id="vc-chunk-box"', 'lang="ja" data-ga-zone="pat" id="ga-head"', 'class="ga-ex-ja" lang="ja"', 'class="rv-card-ex vc-tap-zone vc-live" lang="ja"']) {
   if (!html.includes(jaMark)) {
     throw new Error('Self-test 17 failed: missing Japanese lang="ja" marker for auto-phrase wrapping: ' + jaMark);
   }
@@ -20082,7 +20505,6 @@ if (g38Pt21) {
     throw new Error('Self-test 21 failed: expected ' + g38Pt21.primary.choices.length + ' rendered .opt-desc blocks on ' + g38Pt21.id + ', got ' + descMatches21.length);
   }
 }
-
 // Self-test 22 (v74): Mock Sprint 15 end-to-end + Quiet Commute Speaking Mode + Exam-Day & N2 Zero-to-120 Metadata
 const phaseMeta22 = vm.runInNewContext('({ phase: DATA.phase, track: DATA.track_label, n2_day: DATA.n2_day, exam_date: DATA.exam_date })', sb);
 if (!phaseMeta22.phase || !phaseMeta22.track || !phaseMeta22.exam_date) {
@@ -20189,11 +20611,97 @@ if (g38Pt23) {
     throw new Error('Self-test 23 failed: trailing Japanese period not glued to quiz-blank via .quiz-blank-unit: ' + h23.slice(0, 320));
   }
 }
+
+// Self-test 24 (v77): Whole-App Jobs x Kyoto Zen Unification (GA 3-Beat Auto-Play + Direct Tap Zones + Review/Speaking Cleanliness + Result/Teach 上看下点 + Ledger Grammar Audio)
+const phase24 = vm.runInNewContext('DATA.phase || "n3_sprint"', sb);
+const gaItems24 = (vm.runInNewContext('DATA.grammar_audit.items', sb)) || [];
+if (phase24 !== 'n2_climb' && gaItems24.length !== 173) {
+  throw new Error('Self-test 24 failed: expected 173 N3 grammar audit items, got ' + gaItems24.length);
+}
+for (const gi of gaItems24) {
+  if (phase24 !== 'n2_climb' && (!gi.rev_audio || !gi.ex_audio || !gi.pat_audio || !gi.hook_audio)) {
+    throw new Error('Self-test 24 failed: GA item missing 3-beat studio audio tracks: ' + gi.gid);
+  }
+  if (String(gi.rule || '').includes('必背双胞胎') || String(gi.rule || '').includes('定生死') || String(gi.rule || '').includes('—') || String(gi.meaning || '').includes('—')) {
+    throw new Error('Self-test 24 failed: uncleaned textbook jargon or em dash in GA item: ' + gi.gid + ' -> ' + gi.rule);
+  }
+}
+if (gaItems24.length > 0) {
+  sb.switchMode('vocab');
+  sb.switchVocabSubMode('ga');
+  const gaHtml24 = (els['vocab-stage-box'] && els['vocab-stage-box'].innerHTML) || '';
+  if (!gaHtml24.includes('data-ga-zone="pat"') || !gaHtml24.includes('data-ga-zone="hook"') || !gaHtml24.includes('data-ga-zone="ex"') || !gaHtml24.includes('重听') || !gaHtml24.includes('class="ga-ex-ja" lang="ja"')) {
+    throw new Error('Self-test 24 failed: GA card missing direct-touch zones, lang="ja" example, or unified 重听 button');
+  }
+  const tokGaBeforeFlip24 = vm.runInNewContext('vcToken', sb);
+  sb.onGACardTapOrAudio(null);
+  const tokGaAfterFlip24 = vm.runInNewContext('vcToken', sb);
+  if (tokGaAfterFlip24 <= tokGaBeforeFlip24) {
+    throw new Error('Self-test 24 failed: flipping GA card did NOT auto-play 3-beat studio audio!');
+  }
+  sb.onGACardTapOrAudio(null);
+  const tokGaAfterBg24 = vm.runInNewContext('vcToken', sb);
+  if (tokGaAfterBg24 !== tokGaAfterFlip24) {
+    throw new Error('Self-test 24 failed: tapping empty revealed GA background unexpectedly restarted audio!');
+  }
+  const mockGaZone24 = (z, id) => ({ target: { id, dataset: { gaZone: z }, closest: (sel) => (sel === '[data-ga-zone]' ? { id, dataset: { gaZone: z } } : null) } });
+  sb.onGACardTapOrAudio(mockGaZone24('pat', 'ga-head'));
+  if (!els['ga-head'].classList.contains('vc-speaking')) {
+    throw new Error('Self-test 24 failed: tapping GA pattern did not highlight ga-head with vc-speaking');
+  }
+  sb.onGACardTapOrAudio(mockGaZone24('ex', 'ga-ex-box'));
+  if (!els['ga-ex-box'].classList.contains('vc-speaking')) {
+    throw new Error('Self-test 24 failed: tapping GA example did not highlight ga-ex-box with vc-speaking');
+  }
+  vm.runInNewContext('gaRevealed = true; gaPendingNext = true; gaPendingCode = 1; renderGrammarAuditStage();', sb);
+  const gaPendHtml24 = (els['vocab-stage-box'] && els['vocab-stage-box'].innerHTML) || '';
+  if (!gaPendHtml24.includes('下一条') || gaPendHtml24.includes('id="ga-spec-rail"')) {
+    throw new Error('Self-test 24 failed: gaPendingNext re-render did not preserve 重听 + 下一条 dock');
+  }
+  vm.runInNewContext('gaPendingNext = false; gaPendingCode = 0; gaRevealed = false;', sb);
+}
+sb.switchMode('radio', false);
+sb.openRadioReview(true);
+const rvHtml24 = (els['radio-review-stage'] && els['radio-review-stage'].innerHTML) || '';
+if (rvHtml24.includes('vc-hook-tag') || !rvHtml24.includes('data-rv-zone="head"')) {
+  throw new Error('Self-test 24 failed: Radio Review still contains legacy vc-hook-tag or missing direct tap zones');
+}
+sb.openRadioSpeaking(0);
+const spkHtml24 = (els['radio-review-stage'] && els['radio-review-stage'].innerHTML) || '';
+if (spkHtml24.includes('先听示范，再顺口跟读') || !spkHtml24.includes('data-rv-zone="spk"')) {
+  throw new Error('Self-test 24 failed: Speaking card kept tutorial filler or missing direct tap-to-speak zone');
+}
+sb.closeRadioReview();
+sb.switchMode('tutor');
+const gPt24 = vm.runInNewContext('DATA.points.find(p => p.subject === "语法" && p.primary && !p.primary.is_listening)', sb);
+if (gPt24) {
+  sb.setupCurrentTurn(gPt24.id);
+  vm.runInNewContext('viewStage = "quiz";', sb);
+  const wOpt24 = vm.runInNewContext('activeQuizObj.choices.find(c => c !== activeQuizObj.answer)', sb);
+  sb.submitAnswer(wOpt24);
+  const resHtml24 = (els['voice-card'] && els['voice-card'].innerHTML) || '';
+  const resMeta24 = (resHtml24.match(/<div class="meta-bar">[\s\S]*?<\/div>/) || [''])[0];
+  if (resMeta24.includes('<button') || !resHtml24.includes('tutor-aux-row') || !resHtml24.includes('id="res-orig-btn"')) {
+    throw new Error('Self-test 24 failed: Result screen top meta-bar has buttons or missing thumb-zone tutor-aux-row');
+  }
+  vm.runInNewContext('viewStage = "teach"; renderTutor();', sb);
+  const teachHtml24 = (els['voice-card'] && els['voice-card'].innerHTML) || '';
+  const teachMeta24 = (teachHtml24.match(/<div class="meta-bar">[\s\S]*?<\/div>/) || [''])[0];
+  if (teachMeta24.includes('<button') || !teachHtml24.includes('tutor-aux-row')) {
+    throw new Error('Self-test 24 failed: Teach screen top meta-bar has buttons or missing thumb-zone tutor-aux-row');
+  }
+}
+if (phase24 !== 'n2_climb') {
+  const ledgerGramNoAud24 = vm.runInNewContext('(DATA.mastery.grammar.items || []).filter(x => !x.audio).map(x => x.gid)', sb);
+  if (ledgerGramNoAud24.length > 0) {
+    throw new Error('Self-test 24 failed: ledger grammar rows missing studio audio: ' + JSON.stringify(ledgerGramNoAud24.slice(0, 8)));
+  }
+}
 """
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
 
 sw_path = os.path.join(BASE_DIR, "sw.js")
-SW_CACHE_NAME = "n3-studio-tutor-v76"
+SW_CACHE_NAME = "n3-studio-tutor-v77"
 if not _IS_SIM_OUTPUT and os.path.exists(sw_path):
     with open(sw_path, encoding="utf-8") as sf:
         sw_src = sf.read()

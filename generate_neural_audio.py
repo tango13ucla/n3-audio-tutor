@@ -65,6 +65,7 @@ from vocab_cards import VOCAB_CARDS
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 AUDIO_DIR = os.path.join(BASE_DIR, "audio")
 WORDS_AUDIO_DIR = os.path.join(AUDIO_DIR, "words")
+GA_AUDIO_DIR = os.path.join(AUDIO_DIR, "ga")
 MANIFEST_PATH = os.path.join(AUDIO_DIR, "audio_manifest.json")
 PROXY_URL = os.environ.get("HTTPS_PROXY") or os.environ.get("HTTP_PROXY") or None
 COMM_KWARGS = {"proxy": PROXY_URL} if PROXY_URL else {}
@@ -448,6 +449,7 @@ def stitch_turns(turns: list, clip_lookup: dict, silence_lookup: dict, out_path:
 async def main():
     os.makedirs(AUDIO_DIR, exist_ok=True)
     os.makedirs(WORDS_AUDIO_DIR, exist_ok=True)
+    os.makedirs(GA_AUDIO_DIR, exist_ok=True)
 
     old_manifest = {}
     if os.path.exists(MANIFEST_PATH):
@@ -458,13 +460,19 @@ async def main():
             old_manifest = {}
 
     vocab_only = "--vocab-only" in sys.argv
+    ga_only = "--ga-only" in sys.argv
+    partial_only = vocab_only or ga_only
     old_words = old_manifest.get("words", {})
     old_vc_map = old_manifest.get("vocab_cards", {})
     old_vc_hashes = old_manifest.get("vocab_card_hashes", {})
-    new_manifest = dict(old_manifest) if vocab_only else {}
+    old_ga_map = old_manifest.get("ga_cards", {})
+    old_ga_hashes = old_manifest.get("ga_card_hashes", {})
+    new_manifest = dict(old_manifest) if partial_only else {}
     new_manifest["words"] = dict(old_words)
     new_manifest["vocab_cards"] = dict(old_vc_map)
     new_manifest["vocab_card_hashes"] = dict(old_vc_hashes)
+    new_manifest["ga_cards"] = dict(old_ga_map)
+    new_manifest["ga_card_hashes"] = dict(old_ga_hashes)
     can_synth = (edge_tts is not None) and (shutil.which("ffmpeg") is not None)
 
     voice_map = await detect_voice_map()
@@ -608,7 +616,7 @@ async def main():
     built_e_ok = set()
     built_lp_ok = set()
 
-    if can_synth and (not vocab_only) and (to_build_q or to_build_exp or to_build_lp):
+    if can_synth and (not partial_only) and (to_build_q or to_build_exp or to_build_lp):
         existing_v20 = sorted(glob.glob("/tmp/n3_cards_v20_*"))
         tmpdir = existing_v20[-1] if existing_v20 else tempfile.mkdtemp(prefix="n3_cards_v20_")
         try:
@@ -692,7 +700,7 @@ async def main():
         finally:
             shutil.rmtree(tmpdir, ignore_errors=True)
 
-    if not vocab_only:
+    if not partial_only:
         for lp_fn, lph in hashes_lp.items():
             lp_abs = os.path.join(AUDIO_DIR, lp_fn)
             if os.path.exists(lp_abs):
@@ -765,7 +773,7 @@ async def main():
         except Exception:
             pass
 
-    if not vocab_only:
+    if not partial_only:
         word_sem = asyncio.Semaphore(8)
 
         async def process_word(surface, info):
@@ -788,36 +796,37 @@ async def main():
 
         await asyncio.gather(*(process_word(surf, info) for surf, info in merged_words.items()))
 
-    # Studio Bilingual Vocab Cards (Zen v21: Mnemonic FIRST -> Target Word SECOND -> Full Phrase LAST + direct-touch clips)
-    from vocab_cards import build_dynamic_vocab_card, build_vocab_audio_spec
-    vc_all_cards = {}
-    for vw, vspec in VOCAB_CARDS.items():
-        c = dict(vspec)
-        c["word"] = vw
-        vc_all_cards[vw] = c
-    if os.path.exists(live_path):
-        try:
-            with open(live_path, encoding="utf-8") as lf:
-                for vp in json.load(lf).get("vocab_tracked", []):
-                    vw = vp.get("word", "")
-                    if vw and vw not in vc_all_cards:
-                        vc_all_cards[vw] = build_dynamic_vocab_card(vw, merged_words.get(vw, {}))
-        except Exception:
-            pass
-    for kw, _pitch, _desc in CORE_N3_KANA_VOCAB:
-        if kw and kw not in vc_all_cards:
-            vc_all_cards[kw] = build_dynamic_vocab_card(kw, merged_words.get(kw, {}), fallback_note=_desc)
-    for n2_w, n2_vc in _n2_active_vocab.items():
-        if n2_w and n2_w not in vc_all_cards:
-            c2 = dict(n2_vc)
-            c2["word"] = n2_w
-            vc_all_cards[n2_w] = c2
-
     def _to_bilingual_turns(txt: str) -> list:
         txt = str(txt or "").strip()
         if not txt:
             return []
         return expand_exp_turn("T", txt, False) if JA_SPAN_RE.search(txt) else [("T_VC", txt)]
+
+    # Studio Bilingual Vocab Cards (Zen v21: Mnemonic FIRST -> Target Word SECOND -> Full Phrase LAST + direct-touch clips)
+    from vocab_cards import build_dynamic_vocab_card, build_vocab_audio_spec
+    vc_all_cards = {}
+    if not ga_only:
+        for vw, vspec in VOCAB_CARDS.items():
+            c = dict(vspec)
+            c["word"] = vw
+            vc_all_cards[vw] = c
+        if os.path.exists(live_path):
+            try:
+                with open(live_path, encoding="utf-8") as lf:
+                    for vp in json.load(lf).get("vocab_tracked", []):
+                        vw = vp.get("word", "")
+                        if vw and vw not in vc_all_cards:
+                            vc_all_cards[vw] = build_dynamic_vocab_card(vw, merged_words.get(vw, {}))
+            except Exception:
+                pass
+        for kw, _pitch, _desc in CORE_N3_KANA_VOCAB:
+            if kw and kw not in vc_all_cards:
+                vc_all_cards[kw] = build_dynamic_vocab_card(kw, merged_words.get(kw, {}), fallback_note=_desc)
+        for n2_w, n2_vc in _n2_active_vocab.items():
+            if n2_w and n2_w not in vc_all_cards:
+                c2 = dict(n2_vc)
+                c2["word"] = n2_w
+                vc_all_cards[n2_w] = c2
 
     vc_jobs = {}
     vc_specs = {}
@@ -949,7 +958,119 @@ async def main():
                 entry[slot] = ""
         new_manifest["vocab_cards"][vw] = entry
 
+    # Studio 3-Beat Grammar Audit Cards (Zen v22: Core Cue FIRST -> Pattern SECOND -> Full Example LAST + direct-touch clips)
     if not vocab_only:
+        from grammar_audit_cards import GA_CANONICAL_EXAMPLES, GA_CARD_CURATION
+        ga_jobs = {}
+        ga_specs = {}
+        ga_tag = "edge:Brian_v22_ga_3beat"
+        for gid, (meaning, cue, pat_ja, hook_zh, _hl) in sorted(GA_CARD_CURATION.items()):
+            safe_gid = re.sub(r"[^A-Za-z0-9_-]", "", gid)
+            ex_ja = (GA_CANONICAL_EXAMPLES.get(gid) or ("", ""))[0].strip()
+            pat_spoken = pat_ja.strip(" 。") + "。"
+            ex_spoken = (ex_ja.strip(" 。") + "。") if ex_ja else pat_spoken
+            hook_only_turns = _to_bilingual_turns(hook_zh)
+
+            pat_turns = [("JF", pat_spoken)]
+            pat_fn = f"ga_{safe_gid}_pat.mp3"
+            pat_h = hashlib.sha256((f"v22gap:{ga_tag}:" + json.dumps(pat_turns, ensure_ascii=False)).encode("utf-8")).hexdigest()[:10]
+
+            ex_turns = [("JF", ex_spoken)]
+            ex_fn = f"ga_{safe_gid}_ex.mp3"
+            ex_h = hashlib.sha256((f"v22gae:{ga_tag}:" + json.dumps(ex_turns, ensure_ascii=False)).encode("utf-8")).hexdigest()[:10]
+
+            hook_turns = [*hook_only_turns, ("PAUSE", 0.18), ("JF", pat_spoken)] if hook_only_turns else [("JF", pat_spoken)]
+            hook_fn = f"ga_{safe_gid}_hook.mp3"
+            hook_h = hashlib.sha256((f"v22gah:{ga_tag}:" + json.dumps(hook_turns, ensure_ascii=False)).encode("utf-8")).hexdigest()[:10]
+
+            rev_turns = list(hook_only_turns)
+            if rev_turns:
+                rev_turns.append(("PAUSE", 0.18))
+            rev_turns.append(("JF", pat_spoken))
+            if ex_spoken and ex_spoken != pat_spoken:
+                rev_turns.extend([("PAUSE", 0.24), ("JF", ex_spoken)])
+            rev_fn = f"ga_{safe_gid}_rev.mp3"
+            rev_h = hashlib.sha256((f"v22gar:{ga_tag}:" + json.dumps(rev_turns, ensure_ascii=False)).encode("utf-8")).hexdigest()[:10]
+
+            ga_specs[gid] = {
+                "pat": (pat_fn, pat_h, pat_turns),
+                "ex": (ex_fn, ex_h, ex_turns),
+                "hook": (hook_fn, hook_h, hook_turns),
+                "rev": (rev_fn, rev_h, rev_turns),
+            }
+            for slot_key in ("pat", "ex", "hook", "rev"):
+                fn, fh, ft = ga_specs[gid][slot_key]
+                f_abs = os.path.join(GA_AUDIO_DIR, fn)
+                if old_ga_hashes.get(fn) != fh or not os.path.exists(f_abs):
+                    ga_jobs[fn] = (fh, ft)
+
+        ga_built_ok = set()
+        if can_synth and ga_jobs:
+            ga_tmp = tempfile.mkdtemp(prefix="n3_ga_v22_")
+            try:
+                ga_clips = {}
+                ga_pauses = set()
+                for _, (_, turns) in ga_jobs.items():
+                    for spk, val in turns:
+                        if spk == "PAUSE":
+                            ga_pauses.add(round(float(val), 2))
+                        else:
+                            key = (spk, str(val))
+                            if key not in ga_clips:
+                                ch = hashlib.sha256(f"{spk}:{val}".encode("utf-8")).hexdigest()[:12]
+                                ga_clips[key] = (os.path.join(ga_tmp, f"raw_{ch}.mp3"), os.path.join(ga_tmp, f"trim_{ch}.mp3"))
+
+                ga_sil = {}
+                for sec in sorted(ga_pauses):
+                    sf = os.path.join(ga_tmp, f"sil_{int(round(sec * 100)):03d}.mp3")
+                    make_silence_mp3(sec, sf)
+                    ga_sil[sec] = sf
+
+                await asyncio.gather(
+                    *(
+                        synth_raw_clip(spk, voice_map[spk][0], voice_map[spk][1], txt, raw_p, sem)
+                        for (spk, txt), (raw_p, _) in ga_clips.items()
+                    )
+                )
+
+                ga_lookup = {}
+
+                def _trim_ga(item):
+                    key, (raw_p, trim_p) = item
+                    if os.path.exists(raw_p) and os.path.getsize(raw_p) > 0:
+                        trim_clip_silence(raw_p, trim_p)
+                        return key, trim_p
+                    return key, None
+
+                with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
+                    for key, trim_p in pool.map(_trim_ga, ga_clips.items()):
+                        if trim_p:
+                            ga_lookup[key] = trim_p
+
+                for fn, (fh, turns) in ga_jobs.items():
+                    out_abs = os.path.join(GA_AUDIO_DIR, fn)
+                    if stitch_turns(turns, ga_lookup, ga_sil, out_abs, ga_tmp, fn.replace(".mp3", "")):
+                        ga_built_ok.add(fn)
+                        new_manifest["ga_card_hashes"][fn] = fh
+                print(f"Synthesized {len(ga_built_ok)}/{len(ga_jobs)} studio Grammar Audit MP3s (v22 cue->pat->example).")
+            finally:
+                shutil.rmtree(ga_tmp, ignore_errors=True)
+
+        for gid, spec in ga_specs.items():
+            entry = {}
+            for slot in ("pat", "ex", "hook", "rev"):
+                fn, fh, _ = spec[slot]
+                f_abs = os.path.join(GA_AUDIO_DIR, fn)
+                if os.path.exists(f_abs):
+                    if fn not in ga_jobs or fn in ga_built_ok:
+                        new_manifest["ga_card_hashes"][fn] = fh
+                    ver = new_manifest["ga_card_hashes"].get(fn, fh)[:8]
+                    entry[slot] = f"./audio/ga/{fn}?v={ver}"
+                else:
+                    entry[slot] = ""
+            new_manifest["ga_cards"][gid] = entry
+
+    if not partial_only:
         done_txt = "今天这五十个考点全部过关了。再去听一段三人闲聊，一百二十分就稳稳拿住了，好好歇会儿吧。"
         done_hash = hashlib.sha256((f"v18:{det_tag}:" + done_txt).encode("utf-8")).hexdigest()[:12]
         done_abs = os.path.join(AUDIO_DIR, "done.mp3")
@@ -960,7 +1081,7 @@ async def main():
 
     with open(MANIFEST_PATH, "w", encoding="utf-8") as f:
         json.dump(new_manifest, f, ensure_ascii=False, indent=2)
-    print(f"Verified {len(CARDS_75)} studio Zen v18 Q/Exp pairs + {len(new_manifest['words'])} word MP3s + {len(new_manifest['vocab_cards'])} dual-mode vocab cards (vocab_only={vocab_only}).")
+    print(f"Verified {len(CARDS_75)} studio Zen v18 Q/Exp pairs + {len(new_manifest['words'])} word MP3s + {len(new_manifest['vocab_cards'])} vocab cards + {len(new_manifest['ga_cards'])} GA 3-beat cards (vocab_only={vocab_only}, ga_only={ga_only}).")
 
 
 if __name__ == "__main__":
