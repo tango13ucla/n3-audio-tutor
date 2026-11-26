@@ -66,7 +66,7 @@ if os.path.exists(AUDIO_MANIFEST_PATH):
 
 radio_meta = {
     "date": live_state.get("updated_at", "2026-11-14")[:10],
-    "display_date": "锵锵三人",
+    "display_date": "锵锵三人行",
     "audio_url": "./audio/daily_radio.mp3",
     "duration_sec": 2100.0,
     "duration_label": "36 分钟",
@@ -87,7 +87,7 @@ if os.path.exists(RADIO_META_PATH):
             loaded_rm = json.load(f)
             if loaded_rm.get("audio_url"):
                 radio_meta = loaded_rm
-                radio_meta["display_date"] = "锵锵三人"
+                radio_meta["display_date"] = "锵锵三人行"
                 if not radio_meta.get("hosts") or any(old_h in radio_meta.get("hosts", "") for old_h in ("阿哲", "老文", "小夏")):
                     radio_meta["hosts"] = "文涛 · 文道 · 子东"
     except Exception:
@@ -2021,13 +2021,13 @@ html = r"""<!DOCTYPE html>
     left: 2px;
     color: var(--moss);
     border: 1.5px solid var(--moss);
-    background: rgba(252, 251, 248, 0.94);
+    background: var(--sheet);
   }
   .tutor-stamp.left {
     right: 2px;
     color: var(--bengara);
     border: 1.5px solid var(--bengara);
-    background: rgba(252, 251, 248, 0.94);
+    background: var(--sheet);
   }
   .tutor-stamp.left.moss-tone {
     color: var(--moss);
@@ -2166,14 +2166,20 @@ html = r"""<!DOCTYPE html>
     }
 
     .ledger-back-fab { display: none !important; }
-    .ledger-scroll { padding-bottom: 24px; }
+    .ledger-scroll {
+      padding-bottom: 24px;
+      -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 22px), transparent 100%);
+      mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 22px), transparent 100%);
+    }
 
     .action-dock,
-    .radio-dock,
     .vc-dock,
     .rv-dock,
     .ga-spec-wrap {
       padding-bottom: clamp(16px, 4.4vh, 44px);
+    }
+    .radio-dock {
+      padding-bottom: clamp(8px, 1.4vh, 14px);
     }
     .zen-shell.has-mini-bar .action-dock,
     .zen-shell.has-mini-bar .vc-dock,
@@ -2315,6 +2321,8 @@ html = r"""<!DOCTYPE html>
     line-height: 1.74;
     letter-spacing: 0.035em;
     color: var(--sumi);
+    word-break: auto-phrase;
+    overflow-wrap: break-word;
   }
   @media (min-width: 860px) and (min-height: 521px) {
     .quiz-ja { font-size: 30px; }
@@ -2549,7 +2557,7 @@ html = r"""<!DOCTYPE html>
   .unsure-btn .kbd-tag { display: none; }
   @media (min-width: 860px) and (min-height: 521px) {
     .zen-choice:hover, .listen-num-btn:hover { border-color: var(--sumi); background: var(--hover-bg); }
-    .unsure-btn:hover { border-color: var(--sumi); color: var(--sumi); background: rgba(252, 251, 248, 0.72); }
+    .unsure-btn:hover { border-color: var(--sumi); color: var(--sumi); background: var(--hover-bg); }
     .kbd-tag { opacity: 1; }
     .unsure-btn .kbd-tag { display: inline-block; }
     .desk-hint {
@@ -2575,6 +2583,8 @@ html = r"""<!DOCTYPE html>
     letter-spacing: 0.03em;
     color: var(--sumi);
     white-space: pre-line;
+    word-break: auto-phrase;
+    overflow-wrap: break-word;
   }
   .ans-hl {
     color: var(--moss);
@@ -2823,8 +2833,8 @@ html = r"""<!DOCTYPE html>
     background: var(--soft-bg);
   }
   #radio-inline-lex {
-    bottom: 12px;
-    box-shadow: none;
+    bottom: 0;
+    box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.14);
   }
   @media (min-width: 860px) and (min-height: 521px) {
     #tutor-inline-lex {
@@ -2979,45 +2989,68 @@ html = r"""<!DOCTYPE html>
   .ghost-btn:active, .dock-replay-btn:active { background: var(--tap-bg); }
 
   /* ================= 4. THREE-HOST PODCAST SANCTUARY ("随身听") ================= */
+  #radio-view,
+  #radio-view .stage-wrap {
+    min-height: 0;
+    overflow: hidden;
+  }
+  .radio-body-wrap {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
   .radio-center {
     position: relative;
     flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    padding-top: 28px;
-    gap: 15px;
+    padding: 12px 0 8px;
+    gap: 10px;
   }
+  .radio-center::-webkit-scrollbar { display: none; }
   .radio-chap {
-    font-size: 14px;
+    font-size: 13.5px;
     font-weight: 500;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.1em;
     color: var(--moss);
+    flex-shrink: 0;
   }
   .radio-topic {
     margin: 0;
     font-family: var(--serif-jp);
-    font-size: 26px;
+    font-size: clamp(20px, 5.1vw, 24px);
     font-weight: 600;
-    line-height: 1.45;
+    line-height: 1.38;
     color: var(--sumi);
-    text-wrap: balance;
+    text-wrap: pretty;
+    flex-shrink: 0;
   }
   .radio-ja {
     margin: 0;
     font-family: var(--serif-jp);
-    font-size: 22px;
+    font-size: clamp(17.5px, 4.5vw, 20.5px);
     font-weight: 400;
-    line-height: 1.76;
+    line-height: 1.62;
     color: var(--ink-2);
+    word-break: auto-phrase;
+    overflow-wrap: break-word;
+    flex-shrink: 0;
   }
 
   /* Story Artwork Presentation (Quiet Documentary Aesthetics) */
   .radio-art-card {
     position: relative;
     width: 100%;
-    max-width: 440px;
-    height: 122px;
+    max-width: 100%;
+    height: clamp(98px, 14vh, 134px);
     margin: 2px 0 0;
     border-radius: 8px;
     overflow: hidden;
@@ -3026,11 +3059,21 @@ html = r"""<!DOCTYPE html>
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
     cursor: pointer;
     transition: opacity 0.2s ease;
   }
   @media (min-width: 860px) and (min-height: 521px) {
-    .radio-art-card { height: 156px; }
+    .radio-center { padding-top: 14px; gap: 12px; }
+    .radio-topic { font-size: 24px; line-height: 1.4; }
+    .radio-ja { font-size: 20px; line-height: 1.66; }
+    .radio-art-card { height: clamp(128px, 19vh, 158px); }
+  }
+  @media (max-height: 700px) {
+    .radio-center { padding-top: 6px; gap: 6px; }
+    .radio-topic { font-size: 17.5px; line-height: 1.3; }
+    .radio-ja { font-size: 15.5px; line-height: 1.46; }
+    .radio-art-card { height: 64px; }
   }
   .radio-art-card:active { opacity: 0.86; }
   .radio-art-img {
@@ -3102,17 +3145,17 @@ html = r"""<!DOCTYPE html>
     pointer-events: none;
   }
 
-  /* Story Cinema Modal Presentation */
+  /* Story Cinema Modal Presentation (flush with modal-card edges, zero double padding) */
   .story-modal-box {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    border-radius: 8px;
-    background: var(--sheet);
+    background: transparent;
   }
   .story-modal-img-wrap {
     width: 100%;
-    max-height: 260px;
+    max-height: 240px;
+    border-radius: 8px;
     overflow: hidden;
     background: #141311;
   }
@@ -3130,7 +3173,7 @@ html = r"""<!DOCTYPE html>
     display: block;
   }
   .story-modal-body {
-    padding: 16px 18px 18px;
+    padding: 14px 0 0;
   }
   .story-modal-title {
     margin: 6px 0 4px;
@@ -3144,14 +3187,18 @@ html = r"""<!DOCTYPE html>
     font-size: 13.5px;
     color: var(--ink-2);
     line-height: 1.6;
+    text-wrap: pretty;
   }
 
   .radio-dock {
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    padding-top: 10px;
+    gap: 11px;
+    padding-top: 8px;
+  }
+  @media (max-height: 700px) {
+    .radio-dock { gap: 8px; padding-top: 6px; }
   }
   .scrub-wrap { width: 100%; }
   .zen-range {
@@ -3160,8 +3207,9 @@ html = r"""<!DOCTYPE html>
     width: 100%;
     height: 3px;
     background: var(--track);
+    border-radius: 2px;
     outline: none;
-    margin: 12px 0 8px;
+    margin: 8px 0 7px;
     cursor: pointer;
   }
   .zen-range::-webkit-slider-thumb {
@@ -3175,7 +3223,7 @@ html = r"""<!DOCTYPE html>
   .time-pair {
     display: flex;
     justify-content: space-between;
-    font-size: 13.5px;
+    font-size: 13px;
     color: var(--ink-3);
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.04em;
@@ -3192,7 +3240,7 @@ html = r"""<!DOCTYPE html>
     .transport-row { justify-content: space-between; }
   }
   .radio-spd-pill {
-    height: 48px;
+    height: 46px;
     padding: 0 13px;
     border: 1px solid var(--hairline-strong);
     border-radius: 8px;
@@ -3203,7 +3251,7 @@ html = r"""<!DOCTYPE html>
     flex-shrink: 0;
   }
   .step-time-btn {
-    height: 48px;
+    height: 46px;
     padding: 0 15px;
     border: 1px solid var(--hairline-strong);
     border-radius: 8px;
@@ -3221,7 +3269,7 @@ html = r"""<!DOCTYPE html>
     flex: 1;
     max-width: 168px;
     min-width: 118px;
-    height: 48px;
+    height: 46px;
     border-radius: 8px;
     background: var(--sumi);
     color: var(--sheet);
@@ -3237,26 +3285,37 @@ html = r"""<!DOCTYPE html>
     display: flex;
     justify-content: flex-start;
     align-items: center;
-    gap: 8px;
-    padding-bottom: 10px;
+    gap: 6px;
+    padding-bottom: 8px;
     border-bottom: 1px solid var(--hairline);
     overflow-x: auto;
     scrollbar-width: none;
-    scroll-behavior: smooth;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+  .chapter-strip.fade-right {
     -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 26px), transparent 100%);
     mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 26px), transparent 100%);
   }
-  .chapter-strip.at-end {
+  .chapter-strip.fade-left {
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 24px, #000 100%);
+    mask-image: linear-gradient(to right, transparent 0, #000 24px, #000 100%);
+  }
+  .chapter-strip.fade-both {
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 22px, #000 calc(100% - 24px), transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0, #000 22px, #000 calc(100% - 24px), transparent 100%);
+  }
+  .chapter-strip.at-end:not(.fade-left) {
     -webkit-mask-image: none;
     mask-image: none;
   }
   .chapter-strip::-webkit-scrollbar { display: none; }
   .chap-link {
-    font-size: 14px;
+    font-size: 13.5px;
     font-weight: 500;
     color: var(--ink-3);
-    letter-spacing: 0.04em;
-    padding: 7px 9px;
+    letter-spacing: 0.03em;
+    padding: 6px 9px;
     border-radius: 6px;
     white-space: nowrap;
     flex-shrink: 0;
@@ -3270,43 +3329,58 @@ html = r"""<!DOCTYPE html>
   }
   .chap-sep {
     width: 1px;
-    height: 14px;
+    height: 13px;
     background: var(--hairline-strong);
     flex-shrink: 0;
-    margin: 0 2px;
+    margin: 0 3px;
   }
-  .chap-link.chap-review {
+  .chap-link.chap-review,
+  .chap-link.chap-jpv,
+  .chap-link.chap-spk {
     color: var(--ink-2);
     font-weight: 500;
-    padding-right: 12px;
+    padding: 6px 8px;
   }
   .chap-link.chap-review.is-ready {
     color: var(--moss);
-    background: var(--moss-soft);
     font-weight: 600;
+  }
+  .chap-link.chap-jpv.is-ready,
+  .chap-link.chap-spk.is-ready {
+    color: var(--ink-2);
+    font-weight: 500;
   }
   .chap-link.chap-review.is-done {
     color: var(--moss);
-    opacity: 0.72;
+    opacity: 0.78;
   }
 
   /* ================= 4B. POST-LISTENING FRAMELESS ZEN TINDER REVIEW ("听后复盘") ================= */
   .rv-finish-strip {
     width: 100%;
+    min-width: 0;
+    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    padding: 11px 14px;
-    margin-bottom: 10px;
+    padding: 9px 13px;
+    margin-bottom: 0;
     border-radius: 8px;
     border: 1px solid var(--moss-border);
     background: var(--moss-soft);
     color: var(--sumi);
     font-size: 13px;
-    line-height: 1.4;
+    line-height: 1.35;
     text-align: left;
+    white-space: normal;
     transition: opacity 0.16s ease;
+  }
+  .rv-finish-strip > span:first-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .rv-finish-strip:active { opacity: 0.72; }
   .rv-finish-go {
@@ -3322,6 +3396,7 @@ html = r"""<!DOCTYPE html>
   #radio-review-stage {
     flex: 1;
     min-height: 0;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
   }
@@ -3532,6 +3607,8 @@ html = r"""<!DOCTYPE html>
     color: var(--sumi);
     line-height: 1.58;
     text-wrap: balance;
+    word-break: auto-phrase;
+    overflow-wrap: break-word;
     transition: filter 0.22s ease, opacity 0.22s ease;
   }
   .rv-spk-model.veiled {
@@ -3574,6 +3651,7 @@ html = r"""<!DOCTYPE html>
     line-height: 1.42;
     text-align: center;
     text-wrap: balance;
+    word-break: auto-phrase;
     margin: 0 0 10px;
   }
   .jpv-frame {
@@ -3620,6 +3698,8 @@ html = r"""<!DOCTYPE html>
     line-height: 1.62;
     letter-spacing: 0.02em;
     text-wrap: balance;
+    word-break: auto-phrase;
+    overflow-wrap: break-word;
     min-height: 30px;
   }
   .jpv-sub-ja .jpv-hl {
@@ -3689,15 +3769,6 @@ html = r"""<!DOCTYPE html>
   .jpv-chip.is-now .jpv-chip-cnt {
     color: var(--moss);
     opacity: 0.9;
-  }
-  .chap-link.chap-jpv {
-    color: var(--ink-2);
-    font-weight: 500;
-  }
-  .chap-link.chap-jpv.is-ready {
-    color: var(--moss);
-    background: var(--moss-soft);
-    font-weight: 600;
   }
   .vc-aux-btn.is-on {
     color: var(--moss);
@@ -4114,10 +4185,16 @@ html = r"""<!DOCTYPE html>
     letter-spacing: 0.02em;
   }
   .night-bar-sub {
-    margin-top: 3px;
+    margin-top: 4px;
     font-size: 13px;
     color: var(--ink-3);
     font-variant-numeric: tabular-nums;
+    line-height: 1.5;
+  }
+  .night-bar-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 10px;
   }
   .night-go-btn {
     flex-shrink: 0;
@@ -4845,6 +4922,7 @@ html = r"""<!DOCTYPE html>
     border-bottom: 1px solid var(--hairline);
   }
   .dash-roi-txt {
+    min-width: 0;
     font-size: 13px;
     color: var(--ink-2);
     line-height: 1.5;
@@ -4853,6 +4931,14 @@ html = r"""<!DOCTYPE html>
   .dash-roi-txt b {
     color: var(--sumi);
     font-weight: 600;
+  }
+  .dash-roi-sub {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--ink-3);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1px 10px;
   }
   .dash-roi-btn {
     flex-shrink: 0;
@@ -5501,16 +5587,19 @@ html = r"""<!DOCTYPE html>
     <div class="stage-wrap">
       <div id="radio-player-stage">
         <div class="meta-bar">
-          <span class="overline" id="radio-date-pill">锵锵三人 · 文涛 · 文道 · 子东</span>
+          <span class="overline" id="radio-date-pill">锵锵三人行 · 文涛 · 文道 · 子东</span>
+          <span class="overline ok" id="radio-status-pill" style="flex-shrink:0;"></span>
         </div>
 
-        <div class="radio-center">
-          <div class="radio-chap" id="radio-chap-lbl">逐客茶</div>
-          <h2 class="radio-topic" id="radio-live-title">日本文化夜话</h2>
-          <div class="radio-art-card" id="radio-art-card" style="display:none;" onclick="openStoryArtModal()">
-            <img class="radio-art-img" id="radio-art-img" src="" alt="" />
+        <div class="radio-body-wrap">
+          <div class="radio-center">
+            <div class="radio-chap" id="radio-chap-lbl">逐客茶</div>
+            <h2 class="radio-topic" id="radio-live-title">日本文化夜话</h2>
+            <div class="radio-art-card" id="radio-art-card" style="display:none;" onclick="openStoryArtModal()">
+              <img class="radio-art-img" id="radio-art-img" src="" alt="" />
+            </div>
+            <p class="radio-ja" id="radio-live-ja"></p>
           </div>
-          <p class="radio-ja" id="radio-live-ja"></p>
           <div class="inline-lex empty" id="radio-inline-lex" data-surface="">
             <div class="ilex-top">
               <div class="ilex-head"><span class="ilex-surf"></span><span class="ilex-kana"></span></div>
@@ -5523,8 +5612,8 @@ html = r"""<!DOCTYPE html>
 
         <div class="radio-dock">
           <button type="button" class="rv-finish-strip" id="radio-review-cta" style="display:none;" onclick="openRadioReview()">
-            <span>节目已播完 · 进入收尾小节，3 分钟锁住重点</span>
-            <span class="rv-finish-go">开始复盘 →</span>
+            <span id="radio-review-cta-txt">本集已播完 · 3 分钟收尾复盘</span>
+            <span class="rv-finish-go">去复盘 →</span>
           </button>
           <div class="chapter-strip" id="radio-chap-pills"></div>
 
@@ -8209,20 +8298,29 @@ function formatMMSS(sec) {
 function paintRadioSeekProgress(t) {
   const seekEl = document.getElementById("radio-seek");
   const pillEl = document.getElementById("radio-date-pill");
+  const statusEl = document.getElementById("radio-status-pill");
+  const ctaTxtEl = document.getElementById("radio-review-cta-txt");
   const dur = Math.max(1, (radioPlayer.duration && isFinite(radioPlayer.duration)) ? radioPlayer.duration : (DATA.radio.duration_sec || 2100));
   const rm = computeDaily120Metrics();
   if (pillEl) {
     const hostsLabel = DATA.radio.hosts || "文涛 · 文道 · 子东";
-    pillEl.textContent = rm.radioDone
-      ? `锵锵三人 · ${hostsLabel} · 今日已圆满 ✓`
-      : (rm.radioAudioDone && !rm.radioReviewDone
-        ? `锵锵三人 · ${hostsLabel} · 待收尾复盘`
-        : `锵锵三人 · ${hostsLabel}`);
+    pillEl.textContent = `锵锵三人行 · ${hostsLabel}`;
+  }
+  if (statusEl) {
+    statusEl.textContent = rm.radioDone
+      ? "已圆满 ✓"
+      : (rm.radioAudioDone && !rm.radioReviewDone ? "待复盘" : "");
+  }
+  if (ctaTxtEl && rm.radioAudioDone && !rm.radioReviewDone) {
+    const curRatio = (t || 0) / dur;
+    ctaTxtEl.textContent = (curRatio >= 0.96 || radioPlayer.ended)
+      ? "本集已播完 · 3 分钟收尾复盘"
+      : "今日已听完 · 随时可做收尾复盘";
   }
   if (seekEl) {
     const curPct = Math.max(0, Math.min(100, ((t || 0) / dur) * 100));
     const maxPct = rm.radioAudioDone ? 100 : Math.max(curPct, Math.min(100, ((A.radioMaxSec || 0) / dur) * 100));
-    seekEl.style.background = `linear-gradient(to right, #2D7A56 0%, #2D7A56 ${curPct.toFixed(1)}%, rgba(45, 122, 86, 0.36) ${curPct.toFixed(1)}%, rgba(45, 122, 86, 0.36) ${maxPct.toFixed(1)}%, rgba(28, 27, 24, 0.10) ${maxPct.toFixed(1)}%, rgba(28, 27, 24, 0.10) 100%)`;
+    seekEl.style.background = `linear-gradient(to right, var(--moss) 0%, var(--moss) ${curPct.toFixed(1)}%, var(--moss-border) ${curPct.toFixed(1)}%, var(--moss-border) ${maxPct.toFixed(1)}%, var(--track) ${maxPct.toFixed(1)}%, var(--track) 100%)`;
   }
 }
 
@@ -8284,7 +8382,7 @@ function getCurrentRadioSegTitle() {
   for (let i = 0; i < segs.length; i++) {
     if (t >= segs[i].start && t < segs[i].end && segs[i].title) return segs[i].title;
   }
-  return (segs[0] && segs[0].title) || "锵锵三人 · 日本文化随身听";
+  return (segs[0] && segs[0].title) || "锵锵三人行 · 日本文化随身听";
 }
 
 function setMediaSessionPlaybackState(state) {
@@ -8584,8 +8682,12 @@ function cycleRadioSpeed() {
 function updateChapterStripFade(stripEl) {
   if (!stripEl) return;
   try {
-    const atEnd = (stripEl.scrollWidth - stripEl.clientWidth - stripEl.scrollLeft) <= 8;
-    stripEl.classList.toggle("at-end", atEnd);
+    const hasLeft = (stripEl.scrollLeft || 0) > 4;
+    const hasRight = (stripEl.scrollWidth - stripEl.clientWidth - (stripEl.scrollLeft || 0)) > 6;
+    stripEl.classList.toggle("fade-left", hasLeft && !hasRight);
+    stripEl.classList.toggle("fade-right", !hasLeft && hasRight);
+    stripEl.classList.toggle("fade-both", hasLeft && hasRight);
+    stripEl.classList.toggle("at-end", !hasRight);
   } catch (e) {}
 }
 
@@ -8602,7 +8704,7 @@ function renderRadioChapters(activeChapIdx) {
     tailBtns.push(`<button type="button" class="chap-link chap-review${rvMeta.cls}" id="radio-review-chap" onclick="openRadioReview()">${escapeHtml(rvMeta.label)}</button>`);
   }
   if (spkList.length > 0) {
-    tailBtns.push(`<button type="button" class="chap-link chap-jpv" id="radio-spk-chap" onclick="openRadioSpeaking(0)">开口2句</button>`);
+    tailBtns.push(`<button type="button" class="chap-link chap-spk${rvMeta && rvMeta.needsClose ? " is-ready" : ""}" id="radio-spk-chap" onclick="openRadioSpeaking(0)">开口2句</button>`);
   }
   const closingHTML = tailBtns.length
     ? `<span class="chap-sep" aria-hidden="true"></span>${tailBtns.join("")}`
@@ -8618,7 +8720,7 @@ function renderRadioChapters(activeChapIdx) {
   }
   const activeBtn = strip.querySelector ? strip.querySelector(".chap-link.active") : null;
   if (activeBtn && typeof activeBtn.scrollIntoView === "function") {
-    try { activeBtn.scrollIntoView({ behavior: "auto", inline: "nearest", block: "nearest" }); } catch (e) {}
+    try { activeBtn.scrollIntoView({ behavior: "auto", inline: "center", block: "nearest" }); } catch (e) {}
   }
   updateChapterStripFade(strip);
 }
@@ -9655,15 +9757,22 @@ function updateRadioReviewEntryBadge() {
   if (jpvBtn) {
     jpvBtn.className = "chap-link chap-jpv" + (meta && meta.needsClose ? " is-ready" : "");
   }
+  const spkBtn = document.getElementById("radio-spk-chap");
+  if (spkBtn) {
+    spkBtn.className = "chap-link chap-spk" + (meta && meta.needsClose ? " is-ready" : "");
+  }
   const cta = document.getElementById("radio-review-cta");
   if (cta) {
     const showCta = !!(meta && meta.needsClose);
     cta.style.display = showCta ? "flex" : "none";
-    if (showCta) {
-      const strip = document.getElementById("radio-chap-pills");
-      if (strip && typeof strip.scrollWidth === "number") {
+    const strip = document.getElementById("radio-chap-pills");
+    if (showCta && strip && typeof strip.scrollWidth === "number") {
+      const chaps = (DATA.radio && DATA.radio.chapters) || [];
+      const onLastChap = lastRenderedSegIdx >= Math.max(0, chaps.length - 1);
+      if (onLastChap) {
         try { strip.scrollLeft = strip.scrollWidth; } catch (e) {}
       }
+      updateChapterStripFade(strip);
     }
   }
 }
@@ -9926,7 +10035,7 @@ function renderRadioJpVideoStage(host) {
     </div>
 
     <div class="vc-aux-row">
-      <button type="button" class="vc-aux-btn seal" onclick="closeRadioReview()">随身听</button>
+      ${(!st.done && Array.isArray(DATA.radio && DATA.radio.speaking_prompts) && DATA.radio.speaking_prompts.length) ? `<button type="button" class="vc-aux-btn seal" onclick="openRadioSpeaking(0)">开口2句</button>` : `<span></span>`}
       <div class="vc-aux-right">
         <button type="button" class="vc-aux-btn" id="jpv-sub-btn" onclick="cycleJpVideoSubMode(event)">${subLabel}</button>
         <button type="button" class="vc-aux-btn replay" onclick="if(jpvVideoEl){jpvVideoEl.currentTime=0;jpvVideoEl.muted=false;jpvVideoEl.play().catch(()=>{});}">重播</button>
@@ -14066,21 +14175,22 @@ function renderDashboard() {
     const totalHes = pillarMeta.reduce((s, x) => s + x.hesCnt, 0);
     const dLeft = Number(DATA.days_to_exam || 14);
     const activeConfCnt = Object.keys(DATA.confusion_pairs || {}).length;
-    const extras = [];
-    if (activeConfCnt > 0) extras.push(`<span class="nw">常混 ${activeConfCnt} 组</span>`);
-    if (totalHes > 0) extras.push(`<span class="nw">略生 ${totalHes} 项</span>`);
-    if (totalStale > 0) extras.push(`<span class="nw">待保鲜 ${totalStale} 项</span>`);
-    const extraStr = extras.length ? `，${extras.join("，")}` : "";
+    const subParts = [];
+    if (best && totalWip2 > 0) subParts.push(`<span class="nw">${best.m.label}最提分</span>`);
+    if (activeConfCnt > 0) subParts.push(`<span class="nw">常混 ${activeConfCnt} 组</span>`);
+    if (totalHes > 0) subParts.push(`<span class="nw">略生 ${totalHes} 项</span>`);
+    if (totalStale > 0) subParts.push(`<span class="nw">待保鲜 ${totalStale} 项</span>`);
+    const subLine = subParts.length ? `<div class="dash-roi-sub">${subParts.join("")}</div>` : "";
     if (best && totalWip2 > 0) {
       roiEl.innerHTML = `
         <div class="dash-roi-bar">
-          <span class="dash-roi-txt"><span class="nw">距考剩 <b>${dLeft} 天</b></span> · <span class="nw">临门 2/3 共 <b>${totalWip2} 项</b></span>（<span class="nw">${best.m.label}最提分</span>${extraStr}）</span>
+          <div class="dash-roi-txt"><div><span class="nw">距考剩 <b>${dLeft} 天</b></span> · <span class="nw">临门 2/3 共 <b>${totalWip2} 项</b></span></div>${subLine}</div>
           <button type="button" class="dash-roi-btn" onclick="jumpToRoiPillar('${best.k}')">看 ${best.m.label} ›</button>
         </div>`;
     } else {
       roiEl.innerHTML = `
         <div class="dash-roi-bar">
-          <span class="dash-roi-txt"><span class="nw">距考剩 <b>${dLeft} 天</b></span> · <span class="nw">临门 2/3 已清空</span>${extraStr || "，稳步攻克新点即可"}</span>
+          <div class="dash-roi-txt"><div><span class="nw">距考剩 <b>${dLeft} 天</b></span> · <span class="nw">临门 2/3 已清空</span></div>${subLine || `<div class="dash-roi-sub">稳步攻克新点即可</div>`}</div>
         </div>`;
     }
   }
@@ -14110,14 +14220,19 @@ function renderDashboard() {
   const entryEl = document.getElementById("night-flash-entry");
   if (entryEl) {
     if (dashMod === "grammar" && ga && ga.total > 0) {
-      const subTxt = ga.remaining > 0
-        ? `已盘 ${ga.audited}/${ga.total} · 陌生 ${ga.counts[1] || 0} · 易混 ${ga.counts[2] || 0} · 看懂 ${ga.counts[3] || 0} · 本能 ${ga.counts[4] || 0}`
-        : `全表 ${ga.total}/${ga.total} 已盘完 · 陌生 ${ga.counts[1] || 0} · 易混 ${ga.counts[2] || 0} · 看懂 ${ga.counts[3] || 0} · 本能 ${ga.counts[4] || 0}`;
+      const gaHead = ga.remaining > 0 ? `已盘 ${ga.audited}/${ga.total}` : `全表 ${ga.total}/${ga.total} 已盘完`;
+      const statChips = [
+        gaHead,
+        `陌生 ${ga.counts[1] || 0}`,
+        `易混 ${ga.counts[2] || 0}`,
+        `看懂 ${ga.counts[3] || 0}`,
+        `本能 ${ga.counts[4] || 0}`,
+      ].map(s => `<span class="nw">${s}</span>`).join("");
       entryEl.innerHTML = `
         <div class="night-bar">
           <div class="night-bar-txt">
             <div class="night-bar-title">语法盘点</div>
-            <div class="night-bar-sub">${subTxt}</div>
+            <div class="night-bar-sub night-bar-stats">${statChips}</div>
           </div>
           ${ga.remaining > 0
             ? `<button class="night-go-btn" onclick="openGrammarAuditFromAnywhere()">去盘点</button>`
@@ -17741,6 +17856,30 @@ const pacingOk15 = vm.runInNewContext(`(() => {
 })()`, sb);
 if (!pacingOk15) {
   throw new Error('Self-test 15 failed: live intra-session adaptive pacing failed to pick next point');
+}
+
+// Self-test 16 (Paper-Cut Zero-Regression Guard):
+if (html.includes('锵锵三人 ·')) {
+  throw new Error('Self-test 16 failed: truncated show title "锵锵三人 ·" regressed (must be 锵锵三人行)');
+}
+if (html.includes('rgba(28, 27, 24, 0.10)') || html.includes('rgba(252, 251, 248, 0.94)')) {
+  throw new Error('Self-test 16 failed: dark-mode-breaking hardcoded light color regressed in scrubber or swipe stamps');
+}
+if (!html.includes('.radio-body-wrap') || !html.includes('chapter-strip.fade-both')) {
+  throw new Error('Self-test 16 failed: radio layout containment wrapper or dual-edge chapter fade CSS missing');
+}
+vm.runInNewContext(`(() => {
+  A.radioMaxSec = Math.ceil((DATA.radio.duration_sec || 2370) * 0.99);
+  A.radioReview = { sig: RADIO_SIG, triageIdx: 0, tailQueue: [], doneIds: [], tailDoneIds: [], spokenIds: [], done: false };
+  paintRadioSeekProgress(2100);
+})()`, sb);
+const ctaTxtMid16 = vm.runInNewContext('(document.getElementById("radio-review-cta-txt") && document.getElementById("radio-review-cta-txt").textContent) || ""', sb);
+if (!ctaTxtMid16.includes('今日已听完')) {
+  throw new Error('Self-test 16 failed: mid-episode seek while audioDone should show non-contradictory copy, got: ' + ctaTxtMid16);
+}
+const statusTxt16 = vm.runInNewContext('(document.getElementById("radio-status-pill") && document.getElementById("radio-status-pill").textContent) || ""', sb);
+if (statusTxt16 !== '待复盘') {
+  throw new Error('Self-test 16 failed: #radio-status-pill should show 待复盘, got: ' + statusTxt16);
 }
 """
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)

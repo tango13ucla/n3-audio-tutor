@@ -87,12 +87,36 @@ CURATED_VISUAL_TOPICS: dict[str, dict[str, list[str]]] = {
         "prefer": ["The_Tokyo_Stock_Exchange_-_main_room", "Inside_Tokyo_Stock_Exchange", "Tokyo_Stock_Exchange_Main_Building", "Fugaku"],
     },
     # ---- Vol.11 ----
-    "uchi11_s1_news_fallback": {"ja_wiki": ["三越", "銀座", "伊勢丹"], "wm_queries": ["Nihombashi Mitsukoshi Tokyo", "Ginza Tokyo street"]},
-    "uchi11_s2a_oilshock_part1": {"ja_wiki": ["オイルショック", "スーパーマーケット"], "wm_queries": ["1973 oil crisis Japan", "Showa supermarket Japan"]},
-    "uchi11_s2b_oilshock_part2": {"ja_wiki": ["ホンダ・シビック", "トヨタ・カローラ"], "wm_queries": ["1973 Honda Civic", "Toyota Corolla 1970s"]},
-    "uchi11_s3a_tokyotower_part1": {"ja_wiki": ["東京タワー"], "wm_queries": ["Tokyo Tower construction", "Tokyo Tower daytime"]},
-    "uchi11_s3b_tokyotower_part2": {"ja_wiki": ["東京タワー", "芝公園"], "wm_queries": ["Tokyo Tower night illuminated", "Tokyo Tower skyline"]},
-    "uchi11_s4_world_global_health": {"ja_wiki": ["世界保健機関", "脳科学"], "wm_queries": ["Medical research laboratory microscope", "Brain MRI neuroscience"]},
+    "uchi11_s1_news_fallback": {
+        "ja_wiki": ["三越", "銀座", "伊勢丹"],
+        "wm_queries": ["Nihombashi Mitsukoshi Tokyo", "Ginza Tokyo street"],
+        "prefer": ["Mitsukoshi_Nihonbashi_main_store", "Mitsukoshi_Nihonbashi", "Ginza"],
+    },
+    "uchi11_s2a_oilshock_part1": {
+        "ja_wiki": ["イオン (企業)", "イトーヨーカ堂", "商店街"],
+        "wm_queries": ["Japanese supermarket aisle Tokyo", "Ito-Yokado Japan supermarket", "Showa shopping street Japan"],
+        "prefer": ["Ito-Yokado", "supermarket", "shotengai", "Aeon", "grocery"],
+    },
+    "uchi11_s2b_oilshock_part2": {
+        "ja_wiki": ["ホンダ・シビック", "トヨタ・カローラ"],
+        "wm_queries": ["1973 Honda Civic", "Toyota Corolla 1970s"],
+        "prefer": ["Honda_Civic_CVCC", "1973-1978_Honda_Civic", "1973_Honda_Civic", "Honda_Civic_RS"],
+    },
+    "uchi11_s3a_tokyotower_part1": {
+        "ja_wiki": ["東京タワー"],
+        "wm_queries": ["Tokyo Tower 1961", "Tokyo Tower daytime"],
+        "prefer": ["Tokyo_Tower_1961", "日本電波塔", "Tokyo_Tower_from", "Tokyo_Tower_day"],
+    },
+    "uchi11_s3b_tokyotower_part2": {
+        "ja_wiki": ["芝公園", "東京タワー"],
+        "wm_queries": ["Tokyo Tower illuminated night", "Tokyo Tower night skyline"],
+        "prefer": ["Tokyo_Tower_at_night", "Tokyo_Tower_night", "Illuminated_buildings_and_Tokyo_Tower", "Tokyo_Tower,_Minato"],
+    },
+    "uchi11_s4_world_global_health": {
+        "ja_wiki": ["世界保健機関", "脳"],
+        "wm_queries": ["Medical research laboratory microscope", "Brain MRI neuroscience"],
+        "prefer": ["WHO_HQ_main_building", "microscope", "FMRI", "Brain_MRI"],
+    },
     # ---- Vol.12 ----
     "uchi12_s1_news_fallback": {"ja_wiki": ["就職氷河期", "新宿駅", "丸の内"], "wm_queries": ["Tokyo commuters Shinjuku", "Marunouchi Tokyo office"]},
     "uchi12_s2a_seikan_part1": {"ja_wiki": ["青函トンネル", "青函連絡船"], "wm_queries": ["Seikan Tunnel", "Seikan Ferry Hakodate"]},
