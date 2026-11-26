@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-25 19:54 PT",
+  "updated_at": "2026-11-25 20:55 PT",
   "exam_date": "2026-12-06",
   "days_left": 11,
   "target_score": "120+ / 180",
@@ -14157,7 +14157,7 @@
   "daily_rituals": {
     "date": "2026-11-25",
     "quiz_green": 2,
-    "radio_max_sec": 2188,
+    "radio_max_sec": 2371,
     "flash_seen": 0,
     "flash_target": 0,
     "flash_done": false,
@@ -14167,7 +14167,7 @@
     "ga_total_audited": 89
   },
   "study_date": "2026-11-25",
-  "_baked_epoch": 1795665276,
+  "_baked_epoch": 1795668928,
   "word_lookups": {
     "おく": {
       "count": 1,
