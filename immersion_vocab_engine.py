@@ -40,7 +40,8 @@ MIN_GRADUATION_DAYS = 3
 DAILY_NEW_BUDGET = 5
 BRIDGE_UNTIL_PRIOR_HITS = 6
 BRIDGE_UNTIL_PRIOR_DAYS = 2
-MAX_INLINE_PER_SENTENCE = 3
+MAX_INLINE_PER_SENTENCE = 1
+MAX_AUTO_SWAPS_PER_STORY = 8
 
 # Protected spans that must NEVER be partially rewritten (titles, quotes, proper names)
 PROTECTED_SPAN_RE = re.compile(r"《[^》]*》|『[^』]*』|「[^」]*」|“[^”]*”")
@@ -907,12 +908,14 @@ def apply_immersion_to_stories(
         b_copy = dict(blk)
         new_turns = []
         turns = blk.get("raw_turns") or []
+        story_swaps_added = 0
         for t_idx, (spk, txt_raw) in enumerate(turns):
             txt = str(txt_raw)
             if (
                 not zh_scan_re
                 or spk not in ("W", "D", "X")
                 or (b_idx == 0 and t_idx == 0)
+                or story_swaps_added >= MAX_AUTO_SWAPS_PER_STORY
                 or BROADCAST_FRAME_RE.search(txt)
                 or GRAMMAR_META_RE.search(txt)
             ):
@@ -924,6 +927,9 @@ def apply_immersion_to_stories(
             turn_bridge_used = False
 
             for sent in sentences:
+                if story_swaps_added >= MAX_AUTO_SWAPS_PER_STORY:
+                    rebuilt_sents.append(sent)
+                    continue
                 if "：" in sent and len(JA_KANA_TOKEN_RE.findall(sent.split("：", 1)[1])) >= 1:
                     rebuilt_sents.append(sent)
                     continue
@@ -939,6 +945,8 @@ def apply_immersion_to_stories(
 
                 for m in zh_scan_re.finditer(sent):
                     if existing_inline_cnt + sent_swaps_added >= MAX_INLINE_PER_SENTENCE:
+                        break
+                    if story_swaps_added + sent_swaps_added >= MAX_AUTO_SWAPS_PER_STORY:
                         break
                     zh_hit = m.group(0)
                     ent = zh_to_entry[zh_hit]
@@ -982,6 +990,8 @@ def apply_immersion_to_stories(
                         edits.append((m.start(), m.end(), replacement))
                         sent_swaps_added += 1
                         used_kana_in_sent.add(k)
+
+                story_swaps_added += sent_swaps_added
 
                 if edits:
                     pieces = []

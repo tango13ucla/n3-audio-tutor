@@ -901,6 +901,44 @@ def test_cloud_sync_sandbox_isolation_guard() -> None:
     print("[PASS 14/14] Client-side cloud sync sandbox isolation (N3 + ZenBody) & orphan-punctuation blank guard verified")
 
 
+def test_v43_storycraft_and_archival_footage_guard() -> None:
+    """Gate 13: Guard v43 storycraft (zero mid-podcast quiz on 11/26+, calm immersion cap, Vol.23 golden spacing) & real historical footage pipeline."""
+    import immersion_vocab_engine as ive
+    import radio_salon_uchi_vol23 as v23
+    import radio_visual_studio as rvs
+
+    # 1. Immersion engine must cap inline chops cleanly so storytelling stays fluid
+    assert ive.MAX_INLINE_PER_SENTENCE == 1, f"Expected MAX_INLINE_PER_SENTENCE=1, got {ive.MAX_INLINE_PER_SENTENCE}"
+    assert getattr(ive, "MAX_AUTO_SWAPS_PER_STORY", 99) <= 10
+
+    # 2. generate_daily_radio.py must NOT run mid-episode pop-quiz rumination on 2026-11-26+
+    gdr_src = (BASE_DIR / "generate_daily_radio.py").read_text(encoding="utf-8")
+    assert 'if today_str == "2026-11-25"' in gdr_src, "Mid-episode rumination quiz must be gated to 2026-11-25 only!"
+    assert "_strip_n5_pepper_in_turn" in gdr_src, "Missing v43 N5 pepper-shaker de-chop helper!"
+
+    # 3. Tomorrow's Vol.23 golden storycraft invariants (18 calm grammar points, >=600 chars/pt, pure-Chinese 7-turn outro)
+    stories = v23.SALON_STORIES_UCHI_VOL23
+    tot_chars = sum(len(t[1]) for s in stories for t in s["turns"])
+    tot_pts = sum(len(s.get("point_ids") or []) for s in stories)
+    assert tot_pts <= 20, f"Vol.23 grammar points bloated again ({tot_pts} > 20)!"
+    assert tot_chars / max(1, tot_pts) >= 580, f"Vol.23 chars/pt too dense ({tot_chars/tot_pts:.0f} < 580)!"
+    last7 = stories[-1]["turns"][-7:]
+    last7_txt = "".join(t[1] for t in last7)
+    assert not re.search(r"[ぁ-んァ-ヶー]", last7_txt), "Vol.23 final 7 turns must be 100% pure Chinese under real Phoenix TV outro!"
+    assert 150 <= len(last7_txt) <= 230, f"Vol.23 final 7 turns char count out of range: {len(last7_txt)}"
+
+    # 4. Real historical archival footage catalog & offline fallback contract
+    assert len(rvs.CURATED_ARCHIVAL_FOOTAGE) >= 25, f"Expected >=25 curated archival footage entries, got {len(rvs.CURATED_ARCHIVAL_FOOTAGE)}"
+    for sid in ("uchi23_s1_news_fallback", "uchi23_s2a_kabuki_drama_part1", "uchi23_s3b_mishima_contrast_part2", "uchi23_s4_world_brain_ai"):
+        cands = rvs._resolve_archival_footage_candidates({"id": sid})
+        assert cands, f"Missing curated historical footage for {sid}"
+    theme_hit = rvs._resolve_archival_footage_candidates({"id": "live_nhk_news_2026-12-01", "title": "京都の伝統と新幹線の歴史", "short_tab": "京都"})
+    assert theme_hit, "Theme-matched historical footage fallback returned empty!"
+    # Mocked ffmpeg must skip network cleanly and return []
+    assert rvs._download_chapter_archival_clips({"id": "uchi23_s1_news_fallback", "chapter": 0}, "/tmp", set(), ffmpeg_bin="/usr/bin/true") == []
+    print(f"[PASS 15/15] v43 storycraft ({tot_pts} pts, {tot_chars//tot_pts} chars/pt) & real historical footage vault ({len(rvs.CURATED_ARCHIVAL_FOOTAGE)} chapters) verified")
+
+
 def main() -> int:
     test_all_python_files_syntax_and_names()
     test_apply_practice_logs_all_event_types()
@@ -916,7 +954,8 @@ def main() -> int:
     test_full_bank_100pct_option_notes()
     test_exam_day_and_n2_zero_to_120_transition_contract()
     test_cloud_sync_sandbox_isolation_guard()
-    print("[ALL PASS] tests_ci_guard.py 14/14 gates green!")
+    test_v43_storycraft_and_archival_footage_guard()
+    print("[ALL PASS] tests_ci_guard.py 15/15 gates green!")
     return 0
 
 

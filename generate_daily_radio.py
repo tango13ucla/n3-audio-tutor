@@ -2457,7 +2457,73 @@ async def main():
             "events": [],
         })
 
-    # Apply 365-Day Cumulative 5-Hit Bilingual Vocabulary Graduation Engine (idempotent per study date)
+    # v43 Storycraft De-Chop (2026-11-26+): restore isolated elementary N5 pepper-shaker tokens
+    # (e.g. `两个平行 せかい `, `五分之一 じかん `, `刚去过 にほん 旅游`) sprinkled inside Mandarin clauses
+    # back into natural flowing Chinese BEFORE immersion_vocab_engine runs, while preserving 100% of
+    # full Japanese example sentences, grammar meta-explanations, and authentic Japanese cultural nouns.
+    _N5_PEPPER_TO_ZH = {
+        "せかい": "世界", "じかん": "时间", "おかね": "钱", "かいしゃ": "公司", "しゃいん": "员工",
+        "しゃちょう": "社长", "にほん": "日本", "とうきょう": "东京", "くに": "国家", "かぞく": "家人",
+        "こども": "孩子", "くるま": "车", "でんしゃ": "电车", "えき": "车站", "みせ": "店",
+        "いえ": "家", "かぜ": "风", "あめ": "雨", "てんき": "天气", "ふゆ": "冬天", "なつ": "夏天",
+        "ほん": "书", "ともだち": "朋友", "えいが": "电影", "いしゃ": "医生", "びょういん": "医院",
+        "ひこうき": "飞机", "くうこう": "机场", "がくせい": "学生", "だいがく": "大学", "しごと": "工作",
+        "ニュース": "新闻", "テレビ": "电视", "スーパー": "超市", "ホテル": "酒店", "ラーメン": "拉面",
+        "コーヒー": "咖啡", "コンビニ": "便利店", "スマホ": "手机", "りょこう": "旅行", "ぎんこう": "银行",
+        "しんぶん": "报纸", "でんき": "电", "うちゅう": "宇宙", "かがく": "科学", "ねだん": "价格",
+        "ぎじゅつ": "技术", "こうじょう": "工厂", "れきし": "历史", "おんがく": "音乐", "せんせい": "老师",
+    }
+    _N5_PEPPER_RE = re.compile(
+        r"(?<![ぁ-んァ-ヶー・]) (?P<tok>" + "|".join(re.escape(k) for k in sorted(_N5_PEPPER_TO_ZH, key=len, reverse=True)) + r") (?![ぁ-んァ-ヶー・])"
+    )
+    _N5_META_INTRO_RE = re.compile(r"(?:日语叫|日文叫|念作|读作|叫做|日语是|日文是|写着|喊着)$")
+
+    def _strip_n5_pepper_in_turn(txt: str) -> str:
+        if not _N5_PEPPER_RE.search(txt):
+            return txt
+        out_sents = []
+        for seg in SENTENCE_CHUNK_RE.findall(txt) or [txt]:
+            # Never touch standalone full Japanese example sentences after a colon
+            if "：" in seg:
+                head, tail = seg.split("：", 1)
+                if len(re.findall(r"[ぁ-んァ-ヶー]", tail)) >= 12 and len(re.findall(r"[\u4e00-\u9fff]", tail)) <= 2:
+                    seg_to_clean, preserved_tail = head, "：" + tail
+                else:
+                    seg_to_clean, preserved_tail = seg, ""
+            else:
+                seg_to_clean, preserved_tail = seg, ""
+
+            def _repl(m: re.Match) -> str:
+                tok = m.group("tok")
+                before = seg_to_clean[: m.start()]
+                after = seg_to_clean[m.end() :]
+                if _N5_META_INTRO_RE.search(before.rstrip("「『“ ")):
+                    return m.group(0)
+                zh = _N5_PEPPER_TO_ZH[tok]
+                if tok == "いえ" and before.endswith(("木头", "破", "老", "旧")):
+                    zh = "房子"
+                if tok == "くるま" and not before.endswith(("小", "大", "私家", "月球", "电动", "旧", "新", "轻型", "省油")):
+                    zh = "汽车"
+                # Avoid duplicate adjacent Mandarin words (e.g. `工厂 こうじょう ` -> `工厂`)
+                if before.endswith(zh) or after.startswith(zh):
+                    return ""
+                if len(zh) >= 2 and (before.endswith(zh[-1]) and tok in ("でんき", "かがく")):
+                    return ""
+                return zh
+
+            cleaned = _N5_PEPPER_RE.sub(_repl, seg_to_clean)
+            cleaned = re.sub(r" ([，。！？、；：])", r"\1", cleaned)
+            out_sents.append(cleaned + preserved_tail)
+        return "".join(out_sents)
+
+    if today_str >= "2026-11-26" and imm_profile["ja_ratio"] < 0.35:
+        for b in story_blocks:
+            b["raw_turns"] = [
+                (spk, _strip_n5_pepper_in_turn(str(t)) if spk in ("W", "D", "X") else t)
+                for spk, t in (b.get("raw_turns") or [])
+            ]
+
+    # Apply 365-Day Cumulative 8-Hit Bilingual Vocabulary Graduation Engine (idempotent per study date)
     imm_vocab_report: dict = {}
     if today_str >= "2026-11-22" and imm_profile["ja_ratio"] < 0.72:
         story_blocks, imm_vocab_report = ive.apply_immersion_to_stories(
@@ -2533,11 +2599,11 @@ async def main():
         if "锵锵三人行" in last_line_txt and imm_profile["ja_ratio"] < 0.65:
             closing_turns = []
 
-    # Szpunar, Khan & Schacter (2013, PNAS) + Active Cross-Day Rumination ("反刍小回声"):
-    # Pure audio-only recall cues + mental retrieval pauses + spoken Japanese confirmation with crisp memory hooks.
-    # For 2026-11-25+ (v42): 3 anchor slots across the 60m episode (before Ad 1, before Ad 2, and entering World Finale)
-    # actively ruminate ALL 6 daily focus + yesterday carryover/relearn words so zero words vanish after 1 flash!
-    if today_str >= "2026-11-25" and imm_profile["ja_ratio"] < 0.65:
+    # v43 Storycraft Rule (2026-11-26+): Keep the 40-minute 《锵锵三人行》 podcast 100% immersive
+    # authentic conversation with ZERO fourth-wall-breaking pop-quiz pauses! All focused & carryover
+    # rumination words (`imm_vocab_report["rumination_words"]`) flow directly into the post-listening
+    # Zen Tinder review cards and the all-Japanese historical documentary short video instead.
+    if today_str == "2026-11-25" and imm_profile["ja_ratio"] < 0.65:
         _rum_pool = list(imm_vocab_report.get("rumination_words") or [])
         _today_cnts = imm_vocab_report.get("_today_counts")
         if not isinstance(_today_cnts, dict):
@@ -2622,7 +2688,7 @@ async def main():
             # Prepend to World Finale opening (keeps authentic sudden ending at the very end 100% untouched!)
             story_blocks[-1]["raw_turns"] = _mc3 + list(story_blocks[-1]["raw_turns"])
             story_blocks[-1]["events"] = turns_to_expanded_events(story_blocks[-1]["raw_turns"])
-    elif today_str >= "2026-11-23" and imm_profile["ja_ratio"] < 0.65:
+    elif "2026-11-23" <= today_str < "2026-11-25" and imm_profile["ja_ratio"] < 0.65:
         _mc_used: set[str] = set()
         def _build_micro_check_turns(act_slice: list[dict], variant_idx: int) -> list[tuple[str, object]]:
             found_k = ""
@@ -2674,7 +2740,9 @@ async def main():
     next_program = pick_phoenix_next_program(study_dt) if use_v42_ending else None
     ann_evs = [("ANN", next_program["line"])] if next_program else []
 
-    if use_v42_ending:
+    if today_str >= "2026-11-26":
+        radio_ver_tag = "v43_qq_40m_storycraft_archival_real_outro"
+    elif use_v42_ending:
         radio_ver_tag = "v42_qq_40m_ruminate_jpvideo_real_outro"
     elif today_str >= "2026-11-23":
         radio_ver_tag = "v41_qq_60m_wordguard_seamless_5hit"
