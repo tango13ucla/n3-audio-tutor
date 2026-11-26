@@ -18501,7 +18501,7 @@ sb.closeModal();
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
 
 sw_path = os.path.join(BASE_DIR, "sw.js")
-SW_CACHE_NAME = "n3-studio-tutor-v69"
+SW_CACHE_NAME = "n3-studio-tutor-v70"
 if os.path.exists(sw_path):
     with open(sw_path, encoding="utf-8") as sf:
         sw_src = sf.read()
