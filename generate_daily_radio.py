@@ -2105,6 +2105,12 @@ async def main():
 
     now_pt = datetime.datetime.now(PT_TZ)
     study_dt = (now_pt - datetime.timedelta(hours=4)).date()
+    _force_d = os.environ.get("FORCE_STUDY_DATE", "").strip()
+    if _force_d:
+        try:
+            study_dt = datetime.date.fromisoformat(_force_d[:10])
+        except Exception:
+            pass
     if dry_test and "--dry-date" in sys.argv:
         try:
             _di = sys.argv.index("--dry-date")
@@ -2112,8 +2118,24 @@ async def main():
         except Exception:
             pass
     today_str = study_dt.strftime("%Y-%m-%d")
-    days_left = max(0, (EXAM_DATE - study_dt).days)
+    try:
+        from n2_prep.n2_curriculum_engine import get_n2_radio_stories_for_day as _get_n2_radio
+        from n2_prep.n2_curriculum_engine import get_phase_info as _get_phase_info
+        _phase_info = _get_phase_info(today_str)
+    except Exception:
+        _get_n2_radio = None
+        _phase_info = {"phase": "n3_sprint", "track_label": "N3", "days_to_exam": max(0, (EXAM_DATE - study_dt).days), "n2_day": 0}
+    days_left = int(_phase_info.get("days_to_exam", max(0, (EXAM_DATE - study_dt).days)))
     day_ord = study_dt.toordinal()
+    _n2_radio_bundle = None
+    if _phase_info.get("phase") == "n2_climb" and _get_n2_radio is not None:
+        _n2_radio_bundle = _get_n2_radio(
+            int(_phase_info.get("n2_day") or 1),
+            recent_wrong_ids=[str(x) for x in (state.get("radio_relearn_queue") or {}).keys()],
+            recent_lookup_ids=[str(x) for x in (state.get("word_lookups") or {}).keys()],
+            speaking_slip_points=[str(x) for x in ((state.get("speaking_practice") or {}).get("slips") or {}).keys()],
+            confusion_pairs=state.get("confusion_pairs") or {},
+        )
 
     _rp = tutor_prefs.radio_prefs()
     _focus = tutor_prefs.focus_set()
@@ -2203,7 +2225,16 @@ async def main():
     )
     ranked_focus = [resolve_point_key(pid) for pid, _ in sorted(scores.items(), key=lambda kv: kv[1], reverse=True)[:6]]
     top_focus_labels = []
-    for item in list(night_sig.get("missed_or_unsure_points") or [])[:4] + list(night_sig.get("looked_up_expressions") or [])[:3] + ranked_focus:
+    _n2_focus_seed = []
+    if _n2_radio_bundle and isinstance(_n2_radio_bundle.get("pedagogy"), dict):
+        _ped = _n2_radio_bundle["pedagogy"]
+        for _g in (_ped.get("new_grammar") or []):
+            if isinstance(_g, dict) and _g.get("point"):
+                _n2_focus_seed.append(str(_g["point"]))
+        for _cb in (_ped.get("callbacks") or []):
+            if isinstance(_cb, dict) and _cb.get("point"):
+                _n2_focus_seed.append(str(_cb["point"]))
+    for item in _n2_focus_seed[:5] + list(night_sig.get("missed_or_unsure_points") or [])[:4] + list(night_sig.get("looked_up_expressions") or [])[:3] + ranked_focus:
         if item and item not in top_focus_labels:
             top_focus_labels.append(item)
     top_focus_labels = top_focus_labels[:8]
@@ -2296,7 +2327,12 @@ async def main():
         except Exception:
             pinned_today_ids = []
 
-    if pinned_today_ids and all(sid in story_by_id for sid in pinned_today_ids):
+    if _n2_radio_bundle and _n2_radio_bundle.get("stories") and not pinned_today_ids:
+        _n2_acts = list(_n2_radio_bundle["stories"])
+        if live_news_story and any(st.get("is_news_slot") for st in _n2_acts):
+            _n2_acts = [live_news_story] + [st for st in _n2_acts if not st.get("is_news_slot")]
+        selected_stories = _n2_acts
+    elif pinned_today_ids and all(sid in story_by_id for sid in pinned_today_ids):
         selected_stories = [story_by_id[sid] for sid in pinned_today_ids]
     else:
         # Select a complete cohesive unplayed uchiN_ volume in authored narrative order when available
@@ -2679,7 +2715,8 @@ async def main():
             pass
 
     if np is None or (not dry_test and (edge_tts is None or shutil.which("ffmpeg") is None)):
-        print(f"[local-skip] Verified {len(story_blocks)} Qiang-Qiang stories (sig={script_sig}); full PCM/TTS synthesis runs in cloud CI.")
+        _sids = [str(b.get("id") or "") for b in story_blocks]
+        print(f"[local-skip] Verified {len(story_blocks)} Qiang-Qiang stories (phase={_phase_info.get('phase')}, sig={script_sig}, ids={_sids}); full PCM/TTS synthesis runs in cloud CI.")
         return
 
     all_event_lists = [
@@ -3135,6 +3172,9 @@ async def main():
 
         meta_obj = {
             "date": today_str,
+            "phase": _phase_info.get("phase", "n3_sprint"),
+            "track_label": _phase_info.get("track_label", "N3"),
+            "n2_day": int(_phase_info.get("n2_day", 0)),
             "radio_ver": radio_ver_tag,
             "display_date": "锵锵三人",
             "days_left": days_left,
@@ -3150,6 +3190,8 @@ async def main():
             "review_items": review_items,
             "speaking_prompts": speaking_prompts,
         }
+        if _n2_radio_bundle and _n2_radio_bundle.get("pedagogy"):
+            meta_obj["n2_pedagogy"] = _n2_radio_bundle["pedagogy"]
         if next_program:
             meta_obj["next_program"] = next_program
         if prev_art_url:

@@ -49,7 +49,9 @@ DECK_CAP = tutor_prefs.deck_cap(MEMORY_PREFS)
 TODAY_LOAD, TODAY_LOAD_WHY = tutor_prefs.today_load(MEMORY_PREFS)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-HTML_PATH = os.path.join(BASE_DIR, "index.html")
+_SIM_HTML_OUT = os.environ.get("OUTPUT_HTML_PATH", "").strip()
+_IS_SIM_OUTPUT = bool(_SIM_HTML_OUT)
+HTML_PATH = _SIM_HTML_OUT or os.path.join(BASE_DIR, "index.html")
 STATE_PATH = os.path.join(BASE_DIR, "n3_live_state.json")
 AUDIO_MANIFEST_PATH = os.path.join(BASE_DIR, "audio", "audio_manifest.json")
 RADIO_META_PATH = os.path.join(BASE_DIR, "audio", "daily_radio_meta.json")
@@ -680,11 +682,45 @@ for ext in EXTRA_PRIMARY_CARDS:
         "variants": variants_by_base.get(qid, []),
     })
 
+_force_study_date = os.environ.get("FORCE_STUDY_DATE", "").strip()
 plan_date_str = (
-    live_state.get("study_date")
-    or radio_meta.get("date")
-    or live_state.get("updated_at", plan.get("plan_date", "2026-11-15"))[:10]
+    _force_study_date[:10]
+    if _force_study_date
+    else (
+        live_state.get("study_date")
+        or radio_meta.get("date")
+        or live_state.get("updated_at", plan.get("plan_date", "2026-11-15"))[:10]
+    )
 )
+try:
+    from n2_prep.n2_curriculum_engine import (
+        build_n2_question_bank as _build_n2_qbank,
+        build_n2_vocab_cards as _build_n2_vcards,
+        get_phase_info as _get_phase_info,
+        select_n2_daily_quiz_deck as _select_n2_quiz_deck,
+    )
+    from n2_prep.n2_grammar_syllabus import N2_GRAMMAR_SYLLABUS as _N2_SYLLABUS
+    _phase_info = _get_phase_info(plan_date_str)
+except Exception:
+    _build_n2_qbank = None
+    _build_n2_vcards = None
+    _select_n2_quiz_deck = None
+    _N2_SYLLABUS = []
+    _phase_info = {
+        "study_date": plan_date_str,
+        "phase": "n3_sprint",
+        "track_label": "N3",
+        "exam_date": str(MEMORY_PREFS.get("exam_date") or "2026-12-06"),
+        "days_to_exam": int(live_state.get("days_left", 14)),
+        "n2_day": 0,
+        "is_travel_floor": False,
+        "target_score": 120,
+    }
+active_phase = str(_phase_info.get("phase") or "n3_sprint")
+track_label = str(_phase_info.get("track_label") or "N3")
+exam_date_str = str(_phase_info.get("exam_date") or "2026-12-06")
+n2_day_idx = int(_phase_info.get("n2_day") or 0)
+is_travel_floor = bool(_phase_info.get("is_travel_floor"))
 MIN_REAL_TS = 1_700_000_000
 cloud_cfg_path = os.path.join(BASE_DIR, "cloud_sync_config.json")
 cloud_snap_path = os.path.join(BASE_DIR, "cloud_state_snapshot.json")
@@ -817,7 +853,7 @@ except Exception:
 
 
 locked_same_day_ids = []
-if os.path.exists(HTML_PATH) and os.environ.get("FORCE_REDECK") != "1":
+if not _IS_SIM_OUTPUT and active_phase == "n3_sprint" and os.path.exists(HTML_PATH) and os.environ.get("FORCE_REDECK") != "1":
     try:
         with open(HTML_PATH, encoding="utf-8") as _ef:
             _ehtml = _ef.read()
@@ -841,8 +877,8 @@ def _days_since_last(qid: str) -> int:
 
 
 try:
-    _exam_date_str = str(MEMORY_PREFS.get("exam_date") or "2026-12-06")
-    _days_to_exam = max(0, (_dt_mod.date.fromisoformat(_exam_date_str) - _dt_mod.date.fromisoformat(plan_date_str[:10])).days)
+    _exam_date_str = exam_date_str
+    _days_to_exam = int(_phase_info.get("days_to_exam", max(0, (_dt_mod.date.fromisoformat(_exam_date_str) - _dt_mod.date.fromisoformat(plan_date_str[:10])).days)))
 except Exception:
     _days_to_exam = 14
 
@@ -1077,8 +1113,76 @@ for _gp_card in raw_points:
     if _gp_card.get("subject") == "语法" and _gp_card.get("point_key"):
         all_grammar_cards_by_key.setdefault(_gp_card["point_key"], _gp_card)
 
-DECK_CAP = tutor_prefs.deck_cap(MEMORY_PREFS, day=plan_date_str)
-raw_points = select_balanced_spaced_deck(raw_points, DECK_CAP)
+_all_n3_candidates_snapshot = list(raw_points)
+n2_status_map = {
+    p["point"]: p
+    for p in (live_state.get("n2_grammar_points") or [])
+    if isinstance(p, dict) and p.get("point")
+}
+
+
+def _resolve_optional_mp3(rel_path: str) -> str:
+    if not rel_path:
+        return ""
+    clean_rel = str(rel_path).split("?", 1)[0].lstrip("./")
+    if os.path.exists(os.path.join(BASE_DIR, clean_rel)):
+        return rel_path
+    return ""
+
+
+if active_phase == "exam_day":
+    # 2026-12-06 JLPT N3 Exam Day: Calm 12-item confidence warm-up (3 per pillar),
+    # prioritizing familiar 2/3 & core green items and strictly excluding obscure 0/3 traps.
+    _exam_chosen = []
+    _exam_seen = set()
+    for _subj in ("语法", "活用", "词汇", "听力"):
+        _pool = [p for p in _all_n3_candidates_snapshot if p.get("subject") == _subj and p["id"] not in _exam_seen]
+        _calm = [
+            p for p in _pool
+            if resolve_point_status(p["point_key"]) in ("yellow", "green")
+            and not _is_active_miss(p)
+        ] or _pool
+        _calm.sort(
+            key=lambda p: (
+                0 if (resolve_point_status(p["point_key"]) == "yellow" and resolve_point_streak(p["point_key"]) >= 2) else (
+                    1 if resolve_point_status(p["point_key"]) == "green" else 2
+                ),
+                -p["exam_weight"],
+                p["id"],
+            )
+        )
+        for _p in _calm[:3]:
+            _exam_chosen.append(_p)
+            _exam_seen.add(_p["id"])
+    DECK_CAP = len(_exam_chosen)
+    raw_points = _exam_chosen
+elif active_phase == "n2_climb" and _build_n2_qbank is not None and _select_n2_quiz_deck is not None:
+    # 2026-12-07..2027-03-31 JLPT N2 Zero-to-120 Climb:
+    # Teach-first 4-choice N2 grammar + (+1/+5/+14) spaced callbacks + N3 listening/henkei/vocab bridge.
+    _n2_bank = _build_n2_qbank()
+    for _nb in _n2_bank:
+        _meta_p = audio_manifest.get(f"meta:{_nb['primary']['id']}", {})
+        _nb["primary"]["q_audio"] = _meta_p.get("q_audio") or _resolve_optional_mp3(_nb["primary"].get("q_audio", ""))
+        _nb["primary"]["exp_audio"] = _meta_p.get("exp_audio") or _resolve_optional_mp3(_nb["primary"].get("exp_audio", ""))
+        if _nb.get("teach"):
+            _nb["teach"]["audio"] = _nb["primary"]["exp_audio"] or _resolve_optional_mp3(_nb["teach"].get("audio", ""))
+        for _nv in (_nb.get("variants") or []):
+            _meta_v = audio_manifest.get(f"meta:{_nv['id']}", {})
+            _nv["q_audio"] = _meta_v.get("q_audio") or _resolve_optional_mp3(_nv.get("q_audio", ""))
+            _nv["exp_audio"] = _meta_v.get("exp_audio") or _resolve_optional_mp3(_nv.get("exp_audio", ""))
+    _n3_bridge = [p for p in _all_n3_candidates_snapshot if p.get("subject") in ("听力", "活用", "词汇")]
+    _n3_bridge.sort(key=lambda p: _spaced_wave_key(p, allow_miss_top=True))
+    raw_points = _select_n2_quiz_deck(
+        n2_day_idx,
+        _n2_bank,
+        n2_status_map,
+        _n3_bridge,
+        is_travel_floor=is_travel_floor,
+    )
+    DECK_CAP = len(raw_points)
+else:
+    DECK_CAP = tutor_prefs.deck_cap(MEMORY_PREFS, day=plan_date_str)
+    raw_points = select_balanced_spaced_deck(raw_points, DECK_CAP)
 
 # Cross-day fresh sentence rotation: if a point was NOT yet touched today and has variants,
 # never show a sentence answered yesterday when an unseen or older variant is available!
@@ -1112,9 +1216,14 @@ for _p in raw_points:
 
 buckets = {"语法": [], "活用": [], "词汇": [], "听力": []}
 for p in raw_points:
-    g_st_ref = g_state_map.get(p.get("point_key", "")) or {}
-    if p["subject"] == "语法" and g_st_ref.get("audit_verdict") in ("blank", "weak"):
-        p["teach_first"] = True
+    if active_phase == "n2_climb" and p.get("is_new_n2"):
+        _n2_st = (n2_status_map.get(p.get("point_key", "")) or {}).get("status", "gray")
+        if _n2_st in ("gray", "red", "orange"):
+            p["teach_first"] = True
+    else:
+        g_st_ref = g_state_map.get(p.get("point_key", "")) or {}
+        if p["subject"] == "语法" and g_st_ref.get("audit_verdict") in ("blank", "weak"):
+            p["teach_first"] = True
     buckets[p["subject"]].append(p)
 
 ordered_points = []
@@ -1577,11 +1686,115 @@ def count_tiers(items):
     return c
 
 
+if active_phase == "n2_climb" and _N2_SYLLABUS and _build_n2_vcards is not None:
+    grammar_items = []
+    grammar_audit_items = []
+    ga_split_map = {}
+    for _g in _N2_SYLLABUS:
+        _gid = _g["id"]
+        _nm = _g["point"]
+        _st_obj = n2_status_map.get(_nm) or {"status": "gray", "streak": 0}
+        _tier, _mstate, _streak = norm_tier_meta(_st_obj)
+        _g_pid = point_id_by_key.get(_nm, "")
+        grammar_items.append({
+            "gid": _gid,
+            "key": _nm,
+            "name": _nm,
+            "sub": clean_zen_text(_g.get("soul_meaning", "")),
+            "family": clean_zen_text(_g.get("family", "")),
+            "tier": _tier,
+            "mstate": _mstate,
+            "streak": _streak,
+            "last_date": _norm_last_date(_st_obj, _g_pid),
+            "hesitant": bool(_nm in _hesitant_points or _g_pid in _hesitant_points),
+            "nov_tested": False,
+            "audit_code": 0,
+            "point_id": _g_pid,
+            "note": clean_zen_text(f"接续：{_g.get('connection', '')} · {_g.get('twin_contrast', '')}"),
+        })
+
+    _n2_vc_raw = _build_n2_vcards()
+    vocab_items = []
+    vocab_cards_payload = {}
+    for _vw, _vc in _n2_vc_raw.items():
+        _v_st = v_state_map.get(_vw) or {"status": "gray", "streak": 0}
+        _tier, _mstate, _streak = norm_tier_meta(_v_st)
+        _vc_aud = vc_audio_manifest.get(_vw) or {}
+        _w_aud = resolve_word_audio(_vw) or _resolve_optional_mp3(str(_vc.get("audio") or ""))
+        _front_aud = _vc_aud.get("front") or (_w_aud if _vc["mode"] == "kana_meaning" else "")
+        _rev_aud = _vc_aud.get("rev") or _w_aud
+        _full_aud = _vc_aud.get("full") or _rev_aud or _w_aud
+        _hook_aud = _vc_aud.get("hook") or ""
+        _clean_aud = _vc_aud.get("clean") or _w_aud
+        _mn_txt = clean_zen_text(_vc.get("mnemonic", ""))
+        _tw_txt = clean_zen_text(_vc.get("twin", ""))
+        _combined_note = " · ".join(x for x in ([f"记音：{_mn_txt}"] if _mn_txt else []) + ([_tw_txt] if _tw_txt else []))
+        _v_pid = point_id_by_key.get(_vw, "")
+        vocab_items.append({
+            "key": _vw,
+            "name": _vw,
+            "sub": clean_zen_text(str(_vc.get("zh") or "").split(" · ")[0]),
+            "family": clean_zen_text(str(_vc.get("family") or "N2核心词")),
+            "tier": _tier,
+            "mstate": _mstate,
+            "streak": _streak,
+            "last_date": _norm_last_date(_v_st, _v_pid),
+            "hesitant": bool(_vw in _hesitant_points or _v_pid in _hesitant_points),
+            "point_id": _v_pid,
+            "audio": _w_aud,
+            "note": _combined_note,
+        })
+        _n2_aspec = build_vocab_audio_spec({
+            "mode": _vc["mode"],
+            "chunk_ja": _vc["chunk_ja"],
+            "target": _vc["target"],
+            "kana": _vc["kana"],
+            "zh": _vc["zh"],
+            "twin": _tw_txt,
+            "mnemonic": _mn_txt,
+        })
+        _phrase_aud = _vc_aud.get("phrase") or _clean_aud or _w_aud
+        vocab_cards_payload[_vw] = {
+            "mode": _vc["mode"],
+            "chunk_ja": _vc["chunk_ja"],
+            "target": _vc["target"],
+            "kana": _vc["kana"],
+            "trap_hl": _vc.get("trap_hl") or [],
+            "trap_tag": _vc.get("trap_tag") or "",
+            "zh_opaque": bool(_vc.get("zh_opaque", True)),
+            "pitch": _vc.get("pitch", ""),
+            "zh": _vc["zh"],
+            "zh_card": distill_card_zh(_vc["zh"], _vc["chunk_ja"], _vc["target"]),
+            "twin": _tw_txt,
+            "mnemonic": _mn_txt,
+            "mnemonic_card": distill_card_mnemonic(_mn_txt, has_trap_tag=bool(_vc.get("trap_tag"))),
+            "zh_speak": _vc.get("zh_speak", ""),
+            "hook_spoken": _n2_aspec.get("hook_spoken") or _mn_txt or _vc["kana"],
+            "reveal_spoken": _n2_aspec.get("reveal_spoken") or _vc["zh"],
+            "front_audio": _front_aud,
+            "rev_audio": _rev_aud,
+            "full_audio": _full_aud,
+            "hook_audio": _hook_aud,
+            "phrase_audio": _phrase_aud,
+            "clean_audio": _clean_aud,
+            "word_audio": _w_aud,
+        }
+        rich_words.setdefault(_vw, {
+            "head": _vw,
+            "kana": _vc["kana"],
+            "pitch": _vc.get("pitch", ""),
+            "pos": "N2語彙",
+            "zh": clean_zen_text(str(_vc.get("zh") or "").split(" · ")[0]),
+            "tip": _tw_txt,
+            "mnemonic": _mn_txt,
+            "audio": _w_aud,
+        })
+
 mastery_data = {
     "grammar": {"label": "语法", "detail": f"{len(grammar_items)} 核心考点", "exam_pts": 38, "counts": count_tiers(grammar_items), "items": grammar_items},
     "henkei": {"label": "活用与敬语", "detail": "变形与授受尊谦", "exam_pts": 28, "counts": count_tiers(henkei_items), "items": henkei_items},
     "listening": {"label": "听力口语", "detail": "卷面 60 分", "exam_pts": 60, "counts": count_tiers(listening_items), "items": listening_items},
-    "vocab": {"label": "核心词汇", "detail": "含常考假名副词", "exam_pts": 24, "counts": count_tiers(vocab_items), "items": vocab_items},
+    "vocab": {"label": "核心词汇", "detail": "三轨记词与假名副词" if active_phase == "n2_climb" else "含常考假名副词", "exam_pts": 24, "counts": count_tiers(vocab_items), "items": vocab_items},
 }
 
 baked_epoch = int(live_state.get("_baked_epoch") or 0)
@@ -1648,8 +1861,13 @@ for _cp_k, _cp_v in _confusion_pairs_raw.items():
             confusion_pairs_payload[str(_cp_k)] = _tw
 
 vocab_base_done = sum(1 for it in vocab_items if it["tier"] == "done")
-vocab_daily_count = tutor_prefs.vocab_daily_count(MEMORY_PREFS, day=plan_date_str)
-ga_daily_target = tutor_prefs.grammar_audit_daily_count(MEMORY_PREFS, day=plan_date_str)
+if active_phase == "exam_day":
+    vocab_daily_count = 12
+elif active_phase == "n2_climb":
+    vocab_daily_count = 15 if is_travel_floor else 22
+else:
+    vocab_daily_count = tutor_prefs.vocab_daily_count(MEMORY_PREFS, day=plan_date_str)
+ga_daily_target = 0 if active_phase == "n2_climb" else tutor_prefs.grammar_audit_daily_count(MEMORY_PREFS, day=plan_date_str)
 
 asr_kana_map = {
     "辞書": "じしょ", "自署": "じしょ", "地所": "じしょ", "事情": "じじょう", "事象": "じしょう",
@@ -1692,8 +1910,13 @@ except Exception:
 
 payload = json.dumps({
     "plan_date": plan_date_str,
-    "exam_date": "2026-12-06",
-    "days_to_exam": live_state.get("days_left", plan.get("days_to_exam", 21)),
+    "phase": active_phase,
+    "track_label": track_label,
+    "n2_day": n2_day_idx,
+    "is_travel_floor": is_travel_floor,
+    "n3_real_score": live_state.get("n3_real_score"),
+    "exam_date": exam_date_str,
+    "days_to_exam": _days_to_exam,
     "done_audio": "./audio/done.mp3",
     "radio": radio_meta,
     "points": ordered_points,
@@ -1730,7 +1953,7 @@ html = r"""<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <meta name="screen-orientation" content="portrait" />
 <meta name="x5-orientation" content="portrait" />
-<meta name="description" content="JLPT N3 · 做题 · 随身听 · 单手记词 · 体律" />
+<meta name="description" content="JLPT __TRACK_LABEL__ · 做题 · 随身听 · 单手记词 · 体律" />
 <meta name="color-scheme" content="light dark" />
 <meta name="theme-color" content="#F5F2EB" media="(prefers-color-scheme: light)" />
 <meta name="theme-color" content="#171614" media="(prefers-color-scheme: dark)" />
@@ -1743,7 +1966,7 @@ html = r"""<!DOCTYPE html>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" rel="stylesheet" />
-<title>N3</title>
+<title>__TRACK_LABEL__</title>
 <style>
   :root {
     /* Traditional Japanese Pigments (日本の伝統色): 生成り · 白練 · 墨 · 苔色 · 黄土 · 弁柄 */
@@ -5819,6 +6042,417 @@ html = r"""<!DOCTYPE html>
       border-radius: 12px;
     }
   }
+
+  /* ================= 9. ZEN TIMED MOCK SPRINT 15 & POST-EXAM CALIBRATION ================= */
+  .dash-quiet-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0 11px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .dash-quiet-row.is-done {
+    color: var(--moss);
+  }
+  .dash-quiet-txt {
+    min-width: 0;
+    font-size: 13px;
+    color: var(--ink-2);
+    line-height: 1.48;
+    font-variant-numeric: tabular-nums;
+  }
+  .dash-quiet-txt b {
+    color: var(--sumi);
+    font-weight: 600;
+  }
+  .dash-quiet-row.is-done .dash-quiet-txt b {
+    color: var(--moss);
+  }
+  .dash-quiet-sub {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--ink-3);
+  }
+  .dash-quiet-btn {
+    flex-shrink: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sumi);
+    white-space: nowrap;
+    padding: 4px 0;
+  }
+  .dash-quiet-btn.moss { color: var(--moss); }
+  .dash-quiet-btn.muted { color: var(--ink-3); font-weight: 500; }
+
+  #app-shell.mock-active .zen-header,
+  #app-shell.mock-active #green-board,
+  #app-shell.mock-active .thumb-nav,
+  #app-shell.mock-active #radio-mini-bar {
+    display: none !important;
+  }
+  #mock-view {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .mock-wrap {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    max-width: 560px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 10px 0 12px;
+  }
+  .mock-top {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 4px 0 10px;
+  }
+  .mock-top-left {
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
+    min-width: 0;
+  }
+  .mock-step {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sumi);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+  }
+  .mock-subj {
+    font-size: 12px;
+    color: var(--ink-3);
+  }
+  .mock-top-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-shrink: 0;
+  }
+  .mock-timer {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--ink-2);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.03em;
+  }
+  .mock-timer.warn { color: var(--ochre); font-weight: 600; }
+  .mock-exit-btn {
+    font-size: 13px;
+    color: var(--ink-3);
+    padding: 4px 0;
+  }
+  .mock-rail {
+    flex-shrink: 0;
+    height: 2px;
+    width: 100%;
+    background: var(--hairline);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .mock-rail-fill {
+    height: 100%;
+    background: var(--sumi);
+    transition: width 0.24s ease;
+  }
+  .mock-stage {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 8px 0 16px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .mock-stem {
+    font-family: var(--sans-jp);
+    font-size: clamp(20.5px, 5.2vw, 24.5px);
+    line-height: 1.68;
+    color: var(--sumi);
+    font-weight: 400;
+    letter-spacing: 0.015em;
+    word-break: auto-phrase;
+    overflow-wrap: break-word;
+    margin: 0 0 22px;
+  }
+  .mock-listen-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 0 22px;
+  }
+  .mock-listen-orb {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    border: 1.5px solid var(--hairline-strong);
+    background: var(--sheet);
+    color: var(--sumi);
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.16s ease, transform 0.12s ease;
+  }
+  .mock-listen-orb:active { transform: scale(0.95); }
+  .mock-listen-orb.playing { border-color: var(--moss); color: var(--moss); background: var(--moss-soft); }
+  .mock-listen-hint {
+    font-size: 13px;
+    color: var(--ink-3);
+  }
+  .mock-audio-quiet {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12.5px;
+    color: var(--ink-3);
+    margin-bottom: 14px;
+    align-self: flex-start;
+    padding: 2px 0;
+  }
+  .mock-opts {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+  .mock-opts.cols-3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .mock-opt {
+    width: 100%;
+    min-height: 52px;
+    padding: 12px 18px;
+    border-radius: 12px;
+    border: 1px solid var(--hairline);
+    background: var(--sheet);
+    color: var(--sumi);
+    font-family: var(--sans-jp);
+    font-size: 17.5px;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    line-height: 1.38;
+    text-align: left;
+    word-break: auto-phrase;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+  }
+  .mock-opts.cols-3 .mock-opt {
+    text-align: center;
+    padding: 12px 10px;
+  }
+  .mock-opt:active { transform: scale(0.988); }
+  .mock-opt.picked {
+    background: var(--cta-bg);
+    border-color: var(--cta-border);
+    color: var(--cta-fg);
+    font-weight: 500;
+  }
+  @media (prefers-color-scheme: dark) {
+    .mock-opt { border-color: rgba(234, 229, 218, 0.12); }
+    .mock-opt.picked { border-color: rgba(234, 229, 218, 0.36); }
+  }
+  @media (max-height: 700px) {
+    .mock-stem { font-size: 20px; line-height: 1.58; margin-bottom: 16px; }
+    .mock-opts { gap: 7px; }
+    .mock-opt { min-height: 46px; padding: 10px 16px; font-size: 16.5px; }
+  }
+  .mock-dock {
+    flex-shrink: 0;
+    padding-top: 10px;
+    border-top: 1px solid var(--hairline);
+  }
+  .mock-aux {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12.5px;
+    color: var(--ink-3);
+    margin-bottom: 10px;
+    font-variant-numeric: tabular-nums;
+  }
+  .mock-aux-link {
+    font-size: 12.5px;
+    color: var(--ink-2);
+    padding: 2px 0;
+  }
+  .mock-btn-row {
+    display: flex;
+    gap: 10px;
+  }
+  .mock-btn {
+    flex: 1;
+    height: 48px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    border: 1px solid var(--hairline-strong);
+    background: transparent;
+    color: var(--sumi);
+    transition: opacity 0.15s ease, transform 0.1s ease;
+  }
+  .mock-btn:disabled { opacity: 0.35; pointer-events: none; }
+  .mock-btn:active { transform: scale(0.985); }
+  .mock-btn.primary {
+    background: var(--cta-bg);
+    border-color: var(--cta-border);
+    color: var(--cta-fg);
+  }
+  .mock-btn.exhale {
+    background: var(--moss-soft);
+    border-color: var(--moss-border);
+    color: var(--moss);
+  }
+  .mock-res-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 8px 0 22px;
+  }
+  .mock-hero {
+    text-align: center;
+    padding: 14px 0 20px;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .mock-score-num {
+    font-family: var(--sans-jp);
+    font-size: 54px;
+    line-height: 1.08;
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    color: var(--sumi);
+    font-variant-numeric: tabular-nums;
+  }
+  .mock-score-den {
+    font-size: 17px;
+    font-weight: 400;
+    color: var(--ink-3);
+    margin-left: 4px;
+  }
+  .mock-verdict {
+    margin-top: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--moss);
+  }
+  .mock-verdict.warm { color: var(--ochre); }
+  .mock-meta-line {
+    margin-top: 6px;
+    font-size: 12.5px;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .mock-bars {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 18px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .mock-bar-head {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12.5px;
+    color: var(--ink-2);
+    margin-bottom: 5px;
+    font-variant-numeric: tabular-nums;
+  }
+  .mock-bar-track {
+    height: 3px;
+    background: var(--hairline);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .mock-bar-fill {
+    height: 100%;
+    background: var(--moss);
+  }
+  .mock-miss-head {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sumi);
+    padding: 16px 0 8px;
+  }
+  .mock-miss-item {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .mock-miss-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .mock-miss-ja {
+    font-family: var(--sans-jp);
+    font-size: 15.5px;
+    font-weight: 400;
+    line-height: 1.56;
+    color: var(--sumi);
+    word-break: auto-phrase;
+  }
+  .mock-miss-aud {
+    flex-shrink: 0;
+    font-size: 12px;
+    color: var(--ink-2);
+    padding: 3px 9px;
+    border-radius: 12px;
+    border: 1px solid var(--hairline-strong);
+    white-space: nowrap;
+  }
+  .mock-miss-cmp {
+    margin-top: 6px;
+    font-size: 12.5px;
+    color: var(--ink-2);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+  }
+  .mock-miss-wrong { color: var(--bengara); text-decoration: line-through; }
+  .mock-miss-right { color: var(--moss); font-weight: 600; }
+  .mock-miss-why {
+    margin-top: 5px;
+    font-size: 12.5px;
+    line-height: 1.54;
+    color: var(--ink-3);
+  }
+  .mock-perfect {
+    padding: 26px 0 18px;
+    text-align: center;
+    color: var(--moss);
+    font-size: 14.5px;
+  }
+  .n3-cal-input {
+    width: 100%;
+    height: 46px;
+    padding: 0 14px;
+    border-radius: 12px;
+    border: 1px solid var(--hairline-strong);
+    background: var(--washi);
+    color: var(--sumi);
+    font-size: 18px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    margin: 12px 0 8px;
+    outline: none;
+  }
+  .n3-cal-input:focus { border-color: var(--sumi); }
 </style>
 </head>
 <body>
@@ -5826,7 +6460,7 @@ html = r"""<!DOCTYPE html>
 <div class="zen-shell" id="app-shell">
   <!-- 1. STRICT GRID HEADER (Zero Date / Zero Countdown) -->
   <header class="zen-header">
-    <div class="zen-brand"><strong>N3</strong></div>
+    <div class="zen-brand"><strong>__TRACK_LABEL__</strong></div>
     <nav class="zen-nav">
       <button class="nav-link active" id="tab-tutor" onclick="switchMode('tutor')">做题</button>
       <button class="nav-link" id="tab-radio" onclick="switchMode('radio', true)">随身听</button>
@@ -5925,6 +6559,7 @@ html = r"""<!DOCTYPE html>
     <div class="ledger-scroll">
       <div id="night-flash-entry"></div>
       <div id="dash-roi-focus"></div>
+      <div id="dash-mock-entry"></div>
       <div class="ledger-layout">
         <div class="pillar-list" id="dash-summary"></div>
         <div>
@@ -5938,6 +6573,9 @@ html = r"""<!DOCTYPE html>
     </div>
     <button type="button" class="ledger-back-fab" onclick="toggleDashLedger(event)">← 返回</button>
   </section>
+
+  <!-- 3D2. TIMED MOCK SPRINT 15 ("模拟小测" · 极简禅意考场) -->
+  <section class="zen-panel hidden" id="mock-view"></section>
 
   <!-- 3E. NATIVE ZEN BODY MODULE ("体律" · Open-Washi Zen · 零明文隐私) -->
   <section class="zen-panel hidden" id="body-view">
@@ -10161,6 +10799,9 @@ let rvSpeakIdx = 0;
 let rvSpeakPassedSession = false;
 let rvSpeakAutoPlayedId = "";
 let rvSpeakState = { listening: false, interim: "", result: null, blindMode: false, errorMsg: "" };
+let rvSpeakQuietMode = (() => {
+  try { return localStorage.getItem("n3_spk_quiet") === "1"; } catch (e) { return false; }
+})();
 
 function getRadioJpVideo() {
   return (DATA.radio && DATA.radio.jp_video && DATA.radio.jp_video.video_url) ? DATA.radio.jp_video : null;
@@ -10898,6 +11539,31 @@ function toggleSpeakingBlindMode(forceBlind) {
   renderRadioReviewStage();
 }
 
+function toggleSpeakingQuietMode(forceQuiet) {
+  JA_ASR.stop();
+  rvSpeakQuietMode = typeof forceQuiet === "boolean" ? forceQuiet : !rvSpeakQuietMode;
+  try { localStorage.setItem("n3_spk_quiet", rvSpeakQuietMode ? "1" : "0"); } catch (e) {}
+  rvSpeakState.listening = false;
+  rvSpeakState.interim = "";
+  rvSpeakState.errorMsg = "";
+  renderRadioReviewStage();
+}
+
+function passRadioSpeakingQuiet() {
+  if (rvAnimating) return;
+  const prompt = getActiveSpeakingPrompt();
+  if (prompt) {
+    const st = ensureRadioReviewState(false);
+    if (!Array.isArray(st.spokenIds)) st.spokenIds = [];
+    if (!st.spokenIds.includes(prompt.id)) st.spokenIds.push(prompt.id);
+    st.updatedAt = nowUnixSec();
+    pushSpokenRecord(prompt.id, prompt.key || prompt.title, "开口:默跟顺口", true);
+  }
+  animateRvCardAndRun("fly-right", () => {
+    nextRadioSpeakingPrompt();
+  });
+}
+
 function toggleRadioSpeakingMic() {
   const prompt = getActiveSpeakingPrompt();
   if (!prompt) return;
@@ -11116,6 +11782,10 @@ function handleRadioReviewPass() {
     return;
   }
   if (rvMode === "speak") {
+    if (rvSpeakQuietMode) {
+      passRadioSpeakingQuiet();
+      return;
+    }
     animateRvCardAndRun("fly-right", () => {
       nextRadioSpeakingPrompt();
     });
@@ -11308,6 +11978,7 @@ function renderRadioSpeakingCard(host) {
   }
   const p = prompts[rvSpeakIdx];
   const canRec = JA_ASR.supported();
+  const isQuiet = !!rvSpeakQuietMode;
   const s = rvSpeakState || { listening: false, interim: "", result: null, blindMode: false, errorMsg: "" };
   const isLast = rvSpeakIdx + 1 >= prompts.length;
   const isBlind = !!s.blindMode;
@@ -11318,7 +11989,9 @@ function renderRadioSpeakingCard(host) {
 
   let fbCls = "mic-feedback";
   let fbTxt = "";
-  if (s.listening) {
+  if (isQuiet) {
+    fbTxt = "";
+  } else if (s.listening) {
     fbTxt = s.interim ? `听到：${s.interim}` : (isBlind ? "请脱稿说一句日语…" : "请跟着示范念一遍…");
   } else if (s.errorMsg) {
     fbCls += " ng";
@@ -11333,7 +12006,12 @@ function renderRadioSpeakingCard(host) {
   }
 
   let dockHTML = "";
-  if (!canRec) {
+  if (isQuiet) {
+    dockHTML = `
+      <button type="button" class="vc-btn mid" onclick="playSpeakingPromptAudio(getActiveSpeakingPrompt(), 1.0, 'spk_model', true)">再听一遍</button>
+      <button type="button" class="vc-btn ok" onclick="passRadioSpeakingQuiet()">${isLast ? "心里顺了 · 完成" : "心里顺了"}</button>
+    `;
+  } else if (!canRec) {
     dockHTML = `
       <button type="button" class="vc-btn mid" onclick="playSpeakingPromptAudio(getActiveSpeakingPrompt(), 1.0, 'spk_model', true)">听示范</button>
       <button type="button" class="vc-btn ok" onclick="handleRadioReviewPass()">${isLast ? "完成" : "下一句"}</button>
@@ -11359,19 +12037,24 @@ function renderRadioSpeakingCard(host) {
     `;
   }
 
+  const topModeLbl = isQuiet ? (isBlind ? "默拼" : "默跟") : (isBlind ? "脱稿" : "跟读");
+  const cueLineTxt = isQuiet
+    ? (isBlind ? `心里默拼「${escapeHtml(p.title || "")}」` : "听一遍示范，心里默跟顺口即可")
+    : (isBlind ? `用「${escapeHtml(p.title || "")}」` : "先听示范，再顺口跟读");
+
   host.innerHTML = `
     <div class="meta-bar">
-      <span class="overline warm">${isBlind ? "脱稿" : "跟读"} · ${rvSpeakIdx + 1} / ${prompts.length}</span>
+      <span class="overline warm">${topModeLbl} · ${rvSpeakIdx + 1} / ${prompts.length}</span>
       <span class="overline">${escapeHtml(p.title || "")}</span>
     </div>
 
     <div class="vc-deck-area">
       <div class="vc-card" id="rv-card" data-art-ch="${Number(p.chapter_idx || 0)}">
-        <div class="vc-stamp right" id="rv-st-right">过了</div>
+        <div class="vc-stamp right" id="rv-st-right">${isQuiet ? "顺口" : "过了"}</div>
         <div class="vc-stamp left" id="rv-st-left">慢听</div>
 
         ${artHTML}
-        <div class="vc-cue" id="rv-cue-line">${isBlind ? `用「${escapeHtml(p.title || "")}」` : "先听示范，再顺口跟读"}</div>
+        <div class="vc-cue" id="rv-cue-line">${cueLineTxt}</div>
         <div class="rv-spk-model${isBlind ? " veiled" : ""}" lang="ja" id="rv-spk-model">${annotateJapanese(p.model_ja || "")}</div>
         <div class="rv-spk-zh-sub">${escapeHtml(p.prompt_short || p.model_zh || "")}</div>
         ${!isBlind && p.coaching_tip ? `<div class="rv-spk-tip">${escapeHtml(p.coaching_tip)}</div>` : ""}
@@ -11384,6 +12067,7 @@ function renderRadioSpeakingCard(host) {
     <div class="vc-aux-row">
       <button type="button" class="vc-aux-btn seal" onclick="closeRadioReview()">随身听</button>
       <div class="vc-aux-right">
+        <button type="button" class="vc-aux-btn${isQuiet ? " is-on" : ""}" id="rv-quiet-btn" onclick="toggleSpeakingQuietMode()">${isQuiet ? "静音中" : "静音"}</button>
         <button type="button" class="vc-aux-btn${isBlind ? " is-on" : ""}" id="rv-blind-btn" onclick="toggleSpeakingBlindMode()">${isBlind ? "看句" : "脱稿"}</button>
         <button type="button" class="vc-aux-btn" data-rv-aud="spk_slow" data-lbl-idle="0.85x" data-lbl-play="暂停" onclick="playSpeakingPromptAudio(getActiveSpeakingPrompt(), 0.85, 'spk_slow')">0.85x</button>
         <button type="button" class="vc-aux-btn replay" data-rv-aud="spk_model" data-lbl-idle="示范" data-lbl-play="暂停" onclick="playSpeakingPromptAudio(getActiveSpeakingPrompt(), 1.0, 'spk_model')">示范</button>
@@ -12077,6 +12761,7 @@ function renderTutor() {
     let label = p.subject;
     if (isRetrySame) label += " · 乱序重考";
     else if (isVariant) label += " · 换题复考";
+    else if (DATA.phase === "exam_day") label += " · 考前轻热身";
     else if (useRecallVeil) label += " · 终审盲考";
     else if (ps.audioPrimed) label += " · 随身听已聊";
 
@@ -12740,16 +13425,21 @@ function positionMainThumbBar(immediate) {
 window.addEventListener("resize", () => positionMainThumbBar(true));
 
 function switchMode(m, autoPlayRadio) {
-  if (m !== "dash") prevNonDashMode = m;
+  if (m !== "dash" && m !== "mock") prevNonDashMode = m;
   activeMode = m;
   clearActiveWordToken();
   JA_ASR.stop();
-  if (m !== "tutor") stopQuizAudio();
+  if (m !== "tutor" && m !== "mock") stopQuizAudio();
   if (m !== "vocab") stopVocabAudioAndTimers();
   if (m !== "radio") stopRadioReviewAudio();
+  if (m !== "mock" && typeof stopMockTimer === "function") stopMockTimer();
   if (m !== "body" && window.ZB && typeof window.ZB.stopPacer === "function") window.ZB.stopPacer(false);
 
-  document.getElementById("app-shell").classList.toggle("wide-mode", m === "dash");
+  const appShell = document.getElementById("app-shell");
+  if (appShell) {
+    appShell.classList.toggle("wide-mode", m === "dash");
+    appShell.classList.toggle("mock-active", m === "mock");
+  }
   document.getElementById("tab-tutor").classList.toggle("active", m === "tutor");
   document.getElementById("tab-radio").classList.toggle("active", m === "radio");
   document.getElementById("tab-vocab").classList.toggle("active", m === "vocab");
@@ -12767,6 +13457,8 @@ function switchMode(m, autoPlayRadio) {
   const bodyView = document.getElementById("body-view");
   if (bodyView) bodyView.classList.toggle("hidden", m !== "body");
   document.getElementById("dash-view").classList.toggle("hidden", m !== "dash");
+  const mockView = document.getElementById("mock-view");
+  if (mockView) mockView.classList.toggle("hidden", m !== "mock");
   const gb = document.getElementById("green-board");
   if (gb) gb.classList.remove("hidden");
 
@@ -12786,6 +13478,8 @@ function switchMode(m, autoPlayRadio) {
     if (window.ZB && typeof window.ZB.onEnter === "function") window.ZB.onEnter();
   } else if (m === "dash") {
     renderDashboard();
+  } else if (m === "mock") {
+    if (typeof renderMockStage === "function") renderMockStage();
   } else {
     renderTutor();
   }
@@ -14734,6 +15428,474 @@ function jumpToRoiPillar(modKey) {
   renderDashboard();
 }
 
+// ================= ZEN TIMED MOCK SPRINT 15 ("模拟小测") & POST-EXAM CALIBRATION =================
+const MOCK_HIST_KEY = "n3_mock_hist_v1";
+const N3_SCORE_LOCAL_KEY = "n3_real_score_local_v1";
+let mockState = null;
+let mockTimerId = null;
+let mockAdvTimerId = null;
+
+function loadMockHist() {
+  try {
+    const raw = localStorage.getItem(MOCK_HIST_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    return (parsed && typeof parsed === "object") ? parsed : {};
+  } catch (e) { return {}; }
+}
+
+function saveMockHist(obj) {
+  try { localStorage.setItem(MOCK_HIST_KEY, JSON.stringify(obj || {})); } catch (e) {}
+}
+
+function getLocalN3RealScore() {
+  try {
+    const raw = localStorage.getItem(N3_SCORE_LOCAL_KEY);
+    if (raw) {
+      const o = JSON.parse(raw);
+      if (o && typeof o.total === "number" && o.total >= 0 && o.total <= 180) return o;
+    }
+  } catch (e) {}
+  if (DATA.n3_real_score && typeof DATA.n3_real_score.total === "number") return DATA.n3_real_score;
+  return null;
+}
+
+function openN3ScoreModal() {
+  const cur = getLocalN3RealScore();
+  const valStr = cur ? String(cur.total) : "";
+  const mc = document.getElementById("modal-content");
+  if (!mc) return;
+  mc.innerHTML = `
+    <div style="font-size:16px;font-weight:600;color:var(--sumi);">记下 N3 实考分</div>
+    <p style="margin:8px 0 4px;font-size:13px;line-height:1.6;color:var(--ink-2);">满分 180 分（合格线 95 分）。记下后，系统会按你的真实底子自动校准 N2 节奏，记一次即可。</p>
+    <input id="n3-cal-score-in" class="n3-cal-input" type="number" min="0" max="180" inputmode="numeric" placeholder="例如 132" value="${escapeHtml(valStr)}" onkeydown="if(event.key==='Enter')saveN3RealScore()" />
+    <div id="n3-cal-err" style="font-size:12px;color:var(--bengara);min-height:16px;"></div>
+    <div class="mock-btn-row" style="margin-top:8px;">
+      <button type="button" class="mock-btn" onclick="closeModal()">先不记</button>
+      <button type="button" class="mock-btn primary" onclick="saveN3RealScore()">保存校准</button>
+    </div>
+  `;
+  const mm = document.getElementById("app-modal");
+  if (mm) mm.classList.add("open");
+}
+
+function saveN3RealScore() {
+  const inp = document.getElementById("n3-cal-score-in");
+  const errEl = document.getElementById("n3-cal-err");
+  const raw = inp ? String(inp.value || "").trim() : "";
+  const val = parseInt(raw, 10);
+  if (!raw || isNaN(val) || val < 0 || val > 180) {
+    if (errEl) errEl.textContent = "请输入 0 到 180 之间的整数分数";
+    return;
+  }
+  const obj = { total: val, date: TODAY_TAG };
+  try { localStorage.setItem(N3_SCORE_LOCAL_KEY, JSON.stringify(obj)); } catch (e) {}
+  DATA.n3_real_score = obj;
+  const tsSec = Math.max(TRUE_GREEN_EPOCH, nowUnixSec());
+  const ob = loadOutbox();
+  ob.push([`N3_SCORE:${val}`, "N3实考", `N3实考:${val}`, 1, new Date(tsSec * 1000).toISOString()]);
+  saveOutbox(ob);
+  saveAdaptiveState();
+  scheduleCloudPush(220);
+  closeModal();
+  renderDashboard();
+}
+
+function stopMockTimer() {
+  if (mockTimerId) {
+    clearInterval(mockTimerId);
+    mockTimerId = null;
+  }
+  if (mockAdvTimerId) {
+    clearTimeout(mockAdvTimerId);
+    mockAdvTimerId = null;
+  }
+}
+
+function shuffleMockList(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = a[i];
+    a[i] = a[j];
+    a[j] = tmp;
+  }
+  return a;
+}
+
+function buildMockSprintDeck() {
+  const allPts = Array.isArray(DATA.points) ? DATA.points : [];
+  const bySubj = { "语法": [], "活用": [], "词汇": [], "听力": [] };
+  allPts.forEach(p => {
+    if (!p || !p.primary) return;
+    if (!bySubj[p.subject]) bySubj[p.subject] = [];
+    bySubj[p.subject].push(p);
+  });
+  const targetN = Math.min(15, allPts.length);
+  const quotas = targetN >= 15
+    ? { "语法": 6, "活用": 3, "词汇": 3, "听力": 3 }
+    : { "语法": 3, "活用": 3, "词汇": 3, "听力": 3 };
+  const picked = [];
+  const usedIds = new Set();
+  ["语法", "活用", "词汇", "听力"].forEach(s => {
+    const pool = shuffleMockList(bySubj[s] || []);
+    const q = quotas[s] || 0;
+    for (let i = 0; i < pool.length && picked.filter(x => x.subject === s).length < q; i++) {
+      const p = pool[i];
+      if (!usedIds.has(p.id)) {
+        usedIds.add(p.id);
+        picked.push(p);
+      }
+    }
+  });
+  if (picked.length < targetN) {
+    const rest = shuffleMockList(allPts.filter(p => p && p.primary && !usedIds.has(p.id)));
+    for (let i = 0; i < rest.length && picked.length < targetN; i++) {
+      usedIds.add(rest[i].id);
+      picked.push(rest[i]);
+    }
+  }
+  return picked.map(p => {
+    const cardCandidates = [p.primary].concat(Array.isArray(p.variants) ? p.variants : []).filter(Boolean);
+    const card = cardCandidates[Math.floor(Math.random() * cardCandidates.length)] || p.primary;
+    const isListen = !!card.is_listening;
+    const rawChoices = Array.isArray(card.choices) ? card.choices.slice() : [];
+    const choices = (isListen && !canShuffleListeningCard(card)) ? rawChoices : shuffleMockList(rawChoices);
+    return {
+      pid: p.id,
+      subject: p.subject,
+      point: p.point,
+      point_key: p.point_key,
+      card,
+      choices
+    };
+  });
+}
+
+function formatMockTime(sec) {
+  const s = Math.max(0, Math.floor(sec || 0));
+  const mm = Math.floor(s / 60);
+  const ss = s % 60;
+  return `${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
+}
+
+function startMockSprint() {
+  stopQuizAudio();
+  if (!radioPlayer.paused) radioPlayer.pause();
+  stopMockTimer();
+  const items = buildMockSprintDeck();
+  if (!items.length) return;
+  const totalSec = items.length >= 15 ? 15 * 60 : Math.max(5, items.length) * 60;
+  mockState = {
+    items,
+    idx: 0,
+    answers: new Array(items.length).fill(null),
+    startedAt: Date.now(),
+    totalSec,
+    remSec: totalSec,
+    done: false,
+    result: null
+  };
+  switchMode("mock");
+  mockTimerId = setInterval(() => {
+    if (!mockState || mockState.done || activeMode !== "mock") {
+      stopMockTimer();
+      return;
+    }
+    const elapsed = Math.floor((Date.now() - mockState.startedAt) / 1000);
+    mockState.remSec = Math.max(0, mockState.totalSec - elapsed);
+    const tEl = document.getElementById("mock-timer-lbl");
+    if (tEl) {
+      tEl.textContent = formatMockTime(mockState.remSec);
+      tEl.classList.toggle("warn", mockState.remSec <= 120);
+    }
+    if (mockState.remSec <= 0) {
+      submitMockSprint(true);
+    }
+  }, 1000);
+}
+
+function playMockItemAudio(idx) {
+  if (!mockState || !mockState.items[idx]) return;
+  const item = mockState.items[idx];
+  const card = item.card;
+  if (card.is_listening && canShuffleListeningCard(card) && card.listen_parts && item.choices.length === 3) {
+    if (!radioPlayer.paused) radioPlayer.pause();
+    if (listenSeqTimer) {
+      clearTimeout(listenSeqTimer);
+      listenSeqTimer = null;
+    }
+    const lp = card.listen_parts;
+    const urls = [
+      { url: lp.stem, waitMs: 0 },
+      { url: lp.nums[0], waitMs: 460 },
+      { url: lp.opts[item.choices[0]], waitMs: 70 },
+      { url: lp.nums[1], waitMs: 380 },
+      { url: lp.opts[item.choices[1]], waitMs: 70 },
+      { url: lp.nums[2], waitMs: 380 },
+      { url: lp.opts[item.choices[2]], waitMs: 70 }
+    ];
+    urls.forEach(u => warmAudio(u.url));
+    const seq = ++playReqSeq;
+    listenSeqQueue = urls;
+    activeKind = "q";
+    stepListeningSequence(seq);
+    return;
+  }
+  if (card.q_audio) {
+    playMainClip(card.q_audio, "q", true);
+  } else if (card.full_ja || card.prompt) {
+    speakJapaneseFallback(card.full_ja || card.prompt);
+  }
+}
+
+function playMockReviewAudio(idx) {
+  if (!mockState || !mockState.items[idx]) return;
+  const card = mockState.items[idx].card;
+  if (card.exp_audio) {
+    playMainClip(card.exp_audio, "exp", true);
+  } else if (card.full_ja) {
+    speakJapaneseFallback(card.full_ja);
+  }
+}
+
+function pickMockChoice(choiceIdx) {
+  if (!mockState || mockState.done) return;
+  const item = mockState.items[mockState.idx];
+  if (!item || choiceIdx < 0 || choiceIdx >= item.choices.length) return;
+  mockState.answers[mockState.idx] = item.choices[choiceIdx];
+  renderMockStage();
+  if (mockAdvTimerId) {
+    clearTimeout(mockAdvTimerId);
+    mockAdvTimerId = null;
+  }
+  if (mockState.idx + 1 < mockState.items.length) {
+    mockAdvTimerId = setTimeout(() => {
+      mockAdvTimerId = null;
+      if (mockState && !mockState.done && mockState.idx + 1 < mockState.items.length) {
+        stopQuizAudio();
+        mockState.idx += 1;
+        renderMockStage();
+      }
+    }, 220);
+  }
+}
+
+function mockNavStep(delta) {
+  if (!mockState || mockState.done) return;
+  if (mockAdvTimerId) {
+    clearTimeout(mockAdvTimerId);
+    mockAdvTimerId = null;
+  }
+  const next = mockState.idx + delta;
+  if (next < 0 || next >= mockState.items.length) return;
+  stopQuizAudio();
+  mockState.idx = next;
+  renderMockStage();
+}
+
+function submitMockSprint(autoTimeout) {
+  if (!mockState || mockState.done) return;
+  stopMockTimer();
+  stopQuizAudio();
+  mockState.done = true;
+  const items = mockState.items;
+  const usedSec = Math.min(mockState.totalSec, Math.max(1, Math.floor((Date.now() - mockState.startedAt) / 1000)));
+  let rightCnt = 0;
+  const bySubj = {
+    "语法": { ok: 0, tot: 0 },
+    "活用": { ok: 0, tot: 0 },
+    "词汇": { ok: 0, tot: 0 },
+    "听力": { ok: 0, tot: 0 }
+  };
+  const misses = [];
+  const ob = loadOutbox();
+  const tsIso = new Date(Math.max(TRUE_GREEN_EPOCH, nowUnixSec()) * 1000).toISOString();
+
+  items.forEach((it, i) => {
+    const picked = mockState.answers[i];
+    const ok = picked !== null && picked === it.card.answer;
+    if (!bySubj[it.subject]) bySubj[it.subject] = { ok: 0, tot: 0 };
+    bySubj[it.subject].tot += 1;
+    if (ok) {
+      rightCnt += 1;
+      bySubj[it.subject].ok += 1;
+    } else {
+      misses.push({ idx: i, item: it, picked: picked || "未作答" });
+      ob.push([`MOCK:${it.card.id || it.pid}`, it.point_key || it.point, `模拟错:${picked || "未作答"}`, 0, tsIso]);
+    }
+  });
+  if (misses.length > 0) {
+    saveOutbox(ob);
+    saveAdaptiveState();
+    scheduleCloudPush(220);
+  }
+  const scaled = Math.round((rightCnt / Math.max(1, items.length)) * 180);
+  mockState.result = { rightCnt, total: items.length, scaled, usedSec, bySubj, misses, autoTimeout: !!autoTimeout };
+
+  const hist = loadMockHist();
+  const prevBest = hist[DATA.plan_date];
+  if (!prevBest || scaled >= prevBest.scaled) {
+    hist[DATA.plan_date] = { scaled, rightCnt, total: items.length, usedSec };
+    saveMockHist(hist);
+  }
+  renderMockStage();
+}
+
+function exitMockSprint() {
+  stopMockTimer();
+  stopQuizAudio();
+  mockState = null;
+  switchMode("dash");
+}
+
+function renderMockStage() {
+  const host = document.getElementById("mock-view");
+  if (!host || !mockState) return;
+  const trackLbl = DATA.track_label || "N3";
+
+  if (mockState.done && mockState.result) {
+    const r = mockState.result;
+    const passLine = trackLbl === "N2" ? 90 : 95;
+    const verdict = r.scaled >= 120
+      ? "稳过目标线 · 手感很稳"
+      : (r.scaled >= passLine ? "已达合格线 · 收紧错项即可冲高分" : "提前暴露盲点 · 明日自动优先复测");
+    const verdictCls = r.scaled >= passLine ? "mock-verdict" : "mock-verdict warm";
+    const barsHTML = ["语法", "活用", "词汇", "听力"]
+      .filter(s => r.bySubj[s] && r.bySubj[s].tot > 0)
+      .map(s => {
+        const b = r.bySubj[s];
+        const pct = Math.round((b.ok / Math.max(1, b.tot)) * 100);
+        return `
+          <div>
+            <div class="mock-bar-head"><span>${s}</span><span>${b.ok} / ${b.tot}</span></div>
+            <div class="mock-bar-track"><div class="mock-bar-fill" style="width:${pct}%"></div></div>
+          </div>`;
+      }).join("");
+
+    const missHTML = r.misses.length
+      ? `
+        <div class="mock-miss-head">错题复盘 · ${r.misses.length} 题（已纳入明日优先）</div>
+        ${r.misses.map(m => {
+          const c = m.item.card;
+          const jaTxt = c.full_ja || c.prompt || m.item.point;
+          const whyTxt = c.why_line || c.form_line || "";
+          return `
+            <div class="mock-miss-item">
+              <div class="mock-miss-top">
+                <div class="mock-miss-ja" lang="ja">${escapeHtml(jaTxt)}</div>
+                <button type="button" class="mock-miss-aud" onclick="playMockReviewAudio(${m.idx})">听讲解</button>
+              </div>
+              <div class="mock-miss-cmp">
+                <span>选了 <span class="mock-miss-wrong">${escapeHtml(m.picked)}</span></span>
+                <span>正解 <span class="mock-miss-right">${escapeHtml(c.answer)}</span></span>
+              </div>
+              ${whyTxt ? `<div class="mock-miss-why">${escapeHtml(whyTxt)}</div>` : ""}
+            </div>`;
+        }).join("")}`
+      : `<div class="mock-perfect">全对 · ${r.total} 题一题未错</div>`;
+
+    host.innerHTML = `
+      <div class="mock-wrap">
+        <div class="mock-top">
+          <div class="mock-top-left">
+            <span class="mock-step">${escapeHtml(trackLbl)} 模拟小测</span>
+            <span class="mock-subj">成绩单</span>
+          </div>
+          <div class="mock-top-right">
+            <button type="button" class="mock-exit-btn" onclick="exitMockSprint()">回总表</button>
+          </div>
+        </div>
+        <div class="mock-rail"><div class="mock-rail-fill" style="width:100%;background:var(--moss);"></div></div>
+
+        <div class="mock-res-scroll">
+          <div class="mock-hero">
+            <div class="mock-score-num">${r.scaled}<span class="mock-score-den">/ 180</span></div>
+            <div class="${verdictCls}">${verdict}</div>
+            <div class="mock-meta-line">答对 ${r.rightCnt} / ${r.total} 题 · 用时 ${formatMockTime(r.usedSec)}${r.autoTimeout ? " · 到时自动交卷" : ""}</div>
+          </div>
+          <div class="mock-bars">${barsHTML}</div>
+          ${missHTML}
+        </div>
+
+        <div class="mock-dock">
+          <div class="mock-btn-row">
+            <button type="button" class="mock-btn" onclick="startMockSprint()">再测一组</button>
+            <button type="button" class="mock-btn primary" onclick="exitMockSprint()">回总表</button>
+          </div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  const idx = mockState.idx;
+  const total = mockState.items.length;
+  const item = mockState.items[idx];
+  const card = item.card;
+  const picked = mockState.answers[idx];
+  const answeredCnt = mockState.answers.filter(x => x !== null).length;
+  const pct = Math.round(((idx + 1) / Math.max(1, total)) * 100);
+  const isLast = idx + 1 >= total;
+  const allAnswered = answeredCnt >= total;
+  const optGridCls = card.is_listening ? "mock-opts cols-3" : "mock-opts";
+  const fmtMockStem = escapeHtml(card.prompt || "")
+    .replace(/（[\s\u3000]*）/g, '<span class="quiz-blank" aria-label="空栏"></span>')
+    .replace(/\([\s\u3000]{2,}\)/g, '<span class="quiz-blank" aria-label="空栏"></span>');
+
+  const stemHTML = card.is_listening
+    ? `
+      <div class="mock-listen-box">
+        <button type="button" class="mock-listen-orb" onclick="playMockItemAudio(${idx})">播原题</button>
+        <div class="mock-listen-hint">盲听原声，选出 1 · 2 · 3 中最自然的一项</div>
+      </div>`
+    : `
+      ${card.q_audio ? `<button type="button" class="mock-audio-quiet" onclick="playMockItemAudio(${idx})">听题干</button>` : ""}
+      <div class="mock-stem" lang="ja">${fmtMockStem}</div>`;
+
+  const optsHTML = item.choices.map((ch, cIdx) => {
+    const isPicked = picked === ch;
+    const lbl = card.is_listening ? String(cIdx + 1) : escapeHtml(ch);
+    return `<button type="button" class="mock-opt${isPicked ? " picked" : ""}" lang="ja" onclick="pickMockChoice(${cIdx})">${lbl}</button>`;
+  }).join("");
+
+  host.innerHTML = `
+    <div class="mock-wrap">
+      <div class="mock-top">
+        <div class="mock-top-left">
+          <span class="mock-step">模拟小测 · ${idx + 1} / ${total}</span>
+          <span class="mock-subj">${escapeHtml(item.subject)}</span>
+        </div>
+        <div class="mock-top-right">
+          <span class="mock-timer${mockState.remSec <= 120 ? " warn" : ""}" id="mock-timer-lbl">${formatMockTime(mockState.remSec)}</span>
+          <button type="button" class="mock-exit-btn" onclick="exitMockSprint()">退出</button>
+        </div>
+      </div>
+      <div class="mock-rail"><div class="mock-rail-fill" style="width:${pct}%"></div></div>
+
+      <div class="mock-stage">
+        ${stemHTML}
+        <div class="${optGridCls}">${optsHTML}</div>
+      </div>
+
+      <div class="mock-dock">
+        <div class="mock-aux">
+          <span>已答 ${answeredCnt} / ${total}</span>
+          ${answeredCnt > 0 && !isLast ? `<button type="button" class="mock-aux-link" onclick="submitMockSprint(false)">提前交卷</button>` : `<span>交卷统一出分</span>`}
+        </div>
+        <div class="mock-btn-row">
+          <button type="button" class="mock-btn" ${idx === 0 ? "disabled" : ""} onclick="mockNavStep(-1)">上一题</button>
+          ${isLast || allAnswered
+            ? `<button type="button" class="mock-btn primary" onclick="submitMockSprint(false)">交卷出分</button>`
+            : `<button type="button" class="mock-btn" onclick="mockNavStep(1)">${picked ? "下一题" : "跳过"}</button>`}
+        </div>
+      </div>
+    </div>
+  `;
+  if (card.is_listening) {
+    playMockItemAudio(idx);
+  }
+}
+
 function renderDashboard() {
   applyMasteryOverrides();
   const order = ["grammar", "henkei", "listening", "vocab"];
@@ -14758,15 +15920,25 @@ function renderDashboard() {
     const totalStale = pillarMeta.reduce((s, x) => s + x.staleDone, 0);
     const totalHes = pillarMeta.reduce((s, x) => s + x.hesCnt, 0);
     const dLeft = DATA.days_to_exam != null ? Number(DATA.days_to_exam) : 14;
-    const examLead = dLeft === 0 ? "<b>今日开考</b>" : `距考剩 <b>${dLeft} 天</b>`;
+    const isN2 = DATA.phase === "n2_climb";
+    const isExamDay = DATA.phase === "exam_day" || dLeft === 0;
+    const examLead = isExamDay
+      ? "<b>今日开考</b>"
+      : (isN2
+        ? `距 N2 验收剩 <b>${dLeft} 天</b>${DATA.is_travel_floor ? " · 旅途保底" : ""}`
+        : `距考剩 <b>${dLeft} 天</b>`);
     const activeConfCnt = Object.keys(DATA.confusion_pairs || {}).length;
     const subParts = [];
-    if (best && totalWip2 > 0) subParts.push(`<span class="nw">${best.m.label}最提分</span>`);
-    if (activeConfCnt > 0) subParts.push(`<span class="nw">常混 ${activeConfCnt} 组</span>`);
-    if (totalHes > 0) subParts.push(`<span class="nw">略生 ${totalHes} 项</span>`);
-    if (totalStale > 0) subParts.push(`<span class="nw">待保鲜 ${totalStale} 项</span>`);
+    if (isExamDay) {
+      subParts.push(`<span class="nw">12 题轻热身，稳住手感即可</span>`);
+    } else {
+      if (best && totalWip2 > 0) subParts.push(`<span class="nw">${best.m.label}最提分</span>`);
+      if (activeConfCnt > 0) subParts.push(`<span class="nw">常混 ${activeConfCnt} 组</span>`);
+      if (totalHes > 0) subParts.push(`<span class="nw">略生 ${totalHes} 项</span>`);
+      if (totalStale > 0) subParts.push(`<span class="nw">待保鲜 ${totalStale} 项</span>`);
+    }
     const subLine = subParts.length ? `<div class="dash-roi-sub">${subParts.join("")}</div>` : "";
-    if (best && totalWip2 > 0) {
+    if (best && totalWip2 > 0 && !isExamDay) {
       roiEl.innerHTML = `
         <div class="dash-roi-bar">
           <div class="dash-roi-txt"><div><span class="nw">${examLead}</span> · <span class="nw">临门 2/3 共 <b>${totalWip2} 项</b></span></div>${subLine}</div>
@@ -14775,9 +15947,55 @@ function renderDashboard() {
     } else {
       roiEl.innerHTML = `
         <div class="dash-roi-bar">
-          <div class="dash-roi-txt"><div><span class="nw">${examLead}</span> · <span class="nw">临门 2/3 已清空</span></div>${subLine || `<div class="dash-roi-sub">稳步攻克新点即可</div>`}</div>
+          <div class="dash-roi-txt"><div><span class="nw">${examLead}</span> · <span class="nw">${isExamDay ? "轻装上阵" : "临门 2/3 已清空"}</span></div>${subLine || `<div class="dash-roi-sub">稳步攻克新点即可</div>`}</div>
         </div>`;
     }
+  }
+
+  const mockEntryEl = document.getElementById("dash-mock-entry");
+  if (mockEntryEl) {
+    const hist = loadMockHist();
+    const todayBest = hist[DATA.plan_date];
+    const mockN = Math.min(15, (DATA.points || []).length);
+    const mockRowHTML = todayBest
+      ? `
+        <div class="dash-quiet-row is-done">
+          <div class="dash-quiet-txt">
+            <div>模拟小测 · 今日最佳 <b>${todayBest.scaled} / 180</b></div>
+            <div class="dash-quiet-sub">答对 ${todayBest.rightCnt}/${todayBest.total} · 错题已并入明日优先</div>
+          </div>
+          <button type="button" class="dash-quiet-btn moss" onclick="startMockSprint()">再测 ›</button>
+        </div>`
+      : `
+        <div class="dash-quiet-row">
+          <div class="dash-quiet-txt">
+            <div><b>模拟小测</b> · ${mockN} 题限时 ${mockN >= 15 ? 15 : mockN} 分钟</div>
+            <div class="dash-quiet-sub">连续作答 · 交卷统一出分与错题复盘</div>
+          </div>
+          <button type="button" class="dash-quiet-btn" onclick="startMockSprint()">开始 ›</button>
+        </div>`;
+
+    let n3CalRowHTML = "";
+    if (DATA.phase === "n2_climb") {
+      const sc = getLocalN3RealScore();
+      n3CalRowHTML = sc
+        ? `
+          <div class="dash-quiet-row is-done">
+            <div class="dash-quiet-txt">
+              <div>N3 实考 <b>${sc.total} / 180</b> · 已校准 ✓</div>
+            </div>
+            <button type="button" class="dash-quiet-btn muted" onclick="openN3ScoreModal()">修改</button>
+          </div>`
+        : `
+          <div class="dash-quiet-row">
+            <div class="dash-quiet-txt">
+              <div><b>记下 N3 实考分</b></div>
+              <div class="dash-quiet-sub">出分后记一次，自动校准 N2 爬坡节奏</div>
+            </div>
+            <button type="button" class="dash-quiet-btn moss" onclick="openN3ScoreModal()">记分 ›</button>
+          </div>`;
+    }
+    mockEntryEl.innerHTML = mockRowHTML + n3CalRowHTML;
   }
 
   document.getElementById("dash-summary").innerHTML = pillarMeta.map(({ k, m, c }) => {
@@ -17638,7 +18856,7 @@ initApp();
 </html>
 """
 
-final_html = html.replace("__PAYLOAD__", payload)
+final_html = html.replace("__PAYLOAD__", payload).replace("__TRACK_LABEL__", track_label)
 with open(HTML_PATH, "w", encoding="utf-8") as f:
     f.write(final_html)
 
@@ -17760,6 +18978,7 @@ if (qLenBefore !== qLenAfter || !Array.isArray(lkRec) || lkRec[0] < 1) {
 const vcObj = vm.runInNewContext('DATA.vocab_cards || {}', sb);
 const vcKeys = Object.keys(vcObj);
 if (vcKeys.length < 120) throw new Error('Self-test failed: vocab_cards unexpectedly small: ' + vcKeys.length);
+const isN2VocabCheck = vm.runInNewContext('DATA.phase === "n2_climb"', sb);
 for (const k of vcKeys) {
   const rec = vcObj[k] || {};
   const mn = String(rec.mnemonic || '').trim();
@@ -17770,7 +18989,7 @@ for (const k of vcKeys) {
   if (!mn || !mnCard) throw new Error('Self-test failed: missing mnemonic/mnemonic_card for vocab card ' + k);
   if (mn.includes('—') || mnCard.includes('—') || zhCard.includes('—')) throw new Error('Self-test failed: em dash in vocab card ' + k);
   if (!hs) throw new Error('Self-test failed: missing hook_spoken for vocab card ' + k);
-  if (!rec.rev_audio || !rec.hook_audio || !rec.phrase_audio || !rec.word_audio) {
+  if (!isN2VocabCheck && (!rec.rev_audio || !rec.hook_audio || !rec.phrase_audio || !rec.word_audio)) {
     throw new Error('Self-test failed: missing required studio audio slot for vocab card ' + k + ': ' + JSON.stringify({rev:rec.rev_audio, hook:rec.hook_audio, phrase:rec.phrase_audio, word:rec.word_audio}));
   }
   if (ch.length > 10) throw new Error('Self-test failed: vocab chunk too long (should be concise phrase <=10 chars) for ' + k + ': ' + ch);
@@ -18002,21 +19221,27 @@ if (!rvDoneHtml.includes('回炉 1 项') || (hasStoryArts && !rvDoneHtml.include
 sb.setTimeout = origSetTimeout;
 sb.closeRadioReview();
 // Verify Ear-First 2/3 Vocab Graduation veil activates ONLY on streak===2 kanji cards with audio
-const sampleKanji = '予算';
+const isN2Phase6 = vm.runInNewContext('DATA.phase === "n2_climb"', sb);
+const sampleKanji = isN2Phase6
+  ? vm.runInNewContext('Object.keys(DATA.vocab_cards || {}).find(w => DATA.vocab_cards[w] && DATA.vocab_cards[w].mode === "kanji_read") || ""', sb)
+  : '予算';
 const spec2 = sb.getVocabCardSpec(sampleKanji);
 if (!spec2 || spec2.mode !== 'kanji_read') {
-  throw new Error('Self-test 6 failed: expected 予算 kanji_read spec');
+  throw new Error('Self-test 6 failed: expected kanji_read spec for ' + sampleKanji);
 }
-sb.setMasteryTier(sampleKanji, 'wip2:20261121', Math.floor(Date.now() / 1000) + 10);
-if (!sb.isEarFirstGradCard(spec2)) {
-  throw new Error('Self-test 6 failed: streak=2 kanji card with audio should activate Ear-First graduation');
+if (!isN2Phase6) {
+  sb.setMasteryTier(sampleKanji, 'wip2:20261121', Math.floor(Date.now() / 1000) + 10);
+  if (!sb.isEarFirstGradCard(spec2)) {
+    throw new Error('Self-test 6 failed: streak=2 kanji card with audio should activate Ear-First graduation');
+  }
+  sb.setMasteryTier(sampleKanji, 'wip1:20261121', Math.floor(Date.now() / 1000) + 20);
+  if (sb.isEarFirstGradCard(spec2)) {
+    throw new Error('Self-test 6 failed: streak=1 kanji card must stay silent-kanji front');
+  }
 }
-sb.setMasteryTier(sampleKanji, 'wip1:20261121', Math.floor(Date.now() / 1000) + 20);
-if (sb.isEarFirstGradCard(spec2)) {
-  throw new Error('Self-test 6 failed: streak=1 kanji card must stay silent-kanji front');
-}
-// Self-test 7: Atomic 1-by-1 Zen Open-Canvas Grammar Audit (zero grouped buckets, zero spoilers, zero waste words)
+// Self-test 7: Atomic 1-by-1 Zen Open-Canvas Grammar Audit (N3 pre-exam audit; intentionally cleared on N2 climb!)
 const gaData = vm.runInNewContext('DATA.grammar_audit', sb);
+if (!isN2Phase6) {
 if (!gaData || !Array.isArray(gaData.items) || gaData.items.length !== 173) {
   throw new Error('Self-test 7 failed: grammar_audit must contain 173 atomic 1-by-1 points, got ' + (gaData && gaData.items ? gaData.items.length : 0));
 }
@@ -18115,7 +19340,7 @@ if (!String(parentOv || '').startsWith('todo:') || !String(hkOv || '').startsWit
   throw new Error('Self-test 7 failed: split child did not aggregate weakest verdict to parent & K-005: ' + JSON.stringify({parentOv, hkOv}));
 }
 // Test all 4 spectrum stops via ledger inline adjuster + CRDT packet size & round-trip
-const testItems = gaData.items.filter(it => !it.parent_name).slice(0, 4);
+const testItems = gaData.items.filter(it => !it.parent_name && !it.parent_gid).slice(0, 4);
 sb.setLedgerGrammarSpectrum(testItems[0].gid, 1);
 sb.setLedgerGrammarSpectrum(testItems[1].gid, 2);
 sb.setLedgerGrammarSpectrum(testItems[2].gid, 3);
@@ -18142,6 +19367,7 @@ const dashHtml = (els['point-list'] && els['point-list'].innerHTML) || '';
 if (!dashHtml.includes('setLedgerGrammarSpectrum') || !dashHtml.includes('li-ga-tag') || dashHtml.includes('—')) {
   throw new Error('Self-test 7 failed: dashboard grammar ledger missing inline spectrum controls or contains em dash!');
 }
+}
 // Self-test 8: Peer-Reviewed Research Alignment Across All 5 Tabs (v46 Evidence-First Audit)
 // 8.1 Radio speeds include 0.85x slow decoding (Zhao 1997)
 const rSpeeds = vm.runInNewContext('RADIO_SPEEDS', sb);
@@ -18149,25 +19375,33 @@ if (!Array.isArray(rSpeeds) || !rSpeeds.includes(0.85)) {
   throw new Error('Self-test 8 failed: RADIO_SPEEDS must include 0.85x');
 }
 // 8.2 Vocab confusable-twin anti-interference + 2/3 Kana productive recall + Mnemonic fading + clean_audio
-const vcTwins = vm.runInNewContext('DATA.vocab_twins || {}', sb);
-if (!vcTwins['書類'] || !vcTwins['書類'].includes('種類')) {
-  throw new Error('Self-test 8 failed: DATA.vocab_twins missing 書類<->種類 confusable pair');
-}
-const sampleKana = 'めったに';
-const kSpec = sb.getVocabCardSpec(sampleKana);
-if (!kSpec || kSpec.mode !== 'kana_meaning' || !kSpec.clean_audio || !kSpec.phrase_audio) {
-  throw new Error('Self-test 8 failed: めったに missing kana_meaning, clean_audio, or phrase_audio');
-}
-sb.setMasteryTier(sampleKana, 'wip2:20261120', Math.floor(Date.now() / 1000) + 30);
-if (!sb.isKanaRecallGradCard(kSpec)) {
-  throw new Error('Self-test 8 failed: streak=2 kana card must activate L1->L2 productive recall');
-}
-if (sb.shouldFadeVocabMnemonic(kSpec)) {
-  throw new Error('Self-test 8 failed: streak>=1 vocab card must NOT silently drop mnemonic audio (unified 3-beat reveal)');
-}
-sb.setMasteryTier(sampleKana, 'todo:20261122', Math.floor(Date.now() / 1000) + 40);
-if (sb.shouldFadeVocabMnemonic(kSpec)) {
-  throw new Error('Self-test 8 failed: streak=0 card must NOT fade spoken mnemonic');
+if (!isN2Phase6) {
+  const vcTwins = vm.runInNewContext('DATA.vocab_twins || {}', sb);
+  if (!vcTwins['書類'] || !vcTwins['書類'].includes('種類')) {
+    throw new Error('Self-test 8 failed: DATA.vocab_twins missing 書類<->種類 confusable pair');
+  }
+  const sampleKana = 'めったに';
+  const kSpec = sb.getVocabCardSpec(sampleKana);
+  if (!kSpec || kSpec.mode !== 'kana_meaning' || !kSpec.clean_audio || !kSpec.phrase_audio) {
+    throw new Error('Self-test 8 failed: めったに missing kana_meaning, clean_audio, or phrase_audio');
+  }
+  sb.setMasteryTier(sampleKana, 'wip2:20261120', Math.floor(Date.now() / 1000) + 30);
+  if (!sb.isKanaRecallGradCard(kSpec)) {
+    throw new Error('Self-test 8 failed: streak=2 kana card must activate L1->L2 productive recall');
+  }
+  if (sb.shouldFadeVocabMnemonic(kSpec)) {
+    throw new Error('Self-test 8 failed: streak>=1 vocab card must NOT silently drop mnemonic audio (unified 3-beat reveal)');
+  }
+  sb.setMasteryTier(sampleKana, 'todo:20261122', Math.floor(Date.now() / 1000) + 40);
+  if (sb.shouldFadeVocabMnemonic(kSpec)) {
+    throw new Error('Self-test 8 failed: streak=0 card must NOT fade spoken mnemonic');
+  }
+} else {
+  const n2Kana = vm.runInNewContext('Object.keys(DATA.vocab_cards || {}).find(w => DATA.vocab_cards[w] && DATA.vocab_cards[w].mode === "kana_meaning") || ""', sb);
+  const kSpecN2 = sb.getVocabCardSpec(n2Kana);
+  if (!kSpecN2 || kSpecN2.mode !== 'kana_meaning' || !kSpecN2.mnemonic) {
+    throw new Error('Self-test 8 failed: N2 kana_meaning card missing or missing mnemonic: ' + n2Kana);
+  }
 }
 // 8.3 Delayed hotFamily interleaving (Rohrer & Taylor 2007 / Pan 2015)
 const hotStepCheck = vm.runInNewContext('(() => { A.hotFamily = "DUMMY_FAM"; A.hotFamilyDueStep = A.step + 4; return A.hotFamilyDueStep > A.step; })()', sb);
@@ -18203,7 +19437,7 @@ if (!pMultiHrv || pMultiHrv.tier !== 'yellow' || pMultiHrv.isPZMain) {
 // 8.5 Dashboard ZPL ROI focus bar & zero em dashes
 sb.switchMode('dash');
 const roiEl = els['dash-roi-focus'];
-if (!roiEl || !roiEl.innerHTML.includes('临门') || roiEl.innerHTML.includes('—')) {
+if (!roiEl || (!roiEl.innerHTML.includes('临门') && !roiEl.innerHTML.includes('轻装上阵')) || roiEl.innerHTML.includes('—')) {
   throw new Error('Self-test 8 failed: dashboard missing ZPL exam-ROI focus line or contains em dash');
 }
 // 8.6 Quiz 2/3 recall veil is self-paced tap-to-reveal (zero auto-timer rush, full-area overlay)
@@ -18558,8 +19792,9 @@ if (twoChoiceBad15.length > 0) {
 const fourChoiceCnt15 = vm.runInNewContext(`
   DATA.points.filter(p => p.primary && !p.primary.is_listening && (p.primary.choices || []).length >= 4).length
 `, sb);
-if (fourChoiceCnt15 < 20) {
-  throw new Error('Self-test 15 failed: expected >=20 4-choice exam cards in deck, got ' + fourChoiceCnt15);
+const min4Choice15 = vm.runInNewContext('DATA.phase === "exam_day" ? 8 : (DATA.is_travel_floor ? 15 : 20)', sb);
+if (fourChoiceCnt15 < min4Choice15) {
+  throw new Error('Self-test 15 failed: expected >=' + min4Choice15 + ' 4-choice exam cards in deck, got ' + fourChoiceCnt15);
 }
 const badListen15 = vm.runInNewContext(`
   DATA.points.filter(p => p.primary && p.primary.is_listening && (p.primary.choices || []).length !== 3).map(p => p.id)
@@ -18799,12 +20034,71 @@ if (g38Pt21) {
     throw new Error('Self-test 21 failed: expected ' + g38Pt21.primary.choices.length + ' rendered .opt-desc blocks on ' + g38Pt21.id + ', got ' + descMatches21.length);
   }
 }
+
+// Self-test 22 (v74): Mock Sprint 15 end-to-end + Quiet Commute Speaking Mode + Exam-Day & N2 Zero-to-120 Metadata
+const phaseMeta22 = vm.runInNewContext('({ phase: DATA.phase, track: DATA.track_label, n2_day: DATA.n2_day, exam_date: DATA.exam_date })', sb);
+if (!phaseMeta22.phase || !phaseMeta22.track || !phaseMeta22.exam_date) {
+  throw new Error('Self-test 22 failed: missing phase metadata in DATA: ' + JSON.stringify(phaseMeta22));
+}
+sb.switchMode('dash');
+const mockEntryHtml22 = (els['dash-mock-entry'] && els['dash-mock-entry'].innerHTML) || '';
+if (!mockEntryHtml22.includes('模拟小测') || !mockEntryHtml22.includes('startMockSprint') || mockEntryHtml22.includes('—')) {
+  throw new Error('Self-test 22 failed: dashboard missing quiet Mock Sprint 15 entry row or contains em dash');
+}
+if (phaseMeta22.phase === 'n2_climb' && !mockEntryHtml22.includes('openN3ScoreModal')) {
+  throw new Error('Self-test 22 failed: n2_climb dashboard must expose quiet N3 real-score calibration entry');
+}
+if (phaseMeta22.phase !== 'n2_climb' && mockEntryHtml22.includes('openN3ScoreModal')) {
+  throw new Error('Self-test 22 failed: pre-exam dashboard must NOT show post-exam N3 score calibration row');
+}
+const mockRes22 = vm.runInNewContext(`(() => {
+  const prevObLen = loadOutbox().length;
+  startMockSprint();
+  const n = mockState ? mockState.items.length : 0;
+  for (let i = 0; i < n; i++) {
+    mockState.idx = i;
+    const it = mockState.items[i];
+    const pickIdx = (i % 2 === 0)
+      ? Math.max(0, it.choices.indexOf(it.card.answer))
+      : Math.max(0, it.choices.findIndex(c => c !== it.card.answer));
+    pickMockChoice(pickIdx);
+  }
+  submitMockSprint(false);
+  const res = mockState && mockState.result;
+  const htmlOut = (document.getElementById('mock-view') && document.getElementById('mock-view').innerHTML) || '';
+  const newOb = loadOutbox().slice(prevObLen);
+  exitMockSprint();
+  return { n, res, htmlOut, mockOutboxCnt: newOb.filter(x => String(x[0] || '').startsWith('MOCK:')).length };
+})()`, sb);
+if (!mockRes22.res || mockRes22.n < 10 || mockRes22.res.scaled < 0 || mockRes22.res.scaled > 180 || mockRes22.mockOutboxCnt < 1 || !mockRes22.htmlOut.includes('错题复盘') || mockRes22.htmlOut.includes('—')) {
+  throw new Error('Self-test 22 failed: Mock Sprint 15 execution/diagnosis/outbox check failed: ' + JSON.stringify({ n: mockRes22.n, res: mockRes22.res, ob: mockRes22.mockOutboxCnt }));
+}
+const quietSpk22 = vm.runInNewContext(`(() => {
+  const prevObLen = loadOutbox().length;
+  openRadioSpeaking(0);
+  toggleSpeakingQuietMode(true);
+  const htmlQ = (document.getElementById('radio-review-stage') && document.getElementById('radio-review-stage').innerHTML) || '';
+  const origT = setTimeout;
+  setTimeout = (fn) => { fn(); return 1; };
+  passRadioSpeakingQuiet();
+  setTimeout = origT;
+  const newOb = loadOutbox().slice(prevObLen);
+  toggleSpeakingQuietMode(false);
+  closeRadioReview();
+  return {
+    htmlQ,
+    hasQuietLog: newOb.some(x => String(x[0] || '').startsWith('SPK:') && String(x[2] || '') === '开口:默跟顺口' && x[3] === 1)
+  };
+})()`, sb);
+if (!quietSpk22.htmlQ.includes('心里顺了') || !quietSpk22.htmlQ.includes('再听一遍') || !quietSpk22.hasQuietLog || quietSpk22.htmlQ.includes('—')) {
+  throw new Error('Self-test 22 failed: quiet commute speaking mode failed: ' + JSON.stringify({ hasQuietLog: quietSpk22.hasQuietLog, snippet: quietSpk22.htmlQ.slice(0, 200) }));
+}
 """
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
 
 sw_path = os.path.join(BASE_DIR, "sw.js")
-SW_CACHE_NAME = "n3-studio-tutor-v74"
-if os.path.exists(sw_path):
+SW_CACHE_NAME = "n3-studio-tutor-v75"
+if not _IS_SIM_OUTPUT and os.path.exists(sw_path):
     with open(sw_path, encoding="utf-8") as sf:
         sw_src = sf.read()
     manifest_sig = hashlib.sha256(
@@ -18832,7 +20126,7 @@ if os.path.exists(sw_path):
             sf.write(sw_next)
 
 print(
-    "Wrote Zen v12 N3 Platform:",
+    f"Wrote Zen v12 {track_label} Platform ({active_phase}):",
     HTML_PATH,
     "points:",
     len(ordered_points),

@@ -14,6 +14,7 @@ Synthesizes & stitches Studio Human-Teacher Neural TTS MP3 files (generate_neura
 from __future__ import annotations
 import asyncio
 import concurrent.futures
+import datetime
 import glob
 import hashlib
 import json
@@ -478,6 +479,35 @@ async def main():
         for _it in _src_list:
             if _it.get("id"):
                 card_meta_lookup[_it["id"]] = _it
+    # Auto-activate N2 neural audio synthesis starting 2026-12-07 (rolling +7 day lookahead)
+    _n2_active_vocab = {}
+    try:
+        from n2_prep.n2_curriculum_engine import build_n2_question_bank, build_n2_vocab_cards, get_phase_info
+        _now_pt_na = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=-8)))
+        _study_d_na = os.environ.get("FORCE_STUDY_DATE", "").strip() or (_now_pt_na - datetime.timedelta(hours=4)).date().isoformat()
+        _ph_na = get_phase_info(_study_d_na)
+        if _ph_na.get("phase") == "n2_climb":
+            _n2_win = int(_ph_na.get("n2_day") or 1) + 7
+            for _np in build_n2_question_bank():
+                if int(_np.get("day") or 999) <= _n2_win:
+                    for _nc in ([_np["primary"]] + list(_np.get("variants") or [])):
+                        _nid = _nc["id"]
+                        card_meta_lookup[_nid] = {
+                            "id": _nid,
+                            "subject": "文法",
+                            "point_key": _np["point_key"],
+                            "prompt_display": _nc["prompt"],
+                            "choices": _nc["choices"],
+                            "answer": _nc["answer"],
+                            "full_ja": _nc["full_ja"],
+                            "zh_meaning": _nc["zh_meaning"],
+                            "why_line": _nc["why_line"],
+                            "form_line": _nc["form_line"],
+                            "option_notes": _nc.get("opt_notes") or {},
+                        }
+            _n2_active_vocab = build_n2_vocab_cards()
+    except Exception:
+        _n2_active_vocab = {}
 
     to_build_q = {}
     to_build_exp = {}
@@ -496,7 +526,23 @@ async def main():
             if old_manifest.get(n_fn) != n_hash or not os.path.exists(os.path.join(AUDIO_DIR, n_fn)):
                 to_build_lp[n_fn] = [(spk_code, num_ja)]
 
-    for qid, card in CARDS_75.items():
+    _all_synth_cards = dict(CARDS_75)
+    for _nid, _nmeta in card_meta_lookup.items():
+        if str(_nid).startswith(("N2G-", "N2V-")) and _nid not in _all_synth_cards:
+            _full_ja = str(_nmeta.get("full_ja") or "").strip()
+            _why = str(_nmeta.get("why_line") or "").strip()
+            _form = str(_nmeta.get("form_line") or "").strip()
+            _all_synth_cards[_nid] = {
+                "id": _nid,
+                "subject": "文法",
+                "point_key": _nmeta.get("point_key", ""),
+                "choices": _nmeta.get("choices") or [],
+                "answer": _nmeta.get("answer", ""),
+                "q_turns": [("JF", _full_ja)],
+                "exp_turns": [("T", f"{_why} {_form}".strip())],
+            }
+
+    for qid, card in _all_synth_cards.items():
         q_sig = "v18q:+0%:" + json.dumps(card["q_turns"], ensure_ascii=False)
         q_hash = hashlib.sha256(q_sig.encode("utf-8")).hexdigest()[:12]
         hashes_q[qid] = q_hash
@@ -761,6 +807,11 @@ async def main():
     for kw, _pitch, _desc in CORE_N3_KANA_VOCAB:
         if kw and kw not in vc_all_cards:
             vc_all_cards[kw] = build_dynamic_vocab_card(kw, merged_words.get(kw, {}), fallback_note=_desc)
+    for n2_w, n2_vc in _n2_active_vocab.items():
+        if n2_w and n2_w not in vc_all_cards:
+            c2 = dict(n2_vc)
+            c2["word"] = n2_w
+            vc_all_cards[n2_w] = c2
 
     def _to_bilingual_turns(txt: str) -> list:
         txt = str(txt or "").strip()

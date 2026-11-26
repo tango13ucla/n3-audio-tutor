@@ -136,6 +136,16 @@ def collect_study_history(cutoff_study_day: str | None = None) -> tuple[
             if cid.startswith("HES:") or choice == "犹豫过关":
                 continue
 
+            if cid.startswith("N3_SCORE:") or choice.startswith("N3实考:"):
+                continue
+
+            if cid.startswith("MOCK:"):
+                if pt and not ok and not contains_pii(pt):
+                    pts = missed_by_day.setdefault(sday, [])
+                    if pt not in pts:
+                        pts.append(pt)
+                continue
+
             if cid.startswith("SPK:") or choice.startswith(("开口:", "试读:")):
                 if pt and not ok and not contains_pii(pt):
                     pts = missed_by_day.setdefault(sday, [])

@@ -502,6 +502,16 @@ try:
 except ImportError:
     pass
 
+try:
+    from n2_prep.n2_curriculum_engine import (
+        N2_CURATED_JP_VIDEO_SCRIPTS as _N2_JP_VIDS,
+        N2_CURATED_VISUAL_TOPICS as _N2_VIS_TOPICS,
+    )
+    CURATED_VISUAL_TOPICS.update(_N2_VIS_TOPICS)
+    CURATED_JP_VIDEO_SCRIPTS.update(_N2_JP_VIDS)
+except Exception:
+    pass
+
 
 def _find_ffmpeg() -> str:
     exe = shutil.which("ffmpeg")

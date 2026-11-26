@@ -206,6 +206,8 @@ def apply_practice_logs(state: dict, fallback_day_tag: str = "") -> int:
     extra_meta = _load_extra_vocab_meta()
 
     g_map = {p["name"]: p for p in state.get("grammar_points", [])}
+    n2_g_map = {p["point"]: p for p in state.get("n2_grammar_points", []) if isinstance(p, dict) and p.get("point")}
+    n2_g_id_map = {p["id"]: p for p in state.get("n2_grammar_points", []) if isinstance(p, dict) and p.get("id")}
     h_map = {p["id"]: p for p in state.get("henkei_points", [])}
     h_name_map = {p["name"]: p for p in state.get("henkei_points", [])}
     v_map = {v["word"]: v for v in state.get("vocab_tracked", [])}
@@ -264,9 +266,54 @@ def apply_practice_logs(state: dict, fallback_day_tag: str = "") -> int:
                         hes_map[pt] = max(str(hes_map.get(pt) or ""), day_tag_h)
                     continue
 
+                # Post-exam real JLPT N3 score calibration ("N3_SCORE:<total>"):
+                if rec_id.startswith("N3_SCORE:") or choice.startswith("N3实考:"):
+                    day_tag_sc = _iso_to_day_tag(ts, fallback_day_tag)
+                    m_sc = re.search(r"(\d{1,3})", rec_id.split(":", 1)[-1] if ":" in rec_id else choice)
+                    if m_sc:
+                        sc_val = max(0, min(180, int(m_sc.group(1))))
+                        state["n3_real_score"] = {
+                            "total": sc_val,
+                            "detail": choice[:64],
+                            "date": day_tag_sc,
+                        }
+                    continue
+
+                # Timed 15-min Mock Exam result ("MOCK:<qid>"):
+                # Missed mock items feed straight into tomorrow's priority queue; passed mock items record attempt without inflating 3/3.
+                if rec_id.startswith("MOCK:"):
+                    if not is_correct and pt:
+                        applied += 1
+                        day_tag_mk = _iso_to_day_tag(ts, fallback_day_tag)
+                        _mk_base = rec_id.split(":", 1)[1].split("-V", 1)[0] if ":" in rec_id else ""
+                        if _mk_base in n2_g_id_map or pt in n2_g_map:
+                            _n2p = n2_g_id_map.get(_mk_base) or n2_g_map.get(pt)
+                            _n2p["status"] = "red"
+                            _n2p["streak"] = 0
+                            _n2p["last_ng_date"] = day_tag_mk
+                        elif pt in g_map:
+                            g_map[pt]["status"] = "red"
+                            g_map[pt]["streak"] = 0
+                            g_map[pt]["last_ng_date"] = day_tag_mk
+                        elif pt in h_map or pt in h_name_map:
+                            hp = h_map.get(pt) or h_name_map.get(pt)
+                            hp["status"] = "red"
+                            hp["streak"] = 0
+                            hp["last_ng_date"] = day_tag_mk
+                        elif pt in l_map or pt in l_name_map:
+                            lp = l_map.get(pt) or l_name_map.get(pt)
+                            lp["status"] = "red"
+                            lp["streak"] = 0
+                            lp["last_ng_date"] = day_tag_mk
+                        elif pt in v_map:
+                            v_map[pt]["status"] = "red"
+                            v_map[pt]["streak"] = 0
+                            v_map[pt]["last_ng_date"] = day_tag_mk
+                    continue
+
                 # Real Spoken Voice Active Output & Pronunciation Mirror ("SPK:<id>"):
-                # Never falsely inflates 3/3 true green; records spoken reps, clears redeemed slips on pass,
-                # and flags pronunciation/grammar slips for cross-module reinforcement!
+                # Never falsely inflates 3/3 true green; records spoken reps (including quiet commute shadow pass),
+                # clears redeemed slips on pass, and flags pronunciation/grammar slips for cross-module reinforcement!
                 if rec_id.startswith("SPK:") or choice.startswith(("开口:", "试读:")):
                     day_tag_s = _iso_to_day_tag(ts, fallback_day_tag)
                     spk_st = state.setdefault("speaking_practice", {"total_reps": 0, "last_date": "", "slips": {}})
@@ -426,7 +473,12 @@ def apply_practice_logs(state: dict, fallback_day_tag: str = "") -> int:
                 again = str(rec.get("ask_again", "")).lower() == "true" or rec.get("ask_again") is True
                 instant_seal = choice in ("记词:太熟", "闪卡:太熟", "Grok:不用再考")
 
-                if pt in g_map and not is_vocab_card:
+                _n2_base_id = rec_id.split("-V", 1)[0] if rec_id.startswith("N2G-") else ""
+                if (_n2_base_id in n2_g_id_map or (rec_id.startswith("N2G-") and pt in n2_g_map) or (pt in n2_g_map and pt not in g_map)) and not is_vocab_card:
+                    _n2p = n2_g_id_map.get(_n2_base_id) or n2_g_map.get(pt)
+                    if _n2p is not None:
+                        _apply_cross_day_step(_n2p, day_tag, ok, again, instant_seal)
+                elif pt in g_map and not is_vocab_card:
                     _apply_cross_day_step(g_map[pt], day_tag, ok, again, instant_seal)
                 elif (pt in h_map or pt in h_name_map) and not is_vocab_card:
                     hp = h_map.get(pt) or h_name_map.get(pt)
@@ -531,7 +583,9 @@ def apply_practice_logs(state: dict, fallback_day_tag: str = "") -> int:
                 if ts_i < TRUE_GREEN_EPOCH or ts_i <= int(ov_seen.get(mk) or 0):
                     continue
                 target_item = None
-                if mk in g_map:
+                if mk in n2_g_id_map or (mk in n2_g_map and mk not in g_map):
+                    target_item = n2_g_id_map.get(mk) or n2_g_map.get(mk)
+                elif mk in g_map:
                     target_item = g_map[mk]
                 elif mk in h_map or mk in h_name_map:
                     target_item = h_map.get(mk) or h_name_map.get(mk)
@@ -926,11 +980,55 @@ def main():
 
     now_pt = datetime.datetime.now(PT_TZ)
     study_dt = (now_pt - datetime.timedelta(hours=4)).date()
-    days_left = max(0, (EXAM_DATE - study_dt).days)
+    _force_d = os.environ.get("FORCE_STUDY_DATE", "").strip()
+    if _force_d:
+        try:
+            study_dt = datetime.date.fromisoformat(_force_d[:10])
+        except Exception:
+            pass
+    study_date_s = study_dt.strftime("%Y-%m-%d")
+    try:
+        from n2_prep.n2_curriculum_engine import get_phase_info as _get_phase_info
+        from n2_prep.n2_grammar_syllabus import N2_GRAMMAR_SYLLABUS as _N2_SYL
+        _pinfo = _get_phase_info(study_date_s)
+    except Exception:
+        _N2_SYL = []
+        _pinfo = {
+            "phase": "n3_sprint",
+            "track_label": "N3",
+            "exam_date": EXAM_DATE.isoformat(),
+            "days_to_exam": max(0, (EXAM_DATE - study_dt).days),
+            "n2_day": 0,
+            "is_travel_floor": False,
+        }
+    days_left = int(_pinfo.get("days_to_exam", max(0, (EXAM_DATE - study_dt).days)))
+    state["phase"] = _pinfo.get("phase", "n3_sprint")
+    state["track_label"] = _pinfo.get("track_label", "N3")
+    state["exam_date"] = _pinfo.get("exam_date", EXAM_DATE.isoformat())
     state["days_left"] = days_left
-    state["study_date"] = study_dt.strftime("%Y-%m-%d")
+    state["n2_day"] = int(_pinfo.get("n2_day", 0))
+    state["is_travel_floor"] = bool(_pinfo.get("is_travel_floor", False))
+    state["study_date"] = study_date_s
     state["updated_at"] = now_pt.strftime("%Y-%m-%d %H:%M PT")
     state["_baked_epoch"] = int(now_pt.timestamp())
+
+    # Lazily initialize 190 N2 grammar mastery slots upon entering N2 climb (100% preserving N3 records!)
+    if state["phase"] == "n2_climb" and _N2_SYL:
+        n2_pts = state.setdefault("n2_grammar_points", [])
+        n2_seen = {p.get("point") for p in n2_pts if isinstance(p, dict)}
+        for g in _N2_SYL:
+            if g["point"] not in n2_seen:
+                n2_pts.append({
+                    "id": g["id"],
+                    "day": g["day"],
+                    "family": g["family"],
+                    "point": g["point"],
+                    "meaning": g["soul_meaning"],
+                    "status": "gray",
+                    "streak": 0,
+                    "ok_days": [],
+                })
+                n2_seen.add(g["point"])
 
     count = apply_practice_logs(state, study_dt.strftime("%Y%m%d"))
     recompute_summary(state)
@@ -950,7 +1048,7 @@ def main():
 
     if not sync_only:
         subprocess.run([sys.executable, os.path.join(BASE_DIR, "build_html.py")], check=True)
-    print(f"Brain algorithm v6 synced {count} records (sync_only={sync_only}, quiz_only={quiz_only}, radio_only={radio_only}); days_left={days_left}.")
+    print(f"Brain algorithm v7 synced {count} records (phase={state['phase']}, track={state['track_label']}, sync_only={sync_only}, quiz_only={quiz_only}, radio_only={radio_only}); days_left={days_left}.")
 
 
 if __name__ == "__main__":

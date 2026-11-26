@@ -698,7 +698,7 @@ def test_full_bank_4choice_and_immersion_mnemonics() -> None:
         if not vocab_cards.get_pronunciation_mnemonic(it.get("kanji") or it.get("kana") or "", it.get("kana") or "")
     ]
     assert not missing_mn, f"Immersion words missing bilingual pronunciation mnemonics: {missing_mn[:10]}"
-    print(f"[PASS 11/12] 100% 4-choice across all {len(seen_ids)} cards (0 holdouts) + 100% bilingual mnemonics across {len(ive.IMMERSION_VOCAB_BANK)} immersion words")
+    print(f"[PASS 11/13] 100% 4-choice across all {len(seen_ids)} cards (0 holdouts) + 100% bilingual mnemonics across {len(ive.IMMERSION_VOCAB_BANK)} immersion words")
 
 
 def test_full_bank_100pct_option_notes() -> None:
@@ -788,7 +788,96 @@ def test_full_bank_100pct_option_notes() -> None:
     assert not missing, f"Options missing Chinese opt_notes ({len(missing)}): {missing[:10]}"
     assert not dashes, f"Options containing banned em dash ({len(dashes)}): {dashes[:10]}"
     assert not generic, f"Existing bank options hitting generic fallback ({len(generic)}): {generic[:10]}"
-    print(f"[PASS 12/12] 100% curated zero-dash option explanations across all {len(all_cards)} cards / {total_opts} options (0 blank, 0 generic)")
+    print(f"[PASS 12/13] 100% curated zero-dash option explanations across all {len(all_cards)} cards / {total_opts} options (0 blank, 0 generic)")
+
+
+def test_exam_day_and_n2_zero_to_120_transition_contract() -> None:
+    """Gate 13: Verify 2026-12-06 Exam Day, 2026-12-07 N2 Day 1, 2026-12-20 Europe travel, MOCK/N3_SCORE/quiet-SPK logs, and N2 Day 1 radio."""
+    import os
+    import subprocess
+    import tempfile
+
+    import run_brain_algorithm as rba
+    from n2_prep import n2_curriculum_engine as n2e
+
+    # 1. N2 bank & vocab invariants
+    qbank = n2e.build_n2_question_bank()
+    assert len(qbank) >= 190, f"Expected >=190 N2 grammar points, got {len(qbank)}"
+    for item in qbank:
+        p = item["primary"]
+        assert len(p["choices"]) == 4 and len(set(p["choices"])) == 4, f"{item['id']} not 4 unique choices"
+        assert p["answer"] in p["choices"], f"{item['id']} answer not in choices"
+    vcards = n2e.build_n2_vocab_cards()
+    assert len(vcards) >= 145, f"Expected >=145 N2 vocab cards, got {len(vcards)}"
+    for w, vc in vcards.items():
+        assert vc["mnemonic"] and "—" not in vc["mnemonic"], f"Bad N2 mnemonic for {w}"
+        assert len(vc["chunk_ja"]) <= 10, f"N2 chunk_ja > 10 chars for {w}: {vc['chunk_ja']}"
+
+    # 2. Brain state log handling for N3_SCORE:, MOCK:, quiet SPK, and N2G-001
+    fake_state = {
+        "grammar_points": [{"id": "G-001", "name": "〜ばかりだ", "status": "green", "streak": 3}],
+        "n2_grammar_points": [{"id": "N2G-001", "point": "〜ざるを得ない", "status": "gray", "streak": 0}],
+        "henkei_points": [],
+        "listening_points": [],
+        "vocab_tracked": [],
+        "speaking_practice": {"total_reps": 2, "last_date": "20261124", "slips": {"〜ばかりだ": {"count": 1, "last_date": "20261124", "last_note": "old"}}},
+        "_processed_log_ts": [],
+    }
+    fake_lines = [
+        {"ts": "2026-12-07T18:00:00Z", "id": "N3_SCORE:142", "point": "N3实考", "choice": "N3实考:142", "correct": "true"},
+        {"ts": "2026-12-07T18:01:00Z", "id": "MOCK:N3-G40", "point": "〜ばかりだ", "choice": "模拟错:わけだ", "correct": "false"},
+        {"ts": "2026-12-07T18:02:00Z", "id": "SPK:spk_1", "point": "〜ばかりだ", "choice": "开口:默跟顺口", "correct": "true"},
+        {"ts": "2026-12-07T18:03:00Z", "id": "N2G-001", "point": "〜ざるを得ない", "choice": "ざるを得ない", "correct": "true"},
+    ]
+    orig_log = rba.LOG_PATH
+    orig_snap = rba.SNAPSHOT_PATH
+    with tempfile.TemporaryDirectory(prefix="n2_gate13_") as td:
+        tlog = os.path.join(td, "practice_log.jsonl")
+        with open(tlog, "w", encoding="utf-8") as f:
+            for row in fake_lines:
+                f.write(json.dumps(row, ensure_ascii=False) + "\n")
+        rba.LOG_PATH = tlog
+        rba.SNAPSHOT_PATH = os.path.join(td, "no_snap.json")
+        try:
+            rba.apply_practice_logs(fake_state, "20261207")
+        finally:
+            rba.LOG_PATH = orig_log
+            rba.SNAPSHOT_PATH = orig_snap
+
+        assert (fake_state.get("n3_real_score") or {}).get("total") == 142, f"N3_SCORE failed: {fake_state.get('n3_real_score')}"
+        assert fake_state["grammar_points"][0]["status"] == "red", f"MOCK miss did not flag red: {fake_state['grammar_points'][0]}"
+        assert fake_state["speaking_practice"]["total_reps"] == 3 and "〜ばかりだ" not in fake_state["speaking_practice"]["slips"], f"Quiet SPK failed: {fake_state['speaking_practice']}"
+        assert fake_state["n2_grammar_points"][0]["status"] == "yellow" and fake_state["n2_grammar_points"][0]["streak"] == 1, f"N2G-001 mastery failed: {fake_state['n2_grammar_points'][0]}"
+
+        # 3. Isolated multi-date build_html.py dry-runs (all 22 Node self-tests per date!)
+        for d_str, exp_phase, exp_track, exp_min, exp_max in (
+            ("2026-12-06", "exam_day", "N3", 12, 12),
+            ("2026-12-07", "n2_climb", "N2", 45, 50),
+            ("2026-12-20", "n2_climb", "N2", 20, 26),
+        ):
+            out_html = os.path.join(td, f"sim_{d_str}.html")
+            env = dict(os.environ, FORCE_STUDY_DATE=d_str, OUTPUT_HTML_PATH=out_html)
+            subprocess.run([sys.executable, str(BASE_DIR / "build_html.py")], cwd=str(BASE_DIR), env=env, check=True, stdout=subprocess.DEVNULL)
+            raw_h = open(out_html, encoding="utf-8").read()
+            assert f"<title>{exp_track}</title>" in raw_h, f"{d_str}: expected <title>{exp_track}</title>"
+            m_d = re.search(r"const DATA = (\{.*?\});\n", raw_h)
+            assert m_d, f"{d_str}: DATA payload missing"
+            d_obj = json.loads(m_d.group(1))
+            assert d_obj["phase"] == exp_phase and d_obj["track_label"] == exp_track, f"{d_str}: phase mismatch {d_obj['phase']}/{d_obj['track_label']}"
+            assert exp_min <= len(d_obj["points"]) <= exp_max, f"{d_str}: deck size {len(d_obj['points'])} out of [{exp_min},{exp_max}]"
+            if d_str == "2026-12-07":
+                pids = {p["id"] for p in d_obj["points"]}
+                assert "N2G-001" in pids and "N2G-002" in pids, f"12/07 missing N2G-001/002: {sorted(pids)[:10]}"
+                n2g1 = next(p for p in d_obj["points"] if p["id"] == "N2G-001")
+                assert n2g1.get("teach_first") is True, "12/07 N2G-001 must have teach_first=True"
+
+    # 4. N2 Day 1 Radio dry-test
+    rad_out = subprocess.run(
+        [sys.executable, str(BASE_DIR / "generate_daily_radio.py"), "--dry-test", "--dry-date", "2026-12-07"],
+        cwd=str(BASE_DIR), check=True, capture_output=True, text=True,
+    ).stdout
+    assert "n2_v1_s2a" in rad_out and "n2_v1_s4_world_rare_earth" in rad_out and "phase=n2_climb" in rad_out, f"12/07 radio dry-test failed: {rad_out}"
+    print("[PASS 13/13] Exam-Day (12/06), N2 Day 1 (12/07), Europe Travel (12/20), MOCK/N3_SCORE/quiet-SPK & N2 Radio transitions verified end-to-end")
 
 
 def main() -> int:
@@ -804,7 +893,8 @@ def main() -> int:
     test_generate_daily_radio_async_and_reuse_contract()
     test_full_bank_4choice_and_immersion_mnemonics()
     test_full_bank_100pct_option_notes()
-    print("[ALL PASS] tests_ci_guard.py 12/12 gates green!")
+    test_exam_day_and_n2_zero_to_120_transition_contract()
+    print("[ALL PASS] tests_ci_guard.py 13/13 gates green!")
     return 0
 
 
