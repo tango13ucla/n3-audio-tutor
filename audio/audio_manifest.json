@@ -4721,6 +4721,1740 @@
     "vc_7b6eba65f9_phrase.mp3": "d30b270b5c",
     "vc_7b6eba65f9_word.mp3": "0181a205ea"
   },
+  "ga_cards": {
+    "G-001": {
+      "pat": "./audio/ga/ga_G-001_pat.mp3?v=c3ea0742",
+      "ex": "./audio/ga/ga_G-001_ex.mp3?v=4a258c44",
+      "hook": "./audio/ga/ga_G-001_hook.mp3?v=0f59f5ea",
+      "rev": "./audio/ga/ga_G-001_rev.mp3?v=2d04a8bf"
+    },
+    "G-002": {
+      "pat": "./audio/ga/ga_G-002_pat.mp3?v=5682cf20",
+      "ex": "./audio/ga/ga_G-002_ex.mp3?v=aceef16e",
+      "hook": "./audio/ga/ga_G-002_hook.mp3?v=5b3f161a",
+      "rev": "./audio/ga/ga_G-002_rev.mp3?v=e50fe79d"
+    },
+    "G-003": {
+      "pat": "./audio/ga/ga_G-003_pat.mp3?v=411886f2",
+      "ex": "./audio/ga/ga_G-003_ex.mp3?v=c7b7f95c",
+      "hook": "./audio/ga/ga_G-003_hook.mp3?v=d5914e38",
+      "rev": "./audio/ga/ga_G-003_rev.mp3?v=d16cfbbb"
+    },
+    "G-004": {
+      "pat": "./audio/ga/ga_G-004_pat.mp3?v=bd29d808",
+      "ex": "./audio/ga/ga_G-004_ex.mp3?v=9de21014",
+      "hook": "./audio/ga/ga_G-004_hook.mp3?v=505147d4",
+      "rev": "./audio/ga/ga_G-004_rev.mp3?v=9ad75b22"
+    },
+    "G-005": {
+      "pat": "./audio/ga/ga_G-005_pat.mp3?v=c01e5b23",
+      "ex": "./audio/ga/ga_G-005_ex.mp3?v=e8871e77",
+      "hook": "./audio/ga/ga_G-005_hook.mp3?v=d59cf151",
+      "rev": "./audio/ga/ga_G-005_rev.mp3?v=d0b6a38c"
+    },
+    "G-006": {
+      "pat": "./audio/ga/ga_G-006_pat.mp3?v=afab5427",
+      "ex": "./audio/ga/ga_G-006_ex.mp3?v=e1706b29",
+      "hook": "./audio/ga/ga_G-006_hook.mp3?v=bba783fc",
+      "rev": "./audio/ga/ga_G-006_rev.mp3?v=d534c00d"
+    },
+    "G-007": {
+      "pat": "./audio/ga/ga_G-007_pat.mp3?v=91dc56d2",
+      "ex": "./audio/ga/ga_G-007_ex.mp3?v=f89fd2a2",
+      "hook": "./audio/ga/ga_G-007_hook.mp3?v=a85d8da3",
+      "rev": "./audio/ga/ga_G-007_rev.mp3?v=f4bc568d"
+    },
+    "G-008": {
+      "pat": "./audio/ga/ga_G-008_pat.mp3?v=3a20dfb1",
+      "ex": "./audio/ga/ga_G-008_ex.mp3?v=0d58d3cd",
+      "hook": "./audio/ga/ga_G-008_hook.mp3?v=b0265779",
+      "rev": "./audio/ga/ga_G-008_rev.mp3?v=5d6dc66a"
+    },
+    "G-009": {
+      "pat": "./audio/ga/ga_G-009_pat.mp3?v=9eb4b01c",
+      "ex": "./audio/ga/ga_G-009_ex.mp3?v=56dc03c2",
+      "hook": "./audio/ga/ga_G-009_hook.mp3?v=ad028d9b",
+      "rev": "./audio/ga/ga_G-009_rev.mp3?v=5de4e792"
+    },
+    "G-010": {
+      "pat": "./audio/ga/ga_G-010_pat.mp3?v=05375fc0",
+      "ex": "./audio/ga/ga_G-010_ex.mp3?v=35e353b8",
+      "hook": "./audio/ga/ga_G-010_hook.mp3?v=39c15afc",
+      "rev": "./audio/ga/ga_G-010_rev.mp3?v=15ea068d"
+    },
+    "G-011": {
+      "pat": "./audio/ga/ga_G-011_pat.mp3?v=7690d79e",
+      "ex": "./audio/ga/ga_G-011_ex.mp3?v=56174bba",
+      "hook": "./audio/ga/ga_G-011_hook.mp3?v=44f9d852",
+      "rev": "./audio/ga/ga_G-011_rev.mp3?v=bc106bcb"
+    },
+    "G-012": {
+      "pat": "./audio/ga/ga_G-012_pat.mp3?v=75d1ab39",
+      "ex": "./audio/ga/ga_G-012_ex.mp3?v=c8398f35",
+      "hook": "./audio/ga/ga_G-012_hook.mp3?v=28e69861",
+      "rev": "./audio/ga/ga_G-012_rev.mp3?v=675a4cd1"
+    },
+    "G-013": {
+      "pat": "./audio/ga/ga_G-013_pat.mp3?v=5eb897b7",
+      "ex": "./audio/ga/ga_G-013_ex.mp3?v=8ed0311c",
+      "hook": "./audio/ga/ga_G-013_hook.mp3?v=936e891e",
+      "rev": "./audio/ga/ga_G-013_rev.mp3?v=d2d4c66f"
+    },
+    "G-014": {
+      "pat": "./audio/ga/ga_G-014_pat.mp3?v=03e59c6e",
+      "ex": "./audio/ga/ga_G-014_ex.mp3?v=2b9d06cf",
+      "hook": "./audio/ga/ga_G-014_hook.mp3?v=7ce28291",
+      "rev": "./audio/ga/ga_G-014_rev.mp3?v=1307ff92"
+    },
+    "G-015": {
+      "pat": "./audio/ga/ga_G-015_pat.mp3?v=da7ba3fd",
+      "ex": "./audio/ga/ga_G-015_ex.mp3?v=cd87b660",
+      "hook": "./audio/ga/ga_G-015_hook.mp3?v=ac167fc1",
+      "rev": "./audio/ga/ga_G-015_rev.mp3?v=20f5a9bf"
+    },
+    "G-016": {
+      "pat": "./audio/ga/ga_G-016_pat.mp3?v=454c8dc0",
+      "ex": "./audio/ga/ga_G-016_ex.mp3?v=ff194598",
+      "hook": "./audio/ga/ga_G-016_hook.mp3?v=9609ec04",
+      "rev": "./audio/ga/ga_G-016_rev.mp3?v=1f15b4ac"
+    },
+    "G-017": {
+      "pat": "./audio/ga/ga_G-017_pat.mp3?v=80406024",
+      "ex": "./audio/ga/ga_G-017_ex.mp3?v=fa5ac856",
+      "hook": "./audio/ga/ga_G-017_hook.mp3?v=99170838",
+      "rev": "./audio/ga/ga_G-017_rev.mp3?v=ab8fb984"
+    },
+    "G-018": {
+      "pat": "./audio/ga/ga_G-018_pat.mp3?v=1bdebae3",
+      "ex": "./audio/ga/ga_G-018_ex.mp3?v=58fc78fe",
+      "hook": "./audio/ga/ga_G-018_hook.mp3?v=f256673b",
+      "rev": "./audio/ga/ga_G-018_rev.mp3?v=347e7c9d"
+    },
+    "G-019": {
+      "pat": "./audio/ga/ga_G-019_pat.mp3?v=fe7dd7d8",
+      "ex": "./audio/ga/ga_G-019_ex.mp3?v=18a87d37",
+      "hook": "./audio/ga/ga_G-019_hook.mp3?v=f12ada69",
+      "rev": "./audio/ga/ga_G-019_rev.mp3?v=eed8a7b6"
+    },
+    "G-020": {
+      "pat": "./audio/ga/ga_G-020_pat.mp3?v=22a5ae94",
+      "ex": "./audio/ga/ga_G-020_ex.mp3?v=24cb6d26",
+      "hook": "./audio/ga/ga_G-020_hook.mp3?v=05537a23",
+      "rev": "./audio/ga/ga_G-020_rev.mp3?v=de6b0718"
+    },
+    "G-021": {
+      "pat": "./audio/ga/ga_G-021_pat.mp3?v=34edea89",
+      "ex": "./audio/ga/ga_G-021_ex.mp3?v=a0572f0c",
+      "hook": "./audio/ga/ga_G-021_hook.mp3?v=4fdbc3ba",
+      "rev": "./audio/ga/ga_G-021_rev.mp3?v=bcecc612"
+    },
+    "G-022": {
+      "pat": "./audio/ga/ga_G-022_pat.mp3?v=48d5e4fd",
+      "ex": "./audio/ga/ga_G-022_ex.mp3?v=256e3e5f",
+      "hook": "./audio/ga/ga_G-022_hook.mp3?v=fb1e11ca",
+      "rev": "./audio/ga/ga_G-022_rev.mp3?v=9a97fbf2"
+    },
+    "G-023": {
+      "pat": "./audio/ga/ga_G-023_pat.mp3?v=933cf976",
+      "ex": "./audio/ga/ga_G-023_ex.mp3?v=74011ee1",
+      "hook": "./audio/ga/ga_G-023_hook.mp3?v=386ff032",
+      "rev": "./audio/ga/ga_G-023_rev.mp3?v=d00fbf99"
+    },
+    "G-024": {
+      "pat": "./audio/ga/ga_G-024_pat.mp3?v=0bf9cc27",
+      "ex": "./audio/ga/ga_G-024_ex.mp3?v=b1ca7840",
+      "hook": "./audio/ga/ga_G-024_hook.mp3?v=c706b5aa",
+      "rev": "./audio/ga/ga_G-024_rev.mp3?v=2ed8aa17"
+    },
+    "G-025": {
+      "pat": "./audio/ga/ga_G-025_pat.mp3?v=43822689",
+      "ex": "./audio/ga/ga_G-025_ex.mp3?v=bf38c4df",
+      "hook": "./audio/ga/ga_G-025_hook.mp3?v=5c9cb624",
+      "rev": "./audio/ga/ga_G-025_rev.mp3?v=d47aed64"
+    },
+    "G-026": {
+      "pat": "./audio/ga/ga_G-026_pat.mp3?v=b91505c7",
+      "ex": "./audio/ga/ga_G-026_ex.mp3?v=fd7b055c",
+      "hook": "./audio/ga/ga_G-026_hook.mp3?v=311f20ad",
+      "rev": "./audio/ga/ga_G-026_rev.mp3?v=ee4b61e6"
+    },
+    "G-027": {
+      "pat": "./audio/ga/ga_G-027_pat.mp3?v=62328572",
+      "ex": "./audio/ga/ga_G-027_ex.mp3?v=bd0b8fc9",
+      "hook": "./audio/ga/ga_G-027_hook.mp3?v=beeb3cdf",
+      "rev": "./audio/ga/ga_G-027_rev.mp3?v=f015fc42"
+    },
+    "G-028": {
+      "pat": "./audio/ga/ga_G-028_pat.mp3?v=e3ed4e4e",
+      "ex": "./audio/ga/ga_G-028_ex.mp3?v=c2941e08",
+      "hook": "./audio/ga/ga_G-028_hook.mp3?v=c6d9c8c3",
+      "rev": "./audio/ga/ga_G-028_rev.mp3?v=24bd1a2b"
+    },
+    "G-029": {
+      "pat": "./audio/ga/ga_G-029_pat.mp3?v=6282d437",
+      "ex": "./audio/ga/ga_G-029_ex.mp3?v=41d3faef",
+      "hook": "./audio/ga/ga_G-029_hook.mp3?v=3c9f2f45",
+      "rev": "./audio/ga/ga_G-029_rev.mp3?v=b565fd27"
+    },
+    "G-030": {
+      "pat": "./audio/ga/ga_G-030_pat.mp3?v=d17940d3",
+      "ex": "./audio/ga/ga_G-030_ex.mp3?v=eb801ccc",
+      "hook": "./audio/ga/ga_G-030_hook.mp3?v=4b2f84bf",
+      "rev": "./audio/ga/ga_G-030_rev.mp3?v=9f7a84c5"
+    },
+    "G-031": {
+      "pat": "./audio/ga/ga_G-031_pat.mp3?v=ed5e137b",
+      "ex": "./audio/ga/ga_G-031_ex.mp3?v=60721804",
+      "hook": "./audio/ga/ga_G-031_hook.mp3?v=a886528f",
+      "rev": "./audio/ga/ga_G-031_rev.mp3?v=bab9ce11"
+    },
+    "G-032": {
+      "pat": "./audio/ga/ga_G-032_pat.mp3?v=ad959fbb",
+      "ex": "./audio/ga/ga_G-032_ex.mp3?v=dac3621e",
+      "hook": "./audio/ga/ga_G-032_hook.mp3?v=a4996aa4",
+      "rev": "./audio/ga/ga_G-032_rev.mp3?v=611f8cf0"
+    },
+    "G-033": {
+      "pat": "./audio/ga/ga_G-033_pat.mp3?v=7e4129fb",
+      "ex": "./audio/ga/ga_G-033_ex.mp3?v=8792067d",
+      "hook": "./audio/ga/ga_G-033_hook.mp3?v=e026a016",
+      "rev": "./audio/ga/ga_G-033_rev.mp3?v=e13d86a7"
+    },
+    "G-034": {
+      "pat": "./audio/ga/ga_G-034_pat.mp3?v=6d571045",
+      "ex": "./audio/ga/ga_G-034_ex.mp3?v=48694f50",
+      "hook": "./audio/ga/ga_G-034_hook.mp3?v=06005dc7",
+      "rev": "./audio/ga/ga_G-034_rev.mp3?v=0066bd86"
+    },
+    "G-035": {
+      "pat": "./audio/ga/ga_G-035_pat.mp3?v=917622b7",
+      "ex": "./audio/ga/ga_G-035_ex.mp3?v=918629fc",
+      "hook": "./audio/ga/ga_G-035_hook.mp3?v=34314a34",
+      "rev": "./audio/ga/ga_G-035_rev.mp3?v=f5722875"
+    },
+    "G-036": {
+      "pat": "./audio/ga/ga_G-036_pat.mp3?v=e82e6186",
+      "ex": "./audio/ga/ga_G-036_ex.mp3?v=3df7b2a5",
+      "hook": "./audio/ga/ga_G-036_hook.mp3?v=b7e4a012",
+      "rev": "./audio/ga/ga_G-036_rev.mp3?v=c5d19a87"
+    },
+    "G-037": {
+      "pat": "./audio/ga/ga_G-037_pat.mp3?v=20aa8ae8",
+      "ex": "./audio/ga/ga_G-037_ex.mp3?v=61155591",
+      "hook": "./audio/ga/ga_G-037_hook.mp3?v=9d4a53a0",
+      "rev": "./audio/ga/ga_G-037_rev.mp3?v=4685da68"
+    },
+    "G-038": {
+      "pat": "./audio/ga/ga_G-038_pat.mp3?v=0e7b9bb2",
+      "ex": "./audio/ga/ga_G-038_ex.mp3?v=b724fd38",
+      "hook": "./audio/ga/ga_G-038_hook.mp3?v=463d49d5",
+      "rev": "./audio/ga/ga_G-038_rev.mp3?v=6add1078"
+    },
+    "G-039": {
+      "pat": "./audio/ga/ga_G-039_pat.mp3?v=3df74ea8",
+      "ex": "./audio/ga/ga_G-039_ex.mp3?v=cd03bba7",
+      "hook": "./audio/ga/ga_G-039_hook.mp3?v=3842d60c",
+      "rev": "./audio/ga/ga_G-039_rev.mp3?v=2b152567"
+    },
+    "G-040": {
+      "pat": "./audio/ga/ga_G-040_pat.mp3?v=f54a386e",
+      "ex": "./audio/ga/ga_G-040_ex.mp3?v=301594f1",
+      "hook": "./audio/ga/ga_G-040_hook.mp3?v=d9cfde9d",
+      "rev": "./audio/ga/ga_G-040_rev.mp3?v=16ae4235"
+    },
+    "G-041": {
+      "pat": "./audio/ga/ga_G-041_pat.mp3?v=aa98673c",
+      "ex": "./audio/ga/ga_G-041_ex.mp3?v=f9d8d8e9",
+      "hook": "./audio/ga/ga_G-041_hook.mp3?v=ac135bc9",
+      "rev": "./audio/ga/ga_G-041_rev.mp3?v=bb41162c"
+    },
+    "G-042": {
+      "pat": "./audio/ga/ga_G-042_pat.mp3?v=ca4c9118",
+      "ex": "./audio/ga/ga_G-042_ex.mp3?v=98f42fe9",
+      "hook": "./audio/ga/ga_G-042_hook.mp3?v=7a21fcaf",
+      "rev": "./audio/ga/ga_G-042_rev.mp3?v=43e4c028"
+    },
+    "G-043": {
+      "pat": "./audio/ga/ga_G-043_pat.mp3?v=4eb7e71f",
+      "ex": "./audio/ga/ga_G-043_ex.mp3?v=b1c9f92d",
+      "hook": "./audio/ga/ga_G-043_hook.mp3?v=8987a086",
+      "rev": "./audio/ga/ga_G-043_rev.mp3?v=ff1029d7"
+    },
+    "G-044": {
+      "pat": "./audio/ga/ga_G-044_pat.mp3?v=8f33bc57",
+      "ex": "./audio/ga/ga_G-044_ex.mp3?v=d2d2602f",
+      "hook": "./audio/ga/ga_G-044_hook.mp3?v=4d9fc6ea",
+      "rev": "./audio/ga/ga_G-044_rev.mp3?v=6a36ffb5"
+    },
+    "G-045": {
+      "pat": "./audio/ga/ga_G-045_pat.mp3?v=833567d2",
+      "ex": "./audio/ga/ga_G-045_ex.mp3?v=7f32c659",
+      "hook": "./audio/ga/ga_G-045_hook.mp3?v=f94a41a6",
+      "rev": "./audio/ga/ga_G-045_rev.mp3?v=79fd417b"
+    },
+    "G-046": {
+      "pat": "./audio/ga/ga_G-046_pat.mp3?v=460919e5",
+      "ex": "./audio/ga/ga_G-046_ex.mp3?v=ba03b317",
+      "hook": "./audio/ga/ga_G-046_hook.mp3?v=307f048a",
+      "rev": "./audio/ga/ga_G-046_rev.mp3?v=f0674306"
+    },
+    "G-047": {
+      "pat": "./audio/ga/ga_G-047_pat.mp3?v=ed4fd118",
+      "ex": "./audio/ga/ga_G-047_ex.mp3?v=f8355345",
+      "hook": "./audio/ga/ga_G-047_hook.mp3?v=000ab8e0",
+      "rev": "./audio/ga/ga_G-047_rev.mp3?v=7fbb9b58"
+    },
+    "G-048": {
+      "pat": "./audio/ga/ga_G-048_pat.mp3?v=9cc75968",
+      "ex": "./audio/ga/ga_G-048_ex.mp3?v=9e215cf8",
+      "hook": "./audio/ga/ga_G-048_hook.mp3?v=95a22e23",
+      "rev": "./audio/ga/ga_G-048_rev.mp3?v=9dae552a"
+    },
+    "G-049": {
+      "pat": "./audio/ga/ga_G-049_pat.mp3?v=9ade1e65",
+      "ex": "./audio/ga/ga_G-049_ex.mp3?v=993defc4",
+      "hook": "./audio/ga/ga_G-049_hook.mp3?v=9b7d93f9",
+      "rev": "./audio/ga/ga_G-049_rev.mp3?v=cdc5fdc5"
+    },
+    "G-050": {
+      "pat": "./audio/ga/ga_G-050_pat.mp3?v=e47dbd21",
+      "ex": "./audio/ga/ga_G-050_ex.mp3?v=877fb1e3",
+      "hook": "./audio/ga/ga_G-050_hook.mp3?v=dd865450",
+      "rev": "./audio/ga/ga_G-050_rev.mp3?v=19b4a740"
+    },
+    "G-051": {
+      "pat": "./audio/ga/ga_G-051_pat.mp3?v=055d16c1",
+      "ex": "./audio/ga/ga_G-051_ex.mp3?v=bd2670a8",
+      "hook": "./audio/ga/ga_G-051_hook.mp3?v=77ff849c",
+      "rev": "./audio/ga/ga_G-051_rev.mp3?v=2bc7f8fa"
+    },
+    "G-052": {
+      "pat": "./audio/ga/ga_G-052_pat.mp3?v=259d6183",
+      "ex": "./audio/ga/ga_G-052_ex.mp3?v=8d074a0a",
+      "hook": "./audio/ga/ga_G-052_hook.mp3?v=b0469ce1",
+      "rev": "./audio/ga/ga_G-052_rev.mp3?v=aeaa90af"
+    },
+    "G-053": {
+      "pat": "./audio/ga/ga_G-053_pat.mp3?v=2b4a4b6a",
+      "ex": "./audio/ga/ga_G-053_ex.mp3?v=fb691e58",
+      "hook": "./audio/ga/ga_G-053_hook.mp3?v=deb2f9cf",
+      "rev": "./audio/ga/ga_G-053_rev.mp3?v=7ed09edb"
+    },
+    "G-054": {
+      "pat": "./audio/ga/ga_G-054_pat.mp3?v=425294fb",
+      "ex": "./audio/ga/ga_G-054_ex.mp3?v=58f85778",
+      "hook": "./audio/ga/ga_G-054_hook.mp3?v=025ce6a5",
+      "rev": "./audio/ga/ga_G-054_rev.mp3?v=9388e012"
+    },
+    "G-055": {
+      "pat": "./audio/ga/ga_G-055_pat.mp3?v=28d541b9",
+      "ex": "./audio/ga/ga_G-055_ex.mp3?v=690a3c7c",
+      "hook": "./audio/ga/ga_G-055_hook.mp3?v=903e05e1",
+      "rev": "./audio/ga/ga_G-055_rev.mp3?v=704aef32"
+    },
+    "G-056": {
+      "pat": "./audio/ga/ga_G-056_pat.mp3?v=42645813",
+      "ex": "./audio/ga/ga_G-056_ex.mp3?v=fa75669c",
+      "hook": "./audio/ga/ga_G-056_hook.mp3?v=90fb4fc7",
+      "rev": "./audio/ga/ga_G-056_rev.mp3?v=1d889f5d"
+    },
+    "G-057": {
+      "pat": "./audio/ga/ga_G-057_pat.mp3?v=0b9be0bf",
+      "ex": "./audio/ga/ga_G-057_ex.mp3?v=179021e7",
+      "hook": "./audio/ga/ga_G-057_hook.mp3?v=00eb23b5",
+      "rev": "./audio/ga/ga_G-057_rev.mp3?v=bb6e2ea9"
+    },
+    "G-058": {
+      "pat": "./audio/ga/ga_G-058_pat.mp3?v=0b9be0bf",
+      "ex": "./audio/ga/ga_G-058_ex.mp3?v=ff2263a8",
+      "hook": "./audio/ga/ga_G-058_hook.mp3?v=acc1b786",
+      "rev": "./audio/ga/ga_G-058_rev.mp3?v=7b97109a"
+    },
+    "G-059": {
+      "pat": "./audio/ga/ga_G-059_pat.mp3?v=0e904edb",
+      "ex": "./audio/ga/ga_G-059_ex.mp3?v=c4249254",
+      "hook": "./audio/ga/ga_G-059_hook.mp3?v=03c7779a",
+      "rev": "./audio/ga/ga_G-059_rev.mp3?v=49eccb4c"
+    },
+    "G-060": {
+      "pat": "./audio/ga/ga_G-060_pat.mp3?v=881637d3",
+      "ex": "./audio/ga/ga_G-060_ex.mp3?v=b359e9b6",
+      "hook": "./audio/ga/ga_G-060_hook.mp3?v=6594a79b",
+      "rev": "./audio/ga/ga_G-060_rev.mp3?v=3efd2b3d"
+    },
+    "G-061": {
+      "pat": "./audio/ga/ga_G-061_pat.mp3?v=858aa88a",
+      "ex": "./audio/ga/ga_G-061_ex.mp3?v=fd00c338",
+      "hook": "./audio/ga/ga_G-061_hook.mp3?v=00ec9f3e",
+      "rev": "./audio/ga/ga_G-061_rev.mp3?v=15307d79"
+    },
+    "G-062": {
+      "pat": "./audio/ga/ga_G-062_pat.mp3?v=b91c8d12",
+      "ex": "./audio/ga/ga_G-062_ex.mp3?v=a9a8a5a0",
+      "hook": "./audio/ga/ga_G-062_hook.mp3?v=97966fbc",
+      "rev": "./audio/ga/ga_G-062_rev.mp3?v=a47b4723"
+    },
+    "G-063": {
+      "pat": "./audio/ga/ga_G-063_pat.mp3?v=74b9e14b",
+      "ex": "./audio/ga/ga_G-063_ex.mp3?v=9562aac8",
+      "hook": "./audio/ga/ga_G-063_hook.mp3?v=e82307a6",
+      "rev": "./audio/ga/ga_G-063_rev.mp3?v=a61ff05b"
+    },
+    "G-064": {
+      "pat": "./audio/ga/ga_G-064_pat.mp3?v=cc13a07c",
+      "ex": "./audio/ga/ga_G-064_ex.mp3?v=a91790a5",
+      "hook": "./audio/ga/ga_G-064_hook.mp3?v=1d1679e4",
+      "rev": "./audio/ga/ga_G-064_rev.mp3?v=cb07e8a0"
+    },
+    "G-065": {
+      "pat": "./audio/ga/ga_G-065_pat.mp3?v=8979fa0e",
+      "ex": "./audio/ga/ga_G-065_ex.mp3?v=898bad23",
+      "hook": "./audio/ga/ga_G-065_hook.mp3?v=7e89a98b",
+      "rev": "./audio/ga/ga_G-065_rev.mp3?v=4bac131e"
+    },
+    "G-066": {
+      "pat": "./audio/ga/ga_G-066_pat.mp3?v=e3e525c4",
+      "ex": "./audio/ga/ga_G-066_ex.mp3?v=86374aee",
+      "hook": "./audio/ga/ga_G-066_hook.mp3?v=41636451",
+      "rev": "./audio/ga/ga_G-066_rev.mp3?v=86a0c108"
+    },
+    "G-067": {
+      "pat": "./audio/ga/ga_G-067_pat.mp3?v=4ef925d2",
+      "ex": "./audio/ga/ga_G-067_ex.mp3?v=f636ac90",
+      "hook": "./audio/ga/ga_G-067_hook.mp3?v=4c7edba6",
+      "rev": "./audio/ga/ga_G-067_rev.mp3?v=db48d4f5"
+    },
+    "G-068": {
+      "pat": "./audio/ga/ga_G-068_pat.mp3?v=65ce55a3",
+      "ex": "./audio/ga/ga_G-068_ex.mp3?v=bfbf9379",
+      "hook": "./audio/ga/ga_G-068_hook.mp3?v=10c89da2",
+      "rev": "./audio/ga/ga_G-068_rev.mp3?v=4991b9ba"
+    },
+    "G-069": {
+      "pat": "./audio/ga/ga_G-069_pat.mp3?v=f116cd8d",
+      "ex": "./audio/ga/ga_G-069_ex.mp3?v=3953a38c",
+      "hook": "./audio/ga/ga_G-069_hook.mp3?v=281264a2",
+      "rev": "./audio/ga/ga_G-069_rev.mp3?v=ceae0946"
+    },
+    "G-070": {
+      "pat": "./audio/ga/ga_G-070_pat.mp3?v=03a1f751",
+      "ex": "./audio/ga/ga_G-070_ex.mp3?v=a9040cd7",
+      "hook": "./audio/ga/ga_G-070_hook.mp3?v=07aca76b",
+      "rev": "./audio/ga/ga_G-070_rev.mp3?v=4b23cd36"
+    },
+    "G-071": {
+      "pat": "./audio/ga/ga_G-071_pat.mp3?v=95428395",
+      "ex": "./audio/ga/ga_G-071_ex.mp3?v=26d05628",
+      "hook": "./audio/ga/ga_G-071_hook.mp3?v=df89da49",
+      "rev": "./audio/ga/ga_G-071_rev.mp3?v=2fe984a0"
+    },
+    "G-072": {
+      "pat": "./audio/ga/ga_G-072_pat.mp3?v=b1d5acf6",
+      "ex": "./audio/ga/ga_G-072_ex.mp3?v=d55fd541",
+      "hook": "./audio/ga/ga_G-072_hook.mp3?v=93f9c910",
+      "rev": "./audio/ga/ga_G-072_rev.mp3?v=9631be80"
+    },
+    "G-073": {
+      "pat": "./audio/ga/ga_G-073_pat.mp3?v=68d3e596",
+      "ex": "./audio/ga/ga_G-073_ex.mp3?v=e67ad551",
+      "hook": "./audio/ga/ga_G-073_hook.mp3?v=f38022ba",
+      "rev": "./audio/ga/ga_G-073_rev.mp3?v=f7d100c7"
+    },
+    "G-074": {
+      "pat": "./audio/ga/ga_G-074_pat.mp3?v=cfaf364b",
+      "ex": "./audio/ga/ga_G-074_ex.mp3?v=81f24f98",
+      "hook": "./audio/ga/ga_G-074_hook.mp3?v=afda281a",
+      "rev": "./audio/ga/ga_G-074_rev.mp3?v=576c8b88"
+    },
+    "G-075": {
+      "pat": "./audio/ga/ga_G-075_pat.mp3?v=83f5db41",
+      "ex": "./audio/ga/ga_G-075_ex.mp3?v=ee1c720d",
+      "hook": "./audio/ga/ga_G-075_hook.mp3?v=24e82518",
+      "rev": "./audio/ga/ga_G-075_rev.mp3?v=c2ed75c7"
+    },
+    "G-076": {
+      "pat": "./audio/ga/ga_G-076_pat.mp3?v=c9de95f5",
+      "ex": "./audio/ga/ga_G-076_ex.mp3?v=abf1bac7",
+      "hook": "./audio/ga/ga_G-076_hook.mp3?v=64edfcf0",
+      "rev": "./audio/ga/ga_G-076_rev.mp3?v=1e8dc159"
+    },
+    "G-077": {
+      "pat": "./audio/ga/ga_G-077_pat.mp3?v=61c07d82",
+      "ex": "./audio/ga/ga_G-077_ex.mp3?v=1ff6836c",
+      "hook": "./audio/ga/ga_G-077_hook.mp3?v=06875509",
+      "rev": "./audio/ga/ga_G-077_rev.mp3?v=3b519f2a"
+    },
+    "G-078": {
+      "pat": "./audio/ga/ga_G-078_pat.mp3?v=7569a760",
+      "ex": "./audio/ga/ga_G-078_ex.mp3?v=cc7ef976",
+      "hook": "./audio/ga/ga_G-078_hook.mp3?v=4a244be6",
+      "rev": "./audio/ga/ga_G-078_rev.mp3?v=9156dccb"
+    },
+    "G-079": {
+      "pat": "./audio/ga/ga_G-079_pat.mp3?v=c307be3d",
+      "ex": "./audio/ga/ga_G-079_ex.mp3?v=121e20ce",
+      "hook": "./audio/ga/ga_G-079_hook.mp3?v=31ba4167",
+      "rev": "./audio/ga/ga_G-079_rev.mp3?v=e110110a"
+    },
+    "G-080": {
+      "pat": "./audio/ga/ga_G-080_pat.mp3?v=3402b0b0",
+      "ex": "./audio/ga/ga_G-080_ex.mp3?v=eccc8228",
+      "hook": "./audio/ga/ga_G-080_hook.mp3?v=35cc9010",
+      "rev": "./audio/ga/ga_G-080_rev.mp3?v=9e434f14"
+    },
+    "G-081": {
+      "pat": "./audio/ga/ga_G-081_pat.mp3?v=0aff4e9e",
+      "ex": "./audio/ga/ga_G-081_ex.mp3?v=34f28bf8",
+      "hook": "./audio/ga/ga_G-081_hook.mp3?v=0d01e91c",
+      "rev": "./audio/ga/ga_G-081_rev.mp3?v=8d3e3682"
+    },
+    "G-082": {
+      "pat": "./audio/ga/ga_G-082_pat.mp3?v=e3b89f30",
+      "ex": "./audio/ga/ga_G-082_ex.mp3?v=622ec9d1",
+      "hook": "./audio/ga/ga_G-082_hook.mp3?v=00e0b003",
+      "rev": "./audio/ga/ga_G-082_rev.mp3?v=6c36ad00"
+    },
+    "G-083": {
+      "pat": "./audio/ga/ga_G-083_pat.mp3?v=264e7adb",
+      "ex": "./audio/ga/ga_G-083_ex.mp3?v=df648786",
+      "hook": "./audio/ga/ga_G-083_hook.mp3?v=39512d2b",
+      "rev": "./audio/ga/ga_G-083_rev.mp3?v=0ae5bc38"
+    },
+    "G-084": {
+      "pat": "./audio/ga/ga_G-084_pat.mp3?v=bdca0ee8",
+      "ex": "./audio/ga/ga_G-084_ex.mp3?v=b7157a2d",
+      "hook": "./audio/ga/ga_G-084_hook.mp3?v=dae62af3",
+      "rev": "./audio/ga/ga_G-084_rev.mp3?v=e58363b3"
+    },
+    "G-085": {
+      "pat": "./audio/ga/ga_G-085_pat.mp3?v=3072bcc9",
+      "ex": "./audio/ga/ga_G-085_ex.mp3?v=75b7e75f",
+      "hook": "./audio/ga/ga_G-085_hook.mp3?v=9dd6426d",
+      "rev": "./audio/ga/ga_G-085_rev.mp3?v=21af428f"
+    },
+    "G-086": {
+      "pat": "./audio/ga/ga_G-086_pat.mp3?v=465734f6",
+      "ex": "./audio/ga/ga_G-086_ex.mp3?v=fc64c930",
+      "hook": "./audio/ga/ga_G-086_hook.mp3?v=5e0c5e8d",
+      "rev": "./audio/ga/ga_G-086_rev.mp3?v=1df550f0"
+    },
+    "G-087": {
+      "pat": "./audio/ga/ga_G-087_pat.mp3?v=b59f391d",
+      "ex": "./audio/ga/ga_G-087_ex.mp3?v=ee7b394d",
+      "hook": "./audio/ga/ga_G-087_hook.mp3?v=f7683e2b",
+      "rev": "./audio/ga/ga_G-087_rev.mp3?v=79a32042"
+    },
+    "G-088": {
+      "pat": "./audio/ga/ga_G-088_pat.mp3?v=8c4ddc96",
+      "ex": "./audio/ga/ga_G-088_ex.mp3?v=96445570",
+      "hook": "./audio/ga/ga_G-088_hook.mp3?v=3fa83d42",
+      "rev": "./audio/ga/ga_G-088_rev.mp3?v=e7121b22"
+    },
+    "G-089": {
+      "pat": "./audio/ga/ga_G-089_pat.mp3?v=619f7589",
+      "ex": "./audio/ga/ga_G-089_ex.mp3?v=c9454022",
+      "hook": "./audio/ga/ga_G-089_hook.mp3?v=816fcf49",
+      "rev": "./audio/ga/ga_G-089_rev.mp3?v=24fc62ea"
+    },
+    "G-090": {
+      "pat": "./audio/ga/ga_G-090_pat.mp3?v=a0c5e10e",
+      "ex": "./audio/ga/ga_G-090_ex.mp3?v=2c747209",
+      "hook": "./audio/ga/ga_G-090_hook.mp3?v=1c3b351a",
+      "rev": "./audio/ga/ga_G-090_rev.mp3?v=864493e1"
+    },
+    "G-091": {
+      "pat": "./audio/ga/ga_G-091_pat.mp3?v=cec3aa38",
+      "ex": "./audio/ga/ga_G-091_ex.mp3?v=f56887e4",
+      "hook": "./audio/ga/ga_G-091_hook.mp3?v=9a259d73",
+      "rev": "./audio/ga/ga_G-091_rev.mp3?v=f9b97e3c"
+    },
+    "G-092": {
+      "pat": "./audio/ga/ga_G-092_pat.mp3?v=5728f4cd",
+      "ex": "./audio/ga/ga_G-092_ex.mp3?v=852b0b8f",
+      "hook": "./audio/ga/ga_G-092_hook.mp3?v=132d0351",
+      "rev": "./audio/ga/ga_G-092_rev.mp3?v=1a55bc09"
+    },
+    "G-093": {
+      "pat": "./audio/ga/ga_G-093_pat.mp3?v=954feb52",
+      "ex": "./audio/ga/ga_G-093_ex.mp3?v=8d62d9b5",
+      "hook": "./audio/ga/ga_G-093_hook.mp3?v=9c3d24b1",
+      "rev": "./audio/ga/ga_G-093_rev.mp3?v=cbec7837"
+    },
+    "G-094": {
+      "pat": "./audio/ga/ga_G-094_pat.mp3?v=3edd665c",
+      "ex": "./audio/ga/ga_G-094_ex.mp3?v=2feaadb2",
+      "hook": "./audio/ga/ga_G-094_hook.mp3?v=ed3af0d3",
+      "rev": "./audio/ga/ga_G-094_rev.mp3?v=dceeedc5"
+    },
+    "G-095": {
+      "pat": "./audio/ga/ga_G-095_pat.mp3?v=51228cee",
+      "ex": "./audio/ga/ga_G-095_ex.mp3?v=00a35210",
+      "hook": "./audio/ga/ga_G-095_hook.mp3?v=b4f629d4",
+      "rev": "./audio/ga/ga_G-095_rev.mp3?v=e3842657"
+    },
+    "G-096": {
+      "pat": "./audio/ga/ga_G-096_pat.mp3?v=2b904511",
+      "ex": "./audio/ga/ga_G-096_ex.mp3?v=e076a425",
+      "hook": "./audio/ga/ga_G-096_hook.mp3?v=28298c41",
+      "rev": "./audio/ga/ga_G-096_rev.mp3?v=c97e743a"
+    },
+    "G-097": {
+      "pat": "./audio/ga/ga_G-097_pat.mp3?v=071bd1e8",
+      "ex": "./audio/ga/ga_G-097_ex.mp3?v=1d3ceaf3",
+      "hook": "./audio/ga/ga_G-097_hook.mp3?v=6ec7a1c5",
+      "rev": "./audio/ga/ga_G-097_rev.mp3?v=31fdd5fe"
+    },
+    "G-098a": {
+      "pat": "./audio/ga/ga_G-098a_pat.mp3?v=37ac8d5c",
+      "ex": "./audio/ga/ga_G-098a_ex.mp3?v=c7bfb694",
+      "hook": "./audio/ga/ga_G-098a_hook.mp3?v=de2e28fb",
+      "rev": "./audio/ga/ga_G-098a_rev.mp3?v=b38da7c0"
+    },
+    "G-098b": {
+      "pat": "./audio/ga/ga_G-098b_pat.mp3?v=1d02a6c4",
+      "ex": "./audio/ga/ga_G-098b_ex.mp3?v=abe9c1c7",
+      "hook": "./audio/ga/ga_G-098b_hook.mp3?v=cd6e35c2",
+      "rev": "./audio/ga/ga_G-098b_rev.mp3?v=7aeb4825"
+    },
+    "G-099": {
+      "pat": "./audio/ga/ga_G-099_pat.mp3?v=58eaacfe",
+      "ex": "./audio/ga/ga_G-099_ex.mp3?v=d53c0ff6",
+      "hook": "./audio/ga/ga_G-099_hook.mp3?v=b3e7d259",
+      "rev": "./audio/ga/ga_G-099_rev.mp3?v=11ad2a00"
+    },
+    "G-100": {
+      "pat": "./audio/ga/ga_G-100_pat.mp3?v=0a4655e1",
+      "ex": "./audio/ga/ga_G-100_ex.mp3?v=f27d1358",
+      "hook": "./audio/ga/ga_G-100_hook.mp3?v=1e319b4f",
+      "rev": "./audio/ga/ga_G-100_rev.mp3?v=be0968ee"
+    },
+    "G-101": {
+      "pat": "./audio/ga/ga_G-101_pat.mp3?v=a6563700",
+      "ex": "./audio/ga/ga_G-101_ex.mp3?v=d7ea6179",
+      "hook": "./audio/ga/ga_G-101_hook.mp3?v=42701d75",
+      "rev": "./audio/ga/ga_G-101_rev.mp3?v=9c7c4980"
+    },
+    "G-102": {
+      "pat": "./audio/ga/ga_G-102_pat.mp3?v=33fc3196",
+      "ex": "./audio/ga/ga_G-102_ex.mp3?v=7d7e3d73",
+      "hook": "./audio/ga/ga_G-102_hook.mp3?v=6d90dbb9",
+      "rev": "./audio/ga/ga_G-102_rev.mp3?v=b3b46008"
+    },
+    "G-103": {
+      "pat": "./audio/ga/ga_G-103_pat.mp3?v=ee06d41d",
+      "ex": "./audio/ga/ga_G-103_ex.mp3?v=e32c2146",
+      "hook": "./audio/ga/ga_G-103_hook.mp3?v=47d5eb0c",
+      "rev": "./audio/ga/ga_G-103_rev.mp3?v=9b8e7d35"
+    },
+    "G-104": {
+      "pat": "./audio/ga/ga_G-104_pat.mp3?v=11f14fa0",
+      "ex": "./audio/ga/ga_G-104_ex.mp3?v=22777e19",
+      "hook": "./audio/ga/ga_G-104_hook.mp3?v=7935bf7e",
+      "rev": "./audio/ga/ga_G-104_rev.mp3?v=fd48b4de"
+    },
+    "G-105": {
+      "pat": "./audio/ga/ga_G-105_pat.mp3?v=82926439",
+      "ex": "./audio/ga/ga_G-105_ex.mp3?v=3a083ed6",
+      "hook": "./audio/ga/ga_G-105_hook.mp3?v=1b186c47",
+      "rev": "./audio/ga/ga_G-105_rev.mp3?v=532b2af7"
+    },
+    "G-106": {
+      "pat": "./audio/ga/ga_G-106_pat.mp3?v=9f6567bb",
+      "ex": "./audio/ga/ga_G-106_ex.mp3?v=0d0116a0",
+      "hook": "./audio/ga/ga_G-106_hook.mp3?v=4e688444",
+      "rev": "./audio/ga/ga_G-106_rev.mp3?v=1705be27"
+    },
+    "G-107": {
+      "pat": "./audio/ga/ga_G-107_pat.mp3?v=98ff111c",
+      "ex": "./audio/ga/ga_G-107_ex.mp3?v=cca7740f",
+      "hook": "./audio/ga/ga_G-107_hook.mp3?v=1f013522",
+      "rev": "./audio/ga/ga_G-107_rev.mp3?v=4bf61f79"
+    },
+    "G-108": {
+      "pat": "./audio/ga/ga_G-108_pat.mp3?v=ac13f586",
+      "ex": "./audio/ga/ga_G-108_ex.mp3?v=ac48a69c",
+      "hook": "./audio/ga/ga_G-108_hook.mp3?v=3a1eb81e",
+      "rev": "./audio/ga/ga_G-108_rev.mp3?v=a6a44409"
+    },
+    "G-109": {
+      "pat": "./audio/ga/ga_G-109_pat.mp3?v=0c332cb6",
+      "ex": "./audio/ga/ga_G-109_ex.mp3?v=81406b29",
+      "hook": "./audio/ga/ga_G-109_hook.mp3?v=e0b01cea",
+      "rev": "./audio/ga/ga_G-109_rev.mp3?v=d9056bb8"
+    },
+    "G-110": {
+      "pat": "./audio/ga/ga_G-110_pat.mp3?v=929f47b1",
+      "ex": "./audio/ga/ga_G-110_ex.mp3?v=72eb76a5",
+      "hook": "./audio/ga/ga_G-110_hook.mp3?v=80751aae",
+      "rev": "./audio/ga/ga_G-110_rev.mp3?v=d6f8a9a9"
+    },
+    "G-111": {
+      "pat": "./audio/ga/ga_G-111_pat.mp3?v=95ba706b",
+      "ex": "./audio/ga/ga_G-111_ex.mp3?v=99246ccf",
+      "hook": "./audio/ga/ga_G-111_hook.mp3?v=34d077c5",
+      "rev": "./audio/ga/ga_G-111_rev.mp3?v=8f46a717"
+    },
+    "G-112": {
+      "pat": "./audio/ga/ga_G-112_pat.mp3?v=06992f59",
+      "ex": "./audio/ga/ga_G-112_ex.mp3?v=a1321b67",
+      "hook": "./audio/ga/ga_G-112_hook.mp3?v=e82b815d",
+      "rev": "./audio/ga/ga_G-112_rev.mp3?v=dee7d598"
+    },
+    "G-113": {
+      "pat": "./audio/ga/ga_G-113_pat.mp3?v=121f9f7e",
+      "ex": "./audio/ga/ga_G-113_ex.mp3?v=14524527",
+      "hook": "./audio/ga/ga_G-113_hook.mp3?v=0fb2752e",
+      "rev": "./audio/ga/ga_G-113_rev.mp3?v=252d1f81"
+    },
+    "G-114": {
+      "pat": "./audio/ga/ga_G-114_pat.mp3?v=8e751417",
+      "ex": "./audio/ga/ga_G-114_ex.mp3?v=1f703132",
+      "hook": "./audio/ga/ga_G-114_hook.mp3?v=8d82a9a9",
+      "rev": "./audio/ga/ga_G-114_rev.mp3?v=1b2f061d"
+    },
+    "G-115": {
+      "pat": "./audio/ga/ga_G-115_pat.mp3?v=50ffe853",
+      "ex": "./audio/ga/ga_G-115_ex.mp3?v=25912f54",
+      "hook": "./audio/ga/ga_G-115_hook.mp3?v=57896f61",
+      "rev": "./audio/ga/ga_G-115_rev.mp3?v=206900f1"
+    },
+    "G-116a": {
+      "pat": "./audio/ga/ga_G-116a_pat.mp3?v=f0751bdb",
+      "ex": "./audio/ga/ga_G-116a_ex.mp3?v=270201bc",
+      "hook": "./audio/ga/ga_G-116a_hook.mp3?v=0688b292",
+      "rev": "./audio/ga/ga_G-116a_rev.mp3?v=fafc5856"
+    },
+    "G-116b": {
+      "pat": "./audio/ga/ga_G-116b_pat.mp3?v=29819932",
+      "ex": "./audio/ga/ga_G-116b_ex.mp3?v=71e3ad27",
+      "hook": "./audio/ga/ga_G-116b_hook.mp3?v=2c2385dd",
+      "rev": "./audio/ga/ga_G-116b_rev.mp3?v=0b68f2f0"
+    },
+    "G-116c": {
+      "pat": "./audio/ga/ga_G-116c_pat.mp3?v=93db6b33",
+      "ex": "./audio/ga/ga_G-116c_ex.mp3?v=3003bafc",
+      "hook": "./audio/ga/ga_G-116c_hook.mp3?v=019e4da6",
+      "rev": "./audio/ga/ga_G-116c_rev.mp3?v=d0e4614a"
+    },
+    "G-116d": {
+      "pat": "./audio/ga/ga_G-116d_pat.mp3?v=7ea12f6b",
+      "ex": "./audio/ga/ga_G-116d_ex.mp3?v=faa13db4",
+      "hook": "./audio/ga/ga_G-116d_hook.mp3?v=81542141",
+      "rev": "./audio/ga/ga_G-116d_rev.mp3?v=04f71fd2"
+    },
+    "G-116e": {
+      "pat": "./audio/ga/ga_G-116e_pat.mp3?v=45a564a7",
+      "ex": "./audio/ga/ga_G-116e_ex.mp3?v=0c8f9513",
+      "hook": "./audio/ga/ga_G-116e_hook.mp3?v=24cea70c",
+      "rev": "./audio/ga/ga_G-116e_rev.mp3?v=862cce7f"
+    },
+    "G-116f": {
+      "pat": "./audio/ga/ga_G-116f_pat.mp3?v=35c1bf47",
+      "ex": "./audio/ga/ga_G-116f_ex.mp3?v=1aa46765",
+      "hook": "./audio/ga/ga_G-116f_hook.mp3?v=94b85e96",
+      "rev": "./audio/ga/ga_G-116f_rev.mp3?v=1df41ad8"
+    },
+    "G-117a": {
+      "pat": "./audio/ga/ga_G-117a_pat.mp3?v=3555ac5d",
+      "ex": "./audio/ga/ga_G-117a_ex.mp3?v=0b7760ff",
+      "hook": "./audio/ga/ga_G-117a_hook.mp3?v=c53cd469",
+      "rev": "./audio/ga/ga_G-117a_rev.mp3?v=eee506c4"
+    },
+    "G-117b": {
+      "pat": "./audio/ga/ga_G-117b_pat.mp3?v=e656ff1f",
+      "ex": "./audio/ga/ga_G-117b_ex.mp3?v=4045182a",
+      "hook": "./audio/ga/ga_G-117b_hook.mp3?v=b47f3df5",
+      "rev": "./audio/ga/ga_G-117b_rev.mp3?v=5be8eda5"
+    },
+    "G-117c": {
+      "pat": "./audio/ga/ga_G-117c_pat.mp3?v=ae593213",
+      "ex": "./audio/ga/ga_G-117c_ex.mp3?v=975bce3b",
+      "hook": "./audio/ga/ga_G-117c_hook.mp3?v=f01b550c",
+      "rev": "./audio/ga/ga_G-117c_rev.mp3?v=d021d491"
+    },
+    "G-118": {
+      "pat": "./audio/ga/ga_G-118_pat.mp3?v=091cd44f",
+      "ex": "./audio/ga/ga_G-118_ex.mp3?v=1ca1e445",
+      "hook": "./audio/ga/ga_G-118_hook.mp3?v=8bfc14f4",
+      "rev": "./audio/ga/ga_G-118_rev.mp3?v=b6bd7106"
+    },
+    "G-119a": {
+      "pat": "./audio/ga/ga_G-119a_pat.mp3?v=ea6e50a6",
+      "ex": "./audio/ga/ga_G-119a_ex.mp3?v=818929a0",
+      "hook": "./audio/ga/ga_G-119a_hook.mp3?v=95fc90d6",
+      "rev": "./audio/ga/ga_G-119a_rev.mp3?v=b9cd5abd"
+    },
+    "G-119b": {
+      "pat": "./audio/ga/ga_G-119b_pat.mp3?v=5f0e5fc7",
+      "ex": "./audio/ga/ga_G-119b_ex.mp3?v=dd5f732e",
+      "hook": "./audio/ga/ga_G-119b_hook.mp3?v=ed3619e8",
+      "rev": "./audio/ga/ga_G-119b_rev.mp3?v=182b6ddb"
+    },
+    "G-119c": {
+      "pat": "./audio/ga/ga_G-119c_pat.mp3?v=b753e12d",
+      "ex": "./audio/ga/ga_G-119c_ex.mp3?v=cd2945fa",
+      "hook": "./audio/ga/ga_G-119c_hook.mp3?v=798b2bdc",
+      "rev": "./audio/ga/ga_G-119c_rev.mp3?v=0b1f8589"
+    },
+    "G-119d": {
+      "pat": "./audio/ga/ga_G-119d_pat.mp3?v=17a88fef",
+      "ex": "./audio/ga/ga_G-119d_ex.mp3?v=161216d5",
+      "hook": "./audio/ga/ga_G-119d_hook.mp3?v=326c1cd6",
+      "rev": "./audio/ga/ga_G-119d_rev.mp3?v=7b39e5e8"
+    },
+    "G-119e": {
+      "pat": "./audio/ga/ga_G-119e_pat.mp3?v=61523bf2",
+      "ex": "./audio/ga/ga_G-119e_ex.mp3?v=b2e49488",
+      "hook": "./audio/ga/ga_G-119e_hook.mp3?v=4390fd65",
+      "rev": "./audio/ga/ga_G-119e_rev.mp3?v=2b24fdb7"
+    },
+    "G-119f": {
+      "pat": "./audio/ga/ga_G-119f_pat.mp3?v=133644ca",
+      "ex": "./audio/ga/ga_G-119f_ex.mp3?v=23f7749a",
+      "hook": "./audio/ga/ga_G-119f_hook.mp3?v=226db35e",
+      "rev": "./audio/ga/ga_G-119f_rev.mp3?v=b492fe15"
+    },
+    "G-119g": {
+      "pat": "./audio/ga/ga_G-119g_pat.mp3?v=8a2e6b1a",
+      "ex": "./audio/ga/ga_G-119g_ex.mp3?v=225204b1",
+      "hook": "./audio/ga/ga_G-119g_hook.mp3?v=98d9f689",
+      "rev": "./audio/ga/ga_G-119g_rev.mp3?v=dba6a452"
+    },
+    "G-119h": {
+      "pat": "./audio/ga/ga_G-119h_pat.mp3?v=3066dc5d",
+      "ex": "./audio/ga/ga_G-119h_ex.mp3?v=80d72da7",
+      "hook": "./audio/ga/ga_G-119h_hook.mp3?v=fb1be096",
+      "rev": "./audio/ga/ga_G-119h_rev.mp3?v=df46660a"
+    },
+    "G-120": {
+      "pat": "./audio/ga/ga_G-120_pat.mp3?v=a614569e",
+      "ex": "./audio/ga/ga_G-120_ex.mp3?v=4ab4bdd3",
+      "hook": "./audio/ga/ga_G-120_hook.mp3?v=740485fc",
+      "rev": "./audio/ga/ga_G-120_rev.mp3?v=324663fa"
+    },
+    "G-121": {
+      "pat": "./audio/ga/ga_G-121_pat.mp3?v=f3979773",
+      "ex": "./audio/ga/ga_G-121_ex.mp3?v=35bcb5ee",
+      "hook": "./audio/ga/ga_G-121_hook.mp3?v=fded3c98",
+      "rev": "./audio/ga/ga_G-121_rev.mp3?v=8c36d18b"
+    },
+    "G-122": {
+      "pat": "./audio/ga/ga_G-122_pat.mp3?v=017bdf38",
+      "ex": "./audio/ga/ga_G-122_ex.mp3?v=a0e1167e",
+      "hook": "./audio/ga/ga_G-122_hook.mp3?v=dfa69fc0",
+      "rev": "./audio/ga/ga_G-122_rev.mp3?v=7e636394"
+    },
+    "G-123": {
+      "pat": "./audio/ga/ga_G-123_pat.mp3?v=f76ff832",
+      "ex": "./audio/ga/ga_G-123_ex.mp3?v=1710c5cb",
+      "hook": "./audio/ga/ga_G-123_hook.mp3?v=564f679d",
+      "rev": "./audio/ga/ga_G-123_rev.mp3?v=37955b62"
+    },
+    "G-124a": {
+      "pat": "./audio/ga/ga_G-124a_pat.mp3?v=e92a6212",
+      "ex": "./audio/ga/ga_G-124a_ex.mp3?v=c608c128",
+      "hook": "./audio/ga/ga_G-124a_hook.mp3?v=968de5b6",
+      "rev": "./audio/ga/ga_G-124a_rev.mp3?v=8169a125"
+    },
+    "G-124b": {
+      "pat": "./audio/ga/ga_G-124b_pat.mp3?v=74a7024b",
+      "ex": "./audio/ga/ga_G-124b_ex.mp3?v=1812532f",
+      "hook": "./audio/ga/ga_G-124b_hook.mp3?v=c18b8ca6",
+      "rev": "./audio/ga/ga_G-124b_rev.mp3?v=dce91171"
+    },
+    "G-125a": {
+      "pat": "./audio/ga/ga_G-125a_pat.mp3?v=5224eb1f",
+      "ex": "./audio/ga/ga_G-125a_ex.mp3?v=c380a97b",
+      "hook": "./audio/ga/ga_G-125a_hook.mp3?v=d5fe5bba",
+      "rev": "./audio/ga/ga_G-125a_rev.mp3?v=4f15fbc3"
+    },
+    "G-125b": {
+      "pat": "./audio/ga/ga_G-125b_pat.mp3?v=013412f4",
+      "ex": "./audio/ga/ga_G-125b_ex.mp3?v=0fb5f97b",
+      "hook": "./audio/ga/ga_G-125b_hook.mp3?v=b7d27fd6",
+      "rev": "./audio/ga/ga_G-125b_rev.mp3?v=d441b5c2"
+    },
+    "G-126": {
+      "pat": "./audio/ga/ga_G-126_pat.mp3?v=055d7117",
+      "ex": "./audio/ga/ga_G-126_ex.mp3?v=63f9676d",
+      "hook": "./audio/ga/ga_G-126_hook.mp3?v=fd72418c",
+      "rev": "./audio/ga/ga_G-126_rev.mp3?v=dfb97bf3"
+    },
+    "G-127": {
+      "pat": "./audio/ga/ga_G-127_pat.mp3?v=cbfabce4",
+      "ex": "./audio/ga/ga_G-127_ex.mp3?v=2bd1544f",
+      "hook": "./audio/ga/ga_G-127_hook.mp3?v=204f5f19",
+      "rev": "./audio/ga/ga_G-127_rev.mp3?v=3bc49a0b"
+    },
+    "G-128": {
+      "pat": "./audio/ga/ga_G-128_pat.mp3?v=ed00ee5c",
+      "ex": "./audio/ga/ga_G-128_ex.mp3?v=c9d21667",
+      "hook": "./audio/ga/ga_G-128_hook.mp3?v=33ef955a",
+      "rev": "./audio/ga/ga_G-128_rev.mp3?v=aa8c1763"
+    },
+    "G-129": {
+      "pat": "./audio/ga/ga_G-129_pat.mp3?v=61b8e8a8",
+      "ex": "./audio/ga/ga_G-129_ex.mp3?v=cb5eac01",
+      "hook": "./audio/ga/ga_G-129_hook.mp3?v=94b56bd4",
+      "rev": "./audio/ga/ga_G-129_rev.mp3?v=a0132e59"
+    },
+    "G-130": {
+      "pat": "./audio/ga/ga_G-130_pat.mp3?v=6e319f9f",
+      "ex": "./audio/ga/ga_G-130_ex.mp3?v=01a1e60e",
+      "hook": "./audio/ga/ga_G-130_hook.mp3?v=025c5589",
+      "rev": "./audio/ga/ga_G-130_rev.mp3?v=b4f7d6d5"
+    },
+    "G-131": {
+      "pat": "./audio/ga/ga_G-131_pat.mp3?v=b1d6e2cf",
+      "ex": "./audio/ga/ga_G-131_ex.mp3?v=effc516e",
+      "hook": "./audio/ga/ga_G-131_hook.mp3?v=727e487d",
+      "rev": "./audio/ga/ga_G-131_rev.mp3?v=673b7d68"
+    },
+    "G-132": {
+      "pat": "./audio/ga/ga_G-132_pat.mp3?v=7b23e3de",
+      "ex": "./audio/ga/ga_G-132_ex.mp3?v=505985c4",
+      "hook": "./audio/ga/ga_G-132_hook.mp3?v=46a1bea8",
+      "rev": "./audio/ga/ga_G-132_rev.mp3?v=bbf77317"
+    },
+    "G-133": {
+      "pat": "./audio/ga/ga_G-133_pat.mp3?v=7bdd5651",
+      "ex": "./audio/ga/ga_G-133_ex.mp3?v=fdc24510",
+      "hook": "./audio/ga/ga_G-133_hook.mp3?v=8042cd2b",
+      "rev": "./audio/ga/ga_G-133_rev.mp3?v=e987a3f2"
+    },
+    "G-134": {
+      "pat": "./audio/ga/ga_G-134_pat.mp3?v=8b31f58c",
+      "ex": "./audio/ga/ga_G-134_ex.mp3?v=323f0286",
+      "hook": "./audio/ga/ga_G-134_hook.mp3?v=21b8579a",
+      "rev": "./audio/ga/ga_G-134_rev.mp3?v=a78f80e0"
+    },
+    "G-135": {
+      "pat": "./audio/ga/ga_G-135_pat.mp3?v=3d55aa19",
+      "ex": "./audio/ga/ga_G-135_ex.mp3?v=0abbca99",
+      "hook": "./audio/ga/ga_G-135_hook.mp3?v=80854a03",
+      "rev": "./audio/ga/ga_G-135_rev.mp3?v=904f788a"
+    },
+    "G-136": {
+      "pat": "./audio/ga/ga_G-136_pat.mp3?v=3837bc59",
+      "ex": "./audio/ga/ga_G-136_ex.mp3?v=7518d963",
+      "hook": "./audio/ga/ga_G-136_hook.mp3?v=f6cd43f6",
+      "rev": "./audio/ga/ga_G-136_rev.mp3?v=a9bb7915"
+    },
+    "GB-01": {
+      "pat": "./audio/ga/ga_GB-01_pat.mp3?v=9b7370f4",
+      "ex": "./audio/ga/ga_GB-01_ex.mp3?v=0c1c4d82",
+      "hook": "./audio/ga/ga_GB-01_hook.mp3?v=ff83b439",
+      "rev": "./audio/ga/ga_GB-01_rev.mp3?v=86441624"
+    },
+    "GB-02": {
+      "pat": "./audio/ga/ga_GB-02_pat.mp3?v=d202304a",
+      "ex": "./audio/ga/ga_GB-02_ex.mp3?v=7a5597d9",
+      "hook": "./audio/ga/ga_GB-02_hook.mp3?v=92e80466",
+      "rev": "./audio/ga/ga_GB-02_rev.mp3?v=8e1476e2"
+    },
+    "GB-04": {
+      "pat": "./audio/ga/ga_GB-04_pat.mp3?v=dd73201c",
+      "ex": "./audio/ga/ga_GB-04_ex.mp3?v=42eb5c3d",
+      "hook": "./audio/ga/ga_GB-04_hook.mp3?v=ff4b82f0",
+      "rev": "./audio/ga/ga_GB-04_rev.mp3?v=dd33b6ed"
+    },
+    "GB-05": {
+      "pat": "./audio/ga/ga_GB-05_pat.mp3?v=17d27ab2",
+      "ex": "./audio/ga/ga_GB-05_ex.mp3?v=1127e80f",
+      "hook": "./audio/ga/ga_GB-05_hook.mp3?v=3490a02a",
+      "rev": "./audio/ga/ga_GB-05_rev.mp3?v=57ad2cc0"
+    },
+    "GB-06": {
+      "pat": "./audio/ga/ga_GB-06_pat.mp3?v=04e4a382",
+      "ex": "./audio/ga/ga_GB-06_ex.mp3?v=61f771fe",
+      "hook": "./audio/ga/ga_GB-06_hook.mp3?v=e841b389",
+      "rev": "./audio/ga/ga_GB-06_rev.mp3?v=a15754eb"
+    },
+    "GB-07": {
+      "pat": "./audio/ga/ga_GB-07_pat.mp3?v=82c51f75",
+      "ex": "./audio/ga/ga_GB-07_ex.mp3?v=415bdc9c",
+      "hook": "./audio/ga/ga_GB-07_hook.mp3?v=e712b5b3",
+      "rev": "./audio/ga/ga_GB-07_rev.mp3?v=5b4aa04b"
+    },
+    "GB-08": {
+      "pat": "./audio/ga/ga_GB-08_pat.mp3?v=325c1909",
+      "ex": "./audio/ga/ga_GB-08_ex.mp3?v=829dfafc",
+      "hook": "./audio/ga/ga_GB-08_hook.mp3?v=dcef7369",
+      "rev": "./audio/ga/ga_GB-08_rev.mp3?v=d32832ae"
+    },
+    "GB-09": {
+      "pat": "./audio/ga/ga_GB-09_pat.mp3?v=185c518b",
+      "ex": "./audio/ga/ga_GB-09_ex.mp3?v=a948fd21",
+      "hook": "./audio/ga/ga_GB-09_hook.mp3?v=737527c1",
+      "rev": "./audio/ga/ga_GB-09_rev.mp3?v=710466d6"
+    },
+    "GB-10": {
+      "pat": "./audio/ga/ga_GB-10_pat.mp3?v=4e92f298",
+      "ex": "./audio/ga/ga_GB-10_ex.mp3?v=8144f16b",
+      "hook": "./audio/ga/ga_GB-10_hook.mp3?v=0cadad8c",
+      "rev": "./audio/ga/ga_GB-10_rev.mp3?v=dcd531f1"
+    },
+    "GX-01": {
+      "pat": "./audio/ga/ga_GX-01_pat.mp3?v=25bd62c9",
+      "ex": "./audio/ga/ga_GX-01_ex.mp3?v=e436f281",
+      "hook": "./audio/ga/ga_GX-01_hook.mp3?v=93f73fce",
+      "rev": "./audio/ga/ga_GX-01_rev.mp3?v=4285ad71"
+    },
+    "GX-02": {
+      "pat": "./audio/ga/ga_GX-02_pat.mp3?v=828d9d19",
+      "ex": "./audio/ga/ga_GX-02_ex.mp3?v=52b085bf",
+      "hook": "./audio/ga/ga_GX-02_hook.mp3?v=0ce2a3d7",
+      "rev": "./audio/ga/ga_GX-02_rev.mp3?v=172e85a8"
+    },
+    "GX-03": {
+      "pat": "./audio/ga/ga_GX-03_pat.mp3?v=65eeabe2",
+      "ex": "./audio/ga/ga_GX-03_ex.mp3?v=23f0d698",
+      "hook": "./audio/ga/ga_GX-03_hook.mp3?v=ead882b0",
+      "rev": "./audio/ga/ga_GX-03_rev.mp3?v=e0515ab8"
+    },
+    "GX-04": {
+      "pat": "./audio/ga/ga_GX-04_pat.mp3?v=bb081125",
+      "ex": "./audio/ga/ga_GX-04_ex.mp3?v=a833d740",
+      "hook": "./audio/ga/ga_GX-04_hook.mp3?v=d385be29",
+      "rev": "./audio/ga/ga_GX-04_rev.mp3?v=e52971cd"
+    },
+    "GX-05": {
+      "pat": "./audio/ga/ga_GX-05_pat.mp3?v=56702c81",
+      "ex": "./audio/ga/ga_GX-05_ex.mp3?v=de7a2642",
+      "hook": "./audio/ga/ga_GX-05_hook.mp3?v=779f4ac7",
+      "rev": "./audio/ga/ga_GX-05_rev.mp3?v=22d3d6bf"
+    },
+    "GX-06": {
+      "pat": "./audio/ga/ga_GX-06_pat.mp3?v=e758ba58",
+      "ex": "./audio/ga/ga_GX-06_ex.mp3?v=a41d29f6",
+      "hook": "./audio/ga/ga_GX-06_hook.mp3?v=e3f7308f",
+      "rev": "./audio/ga/ga_GX-06_rev.mp3?v=21678d35"
+    },
+    "GX-07": {
+      "pat": "./audio/ga/ga_GX-07_pat.mp3?v=6b0d46c8",
+      "ex": "./audio/ga/ga_GX-07_ex.mp3?v=230de2c3",
+      "hook": "./audio/ga/ga_GX-07_hook.mp3?v=12523d3a",
+      "rev": "./audio/ga/ga_GX-07_rev.mp3?v=bff99c32"
+    },
+    "GX-08": {
+      "pat": "./audio/ga/ga_GX-08_pat.mp3?v=ae57a950",
+      "ex": "./audio/ga/ga_GX-08_ex.mp3?v=36fc5848",
+      "hook": "./audio/ga/ga_GX-08_hook.mp3?v=360423cc",
+      "rev": "./audio/ga/ga_GX-08_rev.mp3?v=9bd36fb9"
+    },
+    "GX-09": {
+      "pat": "./audio/ga/ga_GX-09_pat.mp3?v=670fc2ca",
+      "ex": "./audio/ga/ga_GX-09_ex.mp3?v=204e114e",
+      "hook": "./audio/ga/ga_GX-09_hook.mp3?v=ed2efb91",
+      "rev": "./audio/ga/ga_GX-09_rev.mp3?v=daa4c8b6"
+    },
+    "GX-10": {
+      "pat": "./audio/ga/ga_GX-10_pat.mp3?v=ed1ed325",
+      "ex": "./audio/ga/ga_GX-10_ex.mp3?v=0c33c1a5",
+      "hook": "./audio/ga/ga_GX-10_hook.mp3?v=7711b2fd",
+      "rev": "./audio/ga/ga_GX-10_rev.mp3?v=9f4d75a4"
+    },
+    "GX-11": {
+      "pat": "./audio/ga/ga_GX-11_pat.mp3?v=345fea53",
+      "ex": "./audio/ga/ga_GX-11_ex.mp3?v=9d98a76f",
+      "hook": "./audio/ga/ga_GX-11_hook.mp3?v=bc14e866",
+      "rev": "./audio/ga/ga_GX-11_rev.mp3?v=1e1dbfc2"
+    }
+  },
+  "ga_card_hashes": {
+    "ga_G-001_pat.mp3": "c3ea0742a0",
+    "ga_G-001_ex.mp3": "4a258c4496",
+    "ga_G-001_hook.mp3": "0f59f5ea87",
+    "ga_G-001_rev.mp3": "2d04a8bfc6",
+    "ga_G-002_pat.mp3": "5682cf205e",
+    "ga_G-002_ex.mp3": "aceef16e0b",
+    "ga_G-002_hook.mp3": "5b3f161ad0",
+    "ga_G-002_rev.mp3": "e50fe79d6e",
+    "ga_G-003_pat.mp3": "411886f232",
+    "ga_G-003_ex.mp3": "c7b7f95c9d",
+    "ga_G-003_hook.mp3": "d5914e38a6",
+    "ga_G-003_rev.mp3": "d16cfbbb84",
+    "ga_G-004_pat.mp3": "bd29d8080f",
+    "ga_G-004_ex.mp3": "9de2101479",
+    "ga_G-004_hook.mp3": "505147d4a8",
+    "ga_G-004_rev.mp3": "9ad75b225a",
+    "ga_G-005_pat.mp3": "c01e5b2387",
+    "ga_G-005_ex.mp3": "e8871e77b2",
+    "ga_G-005_hook.mp3": "d59cf1512e",
+    "ga_G-005_rev.mp3": "d0b6a38c09",
+    "ga_G-006_pat.mp3": "afab54271d",
+    "ga_G-006_ex.mp3": "e1706b294c",
+    "ga_G-006_hook.mp3": "bba783fc68",
+    "ga_G-006_rev.mp3": "d534c00d13",
+    "ga_G-007_pat.mp3": "91dc56d271",
+    "ga_G-007_ex.mp3": "f89fd2a276",
+    "ga_G-007_hook.mp3": "a85d8da350",
+    "ga_G-007_rev.mp3": "f4bc568d8c",
+    "ga_G-008_pat.mp3": "3a20dfb11b",
+    "ga_G-008_ex.mp3": "0d58d3cdee",
+    "ga_G-008_hook.mp3": "b02657794a",
+    "ga_G-008_rev.mp3": "5d6dc66a46",
+    "ga_G-009_pat.mp3": "9eb4b01c13",
+    "ga_G-009_ex.mp3": "56dc03c2fc",
+    "ga_G-009_hook.mp3": "ad028d9bf4",
+    "ga_G-009_rev.mp3": "5de4e792ec",
+    "ga_G-010_pat.mp3": "05375fc0b7",
+    "ga_G-010_ex.mp3": "35e353b8e7",
+    "ga_G-010_hook.mp3": "39c15afc4e",
+    "ga_G-010_rev.mp3": "15ea068de0",
+    "ga_G-011_pat.mp3": "7690d79e4a",
+    "ga_G-011_ex.mp3": "56174bba36",
+    "ga_G-011_hook.mp3": "44f9d852e0",
+    "ga_G-011_rev.mp3": "bc106bcbed",
+    "ga_G-012_pat.mp3": "75d1ab3968",
+    "ga_G-012_ex.mp3": "c8398f35de",
+    "ga_G-012_hook.mp3": "28e6986192",
+    "ga_G-012_rev.mp3": "675a4cd1bc",
+    "ga_G-013_pat.mp3": "5eb897b72f",
+    "ga_G-013_ex.mp3": "8ed0311cad",
+    "ga_G-013_hook.mp3": "936e891ecd",
+    "ga_G-013_rev.mp3": "d2d4c66f3d",
+    "ga_G-014_pat.mp3": "03e59c6e98",
+    "ga_G-014_ex.mp3": "2b9d06cf26",
+    "ga_G-014_hook.mp3": "7ce28291f6",
+    "ga_G-014_rev.mp3": "1307ff92c9",
+    "ga_G-015_pat.mp3": "da7ba3fdfa",
+    "ga_G-015_ex.mp3": "cd87b660f3",
+    "ga_G-015_hook.mp3": "ac167fc140",
+    "ga_G-015_rev.mp3": "20f5a9bfb1",
+    "ga_G-016_pat.mp3": "454c8dc0af",
+    "ga_G-016_ex.mp3": "ff1945987d",
+    "ga_G-016_hook.mp3": "9609ec04ff",
+    "ga_G-016_rev.mp3": "1f15b4ac25",
+    "ga_G-017_pat.mp3": "80406024ce",
+    "ga_G-017_ex.mp3": "fa5ac8567b",
+    "ga_G-017_hook.mp3": "99170838b1",
+    "ga_G-017_rev.mp3": "ab8fb9849f",
+    "ga_G-018_pat.mp3": "1bdebae398",
+    "ga_G-018_ex.mp3": "58fc78fe4b",
+    "ga_G-018_hook.mp3": "f256673bfa",
+    "ga_G-018_rev.mp3": "347e7c9dd7",
+    "ga_G-019_pat.mp3": "fe7dd7d88e",
+    "ga_G-019_ex.mp3": "18a87d37e6",
+    "ga_G-019_hook.mp3": "f12ada6934",
+    "ga_G-019_rev.mp3": "eed8a7b640",
+    "ga_G-020_pat.mp3": "22a5ae94d2",
+    "ga_G-020_ex.mp3": "24cb6d2621",
+    "ga_G-020_hook.mp3": "05537a237b",
+    "ga_G-020_rev.mp3": "de6b0718d4",
+    "ga_G-021_pat.mp3": "34edea899d",
+    "ga_G-021_ex.mp3": "a0572f0cd4",
+    "ga_G-021_hook.mp3": "4fdbc3ba22",
+    "ga_G-021_rev.mp3": "bcecc61206",
+    "ga_G-022_pat.mp3": "48d5e4fde8",
+    "ga_G-022_ex.mp3": "256e3e5fb6",
+    "ga_G-022_hook.mp3": "fb1e11ca22",
+    "ga_G-022_rev.mp3": "9a97fbf295",
+    "ga_G-023_pat.mp3": "933cf97610",
+    "ga_G-023_ex.mp3": "74011ee1eb",
+    "ga_G-023_hook.mp3": "386ff03225",
+    "ga_G-023_rev.mp3": "d00fbf99f2",
+    "ga_G-024_pat.mp3": "0bf9cc2783",
+    "ga_G-024_ex.mp3": "b1ca7840e9",
+    "ga_G-024_hook.mp3": "c706b5aab7",
+    "ga_G-024_rev.mp3": "2ed8aa172e",
+    "ga_G-025_pat.mp3": "43822689c1",
+    "ga_G-025_ex.mp3": "bf38c4dfb6",
+    "ga_G-025_hook.mp3": "5c9cb62496",
+    "ga_G-025_rev.mp3": "d47aed6428",
+    "ga_G-026_pat.mp3": "b91505c71c",
+    "ga_G-026_ex.mp3": "fd7b055c38",
+    "ga_G-026_hook.mp3": "311f20ad16",
+    "ga_G-026_rev.mp3": "ee4b61e66e",
+    "ga_G-027_pat.mp3": "62328572fb",
+    "ga_G-027_ex.mp3": "bd0b8fc970",
+    "ga_G-027_hook.mp3": "beeb3cdf82",
+    "ga_G-027_rev.mp3": "f015fc42ef",
+    "ga_G-028_pat.mp3": "e3ed4e4e42",
+    "ga_G-028_ex.mp3": "c2941e0861",
+    "ga_G-028_hook.mp3": "c6d9c8c37a",
+    "ga_G-028_rev.mp3": "24bd1a2b45",
+    "ga_G-029_pat.mp3": "6282d43713",
+    "ga_G-029_ex.mp3": "41d3faef0c",
+    "ga_G-029_hook.mp3": "3c9f2f4593",
+    "ga_G-029_rev.mp3": "b565fd2781",
+    "ga_G-030_pat.mp3": "d17940d37a",
+    "ga_G-030_ex.mp3": "eb801cccbb",
+    "ga_G-030_hook.mp3": "4b2f84bfc4",
+    "ga_G-030_rev.mp3": "9f7a84c5cd",
+    "ga_G-031_pat.mp3": "ed5e137bf0",
+    "ga_G-031_ex.mp3": "6072180498",
+    "ga_G-031_hook.mp3": "a886528ffd",
+    "ga_G-031_rev.mp3": "bab9ce11a6",
+    "ga_G-032_pat.mp3": "ad959fbbc0",
+    "ga_G-032_ex.mp3": "dac3621e9d",
+    "ga_G-032_hook.mp3": "a4996aa455",
+    "ga_G-032_rev.mp3": "611f8cf056",
+    "ga_G-033_pat.mp3": "7e4129fb5a",
+    "ga_G-033_ex.mp3": "8792067d2a",
+    "ga_G-033_hook.mp3": "e026a0162e",
+    "ga_G-033_rev.mp3": "e13d86a7ff",
+    "ga_G-034_pat.mp3": "6d571045d9",
+    "ga_G-034_ex.mp3": "48694f5000",
+    "ga_G-034_hook.mp3": "06005dc70e",
+    "ga_G-034_rev.mp3": "0066bd8600",
+    "ga_G-035_pat.mp3": "917622b757",
+    "ga_G-035_ex.mp3": "918629fc62",
+    "ga_G-035_hook.mp3": "34314a3438",
+    "ga_G-035_rev.mp3": "f5722875d1",
+    "ga_G-036_pat.mp3": "e82e6186c7",
+    "ga_G-036_ex.mp3": "3df7b2a516",
+    "ga_G-036_hook.mp3": "b7e4a01274",
+    "ga_G-036_rev.mp3": "c5d19a8728",
+    "ga_G-037_pat.mp3": "20aa8ae8f0",
+    "ga_G-037_ex.mp3": "6115559197",
+    "ga_G-037_hook.mp3": "9d4a53a018",
+    "ga_G-037_rev.mp3": "4685da6820",
+    "ga_G-038_pat.mp3": "0e7b9bb250",
+    "ga_G-038_ex.mp3": "b724fd38b6",
+    "ga_G-038_hook.mp3": "463d49d58f",
+    "ga_G-038_rev.mp3": "6add1078a6",
+    "ga_G-039_pat.mp3": "3df74ea88d",
+    "ga_G-039_ex.mp3": "cd03bba757",
+    "ga_G-039_hook.mp3": "3842d60c49",
+    "ga_G-039_rev.mp3": "2b1525675a",
+    "ga_G-040_pat.mp3": "f54a386e1c",
+    "ga_G-040_ex.mp3": "301594f15a",
+    "ga_G-040_hook.mp3": "d9cfde9dcc",
+    "ga_G-040_rev.mp3": "16ae423561",
+    "ga_G-041_pat.mp3": "aa98673c52",
+    "ga_G-041_ex.mp3": "f9d8d8e904",
+    "ga_G-041_hook.mp3": "ac135bc9e0",
+    "ga_G-041_rev.mp3": "bb41162c62",
+    "ga_G-042_pat.mp3": "ca4c9118a0",
+    "ga_G-042_ex.mp3": "98f42fe9b6",
+    "ga_G-042_hook.mp3": "7a21fcaf97",
+    "ga_G-042_rev.mp3": "43e4c028c8",
+    "ga_G-043_pat.mp3": "4eb7e71f46",
+    "ga_G-043_ex.mp3": "b1c9f92d00",
+    "ga_G-043_hook.mp3": "8987a086a1",
+    "ga_G-043_rev.mp3": "ff1029d7f8",
+    "ga_G-044_pat.mp3": "8f33bc5701",
+    "ga_G-044_ex.mp3": "d2d2602f90",
+    "ga_G-044_hook.mp3": "4d9fc6ea55",
+    "ga_G-044_rev.mp3": "6a36ffb5aa",
+    "ga_G-045_pat.mp3": "833567d2b9",
+    "ga_G-045_ex.mp3": "7f32c6598e",
+    "ga_G-045_hook.mp3": "f94a41a642",
+    "ga_G-045_rev.mp3": "79fd417bd2",
+    "ga_G-046_pat.mp3": "460919e5fb",
+    "ga_G-046_ex.mp3": "ba03b31775",
+    "ga_G-046_hook.mp3": "307f048ace",
+    "ga_G-046_rev.mp3": "f067430675",
+    "ga_G-047_pat.mp3": "ed4fd11881",
+    "ga_G-047_ex.mp3": "f83553457b",
+    "ga_G-047_hook.mp3": "000ab8e06e",
+    "ga_G-047_rev.mp3": "7fbb9b586b",
+    "ga_G-048_pat.mp3": "9cc75968d8",
+    "ga_G-048_ex.mp3": "9e215cf8d8",
+    "ga_G-048_hook.mp3": "95a22e23d5",
+    "ga_G-048_rev.mp3": "9dae552a74",
+    "ga_G-049_pat.mp3": "9ade1e65b5",
+    "ga_G-049_ex.mp3": "993defc46c",
+    "ga_G-049_hook.mp3": "9b7d93f9e3",
+    "ga_G-049_rev.mp3": "cdc5fdc549",
+    "ga_G-050_pat.mp3": "e47dbd2160",
+    "ga_G-050_ex.mp3": "877fb1e382",
+    "ga_G-050_hook.mp3": "dd86545034",
+    "ga_G-050_rev.mp3": "19b4a7406e",
+    "ga_G-051_pat.mp3": "055d16c11c",
+    "ga_G-051_ex.mp3": "bd2670a8c2",
+    "ga_G-051_hook.mp3": "77ff849c27",
+    "ga_G-051_rev.mp3": "2bc7f8fa0e",
+    "ga_G-052_pat.mp3": "259d618382",
+    "ga_G-052_ex.mp3": "8d074a0a6e",
+    "ga_G-052_hook.mp3": "b0469ce175",
+    "ga_G-052_rev.mp3": "aeaa90af17",
+    "ga_G-053_pat.mp3": "2b4a4b6aa6",
+    "ga_G-053_ex.mp3": "fb691e5853",
+    "ga_G-053_hook.mp3": "deb2f9cffe",
+    "ga_G-053_rev.mp3": "7ed09edb68",
+    "ga_G-054_pat.mp3": "425294fb89",
+    "ga_G-054_ex.mp3": "58f8577811",
+    "ga_G-054_hook.mp3": "025ce6a5f2",
+    "ga_G-054_rev.mp3": "9388e01290",
+    "ga_G-055_pat.mp3": "28d541b92f",
+    "ga_G-055_ex.mp3": "690a3c7c22",
+    "ga_G-055_hook.mp3": "903e05e153",
+    "ga_G-055_rev.mp3": "704aef3269",
+    "ga_G-056_pat.mp3": "426458133b",
+    "ga_G-056_ex.mp3": "fa75669c22",
+    "ga_G-056_hook.mp3": "90fb4fc782",
+    "ga_G-056_rev.mp3": "1d889f5dc4",
+    "ga_G-057_pat.mp3": "0b9be0bfff",
+    "ga_G-057_ex.mp3": "179021e7d0",
+    "ga_G-057_hook.mp3": "00eb23b54a",
+    "ga_G-057_rev.mp3": "bb6e2ea90d",
+    "ga_G-058_pat.mp3": "0b9be0bfff",
+    "ga_G-058_ex.mp3": "ff2263a816",
+    "ga_G-058_hook.mp3": "acc1b786a6",
+    "ga_G-058_rev.mp3": "7b97109ac8",
+    "ga_G-059_pat.mp3": "0e904edb82",
+    "ga_G-059_ex.mp3": "c4249254fa",
+    "ga_G-059_hook.mp3": "03c7779a01",
+    "ga_G-059_rev.mp3": "49eccb4c54",
+    "ga_G-060_pat.mp3": "881637d3e2",
+    "ga_G-060_ex.mp3": "b359e9b68a",
+    "ga_G-060_hook.mp3": "6594a79bd6",
+    "ga_G-060_rev.mp3": "3efd2b3da8",
+    "ga_G-061_pat.mp3": "858aa88aa3",
+    "ga_G-061_ex.mp3": "fd00c338e9",
+    "ga_G-061_hook.mp3": "00ec9f3e77",
+    "ga_G-061_rev.mp3": "15307d7997",
+    "ga_G-062_pat.mp3": "b91c8d12f6",
+    "ga_G-062_ex.mp3": "a9a8a5a044",
+    "ga_G-062_hook.mp3": "97966fbcba",
+    "ga_G-062_rev.mp3": "a47b47235e",
+    "ga_G-063_pat.mp3": "74b9e14bc8",
+    "ga_G-063_ex.mp3": "9562aac837",
+    "ga_G-063_hook.mp3": "e82307a60e",
+    "ga_G-063_rev.mp3": "a61ff05b29",
+    "ga_G-064_pat.mp3": "cc13a07c23",
+    "ga_G-064_ex.mp3": "a91790a5bd",
+    "ga_G-064_hook.mp3": "1d1679e45c",
+    "ga_G-064_rev.mp3": "cb07e8a0b5",
+    "ga_G-065_pat.mp3": "8979fa0e5d",
+    "ga_G-065_ex.mp3": "898bad2323",
+    "ga_G-065_hook.mp3": "7e89a98b80",
+    "ga_G-065_rev.mp3": "4bac131e09",
+    "ga_G-066_pat.mp3": "e3e525c4a1",
+    "ga_G-066_ex.mp3": "86374aee09",
+    "ga_G-066_hook.mp3": "41636451f8",
+    "ga_G-066_rev.mp3": "86a0c10858",
+    "ga_G-067_pat.mp3": "4ef925d2f7",
+    "ga_G-067_ex.mp3": "f636ac9005",
+    "ga_G-067_hook.mp3": "4c7edba6cf",
+    "ga_G-067_rev.mp3": "db48d4f59d",
+    "ga_G-068_pat.mp3": "65ce55a3c9",
+    "ga_G-068_ex.mp3": "bfbf937930",
+    "ga_G-068_hook.mp3": "10c89da28d",
+    "ga_G-068_rev.mp3": "4991b9bab2",
+    "ga_G-069_pat.mp3": "f116cd8daf",
+    "ga_G-069_ex.mp3": "3953a38c70",
+    "ga_G-069_hook.mp3": "281264a23f",
+    "ga_G-069_rev.mp3": "ceae09460e",
+    "ga_G-070_pat.mp3": "03a1f75155",
+    "ga_G-070_ex.mp3": "a9040cd785",
+    "ga_G-070_hook.mp3": "07aca76b36",
+    "ga_G-070_rev.mp3": "4b23cd360e",
+    "ga_G-071_pat.mp3": "95428395e2",
+    "ga_G-071_ex.mp3": "26d056281d",
+    "ga_G-071_hook.mp3": "df89da494b",
+    "ga_G-071_rev.mp3": "2fe984a0cd",
+    "ga_G-072_pat.mp3": "b1d5acf65b",
+    "ga_G-072_ex.mp3": "d55fd54173",
+    "ga_G-072_hook.mp3": "93f9c9108e",
+    "ga_G-072_rev.mp3": "9631be80f0",
+    "ga_G-073_pat.mp3": "68d3e59695",
+    "ga_G-073_ex.mp3": "e67ad551fd",
+    "ga_G-073_hook.mp3": "f38022baf2",
+    "ga_G-073_rev.mp3": "f7d100c758",
+    "ga_G-074_pat.mp3": "cfaf364b21",
+    "ga_G-074_ex.mp3": "81f24f98f0",
+    "ga_G-074_hook.mp3": "afda281abd",
+    "ga_G-074_rev.mp3": "576c8b88aa",
+    "ga_G-075_pat.mp3": "83f5db4166",
+    "ga_G-075_ex.mp3": "ee1c720dc5",
+    "ga_G-075_hook.mp3": "24e82518c6",
+    "ga_G-075_rev.mp3": "c2ed75c706",
+    "ga_G-076_pat.mp3": "c9de95f504",
+    "ga_G-076_ex.mp3": "abf1bac7f0",
+    "ga_G-076_hook.mp3": "64edfcf037",
+    "ga_G-076_rev.mp3": "1e8dc159e2",
+    "ga_G-077_pat.mp3": "61c07d8285",
+    "ga_G-077_ex.mp3": "1ff6836c8f",
+    "ga_G-077_hook.mp3": "06875509d9",
+    "ga_G-077_rev.mp3": "3b519f2a44",
+    "ga_G-078_pat.mp3": "7569a760db",
+    "ga_G-078_ex.mp3": "cc7ef97608",
+    "ga_G-078_hook.mp3": "4a244be67a",
+    "ga_G-078_rev.mp3": "9156dccb16",
+    "ga_G-079_pat.mp3": "c307be3da2",
+    "ga_G-079_ex.mp3": "121e20cefb",
+    "ga_G-079_hook.mp3": "31ba4167b8",
+    "ga_G-079_rev.mp3": "e110110a9c",
+    "ga_G-080_pat.mp3": "3402b0b0c9",
+    "ga_G-080_ex.mp3": "eccc8228c8",
+    "ga_G-080_hook.mp3": "35cc901084",
+    "ga_G-080_rev.mp3": "9e434f14ee",
+    "ga_G-081_pat.mp3": "0aff4e9e97",
+    "ga_G-081_ex.mp3": "34f28bf898",
+    "ga_G-081_hook.mp3": "0d01e91cd7",
+    "ga_G-081_rev.mp3": "8d3e36827c",
+    "ga_G-082_pat.mp3": "e3b89f3012",
+    "ga_G-082_ex.mp3": "622ec9d130",
+    "ga_G-082_hook.mp3": "00e0b003bc",
+    "ga_G-082_rev.mp3": "6c36ad00ac",
+    "ga_G-083_pat.mp3": "264e7adbd0",
+    "ga_G-083_ex.mp3": "df648786a8",
+    "ga_G-083_hook.mp3": "39512d2b93",
+    "ga_G-083_rev.mp3": "0ae5bc3808",
+    "ga_G-084_pat.mp3": "bdca0ee83c",
+    "ga_G-084_ex.mp3": "b7157a2d46",
+    "ga_G-084_hook.mp3": "dae62af356",
+    "ga_G-084_rev.mp3": "e58363b3a4",
+    "ga_G-085_pat.mp3": "3072bcc9d3",
+    "ga_G-085_ex.mp3": "75b7e75fe3",
+    "ga_G-085_hook.mp3": "9dd6426dd2",
+    "ga_G-085_rev.mp3": "21af428f73",
+    "ga_G-086_pat.mp3": "465734f69a",
+    "ga_G-086_ex.mp3": "fc64c93018",
+    "ga_G-086_hook.mp3": "5e0c5e8da0",
+    "ga_G-086_rev.mp3": "1df550f0f8",
+    "ga_G-087_pat.mp3": "b59f391d74",
+    "ga_G-087_ex.mp3": "ee7b394d0c",
+    "ga_G-087_hook.mp3": "f7683e2bf9",
+    "ga_G-087_rev.mp3": "79a32042a9",
+    "ga_G-088_pat.mp3": "8c4ddc96c2",
+    "ga_G-088_ex.mp3": "96445570ff",
+    "ga_G-088_hook.mp3": "3fa83d428b",
+    "ga_G-088_rev.mp3": "e7121b22e5",
+    "ga_G-089_pat.mp3": "619f758964",
+    "ga_G-089_ex.mp3": "c9454022a8",
+    "ga_G-089_hook.mp3": "816fcf497e",
+    "ga_G-089_rev.mp3": "24fc62ea08",
+    "ga_G-090_pat.mp3": "a0c5e10efa",
+    "ga_G-090_ex.mp3": "2c74720920",
+    "ga_G-090_hook.mp3": "1c3b351aef",
+    "ga_G-090_rev.mp3": "864493e106",
+    "ga_G-091_pat.mp3": "cec3aa38e3",
+    "ga_G-091_ex.mp3": "f56887e496",
+    "ga_G-091_hook.mp3": "9a259d73f6",
+    "ga_G-091_rev.mp3": "f9b97e3c69",
+    "ga_G-092_pat.mp3": "5728f4cd81",
+    "ga_G-092_ex.mp3": "852b0b8fd2",
+    "ga_G-092_hook.mp3": "132d035151",
+    "ga_G-092_rev.mp3": "1a55bc0942",
+    "ga_G-093_pat.mp3": "954feb52b3",
+    "ga_G-093_ex.mp3": "8d62d9b543",
+    "ga_G-093_hook.mp3": "9c3d24b150",
+    "ga_G-093_rev.mp3": "cbec7837e6",
+    "ga_G-094_pat.mp3": "3edd665c34",
+    "ga_G-094_ex.mp3": "2feaadb2eb",
+    "ga_G-094_hook.mp3": "ed3af0d39a",
+    "ga_G-094_rev.mp3": "dceeedc5b8",
+    "ga_G-095_pat.mp3": "51228cee20",
+    "ga_G-095_ex.mp3": "00a3521012",
+    "ga_G-095_hook.mp3": "b4f629d4c0",
+    "ga_G-095_rev.mp3": "e3842657df",
+    "ga_G-096_pat.mp3": "2b904511fb",
+    "ga_G-096_ex.mp3": "e076a4252d",
+    "ga_G-096_hook.mp3": "28298c4102",
+    "ga_G-096_rev.mp3": "c97e743a52",
+    "ga_G-097_pat.mp3": "071bd1e8ab",
+    "ga_G-097_ex.mp3": "1d3ceaf30d",
+    "ga_G-097_hook.mp3": "6ec7a1c560",
+    "ga_G-097_rev.mp3": "31fdd5fe40",
+    "ga_G-098a_pat.mp3": "37ac8d5ca5",
+    "ga_G-098a_ex.mp3": "c7bfb69430",
+    "ga_G-098a_hook.mp3": "de2e28fb22",
+    "ga_G-098a_rev.mp3": "b38da7c036",
+    "ga_G-098b_pat.mp3": "1d02a6c4d2",
+    "ga_G-098b_ex.mp3": "abe9c1c72c",
+    "ga_G-098b_hook.mp3": "cd6e35c23b",
+    "ga_G-098b_rev.mp3": "7aeb4825e9",
+    "ga_G-099_pat.mp3": "58eaacfece",
+    "ga_G-099_ex.mp3": "d53c0ff680",
+    "ga_G-099_hook.mp3": "b3e7d25920",
+    "ga_G-099_rev.mp3": "11ad2a00e5",
+    "ga_G-100_pat.mp3": "0a4655e162",
+    "ga_G-100_ex.mp3": "f27d13582d",
+    "ga_G-100_hook.mp3": "1e319b4f0a",
+    "ga_G-100_rev.mp3": "be0968eedd",
+    "ga_G-101_pat.mp3": "a656370080",
+    "ga_G-101_ex.mp3": "d7ea6179a2",
+    "ga_G-101_hook.mp3": "42701d751b",
+    "ga_G-101_rev.mp3": "9c7c49803d",
+    "ga_G-102_pat.mp3": "33fc319685",
+    "ga_G-102_ex.mp3": "7d7e3d73eb",
+    "ga_G-102_hook.mp3": "6d90dbb947",
+    "ga_G-102_rev.mp3": "b3b46008d9",
+    "ga_G-103_pat.mp3": "ee06d41ddf",
+    "ga_G-103_ex.mp3": "e32c21460b",
+    "ga_G-103_hook.mp3": "47d5eb0ce4",
+    "ga_G-103_rev.mp3": "9b8e7d35e0",
+    "ga_G-104_pat.mp3": "11f14fa079",
+    "ga_G-104_ex.mp3": "22777e197b",
+    "ga_G-104_hook.mp3": "7935bf7e69",
+    "ga_G-104_rev.mp3": "fd48b4dedf",
+    "ga_G-105_pat.mp3": "82926439e1",
+    "ga_G-105_ex.mp3": "3a083ed615",
+    "ga_G-105_hook.mp3": "1b186c47c3",
+    "ga_G-105_rev.mp3": "532b2af702",
+    "ga_G-106_pat.mp3": "9f6567bbae",
+    "ga_G-106_ex.mp3": "0d0116a0bf",
+    "ga_G-106_hook.mp3": "4e6884444d",
+    "ga_G-106_rev.mp3": "1705be27dd",
+    "ga_G-107_pat.mp3": "98ff111c77",
+    "ga_G-107_ex.mp3": "cca7740fd9",
+    "ga_G-107_hook.mp3": "1f01352296",
+    "ga_G-107_rev.mp3": "4bf61f791d",
+    "ga_G-108_pat.mp3": "ac13f5869c",
+    "ga_G-108_ex.mp3": "ac48a69c9f",
+    "ga_G-108_hook.mp3": "3a1eb81ea9",
+    "ga_G-108_rev.mp3": "a6a44409f5",
+    "ga_G-109_pat.mp3": "0c332cb690",
+    "ga_G-109_ex.mp3": "81406b2901",
+    "ga_G-109_hook.mp3": "e0b01cea0f",
+    "ga_G-109_rev.mp3": "d9056bb853",
+    "ga_G-110_pat.mp3": "929f47b1a4",
+    "ga_G-110_ex.mp3": "72eb76a5e2",
+    "ga_G-110_hook.mp3": "80751aaef3",
+    "ga_G-110_rev.mp3": "d6f8a9a96c",
+    "ga_G-111_pat.mp3": "95ba706b1a",
+    "ga_G-111_ex.mp3": "99246ccf3e",
+    "ga_G-111_hook.mp3": "34d077c5e5",
+    "ga_G-111_rev.mp3": "8f46a717d9",
+    "ga_G-112_pat.mp3": "06992f5940",
+    "ga_G-112_ex.mp3": "a1321b67db",
+    "ga_G-112_hook.mp3": "e82b815dc5",
+    "ga_G-112_rev.mp3": "dee7d598c0",
+    "ga_G-113_pat.mp3": "121f9f7ed5",
+    "ga_G-113_ex.mp3": "1452452755",
+    "ga_G-113_hook.mp3": "0fb2752ebc",
+    "ga_G-113_rev.mp3": "252d1f8140",
+    "ga_G-114_pat.mp3": "8e75141770",
+    "ga_G-114_ex.mp3": "1f70313289",
+    "ga_G-114_hook.mp3": "8d82a9a9d7",
+    "ga_G-114_rev.mp3": "1b2f061dd8",
+    "ga_G-115_pat.mp3": "50ffe853eb",
+    "ga_G-115_ex.mp3": "25912f545a",
+    "ga_G-115_hook.mp3": "57896f6190",
+    "ga_G-115_rev.mp3": "206900f1f6",
+    "ga_G-116a_pat.mp3": "f0751bdb20",
+    "ga_G-116a_ex.mp3": "270201bcfd",
+    "ga_G-116a_hook.mp3": "0688b292be",
+    "ga_G-116a_rev.mp3": "fafc5856e7",
+    "ga_G-116b_pat.mp3": "29819932d2",
+    "ga_G-116b_ex.mp3": "71e3ad27a0",
+    "ga_G-116b_hook.mp3": "2c2385dd8a",
+    "ga_G-116b_rev.mp3": "0b68f2f061",
+    "ga_G-116c_pat.mp3": "93db6b33b3",
+    "ga_G-116c_ex.mp3": "3003bafc32",
+    "ga_G-116c_hook.mp3": "019e4da6ed",
+    "ga_G-116c_rev.mp3": "d0e4614ac2",
+    "ga_G-116d_pat.mp3": "7ea12f6bde",
+    "ga_G-116d_ex.mp3": "faa13db492",
+    "ga_G-116d_hook.mp3": "81542141fa",
+    "ga_G-116d_rev.mp3": "04f71fd200",
+    "ga_G-116e_pat.mp3": "45a564a739",
+    "ga_G-116e_ex.mp3": "0c8f95132c",
+    "ga_G-116e_hook.mp3": "24cea70c2d",
+    "ga_G-116e_rev.mp3": "862cce7f27",
+    "ga_G-116f_pat.mp3": "35c1bf472d",
+    "ga_G-116f_ex.mp3": "1aa46765eb",
+    "ga_G-116f_hook.mp3": "94b85e964c",
+    "ga_G-116f_rev.mp3": "1df41ad8de",
+    "ga_G-117a_pat.mp3": "3555ac5dc1",
+    "ga_G-117a_ex.mp3": "0b7760ff74",
+    "ga_G-117a_hook.mp3": "c53cd46907",
+    "ga_G-117a_rev.mp3": "eee506c440",
+    "ga_G-117b_pat.mp3": "e656ff1f1f",
+    "ga_G-117b_ex.mp3": "4045182ac8",
+    "ga_G-117b_hook.mp3": "b47f3df57f",
+    "ga_G-117b_rev.mp3": "5be8eda56e",
+    "ga_G-117c_pat.mp3": "ae59321316",
+    "ga_G-117c_ex.mp3": "975bce3b21",
+    "ga_G-117c_hook.mp3": "f01b550c39",
+    "ga_G-117c_rev.mp3": "d021d4914f",
+    "ga_G-118_pat.mp3": "091cd44f64",
+    "ga_G-118_ex.mp3": "1ca1e44573",
+    "ga_G-118_hook.mp3": "8bfc14f490",
+    "ga_G-118_rev.mp3": "b6bd71061c",
+    "ga_G-119a_pat.mp3": "ea6e50a6aa",
+    "ga_G-119a_ex.mp3": "818929a08c",
+    "ga_G-119a_hook.mp3": "95fc90d6df",
+    "ga_G-119a_rev.mp3": "b9cd5abd14",
+    "ga_G-119b_pat.mp3": "5f0e5fc739",
+    "ga_G-119b_ex.mp3": "dd5f732efd",
+    "ga_G-119b_hook.mp3": "ed3619e87a",
+    "ga_G-119b_rev.mp3": "182b6ddb16",
+    "ga_G-119c_pat.mp3": "b753e12db6",
+    "ga_G-119c_ex.mp3": "cd2945fae3",
+    "ga_G-119c_hook.mp3": "798b2bdce3",
+    "ga_G-119c_rev.mp3": "0b1f8589f7",
+    "ga_G-119d_pat.mp3": "17a88fef82",
+    "ga_G-119d_ex.mp3": "161216d5b0",
+    "ga_G-119d_hook.mp3": "326c1cd603",
+    "ga_G-119d_rev.mp3": "7b39e5e8dd",
+    "ga_G-119e_pat.mp3": "61523bf2e5",
+    "ga_G-119e_ex.mp3": "b2e49488ad",
+    "ga_G-119e_hook.mp3": "4390fd65ee",
+    "ga_G-119e_rev.mp3": "2b24fdb79a",
+    "ga_G-119f_pat.mp3": "133644cadc",
+    "ga_G-119f_ex.mp3": "23f7749a3c",
+    "ga_G-119f_hook.mp3": "226db35e05",
+    "ga_G-119f_rev.mp3": "b492fe15da",
+    "ga_G-119g_pat.mp3": "8a2e6b1ad8",
+    "ga_G-119g_ex.mp3": "225204b1f5",
+    "ga_G-119g_hook.mp3": "98d9f689b3",
+    "ga_G-119g_rev.mp3": "dba6a4525f",
+    "ga_G-119h_pat.mp3": "3066dc5da6",
+    "ga_G-119h_ex.mp3": "80d72da7bc",
+    "ga_G-119h_hook.mp3": "fb1be096d1",
+    "ga_G-119h_rev.mp3": "df46660a21",
+    "ga_G-120_pat.mp3": "a614569eeb",
+    "ga_G-120_ex.mp3": "4ab4bdd3d2",
+    "ga_G-120_hook.mp3": "740485fcea",
+    "ga_G-120_rev.mp3": "324663fa63",
+    "ga_G-121_pat.mp3": "f397977347",
+    "ga_G-121_ex.mp3": "35bcb5ee59",
+    "ga_G-121_hook.mp3": "fded3c9837",
+    "ga_G-121_rev.mp3": "8c36d18b41",
+    "ga_G-122_pat.mp3": "017bdf38d4",
+    "ga_G-122_ex.mp3": "a0e1167e67",
+    "ga_G-122_hook.mp3": "dfa69fc0d8",
+    "ga_G-122_rev.mp3": "7e63639479",
+    "ga_G-123_pat.mp3": "f76ff8325f",
+    "ga_G-123_ex.mp3": "1710c5cbd4",
+    "ga_G-123_hook.mp3": "564f679dff",
+    "ga_G-123_rev.mp3": "37955b620e",
+    "ga_G-124a_pat.mp3": "e92a621275",
+    "ga_G-124a_ex.mp3": "c608c128db",
+    "ga_G-124a_hook.mp3": "968de5b618",
+    "ga_G-124a_rev.mp3": "8169a1251b",
+    "ga_G-124b_pat.mp3": "74a7024b9b",
+    "ga_G-124b_ex.mp3": "1812532fd4",
+    "ga_G-124b_hook.mp3": "c18b8ca6df",
+    "ga_G-124b_rev.mp3": "dce9117154",
+    "ga_G-125a_pat.mp3": "5224eb1ff3",
+    "ga_G-125a_ex.mp3": "c380a97b8f",
+    "ga_G-125a_hook.mp3": "d5fe5bba4d",
+    "ga_G-125a_rev.mp3": "4f15fbc305",
+    "ga_G-125b_pat.mp3": "013412f420",
+    "ga_G-125b_ex.mp3": "0fb5f97ba0",
+    "ga_G-125b_hook.mp3": "b7d27fd6f6",
+    "ga_G-125b_rev.mp3": "d441b5c2a3",
+    "ga_G-126_pat.mp3": "055d711724",
+    "ga_G-126_ex.mp3": "63f9676dea",
+    "ga_G-126_hook.mp3": "fd72418c0c",
+    "ga_G-126_rev.mp3": "dfb97bf375",
+    "ga_G-127_pat.mp3": "cbfabce411",
+    "ga_G-127_ex.mp3": "2bd1544fec",
+    "ga_G-127_hook.mp3": "204f5f1925",
+    "ga_G-127_rev.mp3": "3bc49a0b0d",
+    "ga_G-128_pat.mp3": "ed00ee5cac",
+    "ga_G-128_ex.mp3": "c9d21667c3",
+    "ga_G-128_hook.mp3": "33ef955a5a",
+    "ga_G-128_rev.mp3": "aa8c1763f9",
+    "ga_G-129_pat.mp3": "61b8e8a8b9",
+    "ga_G-129_ex.mp3": "cb5eac019a",
+    "ga_G-129_hook.mp3": "94b56bd4ee",
+    "ga_G-129_rev.mp3": "a0132e59e0",
+    "ga_G-130_pat.mp3": "6e319f9fb2",
+    "ga_G-130_ex.mp3": "01a1e60ed0",
+    "ga_G-130_hook.mp3": "025c5589e4",
+    "ga_G-130_rev.mp3": "b4f7d6d573",
+    "ga_G-131_pat.mp3": "b1d6e2cf4f",
+    "ga_G-131_ex.mp3": "effc516ed3",
+    "ga_G-131_hook.mp3": "727e487dce",
+    "ga_G-131_rev.mp3": "673b7d6814",
+    "ga_G-132_pat.mp3": "7b23e3dec1",
+    "ga_G-132_ex.mp3": "505985c46b",
+    "ga_G-132_hook.mp3": "46a1bea859",
+    "ga_G-132_rev.mp3": "bbf77317e3",
+    "ga_G-133_pat.mp3": "7bdd565197",
+    "ga_G-133_ex.mp3": "fdc24510fc",
+    "ga_G-133_hook.mp3": "8042cd2bc9",
+    "ga_G-133_rev.mp3": "e987a3f21c",
+    "ga_G-134_pat.mp3": "8b31f58c9a",
+    "ga_G-134_ex.mp3": "323f028687",
+    "ga_G-134_hook.mp3": "21b8579a81",
+    "ga_G-134_rev.mp3": "a78f80e0f1",
+    "ga_G-135_pat.mp3": "3d55aa193c",
+    "ga_G-135_ex.mp3": "0abbca990c",
+    "ga_G-135_hook.mp3": "80854a0312",
+    "ga_G-135_rev.mp3": "904f788a7d",
+    "ga_G-136_pat.mp3": "3837bc593f",
+    "ga_G-136_ex.mp3": "7518d963b9",
+    "ga_G-136_hook.mp3": "f6cd43f63a",
+    "ga_G-136_rev.mp3": "a9bb79153d",
+    "ga_GB-01_pat.mp3": "9b7370f401",
+    "ga_GB-01_ex.mp3": "0c1c4d8228",
+    "ga_GB-01_hook.mp3": "ff83b4390f",
+    "ga_GB-01_rev.mp3": "8644162437",
+    "ga_GB-02_pat.mp3": "d202304ab5",
+    "ga_GB-02_ex.mp3": "7a5597d913",
+    "ga_GB-02_hook.mp3": "92e80466c7",
+    "ga_GB-02_rev.mp3": "8e1476e241",
+    "ga_GB-04_pat.mp3": "dd73201cc4",
+    "ga_GB-04_ex.mp3": "42eb5c3d3b",
+    "ga_GB-04_hook.mp3": "ff4b82f02a",
+    "ga_GB-04_rev.mp3": "dd33b6ed60",
+    "ga_GB-05_pat.mp3": "17d27ab209",
+    "ga_GB-05_ex.mp3": "1127e80fe5",
+    "ga_GB-05_hook.mp3": "3490a02a97",
+    "ga_GB-05_rev.mp3": "57ad2cc088",
+    "ga_GB-06_pat.mp3": "04e4a3822f",
+    "ga_GB-06_ex.mp3": "61f771fea9",
+    "ga_GB-06_hook.mp3": "e841b38933",
+    "ga_GB-06_rev.mp3": "a15754eb49",
+    "ga_GB-07_pat.mp3": "82c51f7509",
+    "ga_GB-07_ex.mp3": "415bdc9ca8",
+    "ga_GB-07_hook.mp3": "e712b5b311",
+    "ga_GB-07_rev.mp3": "5b4aa04bfd",
+    "ga_GB-08_pat.mp3": "325c190941",
+    "ga_GB-08_ex.mp3": "829dfafc50",
+    "ga_GB-08_hook.mp3": "dcef736938",
+    "ga_GB-08_rev.mp3": "d32832aec2",
+    "ga_GB-09_pat.mp3": "185c518be4",
+    "ga_GB-09_ex.mp3": "a948fd21d6",
+    "ga_GB-09_hook.mp3": "737527c1f3",
+    "ga_GB-09_rev.mp3": "710466d627",
+    "ga_GB-10_pat.mp3": "4e92f298c1",
+    "ga_GB-10_ex.mp3": "8144f16bbb",
+    "ga_GB-10_hook.mp3": "0cadad8c83",
+    "ga_GB-10_rev.mp3": "dcd531f1b5",
+    "ga_GX-01_pat.mp3": "25bd62c9f4",
+    "ga_GX-01_ex.mp3": "e436f281c3",
+    "ga_GX-01_hook.mp3": "93f73fcea5",
+    "ga_GX-01_rev.mp3": "4285ad71f1",
+    "ga_GX-02_pat.mp3": "828d9d1995",
+    "ga_GX-02_ex.mp3": "52b085bf73",
+    "ga_GX-02_hook.mp3": "0ce2a3d714",
+    "ga_GX-02_rev.mp3": "172e85a858",
+    "ga_GX-03_pat.mp3": "65eeabe22c",
+    "ga_GX-03_ex.mp3": "23f0d698c2",
+    "ga_GX-03_hook.mp3": "ead882b0f0",
+    "ga_GX-03_rev.mp3": "e0515ab8c4",
+    "ga_GX-04_pat.mp3": "bb08112565",
+    "ga_GX-04_ex.mp3": "a833d740c2",
+    "ga_GX-04_hook.mp3": "d385be29f2",
+    "ga_GX-04_rev.mp3": "e52971cd89",
+    "ga_GX-05_pat.mp3": "56702c8105",
+    "ga_GX-05_ex.mp3": "de7a264212",
+    "ga_GX-05_hook.mp3": "779f4ac742",
+    "ga_GX-05_rev.mp3": "22d3d6bf60",
+    "ga_GX-06_pat.mp3": "e758ba58aa",
+    "ga_GX-06_ex.mp3": "a41d29f656",
+    "ga_GX-06_hook.mp3": "e3f7308f3e",
+    "ga_GX-06_rev.mp3": "21678d3544",
+    "ga_GX-07_pat.mp3": "6b0d46c8c4",
+    "ga_GX-07_ex.mp3": "230de2c34c",
+    "ga_GX-07_hook.mp3": "12523d3a23",
+    "ga_GX-07_rev.mp3": "bff99c3207",
+    "ga_GX-08_pat.mp3": "ae57a95053",
+    "ga_GX-08_ex.mp3": "36fc584815",
+    "ga_GX-08_hook.mp3": "360423cc27",
+    "ga_GX-08_rev.mp3": "9bd36fb955",
+    "ga_GX-09_pat.mp3": "670fc2ca37",
+    "ga_GX-09_ex.mp3": "204e114e99",
+    "ga_GX-09_hook.mp3": "ed2efb9102",
+    "ga_GX-09_rev.mp3": "daa4c8b6cf",
+    "ga_GX-10_pat.mp3": "ed1ed325b2",
+    "ga_GX-10_ex.mp3": "0c33c1a5c8",
+    "ga_GX-10_hook.mp3": "7711b2fd36",
+    "ga_GX-10_rev.mp3": "9f4d75a4bd",
+    "ga_GX-11_pat.mp3": "345fea5309",
+    "ga_GX-11_ex.mp3": "9d98a76fd1",
+    "ga_GX-11_hook.mp3": "bc14e8662c",
+    "ga_GX-11_rev.mp3": "1e1dbfc20a"
+  },
   "num_JF_1.mp3": "b67108e5b8a0",
   "num_JF_2.mp3": "faee77d48904",
   "num_JF_3.mp3": "5e6ac3e418ce",
@@ -10714,1739 +12448,5 @@
     "exp_audio": "./audio/VAR11-60_exp.mp3?v=395a4bcb",
     "spoken_text": "关于下周碰头会的事，我打算稍后由我这边再向贵司负责人请教具体需求。 动作发出者是「私から（我这边）」，自己向对方打听请教必须压低自己用谦让语「伺う」。 动作主语是「我」去问/拜访对方＝谦让语「伺う」；「お〜になる」只能抬高对方。"
   },
-  "done.mp3": "33da2bfc13f6",
-  "ga_cards": {
-    "G-001": {
-      "pat": "./audio/ga/ga_G-001_pat.mp3?v=c3ea0742",
-      "ex": "./audio/ga/ga_G-001_ex.mp3?v=4a258c44",
-      "hook": "./audio/ga/ga_G-001_hook.mp3?v=0f59f5ea",
-      "rev": "./audio/ga/ga_G-001_rev.mp3?v=2d04a8bf"
-    },
-    "G-002": {
-      "pat": "./audio/ga/ga_G-002_pat.mp3?v=5682cf20",
-      "ex": "./audio/ga/ga_G-002_ex.mp3?v=aceef16e",
-      "hook": "./audio/ga/ga_G-002_hook.mp3?v=5b3f161a",
-      "rev": "./audio/ga/ga_G-002_rev.mp3?v=e50fe79d"
-    },
-    "G-003": {
-      "pat": "./audio/ga/ga_G-003_pat.mp3?v=411886f2",
-      "ex": "./audio/ga/ga_G-003_ex.mp3?v=c7b7f95c",
-      "hook": "./audio/ga/ga_G-003_hook.mp3?v=d5914e38",
-      "rev": "./audio/ga/ga_G-003_rev.mp3?v=d16cfbbb"
-    },
-    "G-004": {
-      "pat": "./audio/ga/ga_G-004_pat.mp3?v=bd29d808",
-      "ex": "./audio/ga/ga_G-004_ex.mp3?v=9de21014",
-      "hook": "./audio/ga/ga_G-004_hook.mp3?v=505147d4",
-      "rev": "./audio/ga/ga_G-004_rev.mp3?v=9ad75b22"
-    },
-    "G-005": {
-      "pat": "./audio/ga/ga_G-005_pat.mp3?v=c01e5b23",
-      "ex": "./audio/ga/ga_G-005_ex.mp3?v=e8871e77",
-      "hook": "./audio/ga/ga_G-005_hook.mp3?v=d59cf151",
-      "rev": "./audio/ga/ga_G-005_rev.mp3?v=d0b6a38c"
-    },
-    "G-006": {
-      "pat": "./audio/ga/ga_G-006_pat.mp3?v=afab5427",
-      "ex": "./audio/ga/ga_G-006_ex.mp3?v=e1706b29",
-      "hook": "./audio/ga/ga_G-006_hook.mp3?v=bba783fc",
-      "rev": "./audio/ga/ga_G-006_rev.mp3?v=d534c00d"
-    },
-    "G-007": {
-      "pat": "./audio/ga/ga_G-007_pat.mp3?v=91dc56d2",
-      "ex": "./audio/ga/ga_G-007_ex.mp3?v=f89fd2a2",
-      "hook": "./audio/ga/ga_G-007_hook.mp3?v=a85d8da3",
-      "rev": "./audio/ga/ga_G-007_rev.mp3?v=f4bc568d"
-    },
-    "G-008": {
-      "pat": "./audio/ga/ga_G-008_pat.mp3?v=3a20dfb1",
-      "ex": "./audio/ga/ga_G-008_ex.mp3?v=0d58d3cd",
-      "hook": "./audio/ga/ga_G-008_hook.mp3?v=b0265779",
-      "rev": "./audio/ga/ga_G-008_rev.mp3?v=5d6dc66a"
-    },
-    "G-009": {
-      "pat": "./audio/ga/ga_G-009_pat.mp3?v=9eb4b01c",
-      "ex": "./audio/ga/ga_G-009_ex.mp3?v=56dc03c2",
-      "hook": "./audio/ga/ga_G-009_hook.mp3?v=ad028d9b",
-      "rev": "./audio/ga/ga_G-009_rev.mp3?v=5de4e792"
-    },
-    "G-010": {
-      "pat": "./audio/ga/ga_G-010_pat.mp3?v=05375fc0",
-      "ex": "./audio/ga/ga_G-010_ex.mp3?v=35e353b8",
-      "hook": "./audio/ga/ga_G-010_hook.mp3?v=39c15afc",
-      "rev": "./audio/ga/ga_G-010_rev.mp3?v=15ea068d"
-    },
-    "G-011": {
-      "pat": "./audio/ga/ga_G-011_pat.mp3?v=7690d79e",
-      "ex": "./audio/ga/ga_G-011_ex.mp3?v=56174bba",
-      "hook": "./audio/ga/ga_G-011_hook.mp3?v=44f9d852",
-      "rev": "./audio/ga/ga_G-011_rev.mp3?v=bc106bcb"
-    },
-    "G-012": {
-      "pat": "./audio/ga/ga_G-012_pat.mp3?v=75d1ab39",
-      "ex": "./audio/ga/ga_G-012_ex.mp3?v=c8398f35",
-      "hook": "./audio/ga/ga_G-012_hook.mp3?v=28e69861",
-      "rev": "./audio/ga/ga_G-012_rev.mp3?v=675a4cd1"
-    },
-    "G-013": {
-      "pat": "./audio/ga/ga_G-013_pat.mp3?v=5eb897b7",
-      "ex": "./audio/ga/ga_G-013_ex.mp3?v=8ed0311c",
-      "hook": "./audio/ga/ga_G-013_hook.mp3?v=936e891e",
-      "rev": "./audio/ga/ga_G-013_rev.mp3?v=d2d4c66f"
-    },
-    "G-014": {
-      "pat": "./audio/ga/ga_G-014_pat.mp3?v=03e59c6e",
-      "ex": "./audio/ga/ga_G-014_ex.mp3?v=2b9d06cf",
-      "hook": "./audio/ga/ga_G-014_hook.mp3?v=7ce28291",
-      "rev": "./audio/ga/ga_G-014_rev.mp3?v=1307ff92"
-    },
-    "G-015": {
-      "pat": "./audio/ga/ga_G-015_pat.mp3?v=da7ba3fd",
-      "ex": "./audio/ga/ga_G-015_ex.mp3?v=cd87b660",
-      "hook": "./audio/ga/ga_G-015_hook.mp3?v=ac167fc1",
-      "rev": "./audio/ga/ga_G-015_rev.mp3?v=20f5a9bf"
-    },
-    "G-016": {
-      "pat": "./audio/ga/ga_G-016_pat.mp3?v=454c8dc0",
-      "ex": "./audio/ga/ga_G-016_ex.mp3?v=ff194598",
-      "hook": "./audio/ga/ga_G-016_hook.mp3?v=9609ec04",
-      "rev": "./audio/ga/ga_G-016_rev.mp3?v=1f15b4ac"
-    },
-    "G-017": {
-      "pat": "./audio/ga/ga_G-017_pat.mp3?v=80406024",
-      "ex": "./audio/ga/ga_G-017_ex.mp3?v=fa5ac856",
-      "hook": "./audio/ga/ga_G-017_hook.mp3?v=99170838",
-      "rev": "./audio/ga/ga_G-017_rev.mp3?v=ab8fb984"
-    },
-    "G-018": {
-      "pat": "./audio/ga/ga_G-018_pat.mp3?v=1bdebae3",
-      "ex": "./audio/ga/ga_G-018_ex.mp3?v=58fc78fe",
-      "hook": "./audio/ga/ga_G-018_hook.mp3?v=f256673b",
-      "rev": "./audio/ga/ga_G-018_rev.mp3?v=347e7c9d"
-    },
-    "G-019": {
-      "pat": "./audio/ga/ga_G-019_pat.mp3?v=fe7dd7d8",
-      "ex": "./audio/ga/ga_G-019_ex.mp3?v=18a87d37",
-      "hook": "./audio/ga/ga_G-019_hook.mp3?v=f12ada69",
-      "rev": "./audio/ga/ga_G-019_rev.mp3?v=eed8a7b6"
-    },
-    "G-020": {
-      "pat": "./audio/ga/ga_G-020_pat.mp3?v=22a5ae94",
-      "ex": "./audio/ga/ga_G-020_ex.mp3?v=24cb6d26",
-      "hook": "./audio/ga/ga_G-020_hook.mp3?v=05537a23",
-      "rev": "./audio/ga/ga_G-020_rev.mp3?v=de6b0718"
-    },
-    "G-021": {
-      "pat": "./audio/ga/ga_G-021_pat.mp3?v=34edea89",
-      "ex": "./audio/ga/ga_G-021_ex.mp3?v=a0572f0c",
-      "hook": "./audio/ga/ga_G-021_hook.mp3?v=4fdbc3ba",
-      "rev": "./audio/ga/ga_G-021_rev.mp3?v=bcecc612"
-    },
-    "G-022": {
-      "pat": "./audio/ga/ga_G-022_pat.mp3?v=48d5e4fd",
-      "ex": "./audio/ga/ga_G-022_ex.mp3?v=256e3e5f",
-      "hook": "./audio/ga/ga_G-022_hook.mp3?v=fb1e11ca",
-      "rev": "./audio/ga/ga_G-022_rev.mp3?v=9a97fbf2"
-    },
-    "G-023": {
-      "pat": "./audio/ga/ga_G-023_pat.mp3?v=933cf976",
-      "ex": "./audio/ga/ga_G-023_ex.mp3?v=74011ee1",
-      "hook": "./audio/ga/ga_G-023_hook.mp3?v=386ff032",
-      "rev": "./audio/ga/ga_G-023_rev.mp3?v=d00fbf99"
-    },
-    "G-024": {
-      "pat": "./audio/ga/ga_G-024_pat.mp3?v=0bf9cc27",
-      "ex": "./audio/ga/ga_G-024_ex.mp3?v=b1ca7840",
-      "hook": "./audio/ga/ga_G-024_hook.mp3?v=c706b5aa",
-      "rev": "./audio/ga/ga_G-024_rev.mp3?v=2ed8aa17"
-    },
-    "G-025": {
-      "pat": "./audio/ga/ga_G-025_pat.mp3?v=43822689",
-      "ex": "./audio/ga/ga_G-025_ex.mp3?v=bf38c4df",
-      "hook": "./audio/ga/ga_G-025_hook.mp3?v=5c9cb624",
-      "rev": "./audio/ga/ga_G-025_rev.mp3?v=d47aed64"
-    },
-    "G-026": {
-      "pat": "./audio/ga/ga_G-026_pat.mp3?v=b91505c7",
-      "ex": "./audio/ga/ga_G-026_ex.mp3?v=fd7b055c",
-      "hook": "./audio/ga/ga_G-026_hook.mp3?v=311f20ad",
-      "rev": "./audio/ga/ga_G-026_rev.mp3?v=ee4b61e6"
-    },
-    "G-027": {
-      "pat": "./audio/ga/ga_G-027_pat.mp3?v=62328572",
-      "ex": "./audio/ga/ga_G-027_ex.mp3?v=bd0b8fc9",
-      "hook": "./audio/ga/ga_G-027_hook.mp3?v=beeb3cdf",
-      "rev": "./audio/ga/ga_G-027_rev.mp3?v=f015fc42"
-    },
-    "G-028": {
-      "pat": "./audio/ga/ga_G-028_pat.mp3?v=e3ed4e4e",
-      "ex": "./audio/ga/ga_G-028_ex.mp3?v=c2941e08",
-      "hook": "./audio/ga/ga_G-028_hook.mp3?v=c6d9c8c3",
-      "rev": "./audio/ga/ga_G-028_rev.mp3?v=24bd1a2b"
-    },
-    "G-029": {
-      "pat": "./audio/ga/ga_G-029_pat.mp3?v=6282d437",
-      "ex": "./audio/ga/ga_G-029_ex.mp3?v=41d3faef",
-      "hook": "./audio/ga/ga_G-029_hook.mp3?v=3c9f2f45",
-      "rev": "./audio/ga/ga_G-029_rev.mp3?v=b565fd27"
-    },
-    "G-030": {
-      "pat": "./audio/ga/ga_G-030_pat.mp3?v=d17940d3",
-      "ex": "./audio/ga/ga_G-030_ex.mp3?v=eb801ccc",
-      "hook": "./audio/ga/ga_G-030_hook.mp3?v=4b2f84bf",
-      "rev": "./audio/ga/ga_G-030_rev.mp3?v=9f7a84c5"
-    },
-    "G-031": {
-      "pat": "./audio/ga/ga_G-031_pat.mp3?v=ed5e137b",
-      "ex": "./audio/ga/ga_G-031_ex.mp3?v=60721804",
-      "hook": "./audio/ga/ga_G-031_hook.mp3?v=a886528f",
-      "rev": "./audio/ga/ga_G-031_rev.mp3?v=bab9ce11"
-    },
-    "G-032": {
-      "pat": "./audio/ga/ga_G-032_pat.mp3?v=ad959fbb",
-      "ex": "./audio/ga/ga_G-032_ex.mp3?v=dac3621e",
-      "hook": "./audio/ga/ga_G-032_hook.mp3?v=a4996aa4",
-      "rev": "./audio/ga/ga_G-032_rev.mp3?v=611f8cf0"
-    },
-    "G-033": {
-      "pat": "./audio/ga/ga_G-033_pat.mp3?v=7e4129fb",
-      "ex": "./audio/ga/ga_G-033_ex.mp3?v=8792067d",
-      "hook": "./audio/ga/ga_G-033_hook.mp3?v=e026a016",
-      "rev": "./audio/ga/ga_G-033_rev.mp3?v=e13d86a7"
-    },
-    "G-034": {
-      "pat": "./audio/ga/ga_G-034_pat.mp3?v=6d571045",
-      "ex": "./audio/ga/ga_G-034_ex.mp3?v=48694f50",
-      "hook": "./audio/ga/ga_G-034_hook.mp3?v=06005dc7",
-      "rev": "./audio/ga/ga_G-034_rev.mp3?v=0066bd86"
-    },
-    "G-035": {
-      "pat": "./audio/ga/ga_G-035_pat.mp3?v=917622b7",
-      "ex": "./audio/ga/ga_G-035_ex.mp3?v=918629fc",
-      "hook": "./audio/ga/ga_G-035_hook.mp3?v=34314a34",
-      "rev": "./audio/ga/ga_G-035_rev.mp3?v=f5722875"
-    },
-    "G-036": {
-      "pat": "./audio/ga/ga_G-036_pat.mp3?v=e82e6186",
-      "ex": "./audio/ga/ga_G-036_ex.mp3?v=3df7b2a5",
-      "hook": "./audio/ga/ga_G-036_hook.mp3?v=b7e4a012",
-      "rev": "./audio/ga/ga_G-036_rev.mp3?v=c5d19a87"
-    },
-    "G-037": {
-      "pat": "./audio/ga/ga_G-037_pat.mp3?v=20aa8ae8",
-      "ex": "./audio/ga/ga_G-037_ex.mp3?v=61155591",
-      "hook": "./audio/ga/ga_G-037_hook.mp3?v=9d4a53a0",
-      "rev": "./audio/ga/ga_G-037_rev.mp3?v=4685da68"
-    },
-    "G-038": {
-      "pat": "./audio/ga/ga_G-038_pat.mp3?v=0e7b9bb2",
-      "ex": "./audio/ga/ga_G-038_ex.mp3?v=b724fd38",
-      "hook": "./audio/ga/ga_G-038_hook.mp3?v=463d49d5",
-      "rev": "./audio/ga/ga_G-038_rev.mp3?v=6add1078"
-    },
-    "G-039": {
-      "pat": "./audio/ga/ga_G-039_pat.mp3?v=3df74ea8",
-      "ex": "./audio/ga/ga_G-039_ex.mp3?v=cd03bba7",
-      "hook": "./audio/ga/ga_G-039_hook.mp3?v=3842d60c",
-      "rev": "./audio/ga/ga_G-039_rev.mp3?v=2b152567"
-    },
-    "G-040": {
-      "pat": "./audio/ga/ga_G-040_pat.mp3?v=f54a386e",
-      "ex": "./audio/ga/ga_G-040_ex.mp3?v=301594f1",
-      "hook": "./audio/ga/ga_G-040_hook.mp3?v=d9cfde9d",
-      "rev": "./audio/ga/ga_G-040_rev.mp3?v=16ae4235"
-    },
-    "G-041": {
-      "pat": "./audio/ga/ga_G-041_pat.mp3?v=aa98673c",
-      "ex": "./audio/ga/ga_G-041_ex.mp3?v=f9d8d8e9",
-      "hook": "./audio/ga/ga_G-041_hook.mp3?v=ac135bc9",
-      "rev": "./audio/ga/ga_G-041_rev.mp3?v=bb41162c"
-    },
-    "G-042": {
-      "pat": "./audio/ga/ga_G-042_pat.mp3?v=ca4c9118",
-      "ex": "./audio/ga/ga_G-042_ex.mp3?v=98f42fe9",
-      "hook": "./audio/ga/ga_G-042_hook.mp3?v=7a21fcaf",
-      "rev": "./audio/ga/ga_G-042_rev.mp3?v=43e4c028"
-    },
-    "G-043": {
-      "pat": "./audio/ga/ga_G-043_pat.mp3?v=4eb7e71f",
-      "ex": "./audio/ga/ga_G-043_ex.mp3?v=b1c9f92d",
-      "hook": "./audio/ga/ga_G-043_hook.mp3?v=8987a086",
-      "rev": "./audio/ga/ga_G-043_rev.mp3?v=ff1029d7"
-    },
-    "G-044": {
-      "pat": "./audio/ga/ga_G-044_pat.mp3?v=8f33bc57",
-      "ex": "./audio/ga/ga_G-044_ex.mp3?v=d2d2602f",
-      "hook": "./audio/ga/ga_G-044_hook.mp3?v=4d9fc6ea",
-      "rev": "./audio/ga/ga_G-044_rev.mp3?v=6a36ffb5"
-    },
-    "G-045": {
-      "pat": "./audio/ga/ga_G-045_pat.mp3?v=833567d2",
-      "ex": "./audio/ga/ga_G-045_ex.mp3?v=7f32c659",
-      "hook": "./audio/ga/ga_G-045_hook.mp3?v=f94a41a6",
-      "rev": "./audio/ga/ga_G-045_rev.mp3?v=79fd417b"
-    },
-    "G-046": {
-      "pat": "./audio/ga/ga_G-046_pat.mp3?v=460919e5",
-      "ex": "./audio/ga/ga_G-046_ex.mp3?v=ba03b317",
-      "hook": "./audio/ga/ga_G-046_hook.mp3?v=307f048a",
-      "rev": "./audio/ga/ga_G-046_rev.mp3?v=f0674306"
-    },
-    "G-047": {
-      "pat": "./audio/ga/ga_G-047_pat.mp3?v=ed4fd118",
-      "ex": "./audio/ga/ga_G-047_ex.mp3?v=f8355345",
-      "hook": "./audio/ga/ga_G-047_hook.mp3?v=000ab8e0",
-      "rev": "./audio/ga/ga_G-047_rev.mp3?v=7fbb9b58"
-    },
-    "G-048": {
-      "pat": "./audio/ga/ga_G-048_pat.mp3?v=9cc75968",
-      "ex": "./audio/ga/ga_G-048_ex.mp3?v=9e215cf8",
-      "hook": "./audio/ga/ga_G-048_hook.mp3?v=95a22e23",
-      "rev": "./audio/ga/ga_G-048_rev.mp3?v=9dae552a"
-    },
-    "G-049": {
-      "pat": "./audio/ga/ga_G-049_pat.mp3?v=9ade1e65",
-      "ex": "./audio/ga/ga_G-049_ex.mp3?v=993defc4",
-      "hook": "./audio/ga/ga_G-049_hook.mp3?v=9b7d93f9",
-      "rev": "./audio/ga/ga_G-049_rev.mp3?v=cdc5fdc5"
-    },
-    "G-050": {
-      "pat": "./audio/ga/ga_G-050_pat.mp3?v=e47dbd21",
-      "ex": "./audio/ga/ga_G-050_ex.mp3?v=877fb1e3",
-      "hook": "./audio/ga/ga_G-050_hook.mp3?v=dd865450",
-      "rev": "./audio/ga/ga_G-050_rev.mp3?v=19b4a740"
-    },
-    "G-051": {
-      "pat": "./audio/ga/ga_G-051_pat.mp3?v=055d16c1",
-      "ex": "./audio/ga/ga_G-051_ex.mp3?v=bd2670a8",
-      "hook": "./audio/ga/ga_G-051_hook.mp3?v=77ff849c",
-      "rev": "./audio/ga/ga_G-051_rev.mp3?v=2bc7f8fa"
-    },
-    "G-052": {
-      "pat": "./audio/ga/ga_G-052_pat.mp3?v=259d6183",
-      "ex": "./audio/ga/ga_G-052_ex.mp3?v=8d074a0a",
-      "hook": "./audio/ga/ga_G-052_hook.mp3?v=b0469ce1",
-      "rev": "./audio/ga/ga_G-052_rev.mp3?v=aeaa90af"
-    },
-    "G-053": {
-      "pat": "./audio/ga/ga_G-053_pat.mp3?v=2b4a4b6a",
-      "ex": "./audio/ga/ga_G-053_ex.mp3?v=fb691e58",
-      "hook": "./audio/ga/ga_G-053_hook.mp3?v=deb2f9cf",
-      "rev": "./audio/ga/ga_G-053_rev.mp3?v=7ed09edb"
-    },
-    "G-054": {
-      "pat": "./audio/ga/ga_G-054_pat.mp3?v=425294fb",
-      "ex": "./audio/ga/ga_G-054_ex.mp3?v=58f85778",
-      "hook": "./audio/ga/ga_G-054_hook.mp3?v=025ce6a5",
-      "rev": "./audio/ga/ga_G-054_rev.mp3?v=9388e012"
-    },
-    "G-055": {
-      "pat": "./audio/ga/ga_G-055_pat.mp3?v=28d541b9",
-      "ex": "./audio/ga/ga_G-055_ex.mp3?v=690a3c7c",
-      "hook": "./audio/ga/ga_G-055_hook.mp3?v=903e05e1",
-      "rev": "./audio/ga/ga_G-055_rev.mp3?v=704aef32"
-    },
-    "G-056": {
-      "pat": "./audio/ga/ga_G-056_pat.mp3?v=42645813",
-      "ex": "./audio/ga/ga_G-056_ex.mp3?v=fa75669c",
-      "hook": "./audio/ga/ga_G-056_hook.mp3?v=90fb4fc7",
-      "rev": "./audio/ga/ga_G-056_rev.mp3?v=1d889f5d"
-    },
-    "G-057": {
-      "pat": "./audio/ga/ga_G-057_pat.mp3?v=0b9be0bf",
-      "ex": "./audio/ga/ga_G-057_ex.mp3?v=179021e7",
-      "hook": "./audio/ga/ga_G-057_hook.mp3?v=00eb23b5",
-      "rev": "./audio/ga/ga_G-057_rev.mp3?v=bb6e2ea9"
-    },
-    "G-058": {
-      "pat": "./audio/ga/ga_G-058_pat.mp3?v=0b9be0bf",
-      "ex": "./audio/ga/ga_G-058_ex.mp3?v=ff2263a8",
-      "hook": "./audio/ga/ga_G-058_hook.mp3?v=acc1b786",
-      "rev": "./audio/ga/ga_G-058_rev.mp3?v=7b97109a"
-    },
-    "G-059": {
-      "pat": "./audio/ga/ga_G-059_pat.mp3?v=0e904edb",
-      "ex": "./audio/ga/ga_G-059_ex.mp3?v=c4249254",
-      "hook": "./audio/ga/ga_G-059_hook.mp3?v=03c7779a",
-      "rev": "./audio/ga/ga_G-059_rev.mp3?v=49eccb4c"
-    },
-    "G-060": {
-      "pat": "./audio/ga/ga_G-060_pat.mp3?v=881637d3",
-      "ex": "./audio/ga/ga_G-060_ex.mp3?v=b359e9b6",
-      "hook": "./audio/ga/ga_G-060_hook.mp3?v=6594a79b",
-      "rev": "./audio/ga/ga_G-060_rev.mp3?v=3efd2b3d"
-    },
-    "G-061": {
-      "pat": "./audio/ga/ga_G-061_pat.mp3?v=858aa88a",
-      "ex": "./audio/ga/ga_G-061_ex.mp3?v=fd00c338",
-      "hook": "./audio/ga/ga_G-061_hook.mp3?v=00ec9f3e",
-      "rev": "./audio/ga/ga_G-061_rev.mp3?v=15307d79"
-    },
-    "G-062": {
-      "pat": "./audio/ga/ga_G-062_pat.mp3?v=b91c8d12",
-      "ex": "./audio/ga/ga_G-062_ex.mp3?v=a9a8a5a0",
-      "hook": "./audio/ga/ga_G-062_hook.mp3?v=97966fbc",
-      "rev": "./audio/ga/ga_G-062_rev.mp3?v=a47b4723"
-    },
-    "G-063": {
-      "pat": "./audio/ga/ga_G-063_pat.mp3?v=74b9e14b",
-      "ex": "./audio/ga/ga_G-063_ex.mp3?v=9562aac8",
-      "hook": "./audio/ga/ga_G-063_hook.mp3?v=e82307a6",
-      "rev": "./audio/ga/ga_G-063_rev.mp3?v=a61ff05b"
-    },
-    "G-064": {
-      "pat": "./audio/ga/ga_G-064_pat.mp3?v=cc13a07c",
-      "ex": "./audio/ga/ga_G-064_ex.mp3?v=a91790a5",
-      "hook": "./audio/ga/ga_G-064_hook.mp3?v=1d1679e4",
-      "rev": "./audio/ga/ga_G-064_rev.mp3?v=cb07e8a0"
-    },
-    "G-065": {
-      "pat": "./audio/ga/ga_G-065_pat.mp3?v=8979fa0e",
-      "ex": "./audio/ga/ga_G-065_ex.mp3?v=898bad23",
-      "hook": "./audio/ga/ga_G-065_hook.mp3?v=7e89a98b",
-      "rev": "./audio/ga/ga_G-065_rev.mp3?v=4bac131e"
-    },
-    "G-066": {
-      "pat": "./audio/ga/ga_G-066_pat.mp3?v=e3e525c4",
-      "ex": "./audio/ga/ga_G-066_ex.mp3?v=86374aee",
-      "hook": "./audio/ga/ga_G-066_hook.mp3?v=41636451",
-      "rev": "./audio/ga/ga_G-066_rev.mp3?v=86a0c108"
-    },
-    "G-067": {
-      "pat": "./audio/ga/ga_G-067_pat.mp3?v=4ef925d2",
-      "ex": "./audio/ga/ga_G-067_ex.mp3?v=f636ac90",
-      "hook": "./audio/ga/ga_G-067_hook.mp3?v=4c7edba6",
-      "rev": "./audio/ga/ga_G-067_rev.mp3?v=db48d4f5"
-    },
-    "G-068": {
-      "pat": "./audio/ga/ga_G-068_pat.mp3?v=65ce55a3",
-      "ex": "./audio/ga/ga_G-068_ex.mp3?v=bfbf9379",
-      "hook": "./audio/ga/ga_G-068_hook.mp3?v=10c89da2",
-      "rev": "./audio/ga/ga_G-068_rev.mp3?v=4991b9ba"
-    },
-    "G-069": {
-      "pat": "./audio/ga/ga_G-069_pat.mp3?v=f116cd8d",
-      "ex": "./audio/ga/ga_G-069_ex.mp3?v=3953a38c",
-      "hook": "./audio/ga/ga_G-069_hook.mp3?v=281264a2",
-      "rev": "./audio/ga/ga_G-069_rev.mp3?v=ceae0946"
-    },
-    "G-070": {
-      "pat": "./audio/ga/ga_G-070_pat.mp3?v=03a1f751",
-      "ex": "./audio/ga/ga_G-070_ex.mp3?v=a9040cd7",
-      "hook": "./audio/ga/ga_G-070_hook.mp3?v=07aca76b",
-      "rev": "./audio/ga/ga_G-070_rev.mp3?v=4b23cd36"
-    },
-    "G-071": {
-      "pat": "./audio/ga/ga_G-071_pat.mp3?v=95428395",
-      "ex": "./audio/ga/ga_G-071_ex.mp3?v=26d05628",
-      "hook": "./audio/ga/ga_G-071_hook.mp3?v=df89da49",
-      "rev": "./audio/ga/ga_G-071_rev.mp3?v=2fe984a0"
-    },
-    "G-072": {
-      "pat": "./audio/ga/ga_G-072_pat.mp3?v=b1d5acf6",
-      "ex": "./audio/ga/ga_G-072_ex.mp3?v=d55fd541",
-      "hook": "./audio/ga/ga_G-072_hook.mp3?v=93f9c910",
-      "rev": "./audio/ga/ga_G-072_rev.mp3?v=9631be80"
-    },
-    "G-073": {
-      "pat": "./audio/ga/ga_G-073_pat.mp3?v=68d3e596",
-      "ex": "./audio/ga/ga_G-073_ex.mp3?v=e67ad551",
-      "hook": "./audio/ga/ga_G-073_hook.mp3?v=f38022ba",
-      "rev": "./audio/ga/ga_G-073_rev.mp3?v=f7d100c7"
-    },
-    "G-074": {
-      "pat": "./audio/ga/ga_G-074_pat.mp3?v=cfaf364b",
-      "ex": "./audio/ga/ga_G-074_ex.mp3?v=81f24f98",
-      "hook": "./audio/ga/ga_G-074_hook.mp3?v=afda281a",
-      "rev": "./audio/ga/ga_G-074_rev.mp3?v=576c8b88"
-    },
-    "G-075": {
-      "pat": "./audio/ga/ga_G-075_pat.mp3?v=83f5db41",
-      "ex": "./audio/ga/ga_G-075_ex.mp3?v=ee1c720d",
-      "hook": "./audio/ga/ga_G-075_hook.mp3?v=24e82518",
-      "rev": "./audio/ga/ga_G-075_rev.mp3?v=c2ed75c7"
-    },
-    "G-076": {
-      "pat": "./audio/ga/ga_G-076_pat.mp3?v=c9de95f5",
-      "ex": "./audio/ga/ga_G-076_ex.mp3?v=abf1bac7",
-      "hook": "./audio/ga/ga_G-076_hook.mp3?v=64edfcf0",
-      "rev": "./audio/ga/ga_G-076_rev.mp3?v=1e8dc159"
-    },
-    "G-077": {
-      "pat": "./audio/ga/ga_G-077_pat.mp3?v=61c07d82",
-      "ex": "./audio/ga/ga_G-077_ex.mp3?v=1ff6836c",
-      "hook": "./audio/ga/ga_G-077_hook.mp3?v=06875509",
-      "rev": "./audio/ga/ga_G-077_rev.mp3?v=3b519f2a"
-    },
-    "G-078": {
-      "pat": "./audio/ga/ga_G-078_pat.mp3?v=7569a760",
-      "ex": "./audio/ga/ga_G-078_ex.mp3?v=cc7ef976",
-      "hook": "./audio/ga/ga_G-078_hook.mp3?v=4a244be6",
-      "rev": "./audio/ga/ga_G-078_rev.mp3?v=9156dccb"
-    },
-    "G-079": {
-      "pat": "./audio/ga/ga_G-079_pat.mp3?v=c307be3d",
-      "ex": "./audio/ga/ga_G-079_ex.mp3?v=121e20ce",
-      "hook": "./audio/ga/ga_G-079_hook.mp3?v=31ba4167",
-      "rev": "./audio/ga/ga_G-079_rev.mp3?v=e110110a"
-    },
-    "G-080": {
-      "pat": "./audio/ga/ga_G-080_pat.mp3?v=3402b0b0",
-      "ex": "./audio/ga/ga_G-080_ex.mp3?v=eccc8228",
-      "hook": "./audio/ga/ga_G-080_hook.mp3?v=35cc9010",
-      "rev": "./audio/ga/ga_G-080_rev.mp3?v=9e434f14"
-    },
-    "G-081": {
-      "pat": "./audio/ga/ga_G-081_pat.mp3?v=0aff4e9e",
-      "ex": "./audio/ga/ga_G-081_ex.mp3?v=34f28bf8",
-      "hook": "./audio/ga/ga_G-081_hook.mp3?v=0d01e91c",
-      "rev": "./audio/ga/ga_G-081_rev.mp3?v=8d3e3682"
-    },
-    "G-082": {
-      "pat": "./audio/ga/ga_G-082_pat.mp3?v=e3b89f30",
-      "ex": "./audio/ga/ga_G-082_ex.mp3?v=622ec9d1",
-      "hook": "./audio/ga/ga_G-082_hook.mp3?v=00e0b003",
-      "rev": "./audio/ga/ga_G-082_rev.mp3?v=6c36ad00"
-    },
-    "G-083": {
-      "pat": "./audio/ga/ga_G-083_pat.mp3?v=264e7adb",
-      "ex": "./audio/ga/ga_G-083_ex.mp3?v=df648786",
-      "hook": "./audio/ga/ga_G-083_hook.mp3?v=39512d2b",
-      "rev": "./audio/ga/ga_G-083_rev.mp3?v=0ae5bc38"
-    },
-    "G-084": {
-      "pat": "./audio/ga/ga_G-084_pat.mp3?v=bdca0ee8",
-      "ex": "./audio/ga/ga_G-084_ex.mp3?v=b7157a2d",
-      "hook": "./audio/ga/ga_G-084_hook.mp3?v=dae62af3",
-      "rev": "./audio/ga/ga_G-084_rev.mp3?v=e58363b3"
-    },
-    "G-085": {
-      "pat": "./audio/ga/ga_G-085_pat.mp3?v=3072bcc9",
-      "ex": "./audio/ga/ga_G-085_ex.mp3?v=75b7e75f",
-      "hook": "./audio/ga/ga_G-085_hook.mp3?v=9dd6426d",
-      "rev": "./audio/ga/ga_G-085_rev.mp3?v=21af428f"
-    },
-    "G-086": {
-      "pat": "./audio/ga/ga_G-086_pat.mp3?v=465734f6",
-      "ex": "./audio/ga/ga_G-086_ex.mp3?v=fc64c930",
-      "hook": "./audio/ga/ga_G-086_hook.mp3?v=5e0c5e8d",
-      "rev": "./audio/ga/ga_G-086_rev.mp3?v=1df550f0"
-    },
-    "G-087": {
-      "pat": "./audio/ga/ga_G-087_pat.mp3?v=b59f391d",
-      "ex": "./audio/ga/ga_G-087_ex.mp3?v=ee7b394d",
-      "hook": "./audio/ga/ga_G-087_hook.mp3?v=f7683e2b",
-      "rev": "./audio/ga/ga_G-087_rev.mp3?v=79a32042"
-    },
-    "G-088": {
-      "pat": "./audio/ga/ga_G-088_pat.mp3?v=8c4ddc96",
-      "ex": "./audio/ga/ga_G-088_ex.mp3?v=96445570",
-      "hook": "./audio/ga/ga_G-088_hook.mp3?v=3fa83d42",
-      "rev": "./audio/ga/ga_G-088_rev.mp3?v=e7121b22"
-    },
-    "G-089": {
-      "pat": "./audio/ga/ga_G-089_pat.mp3?v=619f7589",
-      "ex": "./audio/ga/ga_G-089_ex.mp3?v=c9454022",
-      "hook": "./audio/ga/ga_G-089_hook.mp3?v=816fcf49",
-      "rev": "./audio/ga/ga_G-089_rev.mp3?v=24fc62ea"
-    },
-    "G-090": {
-      "pat": "./audio/ga/ga_G-090_pat.mp3?v=a0c5e10e",
-      "ex": "./audio/ga/ga_G-090_ex.mp3?v=2c747209",
-      "hook": "./audio/ga/ga_G-090_hook.mp3?v=1c3b351a",
-      "rev": "./audio/ga/ga_G-090_rev.mp3?v=864493e1"
-    },
-    "G-091": {
-      "pat": "./audio/ga/ga_G-091_pat.mp3?v=cec3aa38",
-      "ex": "./audio/ga/ga_G-091_ex.mp3?v=f56887e4",
-      "hook": "./audio/ga/ga_G-091_hook.mp3?v=9a259d73",
-      "rev": "./audio/ga/ga_G-091_rev.mp3?v=f9b97e3c"
-    },
-    "G-092": {
-      "pat": "./audio/ga/ga_G-092_pat.mp3?v=5728f4cd",
-      "ex": "./audio/ga/ga_G-092_ex.mp3?v=852b0b8f",
-      "hook": "./audio/ga/ga_G-092_hook.mp3?v=132d0351",
-      "rev": "./audio/ga/ga_G-092_rev.mp3?v=1a55bc09"
-    },
-    "G-093": {
-      "pat": "./audio/ga/ga_G-093_pat.mp3?v=954feb52",
-      "ex": "./audio/ga/ga_G-093_ex.mp3?v=8d62d9b5",
-      "hook": "./audio/ga/ga_G-093_hook.mp3?v=9c3d24b1",
-      "rev": "./audio/ga/ga_G-093_rev.mp3?v=cbec7837"
-    },
-    "G-094": {
-      "pat": "./audio/ga/ga_G-094_pat.mp3?v=3edd665c",
-      "ex": "./audio/ga/ga_G-094_ex.mp3?v=2feaadb2",
-      "hook": "./audio/ga/ga_G-094_hook.mp3?v=ed3af0d3",
-      "rev": "./audio/ga/ga_G-094_rev.mp3?v=dceeedc5"
-    },
-    "G-095": {
-      "pat": "./audio/ga/ga_G-095_pat.mp3?v=51228cee",
-      "ex": "./audio/ga/ga_G-095_ex.mp3?v=00a35210",
-      "hook": "./audio/ga/ga_G-095_hook.mp3?v=b4f629d4",
-      "rev": "./audio/ga/ga_G-095_rev.mp3?v=e3842657"
-    },
-    "G-096": {
-      "pat": "./audio/ga/ga_G-096_pat.mp3?v=2b904511",
-      "ex": "./audio/ga/ga_G-096_ex.mp3?v=e076a425",
-      "hook": "./audio/ga/ga_G-096_hook.mp3?v=28298c41",
-      "rev": "./audio/ga/ga_G-096_rev.mp3?v=c97e743a"
-    },
-    "G-097": {
-      "pat": "./audio/ga/ga_G-097_pat.mp3?v=071bd1e8",
-      "ex": "./audio/ga/ga_G-097_ex.mp3?v=1d3ceaf3",
-      "hook": "./audio/ga/ga_G-097_hook.mp3?v=6ec7a1c5",
-      "rev": "./audio/ga/ga_G-097_rev.mp3?v=31fdd5fe"
-    },
-    "G-098a": {
-      "pat": "./audio/ga/ga_G-098a_pat.mp3?v=37ac8d5c",
-      "ex": "./audio/ga/ga_G-098a_ex.mp3?v=c7bfb694",
-      "hook": "./audio/ga/ga_G-098a_hook.mp3?v=de2e28fb",
-      "rev": "./audio/ga/ga_G-098a_rev.mp3?v=b38da7c0"
-    },
-    "G-098b": {
-      "pat": "./audio/ga/ga_G-098b_pat.mp3?v=1d02a6c4",
-      "ex": "./audio/ga/ga_G-098b_ex.mp3?v=abe9c1c7",
-      "hook": "./audio/ga/ga_G-098b_hook.mp3?v=cd6e35c2",
-      "rev": "./audio/ga/ga_G-098b_rev.mp3?v=7aeb4825"
-    },
-    "G-099": {
-      "pat": "./audio/ga/ga_G-099_pat.mp3?v=58eaacfe",
-      "ex": "./audio/ga/ga_G-099_ex.mp3?v=d53c0ff6",
-      "hook": "./audio/ga/ga_G-099_hook.mp3?v=b3e7d259",
-      "rev": "./audio/ga/ga_G-099_rev.mp3?v=11ad2a00"
-    },
-    "G-100": {
-      "pat": "./audio/ga/ga_G-100_pat.mp3?v=0a4655e1",
-      "ex": "./audio/ga/ga_G-100_ex.mp3?v=f27d1358",
-      "hook": "./audio/ga/ga_G-100_hook.mp3?v=1e319b4f",
-      "rev": "./audio/ga/ga_G-100_rev.mp3?v=be0968ee"
-    },
-    "G-101": {
-      "pat": "./audio/ga/ga_G-101_pat.mp3?v=a6563700",
-      "ex": "./audio/ga/ga_G-101_ex.mp3?v=d7ea6179",
-      "hook": "./audio/ga/ga_G-101_hook.mp3?v=42701d75",
-      "rev": "./audio/ga/ga_G-101_rev.mp3?v=9c7c4980"
-    },
-    "G-102": {
-      "pat": "./audio/ga/ga_G-102_pat.mp3?v=33fc3196",
-      "ex": "./audio/ga/ga_G-102_ex.mp3?v=7d7e3d73",
-      "hook": "./audio/ga/ga_G-102_hook.mp3?v=6d90dbb9",
-      "rev": "./audio/ga/ga_G-102_rev.mp3?v=b3b46008"
-    },
-    "G-103": {
-      "pat": "./audio/ga/ga_G-103_pat.mp3?v=ee06d41d",
-      "ex": "./audio/ga/ga_G-103_ex.mp3?v=e32c2146",
-      "hook": "./audio/ga/ga_G-103_hook.mp3?v=47d5eb0c",
-      "rev": "./audio/ga/ga_G-103_rev.mp3?v=9b8e7d35"
-    },
-    "G-104": {
-      "pat": "./audio/ga/ga_G-104_pat.mp3?v=11f14fa0",
-      "ex": "./audio/ga/ga_G-104_ex.mp3?v=22777e19",
-      "hook": "./audio/ga/ga_G-104_hook.mp3?v=7935bf7e",
-      "rev": "./audio/ga/ga_G-104_rev.mp3?v=fd48b4de"
-    },
-    "G-105": {
-      "pat": "./audio/ga/ga_G-105_pat.mp3?v=82926439",
-      "ex": "./audio/ga/ga_G-105_ex.mp3?v=3a083ed6",
-      "hook": "./audio/ga/ga_G-105_hook.mp3?v=1b186c47",
-      "rev": "./audio/ga/ga_G-105_rev.mp3?v=532b2af7"
-    },
-    "G-106": {
-      "pat": "./audio/ga/ga_G-106_pat.mp3?v=9f6567bb",
-      "ex": "./audio/ga/ga_G-106_ex.mp3?v=0d0116a0",
-      "hook": "./audio/ga/ga_G-106_hook.mp3?v=4e688444",
-      "rev": "./audio/ga/ga_G-106_rev.mp3?v=1705be27"
-    },
-    "G-107": {
-      "pat": "./audio/ga/ga_G-107_pat.mp3?v=98ff111c",
-      "ex": "./audio/ga/ga_G-107_ex.mp3?v=cca7740f",
-      "hook": "./audio/ga/ga_G-107_hook.mp3?v=1f013522",
-      "rev": "./audio/ga/ga_G-107_rev.mp3?v=4bf61f79"
-    },
-    "G-108": {
-      "pat": "./audio/ga/ga_G-108_pat.mp3?v=ac13f586",
-      "ex": "./audio/ga/ga_G-108_ex.mp3?v=ac48a69c",
-      "hook": "./audio/ga/ga_G-108_hook.mp3?v=3a1eb81e",
-      "rev": "./audio/ga/ga_G-108_rev.mp3?v=a6a44409"
-    },
-    "G-109": {
-      "pat": "./audio/ga/ga_G-109_pat.mp3?v=0c332cb6",
-      "ex": "./audio/ga/ga_G-109_ex.mp3?v=81406b29",
-      "hook": "./audio/ga/ga_G-109_hook.mp3?v=e0b01cea",
-      "rev": "./audio/ga/ga_G-109_rev.mp3?v=d9056bb8"
-    },
-    "G-110": {
-      "pat": "./audio/ga/ga_G-110_pat.mp3?v=929f47b1",
-      "ex": "./audio/ga/ga_G-110_ex.mp3?v=72eb76a5",
-      "hook": "./audio/ga/ga_G-110_hook.mp3?v=80751aae",
-      "rev": "./audio/ga/ga_G-110_rev.mp3?v=d6f8a9a9"
-    },
-    "G-111": {
-      "pat": "./audio/ga/ga_G-111_pat.mp3?v=95ba706b",
-      "ex": "./audio/ga/ga_G-111_ex.mp3?v=99246ccf",
-      "hook": "./audio/ga/ga_G-111_hook.mp3?v=34d077c5",
-      "rev": "./audio/ga/ga_G-111_rev.mp3?v=8f46a717"
-    },
-    "G-112": {
-      "pat": "./audio/ga/ga_G-112_pat.mp3?v=06992f59",
-      "ex": "./audio/ga/ga_G-112_ex.mp3?v=a1321b67",
-      "hook": "./audio/ga/ga_G-112_hook.mp3?v=e82b815d",
-      "rev": "./audio/ga/ga_G-112_rev.mp3?v=dee7d598"
-    },
-    "G-113": {
-      "pat": "./audio/ga/ga_G-113_pat.mp3?v=121f9f7e",
-      "ex": "./audio/ga/ga_G-113_ex.mp3?v=14524527",
-      "hook": "./audio/ga/ga_G-113_hook.mp3?v=0fb2752e",
-      "rev": "./audio/ga/ga_G-113_rev.mp3?v=252d1f81"
-    },
-    "G-114": {
-      "pat": "./audio/ga/ga_G-114_pat.mp3?v=8e751417",
-      "ex": "./audio/ga/ga_G-114_ex.mp3?v=1f703132",
-      "hook": "./audio/ga/ga_G-114_hook.mp3?v=8d82a9a9",
-      "rev": "./audio/ga/ga_G-114_rev.mp3?v=1b2f061d"
-    },
-    "G-115": {
-      "pat": "./audio/ga/ga_G-115_pat.mp3?v=50ffe853",
-      "ex": "./audio/ga/ga_G-115_ex.mp3?v=25912f54",
-      "hook": "./audio/ga/ga_G-115_hook.mp3?v=57896f61",
-      "rev": "./audio/ga/ga_G-115_rev.mp3?v=206900f1"
-    },
-    "G-116a": {
-      "pat": "./audio/ga/ga_G-116a_pat.mp3?v=f0751bdb",
-      "ex": "./audio/ga/ga_G-116a_ex.mp3?v=270201bc",
-      "hook": "./audio/ga/ga_G-116a_hook.mp3?v=0688b292",
-      "rev": "./audio/ga/ga_G-116a_rev.mp3?v=fafc5856"
-    },
-    "G-116b": {
-      "pat": "./audio/ga/ga_G-116b_pat.mp3?v=29819932",
-      "ex": "./audio/ga/ga_G-116b_ex.mp3?v=71e3ad27",
-      "hook": "./audio/ga/ga_G-116b_hook.mp3?v=2c2385dd",
-      "rev": "./audio/ga/ga_G-116b_rev.mp3?v=0b68f2f0"
-    },
-    "G-116c": {
-      "pat": "./audio/ga/ga_G-116c_pat.mp3?v=93db6b33",
-      "ex": "./audio/ga/ga_G-116c_ex.mp3?v=3003bafc",
-      "hook": "./audio/ga/ga_G-116c_hook.mp3?v=019e4da6",
-      "rev": "./audio/ga/ga_G-116c_rev.mp3?v=d0e4614a"
-    },
-    "G-116d": {
-      "pat": "./audio/ga/ga_G-116d_pat.mp3?v=7ea12f6b",
-      "ex": "./audio/ga/ga_G-116d_ex.mp3?v=faa13db4",
-      "hook": "./audio/ga/ga_G-116d_hook.mp3?v=81542141",
-      "rev": "./audio/ga/ga_G-116d_rev.mp3?v=04f71fd2"
-    },
-    "G-116e": {
-      "pat": "./audio/ga/ga_G-116e_pat.mp3?v=45a564a7",
-      "ex": "./audio/ga/ga_G-116e_ex.mp3?v=0c8f9513",
-      "hook": "./audio/ga/ga_G-116e_hook.mp3?v=24cea70c",
-      "rev": "./audio/ga/ga_G-116e_rev.mp3?v=862cce7f"
-    },
-    "G-116f": {
-      "pat": "./audio/ga/ga_G-116f_pat.mp3?v=35c1bf47",
-      "ex": "./audio/ga/ga_G-116f_ex.mp3?v=1aa46765",
-      "hook": "./audio/ga/ga_G-116f_hook.mp3?v=94b85e96",
-      "rev": "./audio/ga/ga_G-116f_rev.mp3?v=1df41ad8"
-    },
-    "G-117a": {
-      "pat": "./audio/ga/ga_G-117a_pat.mp3?v=3555ac5d",
-      "ex": "./audio/ga/ga_G-117a_ex.mp3?v=0b7760ff",
-      "hook": "./audio/ga/ga_G-117a_hook.mp3?v=c53cd469",
-      "rev": "./audio/ga/ga_G-117a_rev.mp3?v=eee506c4"
-    },
-    "G-117b": {
-      "pat": "./audio/ga/ga_G-117b_pat.mp3?v=e656ff1f",
-      "ex": "./audio/ga/ga_G-117b_ex.mp3?v=4045182a",
-      "hook": "./audio/ga/ga_G-117b_hook.mp3?v=b47f3df5",
-      "rev": "./audio/ga/ga_G-117b_rev.mp3?v=5be8eda5"
-    },
-    "G-117c": {
-      "pat": "./audio/ga/ga_G-117c_pat.mp3?v=ae593213",
-      "ex": "./audio/ga/ga_G-117c_ex.mp3?v=975bce3b",
-      "hook": "./audio/ga/ga_G-117c_hook.mp3?v=f01b550c",
-      "rev": "./audio/ga/ga_G-117c_rev.mp3?v=d021d491"
-    },
-    "G-118": {
-      "pat": "./audio/ga/ga_G-118_pat.mp3?v=091cd44f",
-      "ex": "./audio/ga/ga_G-118_ex.mp3?v=1ca1e445",
-      "hook": "./audio/ga/ga_G-118_hook.mp3?v=8bfc14f4",
-      "rev": "./audio/ga/ga_G-118_rev.mp3?v=b6bd7106"
-    },
-    "G-119a": {
-      "pat": "./audio/ga/ga_G-119a_pat.mp3?v=ea6e50a6",
-      "ex": "./audio/ga/ga_G-119a_ex.mp3?v=818929a0",
-      "hook": "./audio/ga/ga_G-119a_hook.mp3?v=95fc90d6",
-      "rev": "./audio/ga/ga_G-119a_rev.mp3?v=b9cd5abd"
-    },
-    "G-119b": {
-      "pat": "./audio/ga/ga_G-119b_pat.mp3?v=5f0e5fc7",
-      "ex": "./audio/ga/ga_G-119b_ex.mp3?v=dd5f732e",
-      "hook": "./audio/ga/ga_G-119b_hook.mp3?v=ed3619e8",
-      "rev": "./audio/ga/ga_G-119b_rev.mp3?v=182b6ddb"
-    },
-    "G-119c": {
-      "pat": "./audio/ga/ga_G-119c_pat.mp3?v=b753e12d",
-      "ex": "./audio/ga/ga_G-119c_ex.mp3?v=cd2945fa",
-      "hook": "./audio/ga/ga_G-119c_hook.mp3?v=798b2bdc",
-      "rev": "./audio/ga/ga_G-119c_rev.mp3?v=0b1f8589"
-    },
-    "G-119d": {
-      "pat": "./audio/ga/ga_G-119d_pat.mp3?v=17a88fef",
-      "ex": "./audio/ga/ga_G-119d_ex.mp3?v=161216d5",
-      "hook": "./audio/ga/ga_G-119d_hook.mp3?v=326c1cd6",
-      "rev": "./audio/ga/ga_G-119d_rev.mp3?v=7b39e5e8"
-    },
-    "G-119e": {
-      "pat": "./audio/ga/ga_G-119e_pat.mp3?v=61523bf2",
-      "ex": "./audio/ga/ga_G-119e_ex.mp3?v=b2e49488",
-      "hook": "./audio/ga/ga_G-119e_hook.mp3?v=4390fd65",
-      "rev": "./audio/ga/ga_G-119e_rev.mp3?v=2b24fdb7"
-    },
-    "G-119f": {
-      "pat": "./audio/ga/ga_G-119f_pat.mp3?v=133644ca",
-      "ex": "./audio/ga/ga_G-119f_ex.mp3?v=23f7749a",
-      "hook": "./audio/ga/ga_G-119f_hook.mp3?v=226db35e",
-      "rev": "./audio/ga/ga_G-119f_rev.mp3?v=b492fe15"
-    },
-    "G-119g": {
-      "pat": "./audio/ga/ga_G-119g_pat.mp3?v=8a2e6b1a",
-      "ex": "./audio/ga/ga_G-119g_ex.mp3?v=225204b1",
-      "hook": "./audio/ga/ga_G-119g_hook.mp3?v=98d9f689",
-      "rev": "./audio/ga/ga_G-119g_rev.mp3?v=dba6a452"
-    },
-    "G-119h": {
-      "pat": "./audio/ga/ga_G-119h_pat.mp3?v=3066dc5d",
-      "ex": "./audio/ga/ga_G-119h_ex.mp3?v=80d72da7",
-      "hook": "./audio/ga/ga_G-119h_hook.mp3?v=fb1be096",
-      "rev": "./audio/ga/ga_G-119h_rev.mp3?v=df46660a"
-    },
-    "G-120": {
-      "pat": "./audio/ga/ga_G-120_pat.mp3?v=a614569e",
-      "ex": "./audio/ga/ga_G-120_ex.mp3?v=4ab4bdd3",
-      "hook": "./audio/ga/ga_G-120_hook.mp3?v=740485fc",
-      "rev": "./audio/ga/ga_G-120_rev.mp3?v=324663fa"
-    },
-    "G-121": {
-      "pat": "./audio/ga/ga_G-121_pat.mp3?v=f3979773",
-      "ex": "./audio/ga/ga_G-121_ex.mp3?v=35bcb5ee",
-      "hook": "./audio/ga/ga_G-121_hook.mp3?v=fded3c98",
-      "rev": "./audio/ga/ga_G-121_rev.mp3?v=8c36d18b"
-    },
-    "G-122": {
-      "pat": "./audio/ga/ga_G-122_pat.mp3?v=017bdf38",
-      "ex": "./audio/ga/ga_G-122_ex.mp3?v=a0e1167e",
-      "hook": "./audio/ga/ga_G-122_hook.mp3?v=dfa69fc0",
-      "rev": "./audio/ga/ga_G-122_rev.mp3?v=7e636394"
-    },
-    "G-123": {
-      "pat": "./audio/ga/ga_G-123_pat.mp3?v=f76ff832",
-      "ex": "./audio/ga/ga_G-123_ex.mp3?v=1710c5cb",
-      "hook": "./audio/ga/ga_G-123_hook.mp3?v=564f679d",
-      "rev": "./audio/ga/ga_G-123_rev.mp3?v=37955b62"
-    },
-    "G-124a": {
-      "pat": "./audio/ga/ga_G-124a_pat.mp3?v=e92a6212",
-      "ex": "./audio/ga/ga_G-124a_ex.mp3?v=c608c128",
-      "hook": "./audio/ga/ga_G-124a_hook.mp3?v=968de5b6",
-      "rev": "./audio/ga/ga_G-124a_rev.mp3?v=8169a125"
-    },
-    "G-124b": {
-      "pat": "./audio/ga/ga_G-124b_pat.mp3?v=74a7024b",
-      "ex": "./audio/ga/ga_G-124b_ex.mp3?v=1812532f",
-      "hook": "./audio/ga/ga_G-124b_hook.mp3?v=c18b8ca6",
-      "rev": "./audio/ga/ga_G-124b_rev.mp3?v=dce91171"
-    },
-    "G-125a": {
-      "pat": "./audio/ga/ga_G-125a_pat.mp3?v=5224eb1f",
-      "ex": "./audio/ga/ga_G-125a_ex.mp3?v=c380a97b",
-      "hook": "./audio/ga/ga_G-125a_hook.mp3?v=d5fe5bba",
-      "rev": "./audio/ga/ga_G-125a_rev.mp3?v=4f15fbc3"
-    },
-    "G-125b": {
-      "pat": "./audio/ga/ga_G-125b_pat.mp3?v=013412f4",
-      "ex": "./audio/ga/ga_G-125b_ex.mp3?v=0fb5f97b",
-      "hook": "./audio/ga/ga_G-125b_hook.mp3?v=b7d27fd6",
-      "rev": "./audio/ga/ga_G-125b_rev.mp3?v=d441b5c2"
-    },
-    "G-126": {
-      "pat": "./audio/ga/ga_G-126_pat.mp3?v=055d7117",
-      "ex": "./audio/ga/ga_G-126_ex.mp3?v=63f9676d",
-      "hook": "./audio/ga/ga_G-126_hook.mp3?v=fd72418c",
-      "rev": "./audio/ga/ga_G-126_rev.mp3?v=dfb97bf3"
-    },
-    "G-127": {
-      "pat": "./audio/ga/ga_G-127_pat.mp3?v=cbfabce4",
-      "ex": "./audio/ga/ga_G-127_ex.mp3?v=2bd1544f",
-      "hook": "./audio/ga/ga_G-127_hook.mp3?v=204f5f19",
-      "rev": "./audio/ga/ga_G-127_rev.mp3?v=3bc49a0b"
-    },
-    "G-128": {
-      "pat": "./audio/ga/ga_G-128_pat.mp3?v=ed00ee5c",
-      "ex": "./audio/ga/ga_G-128_ex.mp3?v=c9d21667",
-      "hook": "./audio/ga/ga_G-128_hook.mp3?v=33ef955a",
-      "rev": "./audio/ga/ga_G-128_rev.mp3?v=aa8c1763"
-    },
-    "G-129": {
-      "pat": "./audio/ga/ga_G-129_pat.mp3?v=61b8e8a8",
-      "ex": "./audio/ga/ga_G-129_ex.mp3?v=cb5eac01",
-      "hook": "./audio/ga/ga_G-129_hook.mp3?v=94b56bd4",
-      "rev": "./audio/ga/ga_G-129_rev.mp3?v=a0132e59"
-    },
-    "G-130": {
-      "pat": "./audio/ga/ga_G-130_pat.mp3?v=6e319f9f",
-      "ex": "./audio/ga/ga_G-130_ex.mp3?v=01a1e60e",
-      "hook": "./audio/ga/ga_G-130_hook.mp3?v=025c5589",
-      "rev": "./audio/ga/ga_G-130_rev.mp3?v=b4f7d6d5"
-    },
-    "G-131": {
-      "pat": "./audio/ga/ga_G-131_pat.mp3?v=b1d6e2cf",
-      "ex": "./audio/ga/ga_G-131_ex.mp3?v=effc516e",
-      "hook": "./audio/ga/ga_G-131_hook.mp3?v=727e487d",
-      "rev": "./audio/ga/ga_G-131_rev.mp3?v=673b7d68"
-    },
-    "G-132": {
-      "pat": "./audio/ga/ga_G-132_pat.mp3?v=7b23e3de",
-      "ex": "./audio/ga/ga_G-132_ex.mp3?v=505985c4",
-      "hook": "./audio/ga/ga_G-132_hook.mp3?v=46a1bea8",
-      "rev": "./audio/ga/ga_G-132_rev.mp3?v=bbf77317"
-    },
-    "G-133": {
-      "pat": "./audio/ga/ga_G-133_pat.mp3?v=7bdd5651",
-      "ex": "./audio/ga/ga_G-133_ex.mp3?v=fdc24510",
-      "hook": "./audio/ga/ga_G-133_hook.mp3?v=8042cd2b",
-      "rev": "./audio/ga/ga_G-133_rev.mp3?v=e987a3f2"
-    },
-    "G-134": {
-      "pat": "./audio/ga/ga_G-134_pat.mp3?v=8b31f58c",
-      "ex": "./audio/ga/ga_G-134_ex.mp3?v=323f0286",
-      "hook": "./audio/ga/ga_G-134_hook.mp3?v=21b8579a",
-      "rev": "./audio/ga/ga_G-134_rev.mp3?v=a78f80e0"
-    },
-    "G-135": {
-      "pat": "./audio/ga/ga_G-135_pat.mp3?v=3d55aa19",
-      "ex": "./audio/ga/ga_G-135_ex.mp3?v=0abbca99",
-      "hook": "./audio/ga/ga_G-135_hook.mp3?v=80854a03",
-      "rev": "./audio/ga/ga_G-135_rev.mp3?v=904f788a"
-    },
-    "G-136": {
-      "pat": "./audio/ga/ga_G-136_pat.mp3?v=3837bc59",
-      "ex": "./audio/ga/ga_G-136_ex.mp3?v=7518d963",
-      "hook": "./audio/ga/ga_G-136_hook.mp3?v=f6cd43f6",
-      "rev": "./audio/ga/ga_G-136_rev.mp3?v=a9bb7915"
-    },
-    "GB-01": {
-      "pat": "./audio/ga/ga_GB-01_pat.mp3?v=9b7370f4",
-      "ex": "./audio/ga/ga_GB-01_ex.mp3?v=0c1c4d82",
-      "hook": "./audio/ga/ga_GB-01_hook.mp3?v=ff83b439",
-      "rev": "./audio/ga/ga_GB-01_rev.mp3?v=86441624"
-    },
-    "GB-02": {
-      "pat": "./audio/ga/ga_GB-02_pat.mp3?v=d202304a",
-      "ex": "./audio/ga/ga_GB-02_ex.mp3?v=7a5597d9",
-      "hook": "./audio/ga/ga_GB-02_hook.mp3?v=92e80466",
-      "rev": "./audio/ga/ga_GB-02_rev.mp3?v=8e1476e2"
-    },
-    "GB-04": {
-      "pat": "./audio/ga/ga_GB-04_pat.mp3?v=dd73201c",
-      "ex": "./audio/ga/ga_GB-04_ex.mp3?v=42eb5c3d",
-      "hook": "./audio/ga/ga_GB-04_hook.mp3?v=ff4b82f0",
-      "rev": "./audio/ga/ga_GB-04_rev.mp3?v=dd33b6ed"
-    },
-    "GB-05": {
-      "pat": "./audio/ga/ga_GB-05_pat.mp3?v=17d27ab2",
-      "ex": "./audio/ga/ga_GB-05_ex.mp3?v=1127e80f",
-      "hook": "./audio/ga/ga_GB-05_hook.mp3?v=3490a02a",
-      "rev": "./audio/ga/ga_GB-05_rev.mp3?v=57ad2cc0"
-    },
-    "GB-06": {
-      "pat": "./audio/ga/ga_GB-06_pat.mp3?v=04e4a382",
-      "ex": "./audio/ga/ga_GB-06_ex.mp3?v=61f771fe",
-      "hook": "./audio/ga/ga_GB-06_hook.mp3?v=e841b389",
-      "rev": "./audio/ga/ga_GB-06_rev.mp3?v=a15754eb"
-    },
-    "GB-07": {
-      "pat": "./audio/ga/ga_GB-07_pat.mp3?v=82c51f75",
-      "ex": "./audio/ga/ga_GB-07_ex.mp3?v=415bdc9c",
-      "hook": "./audio/ga/ga_GB-07_hook.mp3?v=e712b5b3",
-      "rev": "./audio/ga/ga_GB-07_rev.mp3?v=5b4aa04b"
-    },
-    "GB-08": {
-      "pat": "./audio/ga/ga_GB-08_pat.mp3?v=325c1909",
-      "ex": "./audio/ga/ga_GB-08_ex.mp3?v=829dfafc",
-      "hook": "./audio/ga/ga_GB-08_hook.mp3?v=dcef7369",
-      "rev": "./audio/ga/ga_GB-08_rev.mp3?v=d32832ae"
-    },
-    "GB-09": {
-      "pat": "./audio/ga/ga_GB-09_pat.mp3?v=185c518b",
-      "ex": "./audio/ga/ga_GB-09_ex.mp3?v=a948fd21",
-      "hook": "./audio/ga/ga_GB-09_hook.mp3?v=737527c1",
-      "rev": "./audio/ga/ga_GB-09_rev.mp3?v=710466d6"
-    },
-    "GB-10": {
-      "pat": "./audio/ga/ga_GB-10_pat.mp3?v=4e92f298",
-      "ex": "./audio/ga/ga_GB-10_ex.mp3?v=8144f16b",
-      "hook": "./audio/ga/ga_GB-10_hook.mp3?v=0cadad8c",
-      "rev": "./audio/ga/ga_GB-10_rev.mp3?v=dcd531f1"
-    },
-    "GX-01": {
-      "pat": "./audio/ga/ga_GX-01_pat.mp3?v=25bd62c9",
-      "ex": "./audio/ga/ga_GX-01_ex.mp3?v=e436f281",
-      "hook": "./audio/ga/ga_GX-01_hook.mp3?v=93f73fce",
-      "rev": "./audio/ga/ga_GX-01_rev.mp3?v=4285ad71"
-    },
-    "GX-02": {
-      "pat": "./audio/ga/ga_GX-02_pat.mp3?v=828d9d19",
-      "ex": "./audio/ga/ga_GX-02_ex.mp3?v=52b085bf",
-      "hook": "./audio/ga/ga_GX-02_hook.mp3?v=0ce2a3d7",
-      "rev": "./audio/ga/ga_GX-02_rev.mp3?v=172e85a8"
-    },
-    "GX-03": {
-      "pat": "./audio/ga/ga_GX-03_pat.mp3?v=65eeabe2",
-      "ex": "./audio/ga/ga_GX-03_ex.mp3?v=23f0d698",
-      "hook": "./audio/ga/ga_GX-03_hook.mp3?v=ead882b0",
-      "rev": "./audio/ga/ga_GX-03_rev.mp3?v=e0515ab8"
-    },
-    "GX-04": {
-      "pat": "./audio/ga/ga_GX-04_pat.mp3?v=bb081125",
-      "ex": "./audio/ga/ga_GX-04_ex.mp3?v=a833d740",
-      "hook": "./audio/ga/ga_GX-04_hook.mp3?v=d385be29",
-      "rev": "./audio/ga/ga_GX-04_rev.mp3?v=e52971cd"
-    },
-    "GX-05": {
-      "pat": "./audio/ga/ga_GX-05_pat.mp3?v=56702c81",
-      "ex": "./audio/ga/ga_GX-05_ex.mp3?v=de7a2642",
-      "hook": "./audio/ga/ga_GX-05_hook.mp3?v=779f4ac7",
-      "rev": "./audio/ga/ga_GX-05_rev.mp3?v=22d3d6bf"
-    },
-    "GX-06": {
-      "pat": "./audio/ga/ga_GX-06_pat.mp3?v=e758ba58",
-      "ex": "./audio/ga/ga_GX-06_ex.mp3?v=a41d29f6",
-      "hook": "./audio/ga/ga_GX-06_hook.mp3?v=e3f7308f",
-      "rev": "./audio/ga/ga_GX-06_rev.mp3?v=21678d35"
-    },
-    "GX-07": {
-      "pat": "./audio/ga/ga_GX-07_pat.mp3?v=6b0d46c8",
-      "ex": "./audio/ga/ga_GX-07_ex.mp3?v=230de2c3",
-      "hook": "./audio/ga/ga_GX-07_hook.mp3?v=12523d3a",
-      "rev": "./audio/ga/ga_GX-07_rev.mp3?v=bff99c32"
-    },
-    "GX-08": {
-      "pat": "./audio/ga/ga_GX-08_pat.mp3?v=ae57a950",
-      "ex": "./audio/ga/ga_GX-08_ex.mp3?v=36fc5848",
-      "hook": "./audio/ga/ga_GX-08_hook.mp3?v=360423cc",
-      "rev": "./audio/ga/ga_GX-08_rev.mp3?v=9bd36fb9"
-    },
-    "GX-09": {
-      "pat": "./audio/ga/ga_GX-09_pat.mp3?v=670fc2ca",
-      "ex": "./audio/ga/ga_GX-09_ex.mp3?v=204e114e",
-      "hook": "./audio/ga/ga_GX-09_hook.mp3?v=ed2efb91",
-      "rev": "./audio/ga/ga_GX-09_rev.mp3?v=daa4c8b6"
-    },
-    "GX-10": {
-      "pat": "./audio/ga/ga_GX-10_pat.mp3?v=ed1ed325",
-      "ex": "./audio/ga/ga_GX-10_ex.mp3?v=0c33c1a5",
-      "hook": "./audio/ga/ga_GX-10_hook.mp3?v=7711b2fd",
-      "rev": "./audio/ga/ga_GX-10_rev.mp3?v=9f4d75a4"
-    },
-    "GX-11": {
-      "pat": "./audio/ga/ga_GX-11_pat.mp3?v=345fea53",
-      "ex": "./audio/ga/ga_GX-11_ex.mp3?v=9d98a76f",
-      "hook": "./audio/ga/ga_GX-11_hook.mp3?v=bc14e866",
-      "rev": "./audio/ga/ga_GX-11_rev.mp3?v=1e1dbfc2"
-    }
-  },
-  "ga_card_hashes": {
-    "ga_G-001_pat.mp3": "c3ea0742a0",
-    "ga_G-001_ex.mp3": "4a258c4496",
-    "ga_G-001_hook.mp3": "0f59f5ea87",
-    "ga_G-001_rev.mp3": "2d04a8bfc6",
-    "ga_G-002_pat.mp3": "5682cf205e",
-    "ga_G-002_ex.mp3": "aceef16e0b",
-    "ga_G-002_hook.mp3": "5b3f161ad0",
-    "ga_G-002_rev.mp3": "e50fe79d6e",
-    "ga_G-003_pat.mp3": "411886f232",
-    "ga_G-003_ex.mp3": "c7b7f95c9d",
-    "ga_G-003_hook.mp3": "d5914e38a6",
-    "ga_G-003_rev.mp3": "d16cfbbb84",
-    "ga_G-004_pat.mp3": "bd29d8080f",
-    "ga_G-004_ex.mp3": "9de2101479",
-    "ga_G-004_hook.mp3": "505147d4a8",
-    "ga_G-004_rev.mp3": "9ad75b225a",
-    "ga_G-005_pat.mp3": "c01e5b2387",
-    "ga_G-005_ex.mp3": "e8871e77b2",
-    "ga_G-005_hook.mp3": "d59cf1512e",
-    "ga_G-005_rev.mp3": "d0b6a38c09",
-    "ga_G-006_pat.mp3": "afab54271d",
-    "ga_G-006_ex.mp3": "e1706b294c",
-    "ga_G-006_hook.mp3": "bba783fc68",
-    "ga_G-006_rev.mp3": "d534c00d13",
-    "ga_G-007_pat.mp3": "91dc56d271",
-    "ga_G-007_ex.mp3": "f89fd2a276",
-    "ga_G-007_hook.mp3": "a85d8da350",
-    "ga_G-007_rev.mp3": "f4bc568d8c",
-    "ga_G-008_pat.mp3": "3a20dfb11b",
-    "ga_G-008_ex.mp3": "0d58d3cdee",
-    "ga_G-008_hook.mp3": "b02657794a",
-    "ga_G-008_rev.mp3": "5d6dc66a46",
-    "ga_G-009_pat.mp3": "9eb4b01c13",
-    "ga_G-009_ex.mp3": "56dc03c2fc",
-    "ga_G-009_hook.mp3": "ad028d9bf4",
-    "ga_G-009_rev.mp3": "5de4e792ec",
-    "ga_G-010_pat.mp3": "05375fc0b7",
-    "ga_G-010_ex.mp3": "35e353b8e7",
-    "ga_G-010_hook.mp3": "39c15afc4e",
-    "ga_G-010_rev.mp3": "15ea068de0",
-    "ga_G-011_pat.mp3": "7690d79e4a",
-    "ga_G-011_ex.mp3": "56174bba36",
-    "ga_G-011_hook.mp3": "44f9d852e0",
-    "ga_G-011_rev.mp3": "bc106bcbed",
-    "ga_G-012_pat.mp3": "75d1ab3968",
-    "ga_G-012_ex.mp3": "c8398f35de",
-    "ga_G-012_hook.mp3": "28e6986192",
-    "ga_G-012_rev.mp3": "675a4cd1bc",
-    "ga_G-013_pat.mp3": "5eb897b72f",
-    "ga_G-013_ex.mp3": "8ed0311cad",
-    "ga_G-013_hook.mp3": "936e891ecd",
-    "ga_G-013_rev.mp3": "d2d4c66f3d",
-    "ga_G-014_pat.mp3": "03e59c6e98",
-    "ga_G-014_ex.mp3": "2b9d06cf26",
-    "ga_G-014_hook.mp3": "7ce28291f6",
-    "ga_G-014_rev.mp3": "1307ff92c9",
-    "ga_G-015_pat.mp3": "da7ba3fdfa",
-    "ga_G-015_ex.mp3": "cd87b660f3",
-    "ga_G-015_hook.mp3": "ac167fc140",
-    "ga_G-015_rev.mp3": "20f5a9bfb1",
-    "ga_G-016_pat.mp3": "454c8dc0af",
-    "ga_G-016_ex.mp3": "ff1945987d",
-    "ga_G-016_hook.mp3": "9609ec04ff",
-    "ga_G-016_rev.mp3": "1f15b4ac25",
-    "ga_G-017_pat.mp3": "80406024ce",
-    "ga_G-017_ex.mp3": "fa5ac8567b",
-    "ga_G-017_hook.mp3": "99170838b1",
-    "ga_G-017_rev.mp3": "ab8fb9849f",
-    "ga_G-018_pat.mp3": "1bdebae398",
-    "ga_G-018_ex.mp3": "58fc78fe4b",
-    "ga_G-018_hook.mp3": "f256673bfa",
-    "ga_G-018_rev.mp3": "347e7c9dd7",
-    "ga_G-019_pat.mp3": "fe7dd7d88e",
-    "ga_G-019_ex.mp3": "18a87d37e6",
-    "ga_G-019_hook.mp3": "f12ada6934",
-    "ga_G-019_rev.mp3": "eed8a7b640",
-    "ga_G-020_pat.mp3": "22a5ae94d2",
-    "ga_G-020_ex.mp3": "24cb6d2621",
-    "ga_G-020_hook.mp3": "05537a237b",
-    "ga_G-020_rev.mp3": "de6b0718d4",
-    "ga_G-021_pat.mp3": "34edea899d",
-    "ga_G-021_ex.mp3": "a0572f0cd4",
-    "ga_G-021_hook.mp3": "4fdbc3ba22",
-    "ga_G-021_rev.mp3": "bcecc61206",
-    "ga_G-022_pat.mp3": "48d5e4fde8",
-    "ga_G-022_ex.mp3": "256e3e5fb6",
-    "ga_G-022_hook.mp3": "fb1e11ca22",
-    "ga_G-022_rev.mp3": "9a97fbf295",
-    "ga_G-023_pat.mp3": "933cf97610",
-    "ga_G-023_ex.mp3": "74011ee1eb",
-    "ga_G-023_hook.mp3": "386ff03225",
-    "ga_G-023_rev.mp3": "d00fbf99f2",
-    "ga_G-024_pat.mp3": "0bf9cc2783",
-    "ga_G-024_ex.mp3": "b1ca7840e9",
-    "ga_G-024_hook.mp3": "c706b5aab7",
-    "ga_G-024_rev.mp3": "2ed8aa172e",
-    "ga_G-025_pat.mp3": "43822689c1",
-    "ga_G-025_ex.mp3": "bf38c4dfb6",
-    "ga_G-025_hook.mp3": "5c9cb62496",
-    "ga_G-025_rev.mp3": "d47aed6428",
-    "ga_G-026_pat.mp3": "b91505c71c",
-    "ga_G-026_ex.mp3": "fd7b055c38",
-    "ga_G-026_hook.mp3": "311f20ad16",
-    "ga_G-026_rev.mp3": "ee4b61e66e",
-    "ga_G-027_pat.mp3": "62328572fb",
-    "ga_G-027_ex.mp3": "bd0b8fc970",
-    "ga_G-027_hook.mp3": "beeb3cdf82",
-    "ga_G-027_rev.mp3": "f015fc42ef",
-    "ga_G-028_pat.mp3": "e3ed4e4e42",
-    "ga_G-028_ex.mp3": "c2941e0861",
-    "ga_G-028_hook.mp3": "c6d9c8c37a",
-    "ga_G-028_rev.mp3": "24bd1a2b45",
-    "ga_G-029_pat.mp3": "6282d43713",
-    "ga_G-029_ex.mp3": "41d3faef0c",
-    "ga_G-029_hook.mp3": "3c9f2f4593",
-    "ga_G-029_rev.mp3": "b565fd2781",
-    "ga_G-030_pat.mp3": "d17940d37a",
-    "ga_G-030_ex.mp3": "eb801cccbb",
-    "ga_G-030_hook.mp3": "4b2f84bfc4",
-    "ga_G-030_rev.mp3": "9f7a84c5cd",
-    "ga_G-031_pat.mp3": "ed5e137bf0",
-    "ga_G-031_ex.mp3": "6072180498",
-    "ga_G-031_hook.mp3": "a886528ffd",
-    "ga_G-031_rev.mp3": "bab9ce11a6",
-    "ga_G-032_pat.mp3": "ad959fbbc0",
-    "ga_G-032_ex.mp3": "dac3621e9d",
-    "ga_G-032_hook.mp3": "a4996aa455",
-    "ga_G-032_rev.mp3": "611f8cf056",
-    "ga_G-033_pat.mp3": "7e4129fb5a",
-    "ga_G-033_ex.mp3": "8792067d2a",
-    "ga_G-033_hook.mp3": "e026a0162e",
-    "ga_G-033_rev.mp3": "e13d86a7ff",
-    "ga_G-034_pat.mp3": "6d571045d9",
-    "ga_G-034_ex.mp3": "48694f5000",
-    "ga_G-034_hook.mp3": "06005dc70e",
-    "ga_G-034_rev.mp3": "0066bd8600",
-    "ga_G-035_pat.mp3": "917622b757",
-    "ga_G-035_ex.mp3": "918629fc62",
-    "ga_G-035_hook.mp3": "34314a3438",
-    "ga_G-035_rev.mp3": "f5722875d1",
-    "ga_G-036_pat.mp3": "e82e6186c7",
-    "ga_G-036_ex.mp3": "3df7b2a516",
-    "ga_G-036_hook.mp3": "b7e4a01274",
-    "ga_G-036_rev.mp3": "c5d19a8728",
-    "ga_G-037_pat.mp3": "20aa8ae8f0",
-    "ga_G-037_ex.mp3": "6115559197",
-    "ga_G-037_hook.mp3": "9d4a53a018",
-    "ga_G-037_rev.mp3": "4685da6820",
-    "ga_G-038_pat.mp3": "0e7b9bb250",
-    "ga_G-038_ex.mp3": "b724fd38b6",
-    "ga_G-038_hook.mp3": "463d49d58f",
-    "ga_G-038_rev.mp3": "6add1078a6",
-    "ga_G-039_pat.mp3": "3df74ea88d",
-    "ga_G-039_ex.mp3": "cd03bba757",
-    "ga_G-039_hook.mp3": "3842d60c49",
-    "ga_G-039_rev.mp3": "2b1525675a",
-    "ga_G-040_pat.mp3": "f54a386e1c",
-    "ga_G-040_ex.mp3": "301594f15a",
-    "ga_G-040_hook.mp3": "d9cfde9dcc",
-    "ga_G-040_rev.mp3": "16ae423561",
-    "ga_G-041_pat.mp3": "aa98673c52",
-    "ga_G-041_ex.mp3": "f9d8d8e904",
-    "ga_G-041_hook.mp3": "ac135bc9e0",
-    "ga_G-041_rev.mp3": "bb41162c62",
-    "ga_G-042_pat.mp3": "ca4c9118a0",
-    "ga_G-042_ex.mp3": "98f42fe9b6",
-    "ga_G-042_hook.mp3": "7a21fcaf97",
-    "ga_G-042_rev.mp3": "43e4c028c8",
-    "ga_G-043_pat.mp3": "4eb7e71f46",
-    "ga_G-043_ex.mp3": "b1c9f92d00",
-    "ga_G-043_hook.mp3": "8987a086a1",
-    "ga_G-043_rev.mp3": "ff1029d7f8",
-    "ga_G-044_pat.mp3": "8f33bc5701",
-    "ga_G-044_ex.mp3": "d2d2602f90",
-    "ga_G-044_hook.mp3": "4d9fc6ea55",
-    "ga_G-044_rev.mp3": "6a36ffb5aa",
-    "ga_G-045_pat.mp3": "833567d2b9",
-    "ga_G-045_ex.mp3": "7f32c6598e",
-    "ga_G-045_hook.mp3": "f94a41a642",
-    "ga_G-045_rev.mp3": "79fd417bd2",
-    "ga_G-046_pat.mp3": "460919e5fb",
-    "ga_G-046_ex.mp3": "ba03b31775",
-    "ga_G-046_hook.mp3": "307f048ace",
-    "ga_G-046_rev.mp3": "f067430675",
-    "ga_G-047_pat.mp3": "ed4fd11881",
-    "ga_G-047_ex.mp3": "f83553457b",
-    "ga_G-047_hook.mp3": "000ab8e06e",
-    "ga_G-047_rev.mp3": "7fbb9b586b",
-    "ga_G-048_pat.mp3": "9cc75968d8",
-    "ga_G-048_ex.mp3": "9e215cf8d8",
-    "ga_G-048_hook.mp3": "95a22e23d5",
-    "ga_G-048_rev.mp3": "9dae552a74",
-    "ga_G-049_pat.mp3": "9ade1e65b5",
-    "ga_G-049_ex.mp3": "993defc46c",
-    "ga_G-049_hook.mp3": "9b7d93f9e3",
-    "ga_G-049_rev.mp3": "cdc5fdc549",
-    "ga_G-050_pat.mp3": "e47dbd2160",
-    "ga_G-050_ex.mp3": "877fb1e382",
-    "ga_G-050_hook.mp3": "dd86545034",
-    "ga_G-050_rev.mp3": "19b4a7406e",
-    "ga_G-051_pat.mp3": "055d16c11c",
-    "ga_G-051_ex.mp3": "bd2670a8c2",
-    "ga_G-051_hook.mp3": "77ff849c27",
-    "ga_G-051_rev.mp3": "2bc7f8fa0e",
-    "ga_G-052_pat.mp3": "259d618382",
-    "ga_G-052_ex.mp3": "8d074a0a6e",
-    "ga_G-052_hook.mp3": "b0469ce175",
-    "ga_G-052_rev.mp3": "aeaa90af17",
-    "ga_G-053_pat.mp3": "2b4a4b6aa6",
-    "ga_G-053_ex.mp3": "fb691e5853",
-    "ga_G-053_hook.mp3": "deb2f9cffe",
-    "ga_G-053_rev.mp3": "7ed09edb68",
-    "ga_G-054_pat.mp3": "425294fb89",
-    "ga_G-054_ex.mp3": "58f8577811",
-    "ga_G-054_hook.mp3": "025ce6a5f2",
-    "ga_G-054_rev.mp3": "9388e01290",
-    "ga_G-055_pat.mp3": "28d541b92f",
-    "ga_G-055_ex.mp3": "690a3c7c22",
-    "ga_G-055_hook.mp3": "903e05e153",
-    "ga_G-055_rev.mp3": "704aef3269",
-    "ga_G-056_pat.mp3": "426458133b",
-    "ga_G-056_ex.mp3": "fa75669c22",
-    "ga_G-056_hook.mp3": "90fb4fc782",
-    "ga_G-056_rev.mp3": "1d889f5dc4",
-    "ga_G-057_pat.mp3": "0b9be0bfff",
-    "ga_G-057_ex.mp3": "179021e7d0",
-    "ga_G-057_hook.mp3": "00eb23b54a",
-    "ga_G-057_rev.mp3": "bb6e2ea90d",
-    "ga_G-058_pat.mp3": "0b9be0bfff",
-    "ga_G-058_ex.mp3": "ff2263a816",
-    "ga_G-058_hook.mp3": "acc1b786a6",
-    "ga_G-058_rev.mp3": "7b97109ac8",
-    "ga_G-059_pat.mp3": "0e904edb82",
-    "ga_G-059_ex.mp3": "c4249254fa",
-    "ga_G-059_hook.mp3": "03c7779a01",
-    "ga_G-059_rev.mp3": "49eccb4c54",
-    "ga_G-060_pat.mp3": "881637d3e2",
-    "ga_G-060_ex.mp3": "b359e9b68a",
-    "ga_G-060_hook.mp3": "6594a79bd6",
-    "ga_G-060_rev.mp3": "3efd2b3da8",
-    "ga_G-061_pat.mp3": "858aa88aa3",
-    "ga_G-061_ex.mp3": "fd00c338e9",
-    "ga_G-061_hook.mp3": "00ec9f3e77",
-    "ga_G-061_rev.mp3": "15307d7997",
-    "ga_G-062_pat.mp3": "b91c8d12f6",
-    "ga_G-062_ex.mp3": "a9a8a5a044",
-    "ga_G-062_hook.mp3": "97966fbcba",
-    "ga_G-062_rev.mp3": "a47b47235e",
-    "ga_G-063_pat.mp3": "74b9e14bc8",
-    "ga_G-063_ex.mp3": "9562aac837",
-    "ga_G-063_hook.mp3": "e82307a60e",
-    "ga_G-063_rev.mp3": "a61ff05b29",
-    "ga_G-064_pat.mp3": "cc13a07c23",
-    "ga_G-064_ex.mp3": "a91790a5bd",
-    "ga_G-064_hook.mp3": "1d1679e45c",
-    "ga_G-064_rev.mp3": "cb07e8a0b5",
-    "ga_G-065_pat.mp3": "8979fa0e5d",
-    "ga_G-065_ex.mp3": "898bad2323",
-    "ga_G-065_hook.mp3": "7e89a98b80",
-    "ga_G-065_rev.mp3": "4bac131e09",
-    "ga_G-066_pat.mp3": "e3e525c4a1",
-    "ga_G-066_ex.mp3": "86374aee09",
-    "ga_G-066_hook.mp3": "41636451f8",
-    "ga_G-066_rev.mp3": "86a0c10858",
-    "ga_G-067_pat.mp3": "4ef925d2f7",
-    "ga_G-067_ex.mp3": "f636ac9005",
-    "ga_G-067_hook.mp3": "4c7edba6cf",
-    "ga_G-067_rev.mp3": "db48d4f59d",
-    "ga_G-068_pat.mp3": "65ce55a3c9",
-    "ga_G-068_ex.mp3": "bfbf937930",
-    "ga_G-068_hook.mp3": "10c89da28d",
-    "ga_G-068_rev.mp3": "4991b9bab2",
-    "ga_G-069_pat.mp3": "f116cd8daf",
-    "ga_G-069_ex.mp3": "3953a38c70",
-    "ga_G-069_hook.mp3": "281264a23f",
-    "ga_G-069_rev.mp3": "ceae09460e",
-    "ga_G-070_pat.mp3": "03a1f75155",
-    "ga_G-070_ex.mp3": "a9040cd785",
-    "ga_G-070_hook.mp3": "07aca76b36",
-    "ga_G-070_rev.mp3": "4b23cd360e",
-    "ga_G-071_pat.mp3": "95428395e2",
-    "ga_G-071_ex.mp3": "26d056281d",
-    "ga_G-071_hook.mp3": "df89da494b",
-    "ga_G-071_rev.mp3": "2fe984a0cd",
-    "ga_G-072_pat.mp3": "b1d5acf65b",
-    "ga_G-072_ex.mp3": "d55fd54173",
-    "ga_G-072_hook.mp3": "93f9c9108e",
-    "ga_G-072_rev.mp3": "9631be80f0",
-    "ga_G-073_pat.mp3": "68d3e59695",
-    "ga_G-073_ex.mp3": "e67ad551fd",
-    "ga_G-073_hook.mp3": "f38022baf2",
-    "ga_G-073_rev.mp3": "f7d100c758",
-    "ga_G-074_pat.mp3": "cfaf364b21",
-    "ga_G-074_ex.mp3": "81f24f98f0",
-    "ga_G-074_hook.mp3": "afda281abd",
-    "ga_G-074_rev.mp3": "576c8b88aa",
-    "ga_G-075_pat.mp3": "83f5db4166",
-    "ga_G-075_ex.mp3": "ee1c720dc5",
-    "ga_G-075_hook.mp3": "24e82518c6",
-    "ga_G-075_rev.mp3": "c2ed75c706",
-    "ga_G-076_pat.mp3": "c9de95f504",
-    "ga_G-076_ex.mp3": "abf1bac7f0",
-    "ga_G-076_hook.mp3": "64edfcf037",
-    "ga_G-076_rev.mp3": "1e8dc159e2",
-    "ga_G-077_pat.mp3": "61c07d8285",
-    "ga_G-077_ex.mp3": "1ff6836c8f",
-    "ga_G-077_hook.mp3": "06875509d9",
-    "ga_G-077_rev.mp3": "3b519f2a44",
-    "ga_G-078_pat.mp3": "7569a760db",
-    "ga_G-078_ex.mp3": "cc7ef97608",
-    "ga_G-078_hook.mp3": "4a244be67a",
-    "ga_G-078_rev.mp3": "9156dccb16",
-    "ga_G-079_pat.mp3": "c307be3da2",
-    "ga_G-079_ex.mp3": "121e20cefb",
-    "ga_G-079_hook.mp3": "31ba4167b8",
-    "ga_G-079_rev.mp3": "e110110a9c",
-    "ga_G-080_pat.mp3": "3402b0b0c9",
-    "ga_G-080_ex.mp3": "eccc8228c8",
-    "ga_G-080_hook.mp3": "35cc901084",
-    "ga_G-080_rev.mp3": "9e434f14ee",
-    "ga_G-081_pat.mp3": "0aff4e9e97",
-    "ga_G-081_ex.mp3": "34f28bf898",
-    "ga_G-081_hook.mp3": "0d01e91cd7",
-    "ga_G-081_rev.mp3": "8d3e36827c",
-    "ga_G-082_pat.mp3": "e3b89f3012",
-    "ga_G-082_ex.mp3": "622ec9d130",
-    "ga_G-082_hook.mp3": "00e0b003bc",
-    "ga_G-082_rev.mp3": "6c36ad00ac",
-    "ga_G-083_pat.mp3": "264e7adbd0",
-    "ga_G-083_ex.mp3": "df648786a8",
-    "ga_G-083_hook.mp3": "39512d2b93",
-    "ga_G-083_rev.mp3": "0ae5bc3808",
-    "ga_G-084_pat.mp3": "bdca0ee83c",
-    "ga_G-084_ex.mp3": "b7157a2d46",
-    "ga_G-084_hook.mp3": "dae62af356",
-    "ga_G-084_rev.mp3": "e58363b3a4",
-    "ga_G-085_pat.mp3": "3072bcc9d3",
-    "ga_G-085_ex.mp3": "75b7e75fe3",
-    "ga_G-085_hook.mp3": "9dd6426dd2",
-    "ga_G-085_rev.mp3": "21af428f73",
-    "ga_G-086_pat.mp3": "465734f69a",
-    "ga_G-086_ex.mp3": "fc64c93018",
-    "ga_G-086_hook.mp3": "5e0c5e8da0",
-    "ga_G-086_rev.mp3": "1df550f0f8",
-    "ga_G-087_pat.mp3": "b59f391d74",
-    "ga_G-087_ex.mp3": "ee7b394d0c",
-    "ga_G-087_hook.mp3": "f7683e2bf9",
-    "ga_G-087_rev.mp3": "79a32042a9",
-    "ga_G-088_pat.mp3": "8c4ddc96c2",
-    "ga_G-088_ex.mp3": "96445570ff",
-    "ga_G-088_hook.mp3": "3fa83d428b",
-    "ga_G-088_rev.mp3": "e7121b22e5",
-    "ga_G-089_pat.mp3": "619f758964",
-    "ga_G-089_ex.mp3": "c9454022a8",
-    "ga_G-089_hook.mp3": "816fcf497e",
-    "ga_G-089_rev.mp3": "24fc62ea08",
-    "ga_G-090_pat.mp3": "a0c5e10efa",
-    "ga_G-090_ex.mp3": "2c74720920",
-    "ga_G-090_hook.mp3": "1c3b351aef",
-    "ga_G-090_rev.mp3": "864493e106",
-    "ga_G-091_pat.mp3": "cec3aa38e3",
-    "ga_G-091_ex.mp3": "f56887e496",
-    "ga_G-091_hook.mp3": "9a259d73f6",
-    "ga_G-091_rev.mp3": "f9b97e3c69",
-    "ga_G-092_pat.mp3": "5728f4cd81",
-    "ga_G-092_ex.mp3": "852b0b8fd2",
-    "ga_G-092_hook.mp3": "132d035151",
-    "ga_G-092_rev.mp3": "1a55bc0942",
-    "ga_G-093_pat.mp3": "954feb52b3",
-    "ga_G-093_ex.mp3": "8d62d9b543",
-    "ga_G-093_hook.mp3": "9c3d24b150",
-    "ga_G-093_rev.mp3": "cbec7837e6",
-    "ga_G-094_pat.mp3": "3edd665c34",
-    "ga_G-094_ex.mp3": "2feaadb2eb",
-    "ga_G-094_hook.mp3": "ed3af0d39a",
-    "ga_G-094_rev.mp3": "dceeedc5b8",
-    "ga_G-095_pat.mp3": "51228cee20",
-    "ga_G-095_ex.mp3": "00a3521012",
-    "ga_G-095_hook.mp3": "b4f629d4c0",
-    "ga_G-095_rev.mp3": "e3842657df",
-    "ga_G-096_pat.mp3": "2b904511fb",
-    "ga_G-096_ex.mp3": "e076a4252d",
-    "ga_G-096_hook.mp3": "28298c4102",
-    "ga_G-096_rev.mp3": "c97e743a52",
-    "ga_G-097_pat.mp3": "071bd1e8ab",
-    "ga_G-097_ex.mp3": "1d3ceaf30d",
-    "ga_G-097_hook.mp3": "6ec7a1c560",
-    "ga_G-097_rev.mp3": "31fdd5fe40",
-    "ga_G-098a_pat.mp3": "37ac8d5ca5",
-    "ga_G-098a_ex.mp3": "c7bfb69430",
-    "ga_G-098a_hook.mp3": "de2e28fb22",
-    "ga_G-098a_rev.mp3": "b38da7c036",
-    "ga_G-098b_pat.mp3": "1d02a6c4d2",
-    "ga_G-098b_ex.mp3": "abe9c1c72c",
-    "ga_G-098b_hook.mp3": "cd6e35c23b",
-    "ga_G-098b_rev.mp3": "7aeb4825e9",
-    "ga_G-099_pat.mp3": "58eaacfece",
-    "ga_G-099_ex.mp3": "d53c0ff680",
-    "ga_G-099_hook.mp3": "b3e7d25920",
-    "ga_G-099_rev.mp3": "11ad2a00e5",
-    "ga_G-100_pat.mp3": "0a4655e162",
-    "ga_G-100_ex.mp3": "f27d13582d",
-    "ga_G-100_hook.mp3": "1e319b4f0a",
-    "ga_G-100_rev.mp3": "be0968eedd",
-    "ga_G-101_pat.mp3": "a656370080",
-    "ga_G-101_ex.mp3": "d7ea6179a2",
-    "ga_G-101_hook.mp3": "42701d751b",
-    "ga_G-101_rev.mp3": "9c7c49803d",
-    "ga_G-102_pat.mp3": "33fc319685",
-    "ga_G-102_ex.mp3": "7d7e3d73eb",
-    "ga_G-102_hook.mp3": "6d90dbb947",
-    "ga_G-102_rev.mp3": "b3b46008d9",
-    "ga_G-103_pat.mp3": "ee06d41ddf",
-    "ga_G-103_ex.mp3": "e32c21460b",
-    "ga_G-103_hook.mp3": "47d5eb0ce4",
-    "ga_G-103_rev.mp3": "9b8e7d35e0",
-    "ga_G-104_pat.mp3": "11f14fa079",
-    "ga_G-104_ex.mp3": "22777e197b",
-    "ga_G-104_hook.mp3": "7935bf7e69",
-    "ga_G-104_rev.mp3": "fd48b4dedf",
-    "ga_G-105_pat.mp3": "82926439e1",
-    "ga_G-105_ex.mp3": "3a083ed615",
-    "ga_G-105_hook.mp3": "1b186c47c3",
-    "ga_G-105_rev.mp3": "532b2af702",
-    "ga_G-106_pat.mp3": "9f6567bbae",
-    "ga_G-106_ex.mp3": "0d0116a0bf",
-    "ga_G-106_hook.mp3": "4e6884444d",
-    "ga_G-106_rev.mp3": "1705be27dd",
-    "ga_G-107_pat.mp3": "98ff111c77",
-    "ga_G-107_ex.mp3": "cca7740fd9",
-    "ga_G-107_hook.mp3": "1f01352296",
-    "ga_G-107_rev.mp3": "4bf61f791d",
-    "ga_G-108_pat.mp3": "ac13f5869c",
-    "ga_G-108_ex.mp3": "ac48a69c9f",
-    "ga_G-108_hook.mp3": "3a1eb81ea9",
-    "ga_G-108_rev.mp3": "a6a44409f5",
-    "ga_G-109_pat.mp3": "0c332cb690",
-    "ga_G-109_ex.mp3": "81406b2901",
-    "ga_G-109_hook.mp3": "e0b01cea0f",
-    "ga_G-109_rev.mp3": "d9056bb853",
-    "ga_G-110_pat.mp3": "929f47b1a4",
-    "ga_G-110_ex.mp3": "72eb76a5e2",
-    "ga_G-110_hook.mp3": "80751aaef3",
-    "ga_G-110_rev.mp3": "d6f8a9a96c",
-    "ga_G-111_pat.mp3": "95ba706b1a",
-    "ga_G-111_ex.mp3": "99246ccf3e",
-    "ga_G-111_hook.mp3": "34d077c5e5",
-    "ga_G-111_rev.mp3": "8f46a717d9",
-    "ga_G-112_pat.mp3": "06992f5940",
-    "ga_G-112_ex.mp3": "a1321b67db",
-    "ga_G-112_hook.mp3": "e82b815dc5",
-    "ga_G-112_rev.mp3": "dee7d598c0",
-    "ga_G-113_pat.mp3": "121f9f7ed5",
-    "ga_G-113_ex.mp3": "1452452755",
-    "ga_G-113_hook.mp3": "0fb2752ebc",
-    "ga_G-113_rev.mp3": "252d1f8140",
-    "ga_G-114_pat.mp3": "8e75141770",
-    "ga_G-114_ex.mp3": "1f70313289",
-    "ga_G-114_hook.mp3": "8d82a9a9d7",
-    "ga_G-114_rev.mp3": "1b2f061dd8",
-    "ga_G-115_pat.mp3": "50ffe853eb",
-    "ga_G-115_ex.mp3": "25912f545a",
-    "ga_G-115_hook.mp3": "57896f6190",
-    "ga_G-115_rev.mp3": "206900f1f6",
-    "ga_G-116a_pat.mp3": "f0751bdb20",
-    "ga_G-116a_ex.mp3": "270201bcfd",
-    "ga_G-116a_hook.mp3": "0688b292be",
-    "ga_G-116a_rev.mp3": "fafc5856e7",
-    "ga_G-116b_pat.mp3": "29819932d2",
-    "ga_G-116b_ex.mp3": "71e3ad27a0",
-    "ga_G-116b_hook.mp3": "2c2385dd8a",
-    "ga_G-116b_rev.mp3": "0b68f2f061",
-    "ga_G-116c_pat.mp3": "93db6b33b3",
-    "ga_G-116c_ex.mp3": "3003bafc32",
-    "ga_G-116c_hook.mp3": "019e4da6ed",
-    "ga_G-116c_rev.mp3": "d0e4614ac2",
-    "ga_G-116d_pat.mp3": "7ea12f6bde",
-    "ga_G-116d_ex.mp3": "faa13db492",
-    "ga_G-116d_hook.mp3": "81542141fa",
-    "ga_G-116d_rev.mp3": "04f71fd200",
-    "ga_G-116e_pat.mp3": "45a564a739",
-    "ga_G-116e_ex.mp3": "0c8f95132c",
-    "ga_G-116e_hook.mp3": "24cea70c2d",
-    "ga_G-116e_rev.mp3": "862cce7f27",
-    "ga_G-116f_pat.mp3": "35c1bf472d",
-    "ga_G-116f_ex.mp3": "1aa46765eb",
-    "ga_G-116f_hook.mp3": "94b85e964c",
-    "ga_G-116f_rev.mp3": "1df41ad8de",
-    "ga_G-117a_pat.mp3": "3555ac5dc1",
-    "ga_G-117a_ex.mp3": "0b7760ff74",
-    "ga_G-117a_hook.mp3": "c53cd46907",
-    "ga_G-117a_rev.mp3": "eee506c440",
-    "ga_G-117b_pat.mp3": "e656ff1f1f",
-    "ga_G-117b_ex.mp3": "4045182ac8",
-    "ga_G-117b_hook.mp3": "b47f3df57f",
-    "ga_G-117b_rev.mp3": "5be8eda56e",
-    "ga_G-117c_pat.mp3": "ae59321316",
-    "ga_G-117c_ex.mp3": "975bce3b21",
-    "ga_G-117c_hook.mp3": "f01b550c39",
-    "ga_G-117c_rev.mp3": "d021d4914f",
-    "ga_G-118_pat.mp3": "091cd44f64",
-    "ga_G-118_ex.mp3": "1ca1e44573",
-    "ga_G-118_hook.mp3": "8bfc14f490",
-    "ga_G-118_rev.mp3": "b6bd71061c",
-    "ga_G-119a_pat.mp3": "ea6e50a6aa",
-    "ga_G-119a_ex.mp3": "818929a08c",
-    "ga_G-119a_hook.mp3": "95fc90d6df",
-    "ga_G-119a_rev.mp3": "b9cd5abd14",
-    "ga_G-119b_pat.mp3": "5f0e5fc739",
-    "ga_G-119b_ex.mp3": "dd5f732efd",
-    "ga_G-119b_hook.mp3": "ed3619e87a",
-    "ga_G-119b_rev.mp3": "182b6ddb16",
-    "ga_G-119c_pat.mp3": "b753e12db6",
-    "ga_G-119c_ex.mp3": "cd2945fae3",
-    "ga_G-119c_hook.mp3": "798b2bdce3",
-    "ga_G-119c_rev.mp3": "0b1f8589f7",
-    "ga_G-119d_pat.mp3": "17a88fef82",
-    "ga_G-119d_ex.mp3": "161216d5b0",
-    "ga_G-119d_hook.mp3": "326c1cd603",
-    "ga_G-119d_rev.mp3": "7b39e5e8dd",
-    "ga_G-119e_pat.mp3": "61523bf2e5",
-    "ga_G-119e_ex.mp3": "b2e49488ad",
-    "ga_G-119e_hook.mp3": "4390fd65ee",
-    "ga_G-119e_rev.mp3": "2b24fdb79a",
-    "ga_G-119f_pat.mp3": "133644cadc",
-    "ga_G-119f_ex.mp3": "23f7749a3c",
-    "ga_G-119f_hook.mp3": "226db35e05",
-    "ga_G-119f_rev.mp3": "b492fe15da",
-    "ga_G-119g_pat.mp3": "8a2e6b1ad8",
-    "ga_G-119g_ex.mp3": "225204b1f5",
-    "ga_G-119g_hook.mp3": "98d9f689b3",
-    "ga_G-119g_rev.mp3": "dba6a4525f",
-    "ga_G-119h_pat.mp3": "3066dc5da6",
-    "ga_G-119h_ex.mp3": "80d72da7bc",
-    "ga_G-119h_hook.mp3": "fb1be096d1",
-    "ga_G-119h_rev.mp3": "df46660a21",
-    "ga_G-120_pat.mp3": "a614569eeb",
-    "ga_G-120_ex.mp3": "4ab4bdd3d2",
-    "ga_G-120_hook.mp3": "740485fcea",
-    "ga_G-120_rev.mp3": "324663fa63",
-    "ga_G-121_pat.mp3": "f397977347",
-    "ga_G-121_ex.mp3": "35bcb5ee59",
-    "ga_G-121_hook.mp3": "fded3c9837",
-    "ga_G-121_rev.mp3": "8c36d18b41",
-    "ga_G-122_pat.mp3": "017bdf38d4",
-    "ga_G-122_ex.mp3": "a0e1167e67",
-    "ga_G-122_hook.mp3": "dfa69fc0d8",
-    "ga_G-122_rev.mp3": "7e63639479",
-    "ga_G-123_pat.mp3": "f76ff8325f",
-    "ga_G-123_ex.mp3": "1710c5cbd4",
-    "ga_G-123_hook.mp3": "564f679dff",
-    "ga_G-123_rev.mp3": "37955b620e",
-    "ga_G-124a_pat.mp3": "e92a621275",
-    "ga_G-124a_ex.mp3": "c608c128db",
-    "ga_G-124a_hook.mp3": "968de5b618",
-    "ga_G-124a_rev.mp3": "8169a1251b",
-    "ga_G-124b_pat.mp3": "74a7024b9b",
-    "ga_G-124b_ex.mp3": "1812532fd4",
-    "ga_G-124b_hook.mp3": "c18b8ca6df",
-    "ga_G-124b_rev.mp3": "dce9117154",
-    "ga_G-125a_pat.mp3": "5224eb1ff3",
-    "ga_G-125a_ex.mp3": "c380a97b8f",
-    "ga_G-125a_hook.mp3": "d5fe5bba4d",
-    "ga_G-125a_rev.mp3": "4f15fbc305",
-    "ga_G-125b_pat.mp3": "013412f420",
-    "ga_G-125b_ex.mp3": "0fb5f97ba0",
-    "ga_G-125b_hook.mp3": "b7d27fd6f6",
-    "ga_G-125b_rev.mp3": "d441b5c2a3",
-    "ga_G-126_pat.mp3": "055d711724",
-    "ga_G-126_ex.mp3": "63f9676dea",
-    "ga_G-126_hook.mp3": "fd72418c0c",
-    "ga_G-126_rev.mp3": "dfb97bf375",
-    "ga_G-127_pat.mp3": "cbfabce411",
-    "ga_G-127_ex.mp3": "2bd1544fec",
-    "ga_G-127_hook.mp3": "204f5f1925",
-    "ga_G-127_rev.mp3": "3bc49a0b0d",
-    "ga_G-128_pat.mp3": "ed00ee5cac",
-    "ga_G-128_ex.mp3": "c9d21667c3",
-    "ga_G-128_hook.mp3": "33ef955a5a",
-    "ga_G-128_rev.mp3": "aa8c1763f9",
-    "ga_G-129_pat.mp3": "61b8e8a8b9",
-    "ga_G-129_ex.mp3": "cb5eac019a",
-    "ga_G-129_hook.mp3": "94b56bd4ee",
-    "ga_G-129_rev.mp3": "a0132e59e0",
-    "ga_G-130_pat.mp3": "6e319f9fb2",
-    "ga_G-130_ex.mp3": "01a1e60ed0",
-    "ga_G-130_hook.mp3": "025c5589e4",
-    "ga_G-130_rev.mp3": "b4f7d6d573",
-    "ga_G-131_pat.mp3": "b1d6e2cf4f",
-    "ga_G-131_ex.mp3": "effc516ed3",
-    "ga_G-131_hook.mp3": "727e487dce",
-    "ga_G-131_rev.mp3": "673b7d6814",
-    "ga_G-132_pat.mp3": "7b23e3dec1",
-    "ga_G-132_ex.mp3": "505985c46b",
-    "ga_G-132_hook.mp3": "46a1bea859",
-    "ga_G-132_rev.mp3": "bbf77317e3",
-    "ga_G-133_pat.mp3": "7bdd565197",
-    "ga_G-133_ex.mp3": "fdc24510fc",
-    "ga_G-133_hook.mp3": "8042cd2bc9",
-    "ga_G-133_rev.mp3": "e987a3f21c",
-    "ga_G-134_pat.mp3": "8b31f58c9a",
-    "ga_G-134_ex.mp3": "323f028687",
-    "ga_G-134_hook.mp3": "21b8579a81",
-    "ga_G-134_rev.mp3": "a78f80e0f1",
-    "ga_G-135_pat.mp3": "3d55aa193c",
-    "ga_G-135_ex.mp3": "0abbca990c",
-    "ga_G-135_hook.mp3": "80854a0312",
-    "ga_G-135_rev.mp3": "904f788a7d",
-    "ga_G-136_pat.mp3": "3837bc593f",
-    "ga_G-136_ex.mp3": "7518d963b9",
-    "ga_G-136_hook.mp3": "f6cd43f63a",
-    "ga_G-136_rev.mp3": "a9bb79153d",
-    "ga_GB-01_pat.mp3": "9b7370f401",
-    "ga_GB-01_ex.mp3": "0c1c4d8228",
-    "ga_GB-01_hook.mp3": "ff83b4390f",
-    "ga_GB-01_rev.mp3": "8644162437",
-    "ga_GB-02_pat.mp3": "d202304ab5",
-    "ga_GB-02_ex.mp3": "7a5597d913",
-    "ga_GB-02_hook.mp3": "92e80466c7",
-    "ga_GB-02_rev.mp3": "8e1476e241",
-    "ga_GB-04_pat.mp3": "dd73201cc4",
-    "ga_GB-04_ex.mp3": "42eb5c3d3b",
-    "ga_GB-04_hook.mp3": "ff4b82f02a",
-    "ga_GB-04_rev.mp3": "dd33b6ed60",
-    "ga_GB-05_pat.mp3": "17d27ab209",
-    "ga_GB-05_ex.mp3": "1127e80fe5",
-    "ga_GB-05_hook.mp3": "3490a02a97",
-    "ga_GB-05_rev.mp3": "57ad2cc088",
-    "ga_GB-06_pat.mp3": "04e4a3822f",
-    "ga_GB-06_ex.mp3": "61f771fea9",
-    "ga_GB-06_hook.mp3": "e841b38933",
-    "ga_GB-06_rev.mp3": "a15754eb49",
-    "ga_GB-07_pat.mp3": "82c51f7509",
-    "ga_GB-07_ex.mp3": "415bdc9ca8",
-    "ga_GB-07_hook.mp3": "e712b5b311",
-    "ga_GB-07_rev.mp3": "5b4aa04bfd",
-    "ga_GB-08_pat.mp3": "325c190941",
-    "ga_GB-08_ex.mp3": "829dfafc50",
-    "ga_GB-08_hook.mp3": "dcef736938",
-    "ga_GB-08_rev.mp3": "d32832aec2",
-    "ga_GB-09_pat.mp3": "185c518be4",
-    "ga_GB-09_ex.mp3": "a948fd21d6",
-    "ga_GB-09_hook.mp3": "737527c1f3",
-    "ga_GB-09_rev.mp3": "710466d627",
-    "ga_GB-10_pat.mp3": "4e92f298c1",
-    "ga_GB-10_ex.mp3": "8144f16bbb",
-    "ga_GB-10_hook.mp3": "0cadad8c83",
-    "ga_GB-10_rev.mp3": "dcd531f1b5",
-    "ga_GX-01_pat.mp3": "25bd62c9f4",
-    "ga_GX-01_ex.mp3": "e436f281c3",
-    "ga_GX-01_hook.mp3": "93f73fcea5",
-    "ga_GX-01_rev.mp3": "4285ad71f1",
-    "ga_GX-02_pat.mp3": "828d9d1995",
-    "ga_GX-02_ex.mp3": "52b085bf73",
-    "ga_GX-02_hook.mp3": "0ce2a3d714",
-    "ga_GX-02_rev.mp3": "172e85a858",
-    "ga_GX-03_pat.mp3": "65eeabe22c",
-    "ga_GX-03_ex.mp3": "23f0d698c2",
-    "ga_GX-03_hook.mp3": "ead882b0f0",
-    "ga_GX-03_rev.mp3": "e0515ab8c4",
-    "ga_GX-04_pat.mp3": "bb08112565",
-    "ga_GX-04_ex.mp3": "a833d740c2",
-    "ga_GX-04_hook.mp3": "d385be29f2",
-    "ga_GX-04_rev.mp3": "e52971cd89",
-    "ga_GX-05_pat.mp3": "56702c8105",
-    "ga_GX-05_ex.mp3": "de7a264212",
-    "ga_GX-05_hook.mp3": "779f4ac742",
-    "ga_GX-05_rev.mp3": "22d3d6bf60",
-    "ga_GX-06_pat.mp3": "e758ba58aa",
-    "ga_GX-06_ex.mp3": "a41d29f656",
-    "ga_GX-06_hook.mp3": "e3f7308f3e",
-    "ga_GX-06_rev.mp3": "21678d3544",
-    "ga_GX-07_pat.mp3": "6b0d46c8c4",
-    "ga_GX-07_ex.mp3": "230de2c34c",
-    "ga_GX-07_hook.mp3": "12523d3a23",
-    "ga_GX-07_rev.mp3": "bff99c3207",
-    "ga_GX-08_pat.mp3": "ae57a95053",
-    "ga_GX-08_ex.mp3": "36fc584815",
-    "ga_GX-08_hook.mp3": "360423cc27",
-    "ga_GX-08_rev.mp3": "9bd36fb955",
-    "ga_GX-09_pat.mp3": "670fc2ca37",
-    "ga_GX-09_ex.mp3": "204e114e99",
-    "ga_GX-09_hook.mp3": "ed2efb9102",
-    "ga_GX-09_rev.mp3": "daa4c8b6cf",
-    "ga_GX-10_pat.mp3": "ed1ed325b2",
-    "ga_GX-10_ex.mp3": "0c33c1a5c8",
-    "ga_GX-10_hook.mp3": "7711b2fd36",
-    "ga_GX-10_rev.mp3": "9f4d75a4bd",
-    "ga_GX-11_pat.mp3": "345fea5309",
-    "ga_GX-11_ex.mp3": "9d98a76fd1",
-    "ga_GX-11_hook.mp3": "bc14e8662c",
-    "ga_GX-11_rev.mp3": "1e1dbfc20a"
-  }
+  "done.mp3": "33da2bfc13f6"
 }

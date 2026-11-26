@@ -113,7 +113,15 @@
       "uchi11_s3a_tokyotower_part1",
       "uchi11_s3b_tokyotower_part2",
       "uchi11_s4_world_global_health"
+    ],
+    "2026-11-26": [
+      "uchi23_s1_news_fallback",
+      "uchi23_s2a_kabuki_drama_part1",
+      "uchi23_s2b_quartet_drama_part2",
+      "uchi23_s3a_kobayashi_part1",
+      "uchi23_s3b_mishima_contrast_part2",
+      "uchi23_s4_world_brain_ai"
     ]
   },
-  "last_date": "2026-11-25"
+  "last_date": "2026-11-26"
 }
