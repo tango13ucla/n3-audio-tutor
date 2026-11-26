@@ -1,5 +1,5 @@
-const CACHE_NAME = "n3-studio-tutor-v81";
-const BUILD_STAMP = "2026-11-26_4c5591b0337150_b2105bbd_a2d79d_3e9abb33";
+const CACHE_NAME = "n3-studio-tutor-v82";
+const BUILD_STAMP = "2026-11-26_4c5591b0337150_b2105bbd_a570ae_d38c2b2b";
 const CORE_SHELL = [
   "./",
   "./index.html",
@@ -42,7 +42,7 @@ self.addEventListener("fetch", event => {
   if (req.method !== "GET" || req.headers.has("range")) return;
   const url = new URL(req.url);
 
-  // Cache-First for Google Fonts (Noto Sans JP / Shippori Mincho / Noto Sans SC) -> 0ms crisp JP typography offline
+  // Cache-First for Google Fonts (Noto Sans JP / Noto Sans SC) -> 0ms crisp JP typography offline
   if (url.origin === "https://fonts.googleapis.com" || url.origin === "https://fonts.gstatic.com") {
     event.respondWith(
       caches.match(req).then(cached => {

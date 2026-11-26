@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-26 14:07 PT",
+  "updated_at": "2026-11-26 15:08 PT",
   "exam_date": "2026-12-06",
   "days_left": 10,
   "target_score": "120+ / 180",
@@ -14601,7 +14601,7 @@
     "ga_total_audited": 117
   },
   "study_date": "2026-11-26",
-  "_baked_epoch": 1795730867,
+  "_baked_epoch": 1795734537,
   "word_lookups": {
     "おく": {
       "count": 1,
@@ -14894,10 +14894,11 @@
     "はっきり": {
       "top_wrong": "ぼんやり",
       "top_count": 3,
-      "total": 4,
+      "total": 5,
       "counts": {
         "ぼんやり": 3,
-        "うっかり": 1
+        "うっかり": 1,
+        "ぎっしり": 1
       },
       "last_date": "20261125"
     },
@@ -15037,13 +15038,14 @@
       "last_date": "20261124"
     },
     "K-005": {
-      "top_wrong": "いたし",
+      "top_wrong": "うかがって",
       "top_count": 1,
-      "total": 1,
+      "total": 2,
       "counts": {
-        "いたし": 1
+        "いたし": 1,
+        "うかがって": 1
       },
-      "last_date": "20261121"
+      "last_date": "20261125"
     },
     "〜てもかまわない": {
       "top_wrong": "てたまらない",
@@ -15306,6 +15308,16 @@
       },
       "last_date": "20261125"
     },
+    "謙譲語特殊動詞组": {
+      "top_wrong": "ご覧",
+      "top_count": 2,
+      "total": 3,
+      "counts": {
+        "ご覧": 2,
+        "ご案内": 1
+      },
+      "last_date": "20261125"
+    },
     "〜なんか": {
       "top_wrong": "さえ",
       "top_count": 1,
@@ -15331,15 +15343,6 @@
       "total": 1,
       "counts": {
         "たところ": 1
-      },
-      "last_date": "20261125"
-    },
-    "謙譲語特殊動詞组": {
-      "top_wrong": "ご覧",
-      "top_count": 2,
-      "total": 2,
-      "counts": {
-        "ご覧": 2
       },
       "last_date": "20261125"
     }

@@ -3132,11 +3132,9 @@ html = r"""<!DOCTYPE html>
     font-size: 11.5px;
     font-weight: 600;
     color: var(--ink-3);
-    letter-spacing: 0.04em;
-    border: 1px solid var(--hairline-strong);
-    border-radius: 4px;
-    padding: 1px 6px;
-    line-height: 1.45;
+    letter-spacing: 0.08em;
+    padding: 0;
+    line-height: 1.56;
     white-space: nowrap;
   }
   .cue-txt {
@@ -3145,6 +3143,7 @@ html = r"""<!DOCTYPE html>
     color: var(--ink-2);
     line-height: 1.56;
     letter-spacing: 0.01em;
+    text-wrap: pretty;
   }
   .opt-breakdown {
     display: flex;
@@ -4238,15 +4237,15 @@ html = r"""<!DOCTYPE html>
   .jpv-word-chips {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px 8px;
+    gap: 4px 6px;
   }
   .jpv-chip {
     display: inline-flex;
     align-items: baseline;
-    gap: 4px;
-    padding: 5px 10px;
-    border-radius: 8px;
-    border: 1px solid var(--hairline-strong);
+    gap: 3px;
+    padding: 4px 8px;
+    border-radius: 7px;
+    border: 1px solid transparent;
     background: transparent;
     color: var(--ink-2);
     font-family: var(--sans-jp);
@@ -4267,7 +4266,7 @@ html = r"""<!DOCTYPE html>
     font-family: var(--sans);
     font-size: 10.5px;
     color: var(--ink-3);
-    opacity: 0.78;
+    opacity: 0.72;
   }
   .jpv-chip.is-now .jpv-chip-cnt {
     color: var(--moss);
@@ -4702,28 +4701,23 @@ html = r"""<!DOCTYPE html>
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 14px;
-    padding: 14px 16px;
-    margin-bottom: 18px;
-    border-radius: 12px;
-    background: var(--sheet);
-    border: 1px solid var(--hairline);
-  }
-  @media (prefers-color-scheme: dark) {
-    .night-bar {
-      border-color: rgba(234, 229, 218, 0.12);
-    }
+    gap: 12px;
+    padding: 10px 0 12px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--hairline);
+    background: transparent;
   }
   .night-bar-txt { min-width: 0; }
   .night-bar-title {
-    font-size: 15.5px;
-    font-weight: 500;
+    font-size: 13.5px;
+    font-weight: 600;
     color: var(--sumi);
-    letter-spacing: 0.03em;
+    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
   }
   .night-bar-sub {
-    margin-top: 4px;
-    font-size: 12.5px;
+    margin-top: 2px;
+    font-size: 12px;
     color: var(--ink-3);
     font-variant-numeric: tabular-nums;
     line-height: 1.5;
@@ -4731,27 +4725,27 @@ html = r"""<!DOCTYPE html>
   .night-bar-stats {
     display: flex;
     flex-wrap: wrap;
-    gap: 2px 9px;
+    gap: 1px 10px;
   }
   .night-bar-head-stat {
     font-size: 12.5px;
     font-weight: 400;
     color: var(--ink-2);
-    margin-left: 8px;
+    margin-left: 7px;
     font-variant-numeric: tabular-nums;
   }
   .night-go-btn {
     flex-shrink: 0;
-    height: 38px;
-    padding: 0 16px;
-    border-radius: 10px;
-    background: var(--cta-bg);
-    color: var(--cta-fg);
-    border: 1px solid var(--cta-border);
-    font-size: 14px;
-    font-weight: 500;
-    letter-spacing: 0.07em;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--moss);
+    white-space: nowrap;
+    padding: 4px 0;
+    letter-spacing: 0.02em;
+    background: transparent;
+    border: none;
   }
+  .night-go-btn:active { opacity: 0.65; }
 
   .vc-meta-right {
     display: inline-flex;
@@ -6257,8 +6251,8 @@ html = r"""<!DOCTYPE html>
   .zb-toast {
     position: fixed;
     left: 50%;
-    top: calc(124px + env(safe-area-inset-top));
-    transform: translateX(-50%) translateY(-6px);
+    bottom: calc(74px + env(safe-area-inset-bottom));
+    transform: translateX(-50%) translateY(6px);
     background: var(--cta-bg);
     color: var(--cta-fg);
     border: 1px solid var(--cta-border);
@@ -6271,14 +6265,24 @@ html = r"""<!DOCTYPE html>
     z-index: 60;
     white-space: nowrap;
   }
+  .zen-shell.has-mini-bar .zb-toast {
+    bottom: calc(146px + env(safe-area-inset-bottom));
+  }
   .zb-toast.show { opacity: 0.94; transform: translateX(-50%) translateY(0); }
   @media (max-height: 700px) {
-    .zb-ma { min-height: 10px; max-height: 36px; }
+    .zb-ma { min-height: 8px; max-height: 30px; }
     .zb-ma-tail { min-height: 4px; }
     .zb-title { margin: 8px 0 6px; }
     .zb-cta-row { margin-top: 16px; }
     .zb-ritual-list { margin-top: 16px; }
     .zb-ritual-row { min-height: 52px; padding: 9px 0; }
+    .zen-shell.has-mini-bar .zb-ma { min-height: 4px; max-height: 12px; }
+    .zen-shell.has-mini-bar .zb-title { font-size: clamp(22px, 5.8vw, 25px); margin: 6px 0 4px; }
+    .zen-shell.has-mini-bar .zb-cta-row { margin-top: 12px; }
+    .zen-shell.has-mini-bar .zb-btn-primary { height: 46px; }
+    .zen-shell.has-mini-bar .zb-aux-row { margin-top: 4px; min-height: 28px; }
+    .zen-shell.has-mini-bar .zb-ritual-list { margin-top: 10px; }
+    .zen-shell.has-mini-bar .zb-ritual-row { min-height: 46px; padding: 7px 0; }
   }
   /* ================= 3F. GLOBAL FLOATING MINI RADIO BAR (跨 Tab 无缝随身听 · 禅宗双色原生) ================= */
   .radio-mini-bar {
@@ -9158,6 +9162,13 @@ function escapeHtml(s) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+function displayPointName(raw) {
+  const s = String(raw || "");
+  if (s === "尊敬語特殊動詞组") return "尊敬语特殊动词";
+  if (s === "謙譲語特殊動詞组") return "谦让语特殊动词";
+  return s;
 }
 
 function formatZenNoteHTML(raw) {
@@ -12853,6 +12864,8 @@ function renderRadioReviewStage() {
     ? `<div class="rv-art-vignette"><img class="rv-art-vignette-img" src="${escapeHtml(artSrc)}" alt="" /></div>`
     : "";
   const zhShow = item.zh_card || item.zh || "";
+  const _normRvEq = s => String(s || "").replace(/[\s・，、。,.（）()「」『』〜～\-]/g, "").trim();
+  const showRvZh = !!(zhShow && _normRvEq(zhShow) !== _normRvEq(item.title));
   const mnShow = item.mnemonic_card || item.mnemonic || "";
   const showShortEx = !!(
     !mnShow &&
@@ -12883,7 +12896,7 @@ function renderRadioReviewStage() {
 
         <div class="vc-reveal${rvRevealed ? " shown" : ""}" id="rv-reveal-box">
           ${kanaHTML ? `<div class="vc-kana vc-tap-zone vc-live" id="rv-kana-box" data-rv-zone="kana">${kanaHTML}</div>` : ""}
-          <div class="vc-zh vc-tap-zone vc-live" id="rv-zh-box" data-rv-zone="zh">${escapeHtml(zhShow)}</div>
+          ${showRvZh ? `<div class="vc-zh vc-tap-zone vc-live" id="rv-zh-box" data-rv-zone="zh">${escapeHtml(zhShow)}</div>` : ""}
           ${mnShow ? `<div class="vc-hook vc-tap-zone vc-live" id="rv-hook-box" data-rv-zone="hook">${renderZenMnemonicHTML(item.mnemonic_cue, item.mnemonic_scene, mnShow)}</div>` : ""}
           ${showShortEx ? `<div class="rv-card-ex vc-tap-zone vc-live" lang="ja" id="rv-ex-box" data-rv-zone="ex">${item.hl && item.hl.length ? renderGrammarHighlightHTML(item.ja_example, item.hl) : annotateJapanese(item.ja_example)}</div>` : ""}
         </div>
@@ -12940,7 +12953,7 @@ function syncBackendRecord(p, qid, choice, isCorrect, askAgain, newTier, stampSe
 
   scheduleCloudPush(60);
 
-  if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
+  if ((location.hostname === "localhost" || location.hostname === "127.0.0.1") && !String(location.search || "").includes("qa=1")) {
     fetch("./api/record", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -13613,11 +13626,11 @@ function renderTutor() {
     "VAR-H01": "食べる／飲む → いただく（謙譲）",
     "VAR-H02": "一段动词 使役形（させる）",
   };
-  const resPointTitle = _twinTitleMap[q.id] || (
+  const resPointTitle = displayPointName(_twinTitleMap[q.id] || (
     p.subject === "词汇" && q.answer && /^[\u3040-\u30ffー]+$/.test(q.answer) && p.point && !p.point.includes(q.answer) && !/[\u4e00-\u9fff]/.test(p.point)
       ? q.answer
       : (p.point || "")
-  );
+  ));
   const confWrong = (DATA.confusion_pairs && (DATA.confusion_pairs[p.point_key] || DATA.confusion_pairs[p.point])) || "";
   const _ansStr = String(q.answer || "").trim();
   const confHintHTML = (confWrong && confWrong !== _ansStr && (!_ansStr || (!_ansStr.includes(confWrong) && !confWrong.includes(_ansStr))) && !q.is_listening)
@@ -14143,6 +14156,10 @@ function positionMainThumbBar(immediate) {
 window.addEventListener("resize", () => positionMainThumbBar(true));
 
 function switchMode(m, autoPlayRadio) {
+  if (m === "radio" && activeMode === "radio" && radioReviewOpen) {
+    closeRadioReview();
+    return;
+  }
   if (m !== "dash" && m !== "mock") prevNonDashMode = m;
   activeMode = m;
   clearActiveWordToken();
@@ -17077,8 +17094,8 @@ function renderDashboard() {
             <div class="night-bar-sub night-bar-stats">${statChips}</div>
           </div>
           ${ga.remaining > 0
-            ? `<button class="night-go-btn" onclick="openGrammarAuditFromAnywhere()">去盘点</button>`
-            : `<button class="night-go-btn" onclick="switchMode('tutor')">去补漏</button>`}
+            ? `<button class="night-go-btn" onclick="openGrammarAuditFromAnywhere()">去盘点 ›</button>`
+            : `<button class="night-go-btn" onclick="switchMode('tutor')">去补漏 ›</button>`}
         </div>
       `;
     } else if (remVocab > 0) {
@@ -17091,7 +17108,7 @@ function renderDashboard() {
             <div class="night-bar-title">单手记词</div>
             <div class="night-bar-sub">${subTxt}</div>
           </div>
-          <button class="night-go-btn" onclick="switchMode('vocab')">去记词</button>
+          <button class="night-go-btn" onclick="switchMode('vocab')">去记词 ›</button>
         </div>
       `;
     } else {
@@ -17135,7 +17152,7 @@ function renderMasteryList() {
         const ld = getEffectiveItemLastDate(it);
         return it.tier === "done" && !!ld && daysSinceTag(ld) >= 10;
       }
-      return it.name.toLowerCase().includes(q) || (it.sub || "").toLowerCase().includes(q) || (it.family || "").toLowerCase().includes(q);
+      return it.name.toLowerCase().includes(q) || displayPointName(it.name).toLowerCase().includes(q) || (it.sub || "").toLowerCase().includes(q) || (it.family || "").toLowerCase().includes(q);
     }
     return it.tier === dashTier;
   });
@@ -17190,7 +17207,7 @@ function renderMasteryList() {
           <span class="li-dot ${it.tier}"></span>
           <div class="li-name-stack">
             <div class="li-name-line">
-              <span class="li-name" lang="ja">${escapeHtml(it.name)}</span>
+              <span class="li-name" lang="ja">${escapeHtml(displayPointName(it.name))}</span>
               ${gaTagHTML}${hesHTML}
             </div>
             ${it.sub ? `<span class="li-sub-mob">${escapeHtml(it.sub)}</span>` : ""}
@@ -18020,7 +18037,7 @@ window.ZB = (function() {
       cardioDone: false,
       puTarget: opts.puTarget != null ? opts.puTarget : 2,
       state: opts.state, sub: opts.sub, bb: opts.bb, pelo: opts.pelo, wk: opts.wk,
-      cur, next, daysGap: opts.daysGap, stale: opts.stale || "none", isTravel: false
+      cur, next, daysGap: opts.daysGap, stale: opts.stale || "none", isTravel: false, onTrip: !!opts.onTrip
     };
   }
 
@@ -18058,15 +18075,12 @@ window.ZB = (function() {
     if (dObj.pz_done != null && dObj.pelo === "done") {
       const doneCls = getPZMeta(Number(dObj.pz_done));
       const nextCls = getPZMeta(Math.min(PZ_LIST.length, Number(dObj.pz_done) + 1));
-      const nextHint = nextCls.allDone
-        ? "全部 47 节主线已通关"
-        : `下节 ${nextCls.code}`;
       return {
         tier: "green",
-        tierText: `今日已推主线 · ${doneCls.numInProg}/${doneCls.progTotal}`,
+        tierText: trip ? "旅途已推主线" : "今日已推主线",
         title: doneCls.title,
-        shortLine: `${doneCls.code} · ${doneCls.coach} · ${nextHint}`,
-        linkText: "完整课表 ›",
+        shortLine: `${doneCls.code} · ${doneCls.coach} · ${doneCls.min} 分钟`,
+        linkText: "",
         ctaText: `已完成 ${doneCls.code} ✓`,
         ctaDone: true,
         altAction: null,
@@ -18083,8 +18097,8 @@ window.ZB = (function() {
           showSyllabus: true,
           canOverridePZ: false
         },
-        cardioDone: true, puTarget: (bb && (bb.level === "high" || bb.level === "max")) ? 1 : 2,
-        state: st.mode, sub: st.sub, bb, pelo, wk, cur, next: nextCls, daysGap: 0, stale: "none", isTravel: false
+        cardioDone: true, puTarget: trip ? 0 : ((bb && (bb.level === "high" || bb.level === "max")) ? 1 : (puStage().targetRounds || 2)),
+        state: st.mode, sub: st.sub, bb, pelo, wk, cur, next: nextCls, daysGap: 0, stale: "none", isTravel: false, onTrip: !!trip
       };
     }
 
@@ -18642,7 +18656,7 @@ window.ZB = (function() {
       altAction: trip
         ? { label: "改回旅途步行", type: "to_travel", active: false }
         : (yestHeavyBB ? { label: "腿还有点累 · 改休整", type: "to_rest", active: false } : null),
-      puTarget: trip ? 0 : (puStage().targetRounds || 2), state: st.mode, sub: st.sub, bb, pelo, wk, daysGap, stale
+      puTarget: trip ? 0 : (puStage().targetRounds || 2), onTrip: !!trip, state: st.mode, sub: st.sub, bb, pelo, wk, daysGap, stale
     });
   }
 
@@ -18650,8 +18664,8 @@ window.ZB = (function() {
     const b = ST.pu_best || 1;
     if (b <= 1) return { idx: 0, name: "阶段一 · 门框单杠", title: "1 徒手 · 2 黑带慢放", sub: "微仰防碰头 · 单膝挂黑带 4 秒慢放", short: "1 徒手+黑带", defStrict: 1, neg: 2, targetRounds: 2 };
     if (b === 2) return { idx: 1, name: "阶段二 · 门框单杠", title: "2 徒手 · 1 红带慢放", sub: "前 2 下直上不晃 · 末下红带 4 秒慢放", short: "2 徒手+红带", defStrict: 2, neg: 1, targetRounds: 2 };
-    if (b === 3) return { idx: 2, name: "阶段三 · 不力竭冲 5 连", title: "2 个留余力 · 每日 3 轮", sub: "隔 2 小时拉 3 轮攒 6 下 · 每两周测 4 连", short: "2个×3轮", defStrict: 2, neg: 0, targetRounds: 3 };
-    if (b === 4) return { idx: 2, name: "阶段三 · 不力竭冲 5 连", title: "3 个留余力 · 每日 3 轮", sub: "隔 2 小时拉 3 轮攒 9 下 · 每两周测 5 连", short: "3个×3轮", defStrict: 3, neg: 0, targetRounds: 3 };
+    if (b === 3) return { idx: 2, name: "阶段三 · 不力竭冲 5 连", title: "2 个留余力 · 每日 3 轮", sub: "隔 2 小时拉 3 轮攒 6 下 · 每两周测 4 连", short: "每轮 2 个", defStrict: 2, neg: 0, targetRounds: 3 };
+    if (b === 4) return { idx: 2, name: "阶段三 · 不力竭冲 5 连", title: "3 个留余力 · 每日 3 轮", sub: "隔 2 小时拉 3 轮攒 9 下 · 每两周测 5 连", short: "每轮 3 个", defStrict: 3, neg: 0, targetRounds: 3 };
     return { idx: 3, name: "阶段四 · 目标达成", title: `轻松 ${b} 连`, sub: "每日 2 轮从容维稳", short: `轻松 ${b} 连`, defStrict: Math.min(5, b), neg: 0, targetRounds: 2 };
   }
   function puCooldown(day, target) {
@@ -18937,7 +18951,7 @@ window.ZB = (function() {
     if (ge("zb-title")) ge("zb-title").textContent = plan.title;
     if (ge("zb-pelo-short")) ge("zb-pelo-short").textContent = plan.shortLine || "";
     const plk = ge("zb-pelo-link"), prw = ge("zb-pelo-row");
-    if (plk) { plk.style.display = plan.guide ? "inline-flex" : "none"; plk.textContent = plan.linkText || "安排详情 ›"; }
+    if (plk) { plk.style.display = (plan.guide && plan.linkText) ? "inline-flex" : "none"; plk.textContent = plan.linkText || ""; }
     if (prw) prw.style.pointerEvents = plan.guide ? "auto" : "none";
 
     const mb = ge("zb-main-btn");
@@ -18962,14 +18976,15 @@ window.ZB = (function() {
     syncMiniVisibility();
 
     const cd = puCooldown(day, plan.puTarget);
+    const noBarTrip = !!(plan.isTravel || plan.onTrip);
     if (ge("zb-pu-hint")) {
-      if (plan.isTravel) ge("zb-pu-hint").textContent = "旅途免练";
+      if (noBarTrip) ge("zb-pu-hint").textContent = "旅途免杠";
       else if (plan.puTarget === 0) ge("zb-pu-hint").textContent = puDone > 0 ? `随手已拉 ${puDone} 轮` : "今日免练 · 想拉随意";
       else ge("zb-pu-hint").textContent = `${stg.short} · ${puDone}/${plan.puTarget} 轮`;
     }
     const pd = ge("zb-pu-dots");
     if (pd) {
-      if (plan.isTravel) pd.innerHTML = `<span style="font-size:12.5px;color:var(--ink-3);">休</span>`;
+      if (noBarTrip) pd.innerHTML = `<span style="font-size:12.5px;color:var(--ink-3);">休</span>`;
       else if (plan.puTarget === 0) {
         pd.innerHTML = `<button type="button" class="zb-round-dot ${puDone >= 1 ? "done" : ""}" style="${puDone >= 1 ? "" : "opacity:0.65;"}" onclick="ZB.quickPU(1)" aria-label="打卡引体">${puDone >= 1 ? DOT_CHECK_SVG : "1"}</button>`;
       } else {
@@ -19891,7 +19906,7 @@ window.ZB = (function() {
 function initApp() {
   positionMainThumbBar(true);
   // When running on local tutor_server.py, also union-merge local server state if present
-  if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
+  if ((location.hostname === "localhost" || location.hostname === "127.0.0.1") && !String(location.search || "").includes("qa=1")) {
     fetch("./api/state").then(r => r.ok ? r.json() : null).then(st => {
       if (!st || !st.session || !Array.isArray(st.session.doneIds)) return;
       let changed = false;
@@ -21430,11 +21445,54 @@ if (!html.includes('color: var(--cta-fg);') || html.includes('--cta-ink')) {
 }
 vm.runInNewContext('try { localStorage.removeItem(RADIO_FB_LOCAL_KEY); } catch (e) {}', sb);
 sb.closeModal();
+
+// Self-test 27 (v82): Ground-Up Jobs x Kyoto Zen Polish Guard (Travel-Day Completed PZ Pull-up, Zero Contradiction, Zero Duplicate Links, Zero Transparent Echo, Clean Display Names, Borderless Editorial UI)
+const zst27 = sb.ZB._getState();
+const savedTrips27 = zst27.trips;
+const today27 = sb.ZB._todayYmd ? sb.ZB._todayYmd() : vm.runInNewContext('DATA.plan_date', sb);
+const savedDay27 = (zst27.days && zst27.days[today27]) ? Object.assign({}, zst27.days[today27]) : null;
+const savedBest27 = zst27.pu_best;
+zst27.pu_best = 3;
+zst27.trips = [{ name: '测试旅途', start: '2020-01-01', end: '2035-12-31' }];
+if (!zst27.days) zst27.days = {};
+zst27.days[today27] = { pelo: 'done', pz_done: 3, force_pz: 1 };
+const pDoneTrip27 = sb.ZB._planOn(today27);
+if (pDoneTrip27.puTarget !== 0 || !pDoneTrip27.onTrip || pDoneTrip27.linkText !== '' || pDoneTrip27.tierText.includes('/23') || pDoneTrip27.shortLine.includes('下节')) {
+  throw new Error('Self-test 27 failed: travel-day completed PZ violated puTarget=0, onTrip, or no-dup/no-orphan hero: ' + JSON.stringify({ puTarget: pDoneTrip27.puTarget, onTrip: pDoneTrip27.onTrip, linkText: pDoneTrip27.linkText, tierText: pDoneTrip27.tierText, shortLine: pDoneTrip27.shortLine }));
+}
+zst27.trips = [];
+const pDoneHome27 = sb.ZB._planOn(today27);
+if (pDoneHome27.puTarget !== 3) {
+  throw new Error('Self-test 27 failed: non-travel pu_best=3 completed PZ must match targetRounds=3 (zero ×3轮 vs 0/2 contradiction), got puTarget=' + pDoneHome27.puTarget);
+}
+zst27.trips = savedTrips27;
+zst27.pu_best = savedBest27;
+if (savedDay27) zst27.days[today27] = savedDay27; else delete zst27.days[today27];
+if (sb.displayPointName('尊敬語特殊動詞组') !== '尊敬语特殊动词' || sb.displayPointName('謙譲語特殊動詞组') !== '谦让语特殊动词') {
+  throw new Error('Self-test 27 failed: displayPointName mapping broken');
+}
+sb.switchMode('dash');
+sb.selectDashMod('grammar');
+sb.selectDashTier('todo');
+const dashPt27 = (els['point-list'] && els['point-list'].innerHTML) || '';
+const dashVis27 = dashPt27.replace(/<[^>]+>/g, '');
+if (dashVis27.includes('特殊動詞组')) {
+  throw new Error('Self-test 27 failed: raw 特殊動詞组 leaked into Dashboard ledger UI visible text');
+}
+sb.switchMode('radio', false);
+sb.openRadioReview(true);
+sb.switchMode('radio', false);
+if (vm.runInNewContext('radioReviewOpen', sb)) {
+  throw new Error('Self-test 27 failed: tapping active radio tab did not pop back from Radio Review');
+}
+if (html.includes('top: calc(124px + env(safe-area-inset-top))') || html.includes('2个×3轮') || html.includes('3个×3轮')) {
+  throw new Error('Self-test 27 failed: overlapping 124px Body toast or contradictory ×3轮 short string regressed!');
+}
 """
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
 
 sw_path = os.path.join(BASE_DIR, "sw.js")
-SW_CACHE_NAME = "n3-studio-tutor-v81"
+SW_CACHE_NAME = "n3-studio-tutor-v82"
 if not _IS_SIM_OUTPUT and os.path.exists(sw_path):
     with open(sw_path, encoding="utf-8") as sf:
         sw_src = sf.read()

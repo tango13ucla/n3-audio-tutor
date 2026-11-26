@@ -692,6 +692,15 @@ def reconcile_adaptive_telemetry(state: dict, fallback_day_tag: str = "") -> Non
     for p in state.get("grammar_points", []):
         if p.get("name"):
             item_by_key[p["name"]] = p
+    for p in state.get("n2_grammar_points", []):
+        if not isinstance(p, dict):
+            continue
+        if p.get("id"):
+            item_by_key[p["id"]] = p
+        if p.get("point"):
+            item_by_key[p["point"]] = p
+        if p.get("name"):
+            item_by_key[p["name"]] = p
     for p in state.get("henkei_points", []):
         if p.get("id"):
             item_by_key[p["id"]] = p
@@ -744,7 +753,7 @@ def reconcile_adaptive_telemetry(state: dict, fallback_day_tag: str = "") -> Non
     # 4) Rebuild active `confusion_pairs` (real wrong option selections, never "不确定", retired once green)
     conf_counts: dict[str, dict[str, int]] = {}
     conf_last_day: dict[str, str] = {}
-    skip_choice_prefixes = ("记词:", "闪卡:", "盘点:", "听后复盘:", "开口:", "试读:", "Grok:")
+    skip_choice_prefixes = ("记词:", "闪卡:", "盘点:", "听后复盘:", "开口:", "试读:", "Grok:", "N3实考:")
     if os.path.exists(LOG_PATH):
         try:
             with open(LOG_PATH, encoding="utf-8") as lf:
@@ -757,14 +766,20 @@ def reconcile_adaptive_telemetry(state: dict, fallback_day_tag: str = "") -> Non
                     except Exception:
                         continue
                     rec_id = str(rec.get("id") or rec.get("question_id") or "").strip()
-                    if not rec_id or rec_id.startswith(("LK:", "HES:", "SPK:", "RV:", "RADIO_FB:", "N3_SCORE:", "MOCK:", "GA-", "VC-", "FLASH-", "GROK-", "N3L-", "N3-L", "L-")):
+                    if not rec_id or rec_id.startswith(("LK:", "HES:", "SPK:", "RV:", "RADIO_FB:", "N3_SCORE:", "GA-", "VC-", "FLASH-", "GROK-", "N3L-", "N3-L", "L-")):
                         continue
+                    if rec_id.startswith("MOCK:"):
+                        inner_id = rec_id[5:].strip()
+                        if inner_id.startswith(("N3L-", "N3-L", "L-")):
+                            continue
                     is_ok = str(rec.get("correct", "")).lower() == "true" or rec.get("correct") is True
                     if is_ok:
                         continue
                     pt = str(rec.get("point") or "").strip()
                     ch = str(rec.get("choice") or "").strip()
-                    if not pt or not ch or ch == "不确定" or ch.startswith(skip_choice_prefixes) or len(ch) > 14 or "。" in ch:
+                    if ch.startswith("模拟错:"):
+                        ch = ch[len("模拟错:"):].strip()
+                    if not pt or not ch or ch in ("不确定", "未作答") or ch.startswith(skip_choice_prefixes) or len(ch) > 14 or "。" in ch:
                         continue
                     if pt in SKIP_VOCAB_ENROLL or pt.startswith("N3L-"):
                         continue
@@ -811,12 +826,15 @@ def recompute_summary(state: dict) -> None:
             if x.get("word") and x.get("word") not in SKIP_VOCAB_ENROLL
         ]
     summary = state.setdefault("summary", {})
-    for key, arr_key in (
+    groups = [
         ("grammar", "grammar_points"),
         ("henkei", "henkei_points"),
         ("listening", "listening_points"),
         ("vocab", "vocab_tracked"),
-    ):
+    ]
+    if state.get("n2_grammar_points"):
+        groups.append(("n2_grammar", "n2_grammar_points"))
+    for key, arr_key in groups:
         items = state.get(arr_key, [])
         sec = summary.setdefault(key, {})
         for st in ("green", "yellow", "orange", "red", "gray"):

@@ -1,7 +1,7 @@
 {
   "schema": "n3-grok-cloud-brief/1",
   "study_date": "2026-11-26",
-  "updated_at": "2026-11-26 14:07 PT",
+  "updated_at": "2026-11-26 15:08 PT",
   "days_left": 10,
   "grok_cloud_ingest_url": "https://ntfy.sh/n3grok_9c71e4b2a85f13d06e24ab891f03",
   "grammar": {
@@ -182,6 +182,11 @@
   },
   "top_confusion_pairs": [
     {
+      "point": "はっきり",
+      "wrong_choice": "ぼんやり",
+      "count": 5
+    },
+    {
       "point": "K-008",
       "wrong_choice": "お知り",
       "count": 4
@@ -207,11 +212,6 @@
       "count": 4
     },
     {
-      "point": "はっきり",
-      "wrong_choice": "ぼんやり",
-      "count": 4
-    },
-    {
       "point": "〜てたまらない",
       "wrong_choice": "かまわない",
       "count": 3
@@ -232,6 +232,16 @@
       "count": 3
     },
     {
+      "point": "謙譲語特殊動詞组",
+      "wrong_choice": "ご覧",
+      "count": 3
+    },
+    {
+      "point": "K-005",
+      "wrong_choice": "うかがって",
+      "count": 2
+    },
+    {
       "point": "K-006",
       "wrong_choice": "いただいた",
       "count": 2
@@ -244,16 +254,6 @@
     {
       "point": "V-041",
       "wrong_choice": "歩かせた",
-      "count": 2
-    },
-    {
-      "point": "〜きる／〜きれない",
-      "wrong_choice": "やすい",
-      "count": 2
-    },
-    {
-      "point": "〜たものだ",
-      "wrong_choice": "だところだ",
       "count": 2
     }
   ],

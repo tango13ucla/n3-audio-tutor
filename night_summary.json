@@ -1,7 +1,7 @@
 {
-  "closed_study_day": "2026-11-25",
-  "summarized_at_pt": "2026-11-26T04:05:31-08:00",
-  "day_events_count": 165,
+  "closed_study_day": "2026-11-26",
+  "summarized_at_pt": "2026-11-26T15:08:55-08:00",
+  "day_events_count": 24,
   "missed_or_unsure_points": [
     "〜てもかまわない",
     "〜ばかりに",
@@ -35,20 +35,18 @@
     "〜なんか"
   ],
   "missed_vocab_words": [
-    "めったに",
-    "ぎっしり",
-    "自慢",
-    "都合",
     "納得",
-    "世間",
+    "都合",
+    "象徴",
     "ぼろぼろ",
-    "仲直り"
+    "慰める",
+    "うろうろ"
   ],
   "top_confusion_pairs": [
     {
       "point": "はっきり",
       "wrong_choice": "ぼんやり",
-      "count": 4,
+      "count": 5,
       "last_date": "20261125"
     },
     {
@@ -125,7 +123,7 @@
     },
     {
       "point": "K-005",
-      "wrong_choice": "模拟错:うかがって",
+      "wrong_choice": "うかがって",
       "count": 2,
       "last_date": "20261125"
     },
@@ -166,9 +164,7 @@
       "last_date": "20261124"
     }
   ],
-  "looked_up_expressions": [
-    "VAR5-07"
-  ],
+  "looked_up_expressions": [],
   "looked_up_words_count": 20,
   "top_looked_up_words": [
     {
@@ -272,5 +268,6 @@
       "last_ts": "2026-11-26T06:35:15.000Z"
     }
   ],
-  "ever_seen_cards_count": 458
+  "recent_radio_feedback": [],
+  "ever_seen_cards_count": 460
 }

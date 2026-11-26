@@ -178,7 +178,7 @@ def test_all_python_files_syntax_and_names() -> None:
             continue
         all_errs.extend(_check_scope_undefined(tree, p.name))
     assert not all_errs, "Static undefined-name/syntax errors:\n" + "\n".join(all_errs)
-    print(f"[PASS 1/10] Static AST syntax & undefined-name check ({len(py_files)} Python files)")
+    print(f"[PASS 1/18] Static AST syntax & undefined-name check ({len(py_files)} Python files)")
 
 
 def test_apply_practice_logs_all_event_types() -> None:
@@ -276,7 +276,7 @@ def test_apply_practice_logs_all_event_types() -> None:
             aadc.LOG_PATH, aadc.SNAP_PATH = orig_aadc_log, orig_aadc_snap
             if orig_ledger is not None:
                 ive.LEDGER_PATH = orig_ledger
-    print("[PASS 2/10] apply_practice_logs & collect_study_history all-event-types test")
+    print("[PASS 2/18] apply_practice_logs & collect_study_history all-event-types test")
 
 
 def test_frontend_backend_choice_contract() -> None:
@@ -299,7 +299,7 @@ def test_frontend_backend_choice_contract() -> None:
     # Relearn labels must also be handled in auto_author_daily_content.py
     for relbl in ("听后复盘:再过", "听后复盘:重学"):
         assert relbl in aadc_src, f"auto_author_daily_content.py missing '{relbl}'"
-    print(f"[PASS 3/10] Frontend<->Backend choice contract sync ({len(rv_labels)} RV + {len(ga_labels)} GA labels)")
+    print(f"[PASS 3/18] Frontend<->Backend choice contract sync ({len(rv_labels)} RV + {len(ga_labels)} GA labels)")
 
 
 def test_dynamic_vocab_cards_self_test4_invariants() -> None:
@@ -353,7 +353,7 @@ def test_dynamic_vocab_cards_self_test4_invariants() -> None:
     assert vc.has_kanji_cue_pollution("自慢", "Gym Man(じまん)") is False
     assert vc.has_kanji_cue_pollution("貯める", "他(た)没(め)花") is False
     assert vc.has_kanji_cue_pollution("しっかり", "实(しっ)卡(か)死") is False
-    print(f"[PASS 4/10] Dynamic vocab cards Self-test 4 invariants ({len(checked)} words, zero kanji-swap/half-split/vulgar/label regressions)")
+    print(f"[PASS 4/18] Dynamic vocab cards Self-test 4 invariants ({len(checked)} words, zero kanji-swap/half-split/vulgar/label regressions)")
 
 
 def test_speaking_prompts_self_test9_invariants() -> None:
@@ -383,7 +383,7 @@ def test_speaking_prompts_self_test9_invariants() -> None:
         assert sp["target_stems"], f"Fallback target_stems empty: {sp}"
         blob = sp["prompt_short"] + sp["prompt_ja"] + sp["prompt_zh"] + sp["model_ja"] + sp["coaching_tip"]
         assert "—" not in blob, f"Fallback contains em dash: {sp}"
-    print(f"[PASS 5/10] Speaking prompts Self-test 9 invariants ({len(rrb._SPEAKING_TEMPLATES)} templates + fallback stress)")
+    print(f"[PASS 5/18] Speaking prompts Self-test 9 invariants ({len(rrb._SPEAKING_TEMPLATES)} templates + fallback stress)")
 
 
 def test_workflows_radio_version_alignment() -> None:
@@ -405,7 +405,7 @@ def test_workflows_radio_version_alignment() -> None:
         assert m, f"{wf.name} missing expected_ver_num"
         wf_ver = int(m.group(1))
         assert wf_ver <= max_gen_ver, f"{wf.name} expects v{wf_ver} > generate_daily_radio.py max v{max_gen_ver}"
-    print(f"[PASS 6/10] Workflow radio version guard aligned (v{max_gen_ver} across {len(wf_files)} workflows)")
+    print(f"[PASS 6/18] Workflow radio version guard aligned (v{max_gen_ver} across {len(wf_files)} workflows)")
 
 
 def test_workflows_stage_video_and_img_assets() -> None:
@@ -423,7 +423,7 @@ def test_workflows_stage_video_and_img_assets() -> None:
         assert "git add -A video/" in txt or "video/ img/" in txt, (
             f"{wf.name} does not git add video/ and img/ in commit step!"
         )
-    print(f"[PASS 7/10] Workflow video/ & img/ staging guard verified across {len(wf_files)} workflows")
+    print(f"[PASS 7/18] Workflow video/ & img/ staging guard verified across {len(wf_files)} workflows")
 
 
 def test_async_loop_safety_and_live_visual_studio_invocation() -> None:
@@ -570,7 +570,7 @@ def test_async_loop_safety_and_live_visual_studio_invocation() -> None:
             rvs._render_chapter_poster = orig_poster
             rvs._edge_tts_to_mp3 = orig_tts
             rvs._build_jp_documentary_video = orig_build_vid
-    print("[PASS 8/10] Static & live-event-loop async safety guard (zero nested asyncio.run crashes)")
+    print("[PASS 8/18] Static & live-event-loop async safety guard (zero nested asyncio.run crashes)")
 
 
 def test_all_future_volumes_jp_video_invariants() -> None:
@@ -645,7 +645,7 @@ def test_all_future_volumes_jp_video_invariants() -> None:
         c_hits = [we["word"] for we in word_entries if we["word"] in c_ja]
         assert len(c_hits) >= 8, f"Curated {c_sid}: only {len(c_hits)} native target word hits (<8): {c_hits}"
 
-    print(f"[PASS 9/10] All {checked_vols} future volumes + {len(rvs.CURATED_JP_VIDEO_SCRIPTS)} curated JP videos + stingy-LLM Self-test 13 invariants (>=10 cues, >=8 words)")
+    print(f"[PASS 9/18] All {checked_vols} future volumes + {len(rvs.CURATED_JP_VIDEO_SCRIPTS)} curated JP videos + stingy-LLM Self-test 13 invariants (>=10 cues, >=8 words)")
 
 
 def test_generate_daily_radio_async_and_reuse_contract() -> None:
@@ -663,7 +663,7 @@ def test_generate_daily_radio_async_and_reuse_contract() -> None:
     assert '"id": str(st.get("id")' in src, (
         "generate_daily_radio.py story_blocks must include story id so curated topics & JP video scripts match!"
     )
-    print("[PASS 10/11] generate_daily_radio.py async visual invocation, story id & same-day asset preservation verified")
+    print("[PASS 10/18] generate_daily_radio.py async visual invocation, story id & same-day asset preservation verified")
 
 
 def test_full_bank_4choice_and_immersion_mnemonics() -> None:
@@ -720,7 +720,7 @@ def test_full_bank_4choice_and_immersion_mnemonics() -> None:
         if not vocab_cards.get_pronunciation_mnemonic(it.get("kanji") or it.get("kana") or "", it.get("kana") or "")
     ]
     assert not missing_mn, f"Immersion words missing bilingual pronunciation mnemonics: {missing_mn[:10]}"
-    print(f"[PASS 11/13] 100% 4-choice across all {len(seen_ids)} cards (0 holdouts) + 100% bilingual mnemonics across {len(ive.IMMERSION_VOCAB_BANK)} immersion words")
+    print(f"[PASS 11/18] 100% 4-choice across all {len(seen_ids)} cards (0 holdouts) + 100% bilingual mnemonics across {len(ive.IMMERSION_VOCAB_BANK)} immersion words")
 
 
 def test_full_bank_100pct_option_notes() -> None:
@@ -810,7 +810,7 @@ def test_full_bank_100pct_option_notes() -> None:
     assert not missing, f"Options missing Chinese opt_notes ({len(missing)}): {missing[:10]}"
     assert not dashes, f"Options containing banned em dash ({len(dashes)}): {dashes[:10]}"
     assert not generic, f"Existing bank options hitting generic fallback ({len(generic)}): {generic[:10]}"
-    print(f"[PASS 12/13] 100% curated zero-dash option explanations across all {len(all_cards)} cards / {total_opts} options (0 blank, 0 generic)")
+    print(f"[PASS 12/18] 100% curated zero-dash option explanations across all {len(all_cards)} cards / {total_opts} options (0 blank, 0 generic)")
 
 
 def test_exam_day_and_n2_zero_to_120_transition_contract() -> None:
@@ -899,7 +899,7 @@ def test_exam_day_and_n2_zero_to_120_transition_contract() -> None:
         cwd=str(BASE_DIR), check=True, capture_output=True, text=True,
     ).stdout
     assert "n2_v1_s2a" in rad_out and "n2_v1_s4_world_rare_earth" in rad_out and "phase=n2_climb" in rad_out, f"12/07 radio dry-test failed: {rad_out}"
-    print("[PASS 13/13] Exam-Day (12/06), N2 Day 1 (12/07), Europe Travel (12/20), MOCK/N3_SCORE/quiet-SPK & N2 Radio transitions verified end-to-end")
+    print("[PASS 13/18] Exam-Day (12/06), N2 Day 1 (12/07), Europe Travel (12/20), MOCK/N3_SCORE/quiet-SPK & N2 Radio transitions verified end-to-end")
 
 
 def test_cloud_sync_sandbox_isolation_guard() -> None:
@@ -920,7 +920,7 @@ def test_cloud_sync_sandbox_isolation_guard() -> None:
         "ZenBody pullCloud() must also skip ntfy.sh when CLOUD_SYNC_BLOCKED!"
     )
     assert "quiz-blank-unit" in src, "Missing .quiz-blank-unit orphan punctuation prevention!"
-    print("[PASS 14/14] Client-side cloud sync sandbox isolation (N3 + ZenBody) & orphan-punctuation blank guard verified")
+    print("[PASS 14/18] Client-side cloud sync sandbox isolation (N3 + ZenBody) & orphan-punctuation blank guard verified")
 
 
 def test_v43_storycraft_and_archival_footage_guard() -> None:
@@ -958,7 +958,7 @@ def test_v43_storycraft_and_archival_footage_guard() -> None:
     assert theme_hit, "Theme-matched historical footage fallback returned empty!"
     # Mocked ffmpeg must skip network cleanly and return []
     assert rvs._download_chapter_archival_clips({"id": "uchi23_s1_news_fallback", "chapter": 0}, "/tmp", set(), ffmpeg_bin="/usr/bin/true") == []
-    print(f"[PASS 15/15] v43 storycraft ({tot_pts} pts, {tot_chars//tot_pts} chars/pt) & real historical footage vault ({len(rvs.CURATED_ARCHIVAL_FOOTAGE)} chapters) verified")
+    print(f"[PASS 15/18] v43 storycraft ({tot_pts} pts, {tot_chars//tot_pts} chars/pt) & real historical footage vault ({len(rvs.CURATED_ARCHIVAL_FOOTAGE)} chapters) verified")
 
 
 def test_v44_anti_tourist_kanazawa_and_feedback_guard() -> None:
@@ -1065,7 +1065,7 @@ def test_v44_anti_tourist_kanazawa_and_feedback_guard() -> None:
     assert "RADIO_FB:20261126" not in (day_bucket.get("greenAt") or {}) and "RADIO_FB:20261126" not in (day_bucket.get("retestAt") or {}), (
         f"RADIO_FB leaked into sync_cloud_store greenAt/retestAt: {day_bucket}"
     )
-    print(f"[PASS 16/16] v44 non-tourist depth floor (12 volumes + live ranker/catalog), tomorrow's Deep Kanazawa Vol.18 ({tot_pts18} pts, {tot_chars18//tot_pts18} ch/pt) & RADIO_FB cloud loop verified")
+    print(f"[PASS 16/18] v44 non-tourist depth floor (12 volumes + live ranker/catalog), tomorrow's Deep Kanazawa Vol.18 ({tot_pts18} pts, {tot_chars18//tot_pts18} ch/pt) & RADIO_FB cloud loop verified")
 
 
 def test_v45_broadcast_authenticity_guard() -> None:
@@ -1121,7 +1121,60 @@ def test_v45_broadcast_authenticity_guard() -> None:
         assert len(tail10_txt) >= 250, f"Vol.{vnum} final 10 turns too short for 12s smooth fade-out ({len(tail10_txt)} < 250)!"
 
     assert "apply_backchannel_room_filter" in gdr_src and "_maybe_layer_backchannel" in gdr_src, "Missing v45 studio backchannel engine!"
-    print(f"[PASS 17/17] v45 broadcast authenticity (native W/D/X + Keita JP, real 2012 Zhang Miaoyang {zmy_dur:.2f}s WAV, polyphone map, 0.34s opening beat & 10-turn fade-outs) verified")
+    print(f"[PASS 17/18] v45 broadcast authenticity (native W/D/X + Keita JP, real 2012 Zhang Miaoyang {zmy_dur:.2f}s WAV, polyphone map, 0.34s opening beat & 10-turn fade-outs) verified")
+
+
+def test_v82_jobs_zen_and_telemetry_hygiene_guard() -> None:
+    """Gate 18: Guard N2 adaptive telemetry decay, zero 模拟错: prefix in confusion_pairs, and zero banned traffic-light jargon in build_html UI."""
+    import os
+    import tempfile
+    import run_brain_algorithm as rba
+
+    fake_state = {
+        "grammar_points": [{"id": "G-001", "name": "〜ばかりだ", "status": "yellow", "streak": 1}],
+        "n2_grammar_points": [{"id": "N2-001", "point": "〜に際して", "status": "green", "streak": 3, "last_ok_date": "20261208"}],
+        "henkei_points": [{"id": "K-005", "name": "いらっしゃる", "status": "yellow", "streak": 1}],
+        "listening_points": [],
+        "vocab_tracked": [],
+        "radio_relearn_queue": {"〜に際して": "20261207"},
+        "hesitant_points": {"〜に際して": "20261207"},
+        "_processed_log_ts": [],
+    }
+    mock_rows = [
+        {"ts": "2026-11-26T07:18:19.000Z", "id": "MOCK:VAR12-33", "point": "K-005", "choice": "模拟错:うかがって", "correct": "false"},
+        {"ts": "2026-11-26T07:18:20.000Z", "id": "MOCK:N3-L31", "point": "N3L-402", "choice": "模拟错:動物園へ行く", "correct": "false"},
+        {"ts": "2026-11-26T07:18:21.000Z", "id": "MOCK:N3-G99", "point": "〜ばかりだ", "choice": "模拟错:未作答", "correct": "false"},
+    ]
+    orig_log, orig_snap = rba.LOG_PATH, rba.SNAPSHOT_PATH
+    with tempfile.TemporaryDirectory(prefix="v82_gate18_") as td:
+        tlog = os.path.join(td, "practice_log.jsonl")
+        with open(tlog, "w", encoding="utf-8") as f:
+            for r in mock_rows:
+                f.write(json.dumps(r, ensure_ascii=False) + "\n")
+        rba.LOG_PATH = tlog
+        rba.SNAPSHOT_PATH = os.path.join(td, "no_snap.json")
+        try:
+            rba.reconcile_adaptive_telemetry(fake_state, "20261208")
+            rba.recompute_summary(fake_state)
+        finally:
+            rba.LOG_PATH, rba.SNAPSHOT_PATH = orig_log, orig_snap
+
+    assert "〜に際して" not in fake_state["radio_relearn_queue"], "Green N2 grammar point did not auto-decay from radio_relearn_queue!"
+    assert "〜に際して" not in fake_state["hesitant_points"], "Green N2 grammar point did not auto-decay from hesitant_points!"
+    assert fake_state.get("summary", {}).get("n2_grammar", {}).get("green") == 1, "recompute_summary did not summarize n2_grammar_points!"
+    cp = fake_state.get("confusion_pairs") or {}
+    assert (cp.get("K-005") or {}).get("top_wrong") == "うかがって", f"MOCK wrong choice should strip 模拟错: cleanly, got {cp}"
+    assert not any("模拟错:" in json.dumps(v, ensure_ascii=False) for v in cp.values()), f"模拟错: prefix leaked into confusion_pairs: {cp}"
+    assert "N3L-402" not in cp and "〜ばかりだ" not in cp, f"Listening or 未作答 mock item leaked into confusion_pairs: {cp}"
+
+    ns_path = BASE_DIR / "night_summary.json"
+    if ns_path.exists():
+        ns_txt = ns_path.read_text(encoding="utf-8")
+        assert "模拟错:" not in ns_txt, "night_summary.json still contains raw 模拟错: prefix!"
+
+    bh_src = (BASE_DIR / "build_html.py").read_text(encoding="utf-8")
+    assert "displayPointName(" in bh_src, "build_html.py missing displayPointName() helper!"
+    print("[PASS 18/18] N2 telemetry decay, clean mock confusion-pair stripping & Jobs-Zen hygiene verified")
 
 
 def main() -> int:
@@ -1142,7 +1195,8 @@ def main() -> int:
     test_v43_storycraft_and_archival_footage_guard()
     test_v44_anti_tourist_kanazawa_and_feedback_guard()
     test_v45_broadcast_authenticity_guard()
-    print("[ALL PASS] tests_ci_guard.py 17/17 gates green!")
+    test_v82_jobs_zen_and_telemetry_hygiene_guard()
+    print("[ALL PASS] tests_ci_guard.py 18/18 gates green!")
     return 0
 
 
