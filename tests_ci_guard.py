@@ -939,6 +939,113 @@ def test_v43_storycraft_and_archival_footage_guard() -> None:
     print(f"[PASS 15/15] v43 storycraft ({tot_pts} pts, {tot_chars//tot_pts} chars/pt) & real historical footage vault ({len(rvs.CURATED_ARCHIVAL_FOOTAGE)} chapters) verified")
 
 
+def test_v44_anti_tourist_kanazawa_and_feedback_guard() -> None:
+    """Gate 16: Enforce v44 3-year-learner non-tourist floor, tomorrow's Deep Kanazawa Vol.18, and 30-second RADIO_FB cloud loop."""
+    import importlib
+    import os
+    import subprocess
+    import tempfile
+    import auto_author_daily_content as aadc
+    import daily_news_salon_gen as dnsg
+    import radio_salon_uchi_vol18 as v18
+    import run_brain_algorithm as rba
+    import sync_cloud_store as scs
+
+    # 1. Tomorrow (2026-11-27) dry-test MUST select upgraded Vol.18 with Deep Kanazawa 2-parter
+    rad_out = subprocess.run(
+        [sys.executable, str(BASE_DIR / "generate_daily_radio.py"), "--dry-test", "--dry-date", "2026-11-27"],
+        cwd=str(BASE_DIR), check=True, capture_output=True, text=True,
+    ).stdout
+    for exp_id in ("uchi18_s1_news_fallback", "uchi18_s3a_kanazawa_part1", "uchi18_s3b_kanazawa_part2", "uchi18_s4_world_europe_defense"):
+        assert exp_id in rad_out, f"2026-11-27 dry-test missing {exp_id}: {rad_out}"
+
+    # 2. Vol.18 golden v44 storycraft invariants
+    stories18 = v18.SALON_STORIES_UCHI_VOL18
+    tot_chars18 = sum(len(t[1]) for s in stories18 for t in s["turns"])
+    tot_pts18 = sum(len(s.get("point_ids") or []) for s in stories18)
+    assert tot_pts18 <= 20, f"Vol.18 grammar points too dense ({tot_pts18} > 20)"
+    assert tot_chars18 / max(1, tot_pts18) >= 580, f"Vol.18 chars/pt too dense ({tot_chars18 / tot_pts18:.0f} < 580)"
+    last7_18 = "".join(t[1] for t in stories18[-1]["turns"][-7:])
+    assert not re.search(r"[ぁ-んァ-ヶー]", last7_18), "Vol.18 final 7 turns must be 100% pure Chinese!"
+
+    # 3. Zero banned tourist/Japan-101 cliches across ALL upcoming pre-exam, reserve, and N2 preview volumes
+    pat = dnsg.BANNED_TOURIST_CLICHE_RE
+    for vnum in (12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 24, 25):
+        mod = importlib.import_module(f"radio_salon_uchi_vol{vnum}")
+        for st in getattr(mod, f"SALON_STORIES_UCHI_VOL{vnum}"):
+            txt = st.get("title", "") + "\n" + "\n".join(t[1] for t in st.get("turns", []))
+            m = pat.search(txt)
+            assert not m, f"Vol.{vnum} {st['id']} contains banned tourist cliche: {m.group(0)}"
+    n2_prev_txt = (BASE_DIR / "n2_prep" / "n2_radio_vol1_preview.py").read_text(encoding="utf-8")
+    assert not pat.search(n2_prev_txt), "n2_radio_vol1_preview.py contains banned tourist cliche!"
+
+    # 4. Live headline ranker demotes Kyoto overtourism below Kanazawa/fiscal politics & validator rejects cliches
+    ranked = dnsg.rank_headlines_by_editorial_taste([
+        {"title": "京都の観光地でオーバーツーリズム対策 バス混雑と嵐山の外国人観光客"},
+        {"title": "石川県金沢市の北陸新幹線と地方鉄道・自治体財政の新たな挑戦"},
+    ], limit=2)
+    assert "金沢" in ranked[0]["title"], f"Expected Kanazawa governance headline ranked #1, got: {ranked[0]['title']}"
+    bad_story = {
+        "id": "test_cliche",
+        "title": "京都茶泡饭",
+        "turns": [
+            ["tao", "京都人说ぶぶづけ其实就是赶客，大阪大妈买菜喜欢砍价还爱比开枪手势，大家都很清楚。"] * 12,
+        ],
+    }
+    assert dnsg.validate_generated_story(bad_story, require_light_explain=False) is False, "Validator failed to reject banned tourist cliche!"
+
+    # 5. Catalog loader skips deprecated_tourist_cliche entries & includes new deep topics
+    unused = aadc._load_unused_public_memory_topics(set(), set())
+    unused_descs = "\n".join(u[1] for u in unused)
+    for banned_kw in ("茶泡饭", "报联相", "肯德基", "红白歌会", "鞠躬章"):
+        assert banned_kw not in unused_descs, f"Deprecated tourist cliche '{banned_kw}' leaked into auto-author topic pool!"
+    for deep_kw in ("金泽", "故乡税", "主银行", "选择性夫妇别姓"):
+        assert deep_kw in unused_descs, f"New deep topic '{deep_kw}' missing from auto-author topic pool!"
+
+    # 6. End-to-end RADIO_FB: ingestion into brain state WITHOUT polluting quiz mastery or sync_cloud_store greenAt
+    fake_state = {
+        "grammar_points": [{"id": "G-001", "name": "〜ばかりだ", "status": "green", "streak": 3}],
+        "henkei_points": [],
+        "listening_points": [],
+        "vocab_tracked": [],
+        "_processed_log_ts": [],
+    }
+    fb_row = {
+        "ts": "2026-11-26T20:30:00Z",
+        "id": "RADIO_FB:20261126",
+        "point": "feel=听爽了|good=冷门有深度,聊天自然|fix=太游客听腻了",
+        "choice": "评本期:金泽可以多聊，京阪老梗别讲",
+        "correct": "true",
+    }
+    orig_rba_log, orig_rba_snap = rba.LOG_PATH, rba.SNAPSHOT_PATH
+    orig_scs_log = scs.LOG_PATH
+    with tempfile.TemporaryDirectory(prefix="v44_gate16_") as td:
+        tlog = os.path.join(td, "practice_log.jsonl")
+        with open(tlog, "w", encoding="utf-8") as f:
+            f.write(json.dumps(fb_row, ensure_ascii=False) + "\n")
+        rba.LOG_PATH = tlog
+        rba.SNAPSHOT_PATH = os.path.join(td, "no_snap.json")
+        scs.LOG_PATH = tlog
+        try:
+            rba.apply_practice_logs(fake_state, "20261126")
+            crdt_state = scs.empty_crdt_state("2026-11-26")
+            crdt_state, _ = scs.seed_from_practice_log(crdt_state, "2026-11-26")
+        finally:
+            rba.LOG_PATH, rba.SNAPSHOT_PATH = orig_rba_log, orig_rba_snap
+            scs.LOG_PATH = orig_scs_log
+
+    fb_hist = fake_state.get("radio_feedback_history") or []
+    assert len(fb_hist) == 1 and fb_hist[0]["feel"] == "听爽了" and "冷门有深度" in fb_hist[0]["good"] and "金泽可以多聊" in fb_hist[0]["note"], (
+        f"RADIO_FB parsing failed: {fb_hist}"
+    )
+    assert not fake_state.get("confusion_pairs"), f"RADIO_FB polluted confusion_pairs: {fake_state.get('confusion_pairs')}"
+    day_bucket = (crdt_state.get("dates") or {}).get("2026-11-26") or {}
+    assert "RADIO_FB:20261126" not in (day_bucket.get("greenAt") or {}) and "RADIO_FB:20261126" not in (day_bucket.get("retestAt") or {}), (
+        f"RADIO_FB leaked into sync_cloud_store greenAt/retestAt: {day_bucket}"
+    )
+    print(f"[PASS 16/16] v44 non-tourist depth floor (12 volumes + live ranker/catalog), tomorrow's Deep Kanazawa Vol.18 ({tot_pts18} pts, {tot_chars18//tot_pts18} ch/pt) & RADIO_FB cloud loop verified")
+
+
 def main() -> int:
     test_all_python_files_syntax_and_names()
     test_apply_practice_logs_all_event_types()
@@ -955,7 +1062,8 @@ def main() -> int:
     test_exam_day_and_n2_zero_to_120_transition_contract()
     test_cloud_sync_sandbox_isolation_guard()
     test_v43_storycraft_and_archival_footage_guard()
-    print("[ALL PASS] tests_ci_guard.py 15/15 gates green!")
+    test_v44_anti_tourist_kanazawa_and_feedback_guard()
+    print("[ALL PASS] tests_ci_guard.py 16/16 gates green!")
     return 0
 
 

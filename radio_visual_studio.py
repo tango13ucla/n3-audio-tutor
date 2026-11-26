@@ -154,7 +154,7 @@ CURATED_VISUAL_TOPICS: dict[str, dict[str, list[str]]] = {
     "uchi15_s3b_muji_1980_part2": {"ja_wiki": ["無印良品", "銀座"], "wm_queries": ["Muji Ginza interior", "Muji store Japan"]},
     "uchi15_s4_world_glp1_medicine": {"ja_wiki": ["和食", "医薬品"], "wm_queries": ["Washoku traditional Japanese meal", "Pharmaceutical lab"]},
     # ---- Vol.16 ----
-    "uchi16_s1_news_fallback": {"ja_wiki": ["京都市", "清水寺", "祇園"], "wm_queries": ["Kyoto Gion crowded tourists", "Kyoto bus street"]},
+    "uchi16_s1_news_fallback": {"ja_wiki": ["ふるさと納税", "総務省"], "wm_queries": ["Kasumigaseki Tokyo Ministry Japan", "Japanese regional harvest agriculture"]},
     "uchi16_s2a_toto_washlet_1980_part1": {"ja_wiki": ["ウォシュレット", "TOTO (企業)"], "wm_queries": ["TOTO Washlet Japan", "TOTO Museum Kitakyushu"]},
     "uchi16_s2b_toto_washlet_1980_part2": {"ja_wiki": ["ウォシュレット", "TOTO (企業)"], "wm_queries": ["Japanese bidet toilet control panel", "TOTO Japan"]},
     "uchi16_s3a_uniqlo_fleece_1998_part1": {"ja_wiki": ["ユニクロ", "原宿"], "wm_queries": ["Uniqlo Harajuku Tokyo", "Uniqlo Ginza flagship"]},
@@ -167,12 +167,12 @@ CURATED_VISUAL_TOPICS: dict[str, dict[str, list[str]]] = {
     "uchi17_s3a_yoshinoya_part1": {"ja_wiki": ["吉野家", "牛丼"], "wm_queries": ["Yoshinoya store Japan", "Gyudon beef bowl Yoshinoya"]},
     "uchi17_s3b_yoshinoya_part2": {"ja_wiki": ["吉野家", "築地"], "wm_queries": ["Yoshinoya gyudon bowl", "Yoshinoya Tsukiji Japan"]},
     "uchi17_s4_world_solid_state_ev": {"ja_wiki": ["全固体電池", "電気自動車"], "wm_queries": ["Electric vehicle battery pack", "Toyota EV concept Japan"]},
-    # ---- Vol.18 ----
-    "uchi18_s1_news_fallback": {"ja_wiki": ["印章", "デジタル庁"], "wm_queries": ["Hanko Japanese seal stamp", "Japanese stamp hanko"]},
+    # ---- Vol.18 (Hokuriku Rail / Yodogo / Deep Kanazawa / Europe Defense) ----
+    "uchi18_s1_news_fallback": {"ja_wiki": ["のと鉄道", "北陸本線"], "wm_queries": ["Noto Railway Ishikawa Japan train", "Hokuriku local train snow Japan"]},
     "uchi18_s2a_yodogo_part1": {"ja_wiki": ["よど号ハイジャック事件", "ボーイング727"], "wm_queries": ["Japan Airlines Boeing 727", "Haneda Airport 1970"]},
     "uchi18_s2b_yodogo_part2": {"ja_wiki": ["よど号ハイジャック事件", "羽田空港"], "wm_queries": ["Boeing 727 Japan Airlines", "Tokyo Haneda Airport runway"]},
-    "uchi18_s3a_hachiko_part1": {"ja_wiki": ["忠犬ハチ公", "渋谷駅"], "wm_queries": ["Hachiko statue Shibuya", "Hachiko Akita dog photo"]},
-    "uchi18_s3b_hachiko_part2": {"ja_wiki": ["忠犬ハチ公", "東京大学"], "wm_queries": ["Hachiko and Ueno statue University of Tokyo", "Hachiko Shibuya Tokyo"]},
+    "uchi18_s3a_kanazawa_part1": {"ja_wiki": ["兼六園", "金沢城", "辰巳用水"], "wm_queries": ["Kanazawa Castle Ishikawa Japan", "Kenrokuen Garden Kanazawa fountain"]},
+    "uchi18_s3b_kanazawa_part2": {"ja_wiki": ["鈴木大拙館", "金沢21世紀美術館", "長町武家屋敷跡"], "wm_queries": ["D. T. Suzuki Museum Kanazawa", "21st Century Museum of Contemporary Art Kanazawa", "Nagamachi samurai district Kanazawa"]},
     "uchi18_s4_world_europe_defense": {"ja_wiki": ["欧州連合", "自衛隊"], "wm_queries": ["European Parliament Brussels", "Berlin Reichstag"]},
     # ---- Vol.19 ----
     "uchi19_s1_news_fallback": {"ja_wiki": ["少額投資非課税制度", "東京証券取引所"], "wm_queries": ["Tokyo financial district Nihombashi", "Tokyo Stock Exchange"]},
@@ -185,8 +185,8 @@ CURATED_VISUAL_TOPICS: dict[str, dict[str, list[str]]] = {
     "uchi20_s1_news_fallback": {"ja_wiki": ["ガリガリ君", "赤城乳業"], "wm_queries": ["GariGari-kun ice pop Japan", "Japanese convenience store freezer"]},
     "uchi20_s2a_umami_part1": {"ja_wiki": ["うま味", "池田菊苗", "昆布"], "wm_queries": ["Kombu dashi kelp Japan", "Kikunae Ikeda"]},
     "uchi20_s2b_umami_part2": {"ja_wiki": ["味の素"], "wm_queries": ["Ajinomoto bottle Japan", "Ajinomoto headquarters Tokyo"]},
-    "uchi20_s3a_kfc_part1": {"ja_wiki": ["日本ケンタッキー・フライド・チキン", "青山 (東京都港区)"], "wm_queries": ["KFC Japan store Colonel Sanders", "KFC Tokyo Japan"]},
-    "uchi20_s3b_kfc_part2": {"ja_wiki": ["日本ケンタッキー・フライド・チキン", "クリスマス"], "wm_queries": ["Colonel Sanders Santa Japan", "Tokyo Christmas illumination"]},
+    "uchi20_s3a_kfc_part1": {"ja_wiki": ["青色発光ダイオード", "中村修二"], "wm_queries": ["Blue LED semiconductor light", "Shuji Nakamura Nobel"]},
+    "uchi20_s3b_kfc_part2": {"ja_wiki": ["東京地方裁判所", "特許法"], "wm_queries": ["Tokyo District Court Kasumigaseki", "Blue LED laboratory Japan"]},
     "uchi20_s4_world_undersea_cables": {"ja_wiki": ["海底ケーブル"], "wm_queries": ["Submarine communications cable ship", "Fiber optic cable ocean"]},
     # ---- Vol.21 ----
     "uchi21_s1_news_fallback": {"ja_wiki": ["ラジオ体操"], "wm_queries": ["Radio calisthenics Japan park", "Radio taiso Japan"]},
@@ -196,7 +196,7 @@ CURATED_VISUAL_TOPICS: dict[str, dict[str, list[str]]] = {
     "uchi21_s3b_ohtani_part2": {"ja_wiki": ["大谷翔平"], "wm_queries": ["Shohei Ohtani batting", "Shohei Ohtani pitching"]},
     "uchi21_s4_world_arctic_shipping": {"ja_wiki": ["北極海航路"], "wm_queries": ["Icebreaker ship Arctic sea route", "Container ship Japan port"]},
     # ---- Vol.22 ----
-    "uchi22_s1_news_fallback": {"ja_wiki": ["NHK紅白歌合戦", "除夜の鐘", "年越し蕎麦"], "wm_queries": ["Toshikoshi soba Japan", "Joya no kane temple bell Japan"]},
+    "uchi22_s1_news_fallback": {"ja_wiki": ["最高裁判所 (日本)", "夫婦別姓"], "wm_queries": ["Supreme Court of Japan Tokyo", "National Diet Building Tokyo"]},
     "uchi22_s2a_ise_sengu_part1": {"ja_wiki": ["伊勢神宮", "神宮式年遷宮"], "wm_queries": ["Ise Grand Shrine Naiku", "Ise Jingu wooden bridge"]},
     "uchi22_s2b_kongo_gumi_part2": {"ja_wiki": ["金剛組", "四天王寺"], "wm_queries": ["Shitenno-ji Temple Osaka", "Japanese wooden temple carpentry"]},
     "uchi22_s3a_naoshima_part1": {"ja_wiki": ["直島", "安藤忠雄"], "wm_queries": ["Naoshima Yellow Pumpkin Kusama", "Naoshima island Seto Inland Sea"]},
@@ -216,13 +216,13 @@ CURATED_VISUAL_TOPICS: dict[str, dict[str, list[str]]] = {
     "uchi24_s3a_taut_katsura_part1": {"ja_wiki": ["桂離宮", "ブルーノ・タウト"], "wm_queries": ["Katsura Imperial Villa Kyoto", "Katsura Rikyu architecture"]},
     "uchi24_s3b_katsura_nikko_part2": {"ja_wiki": ["日光東照宮", "桂離宮"], "wm_queries": ["Nikko Toshogu Shrine", "Katsura Imperial Villa garden"]},
     "uchi24_s4_world_immunology": {"ja_wiki": ["本庶佑", "免疫チェックポイント阻害剤"], "wm_queries": ["Immunology T cell cancer microscope", "Kyoto University medicine"]},
-    # ---- Vol.25 (Underground Temple / Nemawashi / Hidden Champions / Gut-Brain) ----
+    # ---- Vol.25 (Underground Temple / Main Bank & TSE / Hidden Champions / Gut-Brain) ----
     "uchi25_s1_news_fallback": {"ja_wiki": ["首都圏外郭放水路"], "wm_queries": ["Metropolitan Area Outer Underground Discharge Channel", "G-Cans Kasukabe Saitama"]},
-    "uchi25_s2a_nemawashi_part1": {"ja_wiki": ["稟議制度", "丸の内"], "wm_queries": ["Marunouchi Tokyo office 1970s OR 1980s", "Japanese business meeting office"]},
-    "uchi25_s2b_keigo_boundary_part2": {"ja_wiki": ["敬語", "東京駅"], "wm_queries": ["Tokyo Station commuters 1960s OR 1970s", "Japanese train commuters"]},
+    "uchi25_s2a_nemawashi_ringi_part1": {"ja_wiki": ["丸の内", "メインバンク制"], "wm_queries": ["Marunouchi Tokyo financial district 1960s OR 1970s", "Tokyo financial buildings Marunouchi"]},
+    "uchi25_s2b_keigo_workplace_part2": {"ja_wiki": ["東京証券取引所", "霞が関"], "wm_queries": ["Tokyo Stock Exchange Kabutocho", "Kasumigaseki Tokyo government buildings"]},
     "uchi25_s3a_hidden_champions_part1": {"ja_wiki": ["町工場", "東大阪市"], "wm_queries": ["Japanese precision machining factory", "Japan steel factory 1960s"]},
-    "uchi25_s3b_shinise_part2": {"ja_wiki": ["老舗", "金剛組"], "wm_queries": ["Kyoto traditional wooden shop machiya", "Japanese craftsman workshop"]},
-    "uchi25_s4_world_gut_brain": {"ja_wiki": ["腸内細菌", "納豆"], "wm_queries": ["Microbiome bacteria microscope", "Natto Japanese fermented food"]},
+    "uchi25_s3b_craft_finance_part2": {"ja_wiki": ["老舗", "金剛組"], "wm_queries": ["Japanese traditional wooden craft workshop", "Japanese craftsman workshop"]},
+    "uchi25_s4_world_microbiome": {"ja_wiki": ["腸内細菌", "納豆"], "wm_queries": ["Microbiome bacteria microscope", "Natto Japanese fermented food"]},
 }
 
 
@@ -313,7 +313,7 @@ CURATED_ARCHIVAL_FOOTAGE: dict[str, list[dict[str, Any]]] = {
     ],
     # ---- Vol.16-22 & Vol.24-25 ----
     "uchi16_s1_news_fallback": [
-        {"src": "wm", "id": "File:Un pont à Kyoto (1897).webm", "ss": 8, "label": "1897 Lumière Kyoto"},
+        {"src": "ia", "id": "0576_Human_Face_of_Japan_The_18_01_03_00", "ss": 210, "label": "1982 Japan Regional Town"},
     ],
     "uchi17_s2a_jnr_part1": [
         {"src": "ia", "id": "gov.archives.arc.642010", "ss": 420, "label": "1960 JNR Railways"},
@@ -321,11 +321,17 @@ CURATED_ARCHIVAL_FOOTAGE: dict[str, list[dict[str, Any]]] = {
     "uchi17_s2b_jnr_part2": [
         {"src": "wm", "id": "File:Shinkansen N700 Series Bullet Train Tokyo Station by Don Ramey Logan.webm", "ss": 4, "label": "Tokyo Rail"},
     ],
+    "uchi18_s1_news_fallback": [
+        {"src": "ia", "id": "gov.archives.arc.642010", "ss": 420, "label": "1960 Japan Regional Railways"},
+    ],
     "uchi18_s2a_yodogo_part1": [
         {"src": "wm", "id": "File:20 MINUTES IN TAKEOFFS & LANDINGS at Haneda Airport (HND-RJTT).webm", "ss": 120, "label": "Haneda Runway"},
     ],
-    "uchi18_s3a_hachiko_part1": [
-        {"src": "wm", "id": "File:Shibuya Crossing, Tokyo, Japan (video).webm", "ss": 8, "label": "Shibuya Tokyo"},
+    "uchi18_s3a_kanazawa_part1": [
+        {"src": "ia", "id": "USAF-11059", "ss": 55, "label": "1946 Japanese Traditional Craft Archive"},
+    ],
+    "uchi18_s3b_kanazawa_part2": [
+        {"src": "ia", "id": "0576_Human_Face_of_Japan_The_18_01_03_00", "ss": 110, "label": "1982 Japan Traditional Streetscape"},
     ],
     "uchi19_s2a_sukiyaki_part1": [
         {"src": "ia", "id": "1964-10-15_US_Dominates_Tokyo_Games", "ss": 18, "label": "1964 Tokyo Newsreel"},

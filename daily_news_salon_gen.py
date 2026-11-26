@@ -144,14 +144,23 @@ def fetch_live_world_from_japan_news(max_items: int = 10, timeout: float = 8.0) 
     return items
 
 
-# Zero-PII editorial taste scoring keywords (resonance: AI/neuroscience/physics, global finance,
-# regional culture, cinema/books & sports)
+# Zero-PII editorial taste scoring keywords (3-year Japanese learner depth floor:
+# AI/neuroscience/physics, global finance, non-Golden-Route deep regional history like Kanazawa/Hokuriku/Tohoku/Kyushu,
+# cinema/literature/architecture & sports — NO generic Kyoto/Osaka tourist fluff)
 _EDITORIAL_TASTE_JP_KEYWORDS: tuple[tuple[str, int], ...] = (
     ("AI", 3), ("人工知能", 3), ("脳", 3), ("睡眠", 3), ("量子", 3), ("半導体", 3), ("宇宙", 3),
     ("日銀", 3), ("金利", 2), ("円安", 2), ("株価", 2), ("インフレ", 2), ("投資", 2), ("経済", 1),
-    ("地域", 2), ("京都", 2), ("大阪", 2), ("金沢", 2), ("北海道", 2),
-    ("映画", 3), ("ドラマ", 2), ("文学", 2), ("歌舞伎", 3), ("伝統", 2), ("工芸", 2),
-    ("食", 1), ("寿司", 2), ("そば", 2), ("魚", 2), ("バスケ", 3), ("NBA", 3), ("野球", 2), ("歴史", 2),
+    ("金沢", 3), ("北陸", 3), ("北海道", 2), ("東北", 2), ("長崎", 2), ("九州", 2), ("沖縄", 2),
+    ("映画", 3), ("ドラマ", 2), ("文学", 2), ("歌舞伎", 3), ("工芸", 3), ("建築", 2),
+    ("バスケ", 3), ("NBA", 3), ("野球", 2), ("歴史", 2), ("最高裁", 3), ("ガバナンス", 3),
+)
+
+# Zero-PII tourist / Japan-101 cliché penalty keywords (learner has studied Japanese 3 years & visited Japan extensively)
+_TOURIST_CLICHE_PENALTY_JP_KEYWORDS: tuple[tuple[str, int], ...] = (
+    ("オーバーツーリズム", 8), ("観光公害", 8), ("観光客", 6), ("訪日客", 6), ("インバウンド", 6),
+    ("宿泊税", 6), ("免税", 5), ("清水寺", 8), ("嵐山", 8), ("祇園", 6), ("道頓堀", 8),
+    ("ぶぶづけ", 10), ("県民性", 8), ("ハチ公", 8), ("お辞儀印", 8), ("報連相", 8),
+    ("抹茶", 5), ("回転寿司", 4), ("ケンタッキー", 6), ("紅白", 5), ("除夜の鐘", 6),
 )
 
 # Zero-PII blind-spot / growth-horizon keywords (counter-balances comfort zone with life sciences,
@@ -166,14 +175,15 @@ _GROWTH_HORIZON_JP_KEYWORDS: tuple[tuple[str, int], ...] = (
 
 
 def rank_headlines_by_editorial_taste(items: list[dict], limit: int = 8) -> list[dict]:
-    """Balance ~70% editorial taste resonance with ~30% growth-horizon / blind-spot diversity."""
+    """Balance ~70% editorial taste resonance with ~30% growth-horizon diversity while penalizing tourist/Japan-101 clichés."""
     if not items:
         return []
     scored_rows: list[tuple[int, int, int, dict]] = []
     for idx, it in enumerate(items):
         blob = f"{it.get('category', '')} {it.get('title', '')} {it.get('summary', '')}"
-        taste_sc = sum(wt for kw, wt in _EDITORIAL_TASTE_JP_KEYWORDS if kw in blob)
-        horizon_sc = sum(wt for kw, wt in _GROWTH_HORIZON_JP_KEYWORDS if kw in blob)
+        penalty = sum(wt for kw, wt in _TOURIST_CLICHE_PENALTY_JP_KEYWORDS if kw in blob)
+        taste_sc = sum(wt for kw, wt in _EDITORIAL_TASTE_JP_KEYWORDS if kw in blob) - penalty
+        horizon_sc = sum(wt for kw, wt in _GROWTH_HORIZON_JP_KEYWORDS if kw in blob) - penalty
         scored_rows.append((taste_sc, horizon_sc, idx, it))
 
     horizon_quota = max(1, round(limit * 0.30))
@@ -217,6 +227,9 @@ def rank_headlines_by_editorial_taste(items: list[dict], limit: int = 8) -> list
 
 BANNED_CLASSROOM_RE = re.compile(
     r"第[一二三四]个语法|下面我们学习|请大家跟读|本课重点|今天我们来学习"
+)
+BANNED_TOURIST_CLICHE_RE = re.compile(
+    r"ぶぶづけ|茶泡饭|观光公害|オーバーツーリズム|清水寺|岚山渡月桥|祇园花见小路|道顿堀|指枪|报联相|ほうれんそう|鞠躬章|鞠躬印|おじぎいん|忠犬八公|平安夜.*肯德基|肯德基.*平安夜|一百零八下"
 )
 LIGHT_EXPLAIN_CUE_RE = re.compile(
     r"日语|日文|念|读作|缩成|缩音|省成|别跟|弄混|口语里|说法|尊敬语|谦让语"
@@ -277,6 +290,8 @@ def validate_generated_story(st: dict, require_light_explain: bool = True, min_c
         if re.search(r"哈哈|噗|倒计时|还有\d+天考试|[A-Za-z0-9—]", txt):
             return False
         if BANNED_CLASSROOM_RE.search(txt):
+            return False
+        if BANNED_TOURIST_CLICHE_RE.search(txt):
             return False
         if LIGHT_EXPLAIN_CUE_RE.search(txt):
             explain_hits += 1
@@ -480,19 +495,23 @@ def maybe_generate_live_news_story(
     except Exception:
         vocab_brief = {}
 
+    recent_fb = (night_sig.get("recent_radio_feedback") or [])[:5]
     sys_prompt = (
         "你是凤凰卫视《锵锵三人行》原班总撰稿（对标《山口百惠武道馆放下白色麦克风》《常盘庄四叠半拉面》的巅峰听感：故事抓人、有人性张力、三人真性情聊天）。\n"
         "三位老友：窦文涛(W，俗人真性情、爱自嘲出糗、追问细节、绝不当捧哏报幕员)、"
         "梁文道(D，温厚低沉、慢火铺陈画面与来龙去脉，把今天真新闻放进活生生的人与社会处境里)、"
         "许子东(X，冷幽默世情大师、敢泼冷水拆台、一句点破荒诞与体面背后的算盘)。\n"
         "请从今日真实日本新闻里【只挑一件最有戏剧反差与人情冷暖的真新闻】像聊大故事一样剥洋葱讲透（适配 40 分钟节目第一幕：约 6 分钟，18 到 24 轮，约 1,800 到 2,100 字）。\n"
-        "编辑品味（知己与拓界并重）：七成贴近深度制度反差、财经科技暗流、地方风土与市民烟火气，三成主动打破舒适区去挖微观法制、防灾土木、医疗免疫、艺术建筑或基层运营里的反直觉细节。\n"
+        "【听众底线：学过三年日语的内行听众，严禁一切游客科普与入门老梗！】：\n"
+        "听众已系统学日语三年、深度游历过日本多地并常看日本电视原版节目。绝对禁止聊任何游客/入门老梗（京都茶泡饭逐客令、京都人夸手表钢琴阴阳怪气、京都公交挤行李/清水寺/岚山/艺伎观光公害、大阪阿姨炫耀砍价/指枪喊砰、敬语内外科普或报联相=菠菜或鞠躬章、平安夜吃肯德基、红白跨年荞麦面一百零八下钟声、忠犬八公基础科普、便利店拉面樱花鞠躬常识）。\n"
+        "欢迎深挖真正有历史纵深与权力/产业肌理的非京阪东地方史（如北陆金泽加贺百万石、长崎出岛、北海道东北铁道与过疏、九州冲绳地方史）及日本真实政经、法制、公司治理、土木防灾、医疗免疫、建筑艺术与科技暗流。\n"
+        "如果输入里带有 `recent_listener_feedback`（听众近期 30 秒听后反馈），必须认真照办：放大他夸过的方向，彻底避开他点出的毛病，并优先呼应他留言点名想听的话题！\n"
         "核心铁律（死守故事感与聊天人味）：\n"
         "1. 【写活人，严禁百科流水账与鸡汤感叹】：绝不报菜名、绝不堆干巴巴的数据年表、绝不喊『血脉偾张』『拼出底色』这类播音腔口号！多用句号和问号，每两三轮最多出现一个感叹号；三人要有互相打趣、轻微拌嘴和人情冷暖的留白。\n"
         "2. 【100% 真实新闻，严禁编造人物】：只能聊输入里的真实新闻与真实日本历史社会脉络，绝对不允许虚构任何假朋友、假同事、假邻居故事！\n"
         "3. 【开篇与收束自然衔接】：开篇第一轮 W 直接以『《锵锵三人行》，』切入今日最热日本新闻；最后两轮由 D/W 自然预告待会儿回来要深聊的今日两段日本真实公共记忆大故事（参考 companion_titles），以『待会儿回来，……』收住悬念即可，不要自己抢说『先进广告』，把原版进广告口播留给系统由文涛统一喊出。\n"
         "4. 【呼吸感黄金文法节奏（本章严格只放 3 个 N3 语法点，每 600 字以上才自然带出 1 个！）】：严禁每说三两句就急刹车讲语法课！先让故事连贯推进两三分钟、情绪铺足了，再由 D/X 顺着人物处境自然抛出一句完整日文示范并一两句大白话点透，绝不打断叙事流！\n"
-        "5. 【零洋泾浜碎词 · 只留有味道的词】：严禁在中文句里像撒胡椒面一样乱塞 `いえ / くるま / じかん / おかね / せかい / くに / みせ` 这类入门小词把句子切碎！只保留真正带日式文化质感的新闻专词（如 `おもてなし`、`しゅうしょくひょうがき`），以及参考 `immersion_vocab_ledger` 挑 1 到 2 个真正值钱的 N3/N2 难读词顺手带出。\n"
+        "5. 【零洋泾浜碎词 · 只留有味道的词】：严禁在中文句里像撒胡椒面一样乱塞 `いえ / くるま / じかん / おかね / せかい / くに / みせ` 这类入门小词把句子切碎！只保留真正带日式文化质感的新闻专词（如 `ふるさとのうぜい`、`しゅうしょくひょうがき`），以及参考 `immersion_vocab_ledger` 挑 1 到 2 个真正值钱的 N3/N2 难读词顺手带出。\n"
         f"6. 当前处于 {ramp_days} 天双语计划第 {day_num} 天（阶段：{phase}），日语假名占比保持轻爽自然（约 {max(ja_pct, 10)}%）。\n"
         "7. 【语音合成硬铁律】：对白文本中凡出现日文词句，必须 100% 写成纯平假名或纯片假名（前后留空格或中文标点），严禁汉字紧贴假名，严禁夹杂单字中文孤岛，严禁破折号（—/——），严禁任何英文字母或阿拉伯数字（数字全写中文），严禁『哈哈』『噗』或考试倒计时。\n"
         "输出严格为 JSON：{\"short_tab\": \"今日时局\", \"title\": \"...\", \"ja_focus\": \"...(此处可正常写日文汉字假名供屏幕显示)\", "
@@ -501,6 +520,7 @@ def maybe_generate_live_news_story(
     usr_prompt = json.dumps({
         "nhk_live_headlines": headlines,
         "last_night_priority_targets": combined_targets[:4],
+        "recent_listener_feedback": recent_fb,
         "immersion_vocab_ledger": vocab_brief,
         "later_chapters_for_callbacks": companion_titles[:4],
         "authentic_qqsrx_style_reference": load_cloud_qq_style_exemplars(today_str),
@@ -571,6 +591,7 @@ def maybe_generate_live_world_finale_story(
 
     night_sig = load_last_night_signals()
     night_missed = (night_sig.get("missed_or_unsure_points") or [])[:4]
+    recent_fb = (night_sig.get("recent_radio_feedback") or [])[:5]
     combined_targets = []
     for x in night_missed + list(focus_points):
         if x and x not in combined_targets:
@@ -587,6 +608,7 @@ def maybe_generate_live_world_finale_story(
         "你是凤凰卫视《锵锵三人行》原班总撰稿，现在负责每天 40 分钟节目压轴的【最后五分之一板块：从日本的角度看世界】（约 8 分钟，22 到 30 轮，约 2,200 到 2,500 字）。\n"
         "核心定位：绝对不要锁死在日本本土，也绝对不要局限于文史哲！优先挑选【科学、前沿科技、人工智能、数学物理、国际医学、新能源材料、太空探索、全球财经、气候环境、国际地缘】等非文史哲广谱真新闻！\n"
         "独特视角：只挑一件最有料、最能看出人性与文明反差的世界大事彻底剥洋葱讲透（绝不走马观花报两条流水账！），讲清楚背后的具体人物困境、反转和『日本媒体、学者或普通老百姓为什么跟欧美中国反应完全不同』，听完让人回味无穷！\n"
+        "听众底线（学日语三年的内行听众）：严禁游客观光类肤浅话题与入门常识科普；优先吸收 `recent_listener_feedback` 里听众近期反馈的口味偏好与改进建议。\n"
         "编辑品味（知己与拓界并重）：不仅聊热门科技财经，也主动破界去聊生命科学/免疫演化、艺术与建筑史、微观制造供应链、防灾工程与底层制度细节；文风冷静锋利克制有余味，绝不喊口号、绝不灌鸡汤、多用句号少用感叹号。\n"
         "三位老友：窦文涛(W，真性情好奇、爱自嘲并把前沿科学拉回普通人切身尴尬)、梁文道(D，视野开阔、慢火把日本视角与全球脉络织成一个好故事)、许子东(X，犀利冷幽默、敢抬杠拆台点破各国世情反差)。\n"
         "硬性铁律：\n"
@@ -602,6 +624,7 @@ def maybe_generate_live_world_finale_story(
     usr_prompt = json.dumps({
         "japan_reported_world_and_science_headlines": world_headlines,
         "priority_n3_grammar_targets": combined_targets[:6],
+        "recent_listener_feedback": recent_fb,
         "immersion_vocab_ledger": vocab_brief,
         "earlier_japan_stories_today": companion_titles[:4],
         "authentic_qqsrx_style_reference": load_cloud_qq_style_exemplars(f"world:{today_str}"),

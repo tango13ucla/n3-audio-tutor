@@ -174,7 +174,15 @@
         {
           "id": "cb_30_inbound_tourism_overtourism",
           "title": "四千万外国游客涌入与京都「观光公害」：当便宜日元让全球涌向日本，岛国心态的撕裂与重塑",
-          "angle": "从闭关锁国到观光立国，双轨定价争议与地方小镇的生死抉择。"
+          "angle": "从闭关锁国到观光立国，双轨定价争议与地方小镇的生死抉择。",
+          "deprecated_tourist_cliche": true,
+          "replacement_note": "Replaced by non-tourist Kanazawa/D.T. Suzuki global Zen design echo."
+        },
+        {
+          "id": "cb_30b_kanazawa_suzuki_zen_west",
+          "title": "从金泽武士巷到硅谷极简革命：铃木大拙如何把日本禅宗译成西方现代设计与建筑的底层哲学",
+          "angle": "加贺藩藩医之子铃木大拙旅美十余年译介禅宗，直接启发约翰·凯奇、垮掉的一代与硅谷乔布斯的极简留白观，对照谷口吉生铃木大拙馆水镜之庭与SANAA圆形美术馆。",
+          "priority": 1
         }
       ]
     },

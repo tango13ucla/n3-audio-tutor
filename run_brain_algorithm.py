@@ -266,6 +266,36 @@ def apply_practice_logs(state: dict, fallback_day_tag: str = "") -> int:
                         hes_map[pt] = max(str(hes_map.get(pt) or ""), day_tag_h)
                     continue
 
+                # Daily 30-second Post-Listening Podcast Feedback ("RADIO_FB:<YYYYMMDD>"):
+                # Records listener feel, likes, fixes & optional freeform note for next-day podcast evolution.
+                if rec_id.startswith("RADIO_FB:") or choice.startswith("评本期:"):
+                    day_tag_fb = rec_id.split(":", 1)[1][:8] if ":" in rec_id and rec_id.split(":", 1)[1][:8].isdigit() else _iso_to_day_tag(ts, fallback_day_tag)
+                    feel_val = ""
+                    good_tags: list[str] = []
+                    fix_tags: list[str] = []
+                    for seg in str(pt or "").split("|"):
+                        if seg.startswith("feel="):
+                            feel_val = seg[5:].strip()
+                        elif seg.startswith("good="):
+                            good_tags = [x.strip() for x in seg[5:].split(",") if x.strip()]
+                        elif seg.startswith("fix="):
+                            fix_tags = [x.strip() for x in seg[4:].split(",") if x.strip()]
+                    note_val = choice[4:].strip() if choice.startswith("评本期:") else choice.strip()
+                    hist = state.setdefault("radio_feedback_history", [])
+                    entry = {
+                        "date": day_tag_fb,
+                        "feel": feel_val,
+                        "good": good_tags[:6],
+                        "fix": fix_tags[:6],
+                        "note": note_val[:140],
+                        "ts": ts,
+                    }
+                    hist = [h for h in hist if isinstance(h, dict) and str(h.get("date") or "") != day_tag_fb]
+                    hist.append(entry)
+                    hist.sort(key=lambda h: (str(h.get("date") or ""), str(h.get("ts") or "")))
+                    state["radio_feedback_history"] = hist[-30:]
+                    continue
+
                 # Post-exam real JLPT N3 score calibration ("N3_SCORE:<total>"):
                 if rec_id.startswith("N3_SCORE:") or choice.startswith("N3实考:"):
                     day_tag_sc = _iso_to_day_tag(ts, fallback_day_tag)
@@ -727,7 +757,7 @@ def reconcile_adaptive_telemetry(state: dict, fallback_day_tag: str = "") -> Non
                     except Exception:
                         continue
                     rec_id = str(rec.get("id") or rec.get("question_id") or "").strip()
-                    if not rec_id or rec_id.startswith(("LK:", "HES:", "SPK:", "RV:", "GA-", "VC-", "FLASH-", "GROK-", "N3L-", "N3-L", "L-")):
+                    if not rec_id or rec_id.startswith(("LK:", "HES:", "SPK:", "RV:", "RADIO_FB:", "N3_SCORE:", "MOCK:", "GA-", "VC-", "FLASH-", "GROK-", "N3L-", "N3-L", "L-")):
                         continue
                     is_ok = str(rec.get("correct", "")).lower() == "true" or rec.get("correct") is True
                     if is_ok:

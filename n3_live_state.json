@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-26 09:04 PT",
+  "updated_at": "2026-11-26 11:48 PT",
   "exam_date": "2026-12-06",
   "days_left": 10,
   "target_score": "120+ / 180",
@@ -78,10 +78,10 @@
         "red": 15,
         "gray": 0
       },
-      "green": 66,
-      "yellow": 43,
-      "orange": 2,
-      "red": 45,
+      "green": 67,
+      "yellow": 34,
+      "orange": 8,
+      "red": 47,
       "gray": 0
     },
     "henkei": {
@@ -101,11 +101,11 @@
         "orange": 1,
         "red": 10
       },
-      "green": 18,
-      "yellow": 15,
-      "orange": 0,
-      "red": 6,
-      "gray": 211
+      "green": 16,
+      "yellow": 18,
+      "orange": 2,
+      "red": 4,
+      "gray": 210
     },
     "listening": {
       "total_all": 403,
@@ -253,7 +253,10 @@
       "note": "初步",
       "exam_alert": "模考2 Q2实错（误选に対して）",
       "streak": 2,
-      "last_ok_date": "20261122"
+      "last_ok_date": "",
+      "audit_verdict": "passive",
+      "audit_date": "20261125",
+      "audit_ts": 1795678330
     },
     {
       "id": "G-008",
@@ -529,13 +532,16 @@
       "pool": "核心136点",
       "family": "4. 逆接・対比・基準外",
       "meaning": "虽然……却(让步)",
-      "status": "yellow",
+      "status": "red",
       "history": "Q024(10-18)E Q058(10-19)E Q092(10-20)E Q216(10-22)E Q229(10-22)✅ Q289(10-23)✅？",
       "note": "初步",
       "exam_alert": "",
-      "streak": 1,
-      "last_ng_date": "20261121",
-      "last_ok_date": "20261122"
+      "streak": 0,
+      "last_ng_date": "20261125",
+      "last_ok_date": "20261122",
+      "audit_verdict": "blank",
+      "audit_date": "20261125",
+      "audit_ts": 1795678307
     },
     {
       "id": "G-027",
@@ -543,13 +549,16 @@
       "pool": "核心136点",
       "family": "4. 逆接・対比・基準外",
       "meaning": "就……的标准来看却意外",
-      "status": "yellow",
+      "status": "orange",
       "history": "Q187(10-22)E Q218(10-22)✅",
       "note": "初步",
       "exam_alert": "🔥 Bunpro模考2四度牵涉头号混淆磁铁",
-      "streak": 1,
+      "streak": 0,
       "last_ok_date": "20261118",
-      "last_ng_date": "20261117"
+      "last_ng_date": "20261125",
+      "audit_verdict": "confuse",
+      "audit_date": "20261125",
+      "audit_ts": 1795678311
     },
     {
       "id": "G-028",
@@ -1209,7 +1218,10 @@
       "note": "初步",
       "exam_alert": "",
       "streak": 2,
-      "last_ok_date": "20261122"
+      "last_ok_date": "",
+      "audit_verdict": "passive",
+      "audit_date": "20261125",
+      "audit_ts": 1795678358
     },
     {
       "id": "G-070",
@@ -1239,7 +1251,10 @@
       "note": "初步",
       "exam_alert": "",
       "streak": 2,
-      "last_ok_date": "20261122"
+      "last_ok_date": "",
+      "audit_verdict": "passive",
+      "audit_date": "20261125",
+      "audit_ts": 1795678336
     },
     {
       "id": "G-072",
@@ -1311,7 +1326,7 @@
       "note": "初步",
       "exam_alert": "",
       "streak": 3,
-      "last_ok_date": "20261123",
+      "last_ok_date": "20261125",
       "audit_verdict": "instinct",
       "audit_date": "20261123",
       "audit_ts": 1795503583
@@ -1322,12 +1337,16 @@
       "pool": "核心136点",
       "family": "6. 原因・理由・根拠",
       "meaning": "因……而异,有的……",
-      "status": "yellow",
+      "status": "red",
       "history": "Q352(10-23)✅",
       "note": "初步",
       "exam_alert": "",
-      "streak": 2,
-      "last_ok_date": "20261122"
+      "streak": 0,
+      "last_ok_date": "20261122",
+      "last_ng_date": "20261125",
+      "audit_verdict": "blank",
+      "audit_date": "20261125",
+      "audit_ts": 1795678348
     },
     {
       "id": "G-078",
@@ -1335,12 +1354,16 @@
       "pool": "核心136点",
       "family": "6. 原因・理由・根拠",
       "meaning": "据……",
-      "status": "yellow",
+      "status": "orange",
       "history": "Q045(10-18)✅",
       "note": "初步",
       "exam_alert": "",
-      "streak": 2,
-      "last_ok_date": "20261122"
+      "streak": 0,
+      "last_ok_date": "20261122",
+      "last_ng_date": "20261125",
+      "audit_verdict": "confuse",
+      "audit_date": "20261125",
+      "audit_ts": 1795678351
     },
     {
       "id": "G-079",
@@ -1387,7 +1410,10 @@
       "note": "初步",
       "exam_alert": "",
       "streak": 2,
-      "last_ok_date": "20261122"
+      "last_ok_date": "",
+      "audit_verdict": "passive",
+      "audit_date": "20261125",
+      "audit_ts": 1795678360
     },
     {
       "id": "G-082",
@@ -1525,7 +1551,10 @@
       "note": "答错退出",
       "exam_alert": "",
       "streak": 2,
-      "last_ok_date": "20261120"
+      "last_ok_date": "",
+      "audit_verdict": "passive",
+      "audit_date": "20261125",
+      "audit_ts": 1795678354
     },
     {
       "id": "G-091",
@@ -1538,7 +1567,7 @@
       "note": "初步",
       "exam_alert": "",
       "streak": 3,
-      "last_ok_date": "20261123",
+      "last_ok_date": "20261125",
       "audit_verdict": "instinct",
       "audit_date": "20261123",
       "audit_ts": 1795503595
@@ -1742,12 +1771,16 @@
       "pool": "核心136点",
       "family": "3. 判断・推量・道理・決定",
       "meaning": "并不是",
-      "status": "yellow",
+      "status": "orange",
       "history": "Q040(10-18)✅",
       "note": "初步",
       "exam_alert": "",
-      "streak": 2,
-      "last_ok_date": "20261122"
+      "streak": 0,
+      "last_ok_date": "20261122",
+      "last_ng_date": "20261125",
+      "audit_verdict": "confuse",
+      "audit_date": "20261125",
+      "audit_ts": 1795678340
     },
     {
       "id": "G-104",
@@ -1821,12 +1854,15 @@
       "pool": "核心136点",
       "family": "5. 変化・比例・習慣化",
       "meaning": "一直(越来越)……",
-      "status": "yellow",
+      "status": "green",
       "history": "Q261(10-22)✅？",
       "note": "初步",
       "exam_alert": "",
-      "streak": 2,
-      "last_ok_date": "20261122"
+      "streak": 3,
+      "last_ok_date": "20261125",
+      "audit_verdict": "instinct",
+      "audit_date": "20261125",
+      "audit_ts": 1795678356
     },
     {
       "id": "G-109",
@@ -1839,7 +1875,10 @@
       "note": "初步",
       "exam_alert": "",
       "streak": 2,
-      "last_ok_date": "20261122"
+      "last_ok_date": "",
+      "audit_verdict": "passive",
+      "audit_date": "20261125",
+      "audit_ts": 1795678362
     },
     {
       "id": "G-110",
@@ -1945,15 +1984,54 @@
       "pool": "核心136点",
       "family": "1. 授受・敬語・依頼",
       "meaning": "如 いらっしゃる",
-      "status": "green",
+      "status": "red",
       "history": "Q355(10-23)✅",
       "note": "初步",
       "exam_alert": "",
-      "streak": 3,
-      "last_ok_date": "20261125",
-      "audit_verdict": "passive",
-      "audit_date": "20261123",
-      "audit_ts": 1795503701
+      "streak": 0,
+      "last_ok_date": "",
+      "audit_verdict": "blank",
+      "audit_date": "20261125",
+      "audit_ts": 1795678380,
+      "sub_audits": {
+        "G-116a": {
+          "verdict": "passive",
+          "code": 3,
+          "ts": 1795678363,
+          "date": "20261125"
+        },
+        "G-116b": {
+          "verdict": "instinct",
+          "code": 4,
+          "ts": 1795678367,
+          "date": "20261125"
+        },
+        "G-116c": {
+          "verdict": "passive",
+          "code": 3,
+          "ts": 1795678370,
+          "date": "20261125"
+        },
+        "G-116d": {
+          "verdict": "passive",
+          "code": 3,
+          "ts": 1795678373,
+          "date": "20261125"
+        },
+        "G-116e": {
+          "verdict": "confuse",
+          "code": 2,
+          "ts": 1795678378,
+          "date": "20261125"
+        },
+        "G-116f": {
+          "verdict": "blank",
+          "code": 1,
+          "ts": 1795678380,
+          "date": "20261125"
+        }
+      },
+      "last_ng_date": "20261125"
     },
     {
       "id": "G-117",
@@ -1961,12 +2039,36 @@
       "pool": "核心136点",
       "family": "1. 授受・敬語・依頼",
       "meaning": "如 くださる",
-      "status": "yellow",
+      "status": "orange",
       "history": "Q357(10-23)✅？",
       "note": "初步",
       "exam_alert": "",
-      "streak": 2,
-      "last_ok_date": "20261114"
+      "streak": 0,
+      "last_ok_date": "",
+      "sub_audits": {
+        "G-117a": {
+          "verdict": "passive",
+          "code": 3,
+          "ts": 1795678383,
+          "date": "20261125"
+        },
+        "G-117b": {
+          "verdict": "passive",
+          "code": 3,
+          "ts": 1795678385,
+          "date": "20261125"
+        },
+        "G-117c": {
+          "verdict": "confuse",
+          "code": 2,
+          "ts": 1795678389,
+          "date": "20261125"
+        }
+      },
+      "audit_verdict": "confuse",
+      "audit_date": "20261125",
+      "audit_ts": 1795678389,
+      "last_ng_date": "20261125"
     },
     {
       "id": "G-118",
@@ -1991,16 +2093,24 @@
       "pool": "核心136点",
       "family": "1. 授受・敬語・依頼",
       "meaning": "如 伺う",
-      "status": "red",
+      "status": "yellow",
       "history": "Q356(10-23)✅",
       "note": "初步",
       "exam_alert": "",
-      "streak": 0,
-      "last_ok_date": "20261114",
+      "streak": 2,
+      "last_ok_date": "",
       "audit_verdict": "passive",
-      "audit_date": "20261123",
-      "audit_ts": 1795503703,
-      "last_ng_date": "20261125"
+      "audit_date": "20261125",
+      "audit_ts": 1795678390,
+      "last_ng_date": "20261125",
+      "sub_audits": {
+        "G-119a": {
+          "verdict": "passive",
+          "code": 3,
+          "ts": 1795678390,
+          "date": "20261125"
+        }
+      }
     },
     {
       "id": "G-120",
@@ -2166,12 +2276,15 @@
       "pool": "核心136点",
       "family": "8. 伝聞・様態・傾向",
       "meaning": "装作,接中段用 ふりをして",
-      "status": "yellow",
+      "status": "green",
       "history": "Q253(10-22)E Q363(10-23)E Q375(10-23)✅？ Q435(10-25)E G006(10-25)✅",
       "note": "初步(G006 答对)",
       "exam_alert": "",
-      "streak": 2,
-      "last_ok_date": "20261120"
+      "streak": 3,
+      "last_ok_date": "20261125",
+      "audit_verdict": "instinct",
+      "audit_date": "20261125",
+      "audit_ts": 1795678332
     },
     {
       "id": "G-132",
@@ -2406,13 +2519,16 @@
       "pool": "真题补漏11点",
       "family": "4. 逆接・対比・基準外",
       "meaning": "尽管……却仍然……",
-      "status": "yellow",
+      "status": "orange",
       "history": "10-26补题D5-1✅",
       "note": "初步通过，待隔期确认",
       "exam_alert": "",
-      "streak": 1,
+      "streak": 0,
       "last_ok_date": "20261122",
-      "last_ng_date": "20261121"
+      "last_ng_date": "20261125",
+      "audit_verdict": "confuse",
+      "audit_date": "20261125",
+      "audit_ts": 1795678321
     },
     {
       "id": "GX-11",
@@ -2492,8 +2608,11 @@
       "history": "Bunpro N3补齐",
       "note": "常与「〜わけではない／とは限らない」成对出现",
       "exam_alert": "",
-      "streak": 1,
-      "last_ok_date": "20261120"
+      "streak": 2,
+      "last_ok_date": "",
+      "audit_verdict": "passive",
+      "audit_date": "20261125",
+      "audit_ts": 1795678324
     },
     {
       "id": "GB-06",
@@ -2534,13 +2653,16 @@
       "pool": "Bunpro补齐10点",
       "family": "4. 逆接・対比・基準外",
       "meaning": "与其说A不如说更像B",
-      "status": "yellow",
+      "status": "orange",
       "history": "Bunpro N3补齐",
       "note": "N3 阅读与文法选择题高频定性比较",
       "exam_alert": "",
-      "streak": 1,
-      "last_ng_date": "20261121",
-      "last_ok_date": "20261122"
+      "streak": 0,
+      "last_ng_date": "20261125",
+      "last_ok_date": "20261122",
+      "audit_verdict": "confuse",
+      "audit_date": "20261125",
+      "audit_ts": 1795678317
     },
     {
       "id": "GB-09",
@@ -4043,10 +4165,10 @@
       "name": "いる／行く／来る → いらっしゃる",
       "example": "先生はいらっしゃいますか",
       "tier": "core_n3",
-      "status": "red",
+      "status": "yellow",
       "note": "11-10 & 11-11 正式 いらっしゃる ✅ 两次均选「还是要考」",
-      "streak": 0,
-      "last_ok_date": "20261123",
+      "streak": 2,
+      "last_ok_date": "",
       "last_ng_date": "20261124"
     },
     {
@@ -4058,9 +4180,9 @@
       "tier": "core_n3",
       "status": "yellow",
       "note": "未单测（待按考频抽检）",
-      "streak": 1,
+      "streak": 2,
       "last_ng_date": "20261121",
-      "last_ok_date": "20261125"
+      "last_ok_date": ""
     },
     {
       "id": "K-003",
@@ -4072,7 +4194,7 @@
       "status": "green",
       "note": "11-10 正式 召し上がる ✅(还是要考) → 11-12 快速误判为「谦让语」❌ 从初步扣除！",
       "streak": 3,
-      "last_ok_date": "20261114"
+      "last_ok_date": "20261125"
     },
     {
       "id": "K-004",
@@ -4081,11 +4203,11 @@
       "name": "見る → ご覧になる",
       "example": "こちらをご覧ください",
       "tier": "core_n3",
-      "status": "green",
+      "status": "yellow",
       "note": "未单测（待按考频抽检）",
-      "streak": 3,
+      "streak": 2,
       "last_ng_date": "20261115",
-      "last_ok_date": "20261118"
+      "last_ok_date": ""
     },
     {
       "id": "K-005",
@@ -4094,7 +4216,7 @@
       "name": "する → なさる",
       "example": "ご研究なさっています",
       "tier": "core_n3",
-      "status": "red",
+      "status": "orange",
       "note": "未单测（待按考频抽检）",
       "streak": 0,
       "last_ng_date": "20261125",
@@ -4109,9 +4231,9 @@
       "tier": "core_n3",
       "status": "yellow",
       "note": "未单测（待按考频抽检）",
-      "streak": 1,
+      "streak": 2,
       "last_ng_date": "20261123",
-      "last_ok_date": "20261124"
+      "last_ok_date": ""
     },
     {
       "id": "K-007",
@@ -4132,10 +4254,10 @@
       "name": "知る → ご存じだ",
       "example": "ご存じですか",
       "tier": "core_n3",
-      "status": "yellow",
+      "status": "red",
       "note": "未单测（待按考频抽检）",
-      "streak": 1,
-      "last_ng_date": "20261123",
+      "streak": 0,
+      "last_ng_date": "20261125",
       "last_ok_date": "20261124"
     },
     {
@@ -4203,11 +4325,11 @@
       "name": "聞く／訪ねる／問う → 伺う",
       "example": "先生のお宅に伺います",
       "tier": "core_n3",
-      "status": "red",
+      "status": "yellow",
       "note": "未单测（待按考频抽检）",
-      "streak": 0,
+      "streak": 2,
       "last_ng_date": "20261125",
-      "last_ok_date": "20261125"
+      "last_ok_date": ""
     },
     {
       "id": "K-015",
@@ -4304,9 +4426,10 @@
       "name": "あげる → 差し上げる",
       "example": "花を差し上げます",
       "tier": "core_n3",
-      "status": "gray",
+      "status": "orange",
       "note": "未单测（待按考频抽检）",
-      "streak": 0
+      "streak": 0,
+      "last_ng_date": "20261125"
     },
     {
       "id": "K-024",
@@ -4548,10 +4671,10 @@
       "name": "てくださる／ていただく 变形",
       "example": "教えてくださる／教えていただく",
       "tier": "core_n3",
-      "status": "green",
+      "status": "yellow",
       "note": "未单测（待按考频抽检）",
-      "streak": 3,
-      "last_ok_date": "20261115"
+      "streak": 2,
+      "last_ok_date": ""
     },
     {
       "id": "T-001",
@@ -10938,8 +11061,8 @@
       "word": "はっきり",
       "category": "1. 拟声拟态（〜っ〜り家族）",
       "status": "red",
-      "seen": 21,
-      "wrong": 9,
+      "seen": 23,
+      "wrong": 10,
       "streak": 0,
       "due": "2026-11-13",
       "note": "累计见 2 次｜错 2 次｜当前连对 0",
@@ -14038,11 +14161,45 @@
     "2026-11-26T07:30:39.000Z|N3-G38|〜わけがない|にちがいない",
     "2026-11-26T07:30:39.000Z|N3-G38|〜わけがない|わけではない",
     "2026-11-26T07:30:40.000Z|N3-G38|〜わけがない|わけではない",
+    "2026-11-26T07:30:54.000Z|V-20261114-05|はっきり|うっかり",
+    "2026-11-26T07:31:07.000Z|N3-G70|〜について|について",
+    "2026-11-26T07:31:25.000Z|HES:N3-G96|〜ばよかった|犹豫过关",
+    "2026-11-26T07:31:25.000Z|N3-G96|〜ばよかった|ばよかった",
+    "2026-11-26T07:31:31.000Z|VAR-V05|はっきり|はっきり",
+    "2026-11-26T07:31:34.000Z|N3-G38|〜わけがない|わけがない",
+    "2026-11-26T07:31:47.000Z|GA-G-026|〜ながらも|盘点:陌生",
+    "2026-11-26T07:31:51.000Z|GA-G-027|〜にしては|盘点:易混",
+    "2026-11-26T07:31:57.000Z|GA-GB-08|〜というより|盘点:易混",
+    "2026-11-26T07:32:01.000Z|GA-GX-10|〜にもかかわらず|盘点:易混",
+    "2026-11-26T07:32:04.000Z|GA-GB-05|必ずしも〜ない|盘点:看懂",
+    "2026-11-26T07:32:10.000Z|GA-G-007|〜にとって|盘点:看懂",
+    "2026-11-26T07:32:12.000Z|GA-G-131|〜ふりをする|盘点:本能",
+    "2026-11-26T07:32:16.000Z|GA-G-071|〜とは限らない|盘点:看懂",
+    "2026-11-26T07:32:20.000Z|GA-G-103|〜わけではない|盘点:易混",
+    "2026-11-26T07:32:28.000Z|GA-G-077|〜によっては|盘点:陌生",
+    "2026-11-26T07:32:31.000Z|GA-G-078|〜によると／によれば|盘点:易混",
+    "2026-11-26T07:32:34.000Z|GA-G-090|〜ばかりだ|盘点:看懂",
+    "2026-11-26T07:32:36.000Z|GA-G-108|〜一方だ|盘点:本能",
+    "2026-11-26T07:32:38.000Z|GA-G-069|〜として|盘点:看懂",
+    "2026-11-26T07:32:40.000Z|GA-G-081|〜に対して|盘点:看懂",
+    "2026-11-26T07:32:42.000Z|GA-G-109|〜一方で|盘点:看懂",
+    "2026-11-26T07:32:43.000Z|GA-G-116a|いらっしゃる|盘点:看懂",
+    "2026-11-26T07:32:47.000Z|GA-G-116b|召し上がる|盘点:本能",
+    "2026-11-26T07:32:50.000Z|GA-G-116c|おっしゃる|盘点:看懂",
+    "2026-11-26T07:32:53.000Z|GA-G-116d|ご覧になる|盘点:看懂",
+    "2026-11-26T07:32:58.000Z|GA-G-116e|なさる|盘点:易混",
+    "2026-11-26T07:33:00.000Z|GA-G-116f|ご存じだ|盘点:陌生",
+    "2026-11-26T07:33:03.000Z|GA-G-117a|〜てくださる|盘点:看懂",
+    "2026-11-26T07:33:05.000Z|GA-G-117b|〜ていただく|盘点:看懂",
+    "2026-11-26T07:33:09.000Z|GA-G-117c|〜てさしあげる|盘点:易混",
+    "2026-11-26T07:33:10.000Z|GA-G-119a|伺う|盘点:看懂",
     "2026-11-26T07:33:10.000Z|N3-G38|〜わけがない|わけではない",
     "2026-11-26T07:33:14.000Z|N3-G38|〜わけがない|わけではない",
+    "2026-11-26T07:33:17.000Z|N3-G38|〜わけがない|わけがない",
     "2026-11-26T07:33:17.000Z|N3-G38|〜わけがない|わけではない",
     "2026-11-26T07:33:18.000Z|N3-G38|〜わけがない|わけではない",
     "2026-11-26T07:33:19.000Z|N3-G38|〜わけがない|わけではない",
+    "2026-11-26T07:33:25.000Z|N3-G38|〜わけがない|わけがない",
     "2026-11-26T07:41:20.000Z|MOCK:N3-G117|〜やすい／〜にくい|模拟错:にくい",
     "2026-11-26T07:41:20.000Z|MOCK:N3-G90|〜をはじめ|模拟错:にわたって",
     "2026-11-26T07:41:20.000Z|MOCK:VAR11-60|K-014|模拟错:お聞きになる",
@@ -14410,10 +14567,10 @@
     "ga_seen": 0,
     "ga_target": 0,
     "ga_done": false,
-    "ga_total_audited": 100
+    "ga_total_audited": 117
   },
   "study_date": "2026-11-26",
-  "_baked_epoch": 1795712644,
+  "_baked_epoch": 1795722482,
   "word_lookups": {
     "おく": {
       "count": 1,
@@ -14708,9 +14865,10 @@
     "はっきり": {
       "top_wrong": "ぼんやり",
       "top_count": 3,
-      "total": 4,
+      "total": 5,
       "counts": {
         "ぼんやり": 3,
+        "うっかり": 1,
         "模拟错:ぎっしり": 1
       },
       "last_date": "20261125"

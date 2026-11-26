@@ -5924,6 +5924,103 @@ html = r"""<!DOCTYPE html>
   .zb-sheet-pill.active.is-ochre { background: rgba(176, 125, 58, 0.13); border-color: rgba(176, 125, 58, 0.36); color: var(--ochre); font-weight: 600; }
   .zb-sheet-pill.active.is-red { background: var(--bengara-soft); border-color: rgba(158, 62, 54, 0.36); color: var(--bengara); font-weight: 600; }
 
+  /* Jobs x Kyoto Zen 30-Second Daily Podcast Feedback Sheet (.rfb-*) */
+  .rfb-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+  .rfb-title { font-size: 17px; font-weight: 500; color: var(--sumi); letter-spacing: 0.02em; line-height: 1.3; }
+  .rfb-sub { font-size: 12.5px; color: var(--ink-3); margin-top: 3px; line-height: 1.45; text-wrap: pretty; }
+  .rfb-close {
+    width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--ink-3); font-size: 18px; line-height: 1;
+    transition: background-color 0.16s ease, color 0.16s ease;
+  }
+  .rfb-close:active { background: var(--soft-bg); color: var(--sumi); }
+  .rfb-feel-row {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+    margin-bottom: 14px;
+  }
+  .rfb-feel-btn {
+    height: 40px; border-radius: 10px; font-size: 13.5px; font-weight: 400;
+    color: var(--ink-2); background: var(--soft-bg); border: 1px solid var(--hairline);
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    letter-spacing: 0.02em; transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, transform 0.12s ease;
+  }
+  .rfb-feel-btn:active { transform: scale(0.97); }
+  .rfb-feel-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-3); opacity: 0.35; flex-shrink: 0; }
+  .rfb-feel-btn.active { font-weight: 500; }
+  .rfb-feel-btn.active.is-great { background: var(--moss-soft); border-color: var(--moss-border); color: var(--moss); }
+  .rfb-feel-btn.active.is-great .rfb-feel-dot { background: var(--moss); opacity: 1; }
+  .rfb-feel-btn.active.is-ok { background: rgba(176, 125, 58, 0.13); border-color: rgba(176, 125, 58, 0.36); color: var(--ochre); }
+  .rfb-feel-btn.active.is-ok .rfb-feel-dot { background: var(--ochre); opacity: 1; }
+  .rfb-feel-btn.active.is-off { background: var(--bengara-soft); border-color: rgba(158, 62, 54, 0.36); color: var(--bengara); }
+  .rfb-feel-btn.active.is-off .rfb-feel-dot { background: var(--bengara); opacity: 1; }
+  .rfb-sec { margin-bottom: 12px; }
+  .rfb-sec-lbl { font-size: 11.5px; font-weight: 400; color: var(--ink-3); letter-spacing: 0.08em; margin-bottom: 7px; }
+  .rfb-chip-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .rfb-chip {
+    min-height: 36px; padding: 7px 10px; border-radius: 9px;
+    font-size: 13px; font-weight: 400; color: var(--ink-2);
+    background: transparent; border: 1px solid var(--hairline);
+    text-align: center; letter-spacing: 0.02em; white-space: nowrap;
+    transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, transform 0.12s ease;
+  }
+  .rfb-chip:active { transform: scale(0.97); }
+  .rfb-chip.active.is-good { background: var(--moss-soft); border-color: var(--moss-border); color: var(--moss); font-weight: 500; }
+  .rfb-chip.active.is-fix { background: var(--bengara-soft); border-color: rgba(158, 62, 54, 0.36); color: var(--bengara); font-weight: 500; }
+  .rfb-note-wrap {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--soft-bg); border: 1px solid var(--hairline);
+    border-radius: 10px; padding: 4px 6px 4px 12px;
+    transition: border-color 0.16s ease;
+  }
+  .rfb-note-wrap:focus-within { border-color: var(--hairline-strong); }
+  .rfb-note-in {
+    flex: 1; min-width: 0; border: 0; outline: 0; background: transparent;
+    font-family: inherit; font-size: 13.5px; color: var(--sumi);
+    padding: 8px 0; line-height: 1.4;
+  }
+  .rfb-note-in::placeholder { color: var(--ink-3); opacity: 0.85; }
+  .rfb-mic-btn {
+    width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--ink-2); background: transparent; border: 1px solid transparent;
+    transition: background-color 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+  }
+  .rfb-mic-btn.recording {
+    background: var(--bengara-soft); border-color: rgba(158, 62, 54, 0.36); color: var(--bengara);
+  }
+  .rfb-submit {
+    width: 100%; height: 46px; margin-top: 14px; border-radius: 12px;
+    font-size: 14.5px; font-weight: 500; letter-spacing: 0.04em;
+    background: var(--cta-bg); color: var(--cta-fg); border: 1px solid var(--cta-border);
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    transition: opacity 0.18s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.12s ease;
+  }
+  .rfb-submit:hover:not(.is-saved):not(.is-dim) { background: var(--cta-hover); }
+  .rfb-submit:active { transform: scale(0.985); }
+  .rfb-submit.is-dim { opacity: 0.42; pointer-events: none; }
+  .rfb-submit.is-saved {
+    background: var(--moss-soft); border-color: var(--moss-border); color: var(--moss);
+  }
+  .rfb-done-link {
+    margin-top: 14px; padding: 10px 14px; border-radius: 10px;
+    font-size: 13px; font-weight: 400; color: var(--ink-2);
+    background: transparent; border: 1px solid var(--hairline);
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    letter-spacing: 0.02em; transition: background-color 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+  }
+  .rfb-done-link:active { background: var(--soft-bg); }
+  .rfb-done-link.is-saved { background: var(--moss-soft); border-color: var(--moss-border); color: var(--moss); }
+  .chap-link.chap-fb.is-done { color: var(--moss); }
+  @media (max-height: 700px) {
+    .rfb-head { margin-bottom: 10px; }
+    .rfb-feel-row { margin-bottom: 10px; }
+    .rfb-sec { margin-bottom: 9px; }
+    .rfb-feel-btn { height: 36px; font-size: 13px; }
+    .rfb-chip { min-height: 33px; padding: 5px 8px; font-size: 12.5px; }
+    .rfb-submit { height: 42px; margin-top: 10px; }
+  }
+
   .zb-rep-row {
     display: flex;
     align-items: center;
@@ -10050,7 +10147,10 @@ function updateChapterStripFade(stripEl) {
   } catch (e) {}
 }
 
+let curRadioChapIdx = 0;
 function renderRadioChapters(activeChapIdx) {
+  if (typeof activeChapIdx === "number" && Number.isFinite(activeChapIdx)) curRadioChapIdx = activeChapIdx;
+  else activeChapIdx = curRadioChapIdx;
   const chaps = DATA.radio.chapters || [];
   const jpVid = (DATA.radio && DATA.radio.jp_video && DATA.radio.jp_video.video_url) ? DATA.radio.jp_video : null;
   const spkList = (DATA.radio && Array.isArray(DATA.radio.speaking_prompts)) ? DATA.radio.speaking_prompts : [];
@@ -10065,6 +10165,8 @@ function renderRadioChapters(activeChapIdx) {
   if (spkList.length > 0) {
     tailBtns.push(`<button type="button" class="chap-link chap-spk${rvMeta && rvMeta.needsClose ? " is-ready" : ""}" id="radio-spk-chap" onclick="openRadioSpeaking(0)">开口2句</button>`);
   }
+  const fbDone = !!getTodayRadioFeedback();
+  tailBtns.push(`<button type="button" class="chap-link chap-fb${fbDone ? " is-done" : (rvMeta && rvMeta.needsClose ? " is-ready" : "")}" id="radio-fb-chap" onclick="openRadioFeedbackModal()">${fbDone ? "已评 ✓" : "评本期"}</button>`);
   const closingHTML = tailBtns.length
     ? `<span class="chap-sep" aria-hidden="true"></span>${tailBtns.join("")}`
     : "";
@@ -12471,8 +12573,13 @@ function renderRadioReviewStage() {
         ${renderReviewStoryGalleryHTML()}
         <p class="logic-line">${relearnedItems.length
           ? "刚才回炉的重点已顺手记入明日队列。"
-          : (jpVid ? "再花一分半看一遍全日语短片，今天学过的词就牢了。" : "听完顺手滑一遍，印象最牢。")}</p>
+          : (jpVid ? "再看一遍全日语短片，今日词句更牢。" : "听完顺手滑一遍，印象最牢。")}</p>
         ${relearnNamesHTML}
+        <button type="button" class="rfb-done-link${getTodayRadioFeedback() ? " is-saved" : ""}" id="rv-done-fb-btn" onclick="openRadioFeedbackModal()">
+          ${getTodayRadioFeedback()
+            ? `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.2 8.4L6.6 11.6L12.8 4.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>已记下本期反馈，明早自动调优</span>`
+            : `<span>花 20 秒评本期，明天更好听 ›</span>`}
+        </button>
       </div>
       <div class="vc-dock">
         <button type="button" class="vc-btn mid" onclick="closeRadioReview()">回到随身听</button>
@@ -15962,6 +16069,230 @@ function saveN3RealScore() {
   renderDashboard();
 }
 
+// ================= JOBS x KYOTO ZEN 30-SECOND DAILY PODCAST FEEDBACK ("评本期") =================
+const RADIO_FB_LOCAL_KEY = "n3_radio_fb_v1";
+const RADIO_FB_FEELS = [
+  { key: "听爽了", cls: "is-great" },
+  { key: "还行", cls: "is-ok" },
+  { key: "不太对味", cls: "is-off" }
+];
+const RADIO_FB_GOOD_TAGS = ["故事有劲", "冷门有深度", "日文正好", "聊天自然"];
+const RADIO_FB_FIX_TAGS = ["太游客听腻了", "日文太密", "日文太少", "断句语速怪"];
+let radioFbDraft = { feel: "", good: [], fix: [], note: "", saved: false };
+let radioFbRec = null;
+let radioFbRecording = false;
+let radioFbCloseTimer = null;
+
+function stopRadioFbMic() {
+  radioFbRecording = false;
+  if (radioFbRec) {
+    try { radioFbRec.onresult = null; radioFbRec.onend = null; radioFbRec.onerror = null; radioFbRec.stop(); } catch (e) {}
+    radioFbRec = null;
+  }
+}
+
+function loadAllRadioFeedback() {
+  try {
+    const raw = localStorage.getItem(RADIO_FB_LOCAL_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    return (parsed && typeof parsed === "object") ? parsed : {};
+  } catch (e) { return {}; }
+}
+
+function getTodayRadioFeedback() {
+  const all = loadAllRadioFeedback();
+  const cur = all[TODAY_TAG];
+  return (cur && typeof cur === "object") ? cur : null;
+}
+
+function openRadioFeedbackModal() {
+  if (radioFbCloseTimer) { clearTimeout(radioFbCloseTimer); radioFbCloseTimer = null; }
+  stopRadioFbMic();
+  const prev = getTodayRadioFeedback();
+  radioFbDraft = prev
+    ? {
+        feel: String(prev.feel || ""),
+        good: Array.isArray(prev.good) ? prev.good.slice() : [],
+        fix: Array.isArray(prev.fix) ? prev.fix.slice() : [],
+        note: String(prev.note || ""),
+        saved: false
+      }
+    : { feel: "", good: [], fix: [], note: "", saved: false };
+  renderRadioFeedbackSheet();
+  const mm = document.getElementById("app-modal");
+  if (mm) mm.classList.add("open");
+}
+
+function renderRadioFeedbackSheet() {
+  const mc = document.getElementById("modal-content");
+  if (!mc) return;
+  const hasPrev = !!getTodayRadioFeedback();
+  const canSubmit = !!(
+    radioFbDraft.feel ||
+    radioFbDraft.good.length > 0 ||
+    radioFbDraft.fix.length > 0 ||
+    String(radioFbDraft.note || "").trim().length > 0
+  );
+  const SR = (typeof window !== "undefined") && (window.SpeechRecognition || window.webkitSpeechRecognition);
+  const micHTML = SR
+    ? `<button type="button" class="rfb-mic-btn${radioFbRecording ? " recording" : ""}" id="rfb-mic-btn" onclick="toggleRadioFbMic()" aria-label="${radioFbRecording ? "停止语音" : "语音留言"}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="21"/>
+        </svg>
+      </button>`
+    : "";
+  const ctaHTML = radioFbDraft.saved
+    ? `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.2 8.4L6.6 11.6L12.8 4.8" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg><span>已记下 · 明早自动调优</span>`
+    : (hasPrev ? `<span>更新本期反馈</span>` : `<span>记下 · 明早自动调优</span>`);
+  mc.innerHTML = `
+    <div class="rfb-head">
+      <div>
+        <div class="rfb-title">评本期随身听</div>
+        <div class="rfb-sub">点两下最多 30 秒，明天按你口味调</div>
+      </div>
+      <button type="button" class="rfb-close" onclick="closeModal()" aria-label="关闭">×</button>
+    </div>
+    <div class="rfb-feel-row" role="radiogroup" aria-label="总体感受">
+      ${RADIO_FB_FEELS.map(f => {
+        const on = radioFbDraft.feel === f.key;
+        return `<button type="button" class="rfb-feel-btn ${f.cls}${on ? " active" : ""}" onclick="setRadioFbFeel('${f.key}')"><span class="rfb-feel-dot" aria-hidden="true"></span><span>${f.key}</span></button>`;
+      }).join("")}
+    </div>
+    <div class="rfb-sec">
+      <div class="rfb-sec-lbl">做得好</div>
+      <div class="rfb-chip-grid">
+        ${RADIO_FB_GOOD_TAGS.map(tag => {
+          const on = radioFbDraft.good.includes(tag);
+          return `<button type="button" class="rfb-chip is-good${on ? " active" : ""}" onclick="toggleRadioFbTag('good','${tag}')">${tag}</button>`;
+        }).join("")}
+      </div>
+    </div>
+    <div class="rfb-sec">
+      <div class="rfb-sec-lbl">下次改</div>
+      <div class="rfb-chip-grid">
+        ${RADIO_FB_FIX_TAGS.map(tag => {
+          const on = radioFbDraft.fix.includes(tag);
+          return `<button type="button" class="rfb-chip is-fix${on ? " active" : ""}" onclick="toggleRadioFbTag('fix','${tag}')">${tag}</button>`;
+        }).join("")}
+      </div>
+    </div>
+    <div class="rfb-sec" style="margin-bottom:0;">
+      <div class="rfb-sec-lbl">顺口补一句（可选）</div>
+      <div class="rfb-note-wrap">
+        <input type="text" id="rfb-note-in" class="rfb-note-in" maxlength="120" value="${escapeHtml(radioFbDraft.note || "")}" placeholder="${radioFbRecording ? "正在听你说，说完点记下即可…" : "如：金泽可以多聊，京阪老梗别讲"}" oninput="onRadioFbNoteInput(this.value)" onkeydown="if(event.key==='Enter')submitRadioFeedback()" />
+        ${micHTML}
+      </div>
+    </div>
+    <button type="button" id="rfb-submit-btn" class="rfb-submit${radioFbDraft.saved ? " is-saved" : (!canSubmit ? " is-dim" : "")}" onclick="submitRadioFeedback()">${ctaHTML}</button>
+  `;
+}
+
+function setRadioFbFeel(val) {
+  radioFbDraft.feel = (radioFbDraft.feel === val) ? "" : val;
+  radioFbDraft.saved = false;
+  renderRadioFeedbackSheet();
+}
+
+function toggleRadioFbTag(kind, tag) {
+  const arr = kind === "fix" ? radioFbDraft.fix : radioFbDraft.good;
+  const i = arr.indexOf(tag);
+  if (i >= 0) arr.splice(i, 1);
+  else arr.push(tag);
+  radioFbDraft.saved = false;
+  renderRadioFeedbackSheet();
+}
+
+function onRadioFbNoteInput(val) {
+  radioFbDraft.note = String(val || "").slice(0, 120);
+  radioFbDraft.saved = false;
+  const btn = document.getElementById("rfb-submit-btn");
+  if (btn) {
+    const canSubmit = !!(radioFbDraft.feel || radioFbDraft.good.length || radioFbDraft.fix.length || radioFbDraft.note.trim());
+    btn.classList.toggle("is-dim", !canSubmit);
+    btn.classList.remove("is-saved");
+  }
+}
+
+function toggleRadioFbMic() {
+  if (radioFbRecording) {
+    stopRadioFbMic();
+    renderRadioFeedbackSheet();
+    return;
+  }
+  const SR = (typeof window !== "undefined") && (window.SpeechRecognition || window.webkitSpeechRecognition);
+  if (!SR) return;
+  try {
+    const rec = new SR();
+    rec.lang = "zh-CN";
+    rec.continuous = false;
+    rec.interimResults = true;
+    const baseNote = String(radioFbDraft.note || "").trim();
+    rec.onresult = (ev) => {
+      let spoken = "";
+      for (let i = 0; i < ev.results.length; i++) {
+        spoken += (ev.results[i][0] && ev.results[i][0].transcript) || "";
+      }
+      const merged = (baseNote ? baseNote + " " + spoken.trim() : spoken.trim()).slice(0, 120);
+      radioFbDraft.note = merged;
+      const inp = document.getElementById("rfb-note-in");
+      if (inp) inp.value = merged;
+      onRadioFbNoteInput(merged);
+    };
+    rec.onerror = () => { stopRadioFbMic(); renderRadioFeedbackSheet(); };
+    rec.onend = () => { stopRadioFbMic(); renderRadioFeedbackSheet(); };
+    radioFbRec = rec;
+    radioFbRecording = true;
+    renderRadioFeedbackSheet();
+    rec.start();
+  } catch (e) {
+    stopRadioFbMic();
+  }
+}
+
+function submitRadioFeedback() {
+  stopRadioFbMic();
+  const inp = document.getElementById("rfb-note-in");
+  if (inp && typeof inp.value === "string" && inp.value.length > 0) {
+    radioFbDraft.note = String(inp.value).trim().slice(0, 120);
+  }
+  const feel = String(radioFbDraft.feel || "").trim();
+  const good = (radioFbDraft.good || []).slice(0, 4);
+  const fix = (radioFbDraft.fix || []).slice(0, 4);
+  const note = String(radioFbDraft.note || "").replace(/[\r\n]+/g, " ").trim().slice(0, 120);
+  if (!feel && !good.length && !fix.length && !note) return;
+
+  const tsSec = Math.max(TRUE_GREEN_EPOCH, nowUnixSec());
+  const savedObj = { date: TODAY_TAG, feel, good, fix, note, ts: tsSec };
+  const all = loadAllRadioFeedback();
+  all[TODAY_TAG] = savedObj;
+  try { localStorage.setItem(RADIO_FB_LOCAL_KEY, JSON.stringify(all)); } catch (e) {}
+
+  const parts = [];
+  if (feel) parts.push("feel=" + feel);
+  if (good.length) parts.push("good=" + good.join(","));
+  if (fix.length) parts.push("fix=" + fix.join(","));
+  const ptSummary = parts.join("|") || "feel=已评";
+  const choiceText = "评本期:" + (note || feel || good.concat(fix).join("、") || "已评");
+  const okFlag = feel === "不太对味" ? 0 : 1;
+
+  const ob = loadOutbox();
+  const fbId = `RADIO_FB:${TODAY_TAG}`;
+  const filteredOb = ob.filter(row => !(Array.isArray(row) && row[0] === fbId));
+  filteredOb.push([fbId, ptSummary.slice(0, 96), choiceText.slice(0, 96), okFlag, new Date(tsSec * 1000).toISOString()]);
+  saveOutbox(filteredOb);
+  saveAdaptiveState();
+  scheduleCloudPush(220);
+
+  radioFbDraft.saved = true;
+  renderRadioFeedbackSheet();
+  try { renderRadioChapters(curRadioChapIdx); } catch (e) {}
+  try {
+    const rStage = document.getElementById("radio-review-stage");
+    if (rStage && !rStage.classList.contains("hidden") && rvMode === "done") renderRadioReviewStage();
+  } catch (e) {}
+  radioFbCloseTimer = setTimeout(() => { closeModal(); }, 720);
+}
+
 function stopMockTimer() {
   if (mockTimerId) {
     clearInterval(mockTimerId);
@@ -16637,6 +16968,8 @@ function renderMasteryList() {
 }
 
 function closeModal() {
+  if (radioFbCloseTimer) { clearTimeout(radioFbCloseTimer); radioFbCloseTimer = null; }
+  try { stopRadioFbMic(); } catch (e) {}
   try {
     const mv = document.getElementById("story-modal-video");
     if (mv && typeof mv.pause === "function") mv.pause();
@@ -20761,11 +21094,40 @@ if (!pTrvBack25.isTravel) {
 zst25.trips = savedTrips25;
 if (zst25.days) zst25.days[today25] = savedDay25;
 sb.closeModal();
+
+// Self-test 26 (v79): Jobs x Kyoto Zen 30-Second Daily Podcast Feedback Sheet & Cloud Bus Guard
+sb.switchMode('radio', false);
+sb.renderRadioChapters(0);
+const chapPre26 = (els['radio-chap-pills'] && els['radio-chap-pills'].innerHTML) || '';
+if (!chapPre26.includes('radio-fb-chap') || !chapPre26.includes('评本期')) {
+  throw new Error('Self-test 26 failed: Listen chapter strip missing 评本期 entry');
+}
+sb.openRadioFeedbackModal();
+const fbHtmlOpen26 = (els['modal-content'] && els['modal-content'].innerHTML) || '';
+if (!fbHtmlOpen26.includes('评本期随身听') || !fbHtmlOpen26.includes('故事有劲') || !fbHtmlOpen26.includes('太游客听腻了') || fbHtmlOpen26.includes('—')) {
+  throw new Error('Self-test 26 failed: feedback sheet missing core Jobs-Zen choices or contains em dash');
+}
+sb.setRadioFbFeel('听爽了');
+sb.toggleRadioFbTag('good', '冷门有深度');
+sb.toggleRadioFbTag('fix', '太游客听腻了');
+sb.onRadioFbNoteInput('金泽可以多聊');
+sb.submitRadioFeedback();
+const fbHtmlSaved26 = (els['modal-content'] && els['modal-content'].innerHTML) || '';
+const chapPost26 = (els['radio-chap-pills'] && els['radio-chap-pills'].innerHTML) || '';
+const fbOut26 = vm.runInNewContext('loadOutbox().find(r => Array.isArray(r) && String(r[0]).startsWith("RADIO_FB:"))', sb);
+if (!fbHtmlSaved26.includes('is-saved') || !fbHtmlSaved26.includes('已记下') || !chapPost26.includes('已评 ✓') || !fbOut26 || !String(fbOut26[1]).includes('feel=听爽了') || !String(fbOut26[2]).includes('金泽可以多聊')) {
+  throw new Error('Self-test 26 failed: feedback submit/exhale/outbox contract failed: ' + JSON.stringify({ fbOut26, hasSaved: fbHtmlSaved26.includes('is-saved'), hasDoneChap: chapPost26.includes('已评 ✓') }));
+}
+if (!html.includes('color: var(--cta-fg);') || html.includes('--cta-ink')) {
+  throw new Error('Self-test 26 failed: .rfb-submit must use defined --cta-fg token (never undefined --cta-ink)');
+}
+vm.runInNewContext('try { localStorage.removeItem(RADIO_FB_LOCAL_KEY); } catch (e) {}', sb);
+sb.closeModal();
 """
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
 
 sw_path = os.path.join(BASE_DIR, "sw.js")
-SW_CACHE_NAME = "n3-studio-tutor-v78"
+SW_CACHE_NAME = "n3-studio-tutor-v79"
 if not _IS_SIM_OUTPUT and os.path.exists(sw_path):
     with open(sw_path, encoding="utf-8") as sf:
         sw_src = sf.read()

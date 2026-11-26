@@ -719,6 +719,9 @@ def seed_from_practice_log(state: dict, plan_date: str) -> tuple[dict, list[dict
                 or raw_qid.endswith("-twin")
                 or raw_qid.startswith("FLASH-")
                 or raw_qid.startswith("VC-")
+                or raw_qid.startswith("RADIO_FB:")
+                or raw_qid.startswith("N3_SCORE:")
+                or raw_qid.startswith("MOCK:")
             ):
                 continue
             ts_str = str(rec.get("ts") or "")

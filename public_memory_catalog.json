@@ -348,7 +348,8 @@
         "〜にわたって",
         "〜をきっかけに",
         "〜ほど"
-      ]
+      ],
+      "deprecated_tourist_cliche": true
     },
     {
       "id": "pm_27_shibuya_gyaru_1990s",
@@ -530,7 +531,8 @@
         "〜たびに",
         "〜とともに",
         "〜一方で"
-      ]
+      ],
+      "deprecated_tourist_cliche": true
     },
     {
       "id": "pm_41_koshien_summer_dirt",
@@ -712,7 +714,8 @@
         "〜をきっかけに",
         "〜代わりに",
         "〜ほど"
-      ]
+      ],
+      "deprecated_tourist_cliche": true
     },
     {
       "id": "pm_55_kissaten_morning_nagoya",
@@ -1011,7 +1014,8 @@
         "〜せいで",
         "〜ざるを得ない",
         "〜をきっかけに"
-      ]
+      ],
+      "deprecated_tourist_cliche": true
     },
     {
       "id": "pm_78_lost_30_years_deflation",
@@ -1148,7 +1152,8 @@
         "〜に比べて",
         "〜がちだ"
       ],
-      "priority": 3
+      "priority": 3,
+      "deprecated_tourist_cliche": true
     },
     {
       "id": "pm_88_dazai_ningen_shikkaku_ito",
@@ -1250,7 +1255,8 @@
         "〜ことにする"
       ],
       "priority": 3,
-      "growth_horizon": true
+      "growth_horizon": true,
+      "deprecated_tourist_cliche": true
     },
     {
       "id": "pm_95_ozawa_seiji_classical_music",
@@ -1281,6 +1287,63 @@
       ],
       "priority": 1,
       "growth_horizon": true
+    },
+    {
+      "id": "pm_97_kanazawa_kaga_hyakumangoku",
+      "pillar": "职人建筑与城市记忆",
+      "short_tab": "加贺百万石",
+      "title": "北陆金泽与「加贺百万石」三百年暗棋：前田家装傻保命、金箔能剧、辰巳用水与铃木大拙",
+      "year": 1632,
+      "priority": 1,
+      "real_facts": "前田利家与芳春院江户人质十四年、三代前田利常鼻毛殿下装愚自保、砸巨资扶持加贺友禅/九谷烧/加贺宝生能剧与秘密防城倒虹吸水利辰巳用水、躲过二战空袭与铃木大拙禅学及2004 SANAA圆形美术馆",
+      "n3_targets": [
+        "〜きり",
+        "〜にもかかわらず",
+        "〜からこそ"
+      ]
+    },
+    {
+      "id": "pm_98_furusato_nozei_izumisano",
+      "pillar": "政治经济与制度暗涌",
+      "short_tab": "故乡税暗战",
+      "title": "日本「故乡税」魔幻暗战：从劫富济贫税改到全国特产军备竞赛与泉佐野市告赢总务省",
+      "year": 2008,
+      "priority": 1,
+      "real_facts": "2008年菅义伟力推故乡税，却演成返礼品军备竞赛，大阪泉佐野市靠返现吸走497亿日元被总务省除名后反告上最高法院并于2020年胜诉，都市区税收流失倒逼中央频频修法",
+      "n3_targets": [
+        "〜にとって",
+        "〜といっても",
+        "〜しかない"
+      ]
+    },
+    {
+      "id": "pm_99_postwar_mainbank_tse_pbr",
+      "pillar": "政治经济与制度暗涌",
+      "short_tab": "主银行暗网",
+      "title": "战后日本「主银行制」、护送船团与交叉持股七十年：官僚空降与东证破净改革",
+      "year": 1952,
+      "priority": 1,
+      "real_facts": "盟军解散财阀后旧三井三菱住友借交叉持股与大藏省护送船团重聚，1997年危机解体后2023年东证强推PBR破净公开点名逼企业抛售交叉持股",
+      "n3_targets": [
+        "〜たとえ〜ても",
+        "〜ほど〜ない",
+        "〜ということだ"
+      ]
+    },
+    {
+      "id": "pm_100_selective_separate_surnames",
+      "pillar": "政治经济与制度暗涌",
+      "short_tab": "夫妇别姓战",
+      "title": "一条一八九八年明治民法卡住三十年：日本「选择性夫妇别姓」为何吵到最高法院与经团联",
+      "year": 1898,
+      "priority": 1,
+      "growth_horizon": true,
+      "real_facts": "古代日本贵族实为夫妇别姓，1898年明治民法确立家制度同姓义务，如今超九成五由女方改姓，引发海外护照执业摩擦，连保守派经团联也公开呼吁修法",
+      "n3_targets": [
+        "〜ことから",
+        "〜につれて",
+        "〜わけではない"
+      ]
     }
   ]
 }
