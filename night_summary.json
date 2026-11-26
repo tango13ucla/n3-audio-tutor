@@ -1,59 +1,55 @@
 {
-  "closed_study_day": "2026-11-24",
-  "summarized_at_pt": "2026-11-25T11:50:20-08:00",
-  "day_events_count": 193,
+  "closed_study_day": "2026-11-25",
+  "summarized_at_pt": "2026-11-26T02:02:03-08:00",
+  "day_events_count": 165,
   "missed_or_unsure_points": [
-    "〜気味",
-    "〜ということだ",
-    "〜による／によって",
-    "ところだった",
-    "〜きる／〜きれない",
-    "〜たとえ〜ても",
-    "〜別に〜ない",
-    "決して〜ない",
-    "〜だけしか〜ない",
-    "〜をはじめ",
-    "〜がちだ",
-    "〜に限る",
-    "〜ことはない",
-    "〜からこそ",
-    "〜ばかりに",
-    "〜ようとする",
-    "〜にしたがって",
     "〜てもかまわない",
+    "〜ばかりに",
+    "〜に限る",
     "〜だらけ",
-    "〜ほど〜ない",
-    "ぼろぼろ",
-    "〜ような気がする",
-    "T-034",
-    "〜てばかりいる",
-    "K-014",
-    "そっくり",
-    "N3L-009",
-    "N3L-012",
-    "N3L-368",
-    "K-001"
+    "〜しだい",
+    "〜どころか",
+    "〜させてもらう",
+    "〜うえで",
+    "〜ところだ",
+    "〜おきに",
+    "〜にかけて",
+    "〜てたまらない",
+    "〜をはじめ",
+    "〜にしたがって",
+    "〜からこそ",
+    "〜わけがない",
+    "〜だけしか〜ない",
+    "V-046",
+    "V-028",
+    "〜を中心に",
+    "〜いくら〜ても",
+    "〜らしく",
+    "謙譲語特殊動詞组",
+    "どんなに〜ても",
+    "はっきり",
+    "N3L-402",
+    "K-005",
+    "N3L-403",
+    "N3L-006",
+    "〜なんか"
   ],
   "missed_vocab_words": [
-    "象徴",
-    "こっそり",
-    "慰める",
-    "ぼろぼろ",
     "めったに",
     "ぎっしり",
     "自慢",
-    "油断",
     "都合",
     "納得",
     "世間",
-    "表情"
+    "ぼろぼろ",
+    "仲直り"
   ],
   "top_confusion_pairs": [
     {
-      "point": "ついてない",
-      "wrong_choice": "たまらない",
-      "count": 5,
-      "last_date": "20261123"
+      "point": "はっきり",
+      "wrong_choice": "ぼんやり",
+      "count": 4,
+      "last_date": "20261125"
     },
     {
       "point": "T-034",
@@ -86,6 +82,12 @@
       "last_date": "20261122"
     },
     {
+      "point": "謙譲語特殊動詞组",
+      "wrong_choice": "ご覧",
+      "count": 3,
+      "last_date": "20261125"
+    },
+    {
       "point": "〜ところだ",
       "wrong_choice": "ばかり",
       "count": 3,
@@ -104,16 +106,40 @@
       "last_date": "20261118"
     },
     {
-      "point": "はっきり",
-      "wrong_choice": "ぼんやり",
-      "count": 3,
-      "last_date": "20261118"
-    },
-    {
       "point": "〜にしては",
       "wrong_choice": "にとって",
       "count": 3,
       "last_date": "20261117"
+    },
+    {
+      "point": "〜にしたがって",
+      "wrong_choice": "ついでに",
+      "count": 2,
+      "last_date": "20261125"
+    },
+    {
+      "point": "V-028",
+      "wrong_choice": "着れる",
+      "count": 2,
+      "last_date": "20261125"
+    },
+    {
+      "point": "K-005",
+      "wrong_choice": "模拟错:うかがって",
+      "count": 2,
+      "last_date": "20261125"
+    },
+    {
+      "point": "〜てもかまわない",
+      "wrong_choice": "てたまらない",
+      "count": 2,
+      "last_date": "20261125"
+    },
+    {
+      "point": "〜のように／ような",
+      "wrong_choice": "てほしい",
+      "count": 2,
+      "last_date": "20261125"
     },
     {
       "point": "そっくり",
@@ -138,42 +164,12 @@
       "wrong_choice": "だところだ",
       "count": 2,
       "last_date": "20261124"
-    },
-    {
-      "point": "組む",
-      "wrong_choice": "ぐんで",
-      "count": 2,
-      "last_date": "20261123"
-    },
-    {
-      "point": "K-006",
-      "wrong_choice": "いただいた",
-      "count": 2,
-      "last_date": "20261123"
-    },
-    {
-      "point": "V-041",
-      "wrong_choice": "歩かせた",
-      "count": 2,
-      "last_date": "20261121"
-    },
-    {
-      "point": "〜っぽい",
-      "wrong_choice": "らしく",
-      "count": 2,
-      "last_date": "20261121"
-    },
-    {
-      "point": "〜ことから",
-      "wrong_choice": "にもかかわらず",
-      "count": 2,
-      "last_date": "20261121"
     }
   ],
   "looked_up_expressions": [
-    "N3-G80"
+    "VAR5-07"
   ],
-  "looked_up_words_count": 18,
+  "looked_up_words_count": 20,
   "top_looked_up_words": [
     {
       "surface": "こっそり",
@@ -264,7 +260,17 @@
       "surface": "会った",
       "count": 1,
       "last_ts": "2026-11-24T23:22:59.000Z"
+    },
+    {
+      "surface": "傘",
+      "count": 1,
+      "last_ts": "2026-11-25"
+    },
+    {
+      "surface": "面倒",
+      "count": 1,
+      "last_ts": "2026-11-26T06:35:15.000Z"
     }
   ],
-  "ever_seen_cards_count": 425
+  "ever_seen_cards_count": 458
 }
