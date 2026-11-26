@@ -830,7 +830,7 @@ VOCAB_CARDS = {
         "pitch": "⓪",
         "zh": "干透了、渴得冒烟 · 嗓子干得冒烟",
         "twin": "固定搭配：喉がからからだ",
-        "mnemonic": "嗓子干透像英文 “Crack(から)” 干裂冒烟咔啦作响 → からから",
+        "mnemonic": "像英文 “Crack(から)” 干裂冒烟咔啦作响",
         "ja_speak": "からから。のどがからからだ。",
         "zh_speak": "干透了，渴得冒烟。",
     },
@@ -2317,12 +2317,55 @@ def clean_mnemonic_for_speech(mnemonic: str, word: str = "") -> str:
     return s
 
 
+def distill_card_zh(zh: str, chunk_ja: str = "", target: str = "") -> str:
+    """Distill card meaning to a single concise zero-duplication line for the Zen flashcard face."""
+    s = str(zh or "").strip()
+    if not s:
+        return ""
+    if " · " in s:
+        a, b = [x.strip() for x in s.split(" · ", 1)]
+        if chunk_ja and chunk_ja != target and len(b) >= 2:
+            return b.replace("—", "，")
+        return a.replace("—", "，")
+    return s.replace("—", "，")
+
+
+_TAIL_TRAP_ECHO_RE = re.compile(
+    r"[，,]\s*(?:"
+    r"(?:注意|开头|尾音|首音|中间|前后)?(?:必|也|绝)?(?:双)?"
+    r"(?:[ぁ-んァ-ヶー・]{1,6}\s*)?"
+    r"(?:必拖长|不拖长|绝不拉长|拉满|长音拉满|长音|短音|短拍|促音\s*っ?(?:\s*必顿)?|带促音\s*っ?|中间促音\s*っ?|连浊|浊音\s*[ぁ-ん]?|浊读\s*[ぁ-ん]?|浊短\s*[ぁ-ん]?|半浊\s*[ぁ-ん]?|不浊化|清音不浊化|双长音(?:拉满)?)"
+    r"[^，。]{0,4}"
+    r")$"
+)
+
+
+def distill_card_mnemonic(mnemonic: str, has_trap_tag: bool = False) -> str:
+    """Distill visual pronunciation mnemonic to a crisp, balanced line without redundant trailing echoes."""
+    s = str(mnemonic or "").strip()
+    if not s:
+        return ""
+    # Keep the primary mnemonic clause before semicolon contrast (full contrast stays in ledger)
+    s = s.split("；")[0].strip()
+    # Strip redundant trailing '→ kana' echo since headline/kana already displays the word
+    s = re.sub(r"\s*→\s*[\u3040-\u30ffー・]+(?:[（(][^）)]*[）)])?(?=$|[，,；;])", "", s)
+    s = re.sub(r"[（(](?:反义|对比|同音|発表)[^）)]*[）)]$", "", s)
+    if has_trap_tag:
+        cand = _TAIL_TRAP_ECHO_RE.sub("", s).strip(" ，。；")
+        if len(cand) >= 10:
+            s = cand
+    s = re.sub(r"[，,]\s*([，,；;])", r"\1", s)
+    s = re.sub(r"\s*[，,：:]\s*$", "", s)
+    s = re.sub(r"\s+([“”])", r"\1", s)
+    s = re.sub(r"([“”])\s+", r"\1", s)
+    s = s.replace("—", "，")
+    return s.strip(" ，。；")
+
+
 def build_vocab_audio_spec(vc: dict) -> dict:
-    """Build ordered spoken components: target word -> (brief meaning +) mnemonic FIRST -> short phrase AFTER."""
+    """Build ordered 3-beat spoken components: Mnemonic FIRST -> Target Word SECOND -> Full Phrase LAST."""
     word = str(vc.get("word") or vc.get("target") or "").strip()
-    mode = str(vc.get("mode") or "kana_meaning").strip()
     kana = str(vc.get("kana") or word).strip()
-    zh_opaque = bool(vc.get("zh_opaque", mode != "kanji_read"))
 
     ja_raw = str(vc.get("ja_speak") or "").strip()
     ja_segs = [seg.strip() for seg in re.split(r"[。！？]+", ja_raw) if seg.strip()]
@@ -2332,6 +2375,10 @@ def build_vocab_audio_spec(vc: dict) -> dict:
         cand = ja_segs[1].strip(" 。")
         if cand and cand != word_ja.strip(" 。"):
             chunk_ja = cand + "。"
+    if not chunk_ja:
+        raw_chunk = str(vc.get("chunk_ja") or "").strip(" 。")
+        if raw_chunk and raw_chunk != word and raw_chunk != word_ja.strip(" 。"):
+            chunk_ja = raw_chunk + "。"
 
     hook_spoken = clean_mnemonic_for_speech(str(vc.get("mnemonic") or ""), word=word)
     if not hook_spoken:
@@ -2340,22 +2387,8 @@ def build_vocab_audio_spec(vc: dict) -> dict:
         )
         hook_spoken = clean_mnemonic_for_speech(auto_mn, word=word) or f"按拍读准 {kana or word}。"
 
-    # Brief core meaning (only for pure-kana words or opaque/false-friend kanji; transparent kanji skip straight to hook!)
-    brief_zh = ""
-    if mode != "kanji_read" or zh_opaque:
-        raw_zh = str(vc.get("zh_speak") or "").strip()
-        if not raw_zh:
-            zh_head = str(vc.get("zh") or "").split(" · ")[0].strip()
-            zh_head = re.sub(r"[（(][^）)]*[）)]", "", zh_head).strip()
-            raw_zh = re.sub(r"[、；/／]", "，", zh_head)
-        raw_zh = raw_zh.split("。")[0].strip(" ，。")
-        if raw_zh:
-            brief_zh = raw_zh + "。"
-
-    if brief_zh and hook_spoken:
-        reveal_spoken = f"{brief_zh}{hook_spoken}"
-    else:
-        reveal_spoken = hook_spoken or brief_zh
+    # Direct spoken mnemonic without double-meaning chatter: Mnemonic -> Word -> Full Phrase
+    reveal_spoken = hook_spoken
 
     return {
         "word_ja": word_ja,

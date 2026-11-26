@@ -35,6 +35,8 @@ from vocab_cards import (
     analyze_kanji_reading_trap,
     build_dynamic_vocab_card,
     build_vocab_audio_spec,
+    distill_card_mnemonic,
+    distill_card_zh,
     get_pronunciation_mnemonic,
 )
 import tutor_prefs
@@ -1429,13 +1431,15 @@ all_vc_keys = list(seen_vocab_words) + [k for k in VOCAB_CARDS if k not in seen_
 for vw in all_vc_keys:
     spec = build_dynamic_vocab_card(vw, rich_words.get(vw, {}))
     vc_aud = vc_audio_manifest.get(vw) or {}
-    w_aud = resolve_word_audio(vw)
+    w_aud = vc_aud.get("word") or resolve_word_audio(vw)
     front_aud = vc_aud.get("front") or (w_aud if spec["mode"] == "kana_meaning" else "")
     rev_aud = vc_aud.get("rev") or ""
     full_aud = vc_aud.get("full") or rev_aud or w_aud
     hook_aud = vc_aud.get("hook") or ""
+    phrase_aud = vc_aud.get("phrase") or vc_aud.get("clean") or w_aud
     clean_aud = vc_aud.get("clean") or ""
     aspec = build_vocab_audio_spec(spec)
+    raw_mn = spec.get("mnemonic") or get_pronunciation_mnemonic(vw, str((rich_words.get(vw) or {}).get("head") or ""))
     vocab_cards_payload[vw] = {
         "mode": spec["mode"],
         "chunk_ja": spec["chunk_ja"],
@@ -1446,8 +1450,10 @@ for vw in all_vc_keys:
         "zh_opaque": bool(spec.get("zh_opaque", True)),
         "pitch": spec["pitch"],
         "zh": spec["zh"],
+        "zh_card": distill_card_zh(spec["zh"], spec["chunk_ja"], spec["target"]),
         "twin": spec["twin"],
-        "mnemonic": spec.get("mnemonic") or get_pronunciation_mnemonic(vw, str((rich_words.get(vw) or {}).get("head") or "")),
+        "mnemonic": raw_mn,
+        "mnemonic_card": distill_card_mnemonic(raw_mn, has_trap_tag=bool(spec.get("trap_tag"))),
         "zh_speak": spec.get("zh_speak", ""),
         "hook_spoken": aspec.get("hook_spoken", ""),
         "reveal_spoken": aspec.get("reveal_spoken", ""),
@@ -1455,6 +1461,7 @@ for vw in all_vc_keys:
         "rev_audio": rev_aud,
         "full_audio": full_aud,
         "hook_audio": hook_aud,
+        "phrase_audio": phrase_aud,
         "clean_audio": clean_aud,
         "word_audio": w_aud,
     }
@@ -4334,8 +4341,8 @@ html = r"""<!DOCTYPE html>
     font-size: 12px;
     color: var(--ink-3);
     letter-spacing: 0.12em;
-    margin-bottom: 18px;
-    min-height: 17px;
+    margin-bottom: 14px;
+    min-height: 16px;
     transition: opacity 0.22s ease;
   }
   .vc-cue.quiet-hide {
@@ -4348,14 +4355,43 @@ html = r"""<!DOCTYPE html>
     letter-spacing: 0.06em;
     opacity: 1;
   }
+  .vc-tap-zone {
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity 0.18s ease, color 0.22s ease, transform 0.18s ease;
+  }
+  .vc-tap-zone.vc-live:active {
+    opacity: 0.62;
+  }
+  .vc-tap-zone.vc-speaking {
+    color: var(--moss) !important;
+    opacity: 1 !important;
+  }
+  @media (prefers-color-scheme: dark) {
+    .vc-tap-zone.vc-speaking {
+      color: #84C7A6 !important;
+    }
+  }
   .vc-chunk {
     font-family: var(--serif-jp);
-    font-size: 33px;
+    font-size: 40px;
     font-weight: 500;
     color: var(--sumi);
-    line-height: 1.48;
-    letter-spacing: 0.04em;
-    transition: filter 0.28s ease, opacity 0.28s ease;
+    line-height: 1.38;
+    letter-spacing: 0.03em;
+    padding: 4px 6px;
+    transition: filter 0.28s ease, opacity 0.28s ease, color 0.22s ease;
+  }
+  .vc-chunk.len-8 {
+    font-size: 35px;
+    letter-spacing: 0.02em;
+  }
+  .vc-chunk.len-9 {
+    font-size: 31px;
+    letter-spacing: 0.015em;
+  }
+  .vc-chunk.len-long {
+    font-size: 28px;
+    letter-spacing: 0.01em;
   }
   .vc-chunk.ear-veil {
     filter: blur(9px);
@@ -4363,10 +4399,10 @@ html = r"""<!DOCTYPE html>
     user-select: none;
   }
   .vc-kana-front {
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 500;
     color: var(--sumi);
-    line-height: 1.48;
+    line-height: 1.44;
     letter-spacing: 0.02em;
     margin-bottom: 14px;
     max-height: 84px;
@@ -4386,14 +4422,14 @@ html = r"""<!DOCTYPE html>
   }
   @media (prefers-color-scheme: dark) {
     .vc-hl {
-      border-bottom-color: rgba(98, 173, 137, 0.40);
+      border-bottom-color: rgba(98, 173, 137, 0.44);
     }
   }
   .vc-reveal {
-    margin-top: 18px;
-    min-height: 142px;
+    margin-top: 16px;
+    min-height: 148px;
     width: 100%;
-    max-width: 344px;
+    max-width: 352px;
     opacity: 0;
     transform: translateY(4px);
     transition: opacity 0.24s ease, transform 0.24s ease;
@@ -4405,34 +4441,39 @@ html = r"""<!DOCTYPE html>
     pointer-events: auto;
   }
   .vc-kana {
-    font-size: 18.5px;
+    font-size: 23.5px;
     font-weight: 500;
     color: var(--ink-2);
     letter-spacing: 0.05em;
-    margin-bottom: 6px;
+    margin-bottom: 10px;
+    padding: 3px 10px;
+    display: inline-block;
   }
   .vc-zh {
-    font-size: 17px;
+    font-size: 21px;
     font-weight: 500;
-    color: var(--ink-2);
-    line-height: 1.54;
+    color: var(--sumi);
+    opacity: 0.88;
+    line-height: 1.46;
     letter-spacing: 0.02em;
+    padding: 3px 8px;
   }
   .vc-zh.quiet {
-    font-size: 15px;
+    font-size: 18.5px;
     font-weight: 400;
-    color: var(--ink-3);
+    color: var(--ink-2);
+    opacity: 0.86;
   }
   .vc-hook {
     position: relative;
-    margin: 22px auto 0;
-    padding-top: 18px;
-    max-width: 340px;
-    font-size: 13.8px;
+    margin: 26px auto 0;
+    padding: 22px 8px 6px;
+    max-width: 344px;
+    font-size: 18px;
     color: var(--ink-2);
-    line-height: 1.72;
+    line-height: 1.66;
     letter-spacing: 0.015em;
-    cursor: default;
+    cursor: pointer;
     text-wrap: balance;
   }
   .vc-hook::before {
@@ -4441,16 +4482,17 @@ html = r"""<!DOCTYPE html>
     top: 0;
     left: 50%;
     transform: translateX(-50%);
-    width: 28px;
+    width: 24px;
     height: 1px;
     background: var(--hairline-strong);
   }
   .vc-hook.rv-hook {
     margin: 10px 0 0;
-    padding-top: 10px;
+    padding: 10px 0 0;
     max-width: none;
     border-top: 1px solid var(--hairline);
     text-align: left;
+    font-size: 14px;
   }
   .vc-hook.rv-hook::before {
     display: none;
@@ -4488,10 +4530,16 @@ html = r"""<!DOCTYPE html>
   }
   @media (max-height: 700px) {
     .vc-card { padding: 8px 2px; }
-    .vc-cue { margin-bottom: 12px; }
-    .vc-chunk { font-size: 28px; }
-    .vc-reveal { margin-top: 14px; min-height: 116px; }
-    .vc-hook { margin-top: 16px; padding-top: 13px; font-size: 13.2px; line-height: 1.62; }
+    .vc-cue { margin-bottom: 10px; }
+    .vc-chunk { font-size: 34px; }
+    .vc-chunk.len-8 { font-size: 31px; }
+    .vc-chunk.len-9 { font-size: 28px; }
+    .vc-chunk.len-long { font-size: 25px; }
+    .vc-reveal { margin-top: 12px; min-height: 122px; }
+    .vc-kana { font-size: 21px; margin-bottom: 7px; }
+    .vc-zh { font-size: 19px; }
+    .vc-zh.quiet { font-size: 16.5px; }
+    .vc-hook { margin-top: 18px; padding-top: 16px; font-size: 16.5px; line-height: 1.58; }
     .vc-twin.sub { margin-top: 7px; font-size: 12px; }
   }
 
@@ -7761,6 +7809,43 @@ const player = new Audio();
 player.preload = "auto";
 const wordPlayer = new Audio();
 wordPlayer.preload = "auto";
+wordPlayer.setAttribute("playsinline", "");
+wordPlayer.style.position = "fixed";
+wordPlayer.style.bottom = "-9999px";
+wordPlayer.style.left = "-9999px";
+wordPlayer.style.width = "1px";
+wordPlayer.style.height = "1px";
+wordPlayer.style.opacity = "0.001";
+wordPlayer.style.pointerEvents = "none";
+try { if (document.body) document.body.appendChild(wordPlayer); } catch (e) {}
+let wordPlayerUnlocked = false;
+const SILENT_WAV_URI = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+function unlockWordPlayerOnce() {
+  if (wordPlayerUnlocked) return;
+  wordPlayerUnlocked = true;
+  try {
+    if (!wordPlayer.src) {
+      wordPlayer.src = SILENT_WAV_URI;
+      const pr = wordPlayer.play();
+      if (pr && typeof pr.then === "function") {
+        pr.then(() => {
+          if (wordPlayer.src === SILENT_WAV_URI) {
+            try { wordPlayer.pause(); } catch (e) {}
+          }
+        }).catch(() => { wordPlayerUnlocked = false; });
+      }
+    }
+  } catch (e) {
+    wordPlayerUnlocked = false;
+  }
+}
+try {
+  if (typeof document !== "undefined" && document.addEventListener) {
+    ["pointerdown", "touchstart", "click"].forEach(evName => {
+      document.addEventListener(evName, unlockWordPlayerOnce, { passive: true });
+    });
+  }
+} catch (e) {}
 const radioPlayer = new Audio();
 radioPlayer.preload = "auto";
 radioPlayer.setAttribute("playsinline", "");
@@ -7831,7 +7916,7 @@ function formatZenNoteHTML(raw) {
        .replace(/([”））」』，。：；、！？])\s+/g, "$1")
        .replace(/([\u4e00-\u9fff\u3040-\u30ff]),\s*([\u4e00-\u9fff\u3040-\u30ff])/g, "$1，$2");
   let h = escapeHtml(s);
-  h = h.replace(/([\u4e00-\u9fff]{1,5}\([^()]{2,24}\))/g, '<span class="nw">$1</span>');
+  h = h.replace(/([\u4e00-\u9fff]{1,5}\([^()]{1,24}\)|[A-Za-z0-9&!?.'-]{1,18}\([^()]{1,18}\)|\([ぁ-んァ-ヶー・]{1,12}\))/g, '<span class="nw">$1</span>');
   h = h.replace(/(→\s*[ぁ-んァ-ヶー]{2,8})/g, '<span class="nw">$1</span>');
   return h;
 }
@@ -7995,11 +8080,13 @@ function warmAudio(url) {
     .then(blob => {
       audioFetchMap.delete(url);
       if (!blob || !blob.size) return url;
-      if (audioBlobMap.size >= 80) {
-        const oldestKey = audioBlobMap.keys().next().value;
-        const oldestUrl = audioBlobMap.get(oldestKey);
-        audioBlobMap.delete(oldestKey);
-        try { URL.revokeObjectURL(oldestUrl); } catch (e) {}
+      if (audioBlobMap.size >= 260) {
+        for (const [k, oldBlob] of audioBlobMap.entries()) {
+          if (oldBlob === wordPlayer.src || oldBlob === player.src) continue;
+          audioBlobMap.delete(k);
+          try { URL.revokeObjectURL(oldBlob); } catch (e) {}
+          break;
+        }
       }
       const blobUrl = URL.createObjectURL(blob);
       audioBlobMap.set(url, blobUrl);
@@ -8388,11 +8475,17 @@ function primeDailyAudioBundle() {
       }
     });
   });
-  // Priority 3: Active vocab cards
+  // Priority 3: Active vocab cards (pre-cache real studio MP3s so every card speaks instantly & offline)
   const vcObj = DATA.vocab_cards || {};
-  Object.keys(vcObj).slice(0, 48).forEach(k => {
+  Object.keys(vcObj).forEach(k => {
     const c = vcObj[k];
-    if (c) { addU(c.audio); addU(c.audio_ja); addU(c.audio_zh); addU(c.audio_mn); }
+    if (c) {
+      addU(c.rev_audio);
+      addU(c.phrase_audio);
+      addU(c.hook_audio);
+      addU(c.word_audio);
+      addU(c.front_audio);
+    }
   });
   if (!urls.length) return;
   caches.open(DAILY_OFFLINE_AUDIO_CACHE).then(async cache => {
@@ -12550,6 +12643,9 @@ function getVocabCardSpec(surface) {
   const isTapped = Array.isArray(A.tappedWords) && A.tappedWords.includes(surface);
 
   if (pre) {
+    const rawZh = pre.zh || w.zh || (vItem && vItem.sub) || "";
+    const rawMn = pre.mnemonic || w.mnemonic || "";
+    const wordAud = pre.word_audio || (vItem && vItem.audio) || w.audio || "";
     return {
       word: surface,
       key: (vItem && vItem.key) || surface,
@@ -12562,18 +12658,21 @@ function getVocabCardSpec(surface) {
       trap_tag: pre.trap_tag || w.trap_tag || "",
       zh_opaque: typeof pre.zh_opaque === "boolean" ? pre.zh_opaque : (typeof w.zh_opaque === "boolean" ? w.zh_opaque : true),
       pitch: pre.pitch || w.pitch || "",
-      zh: pre.zh || w.zh || (vItem && vItem.sub) || "",
+      zh: rawZh,
+      zh_card: pre.zh_card || rawZh,
       twin: pre.twin || "",
-      mnemonic: pre.mnemonic || w.mnemonic || "",
-      zh_speak: typeof pre.zh_speak === "string" ? pre.zh_speak : cleanSpeakZh(pre.zh || w.zh || ""),
+      mnemonic: rawMn,
+      mnemonic_card: pre.mnemonic_card || rawMn,
+      zh_speak: typeof pre.zh_speak === "string" ? pre.zh_speak : cleanSpeakZh(rawZh),
       hook_spoken: pre.hook_spoken || "",
-      reveal_spoken: pre.reveal_spoken || "",
+      reveal_spoken: pre.reveal_spoken || pre.hook_spoken || "",
       front_audio: pre.front_audio || "",
       rev_audio: pre.rev_audio || "",
-      full_audio: pre.full_audio || "",
+      full_audio: pre.full_audio || pre.rev_audio || "",
       hook_audio: pre.hook_audio || "",
+      phrase_audio: pre.phrase_audio || pre.clean_audio || wordAud,
       clean_audio: pre.clean_audio || "",
-      word_audio: pre.word_audio || (vItem && vItem.audio) || w.audio || "",
+      word_audio: wordAud,
       source: isTapped ? "今日查词" : ""
     };
   }
@@ -12588,6 +12687,8 @@ function getVocabCardSpec(surface) {
     rawTip = rawTip.slice(zh.length).replace(/^[·\s]+/, "").trim();
   }
   if (rawTip && rawTip !== zh) tipParts.push(rawTip);
+  const dynWordAud = (vItem && vItem.audio) || w.audio || "";
+  const dynMn = String(w.mnemonic || "").split("；")[0].replace(/\s*→\s*[\u3040-\u30ffー・]+$/g, "").trim();
 
   return {
     word: surface,
@@ -12602,8 +12703,10 @@ function getVocabCardSpec(surface) {
     zh_opaque: zhOpaque,
     pitch: w.pitch || "",
     zh: zh,
+    zh_card: zh.includes(" · ") ? zh.split(" · ")[0].trim() : zh,
     twin: tipParts.join(" · "),
     mnemonic: w.mnemonic || "",
+    mnemonic_card: dynMn,
     zh_speak: (!hasKanji || zhOpaque) ? cleanSpeakZh(zh) : "",
     hook_spoken: cleanSpeakZh(w.mnemonic || ""),
     reveal_spoken: cleanSpeakZh(w.mnemonic || zh || ""),
@@ -12611,8 +12714,9 @@ function getVocabCardSpec(surface) {
     rev_audio: "",
     full_audio: "",
     hook_audio: "",
+    phrase_audio: dynWordAud,
     clean_audio: "",
-    word_audio: (vItem && vItem.audio) || w.audio || "",
+    word_audio: dynWordAud,
     source: isTapped ? "今日查词" : ""
   };
 }
@@ -12833,8 +12937,23 @@ function recordFlashProgress(seenCnt, totalCnt, markDoneNow) {
   }
 }
 
+function clearVocabSpeakingZones() {
+  ["vc-chunk-box", "vc-kana-box", "vc-zh-box", "vc-hook-box"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove("vc-speaking");
+  });
+}
+
+function setVocabSpeakingZone(elId) {
+  clearVocabSpeakingZones();
+  if (!elId) return;
+  const el = document.getElementById(elId);
+  if (el) el.classList.add("vc-speaking");
+}
+
 function stopVocabAudioAndTimers() {
   vcToken += 1;
+  clearVocabSpeakingZones();
   if (vcTimer) {
     clearTimeout(vcTimer);
     vcTimer = null;
@@ -12862,7 +12981,7 @@ function speakUtteranceLang(text, langCode, rateVal, cb) {
     clearTimeout(safety);
     if (cb) cb();
   };
-  const safety = setTimeout(finish, 3200);
+  const safety = setTimeout(finish, 4200);
   try {
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(clean);
@@ -12909,16 +13028,20 @@ function playUrlOnWordPlayer(url, myToken, onDone, onFail) {
     else if (onDone) onDone();
   };
 
-  warmAudio(url).then(resolvedUrl => {
+  const startResolved = (resolvedSrc) => {
     if (vcToken !== myToken) {
       clearTimeout(safety);
       return;
     }
     try {
+      const targetSrc = resolvedSrc || url;
       wordPlayer.onended = handleOk;
       wordPlayer.onerror = handleErr;
-      wordPlayer.src = resolvedUrl || url;
-      wordPlayer.currentTime = 0;
+      if (wordPlayer.src === targetSrc) {
+        try { wordPlayer.currentTime = 0; } catch (e) {}
+      } else {
+        wordPlayer.src = targetSrc;
+      }
       wordPlayer.playbackRate = 1.0;
       const pr = wordPlayer.play();
       if (pr && typeof pr.catch === "function") {
@@ -12927,15 +13050,23 @@ function playUrlOnWordPlayer(url, myToken, onDone, onFail) {
     } catch (e) {
       handleErr();
     }
-  });
+  };
+
+  // Synchronous 0ms start when already cached in audioBlobMap (preserves mobile user-gesture activation!)
+  if (audioBlobMap.has(url)) {
+    startResolved(audioBlobMap.get(url));
+    return;
+  }
+  warmAudio(url).then(startResolved);
 }
 
-function playBilingualFallback(card, includeJa, myToken, onDone) {
-  const revealTxt = String(card.reveal_spoken || card.hook_spoken || (typeof card.zh_speak === "string" ? card.zh_speak : (card.zh || ""))).trim();
+function playBilingualFallback(card, includePhrase, myToken, onDone) {
+  // Always follow the cognitive 3-beat order: 1) Mnemonic -> 2) Target Word -> 3) Full Phrase
+  const hookTxt = String(card.hook_spoken || card.reveal_spoken || "").trim();
   const phraseJa = (card.chunk_ja && card.chunk_ja !== card.word) ? card.chunk_ja : "";
   const speakPhraseStep = () => {
     if (vcToken !== myToken) return;
-    if (!phraseJa) {
+    if (!includePhrase || !phraseJa) {
       if (onDone) onDone();
       return;
     }
@@ -12944,48 +13075,45 @@ function playBilingualFallback(card, includeJa, myToken, onDone) {
       speakUtteranceLang(phraseJa, "ja-JP", 0.98, () => {
         if (vcToken === myToken && onDone) onDone();
       });
-    }, 180);
+    }, 200);
   };
-  const speakRevealStep = () => {
+  const speakWordStep = () => {
     if (vcToken !== myToken) return;
-    if (!revealTxt) {
+    const afterWord = () => {
+      if (vcToken !== myToken) return;
       speakPhraseStep();
-      return;
+    };
+    if (card.word_audio) {
+      playUrlOnWordPlayer(
+        card.word_audio,
+        myToken,
+        afterWord,
+        () => speakUtteranceLang(card.kana || card.word, "ja-JP", 0.98, afterWord)
+      );
+    } else {
+      speakUtteranceLang(card.kana || card.word, "ja-JP", 0.98, afterWord);
     }
-    speakUtteranceLang(revealTxt, "zh-CN", 1.04, speakPhraseStep);
   };
-  if (!includeJa) {
-    speakRevealStep();
-    return;
-  }
-  if (card.word_audio) {
-    playUrlOnWordPlayer(
-      card.word_audio,
-      myToken,
-      () => {
-        if (vcToken !== myToken) return;
-        vcTimer = setTimeout(speakRevealStep, 140);
-      },
-      () => {
-        speakUtteranceLang(card.kana || card.word, "ja-JP", 0.98, speakRevealStep);
-      }
-    );
+  if (hookTxt) {
+    speakUtteranceLang(hookTxt, "zh-CN", 1.04, () => {
+      if (vcToken !== myToken) return;
+      vcTimer = setTimeout(speakWordStep, 160);
+    });
   } else {
-    speakUtteranceLang(card.kana || card.word, "ja-JP", 0.98, speakRevealStep);
+    speakWordStep();
   }
 }
 
 function warmUpcomingVocabCards() {
   const sess = A.vocabSess;
   if (!sess || !Array.isArray(sess.queue)) return;
-  sess.queue.slice(0, 3).forEach(sw => {
+  sess.queue.slice(0, 5).forEach(sw => {
     const c = getVocabCardSpec(sw);
-    if (c.front_audio) warmAudio(c.front_audio);
     if (c.rev_audio) warmAudio(c.rev_audio);
-    if (c.full_audio) warmAudio(c.full_audio);
+    if (c.phrase_audio) warmAudio(c.phrase_audio);
     if (c.hook_audio) warmAudio(c.hook_audio);
-    if (c.clean_audio) warmAudio(c.clean_audio);
     if (c.word_audio) warmAudio(c.word_audio);
+    if (c.front_audio) warmAudio(c.front_audio);
   });
 }
 
@@ -13128,12 +13256,81 @@ function isKanaRecallGradCard(card) {
 }
 
 function shouldFadeVocabMnemonic(card) {
-  // Wang & Thomas (1995) / Crutcher (1990): fade spoken keyword crutch on 1/3 & 2/3 smooth passes
-  if (!card || vcPendingLeft) return false;
+  // Unified 3-beat audio (Mnemonic -> Word -> Phrase) plays consistently on EVERY card (0/3, 1/3, 2/3) so zero cards feel silently missing audio
+  return false;
+}
+
+function playVocabZoneAudio(zone, ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
   const sess = A.vocabSess;
-  if (sess && Array.isArray(sess.failedWords) && sess.failedWords.includes(card.word)) return false;
-  const eff = getEffectiveMastery(card.key, card.word);
-  return (eff.streak || 0) >= 1;
+  if (!sess || !sess.queue.length) return;
+  const card = getVocabCardSpec(sess.queue[0]);
+  stopVocabAudioAndTimers();
+  const myToken = ++vcToken;
+  const doneClear = () => {
+    if (vcToken === myToken) clearVocabSpeakingZones();
+  };
+
+  if (zone === "phrase") {
+    setVocabSpeakingZone("vc-chunk-box");
+    const phraseUrl = card.phrase_audio || card.clean_audio || card.word_audio;
+    if (phraseUrl) {
+      playUrlOnWordPlayer(
+        phraseUrl,
+        myToken,
+        doneClear,
+        () => speakUtteranceLang(card.chunk_ja || card.kana || card.word, "ja-JP", 0.98, doneClear)
+      );
+    } else {
+      speakUtteranceLang(card.chunk_ja || card.kana || card.word, "ja-JP", 0.98, doneClear);
+    }
+    return;
+  }
+
+  if (zone === "word") {
+    setVocabSpeakingZone("vc-kana-box");
+    const wordUrl = card.word_audio || card.front_audio || card.phrase_audio;
+    if (wordUrl) {
+      playUrlOnWordPlayer(
+        wordUrl,
+        myToken,
+        doneClear,
+        () => speakUtteranceLang(card.kana || card.word, "ja-JP", 0.98, doneClear)
+      );
+    } else {
+      speakUtteranceLang(card.kana || card.word, "ja-JP", 0.98, doneClear);
+    }
+    return;
+  }
+
+  if (zone === "hook") {
+    setVocabSpeakingZone("vc-hook-box");
+    const hookUrl = card.hook_audio || card.rev_audio;
+    if (hookUrl) {
+      playUrlOnWordPlayer(
+        hookUrl,
+        myToken,
+        doneClear,
+        () => playBilingualFallback(card, false, myToken, doneClear)
+      );
+    } else {
+      playBilingualFallback(card, false, myToken, doneClear);
+    }
+    return;
+  }
+
+  // Full 3-beat loop: Mnemonic FIRST -> Target Word SECOND -> Full Phrase LAST
+  const fullUrl = card.rev_audio || card.full_audio || card.hook_audio;
+  if (fullUrl) {
+    playUrlOnWordPlayer(
+      fullUrl,
+      myToken,
+      doneClear,
+      () => playBilingualFallback(card, true, myToken, doneClear)
+    );
+  } else {
+    playBilingualFallback(card, true, myToken, doneClear);
+  }
 }
 
 function dealCurrentVocabCard(autoStartAudio) {
@@ -13162,10 +13359,9 @@ function dealCurrentVocabCard(autoStartAudio) {
   const earFirst = isEarFirstGradCard(card);
   const kanaRecall = isKanaRecallGradCard(card);
 
-  // Pyc & Rawson (2009) + Tullis & Benjamin (2011): calm 4.2-4.5s fallback window (tap card anytime for instant 0ms reveal!)
+  // Calm 4.2-4.5s fallback window (tap card anytime for instant 0ms reveal + 3-beat auto audio!)
   if (earFirst) {
-    // 2/3 Final Auditory Graduation (Tamaoka et al. 2012): play Japanese ear-first with Kanji veiled!
-    const earUrl = card.word_audio || card.front_audio || card.full_audio;
+    const earUrl = card.word_audio || card.front_audio || card.phrase_audio;
     const afterEar = () => {
       if (activeMode !== "vocab" || vcToken !== myToken || vcRevealed) return;
       vcTimer = setTimeout(() => {
@@ -13184,19 +13380,16 @@ function dealCurrentVocabCard(autoStartAudio) {
       speakUtteranceLang(card.kana || card.word, "ja-JP", 0.98, afterEar);
     }
   } else if (kanaRecall) {
-    // 2/3 Pure Kana Productive Recall (L1->L2): silent Chinese cue on front, calm 4.5s fallback (tap anytime!)
     vcTimer = setTimeout(() => {
       if (activeMode !== "vocab" || vcToken !== myToken || vcRevealed) return;
       revealVocabCard(true);
     }, 4500);
   } else if (card.mode === "kanji_read") {
-    // Silent Kanji micro-chunk front: calm 4.5s fallback before auto-reveal (tap reveals instantly)
     vcTimer = setTimeout(() => {
       if (activeMode !== "vocab" || vcToken !== myToken || vcRevealed) return;
       revealVocabCard(true);
     }, 4500);
   } else {
-    // Kana / spoken word: play Japanese first, calm 4.2s fallback for meaning retrieval (tap reveals instantly)
     const frontUrl = card.front_audio || card.word_audio;
     const afterFront = () => {
       if (activeMode !== "vocab" || vcToken !== myToken || vcRevealed) return;
@@ -13210,10 +13403,10 @@ function dealCurrentVocabCard(autoStartAudio) {
         frontUrl,
         myToken,
         afterFront,
-        () => speakUtteranceLang(card.chunk_ja || card.kana || card.word, "ja-JP", 0.98, afterFront)
+        () => speakUtteranceLang(card.kana || card.word, "ja-JP", 0.98, afterFront)
       );
     } else {
-      speakUtteranceLang(card.chunk_ja || card.kana || card.word, "ja-JP", 0.98, afterFront);
+      speakUtteranceLang(card.kana || card.word, "ja-JP", 0.98, afterFront);
     }
   }
 }
@@ -13222,13 +13415,14 @@ function revealVocabCard(playAudioNow, forceFullBilingual) {
   const sess = A.vocabSess;
   if (!sess || !sess.queue.length) return;
   const card = getVocabCardSpec(sess.queue[0]);
-  const kanaRecall = isKanaRecallGradCard(card);
-  const fadeMn = !forceFullBilingual && shouldFadeVocabMnemonic(card);
   stopVocabAudioAndTimers();
   vcRevealed = true;
 
   const chunkEl = document.getElementById("vc-chunk-box");
-  if (chunkEl) chunkEl.classList.remove("ear-veil");
+  if (chunkEl) {
+    chunkEl.classList.remove("ear-veil");
+    chunkEl.classList.add("vc-live");
+  }
   const kFrontEl = document.getElementById("vc-kana-front");
   if (kFrontEl) kFrontEl.classList.add("revealed");
   const revEl = document.getElementById("vc-reveal-box");
@@ -13244,23 +13438,8 @@ function revealVocabCard(playAudioNow, forceFullBilingual) {
   }
 
   if (!playAudioNow) return;
-  const myToken = ++vcToken;
-  const needFull = !!forceFullBilingual || card.mode === "kanji_read" || kanaRecall;
-  // Wang & Thomas (1995): On 1/3 & 2/3 smooth passes, play crisp native Japanese word+phrase; on 0/3 play mnemonic early
-  const targetUrl = (fadeMn && card.clean_audio)
-    ? card.clean_audio
-    : (needFull ? (card.full_audio || card.rev_audio) : card.rev_audio);
-
-  if (targetUrl) {
-    playUrlOnWordPlayer(
-      targetUrl,
-      myToken,
-      null,
-      () => playBilingualFallback(card, needFull, myToken, null)
-    );
-  } else {
-    playBilingualFallback(card, needFull, myToken, null);
-  }
+  // Always auto-play the unified 3-beat studio clip immediately: Mnemonic -> Target Word -> Full Phrase
+  playVocabZoneAudio("full");
 }
 
 function replayVocabAudio(ev) {
@@ -13271,11 +13450,10 @@ function replayVocabAudio(ev) {
   const earFirst = isEarFirstGradCard(card);
   const kanaRecall = isKanaRecallGradCard(card);
   if (!vcRevealed) {
-    // Before reveal: replay ONLY the front audio on listening/kana fronts (don't spoil the answer!)
     if (earFirst || (card.mode !== "kanji_read" && !kanaRecall)) {
       stopVocabAudioAndTimers();
       const myToken = ++vcToken;
-      const frontUrl = earFirst ? (card.word_audio || card.front_audio || card.full_audio) : (card.front_audio || card.word_audio);
+      const frontUrl = earFirst ? (card.word_audio || card.front_audio || card.phrase_audio) : (card.front_audio || card.word_audio);
       if (frontUrl) {
         playUrlOnWordPlayer(frontUrl, myToken, null, () => speakUtteranceLang(card.kana || card.word, "ja-JP", 0.98, null));
       } else {
@@ -13286,34 +13464,28 @@ function replayVocabAudio(ev) {
     revealVocabCard(true, true);
     return;
   }
-  stopVocabAudioAndTimers();
-  const myToken = ++vcToken;
-  const fullUrl = card.full_audio || (card.mode === "kanji_read" ? card.rev_audio : "");
-  if (fullUrl) {
-    playUrlOnWordPlayer(
-      fullUrl,
-      myToken,
-      null,
-      () => playBilingualFallback(card, true, myToken, null)
-    );
-  } else {
-    playBilingualFallback(card, true, myToken, null);
-  }
+  playVocabZoneAudio("full");
 }
 
 function playVocabHookAudio(ev) {
-  if (ev) ev.stopPropagation();
-  replayVocabAudio(ev);
+  playVocabZoneAudio("hook", ev);
 }
 
-function onVocabCardTapOrReplay() {
+function onVocabCardTapOrReplay(targetEl) {
   if (vcAnimating) return;
   const sess = A.vocabSess;
   if (!sess || !sess.queue.length) return;
   if (!vcRevealed) {
-    revealVocabCard(true, cardNeedsFullOnTap(sess.queue[0]));
+    revealVocabCard(true, true);
+    return;
   }
-  // Once revealed, audio has already spoken — do NOT redundantly restart speech on card/mnemonic tap!
+  // Direct Manipulation (Steve Jobs): touch any text zone to hear THAT exact audio; empty background stays calm & silent
+  const zoneEl = (targetEl && typeof targetEl.closest === "function") ? targetEl.closest("[data-vc-zone]") : null;
+  if (!zoneEl) return;
+  const zone = (zoneEl.dataset && zoneEl.dataset.vcZone) || (zoneEl.getAttribute && zoneEl.getAttribute("data-vc-zone")) || "";
+  if (zone === "phrase" || zone === "word" || zone === "hook") {
+    playVocabZoneAudio(zone);
+  }
 }
 
 function cardNeedsFullOnTap(surface) {
@@ -13493,6 +13665,7 @@ function bindVocabCardGestures(cardEl) {
   let tracking = false;
   let hasDragged = false;
   let activePid = null;
+  let downTarget = null;
   let sx = 0, sy = 0, st = 0;
   const DRAG_DEADZONE = 12;
 
@@ -13503,6 +13676,7 @@ function bindVocabCardGestures(cardEl) {
     tracking = true;
     hasDragged = false;
     activePid = e.pointerId;
+    downTarget = e.target || null;
     sx = fpX(e);
     sy = fpY(e);
     st = performance.now();
@@ -13547,6 +13721,8 @@ function bindVocabCardGestures(cardEl) {
     if (!tracking || e.pointerId !== activePid) return;
     tracking = false;
     activePid = null;
+    const tapTarget = downTarget;
+    downTarget = null;
     try { cardEl.releasePointerCapture(e.pointerId); } catch (err) {}
     if (isCancel) {
       if (hasDragged) resetVocabCardTransform();
@@ -13562,7 +13738,7 @@ function bindVocabCardGestures(cardEl) {
     if (!hasDragged || (Math.hypot(dx, dy) < 20 && dt < 650)) {
       if (hasDragged) resetVocabCardTransform();
       hasDragged = false;
-      onVocabCardTapOrReplay();
+      onVocabCardTapOrReplay(tapTarget);
       return;
     }
     hasDragged = false;
@@ -13663,7 +13839,11 @@ function renderVocabStage() {
   const leftStampTxt = isKanjiCard ? "读音待练" : "没记住";
   const leftBtnTxt = isKanjiCard ? "读音不准" : "没记住";
   const rightBtnTxt = earFirst ? "听懂毕业" : (kanaRecall ? "想起毕业" : (isKanjiCard ? "读准了" : "记住"));
-  const kanaFrontTxt = kanaRecall ? (cleanSpeakZh(card.zh) || card.zh) : "";
+  const zhDisplay = card.zh_card || card.zh || "";
+  const mnDisplay = card.mnemonic_card || card.mnemonic || "";
+  const kanaFrontTxt = kanaRecall ? (cleanSpeakZh(zhDisplay) || zhDisplay) : "";
+  const chunkLen = String(card.chunk_ja || "").length;
+  const chunkLenCls = chunkLen >= 10 ? " len-long" : (chunkLen === 9 ? " len-9" : (chunkLen === 8 ? " len-8" : ""));
   const showVocabMic = JA_ASR.supported();
 
   box.innerHTML = `
@@ -13682,13 +13862,12 @@ function renderVocabStage() {
 
         <div class="vc-cue${vcRevealed && !vcPendingLeft ? " quiet-hide" : ""}" id="vc-cue-line">${initCue}</div>
         ${kanaRecall ? `<div class="vc-kana-front${vcRevealed ? " revealed" : ""}" id="vc-kana-front">${escapeHtml(kanaFrontTxt)}</div>` : ""}
-        <div class="vc-chunk${(earFirst || kanaRecall) && !vcRevealed ? " ear-veil" : ""}" lang="ja" id="vc-chunk-box">${renderChunkHighlightHTML(card.chunk_ja, card.target)}</div>
+        <div class="vc-chunk${chunkLenCls}${(earFirst || kanaRecall) && !vcRevealed ? " ear-veil" : ""} vc-tap-zone${vcRevealed ? " vc-live" : ""}" lang="ja" id="vc-chunk-box" data-vc-zone="phrase">${renderChunkHighlightHTML(card.chunk_ja, card.target)}</div>
 
         <div class="vc-reveal${vcRevealed ? " shown" : ""}" id="vc-reveal-box">
-          ${kanaHtml ? `<div class="vc-kana">${kanaHtml}</div>` : ""}
-          <div class="vc-zh${quietZh ? " quiet" : ""}">${escapeHtml(card.zh)}</div>
-          ${card.mnemonic ? `<div class="vc-hook"><span class="vc-hook-tag">记音</span>${formatZenNoteHTML(card.mnemonic)}</div>` : ""}
-          ${card.twin ? `<div class="vc-twin${card.mnemonic ? " sub" : ""}">${formatZenNoteHTML(card.twin)}</div>` : ""}
+          ${kanaHtml ? `<div class="vc-kana vc-tap-zone vc-live" id="vc-kana-box" data-vc-zone="word">${kanaHtml}</div>` : ""}
+          ${zhDisplay ? `<div class="vc-zh${quietZh ? " quiet" : ""} vc-tap-zone vc-live" id="vc-zh-box" data-vc-zone="phrase">${escapeHtml(zhDisplay)}</div>` : ""}
+          ${mnDisplay ? `<div class="vc-hook vc-tap-zone vc-live" id="vc-hook-box" data-vc-zone="hook">${formatZenNoteHTML(mnDisplay)}</div>` : ""}
         </div>
         <div class="mic-feedback" id="vc-mic-feedback"></div>
       </div>
@@ -17372,25 +17551,29 @@ const lkRec = vm.runInNewContext('A.wordLookups["予約しとこう"]', sb);
 if (qLenBefore !== qLenAfter || !Array.isArray(lkRec) || lkRec[0] < 1) {
   throw new Error('Self-test failed: recordTappedWord either mutated vocabSess or missed wordLookups!');
 }
-// Self-test 4: Every vocab card has a concise phrase (<=10 chars), spoken mnemonic, hook_audio, and zero em dashes
+// Self-test 4: Every vocab card has a concise phrase (<=10 chars), spoken mnemonic, full 4-slot studio audio, distilled card text, and zero clutter/em dashes
 const vcObj = vm.runInNewContext('DATA.vocab_cards || {}', sb);
 const vcKeys = Object.keys(vcObj);
 if (vcKeys.length < 120) throw new Error('Self-test failed: vocab_cards unexpectedly small: ' + vcKeys.length);
 for (const k of vcKeys) {
   const rec = vcObj[k] || {};
   const mn = String(rec.mnemonic || '').trim();
+  const mnCard = String(rec.mnemonic_card || '').trim();
+  const zhCard = String(rec.zh_card || '').trim();
   const hs = String(rec.hook_spoken || '').trim();
   const ch = String(rec.chunk_ja || '').trim();
-  if (!mn) throw new Error('Self-test failed: missing mnemonic for vocab card ' + k);
-  if (mn.includes('—')) throw new Error('Self-test failed: em dash in mnemonic for ' + k);
+  if (!mn || !mnCard) throw new Error('Self-test failed: missing mnemonic/mnemonic_card for vocab card ' + k);
+  if (mn.includes('—') || mnCard.includes('—') || zhCard.includes('—')) throw new Error('Self-test failed: em dash in vocab card ' + k);
   if (!hs) throw new Error('Self-test failed: missing hook_spoken for vocab card ' + k);
-  if (!rec.hook_audio) throw new Error('Self-test failed: missing hook_audio for vocab card ' + k);
+  if (!rec.rev_audio || !rec.hook_audio || !rec.phrase_audio || !rec.word_audio) {
+    throw new Error('Self-test failed: missing required studio audio slot for vocab card ' + k + ': ' + JSON.stringify({rev:rec.rev_audio, hook:rec.hook_audio, phrase:rec.phrase_audio, word:rec.word_audio}));
+  }
   if (ch.length > 10) throw new Error('Self-test failed: vocab chunk too long (should be concise phrase <=10 chars) for ' + k + ': ' + ch);
 }
 sb.switchMode('vocab');
 const vcStageHtml = (els['vocab-stage-box'] && els['vocab-stage-box'].innerHTML) || '';
-if (!vcStageHtml.includes('vc-hook') || !vcStageHtml.includes('>记音<') || vcStageHtml.includes('记音 ♪')) {
-  throw new Error('Self-test failed: vocab card must render calm .vc-hook 记音 without redundant ♪ tap icon!');
+if (!vcStageHtml.includes('id="vc-hook-box"') || !vcStageHtml.includes('data-vc-zone="phrase"') || !vcStageHtml.includes('data-vc-zone="hook"') || vcStageHtml.includes('vc-hook-tag') || vcStageHtml.includes('vc-twin') || vcStageHtml.includes('记音 ♪')) {
+  throw new Error('Self-test failed: vocab card must render ultra-minimal Jobsian zones without vc-hook-tag or duplicate vc-twin!');
 }
 // Self-test 5: Zen Body Human & Basketball-Aware Dynamic Coach + 47-Session Power Zone Engine
 const zst = sb.ZB._getState();
@@ -17762,15 +17945,15 @@ if (!vcTwins['書類'] || !vcTwins['書類'].includes('種類')) {
 }
 const sampleKana = 'めったに';
 const kSpec = sb.getVocabCardSpec(sampleKana);
-if (!kSpec || kSpec.mode !== 'kana_meaning' || !kSpec.clean_audio) {
-  throw new Error('Self-test 8 failed: めったに missing kana_meaning or clean_audio');
+if (!kSpec || kSpec.mode !== 'kana_meaning' || !kSpec.clean_audio || !kSpec.phrase_audio) {
+  throw new Error('Self-test 8 failed: めったに missing kana_meaning, clean_audio, or phrase_audio');
 }
 sb.setMasteryTier(sampleKana, 'wip2:20261120', Math.floor(Date.now() / 1000) + 30);
 if (!sb.isKanaRecallGradCard(kSpec)) {
   throw new Error('Self-test 8 failed: streak=2 kana card must activate L1->L2 productive recall');
 }
-if (!sb.shouldFadeVocabMnemonic(kSpec)) {
-  throw new Error('Self-test 8 failed: streak>=1 non-failed vocab card should fade auto-played mnemonic');
+if (sb.shouldFadeVocabMnemonic(kSpec)) {
+  throw new Error('Self-test 8 failed: streak>=1 vocab card must NOT silently drop mnemonic audio (unified 3-beat reveal)');
 }
 sb.setMasteryTier(sampleKana, 'todo:20261122', Math.floor(Date.now() / 1000) + 40);
 if (sb.shouldFadeVocabMnemonic(kSpec)) {
@@ -18001,32 +18184,43 @@ if (!miniBarEl.classList.contains('hidden')) {
   throw new Error('Self-test 11 failed: radio-mini-bar should be hidden on radio tab!');
 }
 
-// Self-test 12: Zen Vocab Frameless Kanso Ergonomics & Zero Redundant Mnemonic Re-Speak
+// Self-test 12: Steve Jobs Minimalist Vocab Card + Direct-Touch Per-Zone Audio + Calm Background Tap
 sb.switchMode('vocab');
 sb.switchVocabSubMode('vocab');
 const zenVcHtml = (els['vocab-stage-box'] && els['vocab-stage-box'].innerHTML) || '';
 if (!zenVcHtml.includes('vc-aux-row') || !zenVcHtml.includes('id="vc-replay-btn"') || !zenVcHtml.includes('id="vc-seal-btn"')) {
   throw new Error('Self-test 12 failed: vocab card missing Kanso thumb-zone vc-aux-row (太熟 / 重听)!');
 }
-if (zenVcHtml.includes('记音 ♪') || zenVcHtml.includes('↑ 太熟') || zenVcHtml.includes('—')) {
-  throw new Error('Self-test 12 failed: vocab card contains cluttered ♪ / ↑ 太熟 / em dash!');
+if (zenVcHtml.includes('记音 ♪') || zenVcHtml.includes('vc-hook-tag') || zenVcHtml.includes('vc-twin') || zenVcHtml.includes('↑ 太熟') || zenVcHtml.includes('—')) {
+  throw new Error('Self-test 12 failed: vocab card contains cluttered tag/twin/♪/↑ 太熟/em dash!');
 }
 const metaChunk = zenVcHtml.split('vc-deck-area')[0] || '';
 if (metaChunk.includes('<button')) {
   throw new Error('Self-test 12 failed: top meta-bar on vocab screen must remain read-only (上看下点)!');
 }
-// Reveal card once -> tapping card afterwards must NOT re-trigger speech (vcToken stays stable)
+// Reveal card once -> auto-plays full 3-beat rev_audio; tapping empty background stays silent; tapping phrase/word/hook zones plays exact zone audio!
 sb.revealVocabCard(true, false);
 const tokAfterReveal = vm.runInNewContext('vcToken', sb);
-sb.onVocabCardTapOrReplay();
-const tokAfterTap = vm.runInNewContext('vcToken', sb);
-if (tokAfterTap !== tokAfterReveal) {
-  throw new Error('Self-test 12 failed: tapping revealed vocab card/mnemonic redundantly restarted speech!');
+sb.onVocabCardTapOrReplay(null);
+const tokAfterBgTap = vm.runInNewContext('vcToken', sb);
+if (tokAfterBgTap !== tokAfterReveal) {
+  throw new Error('Self-test 12 failed: tapping empty revealed card background unexpectedly restarted speech!');
 }
-// Explicit thumb-zone 重听 button MUST still replay audio cleanly
+const mockZone = (z) => ({ dataset: { vcZone: z }, closest: (sel) => (sel === '[data-vc-zone]' ? { dataset: { vcZone: z } } : null) });
+sb.onVocabCardTapOrReplay(mockZone('phrase'));
+const tokAfterPhraseTap = vm.runInNewContext('vcToken', sb);
+if (tokAfterPhraseTap <= tokAfterReveal || !els['vc-chunk-box'].classList.contains('vc-speaking')) {
+  throw new Error('Self-test 12 failed: tapping phrase/word zone did not trigger phrase_audio & vc-speaking feedback!');
+}
+sb.onVocabCardTapOrReplay(mockZone('hook'));
+const tokAfterHookTap = vm.runInNewContext('vcToken', sb);
+if (tokAfterHookTap <= tokAfterPhraseTap || !els['vc-hook-box'].classList.contains('vc-speaking')) {
+  throw new Error('Self-test 12 failed: tapping mnemonic hook zone did not trigger hook_audio & vc-speaking feedback!');
+}
+// Explicit thumb-zone 重听 button MUST replay full 3-beat audio cleanly
 sb.replayVocabAudio();
 const tokAfterReplay = vm.runInNewContext('vcToken', sb);
-if (tokAfterReplay <= tokAfterReveal) {
+if (tokAfterReplay <= tokAfterHookTap) {
   throw new Error('Self-test 12 failed: explicit thumb-zone 重听 did not advance vcToken to replay!');
 }
 
@@ -18035,8 +18229,12 @@ if (html.includes('--hairline-2') || html.includes('rgba(255, 255, 255, 0.94)'))
   throw new Error('Self-test 13 failed: broken --hairline-2 or hardcoded white mini-bar background regressed!');
 }
 const fmtTest = sb.formatZenNoteHTML('英文 “Show(しょう) Torch(ちょう)” 高举火炬，所長(しょちょう) → よさん');
-if (fmtTest.includes(' “') || fmtTest.includes('” ') || !fmtTest.includes('class="nw">所長(しょちょう)<') || !fmtTest.includes('class="nw">→ よさん<')) {
+if (fmtTest.includes(' “') || fmtTest.includes('” ') || !fmtTest.includes('class="nw">Show(しょう)<') || !fmtTest.includes('class="nw">所長(しょちょう)<') || !fmtTest.includes('class="nw">→ よさん<')) {
   throw new Error('Self-test 13 failed: formatZenNoteHTML did not normalize quote spacing & kana nw spans: ' + fmtTest);
+}
+const fmtCrack = sb.formatZenNoteHTML('像英文“Crack(から)”干裂冒烟咔啦作响');
+if (!fmtCrack.includes('class="nw">Crack(から)<') || fmtCrack.includes('<span class="nw">Crack<span')) {
+  throw new Error('Self-test 13 failed: formatZenNoteHTML broke or nested Crack(から): ' + fmtCrack);
 }
 sb.switchMode('radio', false);
 sb.toggleRadioPlay(true);

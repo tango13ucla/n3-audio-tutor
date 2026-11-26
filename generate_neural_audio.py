@@ -742,7 +742,7 @@ async def main():
 
         await asyncio.gather(*(process_word(surf, info) for surf, info in merged_words.items()))
 
-    # Studio Bilingual Dual-Mode Vocab Cards (Zen v20: Word -> Spoken Pronunciation Mnemonic FIRST -> Short Phrase AFTER)
+    # Studio Bilingual Vocab Cards (Zen v21: Mnemonic FIRST -> Target Word SECOND -> Full Phrase LAST + direct-touch clips)
     from vocab_cards import build_dynamic_vocab_card, build_vocab_audio_spec
     vc_all_cards = {}
     for vw, vspec in VOCAB_CARDS.items():
@@ -770,89 +770,67 @@ async def main():
 
     vc_jobs = {}
     vc_specs = {}
-    vc_tag = "edge:Brian_v20_hookfirst"
+    vc_tag = "edge:Brian_v21_hook_word_phrase"
     for vw, vc in vc_all_cards.items():
         vc_id = hashlib.sha256(vw.encode("utf-8")).hexdigest()[:10]
         mode = vc.get("mode", "kana_meaning")
         aspec = build_vocab_audio_spec(vc)
         word_ja = aspec["word_ja"]
         chunk_ja = aspec["chunk_ja"]
-        reveal_turns = _to_bilingual_turns(aspec["reveal_spoken"])
         hook_only_turns = _to_bilingual_turns(aspec["hook_spoken"])
 
-        # Dedicated tap-to-hear mnemonic clip: target word -> pronunciation mnemonic
-        hook_turns = [("JF", word_ja), ("PAUSE", 0.14), *hook_only_turns] if hook_only_turns else [("JF", word_ja)]
-        hook_file = f"vc_{vc_id}_hook.mp3"
-        hook_hash = hashlib.sha256((f"v20vch:{vc_tag}:" + json.dumps(hook_turns, ensure_ascii=False)).encode("utf-8")).hexdigest()[:10]
+        # 1) Isolated target word clip (for kana reading tap + front audio on kana/ear-first cards)
+        word_turns = [("JF", word_ja)]
+        word_file = f"vc_{vc_id}_word.mp3"
+        word_hash = hashlib.sha256((f"v21vcw:{vc_tag}:" + json.dumps(word_turns, ensure_ascii=False)).encode("utf-8")).hexdigest()[:10]
 
-        # Dedicated pure-Japanese (no-mnemonic) clip for 1/3 & 2/3 mnemonic fading (Wang & Thomas 1995) & 2/3 kana recall
+        # 2) Isolated full phrase/sentence clip (for tapping the big Japanese phrase/word block!)
+        phrase_ja_eff = chunk_ja if (chunk_ja and chunk_ja != word_ja) else word_ja
+        phrase_turns = [("JF", phrase_ja_eff)]
+        phrase_file = f"vc_{vc_id}_phrase.mp3"
+        phrase_hash = hashlib.sha256((f"v21vcp:{vc_tag}:" + json.dumps(phrase_turns, ensure_ascii=False)).encode("utf-8")).hexdigest()[:10]
+
+        # 3) Tap-mnemonic clip: Direct Mnemonic FIRST -> Target Word pronunciation SECOND
+        hook_turns = [*hook_only_turns, ("PAUSE", 0.18), ("JF", word_ja)] if hook_only_turns else [("JF", word_ja)]
+        hook_file = f"vc_{vc_id}_hook.mp3"
+        hook_hash = hashlib.sha256((f"v21vch:{vc_tag}:" + json.dumps(hook_turns, ensure_ascii=False)).encode("utf-8")).hexdigest()[:10]
+
+        # 4) Pure-Japanese clip (Word -> Phrase) for mic pronunciation correction & clean fallback
         clean_turns = [("JF", word_ja)]
         if chunk_ja and chunk_ja != word_ja:
             clean_turns.extend([("PAUSE", 0.18), ("JF", chunk_ja)])
         clean_file = f"vc_{vc_id}_clean.mp3"
-        clean_hash = hashlib.sha256((f"v20vcc:{vc_tag}:" + json.dumps(clean_turns, ensure_ascii=False)).encode("utf-8")).hexdigest()[:10]
+        clean_hash = hashlib.sha256((f"v21vcc:{vc_tag}:" + json.dumps(clean_turns, ensure_ascii=False)).encode("utf-8")).hexdigest()[:10]
 
-        if mode == "kanji_read":
-            # Front is silent; Reveal & Replay: Word (JA) -> Mnemonic (CN+EN) FIRST -> Short Phrase (JA) AFTER
-            rev_turns = [("JF", word_ja)]
-            if reveal_turns:
-                rev_turns.extend([("PAUSE", 0.16), *reveal_turns])
-            if chunk_ja:
-                rev_turns.extend([("PAUSE", 0.22), ("JF", chunk_ja)])
-            rev_file = f"vc_{vc_id}_rev.mp3"
-            rev_hash = hashlib.sha256((f"v20vc:{vc_tag}:" + json.dumps(rev_turns, ensure_ascii=False)).encode("utf-8")).hexdigest()[:10]
-            vc_specs[vw] = {
-                "mode": mode,
-                "front": None,
-                "rev": (rev_file, rev_hash, rev_turns),
-                "full": (rev_file, rev_hash, rev_turns),
-                "hook": (hook_file, hook_hash, hook_turns),
-                "clean": (clean_file, clean_hash, clean_turns),
-            }
-            for fn, fh, ft in (vc_specs[vw]["rev"], vc_specs[vw]["hook"], vc_specs[vw]["clean"]):
-                f_abs = os.path.join(WORDS_AUDIO_DIR, fn)
-                if old_vc_hashes.get(fn) != fh or not os.path.exists(f_abs):
-                    vc_jobs[fn] = (fh, ft)
-        else:
-            # Front: crisp target word ONLY (forces clean retrieval before reveal)
-            front_turns = [("JF", word_ja)]
-            # Reveal: Meaning + Mnemonic FIRST -> Short Phrase (JA) AFTER
-            rev_turns = list(reveal_turns)
-            if chunk_ja:
-                if rev_turns:
-                    rev_turns.append(("PAUSE", 0.22))
-                rev_turns.append(("JF", chunk_ja))
-            if not rev_turns:
-                rev_turns = [("JF", word_ja)]
-            # Full / Replay: Word (JA) -> Meaning + Mnemonic FIRST -> Short Phrase (JA) AFTER
-            full_turns = [("JF", word_ja)]
-            if reveal_turns:
-                full_turns.extend([("PAUSE", 0.16), *reveal_turns])
-            if chunk_ja:
-                full_turns.extend([("PAUSE", 0.22), ("JF", chunk_ja)])
+        # 5) Unified Auto-Reveal & Replay 3-Beat Clip: Mnemonic FIRST -> Target Word SECOND -> Full Phrase LAST
+        rev_turns = list(hook_only_turns)
+        if rev_turns:
+            rev_turns.append(("PAUSE", 0.18))
+        rev_turns.append(("JF", word_ja))
+        if chunk_ja and chunk_ja != word_ja:
+            rev_turns.extend([("PAUSE", 0.24), ("JF", chunk_ja)])
+        rev_file = f"vc_{vc_id}_rev.mp3"
+        rev_hash = hashlib.sha256((f"v21vcr:{vc_tag}:" + json.dumps(rev_turns, ensure_ascii=False)).encode("utf-8")).hexdigest()[:10]
 
-            front_file = f"vc_{vc_id}_front.mp3"
-            rev_file = f"vc_{vc_id}_rev.mp3"
-            full_file = f"vc_{vc_id}_full.mp3"
-            front_hash = hashlib.sha256((f"v20vcf:{vc_tag}:" + json.dumps(front_turns, ensure_ascii=False)).encode("utf-8")).hexdigest()[:10]
-            rev_hash = hashlib.sha256((f"v20vcr:{vc_tag}:" + json.dumps(rev_turns, ensure_ascii=False)).encode("utf-8")).hexdigest()[:10]
-            full_hash = hashlib.sha256((f"v20vcx:{vc_tag}:" + json.dumps(full_turns, ensure_ascii=False)).encode("utf-8")).hexdigest()[:10]
-            vc_specs[vw] = {
-                "mode": mode,
-                "front": (front_file, front_hash, front_turns),
-                "rev": (rev_file, rev_hash, rev_turns),
-                "full": (full_file, full_hash, full_turns),
-                "hook": (hook_file, hook_hash, hook_turns),
-                "clean": (clean_file, clean_hash, clean_turns),
-            }
-            for fn, fh, ft in (vc_specs[vw]["front"], vc_specs[vw]["rev"], vc_specs[vw]["full"], vc_specs[vw]["hook"], vc_specs[vw]["clean"]):
-                f_abs = os.path.join(WORDS_AUDIO_DIR, fn)
-                if old_vc_hashes.get(fn) != fh or not os.path.exists(f_abs):
-                    vc_jobs[fn] = (fh, ft)
+        vc_specs[vw] = {
+            "mode": mode,
+            "front": (word_file, word_hash, word_turns) if mode != "kanji_read" else None,
+            "rev": (rev_file, rev_hash, rev_turns),
+            "full": (rev_file, rev_hash, rev_turns),
+            "hook": (hook_file, hook_hash, hook_turns),
+            "phrase": (phrase_file, phrase_hash, phrase_turns),
+            "word": (word_file, word_hash, word_turns),
+            "clean": (clean_file, clean_hash, clean_turns),
+        }
+        for slot_key in ("rev", "hook", "phrase", "word", "clean"):
+            fn, fh, ft = vc_specs[vw][slot_key]
+            f_abs = os.path.join(WORDS_AUDIO_DIR, fn)
+            if old_vc_hashes.get(fn) != fh or not os.path.exists(f_abs):
+                vc_jobs[fn] = (fh, ft)
 
     vc_built_ok = set()
     if can_synth and vc_jobs:
-        vc_tmp = tempfile.mkdtemp(prefix="n3_vc_v20_")
+        vc_tmp = tempfile.mkdtemp(prefix="n3_vc_v21_")
         try:
             vc_clips = {}
             vc_pauses = set()
@@ -898,13 +876,13 @@ async def main():
                 if stitch_turns(turns, vc_lookup, vc_sil, out_abs, vc_tmp, fn.replace(".mp3", "")):
                     vc_built_ok.add(fn)
                     new_manifest["vocab_card_hashes"][fn] = fh
-            print(f"Synthesized {len(vc_built_ok)}/{len(vc_jobs)} bilingual vocab card MP3s (v20 hook-first).")
+            print(f"Synthesized {len(vc_built_ok)}/{len(vc_jobs)} bilingual vocab card MP3s (v21 hook->word->phrase).")
         finally:
             shutil.rmtree(vc_tmp, ignore_errors=True)
 
     for vw, spec in vc_specs.items():
         entry = {}
-        for slot in ("front", "rev", "full", "hook", "clean"):
+        for slot in ("front", "rev", "full", "hook", "phrase", "word", "clean"):
             item = spec.get(slot)
             if not item:
                 entry[slot] = ""
