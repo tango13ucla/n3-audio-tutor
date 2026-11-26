@@ -17512,11 +17512,11 @@ window.ZB = (function() {
     }
 
     // 1. Travel mode (short trip <=5d: pure chill walking; long trip >5d: walking + optional 8m hotel bodyweight maintenance)
-    if (trip) {
+    if (trip && !forcePZ && st.mode === "normal") {
       const tripDays = Math.max(1, daysDiff(trip.start, trip.end) + 1);
       const isLongTrip = tripDays > 5;
       const tItems = [
-        { k: "旅途心肺", v: "每天自然步行即算达标，不碰单车不焦虑", cur: true }
+        { k: "旅途心肺", v: "每天自然步行即算达标，不碰单车不焦虑", sub: "出门前、返程在家或酒店有单车时，点下方「想骑 Peloton」随时切回主线。", cur: true }
       ];
       if (isLongTrip) {
         tItems.push({
@@ -17535,17 +17535,17 @@ window.ZB = (function() {
         title: "旅途轻松步行",
         shortLine: isLongTrip
           ? `主线暂存在 ${cur.code}，隔两天可做 8 分钟徒手`
-          : `主线暂存在 ${cur.code}，回来无缝接着骑`,
+          : `主线暂存在 ${cur.code}，出门前想骑也可一键切换`,
         linkText: "安排详情 ›",
         ctaText: pelo ? "今日步行已记 ✓" : "记下今日步行",
         ctaDone: !!pelo,
-        altAction: null,
+        altAction: cur.allDone ? null : { label: "想骑 Peloton · 推主线", type: "override_pz", active: false },
         actionType: "travel",
         isPZMain: false, pzCls: cur, rideMin: 30,
         guide: {
           title: `旅途维持 · ${trip.name}`,
           items: tItems,
-          showSyllabus: true, canOverridePZ: false
+          showSyllabus: true, canOverridePZ: !cur.allDone
         },
         cardioDone: !!(pelo || bb), puTarget: 0,
         state: st.mode, sub: st.sub, bb, pelo, wk, cur, next: cur, daysGap: 0, stale: "none", isTravel: true
@@ -18041,25 +18041,31 @@ window.ZB = (function() {
 
     // Default Normal Day (Well-rested & under weekly cap): Smoothly advance next PZ class!
     const tier = (stale === "remind" || stale === "gentle") ? "yellow" : "green";
-    const tierText = stale === "remind"
-      ? "歇了两周 · 轻松接回"
-      : (stale === "gentle"
-        ? `歇了 ${daysGap} 天 · 顺手续一节`
-        : (cur.kind === "test"
-          ? "状态满血 · 测 FTP"
-          : (yestHeavyBB
-            ? "球后可轻推主线"
-            : `常规 · 本周 ${wk.pM}/${wk.pzGoal} 节`)));
+    const tierText = trip
+      ? "旅途日 · 骑主线"
+      : (stale === "remind"
+        ? "歇了两周 · 轻松接回"
+        : (stale === "gentle"
+          ? `歇了 ${daysGap} 天 · 顺手续一节`
+          : (cur.kind === "test"
+            ? "状态满血 · 测 FTP"
+            : (yestHeavyBB
+              ? "球后可轻推主线"
+              : `常规 · 本周 ${wk.pM}/${wk.pzGoal} 节`))));
     return makePZPlan({
       tier, tierText, cur,
       vitalsLine: wr.summary,
-      extraNote: cur.kind === "test"
-        ? "今天没打球且状态正常，正好一口气完成 10 分热身 + 20 分 FTP 测试，锁死你的 7 档专属功率区。"
-        : (yestHeavyBB
-          ? "昨天打完球但今天这节是轻/稳态课，腿轻松就顺手推一节；觉得累点下方直接改休整。"
-          : `每周稳推 ${wk.pzGoal} 节左右就很够（结合你打篮球的量），今天精力正常就照这节骑。`),
-      altAction: yestHeavyBB ? { label: "腿还有点累 · 改休整", type: "to_rest", active: false } : null,
-      puTarget: puStage().targetRounds || 2, state: st.mode, sub: st.sub, bb, pelo, wk, daysGap, stale
+      extraNote: trip
+        ? "出门前、返程在家或酒店有车时顺手推一节；时间紧随时点下方改回旅途步行。"
+        : (cur.kind === "test"
+          ? "今天没打球且状态正常，正好一口气完成 10 分热身 + 20 分 FTP 测试，锁死你的 7 档专属功率区。"
+          : (yestHeavyBB
+            ? "昨天打完球但今天这节是轻/稳态课，腿轻松就顺手推一节；觉得累点下方直接改休整。"
+            : `每周稳推 ${wk.pzGoal} 节左右就很够（结合你打篮球的量），今天精力正常就照这节骑。`)),
+      altAction: trip
+        ? { label: "改回旅途步行", type: "to_travel", active: false }
+        : (yestHeavyBB ? { label: "腿还有点累 · 改休整", type: "to_rest", active: false } : null),
+      puTarget: trip ? 0 : (puStage().targetRounds || 2), state: st.mode, sub: st.sub, bb, pelo, wk, daysGap, stale
     });
   }
 
@@ -18340,8 +18346,8 @@ window.ZB = (function() {
     const tt = ge("zb-tier-txt");
     if (tt) tt.textContent = plan.tierText;
     const stTrig = ge("zb-state-trigger"), stChev = ge("zb-state-chev");
-    if (stTrig) stTrig.className = "zb-state-trigger" + (plan.isTravel ? " is-static" : "");
-    if (stChev) stChev.style.display = plan.isTravel ? "none" : "inline-block";
+    if (stTrig) stTrig.className = "zb-state-trigger";
+    if (stChev) stChev.style.display = "inline-block";
 
     const cur = plan.cur;
     const staleCls = plan.stale === "remind" ? " urgent" : (plan.stale === "gentle" ? " warn" : "");
@@ -18835,7 +18841,8 @@ window.ZB = (function() {
     if (!p || !p.guide) return;
     const links = [];
     if (p.guide.canOverridePZ && p.cur && !p.cur.allDone) {
-      links.push(`<button type="button" class="zb-btn-quiet active" onclick="ZB.overrideToPZ()">精力足，今天照常骑 ${escapeHtml(p.cur.code)} ›</button>`);
+      const ovLabel = p.isTravel ? `想骑 Peloton，今天推 ${escapeHtml(p.cur.code)} ›` : `精力足，今天照常骑 ${escapeHtml(p.cur.code)} ›`;
+      links.push(`<button type="button" class="zb-btn-quiet active" onclick="ZB.overrideToPZ()">${ovLabel}</button>`);
     }
     if (p.guide.showSyllabus) {
       links.push(`<button type="button" class="zb-btn-quiet" onclick="ZB.openPZList()">完整主线课表 ›</button>`);
@@ -18900,10 +18907,27 @@ window.ZB = (function() {
   function openStateSheet() {
     const mc = ge("modal-content"), mm = ge("app-modal");
     if (!mc || !mm) return;
-    const plan = planFor(todayYmd());
-    if (plan.isTravel) return;
+    const today = todayYmd();
+    const plan = planFor(today);
+    const trip = tripOn(today);
+    const forcePZ = !!dayE(today).force_pz;
     const st = plan.state || "normal";
     const sub = plan.sub || "";
+    const rideActive = !!(!plan.isTravel && forcePZ && st === "normal");
+    const showRideRow = !!(trip || !plan.isPZMain || forcePZ);
+    const firstActive = trip ? !!plan.isTravel : (st === "normal" && !rideActive);
+    const firstTitle = trip ? "旅途步行" : "常规";
+    const firstDesc = trip ? "自然步行即达标，主线顺延不焦虑" : "按手表睡眠、HRV 与本周主线自动排课";
+    const rideRowHtml = showRideRow ? `
+        <div class="zb-sheet-block">
+          <button type="button" class="zb-sheet-row ${rideActive ? "active" : ""}" onclick="ZB.overrideToPZ()">
+            <div class="zb-sheet-main">
+              <span class="zb-sheet-dot"></span>
+              <div><div class="zb-sheet-title">骑 Peloton</div><div class="zb-sheet-desc">${trip ? "出门前、返程或酒店有车时，照常推主线" : "跳过今日休整，直接推一节主线课程"}</div></div>
+            </div>
+            ${rideActive ? `<span class="zb-sheet-check">${CTA_CHECK_SVG}</span>` : ""}
+          </button>
+        </div>` : "";
     const bbPills = st === "bb" ? `
       <div class="zb-sheet-subrow">
         <button type="button" class="zb-sheet-pill ${sub === "light" ? "active is-green" : ""}" onclick="ZB.pickState('bb','light',false)">轻投半场</button>
@@ -18917,17 +18941,18 @@ window.ZB = (function() {
       </div>` : "";
     mc.innerHTML = `
       <h3 class="modal-h">今日状态</h3>
-      <p class="zb-sheet-sub">按真实体感轻点一下，今晚安排自动重算。</p>
+      <p class="zb-sheet-sub">按真实体感或行程轻点一下，今日安排自动重算。</p>
       <div class="zb-sheet-list">
         <div class="zb-sheet-block">
-          <button type="button" class="zb-sheet-row ${st === "normal" ? "active" : ""}" onclick="ZB.pickState('normal','',false)">
+          <button type="button" class="zb-sheet-row ${firstActive ? "active" : ""}" onclick="ZB.pickState('normal','',false)">
             <div class="zb-sheet-main">
               <span class="zb-sheet-dot"></span>
-              <div><div class="zb-sheet-title">常规</div><div class="zb-sheet-desc">按手表睡眠、HRV 与本周主线自动排课</div></div>
+              <div><div class="zb-sheet-title">${firstTitle}</div><div class="zb-sheet-desc">${firstDesc}</div></div>
             </div>
-            ${st === "normal" ? `<span class="zb-sheet-check">${CTA_CHECK_SVG}</span>` : ""}
+            ${firstActive ? `<span class="zb-sheet-check">${CTA_CHECK_SVG}</span>` : ""}
           </button>
         </div>
+        ${rideRowHtml}
         <div class="zb-sheet-block">
           <button type="button" class="zb-sheet-row ${st === "bb" ? "active is-bb" : ""}" onclick="ZB.pickState('bb','',true)">
             <div class="zb-sheet-main">
@@ -19085,22 +19110,27 @@ window.ZB = (function() {
       schedPush(); render();
     },
     overrideToPZ() {
-      const d = ensureDay();
+      const today = todayYmd(), d = ensureDay(today);
+      const hasDriveBB = actsOn(today).some(a => a[1] === "bb");
       d.force_pz = 1;
+      d.tired = 0;
+      d.rest_day = 0;
+      if (d.bb && d.bb !== "none") d.bb = hasDriveBB ? "none" : null;
       if (typeof closeModal === "function") closeModal();
-      toast("已切回今日主线课程");
+      toast("已切到今日 Peloton 主线");
       schedPush(); render();
     },
     logCardio(kind) {
       const today = todayYmd(), p = planFor(today), d = ensureDay(today), nowS = Math.floor(Date.now() / 1000);
-      if (p.isTravel) {
-        d.pelo = d.pelo ? null : "done"; d.pelo_min = 30;
-        toast(d.pelo ? "旅途步行已记" : "已撤销");
-      } else if (kind === "recovery") {
+      if (kind === "recovery") {
         const altT = (p.altAction && p.altAction.type) || "recovery";
         if (altT === "override_pz") {
           this.overrideToPZ();
           return;
+        } else if (altT === "to_travel") {
+          const hasDriveBB = actsOn(today).some(a => a[1] === "bb");
+          d.force_pz = 0; d.rest_day = 0; d.tired = 0; d.bb = hasDriveBB ? "none" : null;
+          toast("已切回旅途步行");
         } else if (altT === "to_rest") {
           d.rest_day = 1; d.tired = 0; d.pelo = "rest"; d.pelo_min = 0;
           toast("好，今天安心休整");
@@ -19112,6 +19142,9 @@ window.ZB = (function() {
           d.pelo = d.pelo === "recovery" ? null : "recovery"; d.pelo_min = d.pelo ? 15 : 0;
           toast(d.pelo ? "已记 15 分排酸骑" : "已撤销");
         }
+      } else if (p.isTravel) {
+        d.pelo = d.pelo ? null : "done"; d.pelo_min = 30;
+        toast(d.pelo ? "旅途步行已记" : "已撤销");
       } else if (p.actionType === "pz_main") {
         if (d.pz_done != null && d.pelo === "done") {
           const prevIdx = Number(d.pz_done);
@@ -20697,11 +20730,42 @@ if (phase24 !== 'n2_climb') {
     throw new Error('Self-test 24 failed: ledger grammar rows missing studio audio: ' + JSON.stringify(ledgerGramNoAud24.slice(0, 8)));
   }
 }
+
+// Self-test 25 (v78): Travel-Day Peloton Override & Unlocked Status Sheet Guard
+const zst25 = sb.ZB._getState();
+const savedTrips25 = zst25.trips;
+const today25 = vm.runInNewContext('DATA.plan_date', sb);
+const savedDay25 = zst25.days ? Object.assign({}, zst25.days[today25] || {}) : {};
+const realToday25 = sb.ZB._planToday() ? null : null;
+zst25.trips = [{ name: '测试短途行', start: '2020-01-01', end: '2035-12-31' }];
+sb.ZB.pickState('normal', '', false);
+const pTrvDef25 = sb.ZB._planToday();
+if (!pTrvDef25.isTravel || !pTrvDef25.altAction || pTrvDef25.altAction.type !== 'override_pz' || !pTrvDef25.guide || !pTrvDef25.guide.canOverridePZ) {
+  throw new Error('Self-test 25 failed: travel day must expose Peloton override altAction and guide link: ' + JSON.stringify({ isTravel: pTrvDef25.isTravel, altAction: pTrvDef25.altAction }));
+}
+sb.ZB.openStateSheet();
+const trvSheet25 = (els['modal-content'] && els['modal-content'].innerHTML) || '';
+if (!trvSheet25.includes('旅途步行') || !trvSheet25.includes('骑 Peloton') || trvSheet25.includes('—')) {
+  throw new Error('Self-test 25 failed: travel-day state sheet must open cleanly with 旅途步行 + 骑 Peloton and zero em dashes');
+}
+sb.ZB.logCardio('recovery');
+const pTrvRide25 = sb.ZB._planToday();
+if (pTrvRide25.isTravel || !pTrvRide25.isPZMain || pTrvRide25.tierText !== '旅途日 · 骑主线' || !pTrvRide25.altAction || pTrvRide25.altAction.type !== 'to_travel' || pTrvRide25.puTarget !== 0) {
+  throw new Error('Self-test 25 failed: travel-day Peloton switch failed: ' + JSON.stringify({ isTravel: pTrvRide25.isTravel, isPZMain: pTrvRide25.isPZMain, tierText: pTrvRide25.tierText, altAction: pTrvRide25.altAction, puTarget: pTrvRide25.puTarget }));
+}
+sb.ZB.logCardio('recovery');
+const pTrvBack25 = sb.ZB._planToday();
+if (!pTrvBack25.isTravel) {
+  throw new Error('Self-test 25 failed: switching back from travel-day Peloton to walking failed');
+}
+zst25.trips = savedTrips25;
+if (zst25.days) zst25.days[today25] = savedDay25;
+sb.closeModal();
 """
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
 
 sw_path = os.path.join(BASE_DIR, "sw.js")
-SW_CACHE_NAME = "n3-studio-tutor-v77"
+SW_CACHE_NAME = "n3-studio-tutor-v78"
 if not _IS_SIM_OUTPUT and os.path.exists(sw_path):
     with open(sw_path, encoding="utf-8") as sf:
         sw_src = sf.read()
