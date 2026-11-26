@@ -477,6 +477,7 @@ def unpack_compact_ntfy(pkt: dict) -> dict | None:
                 1795677955 <= ts_s <= 1795677968
                 or 1795678230 <= ts_s <= 1795678242
                 or 1795678389 <= ts_s <= 1795678402
+                or 1795679720 <= ts_s <= 1795679736
             ):
                 continue
             if rid_item.startswith("MOCK:") and not ok_item and 1795678878 <= ts_s <= 1795678883:
@@ -516,6 +517,7 @@ def unpack_compact_ntfy(pkt: dict) -> dict | None:
             1795677955 <= r_g38 <= 1795677968
             or 1795678230 <= r_g38 <= 1795678242
             or 1795678389 <= r_g38 <= 1795678402
+            or 1795679720 <= r_g38 <= 1795679736
         ):
             day["retestAt"].pop("N3-G38", None)
             day["learning"].pop("N3-G38", None)
