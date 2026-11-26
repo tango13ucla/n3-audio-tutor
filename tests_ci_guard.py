@@ -307,7 +307,7 @@ def test_dynamic_vocab_cards_self_test4_invariants() -> None:
     import immersion_vocab_engine as ive
     from adaptive_bank import CORE_N3_KANA_VOCAB
 
-    candidates: list[str] = list(vc.VOCAB_CARDS.keys())
+    candidates: list[str] = list(vc.VOCAB_CARDS.keys()) + list(vc.PRONUNCIATION_MNEMONICS.keys())
     for row in getattr(ive, "IMMERSION_VOCAB_BANK", []):
         if row.get("kanji"):
             candidates.append(str(row["kanji"]))
@@ -316,6 +316,7 @@ def test_dynamic_vocab_cards_self_test4_invariants() -> None:
     # Also test completely unseen synthetic kanji & kana words!
     candidates.extend(["象徴", "緊急事態", "再配達", "もやもや"])
 
+    vulgar_re = re.compile(r"\b(?:cock|gay|shit|fuck|damn|ass|die|sin|cheat)\b", re.I)
     checked = set()
     for w in candidates:
         if not w or w in checked:
@@ -324,8 +325,8 @@ def test_dynamic_vocab_cards_self_test4_invariants() -> None:
         spec = vc.build_dynamic_vocab_card(w, {})
         aspec = vc.build_vocab_audio_spec(spec)
         mn = str(spec.get("mnemonic") or "").strip()
-        mn_card = vc.distill_card_mnemonic(mn, has_trap_tag=bool(spec.get("trap_tag")))
-        mn_cue, mn_scene = vc.split_card_mnemonic(mn, has_trap_tag=bool(spec.get("trap_tag")))
+        mn_card = vc.distill_card_mnemonic(mn, has_trap_tag=bool(spec.get("trap_tag")), target_word=w)
+        mn_cue, mn_scene = vc.split_card_mnemonic(mn, has_trap_tag=bool(spec.get("trap_tag")), target_word=w)
         hs = str(aspec.get("hook_spoken") or "").strip()
         ch = str(spec.get("chunk_ja") or "").strip()
         assert mn and mn_card, f"Empty mnemonic for vocab card '{w}'"
@@ -336,8 +337,23 @@ def test_dynamic_vocab_cards_self_test4_invariants() -> None:
             assert bad_lbl not in mn_card, f"Redundant label '{bad_lbl}' in mnemonic_card for '{w}': {mn_card}"
             assert bad_lbl not in mn_cue and bad_lbl not in mn_scene, f"Redundant label '{bad_lbl}' in cue/scene for '{w}': {mn_cue} | {mn_scene}"
             assert bad_lbl not in hs, f"Redundant label '{bad_lbl}' in hook_spoken for '{w}': {hs}"
+        for field_name, val in (("mn", mn), ("cue", mn_cue), ("scene", mn_scene), ("spoken", hs)):
+            assert not vulgar_re.search(val), f"Banned vulgar/morbid anchor in {field_name} for '{w}': {val}"
+            assert "自满" not in val and "自満" not in val, f"Kanji-swap error 自满/自満 in {field_name} for '{w}': {val}"
+            assert "Gee(ぎ)" not in val, f"Phonetic error Gee(ぎ) in {field_name} for '{w}': {val}"
+        assert not vc.has_kanji_cue_pollution(w, mn_cue), f"Kanji cue pollution for '{w}': cue={mn_cue!r} | scene={mn_scene!r}"
+        if mn_cue:
+            assert "+" not in mn_scene[:10] and "＋" not in mn_scene[:10], f"Broken half-split cue for '{w}': {mn_cue!r} | {mn_scene!r}"
         assert len(ch) <= 10, f"chunk_ja too long ({len(ch)}>10) for '{w}': {ch}"
-    print(f"[PASS 4/10] Dynamic vocab cards Self-test 4 invariants ({len(checked)} words incl. all 236 immersion words, zero language-label prefixes)")
+
+    # Regression unit checks on has_kanji_cue_pollution & split_card_mnemonic
+    assert vc.has_kanji_cue_pollution("自慢", "自(じ)满(まん)") is True
+    assert vc.has_kanji_cue_pollution("指示", "师(し)指(じ)") is True
+    assert vc.has_kanji_cue_pollution("順番", "顺(じゅん)班(ばん)") is True
+    assert vc.has_kanji_cue_pollution("自慢", "Gym Man(じまん)") is False
+    assert vc.has_kanji_cue_pollution("貯める", "他(た)没(め)花") is False
+    assert vc.has_kanji_cue_pollution("しっかり", "实(しっ)卡(か)死") is False
+    print(f"[PASS 4/10] Dynamic vocab cards Self-test 4 invariants ({len(checked)} words, zero kanji-swap/half-split/vulgar/label regressions)")
 
 
 def test_speaking_prompts_self_test9_invariants() -> None:

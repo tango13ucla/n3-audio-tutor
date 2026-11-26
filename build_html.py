@@ -161,8 +161,8 @@ for surf, info in merged_raw_words.items():
     mn = get_pronunciation_mnemonic(surf, str(entry.get("head") or ""))
     if mn:
         _has_tt = bool(entry.get("trap_tag"))
-        entry["mnemonic"] = distill_card_mnemonic(mn, has_trap_tag=_has_tt)
-        _mcue, _mscene = split_card_mnemonic(mn, has_trap_tag=_has_tt)
+        entry["mnemonic"] = distill_card_mnemonic(mn, has_trap_tag=_has_tt, target_word=surf)
+        _mcue, _mscene = split_card_mnemonic(mn, has_trap_tag=_has_tt, target_word=surf)
         if _mcue:
             entry["mnemonic_cue"] = _mcue
             entry["mnemonic_scene"] = _mscene
@@ -1608,7 +1608,7 @@ for p in live_state.get("vocab_tracked", []):
     w_info = rich_words.get(w, {})
     vc_spec = VOCAB_CARDS.get(w, {})
     mn_raw = vc_spec.get("mnemonic") or get_pronunciation_mnemonic(w, str(w_info.get("head") or ""))
-    mn_txt = clean_zen_text(distill_card_mnemonic(mn_raw, has_trap_tag=bool(vc_spec.get("trap_tag") or w_info.get("trap_tag"))))
+    mn_txt = clean_zen_text(distill_card_mnemonic(mn_raw, has_trap_tag=bool(vc_spec.get("trap_tag") or w_info.get("trap_tag")), target_word=w))
     base_note = clean_zen_text(vc_spec.get("twin") or w_info.get("tip") or p.get("classroom_note") or "")
     combined_note = " · ".join(x for x in ([mn_txt] if mn_txt else []) + ([base_note] if base_note else []))
     meaning_short = w_info.get("zh") or (vc_spec.get("zh", "").split(" · ")[0]) or re.sub(r"^\d+\.\s*", "", p.get("category", ""))
@@ -1634,7 +1634,7 @@ for kw, pitch, desc in CORE_N3_KANA_VOCAB:
     seen_vocab_words.add(kw)
     vc_spec = VOCAB_CARDS.get(kw, {})
     mn_raw_k = vc_spec.get("mnemonic") or get_pronunciation_mnemonic(kw)
-    mn_txt = clean_zen_text(distill_card_mnemonic(mn_raw_k, has_trap_tag=bool(vc_spec.get("trap_tag"))))
+    mn_txt = clean_zen_text(distill_card_mnemonic(mn_raw_k, has_trap_tag=bool(vc_spec.get("trap_tag")), target_word=kw))
     base_note = clean_zen_text(vc_spec.get("twin") or f"声调 {pitch} · {desc}")
     combined_note = " · ".join(x for x in ([mn_txt] if mn_txt else []) + ([base_note] if base_note else []))
     kw_pid = point_id_by_key.get(kw, "")
@@ -1667,8 +1667,8 @@ for vw in all_vc_keys:
     clean_aud = vc_aud.get("clean") or ""
     aspec = build_vocab_audio_spec(spec)
     raw_mn = spec.get("mnemonic") or get_pronunciation_mnemonic(vw, str((rich_words.get(vw) or {}).get("head") or ""))
-    _vc_cue, _vc_scene = split_card_mnemonic(raw_mn, has_trap_tag=bool(spec.get("trap_tag")))
-    _vc_distilled = distill_card_mnemonic(raw_mn, has_trap_tag=bool(spec.get("trap_tag")))
+    _vc_cue, _vc_scene = split_card_mnemonic(raw_mn, has_trap_tag=bool(spec.get("trap_tag")), target_word=vw)
+    _vc_distilled = distill_card_mnemonic(raw_mn, has_trap_tag=bool(spec.get("trap_tag")), target_word=vw)
     vocab_cards_payload[vw] = {
         "mode": spec["mode"],
         "chunk_ja": spec["chunk_ja"],
@@ -1789,8 +1789,8 @@ if active_phase == "n2_climb" and _N2_SYLLABUS and _build_n2_vcards is not None:
         _hook_aud = _vc_aud.get("hook") or ""
         _clean_aud = _vc_aud.get("clean") or _w_aud
         _mn_raw = _vc.get("mnemonic", "")
-        _mn_distilled = clean_zen_text(distill_card_mnemonic(_mn_raw, has_trap_tag=bool(_vc.get("trap_tag"))))
-        _mn_cue, _mn_scene = split_card_mnemonic(_mn_raw, has_trap_tag=bool(_vc.get("trap_tag")))
+        _mn_distilled = clean_zen_text(distill_card_mnemonic(_mn_raw, has_trap_tag=bool(_vc.get("trap_tag")), target_word=_vw))
+        _mn_cue, _mn_scene = split_card_mnemonic(_mn_raw, has_trap_tag=bool(_vc.get("trap_tag")), target_word=_vw)
         _tw_txt = clean_zen_text(_vc.get("twin", ""))
         _combined_note = " · ".join(x for x in ([_mn_distilled] if _mn_distilled else []) + ([_tw_txt] if _tw_txt else []))
         _v_pid = point_id_by_key.get(_vw, "")
@@ -1990,8 +1990,8 @@ for _rv in (radio_meta.get("review_items") or []):
         _vref = vocab_cards_payload.get(_rtitle) or {}
         _rv_raw_mn = _rv.get("mnemonic", "")
         _rv_has_t = bool(_rv.get("trap_tag"))
-        _rv_cue, _rv_scene = split_card_mnemonic(_rv_raw_mn, has_trap_tag=_rv_has_t)
-        _rv_dist = distill_card_mnemonic(_rv_raw_mn, has_trap_tag=_rv_has_t)
+        _rv_cue, _rv_scene = split_card_mnemonic(_rv_raw_mn, has_trap_tag=_rv_has_t, target_word=_rtitle)
+        _rv_dist = distill_card_mnemonic(_rv_raw_mn, has_trap_tag=_rv_has_t, target_word=_rtitle)
         if _vref:
             _rv["zh_card"] = _vref.get("zh_card") or distill_card_zh(_rv.get("zh", ""), _rtitle, _rtitle)
             _rv["mnemonic"] = _vref.get("mnemonic_card") or _rv_dist
@@ -20061,6 +20061,8 @@ const vcKeys = Object.keys(vcObj);
 if (vcKeys.length < 120) throw new Error('Self-test failed: vocab_cards unexpectedly small: ' + vcKeys.length);
 const isN2VocabCheck = vm.runInNewContext('DATA.phase === "n2_climb"', sb);
 const bannedLangRe = /(?:英文|中文|谐音)/;
+const bannedVulgarRe = /\b(?:cock|gay|shit|fuck|damn|ass|die|sin|cheat)\b/i;
+const cjkRe4 = /[\u4e00-\u9fff]/g;
 for (const k of vcKeys) {
   const rec = vcObj[k] || {};
   const mn = String(rec.mnemonic || '').trim();
@@ -20075,6 +20077,20 @@ for (const k of vcKeys) {
   if (bannedLangRe.test(mnCard) || bannedLangRe.test(mnCue) || bannedLangRe.test(mnScene) || bannedLangRe.test(hs)) {
     throw new Error('Self-test failed: redundant 英文/中文/谐音 label in vocab card ' + k + ': ' + JSON.stringify({mnCard, hs}));
   }
+  if (bannedVulgarRe.test(mnCard) || bannedVulgarRe.test(mnCue) || bannedVulgarRe.test(mnScene) || bannedVulgarRe.test(hs)) {
+    throw new Error('Self-test failed: banned vulgar/morbid anchor in vocab card ' + k + ': ' + JSON.stringify({mnCard, hs}));
+  }
+  if (mnCard.includes('自满') || mnCard.includes('自満') || hs.includes('自满') || hs.includes('自満') || mnCard.includes('Gee(ぎ)')) {
+    throw new Error('Self-test failed: forbidden polluted mnemonic in vocab card ' + k + ': ' + JSON.stringify({mnCard, hs}));
+  }
+  const tgtCjk = k.match(cjkRe4) || [];
+  const cueCjk = mnCue.match(cjkRe4) || [];
+  if (tgtCjk.length > 0 && cueCjk.length > 0) {
+    const shared = cueCjk.filter(c => tgtCjk.includes(c));
+    if (shared.length > 0 || (tgtCjk.length >= 2 && cueCjk.length === tgtCjk.length && !/[A-Za-z]/.test(mnCue) && !/[+＋]/.test(mnCue))) {
+      throw new Error('Self-test failed: Kanji cue pollution in vocab card ' + k + ': cue=' + mnCue);
+    }
+  }
   if (!hs) throw new Error('Self-test failed: missing hook_spoken for vocab card ' + k);
   if (!isN2VocabCheck && (!rec.rev_audio || !rec.hook_audio || !rec.phrase_audio || !rec.word_audio)) {
     throw new Error('Self-test failed: missing required studio audio slot for vocab card ' + k + ': ' + JSON.stringify({rev:rec.rev_audio, hook:rec.hook_audio, phrase:rec.phrase_audio, word:rec.word_audio}));
@@ -20084,6 +20100,14 @@ for (const k of vcKeys) {
 const impRec = vcObj['印象'];
 if (impRec && (impRec.mnemonic_cue !== 'In(いん) Show(しょう)' || impRec.mnemonic_scene !== '演出留在脑海里的印象' || bannedLangRe.test(impRec.hook_spoken))) {
   throw new Error('Self-test 4 failed: 印象 two-tier cue/scene mismatch: ' + JSON.stringify(impRec));
+}
+const jimanRec = vcObj['自慢'];
+if (jimanRec && (jimanRec.mnemonic_cue !== 'Gym Man(じまん)' || jimanRec.mnemonic_card.includes('自满') || jimanRec.mnemonic_card.includes('自満') || jimanRec.hook_spoken.includes('自满'))) {
+  throw new Error('Self-test 4 failed: 自慢 cue/spoken regression: ' + JSON.stringify(jimanRec));
+}
+const gimonRec = vcObj['疑問'];
+if (gimonRec && (gimonRec.mnemonic_cue !== 'Geek(ぎ) man(もん)?' || gimonRec.mnemonic_card.includes('Gee('))) {
+  throw new Error('Self-test 4 failed: 疑問 cue regression: ' + JSON.stringify(gimonRec));
 }
 for (const rvi of (sb.getRadioReviewItems() || [])) {
   if (rvi && rvi.kind === 'vocab' && bannedLangRe.test(String(rvi.mnemonic_card || rvi.mnemonic || ''))) {
@@ -20789,9 +20813,13 @@ const mnPlus = sb.renderZenMnemonicHTML('せ + Second(けん)', '同世界的 �
 if (!mnPlus.includes('class="mn-sep">+<') || !mnPlus.includes('>Second<') || !mnPlus.includes('>けん<')) {
   throw new Error('Self-test 13 failed: renderZenMnemonicHTML broken for せ + Second(けん): ' + mnPlus);
 }
-const mnGee = sb.renderZenMnemonicHTML('Gee(ぎ), man(もん)?', '满脸问号心生疑问', '');
-if (!mnGee.includes('>Gee,<') || !mnGee.includes('>man?<')) {
-  throw new Error('Self-test 13 failed: renderZenMnemonicHTML broken for Gee(ぎ), man(もん)?: ' + mnGee);
+const mnGeek = sb.renderZenMnemonicHTML('Geek(ぎ), man(もん)?', '极客老兄满脸问号追问', '');
+if (!mnGeek.includes('>Geek,<') || !mnGeek.includes('>man?<')) {
+  throw new Error('Self-test 13 failed: renderZenMnemonicHTML broken for Geek(ぎ), man(もん)?: ' + mnGeek);
+}
+const mnJiman = sb.renderZenMnemonicHTML('Gym Man(じまん)', '秀出拿手绝活，自豪炫耀', '');
+if (!mnJiman.includes('>Gym Man<') || !mnJiman.includes('>じまん<') || mnJiman.includes('自满')) {
+  throw new Error('Self-test 13 failed: renderZenMnemonicHTML broken for Gym Man(じまん): ' + mnJiman);
 }
 const mnInline = sb.renderZenMnemonicHTML('', '出差赶飞机“Shoot!(しゅっ) 冲(ちょう)”顿半拍起飞', '');
 if (!mnInline.includes('class="vc-hook-line"') || !mnInline.includes('class="mn-inline-w">Shoot!<') || !mnInline.includes('class="mn-inline-k" lang="ja">(しゅっ)<')) {
@@ -21406,7 +21434,7 @@ sb.closeModal();
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
 
 sw_path = os.path.join(BASE_DIR, "sw.js")
-SW_CACHE_NAME = "n3-studio-tutor-v80"
+SW_CACHE_NAME = "n3-studio-tutor-v81"
 if not _IS_SIM_OUTPUT and os.path.exists(sw_path):
     with open(sw_path, encoding="utf-8") as sf:
         sw_src = sf.read()
