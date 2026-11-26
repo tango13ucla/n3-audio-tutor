@@ -1068,6 +1068,62 @@ def test_v44_anti_tourist_kanazawa_and_feedback_guard() -> None:
     print(f"[PASS 16/16] v44 non-tourist depth floor (12 volumes + live ranker/catalog), tomorrow's Deep Kanazawa Vol.18 ({tot_pts18} pts, {tot_chars18//tot_pts18} ch/pt) & RADIO_FB cloud loop verified")
 
 
+def test_v45_broadcast_authenticity_guard() -> None:
+    """Gate 17: Guard v45 broadcast authenticity (native 3-host + Keita JP, real 2012 Zhang Miaoyang WAV, polyphone map, opening beat, and 10+ turn fade-out endings)."""
+    import datetime
+    import importlib
+    import wave
+    import generate_daily_radio as gdr
+
+    # 1. Real extracted 2012 Zhang Miaoyang broadcast WAV asset integrity
+    zmy_wav = BASE_DIR / "audio" / "qq_ann_zmy_2012.wav"
+    assert zmy_wav.exists() and zmy_wav.stat().st_size > 100_000, f"Missing or tiny real Zhang Miaoyang WAV: {zmy_wav}"
+    with wave.open(str(zmy_wav), "rb") as wf:
+        assert wf.getnchannels() == 1 and wf.getsampwidth() == 2 and wf.getframerate() == 24000, "zmy WAV must be 24kHz mono 16-bit PCM"
+        zmy_dur = wf.getnframes() / float(wf.getframerate())
+        assert 3.4 <= zmy_dur <= 4.3, f"Unexpected zmy WAV duration: {zmy_dur:.2f}s"
+
+    # 2. Next-program roster schedules real 2012 Zhang Miaoyang on 2026-11-27 and calibrated Yunyang on 2026-11-28
+    np_27 = gdr.pick_phoenix_next_program(datetime.date(2026, 11, 27))
+    assert np_27.get("real_wav") == "audio/qq_ann_zmy_2012.wav" and np_27.get("source") == "original_2012_zhang_miaoyang", f"2026-11-27 must use real Zhang Miaoyang WAV: {np_27}"
+    np_28 = gdr.pick_phoenix_next_program(datetime.date(2026, 11, 28))
+    assert np_28.get("source") == "calibrated_yunyang_zmy" and np_28.get("lead_in") in ("接着下来为您播出", "接着为您播出"), f"2026-11-28 bad continuity spec: {np_28}"
+
+    # 3. Native 3-host voice defaults + ja-JP-KeitaNeural inline Japanese routing (NEVER sending Japanese to zh-CN voice!)
+    gdr_src = (BASE_DIR / "generate_daily_radio.py").read_text(encoding="utf-8")
+    for expected_v in ("zh-CN-YunxiNeural", "zh-TW-YunJheNeural", "zh-CN-YunjianNeural", "ja-JP-KeitaNeural", "zh-CN-YunyangNeural"):
+        assert expected_v in gdr_src, f"generate_daily_radio.py missing native v45 voice {expected_v}"
+    mock_vmap = {
+        "W_MID": ("zh-CN-YunxiNeural", "+7%", "-2Hz"),
+        "W_JA_INLINE": ("ja-JP-KeitaNeural", "+4%", "-1Hz"),
+        "D_MID": ("zh-TW-YunJheNeural", "+3%", "-4Hz"),
+        "D_JA_INLINE": ("ja-JP-KeitaNeural", "+1%", "-4Hz"),
+        "X_MID": ("zh-CN-YunjianNeural", "+8%", "+2Hz"),
+        "X_JA_INLINE": ("ja-JP-KeitaNeural", "+4%", "+2Hz"),
+    }
+    for spk_k in ("W_MID", "D_MID", "X_MID"):
+        jv, _jr, _jp = gdr.inline_ja_voice_cfg(spk_k, mock_vmap, "たつみようすい")
+        assert jv == "ja-JP-KeitaNeural", f"inline_ja_voice_cfg({spk_k}) routed to wrong voice: {jv}"
+
+    # 4. Spoken-only Mandarin polyphone fixes + Dou Wentao signature 0.34s opening beat
+    fixed = gdr.apply_tts_pronunciation_fixes("加贺百万石，一石米，田宫高麿")
+    assert fixed == "加贺百万担，一担米，田宫高摩", f"Polyphone fix mismatch: {fixed}"
+    evs = gdr.split_mandarin_natural("W", "《锵锵三人行》！前些年我坐北陆新干线去石川。", "W_MID")
+    assert len(evs) >= 3 and evs[0] == ("W_JAB", "《锵锵三人行》。") and evs[1] == ("PAUSE", 0.34), f"Missing Dou Wentao 0.34s opening beat: {evs}"
+
+    # 5. Upcoming episodes (Vol.18, 12, 13, 24, 25) MUST end with >=10 pure-Chinese banter turns (>=250 chars) for 12s smooth fade-out
+    for vnum in (18, 12, 13, 24, 25):
+        mod = importlib.import_module(f"radio_salon_uchi_vol{vnum}")
+        last_st = getattr(mod, f"SALON_STORIES_UCHI_VOL{vnum}")[-1]
+        tail10 = last_st["turns"][-10:]
+        tail10_txt = "".join(t[1] for t in tail10)
+        assert not re.search(r"[ぁ-んァ-ヶー]", tail10_txt), f"Vol.{vnum} final 10 turns must be 100% pure Chinese!"
+        assert len(tail10_txt) >= 250, f"Vol.{vnum} final 10 turns too short for 12s smooth fade-out ({len(tail10_txt)} < 250)!"
+
+    assert "apply_backchannel_room_filter" in gdr_src and "_maybe_layer_backchannel" in gdr_src, "Missing v45 studio backchannel engine!"
+    print(f"[PASS 17/17] v45 broadcast authenticity (native W/D/X + Keita JP, real 2012 Zhang Miaoyang {zmy_dur:.2f}s WAV, polyphone map, 0.34s opening beat & 10-turn fade-outs) verified")
+
+
 def main() -> int:
     test_all_python_files_syntax_and_names()
     test_apply_practice_logs_all_event_types()
@@ -1085,7 +1141,8 @@ def main() -> int:
     test_cloud_sync_sandbox_isolation_guard()
     test_v43_storycraft_and_archival_footage_guard()
     test_v44_anti_tourist_kanazawa_and_feedback_guard()
-    print("[ALL PASS] tests_ci_guard.py 16/16 gates green!")
+    test_v45_broadcast_authenticity_guard()
+    print("[ALL PASS] tests_ci_guard.py 17/17 gates green!")
     return 0
 
 

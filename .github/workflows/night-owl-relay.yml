@@ -138,7 +138,7 @@ jobs:
               raise SystemExit(0)
 
           import re as _re_ver
-          expected_ver_num = 42 if study_pt >= "2026-11-25" else (41 if study_pt >= "2026-11-23" else (40 if study_pt >= "2026-11-22" else 36))
+          expected_ver_num = 45 if study_pt >= "2026-11-27" else (42 if study_pt >= "2026-11-25" else (41 if study_pt >= "2026-11-23" else (40 if study_pt >= "2026-11-22" else 36)))
           _m_ver = _re_ver.match(r"^v(\d+)_", str(radio_ver or ""))
           cur_ver_num = int(_m_ver.group(1)) if _m_ver else 0
           if now_pt.hour >= 4 and (meta_date != study_pt or (study_pt >= "2026-11-19" and cur_ver_num < expected_ver_num)):

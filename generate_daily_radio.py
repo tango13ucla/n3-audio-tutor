@@ -169,7 +169,38 @@ MANDARIN_SPECIAL_SPLITS = {
     "仁科芳雄": "仁科\u200c芳雄",
     "川端康成": "川端\u200c康成",
     "大江健三郎": "大江\u200c健三郎",
+    "前田利家": "前田\u200c利家",
+    "前田利常": "前田\u200c利常",
+    "板屋兵四郎": "板屋\u200c兵四郎",
+    "铃木大拙": "铃木\u200c大拙",
+    "谷口吉生": "谷口\u200c吉生",
+    "妹岛和世": "妹岛\u200c和世",
+    "西泽立卫": "西泽\u200c立卫",
+    "山出保": "山出\u200c保",
+    "田宫高摩": "田宫\u200c高摩",
+    "日野原重明": "日野原\u200c重明",
+    "石田真二": "石田\u200c真二",
 }
+
+# Spoken-only Mandarin polyphone fixes (applied strictly inside TTS input, NEVER mutating displayed subtitles/transcripts)
+TTS_PRONUNCIATION_MAP: tuple[tuple[str, str], ...] = (
+    ("加贺百万石", "加贺百万担"),
+    ("一百万石", "一百万担"),
+    ("百万石", "百万担"),
+    ("五千石", "五千担"),
+    ("一石米", "一担米"),
+    ("田宫高麿", "田宫高摩"),
+)
+
+
+def apply_tts_pronunciation_fixes(text: str) -> str:
+    if not text:
+        return text
+    s = text
+    for src, dst in TTS_PRONUNCIATION_MAP:
+        if src in s:
+            s = s.replace(src, dst)
+    return s
 
 # Ambiguous 2-char "和*" compounds (e.g. 和服 inside 和服务区, 和牛 inside 和牛奶, 和食 inside 和食物, 大和 inside 东大和京大)
 # are NEVER blindly substring-matched by regex; they are ONLY wrapped when jieba confirms them as standalone tokens!
@@ -186,7 +217,7 @@ MANDARIN_BOUNDARY_WORDS = sorted(
             "盛田昭夫", "井深大", "大曾根", "山口百惠", "手冢治虫", "藤子不二雄",
             "三岛由纪夫", "夏目漱石", "太宰治", "谷崎润一郎", "松本清张", "村上春树",
             "宫崎骏", "黑泽明", "北野武", "坂本龙一", "久石让", "小八", "怪人二十一面相", "怪人二十面相",
-            "阿加莎", "东野圭吾",
+            "阿加莎", "东野圭吾", "前田家", "芳春院", "铃木大拙馆",
             # Japanese geography, rail, landmarks, brands & institutions
             "东海道", "新干线", "山手线", "青函海底隧道", "青函隧道", "津轻海峡", "阪神高速", "名神高速公路", "名神高速",
             "代代木公园", "代代木", "秋叶原", "白木屋", "日本桥", "樱木町", "神保町", "道顿堀",
@@ -196,6 +227,8 @@ MANDARIN_BOUNDARY_WORDS = sorted(
             "银座", "池袋", "浅草", "上野", "六本木", "青山", "府中", "东大阪", "北九州",
             "新潟", "秋田", "函馆", "神户", "大阪", "京都", "横滨", "名古屋", "熊本", "北海道",
             "冲绳", "千叶县厅", "千叶县", "千叶", "山口县", "爱知县", "丰田市", "静冈", "关西", "关东",
+            "金泽", "加贺", "石川县", "富山", "福井", "能登半岛", "能登铁道", "北陆新干线", "兼六园", "辰巳用水",
+            "加贺宝生", "御细工所", "九谷烧", "加贺友禅", "大樋烧", "长町", "金浦机场", "莱茵金属",
             "吹田", "千里丘陵", "茨木市", "安威川", "西宫市", "草津市", "大津", "滋贺县", "兵库县", "堺市",
             "大田区", "九十九里浜", "房总半岛", "大阪城", "大阪万博",
             "农林水产省", "大藏省", "财务省", "厚生劳动省", "运输省", "防卫省", "金融厅", "气象厅",
@@ -221,7 +254,7 @@ MANDARIN_BOUNDARY_WORDS = sorted(
             "海底光缆", "自主武器", "债务刹车", "核聚变", "超导线圈", "后量子", "减重神药",
             "核酸新疫苗", "超级马里奥", "红白机", "广播体操", "除夜钟声", "蓝鳍金枪鱼", "味之素", "第五味",
             "淀号", "寿喜烧", "安灯", "雇止", "推活", "建前", "团地", "旨味", "御木曳", "具身智能",
-            "冰上丝绸之路", "北极东北航道",
+            "冰上丝绸之路", "北极东北航道", "百万担", "百万石", "中心站",
         ]
     ),
     key=len,
@@ -541,11 +574,11 @@ AD_BREAK_1_POOL = [
     ),
     (
         [("W", "得，咱们先去下广告，《锵锵三人行》，广告之后见！")],
-        [("W", "接着刚才那笔账往下算啊。")],
+        [("W", "《锵锵三人行》，接着刚才那笔账往下算啊。")],
     ),
     (
         [("W", "咱们先去段广告，《锵锵三人行》，广告之后见！")],
-        [("W", "所以你看文道，顺着刚才这个往下看啊。")],
+        [("W", "《锵锵三人行》，顺着刚才这个往下看啊。")],
     ),
 ]
 
@@ -556,13 +589,20 @@ AD_BREAK_2_POOL = [
     ),
     (
         [("W", "先去一下广告，《锵锵三人行》，广告之后见！")],
-        [("W", "刚才聊了外头的制度，咱们再推门看看普通人家里头。")],
+        [("W", "《锵锵三人行》，咱们接着聊刚才那个事儿。")],
     ),
     (
         [("W", "咱们再去下广告，《锵锵三人行》，广告之后见！")],
-        [("W", "接着刚才说的往下走啊。")],
+        [("W", "《锵锵三人行》，接着刚才说的往下走啊。")],
     ),
 ]
+
+# Natural off-axis studio backchannel murmurs (2-char natural Chinese listening cues, safe on all native voices)
+STUDIO_BACKCHANNEL_POOL: dict[str, tuple[str, ...]] = {
+    "W": ("没错。", "对对。", "是啊。"),
+    "D": ("对啊。", "没错。"),
+    "X": ("对对。", "没错。"),
+}
 
 CLOSING_POOL = [
     [
@@ -573,35 +613,42 @@ CLOSING_POOL = [
     ],
 ]
 
-# Authentic Phoenix TV Chinese Channel ("凤凰卫视中文台") Next-Program Continuity Roster
-# Anchored on 2026-11-25 -> "接下来为您播出，凤凰子夜快车。" (classic midnight slot right after 《锵锵三人行》!)
-PHOENIX_NEXT_PROGRAMS: list[tuple[str, str]] = [
-    ("接下来为您播出", "凤凰子夜快车"),
-    ("接着为您播出", "健康新概念"),
-    ("接下来为您播出", "开卷八分钟"),
-    ("接下来为您播出", "凤凰大视野"),
-    ("接着为您播出", "文化大观园"),
-    ("接下来为您播出", "有报天天读"),
-    ("接下来为您播出", "时事亮亮点"),
-    ("接着为您播出", "风云对话"),
-    ("接下来为您播出", "石评大财经"),
-    ("接下来为您播出", "一虎一席谈"),
-    ("接着为您播出", "震海听风录"),
-    ("接下来为您播出", "文涛拍案"),
-    ("接下来为您播出", "军情观察室"),
-    ("接着为您播出", "世纪大讲堂"),
+# Authentic Phoenix TV Chinese Channel ("凤凰卫视中文台") Next-Program Continuity Roster (v45)
+# Original Phoenix TV chief announcer: 张妙阳 (Zhang Miaoyang, "凤凰台声" since 1996, signature "接着下来为您播出……")
+# Index 2 (2026-11-27) plays the 100% real extracted 2012 Zhang Miaoyang broadcast clip (`audio/qq_ann_zmy_2012.wav`)!
+# All other classic Phoenix TV shows use Zhang-Miaoyang-calibrated `zh-CN-YunyangNeural` with his exact 0.42s breath pause.
+PHOENIX_NEXT_PROGRAMS: list[tuple[str, str, str]] = [
+    ("接着下来为您播出", "凤凰子夜快车", ""),
+    ("接着为您播出", "健康新概念", ""),
+    ("接着下来为您播出", "曲江楼观文明启示录", "audio/qq_ann_zmy_2012.wav"),
+    ("接着下来为您播出", "凤凰大视野", ""),
+    ("接着下来为您播出", "开卷八分钟", ""),
+    ("接着为您播出", "文化大观园", ""),
+    ("接着下来为您播出", "有报天天读", ""),
+    ("接着下来为您播出", "时事亮亮点", ""),
+    ("接着为您播出", "风云对话", ""),
+    ("接着下来为您播出", "石评大财经", ""),
+    ("接着下来为您播出", "一虎一席谈", ""),
+    ("接着为您播出", "震海听风录", ""),
+    ("接着下来为您播出", "文涛拍案", ""),
+    ("接着下来为您播出", "军情观察室", ""),
+    ("接着为您播出", "世纪大讲堂", ""),
 ]
 
 
 def pick_phoenix_next_program(study_dt: datetime.date) -> dict[str, str]:
     anchor_ord = datetime.date(2026, 11, 25).toordinal()
     idx = (study_dt.toordinal() - anchor_ord) % len(PHOENIX_NEXT_PROGRAMS)
-    lead_in, show_name = PHOENIX_NEXT_PROGRAMS[idx]
-    return {
+    lead_in, show_name, real_wav = PHOENIX_NEXT_PROGRAMS[idx]
+    out: dict[str, str] = {
         "lead_in": lead_in,
         "show": show_name,
         "line": f"{lead_in}，{show_name}。",
+        "source": "original_2012_zhang_miaoyang" if real_wav else "calibrated_yunyang_zmy",
     }
+    if real_wav:
+        out["real_wav"] = real_wav
+    return out
 
 # Post-N3 (2026-12-07 -> Day 365) Progressive Japanese Salon Framing Pools
 POST_N3_BILINGUAL_OPENING = [
@@ -743,7 +790,7 @@ def save_today_stories(today_str: str, story_ids: list) -> None:
 
 
 def estimate_story_seconds(st: dict) -> float:
-    """Empirical v41-v42 studio timing: ~0.192s per spoken char + 2.5s transition."""
+    """Empirical v41-v45 studio timing: ~0.192s per spoken char + 2.5s transition."""
     chars = sum(len(str(t)) for _, t in (st.get("turns") or []))
     return chars * 0.192 + 2.5
 
@@ -777,17 +824,19 @@ def gear_gain_linear(spk_key: str) -> float:
 
 async def detect_voice_map(ja_sentence_rate: str = "-12%") -> dict:
     """
-    Coherent 3-host voices with full 4-stage 起·承·转·合 intra-turn cadence gears
-    (ZERO mid-sentence pitch/rate jumping — each complete sentence breathes as one unit):
-    - W (文涛): en-US-BrianMultilingualNeural (bright, nimble northern host cadence)
-    - D (文道): ko-KR-HyunsuMultilingualNeural (warm, unhurried East Asian scholar baritone)
-    - X (子东): fr-FR-RemyMultilingualNeural (crisp, dry literary critic cadence)
-    - ANN (凤凰卫视中文台下档播音): zh-CN-YunjianNeural (warm, magnetic Phoenix TV continuity baritone)
+    v45 100% Native Broadcast Voice Architecture (calibrated to real 2005-2017 《锵锵三人行》):
+    - W (窦文涛): zh-CN-YunxiNeural (lively, mischievous northern Chinese talk-show host, mid F0)
+    - D (梁文道): zh-TW-YunJheNeural (warm, gentle HK/Taiwanese Mandarin scholar baritone, lowest F0)
+    - X (许子东): zh-CN-YunjianNeural (crisp, dry middle-aged literary critic, highest F0 matching real 164.9Hz > 156.9Hz > 155.3Hz)
+    - W_JA / D_JA / X_JA & *_JA_INLINE: ja-JP-KeitaNeural (100% native Tokyo Japanese pitch accent, host pitch-matched)
+    - ANN / ANN_SHOW (凤凰卫视中文台导视): zh-CN-YunyangNeural calibrated to 张妙阳's exact tempo & 0.42s dramatic breath
+      (while slots with `real_wav` play the extracted 2012 real original 张妙阳 broadcast recording directly!)
     """
-    w_voice = "en-US-BrianMultilingualNeural"
-    d_voice = "ko-KR-HyunsuMultilingualNeural"
-    x_voice = "fr-FR-RemyMultilingualNeural"
-    ann_voice = "zh-CN-YunjianNeural"
+    w_voice = "zh-CN-YunxiNeural"
+    d_voice = "zh-TW-YunJheNeural"
+    x_voice = "zh-CN-YunjianNeural"
+    ja_voice = "ja-JP-KeitaNeural"
+    ann_voice = "zh-CN-YunyangNeural"
 
     try:
         base_ja_pct = int(ja_sentence_rate.replace("%", "").strip())
@@ -801,59 +850,67 @@ async def detect_voice_map(ja_sentence_rate: str = "-12%") -> dict:
         try:
             voices = await edge_tts.list_voices(**COMM_KWARGS)
             short_names = {v.get("ShortName", "") for v in voices}
-            for cand_w in ("en-US-BrianMultilingualNeural", "en-AU-WilliamMultilingualNeural"):
+            for cand_w in ("zh-CN-YunxiNeural", "zh-CN-YunyangNeural", "en-US-BrianMultilingualNeural"):
                 if cand_w in short_names:
                     w_voice = cand_w
                     break
-            for cand_d in ("ko-KR-HyunsuMultilingualNeural", "it-IT-GiuseppeMultilingualNeural"):
+            for cand_d in ("zh-TW-YunJheNeural", "zh-HK-WanLungNeural", "ko-KR-HyunsuMultilingualNeural"):
                 if cand_d in short_names and cand_d != w_voice:
                     d_voice = cand_d
                     break
-            for cand_x in ("fr-FR-RemyMultilingualNeural", "en-AU-WilliamMultilingualNeural", "it-IT-GiuseppeMultilingualNeural"):
+            for cand_x in ("zh-CN-YunjianNeural", "zh-CN-YunyangNeural", "fr-FR-RemyMultilingualNeural"):
                 if cand_x in short_names and cand_x not in (w_voice, d_voice):
                     x_voice = cand_x
                     break
-            for cand_ann in ("zh-CN-YunjianNeural", "zh-CN-YunyangNeural", "zh-CN-YunxiNeural"):
+            for cand_ja in ("ja-JP-KeitaNeural", "en-US-BrianMultilingualNeural"):
+                if cand_ja in short_names:
+                    ja_voice = cand_ja
+                    break
+            for cand_ann in ("zh-CN-YunyangNeural", "zh-CN-YunjianNeural", "zh-CN-YunxiNeural"):
                 if cand_ann in short_names:
                     ann_voice = cand_ann
                     break
-            print(f"Qiang-Qiang trio voices: W(文涛)={w_voice}, D(文道)={d_voice}, X(子东)={x_voice}, ANN={ann_voice}, ja_rate={w_ja_rate}")
+            print(
+                f"Qiang-Qiang v45 native voices: W(文涛)={w_voice}, D(文道)={d_voice}, "
+                f"X(子东)={x_voice}, JA={ja_voice}, ANN={ann_voice}, ja_rate={w_ja_rate}"
+            )
         except Exception as e:
-            print(f"[info] list_voices fallback to default trio voices: {e}")
+            print(f"[info] list_voices fallback to default native trio voices: {e}")
 
     vmap = {
-        # W (文涛): 清亮活泛 — 急切抢白(+15%) / 自然铺陈(+10%) / 沉吟蓄力(+3%) / 落锤点睛(+6%)
-        "W":             (w_voice, "+10%", "+2Hz"),
-        "W_MID":         (w_voice, "+10%", "+2Hz"),
-        "W_JAB":         (w_voice, "+15%", "+3Hz"),
-        "W_FAST":        (w_voice, "+15%", "+3Hz"),
-        "W_SLOW":        (w_voice, "+3%", "+1Hz"),
-        "W_LOW":         (w_voice, "+3%", "+1Hz"),
-        "W_LAND":        (w_voice, "+6%", "+2Hz"),
-        "W_JA_INLINE":   (w_voice, "+7%", "+2Hz"),
-        "W_JA":          (w_voice, w_ja_rate, "+2Hz"),
-        # D (文道): 温厚胸腔男中音 — 短促应答(+9%) / 从容铺陈(+4%) / 思想转折(-2%) / 收束落定(+1%)
-        "D":             (d_voice, "+4%", "-4Hz"),
-        "D_MID":         (d_voice, "+4%", "-4Hz"),
-        "D_JAB":         (d_voice, "+9%", "-3Hz"),
-        "D_FAST":        (d_voice, "+9%", "-3Hz"),
+        # W (窦文涛): 清亮活泛北方口语 — 急切抢白(+12%) / 自然铺陈(+7%) / 沉吟蓄力(+1%) / 落锤点睛(+4%)
+        "W":             (w_voice, "+7%", "-2Hz"),
+        "W_MID":         (w_voice, "+7%", "-2Hz"),
+        "W_JAB":         (w_voice, "+12%", "-1Hz"),
+        "W_FAST":        (w_voice, "+12%", "-1Hz"),
+        "W_SLOW":        (w_voice, "+1%", "-3Hz"),
+        "W_LOW":         (w_voice, "+1%", "-3Hz"),
+        "W_LAND":        (w_voice, "+4%", "-2Hz"),
+        "W_JA_INLINE":   (ja_voice, "+4%", "-1Hz"),
+        "W_JA":          (ja_voice, w_ja_rate, "-1Hz"),
+        # D (梁文道): 港台温润儒雅书卷腔 — 短促应答(+8%) / 从容铺陈(+3%) / 思想转折(-2%) / 收束落定(+0%)
+        "D":             (d_voice, "+3%", "-4Hz"),
+        "D_MID":         (d_voice, "+3%", "-4Hz"),
+        "D_JAB":         (d_voice, "+8%", "-3Hz"),
+        "D_FAST":        (d_voice, "+8%", "-3Hz"),
         "D_SLOW":        (d_voice, "-2%", "-5Hz"),
         "D_LOW":         (d_voice, "-2%", "-5Hz"),
-        "D_LAND":        (d_voice, "+1%", "-4Hz"),
-        "D_JA_INLINE":   (d_voice, "+3%", "-4Hz"),
-        "D_JA":          (d_voice, d_ja_rate, "-4Hz"),
-        # X (子东): 清瘦干练冷幽默 — 短刀拆台(+13%) / 文本细读(+8%) / 反讽沉吟(+1%) / 一针见血(+4%)
-        "X":             (x_voice, "+8%", "-1Hz"),
-        "X_MID":         (x_voice, "+8%", "-1Hz"),
-        "X_JAB":         (x_voice, "+13%", "+0Hz"),
-        "X_FAST":        (x_voice, "+13%", "+0Hz"),
-        "X_SLOW":        (x_voice, "+1%", "-2Hz"),
-        "X_LOW":         (x_voice, "+1%", "-2Hz"),
-        "X_LAND":        (x_voice, "+4%", "-1Hz"),
-        "X_JA_INLINE":   (x_voice, "+6%", "-1Hz"),
-        "X_JA":          (x_voice, x_ja_rate, "-1Hz"),
-        # ANN (凤凰卫视中文台下档节目播音员): 醇厚磁性广播男中音
-        "ANN":           (ann_voice, "-4%", "-2Hz"),
+        "D_LAND":        (d_voice, "+0%", "-4Hz"),
+        "D_JA_INLINE":   (ja_voice, "+1%", "-4Hz"),
+        "D_JA":          (ja_voice, d_ja_rate, "-4Hz"),
+        # X (许子东): 干练犀利中年学者(真实F0最高) — 短刀拆台(+13%) / 文本细读(+8%) / 反讽沉吟(+2%) / 一针见血(+5%)
+        "X":             (x_voice, "+8%", "+2Hz"),
+        "X_MID":         (x_voice, "+8%", "+2Hz"),
+        "X_JAB":         (x_voice, "+13%", "+3Hz"),
+        "X_FAST":        (x_voice, "+13%", "+3Hz"),
+        "X_SLOW":        (x_voice, "+2%", "+1Hz"),
+        "X_LOW":         (x_voice, "+2%", "+1Hz"),
+        "X_LAND":        (x_voice, "+5%", "+2Hz"),
+        "X_JA_INLINE":   (ja_voice, "+4%", "+2Hz"),
+        "X_JA":          (ja_voice, x_ja_rate, "+2Hz"),
+        # ANN (凤凰卫视中文台导视 · 张妙阳节奏校准): 引语稳重(+0%, -2Hz) + 0.42s 招牌停顿 + 节目名醇厚落地(-5%, -3Hz)
+        "ANN":           (ann_voice, "+0%", "-2Hz"),
+        "ANN_SHOW":      (ann_voice, "-5%", "-3Hz"),
     }
     for g in ("", "_MID", "_JAB", "_FAST", "_SLOW", "_LOW", "_LAND", "_JA_INLINE", "_JA"):
         vmap[f"M{g}"] = vmap[f"W{g}"]
@@ -926,11 +983,19 @@ def split_mandarin_natural(
     if not s:
         return []
 
+    events: list[tuple[str, object]] = []
+    # Authentic Phoenix TV Dou Wentao opening / post-ad-break beat:
+    # "《锵锵三人行》。" -> crisp 0.34s studio breath -> launch right into the hook!
+    m_qq_open = re.match(r"^《锵锵三人行》[，、！。：\s]+(.+)$", s)
+    if is_turn_start and base_spk in ("W", "M") and m_qq_open and m_qq_open.group(1).strip():
+        events.append((f"{base_spk}_JAB", "《锵锵三人行》。"))
+        events.append(("PAUSE", 0.34))
+        s = m_qq_open.group(1).strip()
+
     raw_sentences = [c.strip() for c in SENTENCE_CHUNK_RE.findall(s) if c and c.strip()]
     if not raw_sentences:
         raw_sentences = [s]
 
-    events: list[tuple[str, object]] = []
     n_sents = len(raw_sentences)
 
     for s_idx, raw_sent in enumerate(raw_sentences):
@@ -1205,6 +1270,7 @@ async def synth_turn(spk: str, voice_cfg: tuple, text: str, out_path: str, sem: 
             speak_txt = text.strip()
         is_ja_clip = spk.endswith(("_JA", "_JA_INLINE"))
         if not is_ja_clip:
+            speak_txt = apply_tts_pronunciation_fixes(speak_txt)
             speak_txt = protect_mandarin_word_boundaries(speak_txt)
         if not spk.endswith("_JA_INLINE") and len(speak_txt.replace("\u200c", "")) <= 2 and speak_txt and speak_txt[-1] not in "。！？":
             speak_txt = speak_txt + "。"
@@ -1213,17 +1279,22 @@ async def synth_turn(spk: str, voice_cfg: tuple, text: str, out_path: str, sem: 
         no_quotes = re.sub(r'[“”‘’「」『』"]', "", punct_stripped).strip()
         no_quotes_period = (no_quotes + "。") if (no_quotes and no_quotes[-1] not in "。！？") else with_period
         bare_no_punct = (no_quotes.replace("\u200c", "").rstrip("。！？、 ") or no_quotes_period.replace("\u200c", ""))
-        # Never let D (Liang Wendao baritone) fall back to W's en-US-BrianMultilingualNeural,
-        # and keep ANN strictly on authentic Mandarin male broadcast announcers!
-        if base_spk == "ANN":
-            alt_voice = "zh-CN-YunyangNeural"
+        # Keep every speaker strictly on native-language fallback voices (never fall back Chinese to English or Japanese to Chinese!)
+        if is_ja_clip:
+            alt_voice = "en-US-BrianMultilingualNeural"
+            alt_pitch = pitch
+        elif base_spk == "ANN":
+            alt_voice = "zh-CN-YunjianNeural"
             alt_pitch = "-2Hz"
         elif base_spk == "D":
-            alt_voice = "it-IT-GiuseppeMultilingualNeural"
-            alt_pitch = "-3Hz"
+            alt_voice = "zh-CN-YunyangNeural"
+            alt_pitch = "-5Hz"
+        elif base_spk in ("X", "F"):
+            alt_voice = "zh-CN-YunyangNeural"
+            alt_pitch = "+1Hz"
         else:
-            alt_voice = "en-AU-WilliamMultilingualNeural"
-            alt_pitch = "+0Hz"
+            alt_voice = "zh-CN-YunyangNeural"
+            alt_pitch = "-1Hz"
         for attempt in range(MAX_TRIES):
             if attempt == 0:
                 use_voice, use_rate, use_pitch, use_txt = voice, rate, pitch, speak_txt
@@ -1312,42 +1383,42 @@ def _smooth_band_db(freqs: np.ndarray, f_lo: float, f_hi: float, gain_db: float,
 
 def apply_host_vocal_timbre(arr: np.ndarray, spk_key: str) -> np.ndarray:
     """
-    Zero-phase spectral vocal timbre sculpting calibrated from 400+ real 《锵锵三人行》 broadcast episodes,
-    preserving 100% studio clarity and Japanese phoneme precision while giving W / D / X / ANN unmistakable vocal body:
-    - W (窦文涛): Bright, forward northern studio presence (+1.65dB @ 1.95-3.65kHz, clean 180Hz trim)
-    - D (梁文道): Warm, magnetic chest baritone (+2.15dB @ 105-255Hz, +1.05dB @ 280-680Hz, smooth upper-mids)
-    - X (许子东): Lean, incisive scholar diction (-1.35dB low chest, +1.85dB @ 1.15-2.55kHz nasal-mid focus)
-    - ANN (凤凰卫视中文台下档播音): Master-control broadcast booth authority (+2.4dB chest, +1.85dB TV presence)
+    Zero-phase spectral vocal timbre sculpting calibrated from 13 real 2005-2017 《锵锵三人行》 broadcasts,
+    preserving 100% studio clarity and native Japanese phoneme precision while giving W / D / X / ANN distinct studio presence:
+    - W (窦文涛): Warm-bright forward talk-show studio presence (+1.35dB @ 1.9-3.6kHz, clean low-mid trim)
+    - D (梁文道): Warm, velvety round chest baritone (+1.95dB @ 110-250Hz, +0.90dB @ 280-660Hz, smooth upper-mids)
+    - X (许子东): Lean, incisive scholar diction (-1.20dB low chest, +1.55dB @ 1.2-2.6kHz crisp mid focus)
+    - ANN (凤凰卫视中文台导视 · 张妙阳音色校准): Crisp Phoenix TV master-control booth sheen (+1.9dB chest, +2.3dB 2.2-4.8kHz)
     """
     if np is None or len(arr) < 320:
         return arr
     base = spk_key.split("_")[0]
     spec = np.fft.rfft(arr)
     freqs = np.fft.rfftfreq(len(arr), d=1.0 / SR).astype(np.float32)
-    hp = np.clip((freqs - 42.0) / 36.0, 0.0, 1.0)
+    hp = np.clip((freqs - 45.0) / 36.0, 0.0, 1.0)
     if base in ("W", "M"):
         eq_db = (
-            _smooth_band_db(freqs, 150.0, 250.0, -0.90, 60.0)
-            + _smooth_band_db(freqs, 1950.0, 3650.0, 1.65, 340.0)
-            + _smooth_band_db(freqs, 4200.0, 6800.0, 0.75, 480.0)
+            _smooth_band_db(freqs, 145.0, 240.0, -0.75, 60.0)
+            + _smooth_band_db(freqs, 1900.0, 3600.0, 1.35, 340.0)
+            + _smooth_band_db(freqs, 4200.0, 6800.0, 0.55, 480.0)
         )
     elif base == "D":
         eq_db = (
-            _smooth_band_db(freqs, 105.0, 255.0, 2.15, 50.0)
-            + _smooth_band_db(freqs, 280.0, 680.0, 1.05, 120.0)
-            + _smooth_band_db(freqs, 2600.0, 4600.0, -1.15, 380.0)
+            _smooth_band_db(freqs, 110.0, 250.0, 1.95, 50.0)
+            + _smooth_band_db(freqs, 280.0, 660.0, 0.90, 120.0)
+            + _smooth_band_db(freqs, 2600.0, 4600.0, -0.95, 380.0)
         )
     elif base in ("X", "F"):
         eq_db = (
-            _smooth_band_db(freqs, 85.0, 205.0, -1.35, 50.0)
-            + _smooth_band_db(freqs, 1150.0, 2550.0, 1.85, 250.0)
-            + _smooth_band_db(freqs, 3200.0, 5000.0, 0.45, 380.0)
+            _smooth_band_db(freqs, 85.0, 205.0, -1.20, 50.0)
+            + _smooth_band_db(freqs, 1200.0, 2600.0, 1.55, 260.0)
+            + _smooth_band_db(freqs, 3200.0, 5200.0, 0.45, 380.0)
         )
     elif base == "ANN":
         eq_db = (
-            _smooth_band_db(freqs, 105.0, 235.0, 2.40, 45.0)
-            + _smooth_band_db(freqs, 2100.0, 4300.0, 1.85, 360.0)
-            + _smooth_band_db(freqs, 5000.0, 8200.0, 0.70, 520.0)
+            _smooth_band_db(freqs, 110.0, 240.0, 1.90, 45.0)
+            + _smooth_band_db(freqs, 2200.0, 4800.0, 2.30, 380.0)
+            + _smooth_band_db(freqs, 5200.0, 8400.0, 0.85, 520.0)
         )
     else:
         eq_db = np.zeros_like(freqs)
@@ -1368,6 +1439,26 @@ def apply_host_vocal_timbre(arr: np.ndarray, spk_key: str) -> np.ndarray:
             level_mult = float(np.clip(target_rms / max(med_rms, 1e-4), 0.78, 1.32))
             shaped *= level_mult
     return shaped
+
+
+def apply_backchannel_room_filter(arr: np.ndarray) -> np.ndarray:
+    """
+    Softly distances a studio backchannel murmur (`对啊`/`没错`/`对对`) to sit ~1.2m across the round table
+    (gentle 260-3400Hz off-axis bandpass + smooth edge fades) so it adds live Phoenix TV room presence
+    without ever competing with the foreground speaker.
+    """
+    if np is None or len(arr) < 320:
+        return arr
+    spec = np.fft.rfft(arr)
+    freqs = np.fft.rfftfreq(len(arr), d=1.0 / SR).astype(np.float32)
+    bp = np.clip((freqs - 210.0) / 140.0, 0.0, 1.0) * np.clip((3800.0 - freqs) / 900.0, 0.25, 1.0)
+    out = np.fft.irfft(spec * bp, n=len(arr)).astype(np.float32)
+    fn = min(int(SR * 0.014), len(out) // 4)
+    if fn > 4:
+        ramp = 0.5 - 0.5 * np.cos(np.linspace(0.0, np.pi, fn, dtype=np.float32))
+        out[:fn] *= ramp
+        out[-fn:] *= ramp[::-1]
+    return out
 
 
 def compress_internal_silences(
@@ -1494,15 +1585,20 @@ _NORM_CHAR_RE = re.compile(r"[\u4e00-\u9fffA-Za-z0-9]")
 
 
 def inline_ja_voice_cfg(spk_key: str, voice_map: dict, ja_kana: str) -> tuple[str, str, str]:
-    voice, rate_s, pitch_s = voice_map[spk_key][0], voice_map[spk_key][1], (voice_map[spk_key][2] if len(voice_map[spk_key]) > 2 else "+0Hz")
+    base = spk_key.split("_")[0]
+    ja_key = f"{base}_JA_INLINE"
+    ja_cfg = voice_map.get(ja_key) or voice_map.get(f"{base}_JA") or voice_map[spk_key]
+    voice = ja_cfg[0]
+    pitch_s = ja_cfg[2] if len(ja_cfg) > 2 else "+0Hz"
+    rate_s = voice_map[spk_key][1]
     try:
         zh_pct = int(str(rate_s).replace("%", "").strip())
     except Exception:
-        zh_pct = 8
+        zh_pct = 6
     if len(ja_kana) >= 9:
-        ja_pct = max(-4, min(0, zh_pct - 6))
+        ja_pct = max(-6, min(0, zh_pct - 7))
     else:
-        ja_pct = max(2, min(10, zh_pct))
+        ja_pct = max(-1, min(6, zh_pct - 2))
     return (voice, f"{ja_pct:+d}%", pitch_s)
 
 
@@ -1587,7 +1683,7 @@ def _find_min_energy_idx(pcm: np.ndarray, lo_i: int, hi_i: int, fallback_i: int)
 def build_carrier_and_spans(mixed_txt: str) -> tuple[str, list[tuple[int, int, str, str]]]:
     """
     Converts `mixed_txt` containing `{{zh_carrier|ja_kana}}` into:
-      - `carrier_zh`: pure Mandarin carrier sentence with ZWNJ word-boundary protection
+      - `carrier_zh`: pure Mandarin carrier sentence with polyphone fixes & ZWNJ word-boundary protection
       - `target_spans`: list of `(raw_start, raw_end, zh_carrier, ja_kana)` exact indices
     """
     out_parts: list[str] = []
@@ -1595,7 +1691,7 @@ def build_carrier_and_spans(mixed_txt: str) -> tuple[str, list[tuple[int, int, s
     last = 0
     cur_len = 0
     for m in SWAP_TOKEN_RE.finditer(mixed_txt):
-        pre = protect_mandarin_word_boundaries(mixed_txt[last : m.start()])
+        pre = protect_mandarin_word_boundaries(apply_tts_pronunciation_fixes(mixed_txt[last : m.start()]))
         out_parts.append(pre)
         cur_len += len(pre)
         zh_w, ja_w = m.group(1).strip(), m.group(2).strip()
@@ -1604,7 +1700,7 @@ def build_carrier_and_spans(mixed_txt: str) -> tuple[str, list[tuple[int, int, s
         target_spans.append((cur_len + 1, cur_len + 1 + len(zh_w), zh_w, ja_w))
         cur_len += len(wrapped)
         last = m.end()
-    tail = protect_mandarin_word_boundaries(mixed_txt[last:])
+    tail = protect_mandarin_word_boundaries(apply_tts_pronunciation_fixes(mixed_txt[last:]))
     out_parts.append(tail)
     return "".join(out_parts), target_spans
 
@@ -1624,8 +1720,12 @@ async def synth_edge_with_boundaries(
     punct_stripped = speak_txt.rstrip("，、：:； ")
     with_period = (punct_stripped + "。") if (punct_stripped and punct_stripped[-1] not in "。！？") else speak_txt
     base_spk = spk_key.split("_")[0]
-    alt_voice = "it-IT-GiuseppeMultilingualNeural" if base_spk == "D" else "en-AU-WilliamMultilingualNeural"
-    alt_pitch = "-3Hz" if base_spk == "D" else "+0Hz"
+    if base_spk == "D":
+        alt_voice, alt_pitch = "zh-CN-YunyangNeural", "-5Hz"
+    elif base_spk in ("X", "F"):
+        alt_voice, alt_pitch = "zh-CN-YunyangNeural", "+1Hz"
+    else:
+        alt_voice, alt_pitch = "zh-CN-YunyangNeural", "-1Hz"
 
     async with sem:
         for attempt in range(MAX_TRIES):
@@ -1767,22 +1867,20 @@ def splice_mixed_swap_pcm(
         gap_before = (t0 - prev_bs[-1][3]) if prev_bs else 0.5
         gap_after = (next_bs[0][2] - t1) if next_bs else 0.5
 
-        # Empirically calibrated Azure WordBoundary acoustic offset:
-        # After/before pauses (>=60ms): audio starts ~+75ms after wb_start and ends ~+10ms after wb_end.
-        # In continuous abutting speech (<60ms): audio runs ~+45ms..+55ms shifted relative to wb!
-        sh0 = 0.075 if gap_before >= 0.06 else 0.045
-        sh1 = 0.010 if gap_after >= 0.06 else 0.055
+        # Empirically calibrated Azure WordBoundary acoustic offset (works seamlessly for native zh-CN/zh-TW & multilingual):
+        sh0 = 0.065 if gap_before >= 0.06 else 0.045
+        sh1 = 0.010 if gap_after >= 0.06 else 0.050
 
         s0 = _find_min_energy_idx(
             cpcm,
-            max(cur, int((t0 + sh0 - 0.015) * SR)),
-            int((t0 + sh0 + 0.015) * SR),
+            max(cur, int((t0 + sh0 - 0.025) * SR)),
+            int((t0 + sh0 + 0.025) * SR),
             max(cur, int((t0 + sh0) * SR)),
         )
         s1 = _find_min_energy_idx(
             cpcm,
-            max(s0, int((t1 + sh1 - 0.012) * SR)),
-            int((t1 + sh1 + 0.018) * SR),
+            max(s0, int((t1 + sh1 - 0.022) * SR)),
+            int((t1 + sh1 + 0.032) * SR),
             max(s0, int((t1 + sh1) * SR)),
         )
         if s0 > cur:
@@ -1936,12 +2034,11 @@ class StudioTimelineMixer:
 
 
 def make_intro_duck_envelope(n_samples: int, duck_start_sec: float = 6.75) -> np.ndarray:
-    """Full level during opening theme, then smoothly ducks -10dB as Wen Tao greets at ~6.85s."""
+    """Full level during opening theme, then smoothly ducks -10dB as Wen Tao greets."""
     env = np.ones(n_samples, dtype=np.float32)
     ds = int(round(duck_start_sec * SR))
     if ds < n_samples:
         rem = n_samples - ds
-        # Smooth duck down to 0.30 then fade to 0.0
         duck_curve = np.linspace(1.0, 0.28, min(int(SR * 0.35), rem), dtype=np.float32)
         env[ds : ds + len(duck_curve)] = duck_curve
         if ds + len(duck_curve) < n_samples:
@@ -1972,17 +2069,17 @@ def mix_authentic_qq_ending(
     ch_start_sec: float,
     last_ja_end_sec: float,
     talk_end_sec: float,
+    ann_gain: float = 1.12,
 ) -> dict[str, float]:
     """
-    100% Authentic Phoenix TV 《锵锵三人行》 Broadcast Ending (v42):
-    - Real ~25.16s 《锵锵三人行》 closing theme + Phoenix TV continuity chime (`audio/qq_real_outro.wav`)
-      fades in smoothly underneath 5-7 turns of lively ongoing pure-Chinese banter (ZERO goodbye/recap,
-      and strictly clamped AFTER `last_ja_end_sec + 0.35s` so zero Japanese items are ever covered!).
-    - Around -7.2s before the end (at the real musical pocket before the final 4.05s Phoenix TV chime),
-      studio master-control smoothly ducks the 3 hosts' ongoing chatter into soft background (`0.16 -> 0.00`)
-      while the magnetic Phoenix TV male continuity announcer announces the next classic Phoenix TV show.
-    - Right as the announcer finishes the show title, the iconic Phoenix TV continuity chime & strings
-      bloom to full warm glory (`0.96`) and fade cleanly to silence.
+    v45 Frame-for-Frame Authentic Phoenix TV 《锵锵三人行》 Unfinished-Banter Fade-Out Ending:
+    - Real 25.16s 《锵锵三人行》 closing theme + 4.05s Phoenix TV chime (`audio/qq_real_outro.wav`)
+      glides in underneath 10-12 turns of unstoppable ongoing pure-Chinese banter (strictly clamped
+      AFTER `last_ja_end_sec + 0.40s` so zero Japanese items are ever touched!).
+    - Just like real 2005-2017 Phoenix TV broadcasts, the three hosts NEVER stop talking or go silent
+      before the announcer: instead, a smooth ~12-second studio master fader continuously glides their
+      lively voices down (`1.00 -> 0.68 -> 0.34 -> 0.17 -> 0.08 -> 0.00`) right underneath and slightly
+      past 张妙阳's Phoenix TV next-program announcement, melting invisibly into the blooming 4.05s chime!
     """
     n_out = len(pcm_outro)
     outro_dur = n_out / float(SR)
@@ -1994,71 +2091,68 @@ def mix_authentic_qq_ending(
     if has_ann:
         ann_rel = max(4.5, outro_dur - chime_tail_sec - ann_dur)
         ann_end_rel = min(outro_dur - 1.0, ann_rel + ann_dur)
-        # Keep hosts chatting through the entire closing theme AND lingering ~2.4s softly under the announcer!
-        desired_under_talk = min(outro_dur - chime_tail_sec - 0.25, ann_rel + min(2.4, max(1.4, ann_dur * 0.72)))
+        # Keep hosts STILL talking right through the theme, under the announcer, and fading into the chime!
+        desired_under_talk = min(outro_dur - 1.25, ann_end_rel + 1.55)
     else:
         ann_rel = max(4.5, outro_dur - chime_tail_sec)
         ann_end_rel = ann_rel
-        desired_under_talk = max(8.0, outro_dur - chime_tail_sec - 0.4)
+        desired_under_talk = max(8.0, outro_dur - chime_tail_sec - 0.3)
 
-    outro_start = max(ch_start_sec + 1.0, last_ja_end_sec + 0.35, talk_end_sec - desired_under_talk)
+    outro_start = max(ch_start_sec + 1.0, last_ja_end_sec + 0.40, talk_end_sec - desired_under_talk)
     ann_start_abs = outro_start + ann_rel
     ann_end_abs = outro_start + ann_end_rel
     outro_end_abs = outro_start + outro_dur
 
-    # 1) Studio master-control fader automation on the hosts' voices already written in `mixer.buf`
-    if has_ann and talk_end_sec > ann_start_abs - 0.38:
-        d0 = max(0, int(round((ann_start_abs - 0.38) * SR)))
-        d1 = max(d0 + 1, int(round(ann_start_abs * SR)))
-        d2 = max(d1 + 1, int(round(max(ann_start_abs + 0.4, ann_end_abs - 0.35) * SR)))
-        d3 = max(d2 + 1, int(round((ann_end_abs + 0.05) * SR)))
-        t_end_i = min(len(mixer.buf), int(round((talk_end_sec + 0.15) * SR)))
-        if d0 < t_end_i:
-            # Smooth cosine pull-down 1.00 -> 0.16 right as the Phoenix TV announcer cuts in
-            seg_end = min(d1, t_end_i)
-            if seg_end > d0:
-                frac = np.linspace(0.0, np.pi, max(2, d1 - d0), dtype=np.float32)[: seg_end - d0]
-                mixer.buf[d0:seg_end] *= (0.16 + 0.84 * (0.5 + 0.5 * np.cos(frac)))
-            # Soft live studio background chatter 0.16 -> 0.08 while announcer speaks
-            seg_end2 = min(d2, t_end_i)
-            if seg_end2 > d1:
-                ramp2 = np.linspace(0.16, 0.08, max(2, d2 - d1), dtype=np.float32)[: seg_end2 - d1]
-                mixer.buf[d1:seg_end2] *= ramp2
-            # Smooth fade 0.08 -> 0.00 just before the final Phoenix TV chime blooms
-            seg_end3 = min(d3, t_end_i)
-            if seg_end3 > d2:
-                ramp3 = np.linspace(0.08, 0.0, max(2, d3 - d2), dtype=np.float32)[: seg_end3 - d2]
-                mixer.buf[d2:seg_end3] *= ramp3
-            # Zero any leftover tail beyond ann_end_abs + 0.05s so final chime is 100% spotless
-            if t_end_i > d3:
-                mixer.buf[d3:t_end_i] = 0.0
+    # 1) Continuous ~12-second smooth studio master-fader automation on the hosts' voices (`聊天的声音越来越小`)
+    fader_start_abs = max(outro_start + 3.5, ann_start_abs - 12.0)
+    t_end_i = min(len(mixer.buf), int(round((talk_end_sec + 0.25) * SR)))
+    f0_i = max(0, int(round(fader_start_abs * SR)))
+    if f0_i < t_end_i:
+        t_abs = np.arange(f0_i, t_end_i, dtype=np.float32) / float(SR)
+        if has_ann:
+            k0 = fader_start_abs
+            k1 = max(k0 + 0.4, ann_start_abs - 5.0)
+            k2 = max(k1 + 0.4, ann_start_abs - 0.60)
+            k3 = max(k2 + 0.2, ann_start_abs + 0.15)
+            k4 = max(k3 + 0.3, ann_end_abs)
+            k5 = max(k4 + 0.3, min(outro_end_abs - 1.3, ann_end_abs + 1.50))
+            fk_t = [k0, k1, k2, k3, k4, k5, max(k5 + 0.05, talk_end_sec + 0.30)]
+            fk_g = [1.00, 0.58, 0.28, 0.14, 0.06, 0.00, 0.00]
+        else:
+            k0 = fader_start_abs
+            k1 = max(k0 + 0.5, outro_end_abs - chime_tail_sec - 4.0)
+            k2 = max(k1 + 0.5, outro_end_abs - chime_tail_sec + 0.6)
+            fk_t = [k0, k1, k2, max(k2 + 0.05, talk_end_sec + 0.30)]
+            fk_g = [1.00, 0.45, 0.00, 0.00]
+        host_fader = np.interp(t_abs, fk_t, fk_g).astype(np.float32)
+        mixer.buf[f0_i:t_end_i] *= host_fader
 
     # 2) Dynamic broadcast envelope for `pcm_outro`
     t_rel = np.arange(n_out, dtype=np.float32) / float(SR)
     if has_ann:
-        t_rise1 = min(1.8, ann_rel * 0.25)
-        t_mid = max(t_rise1 + 0.4, ann_rel - 2.6)
-        t_pre_ann = max(t_mid + 0.3, ann_rel - 0.20)
+        t_rise1 = min(1.6, ann_rel * 0.22)
+        t_mid = max(t_rise1 + 0.5, ann_rel - 4.8)
+        t_pre_ann = max(t_mid + 0.4, ann_rel - 0.35)
         t_ann_end = min(outro_dur - 0.5, ann_end_rel - 0.12)
-        t_bloom = min(outro_dur - 0.1, t_ann_end + 0.42)
+        t_bloom = min(outro_dur - 0.1, t_ann_end + 0.38)
         knots_t = [0.0, t_rise1, t_mid, t_pre_ann, t_ann_end, t_bloom, outro_dur]
-        knots_g = [0.0, 0.36, 0.45, 0.56, 0.62, 0.96, 0.96]
-        # If hosts ended early (e.g. shorter fallback pure-Chinese tail), lift bed gently during gap
+        knots_g = [0.0, 0.34, 0.48, 0.62, 0.66, 0.98, 0.98]
+        # Fallback lift if a legacy chapter had a shorter pure-Chinese tail
         talk_rel = talk_end_sec - outro_start
         if 1.0 < talk_rel < t_pre_ann - 0.8:
             knots_t = [0.0, min(1.4, talk_rel * 0.5), talk_rel, talk_rel + 0.55, t_pre_ann - 0.25, t_pre_ann, t_ann_end, t_bloom, outro_dur]
-            knots_g = [0.0, 0.36, 0.45, 0.72, 0.72, 0.58, 0.62, 0.96, 0.96]
+            knots_g = [0.0, 0.34, 0.48, 0.72, 0.72, 0.60, 0.66, 0.98, 0.98]
     else:
         talk_rel = max(1.0, min(outro_dur - 1.5, talk_end_sec - outro_start))
         knots_t = [0.0, min(1.6, talk_rel * 0.4), talk_rel, min(outro_dur, talk_rel + 0.6), outro_dur]
-        knots_g = [0.0, 0.36, 0.46, 0.96, 0.96]
+        knots_g = [0.0, 0.34, 0.48, 0.98, 0.98]
 
     outro_env = np.interp(t_rel, knots_t, knots_g).astype(np.float32)
     mixer.place_at(outro_start, pcm_outro, gain=outro_env)
 
-    # 3) Place Phoenix TV continuity announcer right over the musical pocket!
+    # 3) Place Phoenix TV continuity announcer (real 2012 张妙阳 or calibrated Yunyang) cleanly on top!
     if has_ann:
-        mixer.place_at(ann_start_abs, pcm_announcer, gain=1.12)
+        mixer.place_at(ann_start_abs, pcm_announcer, gain=ann_gain)
 
     final_end = max(mixer.sec, outro_end_abs)
     mixer.cursor = int(round(final_end * SR))
@@ -2071,6 +2165,7 @@ def mix_authentic_qq_ending(
         "ann_start": round(ann_start_abs, 2),
         "ann_end": round(ann_end_abs, 2),
         "outro_end": round(outro_end_abs, 2),
+        "talk_end": round(talk_end_sec, 2),
     }
 
 
@@ -2147,7 +2242,8 @@ async def main():
             for s in ("W", "D", "X", "M", "F")
             for g in ("", "_MID", "_JAB", "_FAST", "_SLOW", "_LOW", "_LAND", "_JA_INLINE", "_JA")
         },
-        "ANN": ("ANN", "-4%", "-2Hz"),
+        "ANN": ("ANN", "+0%", "-2Hz"),
+        "ANN_SHOW": ("ANN", "-5%", "-3Hz"),
     }
     engine_tag = (
         "dry_test"
@@ -2737,10 +2833,25 @@ async def main():
     closing_evs = turns_to_expanded_events(closing_turns) if closing_turns else []
 
     use_v42_ending = today_str >= "2026-11-25"
+    use_v45_broadcast = today_str >= "2026-11-27"
     next_program = pick_phoenix_next_program(study_dt) if use_v42_ending else None
-    ann_evs = [("ANN", next_program["line"])] if next_program else []
+    real_ann_wav_abs = (
+        os.path.join(BASE_DIR, next_program["real_wav"])
+        if (next_program and next_program.get("real_wav"))
+        else ""
+    )
+    use_real_ann_wav = bool(real_ann_wav_abs and os.path.exists(real_ann_wav_abs) and os.path.getsize(real_ann_wav_abs) > 8000)
+    if next_program and not use_real_ann_wav:
+        ann_evs = [
+            ("ANN", f"{next_program['lead_in']}。"),
+            ("ANN_SHOW", f"{next_program['show']}。"),
+        ]
+    else:
+        ann_evs = []
 
-    if today_str >= "2026-11-26":
+    if use_v45_broadcast:
+        radio_ver_tag = "v45_qq_40m_native_zmy_authentic_fade"
+    elif today_str >= "2026-11-26":
         radio_ver_tag = "v43_qq_40m_storycraft_archival_real_outro"
     elif use_v42_ending:
         radio_ver_tag = "v42_qq_40m_ruminate_jpvideo_real_outro"
@@ -2764,14 +2875,15 @@ async def main():
     }
     if next_program:
         sig_obj["next_program"] = next_program["line"]
+        sig_obj["next_program_source"] = next_program.get("source", "")
     script_sig = hashlib.sha256(json.dumps(sig_obj, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()[:14]
 
     if not dry_test and os.path.exists(RADIO_MP3_PATH) and os.path.exists(RADIO_META_PATH):
         try:
             old_meta = json.load(open(RADIO_META_PATH, encoding="utf-8"))
-            # Never overwrite 2026-11-18's already-completed episode tonight; v35 rebuild starts fresh on 2026-11-19!
+            # Never overwrite already-published <= 2026-11-26 episodes mid-day; v45 starts fresh on 2026-11-27!
             if old_meta.get("date") == today_str and (
-                old_meta.get("script_sig") == script_sig or today_str <= "2026-11-18"
+                old_meta.get("script_sig") == script_sig or today_str <= "2026-11-26"
             ) and os.path.getsize(RADIO_MP3_PATH) > 1_000_000:
                 if today_str > "2026-11-18":
                     save_today_stories(today_str, [st["id"] for st in selected_stories])
@@ -2796,7 +2908,7 @@ async def main():
         *(b["events"] for b in story_blocks),
     ]
 
-    tmpdir = tempfile.mkdtemp(prefix="n3_radio_v42_")
+    tmpdir = tempfile.mkdtemp(prefix="n3_radio_v45_")
     try:
         unique_turns: dict[tuple[str, str], str] = {}
         mixed_keys: set[tuple[str, str]] = set()
@@ -2811,6 +2923,7 @@ async def main():
                         if SWAP_TOKEN_RE.search(txt_s):
                             mixed_keys.add(key)
 
+        bc_pcm_pool: dict[str, list[np.ndarray]] = {}
         if dry_test:
             print(
                 f"[dry-test] Stories={[b['short_tab'] for b in story_blocks]}, "
@@ -2850,7 +2963,7 @@ async def main():
                         for (k, ja_w), jp in unique_inline_ja.items()
                     )
                 )
-                print(f"[v41-stage1] Synthesized {sum(1 for x in ja_ok if x)} / {len(unique_inline_ja)} unique inline Japanese word clips.")
+                print(f"[v45-stage1] Synthesized {sum(1 for x in ja_ok if x)} / {len(unique_inline_ja)} unique inline Japanese word clips.")
 
                 def _decode_ja_inline(item):
                     jkey, jp = item
@@ -2864,7 +2977,14 @@ async def main():
                         if arr is not None and len(arr) > 0:
                             ja_pcm_map[jkey] = arr
 
-            # Stage 2: Synthesize plain sentences AND Carrier-Swap mixed sentences in parallel (with live WordGuard)!
+            # Stage 1b (v45): Pre-synthesize tiny natural off-axis studio backchannel cues once per episode
+            bc_specs: list[tuple[str, str, str]] = []
+            if use_v45_broadcast and imm_profile["ja_ratio"] < 0.55:
+                for bc_spk, bc_texts in STUDIO_BACKCHANNEL_POOL.items():
+                    for bc_i, bc_txt in enumerate(bc_texts):
+                        bc_specs.append((bc_spk, bc_txt, os.path.join(tmpdir, f"bc_{bc_spk}_{bc_i}.mp3")))
+
+            # Stage 2: Synthesize plain sentences, Carrier-Swap mixed sentences & studio backchannels in parallel!
             plain_items = [(key, raw_p) for key, raw_p in unique_turns.items() if key not in mixed_keys]
             mixed_items = [(key, raw_p) for key, raw_p in unique_turns.items() if key in mixed_keys]
 
@@ -2882,21 +3002,37 @@ async def main():
                 )
                 for (k, txt), raw_p in mixed_items
             ]
-            plain_results, mixed_res_list = await asyncio.gather(
+            bc_tasks = [
+                synth_turn(f"{bc_spk}_MID", voice_map[f"{bc_spk}_MID"], bc_txt, bc_p, sem)
+                for bc_spk, bc_txt, bc_p in bc_specs
+            ]
+            plain_results, mixed_res_list, _bc_res = await asyncio.gather(
                 asyncio.gather(*plain_tasks),
                 asyncio.gather(*mixed_tasks),
+                asyncio.gather(*bc_tasks),
             )
             plain_ok = sum(1 for x in plain_results if x)
             mixed_ok = sum(1 for r in mixed_res_list if r is not None)
             print(
-                f"[v41-stage2] Synthesized {plain_ok}/{len(plain_items)} plain clips + "
+                f"[v45-stage2] Synthesized {plain_ok}/{len(plain_items)} plain clips + "
                 f"{mixed_ok}/{len(mixed_items)} seamless Carrier-Swap bilingual sentences."
             )
             print(
-                f"[v41-wordguard] Audited {_WORDGUARD_STATS['checked_turns']} Mandarin turns | "
+                f"[v45-wordguard] Audited {_WORDGUARD_STATS['checked_turns']} Mandarin turns | "
                 f"Auto-healed {_WORDGUARD_STATS['healed_turns']} turns ({_WORDGUARD_STATS['healed_seams']} seams) | "
                 f"Samples: {'; '.join(_WORDGUARD_STATS['samples'][:15])}"
             )
+
+            for bc_spk, _bc_txt, bc_p in bc_specs:
+                if os.path.exists(bc_p) and os.path.getsize(bc_p) > 0:
+                    try:
+                        bc_arr = apply_backchannel_room_filter(
+                            decode_to_pcm_f32(bc_p, trim_speech=True, spk_key=bc_spk)
+                        )
+                        if len(bc_arr) >= int(SR * 0.14):
+                            bc_pcm_pool.setdefault(bc_spk, []).append(bc_arr)
+                    except Exception:
+                        pass
 
             clip_pcm = {}
 
@@ -2929,7 +3065,7 @@ async def main():
                         mixed_fallbacks.append(key)
 
             if mixed_fallbacks:
-                print(f"[v40-fallback] Tight zero-gap stitching {len(mixed_fallbacks)} edge-case bilingual sentences...")
+                print(f"[v45-fallback] Tight zero-gap stitching {len(mixed_fallbacks)} edge-case bilingual sentences...")
                 fb_arrs = await asyncio.gather(
                     *(fallback_tight_stitch_mixed(k, voice_map[k], txt, tmpdir, sem, ja_pcm_map) for k, txt in mixed_fallbacks)
                 )
@@ -2938,7 +3074,7 @@ async def main():
                         clip_pcm[key] = arr
 
             ok_count = len(clip_pcm)
-            print(f"Ready {ok_count} / {len(unique_turns)} total Qiang-Qiang v40 studio PCM clips (fallback={len(mixed_fallbacks)}).")
+            print(f"Ready {ok_count} / {len(unique_turns)} total Qiang-Qiang v45 studio PCM clips (fallback={len(mixed_fallbacks)}, bc_hosts={len(bc_pcm_pool)}).")
             min_required = max(1, int(len(unique_turns) * 0.98))
             if ok_count < min_required:
                 raise RuntimeError(
@@ -2967,30 +3103,91 @@ async def main():
                         mixer.append_clip(arr, gain=gear_gain_linear(k), crossfade_sec=pending_latch)
                     pending_latch = 0.0
 
-        # 1) 00:00.0 — Authentic 《锵锵三人行》 Opening Theme -> Clean Studio Entry!
+        # 1) 00:00.0 — Authentic 《锵锵三人行》 Opening Theme -> Let closing guitar chord ring out cleanly, then Wen Tao enters!
         intro_dur_sec = len(pcm_intro) / float(SR)
-        entry_sec = max(6.8, intro_dur_sec - 0.85)
-        intro_env = make_intro_duck_envelope(len(pcm_intro), duck_start_sec=entry_sec - 0.15)
-        mixer.place_at(0.0, pcm_intro, gain=intro_env)
-        mixer.advance(entry_sec)
+        if use_v45_broadcast:
+            entry_sec = max(6.8, intro_dur_sec - 0.18)
+            intro_env = make_intro_duck_envelope(len(pcm_intro), duck_start_sec=max(6.5, intro_dur_sec - 0.42))
+            mixer.place_at(0.0, pcm_intro, gain=intro_env)
+            mixer.advance(entry_sec + 0.22)
+        else:
+            entry_sec = max(6.8, intro_dur_sec - 0.85)
+            intro_env = make_intro_duck_envelope(len(pcm_intro), duck_start_sec=entry_sec - 0.15)
+            mixer.place_at(0.0, pcm_intro, gain=intro_env)
+            mixer.advance(entry_sec)
 
         chapter_starts: dict[int, float] = {0: 0.0}
         raw_seg_bounds: list[tuple[int, float, float]] = []
         turn_timings: dict[tuple[int, int], tuple[float, float]] = {}
         outro_timing_info: dict[str, float] = {}
+        bc_state = {"last_sec": -99.0, "count": 0}
 
-        def _append_turns_tracked(ch_i: int, turns_sub: list[tuple[str, object]], base_t_idx: int = 0) -> None:
+        def _maybe_layer_backchannel(
+            ch_i: int,
+            rel_i: int,
+            n_turns_sub: int,
+            is_last_ch: bool,
+            spk: str,
+            raw_txt: str,
+            t0: float,
+            t1: float,
+        ) -> None:
+            if not bc_pcm_pool or spk not in ("W", "D", "X"):
+                return
+            dur = t1 - t0
+            if dur < 6.2 or (t0 - bc_state["last_sec"]) < 22.0:
+                return
+            if ch_i == 0 and rel_i < 2:
+                return
+            if is_last_ch and rel_i >= max(0, n_turns_sub - 12):
+                return
+            if JA_SPAN_RE.search(raw_txt) or SWAP_TOKEN_RE.search(raw_txt):
+                return
+            # Locate the deepest natural interior comma/breath energy dip inside [32%..68%] of this pure-Chinese turn
+            lo_i = max(0, int(round((t0 + dur * 0.32) * SR)))
+            hi_i = min(len(mixer.buf), int(round((t0 + dur * 0.68) * SR)))
+            fl = 480  # 20ms frame
+            nf = (hi_i - lo_i) // fl
+            if nf < 8:
+                return
+            seg = mixer.buf[lo_i : lo_i + nf * fl].reshape(nf, fl)
+            frms = np.sqrt(np.mean(seg * seg, axis=1) + 1e-12)
+            # 3-frame (60ms) smoothed minimum finds natural breath valleys cleanly
+            sm = np.convolve(frms, np.ones(3, dtype=np.float32) / 3.0, mode="valid")
+            best_f = int(np.argmin(sm))
+            if float(sm[best_f]) > 0.038:
+                return
+            dip_sec = (lo_i + (best_f + 1) * fl) / float(SR)
+            listeners = [h for h in ("W", "D", "X") if h != spk and bc_pcm_pool.get(h)]
+            if not listeners:
+                return
+            l_spk = listeners[bc_state["count"] % len(listeners)]
+            cues = bc_pcm_pool[l_spk]
+            cue_arr = cues[(bc_state["count"] // max(1, len(listeners))) % len(cues)]
+            mixer.place_at(max(t0 + 1.5, dip_sec - 0.03), cue_arr, gain=0.31)
+            bc_state["last_sec"] = dip_sec
+            bc_state["count"] += 1
+
+        def _append_turns_tracked(
+            ch_i: int,
+            turns_sub: list[tuple[str, object]],
+            base_t_idx: int = 0,
+            is_last_ch: bool = False,
+        ) -> None:
+            n_sub = len(turns_sub)
             for rel_i, (spk, val) in enumerate(turns_sub):
                 if spk in ("PAUSE", "LATCH"):
                     _append_events([(spk, float(val))])
                     continue
                 t0 = mixer.sec
-                _append_events(expand_turn_events(spk, str(val)))
+                raw_s = str(val)
+                _append_events(expand_turn_events(spk, raw_s))
                 t1 = mixer.sec
                 turn_timings[(ch_i, base_t_idx + rel_i)] = (round(t0, 1), round(t1, 1))
-                if rel_i + 1 < len(turns_sub) and turns_sub[rel_i + 1][0] not in ("PAUSE", "LATCH"):
+                _maybe_layer_backchannel(ch_i, base_t_idx + rel_i, n_sub, is_last_ch, spk, raw_s, t0, t1)
+                if rel_i + 1 < n_sub and turns_sub[rel_i + 1][0] not in ("PAUSE", "LATCH"):
                     next_spk, next_val = turns_sub[rel_i + 1]
-                    tr_kind, tr_sec = turn_switch_transition(spk, str(val), next_spk, str(next_val))
+                    tr_kind, tr_sec = turn_switch_transition(spk, raw_s, next_spk, str(next_val))
                     _append_events([(tr_kind, tr_sec)])
 
         if opening_evs:
@@ -3013,7 +3210,7 @@ async def main():
             # Main Salon Story Dialogue
             is_last_story = (ch_idx == total_stories - 1)
             if is_last_story and use_v42_ending:
-                _append_turns_tracked(ch_idx, b["raw_turns"], base_t_idx=0)
+                _append_turns_tracked(ch_idx, b["raw_turns"], base_t_idx=0, is_last_ch=True)
                 if closing_turns:
                     mixer.advance(0.30)
                     _append_events(closing_evs)
@@ -3026,7 +3223,23 @@ async def main():
                         _t_bounds = turn_timings.get((ch_idx, t_i))
                         if _t_bounds:
                             last_ja_end = max(last_ja_end, float(_t_bounds[1]))
-                pcm_announcer = clip_pcm.get(("ANN", next_program["line"])) if next_program else None
+                pcm_announcer = None
+                ann_gain_use = 1.12
+                if next_program:
+                    if use_real_ann_wav:
+                        pcm_announcer = decode_to_pcm_f32(real_ann_wav_abs, trim_speech=False)
+                        ann_gain_use = 1.10
+                    else:
+                        p_lead = clip_pcm.get(("ANN", f"{next_program['lead_in']}。"))
+                        p_show = clip_pcm.get(("ANN_SHOW", f"{next_program['show']}。"))
+                        if p_lead is not None and p_show is not None:
+                            pcm_announcer = np.concatenate([
+                                p_lead,
+                                np.zeros(int(round(SR * 0.42)), dtype=np.float32),
+                                p_show,
+                            ]).astype(np.float32)
+                        elif p_lead is not None:
+                            pcm_announcer = p_lead
                 outro_timing_info = mix_authentic_qq_ending(
                     mixer=mixer,
                     pcm_outro=pcm_outro,
@@ -3034,12 +3247,13 @@ async def main():
                     ch_start_sec=seg_start,
                     last_ja_end_sec=last_ja_end,
                     talk_end_sec=mixer.sec,
+                    ann_gain=ann_gain_use,
                 )
             elif is_last_story and not closing_turns and len(b["raw_turns"]) >= 2:
-                _append_turns_tracked(ch_idx, b["raw_turns"][:-1], base_t_idx=0)
+                _append_turns_tracked(ch_idx, b["raw_turns"][:-1], base_t_idx=0, is_last_ch=True)
                 mixer.advance(0.18)
                 w_start_sec = mixer.sec
-                _append_turns_tracked(ch_idx, [b["raw_turns"][-1]], base_t_idx=len(b["raw_turns"]) - 1)
+                _append_turns_tracked(ch_idx, [b["raw_turns"][-1]], base_t_idx=len(b["raw_turns"]) - 1, is_last_ch=True)
                 w_end_sec = mixer.sec
                 w_dur = max(0.8, w_end_sec - w_start_sec)
                 vo_overlap = min(2.0, w_dur * 0.45)
@@ -3048,7 +3262,7 @@ async def main():
                 outro_end = mixer.place_at(outro_start, pcm_outro, gain=outro_env)
                 mixer.cursor = int(round(outro_end * SR))
             else:
-                _append_turns_tracked(ch_idx, b["raw_turns"], base_t_idx=0)
+                _append_turns_tracked(ch_idx, b["raw_turns"], base_t_idx=0, is_last_ch=False)
 
             # End-of-Story Transitions (ZERO "叮叮" stings between ordinary chapters — ONLY at the 2 "广告之后见" breaks!)
             if ch_idx == ad1_after:
@@ -3088,13 +3302,19 @@ async def main():
             seg_end = round(mixer.sec, 1)
             raw_seg_bounds.append((ch_idx, seg_start, seg_end))
 
+        if bc_state["count"] > 0:
+            print(f"[v45-backchannel] Layered {bc_state['count']} organic off-axis studio listening cues across pure-Chinese turns.")
+
         if dry_test:
             test_mp3 = os.path.join(tmpdir, "dry_test_radio.mp3")
             dur = mixer.render_mp3(test_mp3)
             print(f"[dry-test] Rendered full broadcast timeline MP3: {dur:.1f}s ({dur/60.0:.2f} min, {os.path.getsize(test_mp3)} bytes)")
             print(f"[dry-test] Act breaks after ch {ad1_after} & {ad2_after}; Chapters: {chapter_starts}; tracked_turns={len(turn_timings)}")
             if next_program:
-                print(f"[dry-test] v42 Next Program: {next_program['line']} | Outro timing: {outro_timing_info}")
+                print(
+                    f"[dry-test] v45 Next Program: {next_program['line']} "
+                    f"(source={next_program.get('source')}, real_wav={use_real_ann_wav}) | Outro timing: {outro_timing_info}"
+                )
             return
 
         final_dur = mixer.render_mp3(RADIO_MP3_PATH)
