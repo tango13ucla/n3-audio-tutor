@@ -641,7 +641,64 @@ def test_generate_daily_radio_async_and_reuse_contract() -> None:
     assert '"id": str(st.get("id")' in src, (
         "generate_daily_radio.py story_blocks must include story id so curated topics & JP video scripts match!"
     )
-    print("[PASS 10/10] generate_daily_radio.py async visual invocation, story id & same-day asset preservation verified")
+    print("[PASS 10/11] generate_daily_radio.py async visual invocation, story id & same-day asset preservation verified")
+
+
+def test_full_bank_4choice_and_immersion_mnemonics() -> None:
+    """Gate 11: Ensure 100% of non-listening cards across all 14 waves reach 4 choices and 100% of immersion vocab have mnemonics."""
+    import exam_choice_enricher as ece
+    import immersion_vocab_engine as ive
+    import tutor_data
+    import vocab_cards
+    import wave11_precision_variants
+    import weak_expansion_bank
+    import weak_expansion_wave2
+    import weak_expansion_wave3
+    import weak_expansion_wave4
+    import weak_expansion_wave5
+    import weak_expansion_wave6
+    import weak_expansion_wave7
+    import weak_expansion_wave8
+    import weak_expansion_wave9
+    import weak_expansion_wave10
+    import weak_expansion_wave12
+    import weak_expansion_wave13
+
+    mods = [
+        tutor_data, weak_expansion_bank, weak_expansion_wave2, weak_expansion_wave3,
+        weak_expansion_wave4, weak_expansion_wave5, weak_expansion_wave6, weak_expansion_wave7,
+        weak_expansion_wave8, weak_expansion_wave9, weak_expansion_wave10, wave11_precision_variants,
+        weak_expansion_wave12, weak_expansion_wave13,
+    ]
+    seen_ids: set[str] = set()
+    holdouts: list[str] = []
+    for mod in mods:
+        for attr in dir(mod):
+            val = getattr(mod, attr)
+            if isinstance(val, list) and val and isinstance(val[0], dict) and "id" in val[0] and "choices" in val[0]:
+                for q in val:
+                    qid = str(q["id"])
+                    if qid in seen_ids:
+                        continue
+                    seen_ids.add(qid)
+                    subj = str(q.get("subject", ""))
+                    if subj in ("听力", "聴解") or q.get("is_listening") or qid.startswith("N3-L") or "-L" in qid:
+                        continue
+                    enr = ece.enrich_card_choices(
+                        q["choices"], q.get("answer", ""), is_listening=False,
+                        point_key=q.get("point_key", ""), subject=subj,
+                    )
+                    if len(enr) < 4:
+                        holdouts.append(qid)
+    assert not holdouts, f"Non-listening cards staying <4 choices: {holdouts}"
+
+    missing_mn = [
+        it.get("kanji") or it.get("kana")
+        for it in ive.IMMERSION_VOCAB_BANK
+        if not vocab_cards.get_pronunciation_mnemonic(it.get("kanji") or it.get("kana") or "", it.get("kana") or "")
+    ]
+    assert not missing_mn, f"Immersion words missing bilingual pronunciation mnemonics: {missing_mn[:10]}"
+    print(f"[PASS 11/11] 100% 4-choice across all {len(seen_ids)} cards (0 holdouts) + 100% bilingual mnemonics across {len(ive.IMMERSION_VOCAB_BANK)} immersion words")
 
 
 def main() -> int:
@@ -655,7 +712,8 @@ def main() -> int:
     test_async_loop_safety_and_live_visual_studio_invocation()
     test_all_future_volumes_jp_video_invariants()
     test_generate_daily_radio_async_and_reuse_contract()
-    print("[ALL PASS] tests_ci_guard.py 10/10 gates green!")
+    test_full_bank_4choice_and_immersion_mnemonics()
+    print("[ALL PASS] tests_ci_guard.py 11/11 gates green!")
     return 0
 
 

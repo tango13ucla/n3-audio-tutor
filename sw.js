@@ -1,5 +1,5 @@
-const CACHE_NAME = "n3-studio-tutor-v66";
-const BUILD_STAMP = "2026-11-25_85e09336753b3b_e1f1ed95_fd9037_a5d5d74e";
+const CACHE_NAME = "n3-studio-tutor-v68";
+const BUILD_STAMP = "2026-11-25_85e09336753b3b_e1f1ed95_fd9037_65fde9ec";
 const CORE_SHELL = [
   "./",
   "./index.html",
@@ -42,7 +42,21 @@ self.addEventListener("fetch", event => {
   if (req.method !== "GET" || req.headers.has("range")) return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
-  if (url.pathname.includes("/api/") || url.pathname.endsWith("daily_radio.mp3") || url.pathname.endsWith(".mp4") || url.pathname.endsWith("daily_radio_meta.json") || url.pathname.endsWith("body_vault.enc")) return;
+  if (url.pathname.includes("/api/") || url.pathname.endsWith("daily_radio.mp3") || url.pathname.endsWith(".mp4") || url.pathname.endsWith("daily_radio_meta.json")) return;
+
+  // Network-First with offline fallback for encrypted body_vault.enc (always fresh online, resilient on flights)
+  if (url.pathname.endsWith("body_vault.enc")) {
+    event.respondWith(
+      fetch(req, { cache: "no-store" }).then(res => {
+        if (res && res.status === 200) {
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then(c => c.put("./body_vault.enc", copy)).catch(() => {});
+        }
+        return res;
+      }).catch(() => caches.match("./body_vault.enc"))
+    );
+    return;
+  }
 
   // Cache-First keyed by ?v=<hash> for short studio MP3s, icons, story posters, and WebVTT subtitles
   if (url.pathname.endsWith(".mp3") || url.pathname.endsWith(".png") || url.pathname.endsWith(".jpg") || url.pathname.endsWith(".vtt")) {

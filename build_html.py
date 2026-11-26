@@ -2117,6 +2117,9 @@ html = r"""<!DOCTYPE html>
     .horizon-score .ledger-tag { display: none; }
 
     .thumb-nav {
+      position: relative;
+      z-index: 6;
+      background: var(--washi);
       flex-shrink: 0;
       display: flex;
       justify-content: flex-end;
@@ -2167,9 +2170,9 @@ html = r"""<!DOCTYPE html>
 
     .ledger-back-fab { display: none !important; }
     .ledger-scroll {
-      padding-bottom: 24px;
-      -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 22px), transparent 100%);
-      mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 22px), transparent 100%);
+      padding-bottom: 38px;
+      -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 36px), transparent 100%);
+      mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 36px), transparent 100%);
     }
 
     .action-dock,
@@ -2298,6 +2301,8 @@ html = r"""<!DOCTYPE html>
     letter-spacing: 0.03em;
     color: var(--sumi);
     white-space: pre-line;
+    word-break: auto-phrase;
+    overflow-wrap: break-word;
   }
   .example-zh {
     margin: 8px 0 0;
@@ -3872,6 +3877,7 @@ html = r"""<!DOCTYPE html>
   /* ================= 5. ZEN LEDGER ("总表") ================= */
   #dash-view {
     position: relative;
+    overflow: hidden;
   }
   .ledger-scroll {
     flex: 1;
@@ -4186,7 +4192,7 @@ html = r"""<!DOCTYPE html>
   }
   .night-bar-sub {
     margin-top: 4px;
-    font-size: 13px;
+    font-size: 12.5px;
     color: var(--ink-3);
     font-variant-numeric: tabular-nums;
     line-height: 1.5;
@@ -4194,7 +4200,14 @@ html = r"""<!DOCTYPE html>
   .night-bar-stats {
     display: flex;
     flex-wrap: wrap;
-    gap: 2px 10px;
+    gap: 2px 9px;
+  }
+  .night-bar-head-stat {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--ink-2);
+    margin-left: 8px;
+    font-variant-numeric: tabular-nums;
   }
   .night-go-btn {
     flex-shrink: 0;
@@ -5598,7 +5611,7 @@ html = r"""<!DOCTYPE html>
             <div class="radio-art-card" id="radio-art-card" style="display:none;" onclick="openStoryArtModal()">
               <img class="radio-art-img" id="radio-art-img" src="" alt="" />
             </div>
-            <p class="radio-ja" id="radio-live-ja"></p>
+            <p class="radio-ja" id="radio-live-ja" lang="ja"></p>
           </div>
           <div class="inline-lex empty" id="radio-inline-lex" data-surface="">
             <div class="ilex-top">
@@ -8227,6 +8240,114 @@ function primeRadioLocalBlob(allowNetworkDownload) {
 primeRadioLocalBlob(false);
 setTimeout(() => primeRadioLocalBlob(true), 400);
 
+// Silent flight & road-trip offline readiness: background-cache today's JP short video + today's quiz/vocab/speaking MP3s
+const JPV_BLOB_CACHE_NAME = "n3-daily-jpv-v1";
+const DAILY_OFFLINE_AUDIO_CACHE = "n3-daily-offline-audio-v1";
+let cachedJpvBlobUrl = "";
+let jpvCacheFetchStarted = false;
+let dailyAudioBundleStarted = false;
+
+function isSaveDataEnabled() {
+  try { return !!(navigator.connection && navigator.connection.saveData); } catch (e) { return false; }
+}
+
+function primeJpVideoLocalBlob(allowNetworkDownload) {
+  const jpv = (DATA.radio && DATA.radio.jp_video && DATA.radio.jp_video.video_url) ? DATA.radio.jp_video : null;
+  if (cachedJpvBlobUrl || !jpv || !jpv.video_url) return;
+  if (typeof caches === "undefined" || typeof URL === "undefined" || !URL.createObjectURL) return;
+  const videoUrl = jpv.video_url;
+  caches.open(JPV_BLOB_CACHE_NAME).then(cache => {
+    return cache.match(videoUrl).then(hit => {
+      if (hit) {
+        return hit.blob().then(blob => {
+          if (blob && blob.size > 100000 && !cachedJpvBlobUrl) {
+            cachedJpvBlobUrl = URL.createObjectURL(blob);
+          }
+        });
+      }
+      if (!allowNetworkDownload || jpvCacheFetchStarted || isSaveDataEnabled()) return;
+      jpvCacheFetchStarted = true;
+      return fetch(videoUrl, { cache: "force-cache" }).then(res => {
+        if (!res || !res.ok) return;
+        const copy = res.clone();
+        const cleanup = cache.keys().then(keys =>
+          Promise.all(keys.map(k => (k.url && !k.url.endsWith(videoUrl.replace(/^\.\//, ""))) ? cache.delete(k) : null))
+        ).catch(() => {});
+        return Promise.all([cleanup, cache.put(videoUrl, copy).catch(() => {}), res.blob()]).then(([, , blob]) => {
+          if (blob && blob.size > 100000 && !cachedJpvBlobUrl) {
+            cachedJpvBlobUrl = URL.createObjectURL(blob);
+          }
+        });
+      }).catch(() => { jpvCacheFetchStarted = false; });
+    });
+  }).catch(() => {});
+}
+
+function primeDailyAudioBundle() {
+  if (dailyAudioBundleStarted || isSaveDataEnabled()) return;
+  if (typeof caches === "undefined" || typeof navigator === "undefined" || navigator.onLine === false) return;
+  dailyAudioBundleStarted = true;
+  const urls = [];
+  const seen = new Set();
+  const addU = u => {
+    const s = String(u || "").trim();
+    if (!s || seen.has(s) || (!s.includes(".mp3") && !s.includes(".jpg") && !s.includes(".vtt"))) return;
+    seen.add(s);
+    urls.push(s);
+  };
+  // Priority 1: Speaking prompts, review clips, story images & video captions
+  ((DATA.radio && DATA.radio.speaking_prompts) || []).forEach(sp => addU(sp && sp.model_audio));
+  ((DATA.radio && DATA.radio.story_arts) || []).forEach(a => addU(a && a.img));
+  if (DATA.radio && DATA.radio.jp_video) {
+    addU(DATA.radio.jp_video.vtt_url);
+    addU(DATA.radio.jp_video.poster_url);
+  }
+  // Priority 2: Today's 60 quiz items (q_audio + exp_audio + listening split clips)
+  (DATA.points || []).forEach(p => {
+    if (p && p.teach) addU(p.teach.audio);
+    const cards = [p && p.primary].concat((p && p.variants) || []).filter(Boolean);
+    cards.forEach(c => {
+      addU(c.q_audio);
+      addU(c.exp_audio);
+      if (c.listen_parts) {
+        addU(c.listen_parts.stem);
+        (Array.isArray(c.listen_parts.nums) ? c.listen_parts.nums : []).forEach(addU);
+        const lpOpts = c.listen_parts.opts;
+        if (Array.isArray(lpOpts)) lpOpts.forEach(addU);
+        else if (lpOpts && typeof lpOpts === "object") Object.values(lpOpts).forEach(addU);
+      }
+    });
+  });
+  // Priority 3: Active vocab cards
+  const vcObj = DATA.vocab_cards || {};
+  Object.keys(vcObj).slice(0, 48).forEach(k => {
+    const c = vcObj[k];
+    if (c) { addU(c.audio); addU(c.audio_ja); addU(c.audio_zh); addU(c.audio_mn); }
+  });
+  if (!urls.length) return;
+  caches.open(DAILY_OFFLINE_AUDIO_CACHE).then(async cache => {
+    let idx = 0;
+    const pump = async () => {
+      if (navigator.onLine === false) return;
+      const batch = urls.slice(idx, idx + 4);
+      idx += 4;
+      await Promise.all(batch.map(async u => {
+        try {
+          const hit = await caches.match(u);
+          if (hit) return;
+          const res = await fetch(u, { cache: "force-cache" });
+          if (res && res.ok) await cache.put(u, res);
+        } catch (e) {}
+      }));
+      if (idx < urls.length) setTimeout(pump, 350);
+    };
+    pump();
+  }).catch(() => {});
+}
+
+primeJpVideoLocalBlob(false);
+setTimeout(() => { primeJpVideoLocalBlob(true); primeDailyAudioBundle(); }, 2600);
+
 function applyRadioSeek(sec) {
   const dur = getEffectiveRadioDuration();
   const target = Math.max(0, Math.min(Math.max(0, dur - 2), Number(sec) || 0));
@@ -10012,7 +10133,7 @@ function renderRadioJpVideoStage(host) {
     </div>
 
     <div class="jpv-stage">
-      <h2 class="jpv-title-ja">${escapeHtml(jpv.title_ja || "今日の日本ストーリー")}</h2>
+      <h2 class="jpv-title-ja" lang="ja">${escapeHtml(jpv.title_ja || "今日の日本ストーリー")}</h2>
       <div class="jpv-frame is-paused" id="jpv-frame" onclick="toggleJpVideoPlay(event)">
         <div class="rv-cinema-slot" id="jpv-slot">
           ${jpv.poster_url ? `<img class="rv-cinema-poster" src="${escapeHtml(jpv.poster_url)}" alt="" />` : ""}
@@ -10026,7 +10147,7 @@ function renderRadioJpVideoStage(host) {
       </div>
 
       <div class="jpv-sub-stage${subStageCls}" id="jpv-sub-stage" onclick="if(event.target && event.target.closest && event.target.closest('.w-tok') && jpvVideoEl && !jpvVideoEl.paused) jpvVideoEl.pause()">
-        <div class="jpv-sub-ja" id="jpv-sub-ja">${formatJpVideoLineHTML(initCue)}</div>
+        <div class="jpv-sub-ja" lang="ja" id="jpv-sub-ja">${formatJpVideoLineHTML(initCue)}</div>
         <div class="jpv-sub-zh" id="jpv-sub-zh">${escapeHtml(initCue.zh || "")}</div>
       </div>
 
@@ -10055,7 +10176,7 @@ function renderRadioJpVideoStage(host) {
       slot.innerHTML = "";
       slot.appendChild(v);
     }
-    const wantSrc = jpv.video_url;
+    const wantSrc = cachedJpvBlobUrl || jpv.video_url;
     if (v.getAttribute && v.getAttribute("data-src") !== wantSrc) {
       if (jpv.poster_url) v.poster = jpv.poster_url;
       v.src = wantSrc;
@@ -10884,7 +11005,7 @@ function renderRadioSpeakingCard(host) {
 
         ${artHTML}
         <div class="vc-cue" id="rv-cue-line">${isBlind ? `用「${escapeHtml(p.title || "")}」` : "先听示范，再顺口跟读"}</div>
-        <div class="rv-spk-model${isBlind ? " veiled" : ""}" id="rv-spk-model">${annotateJapanese(p.model_ja || "")}</div>
+        <div class="rv-spk-model${isBlind ? " veiled" : ""}" lang="ja" id="rv-spk-model">${annotateJapanese(p.model_ja || "")}</div>
         <div class="rv-spk-zh-sub">${escapeHtml(p.prompt_short || p.model_zh || "")}</div>
         ${!isBlind && p.coaching_tip ? `<div class="rv-spk-tip">${escapeHtml(p.coaching_tip)}</div>` : ""}
         <div class="${fbCls}" id="rv-mic-feedback">${escapeHtml(fbTxt)}</div>
@@ -10999,7 +11120,7 @@ function renderRadioReviewStage() {
 
         ${visualHTML}
         <div class="vc-cue${rvRevealed && !rvPendingLeft ? " quiet-hide" : (isTail ? " ng" : "")}" id="rv-cue-line">${cueTxt}</div>
-        <div class="vc-chunk" id="rv-head">${escapeHtml(rvRevealed ? item.title : stripGrammarSpoilerTitle(item.title))}</div>
+        <div class="vc-chunk" lang="ja" id="rv-head">${escapeHtml(rvRevealed ? item.title : stripGrammarSpoilerTitle(item.title))}</div>
 
         <div class="vc-reveal${rvRevealed ? " shown" : ""}" id="rv-reveal-box">
           ${kanaHTML ? `<div class="vc-kana">${kanaHTML}</div>` : ""}
@@ -11544,16 +11665,16 @@ function renderTutor() {
         <h2 class="point-heading">${escapeHtml(p.point)}</h2>
         <div class="zen-pair">
           <div class="zen-pair-row">
-            <div class="zp-ja"><span class="zp-dot"></span><span>${annotateJapanese(p.teach.left.ja)}</span></div>
+            <div class="zp-ja" lang="ja"><span class="zp-dot"></span><span>${annotateJapanese(p.teach.left.ja)}</span></div>
             <div class="zp-sub">${escapeHtml(p.teach.left.sub)}</div>
           </div>
           ${p.teach.right && p.teach.right.ja ? `
           <div class="zen-pair-row">
-            <div class="zp-ja"><span class="zp-dot muted"></span><span>${annotateJapanese(p.teach.right.ja)}</span></div>
+            <div class="zp-ja" lang="ja"><span class="zp-dot muted"></span><span>${annotateJapanese(p.teach.right.ja)}</span></div>
             <div class="zp-sub">${escapeHtml(p.teach.right.sub)}</div>
           </div>` : ""}
         </div>
-        <div class="example-line">${annotateJapanese(p.teach.example_ja)}</div>
+        <div class="example-line" lang="ja">${annotateJapanese(p.teach.example_ja)}</div>
         ${p.teach.zh_meaning ? `<p class="example-zh">${escapeHtml(p.teach.zh_meaning)}</p>` : ""}
       </div>
 
@@ -11621,7 +11742,7 @@ function renderTutor() {
               <svg class="med-ic" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86A1 1 0 0 0 8 5.14z"/></svg>
               <div class="med-waves"><span></span><span></span><span></span></div>
             </button>
-          </div>` : `<p class="quiz-ja" onclick="playQuizQuestionAudio(activeQuizObj, true)" title="轻点重听题目">${escapeHtml(activeQuizObj.prompt)}</p>`}
+          </div>` : `<p class="quiz-ja" lang="ja" onclick="playQuizQuestionAudio(activeQuizObj, true)" title="轻点重听题目">${escapeHtml(activeQuizObj.prompt)}</p>`}
         </div>
       </div>
 
@@ -11744,7 +11865,7 @@ function renderTutor() {
     </div>
 
     <div class="focal-space">
-      ${(q.is_listening && renderDialogueHTML(q.full_ja, q.answer, q.zh_meaning)) || `<div class="result-ja">${annotateSentenceWithAnswer(q.full_ja, q.answer)}</div>
+      ${(q.is_listening && renderDialogueHTML(q.full_ja, q.answer, q.zh_meaning)) || `<div class="result-ja" lang="ja">${annotateSentenceWithAnswer(q.full_ja, q.answer)}</div>
       ${q.zh_meaning ? `<p class="result-zh">${escapeHtml(q.zh_meaning)}</p>` : ""}`}
       <div class="result-divider"></div>
       ${resPointTitle ? `<div class="res-point-head"><span class="res-point-subj">${escapeHtml(p.subject || "")}</span><span>${escapeHtml(resPointTitle)}</span></div>` : ""}
@@ -12482,7 +12603,7 @@ function curateVocabBatch(limitCnt) {
   // 2) True Expanding FSRS-lite cross-day spacing for 2/3 & 1/3 reviews:
   //    - 1/3 -> due after >=1d; 2/3 -> due after >=2d (or >=3d when >10d to exam); hesitant -> -1d!
   //    - Prevents rote next-day 2/3->3/3 false green while always reserving room for fresh 0/3 words each day.
-  const daysToExam = Number(DATA.days_to_exam || 14);
+  const daysToExam = DATA.days_to_exam != null ? Number(DATA.days_to_exam) : 14;
   const dueWip2 = [];
   const dueWip1 = [];
   const earlyWip = [];
@@ -13482,7 +13603,7 @@ function renderVocabStage() {
 
         <div class="vc-cue${vcRevealed && !vcPendingLeft ? " quiet-hide" : ""}" id="vc-cue-line">${initCue}</div>
         ${kanaRecall ? `<div class="vc-kana-front${vcRevealed ? " revealed" : ""}" id="vc-kana-front">${escapeHtml(kanaFrontTxt)}</div>` : ""}
-        <div class="vc-chunk${(earFirst || kanaRecall) && !vcRevealed ? " ear-veil" : ""}" id="vc-chunk-box">${renderChunkHighlightHTML(card.chunk_ja, card.target)}</div>
+        <div class="vc-chunk${(earFirst || kanaRecall) && !vcRevealed ? " ear-veil" : ""}" lang="ja" id="vc-chunk-box">${renderChunkHighlightHTML(card.chunk_ja, card.target)}</div>
 
         <div class="vc-reveal${vcRevealed ? " shown" : ""}" id="vc-reveal-box">
           ${kanaHtml ? `<div class="vc-kana">${kanaHtml}</div>` : ""}
@@ -14068,7 +14189,7 @@ function renderGrammarAuditStage() {
 
     <div class="ga-stage" onclick="onGACardTapOrAudio()">
       <div class="ga-canvas" id="ga-card">
-        <div class="ga-head" id="ga-head">${escapeHtml(headText)}</div>
+        <div class="ga-head" lang="ja" id="ga-head">${escapeHtml(headText)}</div>
 
         <div class="ga-reveal${gaRevealed ? " shown" : ""}" id="ga-reveal-box">
           <div class="ga-meaning">${escapeHtml(item.meaning)}</div>
@@ -14173,7 +14294,8 @@ function renderDashboard() {
     const totalWip2 = pillarMeta.reduce((s, x) => s + x.wip2, 0);
     const totalStale = pillarMeta.reduce((s, x) => s + x.staleDone, 0);
     const totalHes = pillarMeta.reduce((s, x) => s + x.hesCnt, 0);
-    const dLeft = Number(DATA.days_to_exam || 14);
+    const dLeft = DATA.days_to_exam != null ? Number(DATA.days_to_exam) : 14;
+    const examLead = dLeft === 0 ? "<b>今日开考</b>" : `距考剩 <b>${dLeft} 天</b>`;
     const activeConfCnt = Object.keys(DATA.confusion_pairs || {}).length;
     const subParts = [];
     if (best && totalWip2 > 0) subParts.push(`<span class="nw">${best.m.label}最提分</span>`);
@@ -14184,13 +14306,13 @@ function renderDashboard() {
     if (best && totalWip2 > 0) {
       roiEl.innerHTML = `
         <div class="dash-roi-bar">
-          <div class="dash-roi-txt"><div><span class="nw">距考剩 <b>${dLeft} 天</b></span> · <span class="nw">临门 2/3 共 <b>${totalWip2} 项</b></span></div>${subLine}</div>
+          <div class="dash-roi-txt"><div><span class="nw">${examLead}</span> · <span class="nw">临门 2/3 共 <b>${totalWip2} 项</b></span></div>${subLine}</div>
           <button type="button" class="dash-roi-btn" onclick="jumpToRoiPillar('${best.k}')">看 ${best.m.label} ›</button>
         </div>`;
     } else {
       roiEl.innerHTML = `
         <div class="dash-roi-bar">
-          <div class="dash-roi-txt"><div><span class="nw">距考剩 <b>${dLeft} 天</b></span> · <span class="nw">临门 2/3 已清空</span></div>${subLine || `<div class="dash-roi-sub">稳步攻克新点即可</div>`}</div>
+          <div class="dash-roi-txt"><div><span class="nw">${examLead}</span> · <span class="nw">临门 2/3 已清空</span></div>${subLine || `<div class="dash-roi-sub">稳步攻克新点即可</div>`}</div>
         </div>`;
     }
   }
@@ -14222,7 +14344,6 @@ function renderDashboard() {
     if (dashMod === "grammar" && ga && ga.total > 0) {
       const gaHead = ga.remaining > 0 ? `已盘 ${ga.audited}/${ga.total}` : `全表 ${ga.total}/${ga.total} 已盘完`;
       const statChips = [
-        gaHead,
         `陌生 ${ga.counts[1] || 0}`,
         `易混 ${ga.counts[2] || 0}`,
         `看懂 ${ga.counts[3] || 0}`,
@@ -14231,7 +14352,7 @@ function renderDashboard() {
       entryEl.innerHTML = `
         <div class="night-bar">
           <div class="night-bar-txt">
-            <div class="night-bar-title">语法盘点</div>
+            <div class="night-bar-title">语法盘点<span class="night-bar-head-stat">${gaHead}</span></div>
             <div class="night-bar-sub night-bar-stats">${statChips}</div>
           </div>
           ${ga.remaining > 0
@@ -14697,18 +14818,28 @@ window.ZB = (function() {
     TOAST_T = setTimeout(() => el.classList.remove("show"), 2200);
   }
 
+  function resolveLocalTz() {
+    try {
+      if (typeof Intl !== "undefined" && Intl.DateTimeFormat) {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        if (tz && tz !== "UTC" && tz !== "Etc/UTC" && tz !== "GMT") return tz;
+      }
+    } catch (e) {}
+    return "America/Los_Angeles";
+  }
   function ptNow(offH) {
     const now = new Date(Date.now() + (offH || 0) * 3600000);
     if (typeof Intl !== "undefined" && Intl.DateTimeFormat) {
       try {
         const parts = new Intl.DateTimeFormat("en-CA", {
-          timeZone: "America/Los_Angeles",
+          timeZone: resolveLocalTz(),
           year: "numeric", month: "2-digit", day: "2-digit",
           hour: "2-digit", minute: "2-digit", hour12: false
         }).formatToParts(now);
         const m = {};
         for (const p of parts) m[p.type] = p.value;
-        return { ymd: `${m.year}-${m.month}-${m.day}`, hour: Number(m.hour), minute: Number(m.minute) };
+        const hh = Number(m.hour) === 24 ? 0 : Number(m.hour);
+        return { ymd: `${m.year}-${m.month}-${m.day}`, hour: hh, minute: Number(m.minute) };
       } catch (e) {}
     }
     const iso = now.toISOString();
@@ -14717,9 +14848,10 @@ window.ZB = (function() {
   function fmtEpochPT(sec) {
     if (!sec) return "";
     try {
-      const parts = new Intl.DateTimeFormat("en-GB", { timeZone: "America/Los_Angeles", hour: "2-digit", minute: "2-digit", hour12: false }).formatToParts(new Date(sec * 1000));
+      const parts = new Intl.DateTimeFormat("en-GB", { timeZone: resolveLocalTz(), hour: "2-digit", minute: "2-digit", hour12: false }).formatToParts(new Date(sec * 1000));
       const m = {}; for (const p of parts) m[p.type] = p.value;
-      return `${m.hour}:${m.minute}`;
+      const hh = m.hour === "24" ? "00" : m.hour;
+      return `${hh}:${m.minute}`;
     } catch (e) { return ""; }
   }
   function todayYmd() { return ptNow(-4).ymd; }
@@ -15227,13 +15359,32 @@ window.ZB = (function() {
       };
     }
 
-    // 1. Travel mode
+    // 1. Travel mode (short trip <=5d: pure chill walking; long trip >5d: walking + optional 8m hotel bodyweight maintenance)
     if (trip) {
+      const tripDays = Math.max(1, daysDiff(trip.start, trip.end) + 1);
+      const isLongTrip = tripDays > 5;
+      const tItems = [
+        { k: "旅途心肺", v: "每天自然步行即算达标，不碰单车不焦虑", cur: true }
+      ];
+      if (isLongTrip) {
+        tItems.push({
+          k: "长途保力（隔 2–3 天可选）",
+          v: "酒店 8 分钟徒手：2 组慢速俯卧撑 + 死虫核心 + 毛巾划船",
+          sub: `本次行程 ${tripDays} 天无单杠，隔天随手保持推拉与核心，回来直接稳拉 3–5 个引体不掉功力。`
+        });
+      }
+      tItems.push({
+        k: "回来后继续",
+        v: `${cur.progName} · ${cur.code}（${cur.title}）`,
+        sub: "Peloton 新版项目支持暂停顺延，回来直接接上。"
+      });
       return {
         tier: "green", tierText: `旅途中 · ${trip.name}`,
         title: "旅途轻松步行",
-        shortLine: `主线暂停在 ${cur.code} · 回来无缝接着骑`,
-        linkText: "课表 ›",
+        shortLine: isLongTrip
+          ? `主线暂停在 ${cur.code} · 隔 2 天可做 8 分酒店核心推拉`
+          : `主线暂停在 ${cur.code} · 回来无缝接着骑`,
+        linkText: "安排 ›",
         ctaText: pelo ? "今日步行已记 ✓" : "记下今日步行",
         ctaDone: !!pelo,
         altAction: null,
@@ -15241,10 +15392,7 @@ window.ZB = (function() {
         isPZMain: false, pzCls: cur, rideMin: 30,
         guide: {
           title: `旅途维持 · ${trip.name}`,
-          items: [
-            { k: "旅途安排", v: "每天自然步行即算心肺达标，不碰单车不焦虑", cur: true },
-            { k: "回来后继续", v: `${cur.progName} · ${cur.code}（${cur.title}）`, sub: "Peloton 新版项目支持暂停顺延，回来直接接上。" }
-          ],
+          items: tItems,
           showSyllabus: true, canOverridePZ: false
         },
         cardioDone: !!(pelo || bb), puTarget: 0,
@@ -16149,12 +16297,23 @@ window.ZB = (function() {
     // Tab 4: Ledger
     const kp = ge("zb-kpis");
     const vt = ST.vitals || {};
-    const hrvSub = vt.hrv_7d ? `HRV · 7日 ${vt.hrv_7d}` : "HRV";
+    const staleTag = (dt) => {
+      if (!dt || !today) return "";
+      const gap = daysDiff(dt, today);
+      if (gap < 3) return "";
+      const p = String(dt).slice(5).split("-");
+      return ` ${Number(p[0])}/${Number(p[1])}`;
+    };
+    const rhrStale = staleTag(vt.rhr_date);
+    const rhrSub = rhrStale ? (`静息${rhrStale}`) : "静息心率";
+    const hrvStale = staleTag(vt.hrv_date);
+    const hrvSub = hrvStale ? (`HRV${hrvStale}`) : (vt.hrv_7d ? `HRV · 7日 ${vt.hrv_7d}` : "HRV");
+    const slpSub = "睡眠" + staleTag(vt.sleep_date);
     if (kp) {
       kp.innerHTML =
-        `<div><div class="zb-kpi-v">${vt.rhr || "--"}</div><div class="zb-kpi-l">静息心率</div></div>` +
+        `<div><div class="zb-kpi-v">${vt.rhr || "--"}</div><div class="zb-kpi-l">${rhrSub}</div></div>` +
         `<div><div class="zb-kpi-v">${vt.hrv || "--"}</div><div class="zb-kpi-l">${hrvSub}</div></div>` +
-        `<div><div class="zb-kpi-v">${vt.sleep_h ? Number(vt.sleep_h).toFixed(1) + "h" : "--"}</div><div class="zb-kpi-l">睡眠</div></div>` +
+        `<div><div class="zb-kpi-v">${vt.sleep_h ? Number(vt.sleep_h).toFixed(1) + "h" : "--"}</div><div class="zb-kpi-l">${slpSub}</div></div>` +
         `<div><div class="zb-kpi-v">${ST.pu_best || 1}<span style="font-size:12px;color:var(--ink-3);font-weight:400;">/5</span></div><div class="zb-kpi-l">标准引体</div></div>`;
     }
     const lpz = ge("zb-ledger-pz");
@@ -17881,10 +18040,77 @@ const statusTxt16 = vm.runInNewContext('(document.getElementById("radio-status-p
 if (statusTxt16 !== '待复盘') {
   throw new Error('Self-test 16 failed: #radio-status-pill should show 待复盘, got: ' + statusTxt16);
 }
+// Self-test 17: Exam-day falsy-zero fix, lang="ja" Japanese phrase wrapping, 100% 4-choice non-listening,
+// local-tz + long-trip hotel maintenance + stale watch date hints + offline JP video/audio pre-caching!
+const nonListenUnder4 = vm.runInNewContext(`(() => {
+  const acc = [];
+  for (const p of (DATA.points || [])) {
+    if (!p || p.subject === '听力') continue;
+    const cs = [p.primary].concat(p.variants || []).filter(Boolean);
+    for (const c of cs) {
+      if (!c.is_listening && Array.isArray(c.choices) && c.choices.length < 4) acc.push(c.id || p.id);
+    }
+  }
+  return acc;
+})()`, sb);
+if (nonListenUnder4.length > 0) {
+  throw new Error('Self-test 17 failed: non-listening cards with <4 choices remain: ' + nonListenUnder4.join(', '));
+}
+for (const jaMark of ['id="radio-live-ja" lang="ja"', 'class="jpv-title-ja" lang="ja"', 'class="jpv-sub-ja" lang="ja"', 'class="example-line" lang="ja"', 'class="quiz-ja" lang="ja"', 'class="result-ja" lang="ja"', 'lang="ja" id="rv-spk-model"', 'lang="ja" id="vc-chunk-box"', 'lang="ja" id="ga-head"']) {
+  if (!html.includes(jaMark)) {
+    throw new Error('Self-test 17 failed: missing Japanese lang="ja" marker for auto-phrase wrapping: ' + jaMark);
+  }
+}
+if (!html.includes('primeJpVideoLocalBlob') || !html.includes('primeDailyAudioBundle')) {
+  throw new Error('Self-test 17 failed: flight/road-trip silent offline bundle pre-caching missing!');
+}
+const bundleRan17 = vm.runInNewContext(`(() => {
+  const prevCaches = typeof caches !== 'undefined' ? caches : undefined;
+  globalThis.caches = {
+    open: () => Promise.resolve({ put: () => Promise.resolve() }),
+    match: () => Promise.resolve(true)
+  };
+  dailyAudioBundleStarted = false;
+  primeDailyAudioBundle();
+  const ok = dailyAudioBundleStarted === true;
+  if (prevCaches === undefined) delete globalThis.caches; else globalThis.caches = prevCaches;
+  return ok;
+})()`, sb);
+if (!bundleRan17) {
+  throw new Error('Self-test 17 failed: primeDailyAudioBundle threw or failed to execute cleanly');
+}
+const roiZero17 = vm.runInNewContext(`(() => {
+  const saved = DATA.days_to_exam;
+  DATA.days_to_exam = 0;
+  renderDashboard();
+  const out = (document.getElementById('dash-roi-focus') && document.getElementById('dash-roi-focus').innerHTML) || '';
+  DATA.days_to_exam = saved;
+  renderDashboard();
+  return out;
+})()`, sb);
+if (!roiZero17.includes('今日开考') || roiZero17.includes('14 天')) {
+  throw new Error('Self-test 17 failed: days_to_exam=0 regressed to falsy fallback! got: ' + roiZero17);
+}
+const zst17 = sb.ZB._getState();
+const savedTrips17 = zst17.trips;
+zst17.trips = [
+  { name: '短途测试', start: '2026-11-26', end: '2026-11-28' },
+  { name: '长途欧洲测试', start: '2026-12-14', end: '2027-01-09' }
+];
+const pShortTrip17 = sb.ZB._planOn('2026-11-27');
+const pLongTrip17 = sb.ZB._planOn('2026-12-20');
+zst17.trips = savedTrips17;
+if (!pShortTrip17.isTravel || JSON.stringify(pShortTrip17.guide).includes('长途保力')) {
+  throw new Error('Self-test 17 failed: short trip <=5d should remain chill walking without long-trip block');
+}
+if (!pLongTrip17.isTravel || !JSON.stringify(pLongTrip17.guide).includes('酒店 8 分钟徒手')) {
+  throw new Error('Self-test 17 failed: long trip >5d must include optional 8m hotel bodyweight maintenance guide');
+}
 """
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
 
 sw_path = os.path.join(BASE_DIR, "sw.js")
+SW_CACHE_NAME = "n3-studio-tutor-v68"
 if os.path.exists(sw_path):
     with open(sw_path, encoding="utf-8") as sf:
         sw_src = sf.read()
@@ -17897,9 +18123,15 @@ if os.path.exists(sw_path):
     html_sig = hashlib.sha256(final_html.encode("utf-8")).hexdigest()[:8]
     new_stamp = f'{plan_date_str}_{radio_meta.get("script_sig", "")}_{manifest_sig}_{prefs_sig}_{html_sig}'
     sw_next = re.sub(
+        r'const CACHE_NAME = "[^"]*";',
+        f'const CACHE_NAME = "{SW_CACHE_NAME}";',
+        sw_src,
+        count=1,
+    )
+    sw_next = re.sub(
         r'const BUILD_STAMP = "[^"]*";',
         f'const BUILD_STAMP = "{new_stamp}";',
-        sw_src,
+        sw_next,
         count=1,
     )
     if sw_next != sw_src:
