@@ -1682,7 +1682,7 @@ html = r"""<!DOCTYPE html>
 <link rel="apple-touch-icon" href="./icon-192.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600&family=Noto+Serif+JP:wght@500;600&display=optional" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;600&family=Shippori+Mincho:wght@500;600&display=swap" rel="stylesheet" />
 <title>N3</title>
 <style>
   :root {
@@ -1705,9 +1705,10 @@ html = r"""<!DOCTYPE html>
     --tap-bg: #EDEAE1;
     --hover-bg: #FFFFFF;
     --soft-bg: #F4F1E8;
-    /* Editorial Bilingual Pairing: Japanese Literary Mincho + Clean Chinese Humanist Sans */
+    /* Jobs x Kyoto Typography: Crisp Modern JP Gothic for Interactive Reading + Warm Shippori Mincho for Hero Display */
     --sans: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Noto Sans CJK SC", -apple-system, BlinkMacSystemFont, sans-serif;
-    --serif-jp: "Hiragino Mincho ProN", "YuMincho", "Noto Serif JP", "Noto Serif CJK SC", "Songti SC", serif;
+    --sans-jp: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", "PingFang SC", "Noto Sans SC", -apple-system, BlinkMacSystemFont, sans-serif;
+    --serif-jp: "Hiragino Mincho ProN", "Shippori Mincho", "YuMincho", "Noto Serif JP", serif;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -2201,8 +2202,8 @@ html = r"""<!DOCTYPE html>
       padding-bottom: 12px;
     }
     #tutor-view .stage-quiz .focal-space {
-      justify-content: flex-end;
-      padding-bottom: 24px;
+      justify-content: center;
+      padding: 8px 0 26px;
       -webkit-mask-image: none;
       mask-image: none;
     }
@@ -2212,8 +2213,8 @@ html = r"""<!DOCTYPE html>
       margin-bottom: 0;
     }
     #tutor-view .stage-quiz .quiz-focal {
-      min-height: 92px;
-      justify-content: flex-end;
+      min-height: 84px;
+      justify-content: center;
     }
     #tutor-view .stage-quiz .listen-medallion-wrap {
       padding: 12px 0 8px;
@@ -2318,26 +2319,36 @@ html = r"""<!DOCTYPE html>
     line-height: 1.62;
   }
 
-  /* -------- QUIZ VIEW (Optimal Literary Reading Scale + Blind-Ear Listening) -------- */
+  /* -------- QUIZ VIEW (Jobs x Kyoto Modern Japanese Sans + Clean Single-Column Stack) -------- */
   .quiz-focal {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    min-height: 116px;
+    min-height: 108px;
   }
   .quiz-ja {
     margin: 0;
-    font-family: var(--serif-jp);
-    font-size: 27px;
-    font-weight: 600;
-    line-height: 1.74;
-    letter-spacing: 0.035em;
+    font-family: var(--sans-jp);
+    font-size: 24px;
+    font-weight: 500;
+    line-height: 1.66;
+    letter-spacing: 0.015em;
     color: var(--sumi);
     word-break: auto-phrase;
     overflow-wrap: break-word;
+    cursor: pointer;
+  }
+  .quiz-blank {
+    display: inline-block;
+    width: 2.35em;
+    height: 1px;
+    border-bottom: 1.75px solid var(--moss);
+    margin: 0 0.24em;
+    vertical-align: -0.06em;
+    opacity: 0.88;
   }
   @media (min-width: 860px) and (min-height: 521px) {
-    .quiz-ja { font-size: 30px; }
+    .quiz-ja { font-size: 27px; }
   }
 
   .listen-medallion-wrap {
@@ -2393,7 +2404,7 @@ html = r"""<!DOCTYPE html>
     align-items: center;
     justify-content: center;
     gap: 6px;
-    border-radius: 10px;
+    border-radius: 12px;
     background: rgba(250, 248, 244, 0.58);
     backdrop-filter: blur(2px);
     -webkit-backdrop-filter: blur(2px);
@@ -2421,7 +2432,7 @@ html = r"""<!DOCTYPE html>
   .choice-list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
     transition: filter 0.22s ease, opacity 0.22s ease;
   }
   .choice-list.recall-veiled {
@@ -2432,45 +2443,52 @@ html = r"""<!DOCTYPE html>
   }
   .zen-choice {
     width: 100%;
-    min-height: 62px;
-    padding: 14px 22px;
+    min-height: 54px;
+    padding: 13px 20px;
     background: var(--sheet);
-    border: 1px solid var(--hairline-strong);
-    border-radius: 8px;
-    font-family: var(--serif-jp);
-    font-size: 22.5px;
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    font-family: var(--sans-jp);
+    font-size: 18.5px;
     font-weight: 500;
     color: var(--sumi);
-    letter-spacing: 0.03em;
-    line-height: 1.44;
+    letter-spacing: 0.02em;
+    line-height: 1.36;
     text-align: left;
     white-space: normal;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    transition: border-color 0.16s ease, background 0.16s ease;
+    transition: border-color 0.16s ease, background 0.16s ease, transform 0.12s ease;
   }
-  .zen-choice:active { background: var(--tap-bg); }
-  .choice-list.grid-2x2 {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
+  @media (prefers-color-scheme: dark) {
+    .zen-choice {
+      border-color: rgba(234, 229, 218, 0.12);
+    }
   }
-  .choice-list.grid-2x2 .zen-choice {
-    min-height: 58px;
-    padding: 12px 14px;
-    font-size: 19.5px;
-    line-height: 1.32;
-    gap: 6px;
+  .zen-choice:active {
+    background: var(--tap-bg);
+    border-color: var(--hairline-strong);
+    transform: scale(0.988);
   }
-  .choice-list.compact-4 {
+  .choice-list.stack-4 {
     gap: 9px;
   }
-  .choice-list.compact-4 .zen-choice {
-    min-height: 50px;
-    padding: 10px 18px;
-    font-size: 19px;
-    line-height: 1.35;
+  .choice-list.stack-4 .zen-choice {
+    min-height: 52px;
+    padding: 12px 20px;
+  }
+  @media (max-height: 700px) {
+    .quiz-ja { font-size: 21.5px; line-height: 1.56; }
+    .choice-list,
+    .choice-list.stack-4 { gap: 7px; }
+    .zen-choice,
+    .choice-list.stack-4 .zen-choice {
+      min-height: 46px;
+      padding: 10px 18px;
+      font-size: 17px;
+      border-radius: 10px;
+    }
   }
 
   .listen-num-grid {
@@ -2479,21 +2497,21 @@ html = r"""<!DOCTYPE html>
     gap: 14px;
   }
   .listen-num-btn {
-    min-height: 68px;
+    min-height: 64px;
     background: var(--sheet);
     border: 1px solid var(--hairline-strong);
-    border-radius: 8px;
-    font-family: var(--serif-jp);
-    font-size: 25px;
+    border-radius: 12px;
+    font-family: var(--sans-jp);
+    font-size: 23px;
     font-weight: 600;
     color: var(--sumi);
     font-variant-numeric: tabular-nums;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: border-color 0.16s ease, background 0.16s ease;
+    transition: border-color 0.16s ease, background 0.16s ease, transform 0.12s ease;
   }
-  .listen-num-btn:active { background: var(--tap-bg); }
+  .listen-num-btn:active { background: var(--tap-bg); transform: scale(0.97); }
 
   .unsure-btn {
     margin-top: 12px;
@@ -2533,7 +2551,7 @@ html = r"""<!DOCTYPE html>
     background: transparent;
     font-size: 14.5px;
     font-weight: 500;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
     transition: opacity 0.15s ease, color 0.2s ease;
   }
   .quiz-aux-row .unsure-btn {
@@ -2556,22 +2574,21 @@ html = r"""<!DOCTYPE html>
   }
 
   .desk-hint { display: none; }
+  /* Hide keyboard shortcut numerals (1 2 3 4 / 0) completely on touch & mobile screens! */
   .kbd-tag {
-    display: inline-block;
+    display: none;
     font-family: var(--sans);
-    font-size: 13px;
+    font-size: 12.5px;
     color: var(--ink-3);
-    opacity: 0.45;
+    opacity: 0.52;
     font-variant-numeric: tabular-nums;
-    margin-left: 10px;
+    margin-left: 12px;
     flex-shrink: 0;
   }
-  .unsure-btn .kbd-tag { display: none; }
-  @media (min-width: 860px) and (min-height: 521px) {
+  @media (min-width: 860px) and (min-height: 521px) and (hover: hover) and (pointer: fine) {
     .zen-choice:hover, .listen-num-btn:hover { border-color: var(--sumi); background: var(--hover-bg); }
     .unsure-btn:hover { border-color: var(--sumi); color: var(--sumi); background: var(--hover-bg); }
-    .kbd-tag { opacity: 1; }
-    .unsure-btn .kbd-tag { display: inline-block; }
+    .kbd-tag { display: inline-block; }
     .desk-hint {
       display: inline-block;
       font-size: 12.5px;
@@ -2581,18 +2598,15 @@ html = r"""<!DOCTYPE html>
       margin-left: 10px;
     }
   }
-  .quiz-ja {
-    cursor: pointer;
-  }
 
   /* -------- RESULT VIEW (3-Step Human Clarity: 句意 -> 为什么用 -> 变形与辨析) -------- */
   .result-ja {
     margin: 0;
-    font-family: var(--serif-jp);
-    font-size: 22.5px;
+    font-family: var(--sans-jp);
+    font-size: 21.5px;
     font-weight: 500;
-    line-height: 1.68;
-    letter-spacing: 0.03em;
+    line-height: 1.66;
+    letter-spacing: 0.015em;
     color: var(--sumi);
     white-space: pre-line;
     word-break: auto-phrase;
@@ -2638,11 +2652,11 @@ html = r"""<!DOCTYPE html>
     transform: translateY(-2px);
   }
   .dlg-ja {
-    font-family: var(--serif-jp);
-    font-size: 19px;
+    font-family: var(--sans-jp);
+    font-size: 18.5px;
     font-weight: 500;
     line-height: 1.58;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.015em;
     color: var(--sumi);
   }
   .dlg-row.is-ans .dlg-who {
@@ -2747,8 +2761,8 @@ html = r"""<!DOCTYPE html>
     gap: 8px;
   }
   .opt-ja {
-    font-family: var(--serif-jp);
-    font-size: 17.5px;
+    font-family: var(--sans-jp);
+    font-size: 17px;
     font-weight: 600;
     color: var(--sumi);
     line-height: 1.45;
@@ -11881,8 +11895,13 @@ function renderTutor() {
     else if (ps.audioPrimed) label += " · 随身听已聊";
 
     const _is4Choices = !activeQuizObj.is_listening && currentChoices.length >= 4;
-    const _maxChoiceLen = _is4Choices ? Math.max(...currentChoices.map(c => String(c || "").length)) : 0;
-    const _choiceGridCls = _is4Choices ? (_maxChoiceLen <= 9 ? " grid-2x2" : " compact-4") : "";
+    const _choiceGridCls = _is4Choices ? " stack-4" : "";
+    const _renderQuizPromptHTML = (rawPrompt) => {
+      const esc = escapeHtml(rawPrompt || "");
+      return esc
+        .replace(/（[\s\u3000]*）/g, '<span class="quiz-blank" aria-label="空栏"></span>')
+        .replace(/\([\s\u3000]{2,}\)/g, '<span class="quiz-blank" aria-label="空栏"></span>');
+    };
     const controlsHTML = activeQuizObj.is_listening
       ? `<div class="listen-num-grid">
           ${currentChoices.map((c, cIdx) => `
@@ -11893,7 +11912,7 @@ function renderTutor() {
           ${useRecallVeil ? `<button type="button" class="recall-veil-overlay" id="quiz-recall-veil" onclick="revealQuizChoicesNow()"><span class="recall-veil-title">读完题，先在心里想答案</span><span class="recall-veil-sub">想好轻点这里看选项</span></button>` : ""}
           <div class="choice-list${_choiceGridCls}${useRecallVeil ? " recall-veiled" : ""}" id="quiz-choice-list">
             ${currentChoices.map((c, cIdx) => `
-              <button class="zen-choice" onclick="submitAnswer(currentChoices[${cIdx}])">
+              <button class="zen-choice" lang="ja" onclick="submitAnswer(currentChoices[${cIdx}])">
                 <span>${escapeHtml(c)}</span>
                 <span class="kbd-tag">${cIdx + 1}</span>
               </button>
@@ -11914,7 +11933,7 @@ function renderTutor() {
               <svg class="med-ic" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86A1 1 0 0 0 8 5.14z"/></svg>
               <div class="med-waves"><span></span><span></span><span></span></div>
             </button>
-          </div>` : `<p class="quiz-ja" lang="ja" onclick="playQuizQuestionAudio(activeQuizObj, true)" title="轻点重听题目">${escapeHtml(activeQuizObj.prompt)}</p>`}
+          </div>` : `<p class="quiz-ja" lang="ja" onclick="playQuizQuestionAudio(activeQuizObj, true)" title="轻点重听题目">${_renderQuizPromptHTML(activeQuizObj.prompt)}</p>`}
         </div>
       </div>
 
@@ -17571,6 +17590,10 @@ for (const k of vcKeys) {
   if (ch.length > 10) throw new Error('Self-test failed: vocab chunk too long (should be concise phrase <=10 chars) for ' + k + ': ' + ch);
 }
 sb.switchMode('vocab');
+sb.switchVocabSubMode('vocab');
+if (!vm.runInNewContext('A.vocabSess && A.vocabSess.queue && A.vocabSess.queue.length', sb)) {
+  sb.startNextVocabBatch();
+}
 const vcStageHtml = (els['vocab-stage-box'] && els['vocab-stage-box'].innerHTML) || '';
 if (!vcStageHtml.includes('id="vc-hook-box"') || !vcStageHtml.includes('data-vc-zone="phrase"') || !vcStageHtml.includes('data-vc-zone="hook"') || vcStageHtml.includes('vc-hook-tag') || vcStageHtml.includes('vc-twin') || vcStageHtml.includes('记音 ♪')) {
   throw new Error('Self-test failed: vocab card must render ultra-minimal Jobsian zones without vc-hook-tag or duplicate vc-twin!');
@@ -18497,11 +18520,29 @@ if (!pzProgHtml18.includes('zb-pz-prog-track') || !pzProgHtml18.includes('已完
   throw new Error('Self-test 18 failed: Power Zone progress bar missing from syllabus modal');
 }
 sb.closeModal();
+
+// Self-test 19: Jobs x Kyoto Quiz Typography & Single-Column Clean Choices (zero mobile 1234, zero cramped 2x2)
+if (html.includes('display=optional') || !html.includes('Noto+Sans+JP') || !html.includes('Shippori+Mincho') || !html.includes('--sans-jp')) {
+  throw new Error('Self-test 19 failed: crisp JP webfont stack (Noto Sans JP + Shippori Mincho + display=swap) missing or regressed!');
+}
+if (html.includes('grid-2x2')) {
+  throw new Error('Self-test 19 failed: cramped 2x2 choice grid regressed!');
+}
+const qPt19 = vm.runInNewContext('DATA.points.find(p => p.primary && !p.primary.is_listening && String(p.primary.prompt || "").includes("（"))', sb);
+if (qPt19) {
+  sb.setupCurrentTurn(qPt19.id);
+  vm.runInNewContext('viewStage = "quiz";', sb);
+  sb.renderTutor();
+  const qHtml19 = (els['voice-card'] && els['voice-card'].innerHTML) || '';
+  if (!qHtml19.includes('choice-list stack-4') || !qHtml19.includes('class="zen-choice" lang="ja"') || !qHtml19.includes('quiz-blank') || qHtml19.includes('grid-2x2')) {
+    throw new Error('Self-test 19 failed: quiz stage missing single-column stack-4, lang=ja choices, or Kyoto quiz-blank: ' + qHtml19.slice(0, 320));
+  }
+}
 """
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
 
 sw_path = os.path.join(BASE_DIR, "sw.js")
-SW_CACHE_NAME = "n3-studio-tutor-v70"
+SW_CACHE_NAME = "n3-studio-tutor-v71"
 if os.path.exists(sw_path):
     with open(sw_path, encoding="utf-8") as sf:
         sw_src = sf.read()

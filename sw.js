@@ -1,5 +1,5 @@
-const CACHE_NAME = "n3-studio-tutor-v70";
-const BUILD_STAMP = "2026-11-25_85e09336753b3b_8eaec1e5_fd9037_64f2add9";
+const CACHE_NAME = "n3-studio-tutor-v71";
+const BUILD_STAMP = "2026-11-25_85e09336753b3b_8eaec1e5_fd9037_1a15146f";
 const CORE_SHELL = [
   "./",
   "./index.html",
@@ -41,6 +41,24 @@ self.addEventListener("fetch", event => {
   const req = event.request;
   if (req.method !== "GET" || req.headers.has("range")) return;
   const url = new URL(req.url);
+
+  // Cache-First for Google Fonts (Noto Sans JP / Shippori Mincho / Noto Sans SC) -> 0ms crisp JP typography offline
+  if (url.origin === "https://fonts.googleapis.com" || url.origin === "https://fonts.gstatic.com") {
+    event.respondWith(
+      caches.match(req).then(cached => {
+        if (cached) return cached;
+        return fetch(req).then(res => {
+          if (res && (res.status === 200 || res.type === "opaque")) {
+            const copy = res.clone();
+            caches.open(CACHE_NAME).then(c => c.put(req, copy)).catch(() => {});
+          }
+          return res;
+        }).catch(() => cached);
+      })
+    );
+    return;
+  }
+
   if (url.origin !== self.location.origin) return;
   if (url.pathname.includes("/api/") || url.pathname.endsWith("daily_radio.mp3") || url.pathname.endsWith(".mp4") || url.pathname.endsWith("daily_radio_meta.json")) return;
 
