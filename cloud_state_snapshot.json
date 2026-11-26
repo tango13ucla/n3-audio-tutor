@@ -4071,6 +4071,19 @@
         1795676087
       ]
     },
+    "2026-11-26": {
+      "resetAt": 0,
+      "radioMaxSec": 0,
+      "radioPos": [
+        0,
+        0
+      ],
+      "radioSig": "",
+      "greenAt": {},
+      "retestAt": {},
+      "learning": {},
+      "sched": {}
+    },
     "2026-12-06": {
       "resetAt": 0,
       "radioMaxSec": 0,
