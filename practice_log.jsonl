@@ -1680,3 +1680,7 @@
 {"id": "VC-仲直り", "point": "仲直り", "choice": "记词:没记住", "correct": "false", "ask_again": "false", "ts": "2026-11-26T06:17:33.000Z"}
 {"id": "VC-ぼろぼろ", "point": "ぼろぼろ", "choice": "记词:记住", "correct": "true", "ask_again": "false", "ts": "2026-11-26T06:17:38.000Z"}
 {"id": "VC-からから", "point": "からから", "choice": "记词:记住", "correct": "true", "ask_again": "false", "ts": "2026-11-26T06:26:03.000Z"}
+{"id": "VC-組む", "point": "組む", "choice": "记词:记住", "correct": "true", "ask_again": "false", "ts": "2026-11-26T06:34:33.000Z"}
+{"id": "VC-任せる", "point": "任せる", "choice": "记词:记住", "correct": "true", "ask_again": "false", "ts": "2026-11-26T06:34:42.000Z"}
+{"id": "VAR5-07", "point": "N3L-009", "choice": "先にお皿を洗う", "correct": "true", "ask_again": "false", "ts": "2026-11-26T06:35:07.000Z"}
+{"id": "LK:面倒", "point": "VAR5-07", "choice": "面倒", "correct": "true", "ask_again": "false", "ts": "2026-11-26T06:35:15.000Z"}
