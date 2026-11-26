@@ -1742,7 +1742,7 @@ html = r"""<!DOCTYPE html>
 <link rel="apple-touch-icon" href="./icon-192.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;600&family=Shippori+Mincho:wght@500;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" rel="stylesheet" />
 <title>N3</title>
 <style>
   :root {
@@ -1753,7 +1753,7 @@ html = r"""<!DOCTYPE html>
     --ink-2: #48443C;
     --ink-3: #847E72;
     --hairline: rgba(28, 27, 24, 0.09);
-    --hairline-strong: rgba(28, 27, 24, 0.18);
+    --hairline-strong: rgba(28, 27, 24, 0.17);
     --track: #E5E0D5;
     --moss: #2B5F49;
     --moss-solid: #2D7A56;
@@ -1765,10 +1765,14 @@ html = r"""<!DOCTYPE html>
     --tap-bg: #EDEAE1;
     --hover-bg: #FFFFFF;
     --soft-bg: #F4F1E8;
-    /* Jobs x Kyoto Typography: Crisp Modern JP Gothic for Interactive Reading + Warm Shippori Mincho for Hero Display */
-    --sans: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Noto Sans CJK SC", -apple-system, BlinkMacSystemFont, sans-serif;
-    --sans-jp: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", "PingFang SC", "Noto Sans SC", -apple-system, BlinkMacSystemFont, sans-serif;
-    --serif-jp: "Hiragino Mincho ProN", "Shippori Mincho", "YuMincho", "Noto Serif JP", serif;
+    /* Kyoto Zen Retreat Primary Surface (墨印 on Washi, Quiet Temple Stone in Night) */
+    --cta-bg: #252420;
+    --cta-fg: #F7F5EF;
+    --cta-border: transparent;
+    --cta-hover: #35332D;
+    /* Unified Pan-CJK Kyoto Zen Retreat Typography (一砚墨 · Noto Sans JP + SC 300/400/500) */
+    --sans: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", -apple-system, BlinkMacSystemFont, sans-serif;
+    --sans-jp: "Noto Sans JP", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans SC", -apple-system, BlinkMacSystemFont, sans-serif;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -1779,7 +1783,7 @@ html = r"""<!DOCTYPE html>
       --ink-2: #B9B2A5;
       --ink-3: #868074;
       --hairline: rgba(234, 229, 218, 0.09);
-      --hairline-strong: rgba(234, 229, 218, 0.21);
+      --hairline-strong: rgba(234, 229, 218, 0.18);
       --track: #2F2D28;
       --moss: #62AD89;
       --moss-solid: #3F8B66;
@@ -1791,6 +1795,10 @@ html = r"""<!DOCTYPE html>
       --tap-bg: #2B2925;
       --hover-bg: #272521;
       --soft-bg: #22201D;
+      --cta-bg: #2A2824;
+      --cta-fg: #F2EDE3;
+      --cta-border: rgba(234, 229, 218, 0.22);
+      --cta-hover: #33312C;
     }
   }
 
@@ -1910,10 +1918,10 @@ html = r"""<!DOCTYPE html>
     gap: 20px;
   }
   .nav-link {
-    font-size: 16.5px;
-    font-weight: 500;
+    font-size: 16px;
+    font-weight: 400;
     color: var(--ink-3);
-    letter-spacing: 0.04em;
+    letter-spacing: 0.06em;
     padding: 6px 4px 5px;
     margin: -6px -4px 0;
     position: relative;
@@ -1921,7 +1929,7 @@ html = r"""<!DOCTYPE html>
   }
   .nav-link.active {
     color: var(--sumi);
-    font-weight: 600;
+    font-weight: 500;
   }
   .nav-link.active::after {
     content: "";
@@ -2307,16 +2315,29 @@ html = r"""<!DOCTYPE html>
     }
   }
 
-  /* -------- TEACH VIEW -------- */
+  /* -------- TEACH VIEW (Kyoto Zen Retreat Gallery Typography) -------- */
   .point-heading {
-    margin: 0 0 20px;
-    font-family: var(--serif-jp);
-    font-size: 27.5px;
-    font-weight: 600;
-    line-height: 1.38;
-    letter-spacing: 0.03em;
+    margin: 0 0 18px;
+    font-family: var(--sans-jp);
+    font-size: 26px;
+    font-weight: 300;
+    line-height: 1.4;
+    letter-spacing: 0.04em;
     color: var(--sumi);
     text-wrap: balance;
+  }
+  .point-heading.has-sub {
+    margin-bottom: 6px;
+    font-size: 28px;
+  }
+  .point-sub {
+    margin: 0 0 20px;
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--ink-3);
+    letter-spacing: 0.03em;
+    line-height: 1.5;
   }
   .zen-pair {
     border-top: 1px solid var(--hairline);
@@ -2333,9 +2354,9 @@ html = r"""<!DOCTYPE html>
     border-top: 1px solid var(--hairline);
   }
   .zp-ja {
-    font-family: var(--serif-jp);
-    font-size: 22px;
-    font-weight: 600;
+    font-family: var(--sans-jp);
+    font-size: 20.5px;
+    font-weight: 400;
     color: var(--sumi);
     letter-spacing: 0.025em;
     display: flex;
@@ -2343,30 +2364,30 @@ html = r"""<!DOCTYPE html>
     gap: 10px;
   }
   .zp-dot {
-    width: 6.5px;
-    height: 6.5px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     background: var(--moss);
     flex-shrink: 0;
   }
   .zp-dot.muted {
     background: transparent;
-    border: 1.5px solid var(--ink-3);
+    border: 1.4px solid var(--ink-3);
   }
   .zp-sub {
-    padding-left: 16.5px;
-    font-size: 16.5px;
+    padding-left: 16px;
+    font-size: 15.5px;
     font-weight: 400;
     color: var(--ink-2);
-    line-height: 1.6;
+    line-height: 1.62;
   }
 
   .example-line {
-    font-family: var(--serif-jp);
-    font-size: 22.5px;
-    font-weight: 500;
-    line-height: 1.76;
-    letter-spacing: 0.03em;
+    font-family: var(--sans-jp);
+    font-size: 21px;
+    font-weight: 400;
+    line-height: 1.74;
+    letter-spacing: 0.02em;
     color: var(--sumi);
     white-space: pre-line;
     word-break: auto-phrase;
@@ -2374,12 +2395,13 @@ html = r"""<!DOCTYPE html>
   }
   .example-zh {
     margin: 8px 0 0;
-    font-size: 17px;
-    color: var(--ink-2);
+    font-size: 15.5px;
+    font-weight: 400;
+    color: var(--ink-3);
     line-height: 1.62;
   }
 
-  /* -------- QUIZ VIEW (Jobs x Kyoto Modern Japanese Sans + Clean Single-Column Stack) -------- */
+  /* -------- QUIZ VIEW (Kyoto Zen Retreat Sans + Clean Single-Column Stack) -------- */
   .quiz-focal {
     display: flex;
     flex-direction: column;
@@ -2389,10 +2411,10 @@ html = r"""<!DOCTYPE html>
   .quiz-ja {
     margin: 0;
     font-family: var(--sans-jp);
-    font-size: 24px;
-    font-weight: 500;
-    line-height: 1.66;
-    letter-spacing: 0.015em;
+    font-size: 23.5px;
+    font-weight: 400;
+    line-height: 1.72;
+    letter-spacing: 0.02em;
     color: var(--sumi);
     word-break: auto-phrase;
     overflow-wrap: break-word;
@@ -2402,13 +2424,13 @@ html = r"""<!DOCTYPE html>
     display: inline-block;
     width: 2.35em;
     height: 1px;
-    border-bottom: 1.75px solid var(--moss);
+    border-bottom: 1.6px solid var(--moss);
     margin: 0 0.24em;
     vertical-align: -0.06em;
     opacity: 0.88;
   }
   @media (min-width: 860px) and (min-height: 521px) {
-    .quiz-ja { font-size: 27px; }
+    .quiz-ja { font-size: 26.5px; }
   }
 
   .listen-medallion-wrap {
@@ -2510,10 +2532,10 @@ html = r"""<!DOCTYPE html>
     border-radius: 12px;
     font-family: var(--sans-jp);
     font-size: 18.5px;
-    font-weight: 500;
+    font-weight: 400;
     color: var(--sumi);
-    letter-spacing: 0.02em;
-    line-height: 1.36;
+    letter-spacing: 0.025em;
+    line-height: 1.38;
     text-align: left;
     white-space: normal;
     display: flex;
@@ -2539,7 +2561,7 @@ html = r"""<!DOCTYPE html>
     padding: 12px 20px;
   }
   @media (max-height: 700px) {
-    .quiz-ja { font-size: 21.5px; line-height: 1.56; }
+    .quiz-ja { font-size: 21.5px; line-height: 1.6; }
     .choice-list,
     .choice-list.stack-4 { gap: 7px; }
     .zen-choice,
@@ -2547,7 +2569,7 @@ html = r"""<!DOCTYPE html>
       min-height: 46px;
       padding: 10px 18px;
       font-size: 17px;
-      border-radius: 10px;
+      border-radius: 11px;
     }
   }
 
@@ -2559,17 +2581,22 @@ html = r"""<!DOCTYPE html>
   .listen-num-btn {
     min-height: 64px;
     background: var(--sheet);
-    border: 1px solid var(--hairline-strong);
+    border: 1px solid var(--hairline);
     border-radius: 12px;
     font-family: var(--sans-jp);
-    font-size: 23px;
-    font-weight: 600;
+    font-size: 24px;
+    font-weight: 300;
     color: var(--sumi);
     font-variant-numeric: tabular-nums;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: border-color 0.16s ease, background 0.16s ease, transform 0.12s ease;
+  }
+  @media (prefers-color-scheme: dark) {
+    .listen-num-btn {
+      border-color: rgba(234, 229, 218, 0.12);
+    }
   }
   .listen-num-btn:active { background: var(--tap-bg); transform: scale(0.97); }
 
@@ -2663,10 +2690,10 @@ html = r"""<!DOCTYPE html>
   .result-ja {
     margin: 0;
     font-family: var(--sans-jp);
-    font-size: 21.5px;
-    font-weight: 500;
-    line-height: 1.66;
-    letter-spacing: 0.015em;
+    font-size: 21px;
+    font-weight: 400;
+    line-height: 1.7;
+    letter-spacing: 0.02em;
     color: var(--sumi);
     white-space: pre-line;
     word-break: auto-phrase;
@@ -2674,7 +2701,7 @@ html = r"""<!DOCTYPE html>
   }
   .ans-hl {
     color: var(--moss);
-    font-weight: 600;
+    font-weight: 500;
   }
   .result-zh {
     margin: 6px 0 0;
@@ -2697,8 +2724,8 @@ html = r"""<!DOCTYPE html>
   }
   .dlg-who {
     font-family: var(--sans);
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 12.5px;
+    font-weight: 500;
     color: var(--ink-3);
     text-align: center;
     min-width: 24px;
@@ -2706,7 +2733,7 @@ html = r"""<!DOCTYPE html>
     box-sizing: border-box;
     white-space: nowrap;
     border: 1px solid var(--hairline);
-    border-radius: 5px;
+    border-radius: 6px;
     line-height: 22px;
     height: 22px;
     transform: translateY(-2px);
@@ -2714,9 +2741,9 @@ html = r"""<!DOCTYPE html>
   .dlg-ja {
     font-family: var(--sans-jp);
     font-size: 18.5px;
-    font-weight: 500;
-    line-height: 1.58;
-    letter-spacing: 0.015em;
+    font-weight: 400;
+    line-height: 1.62;
+    letter-spacing: 0.02em;
     color: var(--sumi);
   }
   .dlg-row.is-ans .dlg-who {
@@ -2905,8 +2932,8 @@ html = r"""<!DOCTYPE html>
     bottom: 108px;
     z-index: 20;
     height: 114px;
-    padding: 12px 14px;
-    border-radius: 8px;
+    padding: 12px 15px;
+    border-radius: 12px;
     background: var(--sheet);
     border: 1px solid var(--hairline-strong);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.10);
@@ -2952,22 +2979,23 @@ html = r"""<!DOCTYPE html>
     white-space: nowrap;
   }
   .ilex-surf {
-    font-family: var(--serif-jp);
+    font-family: var(--sans-jp);
     font-size: 18px;
-    font-weight: 600;
+    font-weight: 500;
+    letter-spacing: 0.02em;
     color: var(--sumi);
     flex-shrink: 0;
   }
   .ilex-kana {
     font-size: 14.5px;
     color: var(--ink-2);
-    font-weight: 500;
+    font-weight: 400;
     overflow: hidden;
     text-overflow: ellipsis;
   }
   .kana-trap {
     color: var(--bengara);
-    font-weight: 700;
+    font-weight: 600;
   }
   .kana-tag {
     font-size: 0.82em;
@@ -2980,7 +3008,7 @@ html = r"""<!DOCTYPE html>
     height: 22px;
     line-height: 22px;
     font-size: 15.5px;
-    font-weight: 500;
+    font-weight: 400;
     color: var(--sumi);
     overflow: hidden;
     text-overflow: ellipsis;
@@ -3000,11 +3028,11 @@ html = r"""<!DOCTYPE html>
   .ilex-speak {
     flex-shrink: 0;
     height: 26px;
-    font-size: 13.5px;
-    font-weight: 600;
+    font-size: 13px;
+    font-weight: 500;
     color: var(--moss);
-    padding: 0 9px;
-    border-radius: 5px;
+    padding: 0 10px;
+    border-radius: 7px;
     border: 1px solid var(--moss-border);
   }
 
@@ -3020,14 +3048,14 @@ html = r"""<!DOCTYPE html>
   }
   .logic-line {
     margin: 0;
-    font-size: 16px;
+    font-size: 15.5px;
     font-weight: 400;
     color: var(--ink-2);
     line-height: 1.74;
     letter-spacing: 0.015em;
   }
 
-  /* Right-Hand Ergonomic Architectural Sumi Buttons */
+  /* Right-Hand Ergonomic Kyoto Temple Stone Buttons */
   .dock-row {
     display: flex;
     align-items: center;
@@ -3035,46 +3063,50 @@ html = r"""<!DOCTYPE html>
   }
   .dock-replay-btn {
     height: 52px;
-    padding: 0 14px;
+    padding: 0 16px;
     border: 1px solid var(--hairline-strong);
-    border-radius: 8px;
+    border-radius: 12px;
     font-size: 14.5px;
-    font-weight: 500;
+    font-weight: 400;
     color: var(--ink-2);
-    letter-spacing: 0.03em;
+    letter-spacing: 0.04em;
     flex-shrink: 0;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
   }
   .dock-replay-btn.playing {
-    border-color: var(--moss);
+    border-color: var(--moss-border);
     color: var(--moss);
-    font-weight: 600;
+    font-weight: 500;
   }
   .sumi-btn {
     flex: 1.45;
     height: 52px;
-    background: var(--sumi);
-    color: var(--sheet);
-    border-radius: 8px;
-    font-size: 16.5px;
+    background: var(--cta-bg);
+    color: var(--cta-fg);
+    border: 1px solid var(--cta-border);
+    border-radius: 12px;
+    font-size: 16px;
     font-weight: 500;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: background 0.15s ease, opacity 0.15s ease, transform 0.12s ease;
   }
-  .sumi-btn:active { opacity: 0.88; }
+  .sumi-btn:active { opacity: 0.86; transform: scale(0.988); }
   .ghost-btn {
     height: 52px;
     padding: 0 16px;
     border: 1px solid var(--hairline-strong);
-    border-radius: 8px;
+    border-radius: 12px;
     font-size: 15px;
-    font-weight: 500;
+    font-weight: 400;
     color: var(--ink-2);
-    letter-spacing: 0.03em;
+    letter-spacing: 0.04em;
     flex-shrink: 0;
+    transition: background 0.15s ease, transform 0.12s ease;
   }
-  .ghost-btn:active, .dock-replay-btn:active { background: var(--tap-bg); }
+  .ghost-btn:active, .dock-replay-btn:active { background: var(--tap-bg); transform: scale(0.985); }
 
   /* ================= 4. THREE-HOST PODCAST SANCTUARY ("随身听") ================= */
   #radio-view,
@@ -3113,20 +3145,22 @@ html = r"""<!DOCTYPE html>
   }
   .radio-topic {
     margin: 0;
-    font-family: var(--serif-jp);
-    font-size: clamp(20px, 5.1vw, 24px);
-    font-weight: 600;
-    line-height: 1.38;
+    font-family: var(--sans);
+    font-size: clamp(19.5px, 4.9vw, 23px);
+    font-weight: 400;
+    line-height: 1.48;
+    letter-spacing: 0.02em;
     color: var(--sumi);
     text-wrap: pretty;
     flex-shrink: 0;
   }
   .radio-ja {
     margin: 0;
-    font-family: var(--serif-jp);
-    font-size: clamp(17.5px, 4.5vw, 20.5px);
+    font-family: var(--sans-jp);
+    font-size: clamp(17px, 4.3vw, 19.5px);
     font-weight: 400;
-    line-height: 1.62;
+    line-height: 1.72;
+    letter-spacing: 0.02em;
     color: var(--ink-2);
     word-break: auto-phrase;
     overflow-wrap: break-word;
@@ -3140,7 +3174,7 @@ html = r"""<!DOCTYPE html>
     max-width: 100%;
     height: clamp(98px, 14vh, 134px);
     margin: 2px 0 0;
-    border-radius: 8px;
+    border-radius: 12px;
     overflow: hidden;
     background: var(--sheet);
     border: 1px solid var(--hairline);
@@ -3265,9 +3299,10 @@ html = r"""<!DOCTYPE html>
   }
   .story-modal-title {
     margin: 6px 0 4px;
-    font-family: var(--serif-jp);
+    font-family: var(--sans);
     font-size: 19px;
-    font-weight: 600;
+    font-weight: 500;
+    letter-spacing: 0.02em;
     color: var(--sumi);
   }
   .story-modal-sub {
@@ -3293,7 +3328,7 @@ html = r"""<!DOCTYPE html>
     -webkit-appearance: none;
     appearance: none;
     width: 100%;
-    height: 3px;
+    height: 2.5px;
     background: var(--track);
     border-radius: 2px;
     outline: none;
@@ -3302,8 +3337,8 @@ html = r"""<!DOCTYPE html>
   }
   .zen-range::-webkit-slider-thumb {
     -webkit-appearance: none;
-    width: 15px;
-    height: 15px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
     background: var(--sumi);
     cursor: pointer;
@@ -3331,9 +3366,9 @@ html = r"""<!DOCTYPE html>
     height: 46px;
     padding: 0 13px;
     border: 1px solid var(--hairline-strong);
-    border-radius: 8px;
+    border-radius: 12px;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 400;
     color: var(--ink-2);
     font-variant-numeric: tabular-nums;
     flex-shrink: 0;
@@ -3342,10 +3377,10 @@ html = r"""<!DOCTYPE html>
     height: 46px;
     padding: 0 15px;
     border: 1px solid var(--hairline-strong);
-    border-radius: 8px;
+    border-radius: 12px;
     background: var(--sheet);
-    font-size: 15px;
-    font-weight: 500;
+    font-size: 14.5px;
+    font-weight: 400;
     color: var(--ink-2);
     font-variant-numeric: tabular-nums;
     flex-shrink: 0;
@@ -3358,14 +3393,16 @@ html = r"""<!DOCTYPE html>
     max-width: 168px;
     min-width: 118px;
     height: 46px;
-    border-radius: 8px;
-    background: var(--sumi);
-    color: var(--sheet);
-    font-size: 16px;
+    border-radius: 12px;
+    background: var(--cta-bg);
+    color: var(--cta-fg);
+    border: 1px solid var(--cta-border);
+    font-size: 15.5px;
     font-weight: 500;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
+    transition: opacity 0.15s ease, transform 0.12s ease;
   }
   .play-toggle-btn:active { opacity: 0.84; transform: scale(0.985); }
 
@@ -3400,11 +3437,11 @@ html = r"""<!DOCTYPE html>
   .chapter-strip::-webkit-scrollbar { display: none; }
   .chap-link {
     font-size: 13.5px;
-    font-weight: 500;
+    font-weight: 400;
     color: var(--ink-3);
     letter-spacing: 0.03em;
-    padding: 6px 9px;
-    border-radius: 6px;
+    padding: 6px 10px;
+    border-radius: 8px;
     white-space: nowrap;
     flex-shrink: 0;
     touch-action: manipulation;
@@ -3413,7 +3450,7 @@ html = r"""<!DOCTYPE html>
   .chap-link.active {
     color: var(--sumi);
     background: var(--tap-bg);
-    font-weight: 600;
+    font-weight: 500;
   }
   .chap-sep {
     width: 1px;
@@ -3426,17 +3463,17 @@ html = r"""<!DOCTYPE html>
   .chap-link.chap-jpv,
   .chap-link.chap-spk {
     color: var(--ink-2);
-    font-weight: 500;
+    font-weight: 400;
     padding: 6px 8px;
   }
   .chap-link.chap-review.is-ready {
     color: var(--moss);
-    font-weight: 600;
+    font-weight: 500;
   }
   .chap-link.chap-jpv.is-ready,
   .chap-link.chap-spk.is-ready {
     color: var(--ink-2);
-    font-weight: 500;
+    font-weight: 400;
   }
   .chap-link.chap-review.is-done {
     color: var(--moss);
@@ -3452,9 +3489,9 @@ html = r"""<!DOCTYPE html>
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    padding: 9px 13px;
+    padding: 10px 14px;
     margin-bottom: 0;
-    border-radius: 8px;
+    border-radius: 12px;
     border: 1px solid var(--moss-border);
     background: var(--moss-soft);
     color: var(--sumi);
@@ -3664,9 +3701,11 @@ html = r"""<!DOCTYPE html>
     margin: 14px auto 0;
     padding-top: 12px;
     max-width: 332px;
-    font-family: var(--serif-jp);
+    font-family: var(--sans-jp);
     font-size: 16.5px;
-    line-height: 1.58;
+    font-weight: 400;
+    line-height: 1.66;
+    letter-spacing: 0.02em;
     color: var(--ink-2);
     text-wrap: balance;
   }
@@ -3682,18 +3721,19 @@ html = r"""<!DOCTYPE html>
   }
   .rv-spk-prompt {
     font-family: var(--sans);
-    font-size: 28px;
-    font-weight: 500;
+    font-size: 26px;
+    font-weight: 300;
     color: var(--sumi);
-    line-height: 1.44;
-    letter-spacing: 0.03em;
+    line-height: 1.46;
+    letter-spacing: 0.04em;
   }
   .rv-spk-model {
-    font-family: var(--serif-jp);
-    font-size: 21px;
-    font-weight: 500;
+    font-family: var(--sans-jp);
+    font-size: 20.5px;
+    font-weight: 400;
     color: var(--sumi);
-    line-height: 1.58;
+    line-height: 1.66;
+    letter-spacing: 0.02em;
     text-wrap: balance;
     word-break: auto-phrase;
     overflow-wrap: break-word;
@@ -3732,11 +3772,12 @@ html = r"""<!DOCTYPE html>
     padding: 4px 0 12px;
   }
   .jpv-title-ja {
-    font-family: var(--serif-jp);
+    font-family: var(--sans-jp);
     font-size: 17.5px;
-    font-weight: 500;
+    font-weight: 400;
+    letter-spacing: 0.03em;
     color: var(--sumi);
-    line-height: 1.42;
+    line-height: 1.48;
     text-align: center;
     text-wrap: balance;
     word-break: auto-phrase;
@@ -3747,7 +3788,7 @@ html = r"""<!DOCTYPE html>
     width: min(100%, calc(min(33vh, 240px) * 16 / 9));
     max-width: 520px;
     aspect-ratio: 16 / 9;
-    border-radius: 10px;
+    border-radius: 12px;
     overflow: hidden;
     background: #141311;
     border: 1px solid var(--hairline);
@@ -3779,11 +3820,11 @@ html = r"""<!DOCTYPE html>
     pointer-events: none;
   }
   .jpv-sub-ja {
-    font-family: var(--serif-jp);
+    font-family: var(--sans-jp);
     font-size: 18px;
-    font-weight: 500;
+    font-weight: 400;
     color: var(--sumi);
-    line-height: 1.62;
+    line-height: 1.68;
     letter-spacing: 0.02em;
     text-wrap: balance;
     word-break: auto-phrase;
@@ -3792,7 +3833,7 @@ html = r"""<!DOCTYPE html>
   }
   .jpv-sub-ja .jpv-hl {
     color: var(--moss);
-    font-weight: 600;
+    font-weight: 500;
   }
   .jpv-sub-zh {
     margin-top: 5px;
@@ -3831,12 +3872,13 @@ html = r"""<!DOCTYPE html>
     align-items: baseline;
     gap: 4px;
     padding: 5px 10px;
-    border-radius: 6px;
+    border-radius: 8px;
     border: 1px solid var(--hairline-strong);
     background: transparent;
     color: var(--ink-2);
-    font-family: var(--serif-jp);
+    font-family: var(--sans-jp);
     font-size: 13.5px;
+    font-weight: 400;
     line-height: 1.25;
     touch-action: manipulation;
     transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease;
@@ -3846,7 +3888,7 @@ html = r"""<!DOCTYPE html>
     color: var(--moss);
     background: var(--moss-soft);
     border-color: var(--moss-border);
-    font-weight: 600;
+    font-weight: 500;
   }
   .jpv-chip-cnt {
     font-family: var(--sans);
@@ -3860,7 +3902,7 @@ html = r"""<!DOCTYPE html>
   }
   .vc-aux-btn.is-on {
     color: var(--moss);
-    font-weight: 600;
+    font-weight: 500;
   }
   @keyframes rvAudioPulse {
     0%, 100% { opacity: 1; }
@@ -3868,7 +3910,7 @@ html = r"""<!DOCTYPE html>
   }
   .vc-aux-btn.playing {
     color: var(--bengara);
-    font-weight: 600;
+    font-weight: 500;
     animation: rvAudioPulse 1.3s ease-in-out infinite;
   }
   .vc-btn.listening {
@@ -3876,7 +3918,7 @@ html = r"""<!DOCTYPE html>
     background: var(--bengara);
     color: #fff;
     border: 1px solid var(--bengara);
-    font-weight: 600;
+    font-weight: 500;
   }
   .rv-done-list {
     margin: 10px 0 0;
@@ -3885,7 +3927,7 @@ html = r"""<!DOCTYPE html>
     gap: 8px 14px;
     font-size: 14.5px;
     color: var(--bengara);
-    font-family: var(--serif-jp);
+    font-family: var(--sans-jp);
   }
   #radio-review-stage .vc-card {
     padding: 6px 2px;
@@ -3986,11 +4028,12 @@ html = r"""<!DOCTYPE html>
       height: 44px;
       padding: 0 18px;
       border-radius: 22px;
-      background: var(--sumi);
-      color: var(--sheet);
+      background: var(--cta-bg);
+      color: var(--cta-fg);
+      border: 1px solid var(--cta-border);
       font-size: 14.5px;
       font-weight: 500;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.06em;
       box-shadow: 0 4px 16px rgba(28, 27, 24, 0.16);
     }
   }
@@ -4021,10 +4064,10 @@ html = r"""<!DOCTYPE html>
     margin-bottom: 8px;
   }
   .pillar-name {
-    font-size: 16.5px;
-    font-weight: 600;
+    font-size: 16px;
+    font-weight: 500;
     color: var(--sumi);
-    letter-spacing: 0.03em;
+    letter-spacing: 0.04em;
   }
   .pillar-stat {
     font-size: 13.5px;
@@ -4032,7 +4075,7 @@ html = r"""<!DOCTYPE html>
     font-variant-numeric: tabular-nums;
   }
   .pillar-line {
-    height: 2px;
+    height: 1.8px;
     background: var(--track);
     display: flex;
     overflow: hidden;
@@ -4059,7 +4102,7 @@ html = r"""<!DOCTYPE html>
   }
   .tier-link.active {
     color: var(--sumi);
-    font-weight: 600;
+    font-weight: 500;
   }
   .zen-search {
     width: 128px;
@@ -4109,8 +4152,8 @@ html = r"""<!DOCTYPE html>
     min-width: 0;
   }
   .li-dot {
-    width: 6.5px;
-    height: 6.5px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     flex-shrink: 0;
   }
@@ -4118,9 +4161,10 @@ html = r"""<!DOCTYPE html>
   .li-dot.wip { background: var(--ochre); }
   .li-dot.done { background: var(--moss); }
   .li-name {
-    font-family: var(--serif-jp);
-    font-size: 18px;
-    font-weight: 500;
+    font-family: var(--sans-jp);
+    font-size: 17.5px;
+    font-weight: 400;
+    letter-spacing: 0.02em;
     color: var(--sumi);
     white-space: nowrap;
     overflow: hidden;
@@ -4167,12 +4211,12 @@ html = r"""<!DOCTYPE html>
   .li-streak.s-wip { color: var(--ochre); font-weight: 500; }
   .li-streak.s-done { color: var(--moss); font-weight: 500; }
   .li-act {
-    font-size: 13.5px;
+    font-size: 13px;
     color: var(--moss);
     font-weight: 500;
     height: 32px;
-    padding: 0 10px;
-    border-radius: 6px;
+    padding: 0 11px;
+    border-radius: 9px;
     border: 1px solid var(--moss-border);
     background: var(--sheet);
     display: inline-flex;
@@ -4227,13 +4271,13 @@ html = r"""<!DOCTYPE html>
     to { opacity: 1; transform: translateY(0); }
   }
   .modal-card::-webkit-scrollbar { display: none; }
-  .modal-h { margin: 0 0 12px; font-size: 18px; font-weight: 600; letter-spacing: 0.04em; }
-  .modal-body { margin: 0 0 14px; font-size: 16px; color: var(--ink-2); line-height: 1.85; font-variant-numeric: tabular-nums; }
-  .modal-promise { margin: 0 0 16px; padding-top: 12px; border-top: 1px solid var(--hairline); font-size: 14.5px; color: var(--moss); line-height: 1.65; font-weight: 500; }
+  .modal-h { margin: 0 0 12px; font-size: 18px; font-weight: 500; letter-spacing: 0.05em; }
+  .modal-body { margin: 0 0 14px; font-size: 15.5px; color: var(--ink-2); line-height: 1.85; font-variant-numeric: tabular-nums; }
+  .modal-promise { margin: 0 0 16px; padding-top: 12px; border-top: 1px solid var(--hairline); font-size: 14.5px; color: var(--moss); line-height: 1.65; font-weight: 400; }
   .sync-box {
     margin: 0 0 18px;
     padding: 12px 14px;
-    border-radius: 8px;
+    border-radius: 12px;
     background: var(--soft-bg);
     border: 1px solid var(--hairline);
   }
@@ -4245,14 +4289,14 @@ html = r"""<!DOCTYPE html>
   }
   .sync-btn {
     width: 100%;
-    height: 42px;
+    height: 44px;
     border: 1px solid var(--hairline-strong);
-    border-radius: 6px;
+    border-radius: 10px;
     background: var(--sheet);
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 500;
     color: var(--sumi);
-    letter-spacing: 0.03em;
+    letter-spacing: 0.04em;
   }
   .sync-btn.copied {
     border-color: var(--moss);
@@ -4265,18 +4309,23 @@ html = r"""<!DOCTYPE html>
     justify-content: space-between;
     align-items: center;
     gap: 14px;
-    padding: 13px 16px;
+    padding: 14px 16px;
     margin-bottom: 18px;
-    border-radius: 9px;
+    border-radius: 12px;
     background: var(--sheet);
-    border: 1px solid var(--hairline-strong);
+    border: 1px solid var(--hairline);
+  }
+  @media (prefers-color-scheme: dark) {
+    .night-bar {
+      border-color: rgba(234, 229, 218, 0.12);
+    }
   }
   .night-bar-txt { min-width: 0; }
   .night-bar-title {
     font-size: 15.5px;
-    font-weight: 600;
+    font-weight: 500;
     color: var(--sumi);
-    letter-spacing: 0.02em;
+    letter-spacing: 0.03em;
   }
   .night-bar-sub {
     margin-top: 4px;
@@ -4292,7 +4341,7 @@ html = r"""<!DOCTYPE html>
   }
   .night-bar-head-stat {
     font-size: 12.5px;
-    font-weight: 500;
+    font-weight: 400;
     color: var(--ink-2);
     margin-left: 8px;
     font-variant-numeric: tabular-nums;
@@ -4301,12 +4350,13 @@ html = r"""<!DOCTYPE html>
     flex-shrink: 0;
     height: 38px;
     padding: 0 16px;
-    border-radius: 7px;
-    background: var(--sumi);
-    color: var(--sheet);
+    border-radius: 10px;
+    background: var(--cta-bg);
+    color: var(--cta-fg);
+    border: 1px solid var(--cta-border);
     font-size: 14px;
     font-weight: 500;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.07em;
   }
 
   .vc-meta-right {
@@ -4448,26 +4498,26 @@ html = r"""<!DOCTYPE html>
     }
   }
   .vc-chunk {
-    font-family: var(--serif-jp);
+    font-family: var(--sans-jp);
     font-size: 40px;
-    font-weight: 500;
+    font-weight: 300;
     color: var(--sumi);
-    line-height: 1.38;
-    letter-spacing: 0.03em;
+    line-height: 1.4;
+    letter-spacing: 0.055em;
     padding: 4px 6px;
     transition: filter 0.28s ease, opacity 0.28s ease, color 0.22s ease;
   }
   .vc-chunk.len-8 {
     font-size: 35px;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.04em;
   }
   .vc-chunk.len-9 {
     font-size: 31px;
-    letter-spacing: 0.015em;
+    letter-spacing: 0.03em;
   }
   .vc-chunk.len-long {
     font-size: 28px;
-    letter-spacing: 0.01em;
+    letter-spacing: 0.02em;
   }
   .vc-chunk.ear-veil {
     filter: blur(9px);
@@ -4475,11 +4525,12 @@ html = r"""<!DOCTYPE html>
     user-select: none;
   }
   .vc-kana-front {
+    font-family: var(--sans-jp);
     font-size: 22px;
-    font-weight: 500;
+    font-weight: 400;
     color: var(--sumi);
-    line-height: 1.44;
-    letter-spacing: 0.02em;
+    line-height: 1.46;
+    letter-spacing: 0.04em;
     margin-bottom: 14px;
     max-height: 84px;
     overflow: hidden;
@@ -4492,7 +4543,7 @@ html = r"""<!DOCTYPE html>
     pointer-events: none;
   }
   .vc-hl {
-    font-weight: 600;
+    font-weight: 400;
     border-bottom: 1.5px solid rgba(43, 95, 73, 0.36);
     padding-bottom: 3px;
   }
@@ -4676,21 +4727,21 @@ html = r"""<!DOCTYPE html>
   }
   .vc-btn {
     height: 52px;
-    border-radius: 8px;
+    border-radius: 12px;
     font-size: 15.5px;
-    font-weight: 500;
-    letter-spacing: 0.05em;
+    font-weight: 400;
+    letter-spacing: 0.06em;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     touch-action: manipulation;
-    transition: opacity 0.15s ease, background 0.15s ease;
+    transition: opacity 0.15s ease, background 0.15s ease, transform 0.12s ease;
   }
   .vc-btn.ng {
     flex: 1;
     border: 1px solid var(--hairline-strong);
     color: var(--bengara);
-    font-weight: 500;
+    font-weight: 400;
     background: transparent;
   }
   .vc-btn.mid {
@@ -4702,25 +4753,28 @@ html = r"""<!DOCTYPE html>
   }
   .vc-btn.ok {
     flex: 1.32;
-    background: var(--sumi);
-    color: var(--sheet);
-    font-weight: 600;
+    background: var(--cta-bg);
+    color: var(--cta-fg);
+    border: 1px solid var(--cta-border);
+    font-weight: 500;
+    letter-spacing: 0.08em;
   }
-  .vc-btn.ok:active { opacity: 0.86; }
-  .vc-btn.ng:active, .vc-btn.mid:active { background: var(--tap-bg); }
+  .vc-btn.ok:active { opacity: 0.86; transform: scale(0.988); }
+  .vc-btn.ng:active, .vc-btn.mid:active { background: var(--tap-bg); transform: scale(0.985); }
   .vc-btn.ga-solid {
     flex: 0.92;
     border: 1px solid var(--moss-border);
     color: var(--moss);
-    font-weight: 600;
+    font-weight: 500;
     background: var(--sheet);
     font-size: 13.8px;
   }
   .vc-btn.ga-fuzzy {
     flex: 1.05;
-    background: var(--sumi);
-    color: var(--sheet);
-    font-weight: 600;
+    background: var(--cta-bg);
+    color: var(--cta-fg);
+    border: 1px solid var(--cta-border);
+    font-weight: 500;
   }
 
   /* Position #3 Zen Sub-Bar ("记词 · 语法盘点" — auto-retires once 156/156 complete) */
@@ -4820,12 +4874,12 @@ html = r"""<!DOCTYPE html>
     transition: opacity 0.16s ease, transform 0.16s ease;
   }
   .ga-head {
-    font-family: var(--serif-jp);
-    font-size: clamp(29px, 7.8vw, 36px);
-    font-weight: 500;
+    font-family: var(--sans-jp);
+    font-size: clamp(30px, 8vw, 38px);
+    font-weight: 300;
     color: var(--sumi);
-    line-height: 1.38;
-    letter-spacing: 0.03em;
+    line-height: 1.4;
+    letter-spacing: 0.055em;
     word-break: keep-all;
   }
   .ga-reveal {
@@ -4844,10 +4898,10 @@ html = r"""<!DOCTYPE html>
   }
   .ga-meaning {
     font-size: 18px;
-    font-weight: 500;
+    font-weight: 400;
     color: var(--sumi);
-    line-height: 1.5;
-    letter-spacing: 0.015em;
+    line-height: 1.54;
+    letter-spacing: 0.025em;
     text-wrap: balance;
   }
   .ga-rule {
@@ -4855,7 +4909,7 @@ html = r"""<!DOCTYPE html>
     max-width: 344px;
     font-size: 13.5px;
     color: var(--ink-3);
-    line-height: 1.62;
+    line-height: 1.64;
     text-wrap: balance;
   }
   .ga-divider {
@@ -4870,10 +4924,12 @@ html = r"""<!DOCTYPE html>
     text-align: center;
   }
   .ga-ex-ja {
-    font-family: var(--serif-jp);
-    font-size: 16px;
+    font-family: var(--sans-jp);
+    font-size: 16.5px;
+    font-weight: 400;
     color: var(--sumi);
-    line-height: 1.66;
+    line-height: 1.7;
+    letter-spacing: 0.02em;
     text-wrap: balance;
   }
   .ga-ex-zh {
@@ -4894,9 +4950,9 @@ html = r"""<!DOCTYPE html>
   }
   .ga-stat-cell { text-align: center; }
   .ga-stat-num {
-    font-family: var(--serif-jp);
-    font-size: 22px;
-    font-weight: 600;
+    font-family: var(--sans);
+    font-size: 24px;
+    font-weight: 300;
     font-variant-numeric: tabular-nums;
     line-height: 1.2;
   }
@@ -5028,8 +5084,9 @@ html = r"""<!DOCTYPE html>
   }
   .li-ga-subrow:first-child { border-top: none; }
   .li-ga-subname {
-    font-family: var(--serif-jp);
+    font-family: var(--sans-jp);
     font-size: 13.5px;
+    font-weight: 400;
     color: var(--sumi);
     min-width: 92px;
   }
@@ -5269,11 +5326,11 @@ html = r"""<!DOCTYPE html>
   }
   .zb-hero-tap:active { opacity: 0.72; }
   .zb-title {
-    font-family: var(--serif-jp);
-    font-size: clamp(24px, 6.6vw, 28px);
-    font-weight: 600;
-    line-height: 1.32;
-    letter-spacing: 0.02em;
+    font-family: var(--sans);
+    font-size: clamp(24px, 6.4vw, 28px);
+    font-weight: 400;
+    line-height: 1.38;
+    letter-spacing: 0.03em;
     color: var(--sumi);
     margin: 12px 0 9px;
     text-wrap: balance;
@@ -5282,7 +5339,7 @@ html = r"""<!DOCTYPE html>
   .zb-guide-txt {
     margin: 0;
     font-size: 14px;
-    line-height: 1.62;
+    line-height: 1.64;
     color: var(--ink-2);
     letter-spacing: 0.015em;
     text-wrap: pretty;
@@ -5296,15 +5353,15 @@ html = r"""<!DOCTYPE html>
   }
   .zb-btn-primary {
     flex: 1;
-    height: 50px;
+    height: 52px;
     padding: 0 20px;
-    border-radius: 10px;
-    background: var(--sumi);
-    color: var(--sheet);
-    border: 1px solid transparent;
+    border-radius: 12px;
+    background: var(--cta-bg);
+    color: var(--cta-fg);
+    border: 1px solid var(--cta-border);
     font-size: 15.5px;
     font-weight: 500;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.07em;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -5319,14 +5376,14 @@ html = r"""<!DOCTYPE html>
   }
   .zb-btn-primary:active { transform: scale(0.985); opacity: 0.86; }
   .zb-btn-ghost {
-    height: 50px;
-    padding: 0 15px;
+    height: 52px;
+    padding: 0 16px;
     border: 1px solid var(--hairline-strong);
-    border-radius: 10px;
+    border-radius: 12px;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 400;
     color: var(--ink-2);
-    letter-spacing: 0.03em;
+    letter-spacing: 0.04em;
     flex-shrink: 0;
     display: inline-flex;
     align-items: center;
@@ -5503,13 +5560,13 @@ html = r"""<!DOCTYPE html>
   .zb-stepper { display: inline-flex; align-items: center; gap: 14px; }
   .zb-step-btn { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--hairline-strong); font-size: 16px; color: var(--sumi); display: inline-flex; align-items: center; justify-content: center; transition: background-color 0.14s ease, transform 0.12s ease; }
   .zb-step-btn:active { background: var(--hairline); transform: scale(0.93); }
-  .zb-step-val { min-width: 24px; text-align: center; font-family: var(--serif-jp); font-size: 21px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .zb-step-val { min-width: 24px; text-align: center; font-family: var(--sans); font-size: 22px; font-weight: 400; font-variant-numeric: tabular-nums; }
 
   .zb-pacer { display: none; margin-top: 18px; padding: 14px 0 6px; flex-direction: column; align-items: center; gap: 9px; animation: zenModeIn 0.2s ease; }
   .zb-pacer.open { display: flex; }
   .zb-pacer-ring { position: relative; width: 102px; height: 102px; display: flex; align-items: center; justify-content: center; }
   .zb-pacer-svg { width: 102px; height: 102px; display: block; overflow: visible; }
-  .zb-pacer-num { position: absolute; font-family: var(--serif-jp); font-size: 30px; font-weight: 600; color: var(--sumi); font-variant-numeric: tabular-nums; }
+  .zb-pacer-num { position: absolute; font-family: var(--sans); font-size: 32px; font-weight: 300; color: var(--sumi); font-variant-numeric: tabular-nums; }
   .zb-pacer-phase { font-size: 13px; font-weight: 500; color: var(--ink-2); letter-spacing: 0.04em; }
   .zb-pacer-ctrls { display: flex; align-items: center; gap: 20px; }
 
@@ -5518,10 +5575,10 @@ html = r"""<!DOCTYPE html>
   .zb-ladder-bar { height: 1.8px; background: var(--track); border-radius: 2px; }
   .zb-ladder-step.past .zb-ladder-bar, .zb-ladder-step.cur .zb-ladder-bar { background: var(--moss); }
   .zb-ladder-lbl { font-size: 11.5px; color: var(--ink-3); letter-spacing: 0.04em; }
-  .zb-ladder-step.cur .zb-ladder-lbl { color: var(--sumi); font-weight: 600; }
+  .zb-ladder-step.cur .zb-ladder-lbl { color: var(--sumi); font-weight: 500; }
 
   .zb-stat-pair { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 14px 0 18px; }
-  .zb-stat-big { font-family: var(--serif-jp); font-size: 38px; font-weight: 600; letter-spacing: -0.02em; color: var(--sumi); font-variant-numeric: tabular-nums; line-height: 1.08; transition: color 0.16s ease; }
+  .zb-stat-big { font-family: var(--sans); font-size: 40px; font-weight: 300; letter-spacing: -0.015em; color: var(--sumi); font-variant-numeric: tabular-nums; line-height: 1.08; transition: color 0.16s ease; }
   .zb-stat-big.scrub { color: var(--moss); }
   .zb-stat-unit { font-family: var(--sans); font-size: 13.5px; font-weight: 400; color: var(--ink-3); margin-left: 3px; }
   .zb-stat-sub { font-size: 12.5px; color: var(--ink-3); margin-top: 6px; font-variant-numeric: tabular-nums; }
@@ -5536,20 +5593,20 @@ html = r"""<!DOCTYPE html>
   .zb-dial-head { display: flex; justify-content: space-between; align-items: center; }
   .zb-dial-lbl { font-size: 13px; color: var(--ink-3); }
   .zb-dial-ctrl { display: inline-flex; align-items: center; gap: 10px; }
-  .zb-dial-val { font-family: var(--serif-jp); font-size: 19px; font-weight: 600; color: var(--sumi); font-variant-numeric: tabular-nums; min-width: 64px; text-align: center; border-bottom: 1px dashed var(--hairline-strong); padding-bottom: 1px; }
-  .zb-dial-in { width: 64px; font-family: var(--serif-jp); font-size: 18px; font-weight: 600; text-align: center; color: var(--sumi); background: transparent; border: none; border-bottom: 1.5px solid var(--moss); outline: none; font-variant-numeric: tabular-nums; -webkit-user-select: text; user-select: text; }
-  .zb-dial-track { position: relative; height: 28px; border-radius: 6px; background: var(--sheet); border: 1px solid var(--hairline); overflow: hidden; touch-action: none; cursor: ew-resize; }
+  .zb-dial-val { font-family: var(--sans); font-size: 20px; font-weight: 400; color: var(--sumi); font-variant-numeric: tabular-nums; min-width: 64px; text-align: center; border-bottom: 1px dashed var(--hairline-strong); padding-bottom: 1px; }
+  .zb-dial-in { width: 64px; font-family: var(--sans); font-size: 19px; font-weight: 400; text-align: center; color: var(--sumi); background: transparent; border: none; border-bottom: 1.5px solid var(--moss); outline: none; font-variant-numeric: tabular-nums; -webkit-user-select: text; user-select: text; }
+  .zb-dial-track { position: relative; height: 28px; border-radius: 8px; background: var(--sheet); border: 1px solid var(--hairline); overflow: hidden; touch-action: none; cursor: ew-resize; }
   .zb-dial-ticks { position: absolute; inset: 0; background-image: repeating-linear-gradient(90deg, transparent 0, transparent 9px, var(--hairline-strong) 9px, var(--hairline-strong) 10px); background-size: 50px 100%; opacity: 0.85; }
   .zb-dial-needle { position: absolute; left: 50%; top: 4px; bottom: 4px; width: 2px; margin-left: -1px; background: var(--moss); border-radius: 2px; pointer-events: none; }
   .zb-dial-foot { display: flex; justify-content: space-between; align-items: center; }
   .zb-res-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--hairline); }
   .zb-waist-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 4px; }
-  .zb-waist-in { width: 108px; font-family: var(--serif-jp); font-size: 16px; font-weight: 500; text-align: right; color: var(--sumi); background: transparent; border: none; border-bottom: 1px dashed var(--hairline-strong); padding: 4px 2px; outline: none; font-variant-numeric: tabular-nums; -webkit-user-select: text; user-select: text; }
+  .zb-waist-in { width: 108px; font-family: var(--sans); font-size: 16px; font-weight: 400; text-align: right; color: var(--sumi); background: transparent; border: none; border-bottom: 1px dashed var(--hairline-strong); padding: 4px 2px; outline: none; font-variant-numeric: tabular-nums; -webkit-user-select: text; user-select: text; }
   .zb-waist-in:focus { border-bottom-color: var(--moss); border-bottom-style: solid; }
   .zb-waist-in::placeholder { font-family: var(--sans); font-size: 12.5px; font-weight: 400; color: var(--ink-3); }
 
   .zb-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 14px 0 18px; border-bottom: 1px solid var(--hairline); margin-bottom: 4px; }
-  .zb-kpi-v { font-family: var(--serif-jp); font-size: 20px; font-weight: 600; color: var(--sumi); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .zb-kpi-v { font-family: var(--sans); font-size: 21px; font-weight: 300; color: var(--sumi); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .zb-kpi-l { font-size: 11.5px; color: var(--ink-3); margin-top: 4px; letter-spacing: 0.03em; }
   .zb-ledger-list { margin-top: 2px; }
   .zb-ledger-item { border-bottom: 1px solid var(--hairline); }
@@ -5565,23 +5622,23 @@ html = r"""<!DOCTYPE html>
   .zb-ed-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 12.5px; }
   .zb-ed-lbl { color: var(--ink-3); min-width: 30px; font-size: 12px; }
   .zb-ed-chip { font-size: 12.5px; color: var(--ink-2); padding: 4px 2px; border-bottom: 1px solid transparent; }
-  .zb-ed-chip.on { color: var(--moss); font-weight: 600; border-bottom-color: var(--moss); }
-  .zb-ed-chip.on-red { color: var(--bengara); font-weight: 600; border-bottom-color: var(--bengara); }
+  .zb-ed-chip.on { color: var(--moss); font-weight: 500; border-bottom-color: var(--moss); }
+  .zb-ed-chip.on-red { color: var(--bengara); font-weight: 500; border-bottom-color: var(--bengara); }
 
   .zb-sync-foot { margin-top: 16px; display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 12.5px; color: var(--ink-3); }
   .zb-sync-left { display: flex; align-items: center; gap: 10px; min-width: 0; flex-wrap: wrap; }
 
   .zb-guide-list { display: flex; flex-direction: column; margin: 4px 0 16px; border-top: 1px solid var(--hairline); }
   .zb-guide-item { padding: 13px 0; border-bottom: 1px solid var(--hairline); }
-  .zb-guide-k { font-size: 12px; font-weight: 600; color: var(--moss); letter-spacing: 0.05em; margin-bottom: 5px; }
+  .zb-guide-k { font-size: 12px; font-weight: 500; color: var(--moss); letter-spacing: 0.06em; margin-bottom: 5px; }
   .zb-guide-v { font-size: 14.5px; line-height: 1.62; color: var(--sumi); }
   .zb-guide-sub { font-size: 13px; line-height: 1.55; color: var(--ink-3); margin-top: 4px; }
   .zb-guide-item.cur .zb-guide-k::before { content: "● "; font-size: 9px; }
 
   .zb-modal-links { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: -4px 0 14px; flex-wrap: wrap; }
   .zb-pz-tabs { display: flex; gap: 18px; margin: 2px 0 12px; border-bottom: 1px solid var(--hairline); }
-  .zb-pz-tab { font-size: 13.5px; font-weight: 500; color: var(--ink-3); padding: 6px 0 8px; border-bottom: 1.5px solid transparent; }
-  .zb-pz-tab.active { color: var(--sumi); font-weight: 600; border-bottom-color: var(--sumi); }
+  .zb-pz-tab { font-size: 13.5px; font-weight: 400; color: var(--ink-3); padding: 6px 0 8px; border-bottom: 1.5px solid transparent; }
+  .zb-pz-tab.active { color: var(--sumi); font-weight: 500; border-bottom-color: var(--sumi); }
   .zb-pz-prog { margin: 0 0 12px; }
   .zb-pz-prog-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums; margin-bottom: 6px; }
   .zb-pz-prog-track { width: 100%; height: 2px; background: var(--track); border-radius: 2px; overflow: hidden; }
@@ -5589,16 +5646,16 @@ html = r"""<!DOCTYPE html>
   .zb-pz-note { font-size: 12.5px; color: var(--ink-3); line-height: 1.55; margin: 0 0 12px; }
   .zb-pz-list { display: flex; flex-direction: column; margin-bottom: 16px; max-height: 46vh; overflow-y: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
   .zb-pz-list::-webkit-scrollbar { display: none; }
-  .zb-pz-wk { font-size: 11.5px; font-weight: 600; color: var(--ink-3); letter-spacing: 0.06em; padding: 12px 0 6px; border-bottom: 1px solid var(--hairline); }
+  .zb-pz-wk { font-size: 11.5px; font-weight: 500; color: var(--ink-3); letter-spacing: 0.06em; padding: 12px 0 6px; border-bottom: 1px solid var(--hairline); }
   .zb-pz-row { width: 100%; display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--hairline); text-align: left; }
   .zb-pz-row:active { opacity: 0.7; }
   .zb-pz-mark { width: 16px; flex-shrink: 0; font-size: 12.5px; color: var(--ink-3); text-align: center; padding-top: 2px; }
-  .zb-pz-row.done .zb-pz-mark { color: var(--moss); font-weight: 600; }
+  .zb-pz-row.done .zb-pz-mark { color: var(--moss); font-weight: 500; }
   .zb-pz-row.cur .zb-pz-mark { color: var(--moss); }
   .zb-pz-info { flex: 1; min-width: 0; }
   .zb-pz-name { font-size: 13.5px; line-height: 1.45; color: var(--sumi); }
   .zb-pz-row.done .zb-pz-name { color: var(--ink-3); }
-  .zb-pz-row.cur .zb-pz-name { color: var(--sumi); font-weight: 600; }
+  .zb-pz-row.cur .zb-pz-name { color: var(--sumi); font-weight: 500; }
   .zb-pz-meta { font-size: 12px; color: var(--ink-3); margin-top: 2px; font-variant-numeric: tabular-nums; }
   .zb-pz-min { flex-shrink: 0; font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums; padding-top: 2px; }
 
@@ -5606,18 +5663,19 @@ html = r"""<!DOCTYPE html>
   .zb-ledger-pz:active { opacity: 0.7; }
 
   .zb-locked { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; padding: 16px 2px; }
-  .zb-locked-title { font-family: var(--serif-jp); font-size: 24px; font-weight: 600; margin: 14px 0 8px; }
-  .zb-locked-sub { font-size: 14px; line-height: 1.68; color: var(--ink-3); margin: 0; }
-  .zb-pass-row { width: 100%; margin-top: 20px; display: flex; gap: 10px; }
-  .zb-pass-in { flex: 1; height: 46px; padding: 0 14px; border: 1px solid var(--hairline-strong); border-radius: 8px; background: var(--sheet); color: var(--sumi); font-size: 15px; -webkit-user-select: text; user-select: text; }
+  .zb-locked-title { font-family: var(--sans); font-size: 26px; font-weight: 300; letter-spacing: 0.14em; margin: 16px 0 8px; }
+  .zb-locked-sub { font-size: 14px; line-height: 1.72; color: var(--ink-3); margin: 0; }
+  .zb-pass-row { width: 100%; margin-top: 22px; display: flex; gap: 10px; }
+  .zb-pass-in { flex: 1; height: 50px; padding: 0 16px; border: 1px solid var(--hairline-strong); border-radius: 12px; background: var(--sheet); color: var(--sumi); font-size: 15px; -webkit-user-select: text; user-select: text; }
 
   .zb-toast {
     position: fixed;
     left: 50%;
     top: calc(124px + env(safe-area-inset-top));
     transform: translateX(-50%) translateY(-6px);
-    background: var(--sumi);
-    color: var(--washi);
+    background: var(--cta-bg);
+    color: var(--cta-fg);
+    border: 1px solid var(--cta-border);
     font-size: 12.5px;
     padding: 7px 16px;
     border-radius: 999px;
@@ -5814,7 +5872,7 @@ html = r"""<!DOCTYPE html>
           </div>
           <div class="inline-lex empty" id="radio-inline-lex" data-surface="">
             <div class="ilex-top">
-              <div class="ilex-head"><span class="ilex-surf"></span><span class="ilex-kana"></span></div>
+              <div class="ilex-head"><span class="ilex-surf" lang="ja"></span><span class="ilex-kana"></span></div>
               <button class="ilex-speak" type="button">发音</button>
             </div>
             <div class="ilex-zh"></div>
@@ -5825,7 +5883,7 @@ html = r"""<!DOCTYPE html>
         <div class="radio-dock">
           <button type="button" class="rv-finish-strip" id="radio-review-cta" style="display:none;" onclick="openRadioReview()">
             <span id="radio-review-cta-txt">本集已播完 · 3 分钟收尾复盘</span>
-            <span class="rv-finish-go">去复盘 →</span>
+            <span class="rv-finish-go">去复盘 ›</span>
           </button>
           <div class="chapter-strip" id="radio-chap-pills"></div>
 
@@ -11907,7 +11965,7 @@ function lexBoxHTML(id) {
   return `
     <div class="inline-lex empty" id="${id}" data-surface="">
       <div class="ilex-top">
-        <div class="ilex-head"><span class="ilex-surf"></span><span class="ilex-kana"></span></div>
+        <div class="ilex-head"><span class="ilex-surf" lang="ja"></span><span class="ilex-kana"></span></div>
         <button class="ilex-speak" type="button">发音</button>
       </div>
       <div class="ilex-zh"></div>
@@ -11931,10 +11989,10 @@ function renderTutor() {
   if (viewStage === "done" || !curPointId) {
     const m = computeDaily120Metrics();
     const nextBtn = !m.radioDone
-      ? `<button class="sumi-btn" onclick="switchMode('radio', true)">去听随身听 →</button>`
+      ? `<button class="sumi-btn" onclick="switchMode('radio', true)">去听随身听</button>`
       : (!m.ritual3Done
-          ? `<button class="sumi-btn" onclick="switchMode('vocab')">${(!m.flashDone ? "去单手记词 →" : "去语法盘点 →")}</button>`
-          : `<button class="sumi-btn" onclick="switchMode('dash')">查看总表 →</button>`);
+          ? `<button class="sumi-btn" onclick="switchMode('vocab')">${(!m.flashDone ? "去单手记词" : "去语法盘点")}</button>`
+          : `<button class="sumi-btn" onclick="switchMode('dash')">查看总表</button>`);
     box.innerHTML = `
       <div class="meta-bar"><span class="overline ok">${m.allThreeDone ? "今日日语三修圆满 · 稳过 120 分" : `今日 ${m.totalCards} 道题已全部过关`}</span></div>
       <div class="focal-space">
@@ -11960,9 +12018,13 @@ function renderTutor() {
   if (viewStage === "teach") {
     warmAudio(p.teach.audio);
     warmAudio(p.primary.q_audio);
+    const _ptRaw = String(p.point || "").trim();
+    const _ptM = _ptRaw.match(/^(.+?)\s*[（(]([^）)]+)[）)]$/);
+    const _ptMain = _ptM ? _ptM[1].trim() : _ptRaw;
+    const _ptSub = _ptM ? _ptM[2].trim() : "";
     box.innerHTML = `
-      <div class="tutor-stamp right" id="tutor-st-right">开始做题 →</div>
-      <div class="tutor-stamp left moss-tone" id="tutor-st-left">开始做题 →</div>
+      <div class="tutor-stamp right" id="tutor-st-right">开始做题</div>
+      <div class="tutor-stamp left moss-tone" id="tutor-st-left">开始做题</div>
       <div class="meta-bar">
         <span class="overline warm">${escapeHtml(p.subject)} · 考点梳理</span>
         <div class="quiet-actions">
@@ -11971,7 +12033,8 @@ function renderTutor() {
       </div>
 
       <div class="focal-space">
-        <h2 class="point-heading">${escapeHtml(p.point)}</h2>
+        <h2 class="point-heading${_ptSub ? " has-sub" : ""}" lang="ja">${escapeHtml(_ptMain)}</h2>
+        ${_ptSub ? `<p class="point-sub">${escapeHtml(_ptSub)}</p>` : ""}
         <div class="zen-pair">
           <div class="zen-pair-row">
             <div class="zp-ja" lang="ja"><span class="zp-dot"></span><span>${annotateJapanese(p.teach.left.ja)}</span></div>
@@ -11990,7 +12053,7 @@ function renderTutor() {
       <div class="action-dock">
         <div class="dock-row">
           <button class="dock-replay-btn" id="dock-exp-btn" onclick="playMainClip('${p.teach.audio}', 'teach', true)">讲解</button>
-          <button class="sumi-btn" onclick="completeTeachCard()"><span>开始做题 →</span><span class="desk-hint">滚轮下滑 · Enter</span></button>
+          <button class="sumi-btn" onclick="completeTeachCard()"><span>开始做题</span><span class="desk-hint">滚轮下滑 · Enter</span></button>
         </div>
       </div>
       ${lexBoxHTML("tutor-inline-lex")}
@@ -12142,10 +12205,10 @@ function renderTutor() {
   }).join("");
 
   const fullyPassed = isCorrect && !stillNeedsVariantPass;
-  const leftStampLabel = fullyPassed ? "← 稍后再考" : `← ${retryCopy}`;
+  const leftStampLabel = fullyPassed ? "稍后再考" : `${retryCopy}`;
   const leftStampTone = fullyPassed ? "" : " moss-tone";
-  const rightStampLabel = fullyPassed ? "下一题 →" : (stillNeedsVariantPass ? "3 题后复考 →" : `未过 · ${retryCopy} →`);
-  const mainBtnLabel = fullyPassed ? "下一题 →" : (stillNeedsVariantPass ? "继续（3 题后复考） →" : `未过 · ${retryCopy} →`);
+  const rightStampLabel = fullyPassed ? "下一题" : (stillNeedsVariantPass ? "3 题后复考" : `未过 · ${retryCopy}`);
+  const mainBtnLabel = fullyPassed ? "下一题" : (stillNeedsVariantPass ? "继续 · 3 题后复考" : `未过 · ${retryCopy}`);
   const _twinTitleMap = {
     "VAR-G05": "〜ついでに（顺便做另一件事）",
     "VAR-G10": "〜はずがない（按理绝不可能）",
@@ -12191,7 +12254,7 @@ function renderTutor() {
     <div class="action-dock">
       <div class="dock-row">
         <button class="dock-replay-btn" id="dock-exp-btn" onclick="playMainClip(activeQuizObj.exp_audio, 'exp', true)">讲解</button>
-        ${fullyPassed ? `<button class="ghost-btn" onclick="advanceNext(true)">← 再考</button>` : ""}
+        ${fullyPassed ? `<button class="ghost-btn" onclick="advanceNext(true)">再考</button>` : ""}
         <button class="sumi-btn" onclick="advanceNext(false)"><span>${mainBtnLabel}</span><span class="desk-hint">滚轮下滑 · Enter</span></button>
       </div>
     </div>
@@ -14867,7 +14930,7 @@ function renderMasteryList() {
           <span class="li-dot ${it.tier}"></span>
           <div class="li-name-stack">
             <div class="li-name-line">
-              <span class="li-name">${escapeHtml(it.name)}</span>
+              <span class="li-name" lang="ja">${escapeHtml(it.name)}</span>
               ${gaTagHTML}${hesHTML}
             </div>
             ${it.sub ? `<span class="li-sub-mob">${escapeHtml(it.sub)}</span>` : ""}
@@ -18029,9 +18092,10 @@ if (expectedGaBatch > 0) {
     throw new Error('Self-test 7 failed: revealing GA card did not unveil family & full name: ' + JSON.stringify({eye: els['ga-eyebrow'] && els['ga-eyebrow'].textContent, head: els['ga-head'] && els['ga-head'].textContent}));
   }
   const gaEntry1 = vm.runInNewContext(`A.gaMap["${firstItem.gid}"]`, sb);
-  const ov1 = vm.runInNewContext(`A.masteryOverrides[${JSON.stringify(firstItem.name)}]`, sb);
+  const ov1Key = firstItem.parent_name || firstItem.name;
+  const ov1 = vm.runInNewContext(`A.masteryOverrides[${JSON.stringify(ov1Key)}]`, sb);
   if (!Array.isArray(gaEntry1) || gaEntry1[0] !== 1 || !String(ov1 || '').startsWith('todo:')) {
-    throw new Error('Self-test 7 failed: spectrum 1 did not set code=1 and todo mastery: ' + JSON.stringify({gaEntry1, ov1}));
+    throw new Error('Self-test 7 failed: spectrum 1 did not set code=1 and todo mastery: ' + JSON.stringify({gaEntry1, ov1, ov1Key}));
   }
   // Undo writes CRDT code=0 tombstone cleanly
   sb.undoLastGA();
@@ -18051,7 +18115,7 @@ if (!String(parentOv || '').startsWith('todo:') || !String(hkOv || '').startsWit
   throw new Error('Self-test 7 failed: split child did not aggregate weakest verdict to parent & K-005: ' + JSON.stringify({parentOv, hkOv}));
 }
 // Test all 4 spectrum stops via ledger inline adjuster + CRDT packet size & round-trip
-const testItems = gaData.items.slice(0, 4);
+const testItems = gaData.items.filter(it => !it.parent_name).slice(0, 4);
 sb.setLedgerGrammarSpectrum(testItems[0].gid, 1);
 sb.setLedgerGrammarSpectrum(testItems[1].gid, 2);
 sb.setLedgerGrammarSpectrum(testItems[2].gid, 3);
@@ -18645,9 +18709,12 @@ if (!pzProgHtml18.includes('zb-pz-prog-track') || !pzProgHtml18.includes('已完
 }
 sb.closeModal();
 
-// Self-test 19: Jobs x Kyoto Quiz Typography & Single-Column Clean Choices (zero mobile 1234, zero cramped 2x2)
-if (html.includes('display=optional') || !html.includes('Noto+Sans+JP') || !html.includes('Shippori+Mincho') || !html.includes('--sans-jp')) {
-  throw new Error('Self-test 19 failed: crisp JP webfont stack (Noto Sans JP + Shippori Mincho + display=swap) missing or regressed!');
+// Self-test 19: Whole-App Kyoto Zen Retreat Typography & Stone Surface Guard (zero mixed serif, zero mobile 1234, zero cramped 2x2)
+if (html.includes('display=optional') || html.includes('Shippori') || html.includes('Noto+Serif') || html.includes('--serif-jp')) {
+  throw new Error('Self-test 19 failed: legacy mixed serif or display=optional regressed!');
+}
+if (!html.includes('Noto+Sans+JP:wght@300;400;500;600') || !html.includes('Noto+Sans+SC:wght@300;400;500;600') || !html.includes('--sans-jp') || !html.includes('--cta-bg')) {
+  throw new Error('Self-test 19 failed: unified Pan-CJK Kyoto Zen typography (300/400/500/600) or Kyoto stone --cta-bg token missing!');
 }
 if (html.includes('grid-2x2')) {
   throw new Error('Self-test 19 failed: cramped 2x2 choice grid regressed!');
@@ -18736,7 +18803,7 @@ if (g38Pt21) {
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
 
 sw_path = os.path.join(BASE_DIR, "sw.js")
-SW_CACHE_NAME = "n3-studio-tutor-v73"
+SW_CACHE_NAME = "n3-studio-tutor-v74"
 if os.path.exists(sw_path):
     with open(sw_path, encoding="utf-8") as sf:
         sw_src = sf.read()
