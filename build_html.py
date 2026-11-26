@@ -38,6 +38,7 @@ from vocab_cards import (
     distill_card_mnemonic,
     distill_card_zh,
     get_pronunciation_mnemonic,
+    split_card_mnemonic,
 )
 import tutor_prefs
 from exam_choice_enricher import enrich_card_choices
@@ -159,7 +160,12 @@ for surf, info in merged_raw_words.items():
         entry["zh_opaque"] = opq
     mn = get_pronunciation_mnemonic(surf, str(entry.get("head") or ""))
     if mn:
-        entry["mnemonic"] = mn
+        _has_tt = bool(entry.get("trap_tag"))
+        entry["mnemonic"] = distill_card_mnemonic(mn, has_trap_tag=_has_tt)
+        _mcue, _mscene = split_card_mnemonic(mn, has_trap_tag=_has_tt)
+        if _mcue:
+            entry["mnemonic_cue"] = _mcue
+            entry["mnemonic_scene"] = _mscene
     rich_words[surf] = entry
 
 
@@ -1601,9 +1607,10 @@ for p in live_state.get("vocab_tracked", []):
     tier, mstate, streak = norm_tier_meta(p)
     w_info = rich_words.get(w, {})
     vc_spec = VOCAB_CARDS.get(w, {})
-    mn_txt = clean_zen_text(vc_spec.get("mnemonic") or get_pronunciation_mnemonic(w, str(w_info.get("head") or "")))
+    mn_raw = vc_spec.get("mnemonic") or get_pronunciation_mnemonic(w, str(w_info.get("head") or ""))
+    mn_txt = clean_zen_text(distill_card_mnemonic(mn_raw, has_trap_tag=bool(vc_spec.get("trap_tag") or w_info.get("trap_tag"))))
     base_note = clean_zen_text(vc_spec.get("twin") or w_info.get("tip") or p.get("classroom_note") or "")
-    combined_note = " · ".join(x for x in ([f"记音：{mn_txt}"] if mn_txt else []) + ([base_note] if base_note else []))
+    combined_note = " · ".join(x for x in ([mn_txt] if mn_txt else []) + ([base_note] if base_note else []))
     meaning_short = w_info.get("zh") or (vc_spec.get("zh", "").split(" · ")[0]) or re.sub(r"^\d+\.\s*", "", p.get("category", ""))
     v_pid = point_id_by_key.get(w, "")
     vocab_items.append({
@@ -1626,9 +1633,10 @@ for kw, pitch, desc in CORE_N3_KANA_VOCAB:
         continue
     seen_vocab_words.add(kw)
     vc_spec = VOCAB_CARDS.get(kw, {})
-    mn_txt = clean_zen_text(vc_spec.get("mnemonic") or get_pronunciation_mnemonic(kw))
+    mn_raw_k = vc_spec.get("mnemonic") or get_pronunciation_mnemonic(kw)
+    mn_txt = clean_zen_text(distill_card_mnemonic(mn_raw_k, has_trap_tag=bool(vc_spec.get("trap_tag"))))
     base_note = clean_zen_text(vc_spec.get("twin") or f"声调 {pitch} · {desc}")
-    combined_note = " · ".join(x for x in ([f"记音：{mn_txt}"] if mn_txt else []) + ([base_note] if base_note else []))
+    combined_note = " · ".join(x for x in ([mn_txt] if mn_txt else []) + ([base_note] if base_note else []))
     kw_pid = point_id_by_key.get(kw, "")
     vocab_items.append({
         "key": kw,
@@ -1659,6 +1667,8 @@ for vw in all_vc_keys:
     clean_aud = vc_aud.get("clean") or ""
     aspec = build_vocab_audio_spec(spec)
     raw_mn = spec.get("mnemonic") or get_pronunciation_mnemonic(vw, str((rich_words.get(vw) or {}).get("head") or ""))
+    _vc_cue, _vc_scene = split_card_mnemonic(raw_mn, has_trap_tag=bool(spec.get("trap_tag")))
+    _vc_distilled = distill_card_mnemonic(raw_mn, has_trap_tag=bool(spec.get("trap_tag")))
     vocab_cards_payload[vw] = {
         "mode": spec["mode"],
         "chunk_ja": spec["chunk_ja"],
@@ -1671,8 +1681,10 @@ for vw in all_vc_keys:
         "zh": spec["zh"],
         "zh_card": distill_card_zh(spec["zh"], spec["chunk_ja"], spec["target"]),
         "twin": spec["twin"],
-        "mnemonic": raw_mn,
-        "mnemonic_card": distill_card_mnemonic(raw_mn, has_trap_tag=bool(spec.get("trap_tag"))),
+        "mnemonic": _vc_distilled,
+        "mnemonic_card": _vc_distilled,
+        "mnemonic_cue": _vc_cue,
+        "mnemonic_scene": _vc_scene,
         "zh_speak": spec.get("zh_speak", ""),
         "hook_spoken": aspec.get("hook_spoken", ""),
         "reveal_spoken": aspec.get("reveal_spoken", ""),
@@ -1776,9 +1788,11 @@ if active_phase == "n2_climb" and _N2_SYLLABUS and _build_n2_vcards is not None:
         _full_aud = _vc_aud.get("full") or _rev_aud or _w_aud
         _hook_aud = _vc_aud.get("hook") or ""
         _clean_aud = _vc_aud.get("clean") or _w_aud
-        _mn_txt = clean_zen_text(_vc.get("mnemonic", ""))
+        _mn_raw = _vc.get("mnemonic", "")
+        _mn_distilled = clean_zen_text(distill_card_mnemonic(_mn_raw, has_trap_tag=bool(_vc.get("trap_tag"))))
+        _mn_cue, _mn_scene = split_card_mnemonic(_mn_raw, has_trap_tag=bool(_vc.get("trap_tag")))
         _tw_txt = clean_zen_text(_vc.get("twin", ""))
-        _combined_note = " · ".join(x for x in ([f"记音：{_mn_txt}"] if _mn_txt else []) + ([_tw_txt] if _tw_txt else []))
+        _combined_note = " · ".join(x for x in ([_mn_distilled] if _mn_distilled else []) + ([_tw_txt] if _tw_txt else []))
         _v_pid = point_id_by_key.get(_vw, "")
         vocab_items.append({
             "key": _vw,
@@ -1801,7 +1815,7 @@ if active_phase == "n2_climb" and _N2_SYLLABUS and _build_n2_vcards is not None:
             "kana": _vc["kana"],
             "zh": _vc["zh"],
             "twin": _tw_txt,
-            "mnemonic": _mn_txt,
+            "mnemonic": _mn_raw,
         })
         _phrase_aud = _vc_aud.get("phrase") or _clean_aud or _w_aud
         vocab_cards_payload[_vw] = {
@@ -1816,10 +1830,12 @@ if active_phase == "n2_climb" and _N2_SYLLABUS and _build_n2_vcards is not None:
             "zh": _vc["zh"],
             "zh_card": distill_card_zh(_vc["zh"], _vc["chunk_ja"], _vc["target"]),
             "twin": _tw_txt,
-            "mnemonic": _mn_txt,
-            "mnemonic_card": distill_card_mnemonic(_mn_txt, has_trap_tag=bool(_vc.get("trap_tag"))),
+            "mnemonic": _mn_distilled,
+            "mnemonic_card": _mn_distilled,
+            "mnemonic_cue": _mn_cue,
+            "mnemonic_scene": _mn_scene,
             "zh_speak": _vc.get("zh_speak", ""),
-            "hook_spoken": _n2_aspec.get("hook_spoken") or _mn_txt or _vc["kana"],
+            "hook_spoken": _n2_aspec.get("hook_spoken") or _mn_distilled or _vc["kana"],
             "reveal_spoken": _n2_aspec.get("reveal_spoken") or _vc["zh"],
             "front_audio": _front_aud,
             "rev_audio": _rev_aud,
@@ -1836,7 +1852,9 @@ if active_phase == "n2_climb" and _N2_SYLLABUS and _build_n2_vcards is not None:
             "pos": "N2語彙",
             "zh": clean_zen_text(str(_vc.get("zh") or "").split(" · ")[0]),
             "tip": _tw_txt,
-            "mnemonic": _mn_txt,
+            "mnemonic": _mn_distilled,
+            "mnemonic_cue": _mn_cue,
+            "mnemonic_scene": _mn_scene,
             "audio": _w_aud,
         })
 
@@ -1970,16 +1988,26 @@ for _rv in (radio_meta.get("review_items") or []):
     _rkind = str(_rv.get("kind") or "").strip()
     if _rkind == "vocab":
         _vref = vocab_cards_payload.get(_rtitle) or {}
+        _rv_raw_mn = _rv.get("mnemonic", "")
+        _rv_has_t = bool(_rv.get("trap_tag"))
+        _rv_cue, _rv_scene = split_card_mnemonic(_rv_raw_mn, has_trap_tag=_rv_has_t)
+        _rv_dist = distill_card_mnemonic(_rv_raw_mn, has_trap_tag=_rv_has_t)
         if _vref:
             _rv["zh_card"] = _vref.get("zh_card") or distill_card_zh(_rv.get("zh", ""), _rtitle, _rtitle)
-            _rv["mnemonic_card"] = _vref.get("mnemonic_card") or distill_card_mnemonic(_rv.get("mnemonic", ""), bool(_rv.get("trap_tag")))
+            _rv["mnemonic"] = _vref.get("mnemonic_card") or _rv_dist
+            _rv["mnemonic_card"] = _vref.get("mnemonic_card") or _rv_dist
+            _rv["mnemonic_cue"] = _vref.get("mnemonic_cue") or _rv_cue
+            _rv["mnemonic_scene"] = _vref.get("mnemonic_scene") or _rv_scene
             _rv["rev_audio"] = _vref.get("rev_audio") or ""
             _rv["hook_audio"] = _vref.get("hook_audio") or ""
             _rv["word_audio"] = _vref.get("word_audio") or _rv.get("demo_audio") or ""
             _rv["phrase_audio"] = _vref.get("phrase_audio") or _rv.get("word_audio") or ""
         else:
             _rv["zh_card"] = distill_card_zh(_rv.get("zh", ""), _rtitle, _rtitle)
-            _rv["mnemonic_card"] = distill_card_mnemonic(_rv.get("mnemonic", ""), bool(_rv.get("trap_tag")))
+            _rv["mnemonic"] = _rv_dist
+            _rv["mnemonic_card"] = _rv_dist
+            _rv["mnemonic_cue"] = _rv_cue
+            _rv["mnemonic_scene"] = _rv_scene
     else:
         _gref = _ga_by_name_enrich.get(_rtitle) or _ga_by_name_enrich.get(clean_grammar_front_name(_rtitle)) or {}
         if _gref:
@@ -4299,12 +4327,14 @@ html = r"""<!DOCTYPE html>
     font-size: 19.5px;
   }
   #radio-review-stage .vc-hook {
-    margin-top: 16px;
-    padding-top: 16px;
-    font-size: 16.5px;
-    line-height: 1.66;
+    margin-top: 14px;
+    padding-top: 14px;
+    font-size: 16px;
+    line-height: 1.62;
     max-width: 352px;
   }
+  #radio-review-stage .mn-word { font-size: 18px; }
+  #radio-review-stage .vc-hook-scene { margin-top: 6px; font-size: 14px; }
   @media (max-height: 740px) {
     .rv-cinema { max-width: 288px; margin-bottom: 10px; }
     .rv-sub-line { font-size: 11.8px; }
@@ -4313,7 +4343,10 @@ html = r"""<!DOCTYPE html>
     #radio-review-stage .vc-reveal { min-height: 84px; margin-top: 10px; }
     #radio-review-stage .vc-kana { font-size: 18px; }
     #radio-review-stage .vc-zh { font-size: 17.5px; }
-    #radio-review-stage .vc-hook { font-size: 15px; margin-top: 12px; padding-top: 12px; }
+    #radio-review-stage .vc-hook { font-size: 14.5px; margin-top: 11px; padding-top: 11px; }
+    #radio-review-stage .mn-word { font-size: 16.5px; }
+    #radio-review-stage .mn-kana { font-size: 10px; }
+    #radio-review-stage .vc-hook-scene { margin-top: 4px; font-size: 13px; }
     .rv-card-ex { font-size: 16px; margin-top: 12px; padding-top: 10px; }
     .rv-art-vignette { width: 158px; height: 74px; margin-bottom: 12px; }
     .rv-spk-prompt { font-size: 24px; }
@@ -4954,12 +4987,12 @@ html = r"""<!DOCTYPE html>
   }
   .vc-hook {
     position: relative;
-    margin: 26px auto 0;
-    padding: 22px 8px 6px;
+    margin: 24px auto 0;
+    padding: 20px 8px 6px;
     max-width: 344px;
-    font-size: 18px;
+    font-size: 16.5px;
     color: var(--ink-2);
-    line-height: 1.66;
+    line-height: 1.62;
     letter-spacing: 0.015em;
     cursor: pointer;
     text-wrap: balance;
@@ -4973,6 +5006,81 @@ html = r"""<!DOCTYPE html>
     width: 24px;
     height: 1px;
     background: var(--hairline-strong);
+  }
+  .vc-hook-cue {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: baseline;
+    column-gap: 12px;
+    row-gap: 6px;
+  }
+  .mn-run-zh {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 2px;
+  }
+  .mn-pair {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    vertical-align: baseline;
+  }
+  .mn-word {
+    font-size: 19px;
+    font-weight: 500;
+    color: var(--sumi);
+    opacity: 0.94;
+    line-height: 1.24;
+    letter-spacing: 0.015em;
+  }
+  .mn-kana {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--ink-3);
+    line-height: 1.2;
+    margin-top: 2px;
+    letter-spacing: 0.03em;
+    font-family: var(--sans-jp);
+  }
+  .mn-sep {
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--ink-3);
+    line-height: 1.24;
+    margin: 0 -3px;
+  }
+  .vc-hook-scene {
+    margin-top: 8px;
+    font-size: 14.5px;
+    font-weight: 400;
+    color: var(--ink-2);
+    opacity: 0.86;
+    line-height: 1.56;
+    letter-spacing: 0.01em;
+    text-wrap: balance;
+  }
+  .vc-hook-line {
+    font-size: 16.5px;
+    font-weight: 400;
+    color: var(--ink-2);
+    line-height: 1.62;
+    text-wrap: balance;
+  }
+  .mn-inline {
+    display: inline;
+    white-space: nowrap;
+  }
+  .mn-inline-w {
+    color: var(--sumi);
+    font-weight: 500;
+  }
+  .mn-inline-k {
+    font-size: 0.78em;
+    font-weight: 400;
+    color: var(--ink-3);
+    margin-left: 1px;
+    font-family: var(--sans-jp);
   }
   .vc-hook.rv-hook {
     margin: 10px 0 0;
@@ -5027,7 +5135,11 @@ html = r"""<!DOCTYPE html>
     .vc-kana { font-size: 21px; margin-bottom: 7px; }
     .vc-zh { font-size: 19px; }
     .vc-zh.quiet { font-size: 16.5px; }
-    .vc-hook { margin-top: 18px; padding-top: 16px; font-size: 16.5px; line-height: 1.58; }
+    .vc-hook { margin-top: 16px; padding-top: 14px; font-size: 15.5px; line-height: 1.54; }
+    .mn-word { font-size: 17px; }
+    .mn-kana { font-size: 10.5px; }
+    .vc-hook-scene { margin-top: 5px; font-size: 13.5px; }
+    .vc-hook-line { font-size: 15px; }
     .vc-twin.sub { margin-top: 7px; font-size: 12px; }
   }
 
@@ -9060,6 +9172,134 @@ function formatZenNoteHTML(raw) {
   return h;
 }
 
+function renderZenMnemonicCueHTML(cueRaw) {
+  const cue = String(cueRaw || "").trim();
+  if (!cue) return "";
+  const tokens = [];
+  const pushWordToken = (rawW, kana) => {
+    const w = String(rawW || "").trim();
+    if (!w) return;
+    const plusParts = w.split(/\s*([+＋])\s*/);
+    if (plusParts.length > 1) {
+      for (let pi = 0; pi < plusParts.length; pi++) {
+        const part = plusParts[pi].trim();
+        if (!part) continue;
+        if (part === "+" || part === "＋") {
+          tokens.push({ word: "+", kana: "", isSep: true, isZhChar: false });
+        } else {
+          const isLast = pi === plusParts.length - 1;
+          tokens.push({
+            word: part,
+            kana: isLast ? kana : "",
+            isSep: false,
+            isZhChar: /^[\u4e00-\u9fff]{1,2}$/.test(part),
+          });
+        }
+      }
+      return;
+    }
+    tokens.push({
+      word: w,
+      kana: kana || "",
+      isSep: false,
+      isZhChar: /^[\u4e00-\u9fff]{1,2}$/.test(w),
+    });
+  };
+
+  const re = /([^()]+?)\(([ぁ-んァ-ヶー・]+)\)/g;
+  let lastIdx = 0;
+  let m;
+  while ((m = re.exec(cue)) !== null) {
+    let wPart = m[1];
+    const kPart = m[2];
+    const sepMatch = wPart.match(/^\s*([,，+＋\-－・/])\s*(.+)$/);
+    if (sepMatch && tokens.length > 0) {
+      const sepCh = sepMatch[1];
+      if (sepCh === "," || sepCh === "，") {
+        if (!tokens[tokens.length - 1].isSep) tokens[tokens.length - 1].word += sepCh;
+      } else {
+        tokens.push({ word: sepCh === "＋" ? "+" : sepCh, kana: "", isSep: true, isZhChar: false });
+      }
+      wPart = sepMatch[2];
+    }
+    pushWordToken(wPart, kPart);
+    lastIdx = re.lastIndex;
+  }
+  const tail = cue.slice(lastIdx).trim();
+  if (tail) {
+    if (/^[?!！？]+$/.test(tail) && tokens.length > 0 && !tokens[tokens.length - 1].isSep) {
+      tokens[tokens.length - 1].word += tail;
+    } else {
+      let rest = tail;
+      const tSep = rest.match(/^([+＋\-－・/])\s*(.+)$/);
+      if (tSep && tokens.length > 0) {
+        tokens.push({ word: tSep[1] === "＋" ? "+" : tSep[1], kana: "", isSep: true, isZhChar: false });
+        rest = tSep[2];
+      }
+      pushWordToken(rest, "");
+    }
+  }
+  if (!tokens.length) return `<span class="mn-word">${escapeHtml(cue)}</span>`;
+
+  let out = "";
+  let i = 0;
+  while (i < tokens.length) {
+    const t = tokens[i];
+    if (t.isSep) {
+      out += `<span class="mn-sep">${escapeHtml(t.word)}</span>`;
+      i++;
+      continue;
+    }
+    if (t.isZhChar) {
+      let runHtml = "";
+      let cnt = 0;
+      while (i < tokens.length && tokens[i].isZhChar) {
+        const z = tokens[i];
+        runHtml += `<span class="mn-pair"><span class="mn-word">${escapeHtml(z.word)}</span>${z.kana ? `<span class="mn-kana" lang="ja">${escapeHtml(z.kana)}</span>` : ""}</span>`;
+        i++;
+        cnt++;
+      }
+      out += cnt > 1 ? `<span class="mn-run-zh">${runHtml}</span>` : runHtml;
+    } else {
+      out += `<span class="mn-pair"><span class="mn-word">${escapeHtml(t.word)}</span>${t.kana ? `<span class="mn-kana" lang="ja">${escapeHtml(t.kana)}</span>` : ""}</span>`;
+      i++;
+    }
+  }
+  return out;
+}
+
+function formatZenInlineMnemonicHTML(raw) {
+  let s = String(raw || "").trim();
+  if (!s) return "";
+  s = s.replace(/^(?:谐音中文|谐音|像英文|英文|像中文|中文|记音[：:])\s*/, "")
+       .replace(/\s+([“（（「『，。：；、！？])/g, "$1")
+       .replace(/([”））」』，。：；、！？])\s+/g, "$1")
+       .replace(/([\u4e00-\u9fff\u3040-\u30ff]),\s*([\u4e00-\u9fff\u3040-\u30ff])/g, "$1，$2");
+  let h = escapeHtml(s);
+  h = h.replace(/([A-Za-z0-9&!?.'-]{1,18}|[\u4e00-\u9fff]{1,4})\(([ぁ-んァ-ヶー・]{1,12})\)/g, '<span class="mn-inline"><span class="mn-inline-w">$1</span><span class="mn-inline-k" lang="ja">($2)</span></span>');
+  return h;
+}
+
+function renderZenMnemonicHTML(cueRaw, sceneRaw, fallbackRaw) {
+  let cue = String(cueRaw || "").trim();
+  let scene = String(sceneRaw || "").trim();
+  const fb = String(fallbackRaw || "").trim();
+  if (!cue && fb && fb.includes(" · ")) {
+    const idx = fb.indexOf(" · ");
+    const candCue = fb.slice(0, idx).trim();
+    const candScene = fb.slice(idx + 3).trim();
+    if (/\([ぁ-んァ-ヶー・]+\)/.test(candCue) && candScene.length >= 3) {
+      cue = candCue;
+      scene = candScene;
+    }
+  }
+  if (cue && scene) {
+    return `<div class="vc-hook-cue">${renderZenMnemonicCueHTML(cue)}</div><div class="vc-hook-scene">${formatZenNoteHTML(scene)}</div>`;
+  }
+  const single = scene || fb;
+  return single ? `<div class="vc-hook-line">${formatZenInlineMnemonicHTML(single)}</div>` : "";
+}
+
 function isWordMarkedForReading(surface) {
   if (!surface || PARTICLE_FALLBACK[surface] || TRIVIAL_TAP_WORDS.has(surface)) return false;
   const inTapped = Array.isArray(A.tappedWords) && A.tappedWords.includes(surface);
@@ -12644,7 +12884,7 @@ function renderRadioReviewStage() {
         <div class="vc-reveal${rvRevealed ? " shown" : ""}" id="rv-reveal-box">
           ${kanaHTML ? `<div class="vc-kana vc-tap-zone vc-live" id="rv-kana-box" data-rv-zone="kana">${kanaHTML}</div>` : ""}
           <div class="vc-zh vc-tap-zone vc-live" id="rv-zh-box" data-rv-zone="zh">${escapeHtml(zhShow)}</div>
-          ${mnShow ? `<div class="vc-hook vc-tap-zone vc-live" id="rv-hook-box" data-rv-zone="hook">${formatZenNoteHTML(mnShow)}</div>` : ""}
+          ${mnShow ? `<div class="vc-hook vc-tap-zone vc-live" id="rv-hook-box" data-rv-zone="hook">${renderZenMnemonicHTML(item.mnemonic_cue, item.mnemonic_scene, mnShow)}</div>` : ""}
           ${showShortEx ? `<div class="rv-card-ex vc-tap-zone vc-live" lang="ja" id="rv-ex-box" data-rv-zone="ex">${item.hl && item.hl.length ? renderGrammarHighlightHTML(item.ja_example, item.hl) : annotateJapanese(item.ja_example)}</div>` : ""}
         </div>
         <div class="mic-feedback" id="rv-mic-feedback"></div>
@@ -13581,7 +13821,7 @@ function showInlineWordMeaning(surface, tokEl) {
   }
 
   const headDiff = info.head && info.head !== surface ? `原形 ${info.head}` : "";
-  const mnLine = info.mnemonic ? `记音：${info.mnemonic}` : "";
+  const mnLine = info.mnemonic ? String(info.mnemonic) : "";
   const subBreak = buildSubwordBreakdown(surface);
   const metaLine = [headDiff, mnLine, info.pos, info.tip, subBreak].filter(Boolean).join(" · ");
   const kanaHtml = renderTrapKanaHTML(surface, info.kana || "", info.trap_hl, info.trap_tag);
@@ -14040,6 +14280,8 @@ function getVocabCardSpec(surface) {
       twin: pre.twin || "",
       mnemonic: rawMn,
       mnemonic_card: pre.mnemonic_card || rawMn,
+      mnemonic_cue: pre.mnemonic_cue || w.mnemonic_cue || "",
+      mnemonic_scene: pre.mnemonic_scene || w.mnemonic_scene || "",
       zh_speak: typeof pre.zh_speak === "string" ? pre.zh_speak : cleanSpeakZh(rawZh),
       hook_spoken: pre.hook_spoken || "",
       reveal_spoken: pre.reveal_spoken || pre.hook_spoken || "",
@@ -14084,6 +14326,8 @@ function getVocabCardSpec(surface) {
     twin: tipParts.join(" · "),
     mnemonic: w.mnemonic || "",
     mnemonic_card: dynMn,
+    mnemonic_cue: w.mnemonic_cue || "",
+    mnemonic_scene: w.mnemonic_scene || "",
     zh_speak: (!hasKanji || zhOpaque) ? cleanSpeakZh(zh) : "",
     hook_spoken: cleanSpeakZh(w.mnemonic || ""),
     reveal_spoken: cleanSpeakZh(w.mnemonic || zh || ""),
@@ -15245,7 +15489,7 @@ function renderVocabStage() {
         <div class="vc-reveal${vcRevealed ? " shown" : ""}" id="vc-reveal-box">
           ${kanaHtml ? `<div class="vc-kana vc-tap-zone vc-live" id="vc-kana-box" data-vc-zone="word">${kanaHtml}</div>` : ""}
           ${zhDisplay ? `<div class="vc-zh${quietZh ? " quiet" : ""} vc-tap-zone vc-live" id="vc-zh-box" data-vc-zone="phrase">${escapeHtml(zhDisplay)}</div>` : ""}
-          ${mnDisplay ? `<div class="vc-hook vc-tap-zone vc-live" id="vc-hook-box" data-vc-zone="hook">${formatZenNoteHTML(mnDisplay)}</div>` : ""}
+          ${mnDisplay ? `<div class="vc-hook vc-tap-zone vc-live" id="vc-hook-box" data-vc-zone="hook">${renderZenMnemonicHTML(card.mnemonic_cue, card.mnemonic_scene, mnDisplay)}</div>` : ""}
         </div>
         <div class="mic-feedback" id="vc-mic-feedback"></div>
       </div>
@@ -19811,25 +20055,40 @@ const lkRec = vm.runInNewContext('A.wordLookups["予約しとこう"]', sb);
 if (qLenBefore !== qLenAfter || !Array.isArray(lkRec) || lkRec[0] < 1) {
   throw new Error('Self-test failed: recordTappedWord either mutated vocabSess or missed wordLookups!');
 }
-// Self-test 4: Every vocab card has a concise phrase (<=10 chars), spoken mnemonic, full 4-slot studio audio, distilled card text, and zero clutter/em dashes
+// Self-test 4: Every vocab card has a concise phrase (<=10 chars), spoken mnemonic, full 4-slot studio audio, distilled card text, and zero clutter/em dashes/language labels
 const vcObj = vm.runInNewContext('DATA.vocab_cards || {}', sb);
 const vcKeys = Object.keys(vcObj);
 if (vcKeys.length < 120) throw new Error('Self-test failed: vocab_cards unexpectedly small: ' + vcKeys.length);
 const isN2VocabCheck = vm.runInNewContext('DATA.phase === "n2_climb"', sb);
+const bannedLangRe = /(?:英文|中文|谐音)/;
 for (const k of vcKeys) {
   const rec = vcObj[k] || {};
   const mn = String(rec.mnemonic || '').trim();
   const mnCard = String(rec.mnemonic_card || '').trim();
+  const mnCue = String(rec.mnemonic_cue || '').trim();
+  const mnScene = String(rec.mnemonic_scene || '').trim();
   const zhCard = String(rec.zh_card || '').trim();
   const hs = String(rec.hook_spoken || '').trim();
   const ch = String(rec.chunk_ja || '').trim();
   if (!mn || !mnCard) throw new Error('Self-test failed: missing mnemonic/mnemonic_card for vocab card ' + k);
   if (mn.includes('—') || mnCard.includes('—') || zhCard.includes('—')) throw new Error('Self-test failed: em dash in vocab card ' + k);
+  if (bannedLangRe.test(mnCard) || bannedLangRe.test(mnCue) || bannedLangRe.test(mnScene) || bannedLangRe.test(hs)) {
+    throw new Error('Self-test failed: redundant 英文/中文/谐音 label in vocab card ' + k + ': ' + JSON.stringify({mnCard, hs}));
+  }
   if (!hs) throw new Error('Self-test failed: missing hook_spoken for vocab card ' + k);
   if (!isN2VocabCheck && (!rec.rev_audio || !rec.hook_audio || !rec.phrase_audio || !rec.word_audio)) {
     throw new Error('Self-test failed: missing required studio audio slot for vocab card ' + k + ': ' + JSON.stringify({rev:rec.rev_audio, hook:rec.hook_audio, phrase:rec.phrase_audio, word:rec.word_audio}));
   }
   if (ch.length > 10) throw new Error('Self-test failed: vocab chunk too long (should be concise phrase <=10 chars) for ' + k + ': ' + ch);
+}
+const impRec = vcObj['印象'];
+if (impRec && (impRec.mnemonic_cue !== 'In(いん) Show(しょう)' || impRec.mnemonic_scene !== '演出留在脑海里的印象' || bannedLangRe.test(impRec.hook_spoken))) {
+  throw new Error('Self-test 4 failed: 印象 two-tier cue/scene mismatch: ' + JSON.stringify(impRec));
+}
+for (const rvi of (sb.getRadioReviewItems() || [])) {
+  if (rvi && rvi.kind === 'vocab' && bannedLangRe.test(String(rvi.mnemonic_card || rvi.mnemonic || ''))) {
+    throw new Error('Self-test 4 failed: redundant language label in radio review vocab item ' + rvi.title + ': ' + rvi.mnemonic_card);
+  }
 }
 sb.switchMode('vocab');
 sb.switchVocabSubMode('vocab');
@@ -20518,6 +20777,26 @@ const fmtCrack = sb.formatZenNoteHTML('像英文“Crack(から)”干裂冒烟�
 if (!fmtCrack.includes('class="nw">Crack(から)<') || fmtCrack.includes('<span class="nw">Crack<span')) {
   throw new Error('Self-test 13 failed: formatZenNoteHTML broke or nested Crack(から): ' + fmtCrack);
 }
+const mnTwoTier = sb.renderZenMnemonicHTML('In(いん) Show(しょう)', '演出留在脑海里的印象', '');
+if (!mnTwoTier.includes('class="vc-hook-cue"') || !mnTwoTier.includes('>In<') || !mnTwoTier.includes('>いん<') || !mnTwoTier.includes('>Show<') || !mnTwoTier.includes('>しょう<') || !mnTwoTier.includes('class="vc-hook-scene">演出留在脑海里的印象<') || mnTwoTier.includes('英文')) {
+  throw new Error('Self-test 13 failed: renderZenMnemonicHTML broken for In(いん) Show(しょう): ' + mnTwoTier);
+}
+const mnZhRun = sb.renderZenMnemonicHTML('他(た)没(め)花', '工资一分没花全攒下来', '');
+if (!mnZhRun.includes('class="mn-run-zh"') || !mnZhRun.includes('>花<') || !mnZhRun.includes('>た<')) {
+  throw new Error('Self-test 13 failed: renderZenMnemonicHTML broken for 他(た)没(め)花: ' + mnZhRun);
+}
+const mnPlus = sb.renderZenMnemonicHTML('せ + Second(けん)', '同世界的 せ，旁人第二视角', '');
+if (!mnPlus.includes('class="mn-sep">+<') || !mnPlus.includes('>Second<') || !mnPlus.includes('>けん<')) {
+  throw new Error('Self-test 13 failed: renderZenMnemonicHTML broken for せ + Second(けん): ' + mnPlus);
+}
+const mnGee = sb.renderZenMnemonicHTML('Gee(ぎ), man(もん)?', '满脸问号心生疑问', '');
+if (!mnGee.includes('>Gee,<') || !mnGee.includes('>man?<')) {
+  throw new Error('Self-test 13 failed: renderZenMnemonicHTML broken for Gee(ぎ), man(もん)?: ' + mnGee);
+}
+const mnInline = sb.renderZenMnemonicHTML('', '出差赶飞机“Shoot!(しゅっ) 冲(ちょう)”顿半拍起飞', '');
+if (!mnInline.includes('class="vc-hook-line"') || !mnInline.includes('class="mn-inline-w">Shoot!<') || !mnInline.includes('class="mn-inline-k" lang="ja">(しゅっ)<')) {
+  throw new Error('Self-test 13 failed: renderZenMnemonicHTML broken for narrative inline anchor: ' + mnInline);
+}
 sb.switchMode('radio', false);
 sb.toggleRadioPlay(true);
 sb.switchMode('vocab');
@@ -21127,7 +21406,7 @@ sb.closeModal();
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
 
 sw_path = os.path.join(BASE_DIR, "sw.js")
-SW_CACHE_NAME = "n3-studio-tutor-v79"
+SW_CACHE_NAME = "n3-studio-tutor-v80"
 if not _IS_SIM_OUTPUT and os.path.exists(sw_path):
     with open(sw_path, encoding="utf-8") as sf:
         sw_src = sf.read()

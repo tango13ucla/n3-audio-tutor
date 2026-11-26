@@ -324,14 +324,20 @@ def test_dynamic_vocab_cards_self_test4_invariants() -> None:
         spec = vc.build_dynamic_vocab_card(w, {})
         aspec = vc.build_vocab_audio_spec(spec)
         mn = str(spec.get("mnemonic") or "").strip()
+        mn_card = vc.distill_card_mnemonic(mn, has_trap_tag=bool(spec.get("trap_tag")))
+        mn_cue, mn_scene = vc.split_card_mnemonic(mn, has_trap_tag=bool(spec.get("trap_tag")))
         hs = str(aspec.get("hook_spoken") or "").strip()
         ch = str(spec.get("chunk_ja") or "").strip()
-        assert mn, f"Empty mnemonic for vocab card '{w}'"
-        assert "—" not in mn, f"Em dash in mnemonic for '{w}': {mn}"
+        assert mn and mn_card, f"Empty mnemonic for vocab card '{w}'"
+        assert "—" not in mn and "—" not in mn_card, f"Em dash in mnemonic for '{w}': {mn}"
         assert hs, f"Empty hook_spoken for vocab card '{w}'"
         assert "—" not in hs, f"Em dash in hook_spoken for '{w}': {hs}"
+        for bad_lbl in ("英文", "中文", "谐音"):
+            assert bad_lbl not in mn_card, f"Redundant label '{bad_lbl}' in mnemonic_card for '{w}': {mn_card}"
+            assert bad_lbl not in mn_cue and bad_lbl not in mn_scene, f"Redundant label '{bad_lbl}' in cue/scene for '{w}': {mn_cue} | {mn_scene}"
+            assert bad_lbl not in hs, f"Redundant label '{bad_lbl}' in hook_spoken for '{w}': {hs}"
         assert len(ch) <= 10, f"chunk_ja too long ({len(ch)}>10) for '{w}': {ch}"
-    print(f"[PASS 4/10] Dynamic vocab cards Self-test 4 invariants ({len(checked)} words incl. all 236 immersion words)")
+    print(f"[PASS 4/10] Dynamic vocab cards Self-test 4 invariants ({len(checked)} words incl. all 236 immersion words, zero language-label prefixes)")
 
 
 def test_speaking_prompts_self_test9_invariants() -> None:

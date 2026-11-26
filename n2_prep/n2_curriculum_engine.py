@@ -833,7 +833,7 @@ def _make_n2_mnemonic(word: str, kana: str, zh: str, extra: str = "") -> str:
         pass
     # Root-aware compound verb locks
     suffix_hints = [
-        ("込む", "こむ", "尾巴 込む(こむ) = 英文 “Come in” 往里扎进去"),
+        ("込む", "こむ", "尾巴 込む(こむ) = “Come in(こむ)” 往里扎进去"),
         ("直す", "なおす", "尾巴 直す(なおす) = “Now(なお) 修好重来”"),
         ("切る", "きる", "尾巴 切る(きる) = “Kill(きる) 一刀切到底”"),
         ("切れる", "きれる", "尾巴 切れる(きれる) = 切光耗尽彻底没了"),
@@ -858,7 +858,7 @@ def _make_n2_mnemonic(word: str, kana: str, zh: str, extra: str = "") -> str:
             stem_k = kana[:-len(suf_k)] if kana.endswith(suf_k) else kana
             return _clean_text(f"{suf_tip}；前半 {stem_k} 连读成 {kana}（{zh.split('、')[0]}）")
     if extra:
-        return _clean_text(f"记音锁拍 {kana}：{extra}")
+        return _clean_text(f"{extra}")
     return _clean_text(f"按节奏记读音 {kana}，联想「{zh.split('、')[0]}」直接脱口而出 → {kana}")
 
 
