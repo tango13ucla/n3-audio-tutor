@@ -2643,14 +2643,21 @@ html = r"""<!DOCTYPE html>
     overflow-wrap: break-word;
     cursor: pointer;
   }
+  .quiz-blank-unit {
+    display: inline;
+    white-space: nowrap;
+  }
   .quiz-blank {
     display: inline-block;
-    width: 2.35em;
+    width: 2.15em;
     height: 1px;
     border-bottom: 1.6px solid var(--moss);
-    margin: 0 0.24em;
+    margin: 0 0.22em;
     vertical-align: -0.06em;
     opacity: 0.88;
+  }
+  .quiz-blank-unit .quiz-blank {
+    margin-right: 0.06em;
   }
   @media (min-width: 860px) and (min-height: 521px) {
     .quiz-ja { font-size: 26.5px; }
@@ -7633,7 +7640,36 @@ function applySyncCodeFromUrl() {
 }
 
 // ================= REAL-TIME ZERO-LOGIN MULTI-PLATFORM CLOUD SYNC =================
-const NTFY_TOPIC = (DATA.cloud_sync && DATA.cloud_sync.ntfy_topic) ? String(DATA.cloud_sync.ntfy_topic).trim() : "";
+function isCloudSyncBlockedEnv(locObj, navObj) {
+  try {
+    const loc = locObj || ((typeof location !== "undefined" && location) ? location : {});
+    const host = String(loc.hostname || "").toLowerCase();
+    const proto = String(loc.protocol || "").toLowerCase();
+    const qs = String(loc.search || "");
+    if (qs && /(?:[?&])(qa|nosync|sandbox)=1(?:&|$)/i.test(qs)) return true;
+    if (proto === "file:") return true;
+    if (
+      host === "localhost" ||
+      host === "127.0.0.1" ||
+      host === "0.0.0.0" ||
+      host === "::1" ||
+      host === "[::1]" ||
+      host.endsWith(".local")
+    ) {
+      return true;
+    }
+    const nav = navObj || ((typeof navigator !== "undefined" && navigator) ? navigator : {});
+    if (nav.webdriver === true) return true;
+    if (/HeadlessChrome|Playwright|Puppeteer|Selenium|PhantomJS/i.test(String(nav.userAgent || ""))) {
+      return true;
+    }
+  } catch (e) {}
+  return false;
+}
+const CLOUD_SYNC_BLOCKED = isCloudSyncBlockedEnv();
+const NTFY_TOPIC = (!CLOUD_SYNC_BLOCKED && DATA.cloud_sync && DATA.cloud_sync.ntfy_topic)
+  ? String(DATA.cloud_sync.ntfy_topic).trim()
+  : "";
 let cloudSyncState = NTFY_TOPIC ? "connecting" : "local";
 let cloudLastSyncTs = 0;
 let lastSyncedFp = "";
@@ -8008,7 +8044,7 @@ function mergeIncomingPacketData(pkt) {
   }
 }
 
-function finalizeIncomingSync(changed, dayChanged, curChanged) {
+function finalizeIncomingSync(changed, dayChanged, curChanged, fromSSE) {
   if (!changed) return;
   syncApplyingRemote = true;
   try {
@@ -8033,11 +8069,14 @@ function finalizeIncomingSync(changed, dayChanged, curChanged) {
       const curPs = curOk ? A.pts[curPointId] : null;
       const expectedQ = (curPt && curPs) ? getQuizForPoint(curPt, curPs) : null;
       const expectedSalt = curPs ? ((curPs.wrongCount || 0) * 7 + (curPs.passStreak || 0) * 3 + 1) : 1;
-      const curSalt = (curPs && curPs.lastChoiceOrder && curPs.lastChoiceOrder.qid === prevQ && typeof curPs.lastChoiceOrder.salt === "number")
-        ? curPs.lastChoiceOrder.salt
-        : expectedSalt;
-      const sameActiveCard = !!(viewStage === "quiz" && curOk && expectedQ && expectedQ.id === prevQ && expectedSalt === curSalt);
-      const curTargetChanged = !!(curChanged && want && want !== curPointId);
+      // Never rotate/shuffle options or swap variants under the user's thumb while they are actively answering an unfinished card!
+      const liveFreezeActive = !!(fromSSE && activeMode === "tutor" && viewStage === "quiz" && curOk && activeQuizObj && currentChoices.length > 0);
+      const sameActiveCard = liveFreezeActive || !!(viewStage === "quiz" && curOk && expectedQ && expectedQ.id === prevQ && currentChoices.length > 0);
+      if (sameActiveCard && curPs && prevQ) {
+        curPs.lastChoiceOrder = { qid: prevQ, salt: expectedSalt, order: currentChoices.slice() };
+      }
+      // On live SSE while reading an unfinished quiz card, never yank the question away unless the current card itself became green
+      const curTargetChanged = !!(!liveFreezeActive && curChanged && want && want !== curPointId);
 
       if (curTargetChanged) {
         setupCurrentTurn(want);
@@ -8068,9 +8107,9 @@ function finalizeIncomingSync(changed, dayChanged, curChanged) {
   }
 }
 
-function applyIncomingPacket(pkt) {
+function applyIncomingPacket(pkt, fromSSE) {
   const r = mergeIncomingPacketData(pkt);
-  if (r.changed) finalizeIncomingSync(true, r.dayChanged, r.curChanged);
+  if (r.changed) finalizeIncomingSync(true, r.dayChanged, r.curChanged, !!fromSSE);
   return r.changed;
 }
 
@@ -8176,7 +8215,7 @@ function pullCloudSync(pushIfLocalAhead) {
         } catch (e) {}
       });
     }
-    if (anyChanged) finalizeIncomingSync(true, anyDayChanged, anyCurChanged);
+    if (anyChanged) finalizeIncomingSync(true, anyDayChanged, anyCurChanged, false);
     cloudLastSyncTs = Date.now();
     if (cloudSyncState !== "live") cloudSyncState = "synced";
     updateSyncModalBadge();
@@ -8218,7 +8257,7 @@ function connectCloudSSE() {
         const pkt = JSON.parse(msgStr);
         if (pkt && pkt.a === "n3z") {
           const inFp = packetFingerprint(pkt);
-          applyIncomingPacket(pkt);
+          applyIncomingPacket(pkt, true);
           const myFp = packetFingerprint(buildCompactPacket());
           if (myFp === inFp) lastSyncedFp = myFp;
           cloudLastSyncTs = Date.now();
@@ -12769,9 +12808,11 @@ function renderTutor() {
     const _choiceGridCls = _is4Choices ? " stack-4" : "";
     const _renderQuizPromptHTML = (rawPrompt) => {
       const esc = escapeHtml(rawPrompt || "");
-      return esc
-        .replace(/（[\s\u3000]*）/g, '<span class="quiz-blank" aria-label="空栏"></span>')
-        .replace(/\([\s\u3000]{2,}\)/g, '<span class="quiz-blank" aria-label="空栏"></span>');
+      return esc.replace(/(?:（[\s\u3000]*）|\([\s\u3000]{2,}\))([。、？！）」』…]*)/g, (_, punct) =>
+        punct
+          ? `<span class="quiz-blank-unit"><span class="quiz-blank" aria-label="空栏"></span>${punct}</span>`
+          : '<span class="quiz-blank" aria-label="空栏"></span>'
+      );
     };
     const controlsHTML = activeQuizObj.is_listening
       ? `<div class="listen-num-grid">
@@ -15839,8 +15880,11 @@ function renderMockStage() {
   const allAnswered = answeredCnt >= total;
   const optGridCls = card.is_listening ? "mock-opts cols-3" : "mock-opts";
   const fmtMockStem = escapeHtml(card.prompt || "")
-    .replace(/（[\s\u3000]*）/g, '<span class="quiz-blank" aria-label="空栏"></span>')
-    .replace(/\([\s\u3000]{2,}\)/g, '<span class="quiz-blank" aria-label="空栏"></span>');
+    .replace(/(?:（[\s\u3000]*）|\([\s\u3000]{2,}\))([。、？！）」』…]*)/g, (_, punct) =>
+      punct
+        ? `<span class="quiz-blank-unit"><span class="quiz-blank" aria-label="空栏"></span>${punct}</span>`
+        : '<span class="quiz-blank" aria-label="空栏"></span>'
+    );
 
   const stemHTML = card.is_listening
     ? `
@@ -16707,21 +16751,25 @@ window.ZB = (function() {
       }
     } catch (e) {}
     try {
-      const r2 = await fetch(`https://ntfy.sh/${encodeURIComponent(VAULT.t)}/json?poll=1&since=all`, { cache: "no-store" });
-      if (r2.ok) {
-        const lines = (await r2.text()).trim().split("\n").filter(Boolean);
-        for (const ln of lines) {
-          try {
-            const ev = JSON.parse(ln);
-            if (ev.event !== "message" || !ev.message) continue;
-            const dec = await decWithKey(CKEY, ev.message.trim());
-            if (dec && dec.v === 1) { ST = mergeS(ST, dec); n++; }
-          } catch (e) {}
+      if (!CLOUD_SYNC_BLOCKED) {
+        const r2 = await fetch(`https://ntfy.sh/${encodeURIComponent(VAULT.t)}/json?poll=1&since=all`, { cache: "no-store" });
+        if (r2.ok) {
+          const lines = (await r2.text()).trim().split("\n").filter(Boolean);
+          for (const ln of lines) {
+            try {
+              const ev = JSON.parse(ln);
+              if (ev.event !== "message" || !ev.message) continue;
+              const dec = await decWithKey(CKEY, ev.message.trim());
+              if (dec && dec.v === 1) { ST = mergeS(ST, dec); n++; }
+            } catch (e) {}
+          }
         }
       }
       if (n > 0) { saveLocal(); syncPUDefault(); }
       const p = ptNow(0);
-      SYNC_NOTE = `云端已同步 · ${String(p.hour).padStart(2, "0")}:${String(p.minute).padStart(2, "0")}`;
+      SYNC_NOTE = CLOUD_SYNC_BLOCKED
+        ? "本地预览模式（已隔离云端）"
+        : `云端已同步 · ${String(p.hour).padStart(2, "0")}:${String(p.minute).padStart(2, "0")}`;
       render();
       if (!silent) toast("体律已同步最新数据");
     } catch (e) {
@@ -16732,7 +16780,7 @@ window.ZB = (function() {
   }
 
   async function pushNow() {
-    if (!VAULT || !CKEY) return;
+    if (CLOUD_SYNC_BLOCKED || !VAULT || !CKEY) return;
     try {
       const pl = compactS(ST);
       let enc = await encWithKey(CKEY, pl);
@@ -20093,11 +20141,59 @@ const quietSpk22 = vm.runInNewContext(`(() => {
 if (!quietSpk22.htmlQ.includes('心里顺了') || !quietSpk22.htmlQ.includes('再听一遍') || !quietSpk22.hasQuietLog || quietSpk22.htmlQ.includes('—')) {
   throw new Error('Self-test 22 failed: quiet commute speaking mode failed: ' + JSON.stringify({ hasQuietLog: quietSpk22.hasQuietLog, snippet: quietSpk22.htmlQ.slice(0, 200) }));
 }
+
+// Self-test 23 (v76): Cloud Sync Sandbox Isolation + Zero SSE Quiz Hijack/Option Jump + Orphan Period Blank Guard
+if (
+  !sb.isCloudSyncBlockedEnv({ hostname: 'localhost', protocol: 'http:', search: '' }, { userAgent: 'Mozilla/5.0' }) ||
+  !sb.isCloudSyncBlockedEnv({ hostname: '127.0.0.1', protocol: 'http:', search: '' }, { userAgent: 'Mozilla/5.0' }) ||
+  !sb.isCloudSyncBlockedEnv({ hostname: '', protocol: 'file:', search: '' }, { userAgent: 'Mozilla/5.0' }) ||
+  !sb.isCloudSyncBlockedEnv({ hostname: 'tango13ucla.github.io', protocol: 'https:', search: '' }, { webdriver: true, userAgent: 'Mozilla/5.0' }) ||
+  !sb.isCloudSyncBlockedEnv({ hostname: 'tango13ucla.github.io', protocol: 'https:', search: '' }, { userAgent: 'Mozilla/5.0 HeadlessChrome/130' }) ||
+  !sb.isCloudSyncBlockedEnv({ hostname: 'tango13ucla.github.io', protocol: 'https:', search: '?qa=1' }, { userAgent: 'Mozilla/5.0 Mobile' }) ||
+  sb.isCloudSyncBlockedEnv({ hostname: 'tango13ucla.github.io', protocol: 'https:', search: '' }, { webdriver: false, userAgent: 'Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 Chrome/130.0 Mobile Safari/537.36' })
+) {
+  throw new Error('Self-test 23 failed: isCloudSyncBlockedEnv classification mismatch!');
+}
+const pts23 = (data20.points || []).filter(p => p && p.primary && !p.primary.is_listening);
+if (pts23.length >= 2) {
+  const pA23 = pts23[0];
+  const pB23 = pts23[1];
+  vm.runInNewContext(`
+    activeMode = "tutor";
+    A.pts[${JSON.stringify(pA23.id)}].greenAt = 0; A.pts[${JSON.stringify(pA23.id)}].retestAt = 0; A.pts[${JSON.stringify(pA23.id)}].wrongCount = 0;
+    A.pts[${JSON.stringify(pB23.id)}].greenAt = 0; A.pts[${JSON.stringify(pB23.id)}].retestAt = 0; A.pts[${JSON.stringify(pB23.id)}].wrongCount = 0;
+    recomputeStatusesFromCRDT(A);
+  `, sb);
+  sb.setupCurrentTurn(pA23.id);
+  vm.runInNewContext('viewStage = "quiz";', sb);
+  sb.renderTutor();
+  const cBefore23 = vm.runInNewContext('currentChoices.join("|")', sb);
+  const nowS23 = Math.floor(Date.now() / 1000) + 60;
+  const nowMs23 = nowS23 * 1000 + 999;
+  const zBump23 = `${pA23.id}:.${nowS23.toString(36)}.5..7..${nowMs23.toString(36)}`;
+  // Live SSE packet with remote wrongCount jump AND different cursor pB23 must NOT hijack pA23 or shuffle its options!
+  sb.applyIncomingPacket({ a: 'n3z', v: 15, d: data20.plan_date, z: zBump23, c: [pB23.id, 99, pB23.id, '', nowMs23] }, true);
+  const curAfter23 = vm.runInNewContext('curPointId', sb);
+  const cAfter23 = vm.runInNewContext('currentChoices.join("|")', sb);
+  if (curAfter23 !== pA23.id || cAfter23 !== cBefore23) {
+    throw new Error('Self-test 23 failed: live SSE hijacked active quiz or shuffled choices under thumb: ' + JSON.stringify({ curAfter23, expected: pA23.id, cBefore23, cAfter23 }));
+  }
+}
+const g38Pt23 = (data20.points || []).find(p => p && p.primary && /（[\s\u3000]*）。/.test(String(p.primary.prompt || '')));
+if (g38Pt23) {
+  sb.setupCurrentTurn(g38Pt23.id);
+  vm.runInNewContext('viewStage = "quiz";', sb);
+  sb.renderTutor();
+  const h23 = (els['voice-card'] && els['voice-card'].innerHTML) || '';
+  if (!h23.includes('<span class="quiz-blank-unit"><span class="quiz-blank" aria-label="空栏"></span>。</span>')) {
+    throw new Error('Self-test 23 failed: trailing Japanese period not glued to quiz-blank via .quiz-blank-unit: ' + h23.slice(0, 320));
+  }
+}
 """
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
 
 sw_path = os.path.join(BASE_DIR, "sw.js")
-SW_CACHE_NAME = "n3-studio-tutor-v75"
+SW_CACHE_NAME = "n3-studio-tutor-v76"
 if not _IS_SIM_OUTPUT and os.path.exists(sw_path):
     with open(sw_path, encoding="utf-8") as sf:
         sw_src = sf.read()

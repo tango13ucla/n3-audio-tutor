@@ -880,6 +880,27 @@ def test_exam_day_and_n2_zero_to_120_transition_contract() -> None:
     print("[PASS 13/13] Exam-Day (12/06), N2 Day 1 (12/07), Europe Travel (12/20), MOCK/N3_SCORE/quiet-SPK & N2 Radio transitions verified end-to-end")
 
 
+def test_cloud_sync_sandbox_isolation_guard() -> None:
+    """Gate 14: Automated/headless/localhost browsers must NEVER publish to production ntfy.sh (N3 Tutor or ZenBody)."""
+    src = (BASE_DIR / "build_html.py").read_text(encoding="utf-8")
+    assert "function isCloudSyncBlockedEnv(" in src, "build_html.py missing isCloudSyncBlockedEnv() guard!"
+    assert "nav.webdriver === true" in src and "HeadlessChrome" in src, (
+        "isCloudSyncBlockedEnv() must block navigator.webdriver and HeadlessChrome!"
+    )
+    assert 'host === "localhost"' in src and 'host === "127.0.0.1"' in src and 'proto === "file:"' in src, (
+        "isCloudSyncBlockedEnv() must block localhost, 127.0.0.1, and file: origins!"
+    )
+    assert "const CLOUD_SYNC_BLOCKED = isCloudSyncBlockedEnv();" in src, "Missing CLOUD_SYNC_BLOCKED binding!"
+    assert "if (CLOUD_SYNC_BLOCKED || !VAULT || !CKEY) return;" in src, (
+        "ZenBody pushNow() must also respect CLOUD_SYNC_BLOCKED!"
+    )
+    assert "if (!CLOUD_SYNC_BLOCKED) {" in src, (
+        "ZenBody pullCloud() must also skip ntfy.sh when CLOUD_SYNC_BLOCKED!"
+    )
+    assert "quiz-blank-unit" in src, "Missing .quiz-blank-unit orphan punctuation prevention!"
+    print("[PASS 14/14] Client-side cloud sync sandbox isolation (N3 + ZenBody) & orphan-punctuation blank guard verified")
+
+
 def main() -> int:
     test_all_python_files_syntax_and_names()
     test_apply_practice_logs_all_event_types()
@@ -894,10 +915,12 @@ def main() -> int:
     test_full_bank_4choice_and_immersion_mnemonics()
     test_full_bank_100pct_option_notes()
     test_exam_day_and_n2_zero_to_120_transition_contract()
-    print("[ALL PASS] tests_ci_guard.py 13/13 gates green!")
+    test_cloud_sync_sandbox_isolation_guard()
+    print("[ALL PASS] tests_ci_guard.py 14/14 gates green!")
     return 0
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
 

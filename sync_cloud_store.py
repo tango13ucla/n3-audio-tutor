@@ -469,13 +469,23 @@ def unpack_compact_ntfy(pkt: dict) -> dict | None:
         if isinstance(item, list) and len(item) >= 4:
             ts_item = item[4] if len(item) >= 5 else ""
             ts_s = _iso_to_unix_sec(str(ts_item))
+            rid_item = str(item[0] or "")
+            ok_item = bool(item[3])
             if 1795016635 <= ts_s <= 1795016690:
+                continue
+            if rid_item == "N3-G38" and not ok_item and (
+                1795677955 <= ts_s <= 1795677968
+                or 1795678230 <= ts_s <= 1795678242
+                or 1795678389 <= ts_s <= 1795678402
+            ):
+                continue
+            if rid_item.startswith("MOCK:") and not ok_item and 1795678878 <= ts_s <= 1795678883:
                 continue
             recs.append({
                 "id": item[0],
                 "point": item[1],
                 "choice": item[2],
-                "correct": str(bool(item[3])).lower(),
+                "correct": str(ok_item).lower(),
                 "ask_again": "false",
                 "ts": ts_item,
             })
@@ -500,6 +510,20 @@ def unpack_compact_ntfy(pkt: dict) -> dict | None:
         day["learning"].pop("N3-L11", None)
         if isinstance(day.get("sched"), dict):
             day["sched"].pop("N3-L11", None)
+    if d == "2026-11-25":
+        r_g38 = int(day["retestAt"].get("N3-G38") or 0)
+        if (
+            1795677955 <= r_g38 <= 1795677968
+            or 1795678230 <= r_g38 <= 1795678242
+            or 1795678389 <= r_g38 <= 1795678402
+        ):
+            day["retestAt"].pop("N3-G38", None)
+            day["learning"].pop("N3-G38", None)
+            if isinstance(day.get("sched"), dict):
+                day["sched"].pop("N3-G38", None)
+            cur_c = day.get("cursor")
+            if isinstance(cur_c, list) and cur_c and cur_c[0] == "N3-G38":
+                day.pop("cursor", None)
     return {
         "v": 15,
         "app": "n3-zen",
