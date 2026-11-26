@@ -7089,8 +7089,9 @@ function mergeIncomingRecords(compactList) {
   if (A.recentRecords.length > 25) A.recentRecords = A.recentRecords.slice(-25);
 }
 
-function applyIncomingPacket(pkt) {
-  if (!pkt || pkt.a !== "n3z") return false;
+function mergeIncomingPacketData(pkt) {
+  const res = { changed: false, dayChanged: false, curChanged: false };
+  if (!pkt || pkt.a !== "n3z") return res;
   let changed = false;
   syncApplyingRemote = true;
   const pktVer = Math.floor(pkt.v || 0);
@@ -7122,11 +7123,8 @@ function applyIncomingPacket(pkt) {
     }
 
     if (pkt.d !== DATA.plan_date) {
-      if (changed) {
-        applyMasteryOverrides();
-        saveAdaptiveState();
-      }
-      return changed;
+      res.changed = changed;
+      return res;
     }
 
     const rIn = Math.floor(pkt.r || 0);
@@ -7243,43 +7241,79 @@ function applyIncomingPacket(pkt) {
     }
 
     mergeIncomingRecords(pkt.l);
-
-    if (changed) {
-      recomputeStatusesFromCRDT(A);
-      applyMasteryOverrides();
-      let shownChanged = false;
-      if (viewStage === "quiz" || viewStage === "done") {
-        const prevId = curPointId;
-        const prevQ = activeQuizObj ? activeQuizObj.id : "";
-        const prevC = currentChoices.join("|");
-        const prevStage = viewStage;
-        const want = (A.cur && A.pts[A.cur] && A.pts[A.cur].status !== "green") ? A.cur : "";
-        const curOk = curPointId && A.pts[curPointId] && A.pts[curPointId].status !== "green";
-        if (curChanged && want) setupCurrentTurn(want);
-        else if (!curOk) setupCurrentTurn();
-        else setupCurrentTurn(curPointId);
-        shownChanged = curPointId !== prevId || viewStage !== prevStage ||
-          (activeQuizObj ? activeQuizObj.id : "") !== prevQ || currentChoices.join("|") !== prevC;
-        if (shownChanged) {
-          stageEnteredAt = performance.now();
-          if (activeKind === "q" || activeKind === "done") stopQuizAudio();
-        }
-      }
-      saveAdaptiveState();
-      renderGreenBoard();
-      if (typeof refreshMarkedWordTokens === "function") refreshMarkedWordTokens();
-      if (activeMode === "tutor") {
-        if (shownChanged || viewStage !== "result") renderTutor();
-      } else if (activeMode === "dash") {
-        renderDashboard();
-      } else if (activeMode === "vocab" && typeof onRemoteVocabSync === "function") {
-        onRemoteVocabSync();
-      }
-    }
-    return changed;
+    res.changed = changed;
+    res.dayChanged = changed;
+    res.curChanged = curChanged;
+    return res;
   } finally {
     syncApplyingRemote = false;
   }
+}
+
+function finalizeIncomingSync(changed, dayChanged, curChanged) {
+  if (!changed) return;
+  syncApplyingRemote = true;
+  try {
+    if (!dayChanged) {
+      applyMasteryOverrides();
+      saveAdaptiveState();
+      renderGreenBoard();
+      if (activeMode === "dash") renderDashboard();
+      return;
+    }
+    recomputeStatusesFromCRDT(A);
+    applyMasteryOverrides();
+    let shownChanged = false;
+    if (viewStage === "quiz" || viewStage === "done") {
+      const prevId = curPointId;
+      const prevQ = activeQuizObj ? activeQuizObj.id : "";
+      const prevC = currentChoices.join("|");
+      const prevStage = viewStage;
+      const want = (A.cur && A.pts[A.cur] && A.pts[A.cur].status !== "green") ? A.cur : "";
+      const curOk = !!(curPointId && A.pts[curPointId] && A.pts[curPointId].status !== "green");
+      const curPt = curOk ? getPointById(curPointId) : null;
+      const curPs = curOk ? A.pts[curPointId] : null;
+      const expectedQ = (curPt && curPs) ? getQuizForPoint(curPt, curPs) : null;
+      const expectedSalt = curPs ? ((curPs.wrongCount || 0) * 7 + (curPs.passStreak || 0) * 3 + 1) : 1;
+      const curSalt = (curPs && curPs.lastChoiceOrder && curPs.lastChoiceOrder.qid === prevQ && typeof curPs.lastChoiceOrder.salt === "number")
+        ? curPs.lastChoiceOrder.salt
+        : expectedSalt;
+      const sameActiveCard = !!(viewStage === "quiz" && curOk && expectedQ && expectedQ.id === prevQ && expectedSalt === curSalt);
+      const curTargetChanged = !!(curChanged && want && want !== curPointId);
+
+      if (curTargetChanged) {
+        setupCurrentTurn(want);
+      } else if (!curOk) {
+        setupCurrentTurn();
+      } else if (!sameActiveCard) {
+        setupCurrentTurn(curPointId);
+      }
+      shownChanged = curPointId !== prevId || viewStage !== prevStage ||
+        (activeQuizObj ? activeQuizObj.id : "") !== prevQ || currentChoices.join("|") !== prevC;
+      if (shownChanged) {
+        stageEnteredAt = performance.now();
+        if (activeKind === "q" || activeKind === "done") stopQuizAudio();
+      }
+    }
+    saveAdaptiveState();
+    renderGreenBoard();
+    if (typeof refreshMarkedWordTokens === "function") refreshMarkedWordTokens();
+    if (activeMode === "tutor") {
+      if (shownChanged || viewStage === "done") renderTutor();
+    } else if (activeMode === "dash") {
+      renderDashboard();
+    } else if (activeMode === "vocab" && typeof onRemoteVocabSync === "function") {
+      onRemoteVocabSync();
+    }
+  } finally {
+    syncApplyingRemote = false;
+  }
+}
+
+function applyIncomingPacket(pkt) {
+  const r = mergeIncomingPacketData(pkt);
+  if (r.changed) finalizeIncomingSync(true, r.dayChanged, r.curChanged);
+  return r.changed;
 }
 
 function updateSyncModalBadge() {
@@ -7362,6 +7396,9 @@ function pullCloudSync(pushIfLocalAhead) {
     cache: "no-store"
   }).then(resp => resp.ok ? resp.text() : "").then(raw => {
     let latestRemoteFp = "";
+    let anyChanged = false;
+    let anyDayChanged = false;
+    let anyCurChanged = false;
     if (raw) {
       raw.split("\n").forEach(line => {
         const s = line.trim();
@@ -7372,12 +7409,16 @@ function pullCloudSync(pushIfLocalAhead) {
             const pkt = JSON.parse(env.message);
             if (pkt && pkt.a === "n3z") {
               if (pkt.d === DATA.plan_date) latestRemoteFp = packetFingerprint(pkt);
-              applyIncomingPacket(pkt);
+              const r = mergeIncomingPacketData(pkt);
+              if (r.changed) anyChanged = true;
+              if (r.dayChanged) anyDayChanged = true;
+              if (r.curChanged) anyCurChanged = true;
             }
           }
         } catch (e) {}
       });
     }
+    if (anyChanged) finalizeIncomingSync(true, anyDayChanged, anyCurChanged);
     cloudLastSyncTs = Date.now();
     if (cloudSyncState !== "live") cloudSyncState = "synced";
     updateSyncModalBadge();
@@ -7761,7 +7802,30 @@ function prepareChoices(qObj, salt, pState) {
   const arr = (qObj.choices || []).slice();
   if (arr.length < 2 || !canShuffleListeningCard(qObj)) return arr;
 
-  let seed = ((salt || 0) * 9973 + 17) >>> 0;
+  const normSalt = Math.floor(salt || 0);
+  const prevRec = pState && pState.lastChoiceOrder && pState.lastChoiceOrder.qid === qObj.id
+    ? pState.lastChoiceOrder
+    : null;
+  const prevOrder = prevRec && Array.isArray(prevRec.order) ? prevRec.order : null;
+  const sameChoiceSet = !!(
+    prevOrder &&
+    prevOrder.length === arr.length &&
+    prevOrder.slice().sort().join("\u0000") === arr.slice().sort().join("\u0000")
+  );
+
+  // Same question & same unanswered attempt (e.g. cloud sync, reload, tab switch):
+  // NEVER re-shuffle or rotate options under the user's thumb!
+  if (sameChoiceSet) {
+    const hasPrevSalt = typeof prevRec.salt === "number";
+    if ((hasPrevSalt && prevRec.salt === normSalt) || (!hasPrevSalt && normSalt <= 1)) {
+      if (!hasPrevSalt && pState) {
+        pState.lastChoiceOrder = { qid: qObj.id, salt: normSalt, order: prevOrder.slice() };
+      }
+      return prevOrder.slice();
+    }
+  }
+
+  let seed = (normSalt * 9973 + 17) >>> 0;
   for (let i = 0; i < qObj.id.length; i++) {
     seed = (Math.imul(seed, 31) + qObj.id.charCodeAt(i)) >>> 0;
   }
@@ -7777,12 +7841,9 @@ function prepareChoices(qObj, salt, pState) {
   }
 
   // On any retry (including missing a 2nd/3rd time), strictly guarantee a DIFFERENT option order than last attempt!
-  const prev = pState && pState.lastChoiceOrder && pState.lastChoiceOrder.qid === qObj.id
-    ? pState.lastChoiceOrder.order
-    : null;
-  if (Array.isArray(prev) && prev.length === arr.length) {
-    const sameFull = arr.every((v, idx) => v === prev[idx]);
-    const prevAnsIdx = prev.indexOf(qObj.answer);
+  if (sameChoiceSet) {
+    const sameFull = arr.every((v, idx) => v === prevOrder[idx]);
+    const prevAnsIdx = prevOrder.indexOf(qObj.answer);
     const curAnsIdx = arr.indexOf(qObj.answer);
     if (sameFull || (arr.length >= 3 && prevAnsIdx >= 0 && curAnsIdx === prevAnsIdx)) {
       const first = arr.shift();
@@ -7790,7 +7851,7 @@ function prepareChoices(qObj, salt, pState) {
     }
   }
   if (pState) {
-    pState.lastChoiceOrder = { qid: qObj.id, order: arr.slice() };
+    pState.lastChoiceOrder = { qid: qObj.id, salt: normSalt, order: arr.slice() };
   }
   return arr;
 }
@@ -18538,11 +18599,48 @@ if (qPt19) {
     throw new Error('Self-test 19 failed: quiz stage missing single-column stack-4, lang=ja choices, or Kyoto quiz-blank: ' + qHtml19.slice(0, 320));
   }
 }
+
+// Self-test 20: Zero Mid-Question Option Jump Guard (same-attempt idempotency + cloud sync stability)
+const q20 = { id: 'VAR9-39', choices: ['届けて', '届いて', '届って', '届けられて'], answer: '届けて', is_listening: false };
+const ps20 = { lastChoiceOrder: null };
+const ord20a = sb.prepareChoices(q20, 1, ps20);
+const ord20b = sb.prepareChoices(q20, 1, ps20);
+const ord20c = sb.prepareChoices(q20, 1, ps20);
+if (ord20a.join('|') !== ord20b.join('|') || ord20b.join('|') !== ord20c.join('|')) {
+  throw new Error('Self-test 20 failed: same-attempt prepareChoices rotated options: ' + JSON.stringify({ord20a, ord20b, ord20c}));
+}
+const ord20Retry = sb.prepareChoices(q20, 8, ps20);
+if (ord20Retry.join('|') === ord20a.join('|') || ord20Retry.indexOf(q20.answer) === ord20a.indexOf(q20.answer)) {
+  throw new Error('Self-test 20 failed: genuine retry (salt=8) must still rotate option order & answer slot');
+}
+const ps20Legacy = { lastChoiceOrder: { qid: 'VAR9-39', order: ['届けられて', '届けて', '届って', '届いて'] } };
+const ord20Leg = sb.prepareChoices(q20, 1, ps20Legacy);
+if (ord20Leg.join('|') !== '届けられて|届けて|届って|届いて') {
+  throw new Error('Self-test 20 failed: legacy saved order without salt jumped on unanswered salt=1');
+}
+const data20 = vm.runInNewContext('DATA', sb);
+const pt20 = (data20.points || []).find(p => p && p.primary && !p.primary.is_listening);
+if (pt20) {
+  vm.runInNewContext(`activeMode = "tutor"; A.pts[${JSON.stringify(pt20.id)}].greenAt = 0; A.pts[${JSON.stringify(pt20.id)}].retestAt = 0; recomputeStatusesFromCRDT(A);`, sb);
+  sb.setupCurrentTurn(pt20.id);
+  vm.runInNewContext('viewStage = "quiz";', sb);
+  sb.renderTutor();
+  const cBefore20 = vm.runInNewContext('currentChoices.join("|")', sb);
+  const domBefore20 = (els['voice-card'] && els['voice-card'].innerHTML) || '';
+  const mNow20 = vm.runInNewContext('A.radioMaxSec || 0', sb);
+  sb.applyIncomingPacket({ a: 'n3z', v: 15, d: data20.plan_date, rp: [2280, Math.floor(Date.now() / 1000)], m: mNow20 + 30 });
+  sb.applyIncomingPacket({ a: 'n3z', v: 15, d: data20.plan_date, m: mNow20 + 60, tw: ['辞書'], fp: [24, 24, Math.floor(Date.now() / 1000), Math.floor(Date.now() / 1000)] });
+  const cAfter20 = vm.runInNewContext('currentChoices.join("|")', sb);
+  const domAfter20 = (els['voice-card'] && els['voice-card'].innerHTML) || '';
+  if (cBefore20 !== cAfter20 || domBefore20 !== domAfter20) {
+    throw new Error('Self-test 20 failed: unrelated cloud sync jumped options or rebuilt active quiz DOM: ' + JSON.stringify({cBefore20, cAfter20}));
+  }
+}
 """
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
 
 sw_path = os.path.join(BASE_DIR, "sw.js")
-SW_CACHE_NAME = "n3-studio-tutor-v71"
+SW_CACHE_NAME = "n3-studio-tutor-v72"
 if os.path.exists(sw_path):
     with open(sw_path, encoding="utf-8") as sf:
         sw_src = sf.read()
