@@ -346,12 +346,13 @@
       "mnemonic": "赤 训读 あか + 字 浊 じ：红(あか)字记账就是亏损赤字 → あかじ",
       "clip_start": 231.0,
       "clip_end": 251.0,
-      "demo_audio": "",
+      "demo_audio": "./audio/rv_w_0.mp3?v=2026-11-27_v93rv",
       "hook_audio": "",
       "is_new_n2": true,
       "status": "yellow",
       "streak": 0,
-      "img": "./img/ch_0.jpg?v=2026-11-27_3f23a9_jp4"
+      "img": "./img/ch_0.jpg?v=2026-11-27_3f23a9_jp4",
+      "word_audio": "./audio/rv_w_0.mp3?v=2026-11-27_v93rv"
     },
     {
       "id": "RVR-N3-G33",
@@ -375,12 +376,14 @@
       "mnemonic": "",
       "clip_start": 280.7,
       "clip_end": 292.1,
-      "demo_audio": "./audio/N3-G33_q.mp3",
+      "demo_audio": "",
       "hook_audio": "",
       "is_new_n2": false,
       "status": "red",
       "streak": 0,
-      "img": "./img/ch_0.jpg?v=2026-11-27_3f23a9_jp4"
+      "img": "./img/ch_0.jpg?v=2026-11-27_3f23a9_jp4",
+      "story_ex_audio": "./audio/rv_ex_1.mp3?v=2026-11-27_v93rv",
+      "ex_audio": "./audio/rv_ex_1.mp3?v=2026-11-27_v93rv"
     },
     {
       "id": "RVR-N3-G47",
@@ -404,12 +407,14 @@
       "mnemonic": "",
       "clip_start": 725.8,
       "clip_end": 741.6,
-      "demo_audio": "./audio/N3-G47_q.mp3",
+      "demo_audio": "",
       "hook_audio": "",
       "is_new_n2": false,
       "status": "red",
       "streak": 0,
-      "img": "./img/ch_1.jpg?v=2026-11-27_3f23a9_jp4"
+      "img": "./img/ch_1.jpg?v=2026-11-27_3f23a9_jp4",
+      "story_ex_audio": "./audio/rv_ex_2.mp3?v=2026-11-27_v93rv",
+      "ex_audio": "./audio/rv_ex_2.mp3?v=2026-11-27_v93rv"
     },
     {
       "id": "RVW-きき",
@@ -464,12 +469,14 @@
       "mnemonic": "",
       "clip_start": 881.7,
       "clip_end": 903.7,
-      "demo_audio": "./audio/N3-G123_q.mp3",
+      "demo_audio": "",
       "hook_audio": "",
       "is_new_n2": false,
       "status": "red",
       "streak": 0,
-      "img": "./img/ch_2.jpg?v=2026-11-27_3f23a9_jp4"
+      "img": "./img/ch_2.jpg?v=2026-11-27_3f23a9_jp4",
+      "story_ex_audio": "./audio/rv_ex_4.mp3?v=2026-11-27_v93rv",
+      "ex_audio": "./audio/rv_ex_4.mp3?v=2026-11-27_v93rv"
     },
     {
       "id": "RVR-N3-G80",
@@ -493,12 +500,14 @@
       "mnemonic": "",
       "clip_start": 1251.3,
       "clip_end": 1273.3,
-      "demo_audio": "./audio/N3-G80_q.mp3",
+      "demo_audio": "",
       "hook_audio": "",
       "is_new_n2": false,
       "status": "red",
       "streak": 0,
-      "img": "./img/ch_3.jpg?v=2026-11-27_3f23a9_jp4"
+      "img": "./img/ch_3.jpg?v=2026-11-27_3f23a9_jp4",
+      "story_ex_audio": "./audio/rv_ex_5.mp3?v=2026-11-27_v93rv",
+      "ex_audio": "./audio/rv_ex_5.mp3?v=2026-11-27_v93rv"
     },
     {
       "id": "RVR-N3-G45",
@@ -522,12 +531,14 @@
       "mnemonic": "",
       "clip_start": 1767.3,
       "clip_end": 1789.3,
-      "demo_audio": "./audio/N3-G45_q.mp3",
+      "demo_audio": "",
       "hook_audio": "",
       "is_new_n2": false,
       "status": "red",
       "streak": 0,
-      "img": "./img/ch_4.jpg?v=2026-11-27_3f23a9_jp4"
+      "img": "./img/ch_4.jpg?v=2026-11-27_3f23a9_jp4",
+      "story_ex_audio": "./audio/rv_ex_6.mp3?v=2026-11-27_v93rv",
+      "ex_audio": "./audio/rv_ex_6.mp3?v=2026-11-27_v93rv"
     },
     {
       "id": "RVR-N3-G74",
@@ -551,12 +562,14 @@
       "mnemonic": "",
       "clip_start": 1997.8,
       "clip_end": 2014.4,
-      "demo_audio": "./audio/N3-G74_q.mp3",
+      "demo_audio": "",
       "hook_audio": "",
       "is_new_n2": false,
       "status": "orange",
       "streak": 0,
-      "img": "./img/ch_5.jpg?v=2026-11-27_3f23a9_jp4"
+      "img": "./img/ch_5.jpg?v=2026-11-27_3f23a9_jp4",
+      "story_ex_audio": "./audio/rv_ex_7.mp3?v=2026-11-27_v93rv",
+      "ex_audio": "./audio/rv_ex_7.mp3?v=2026-11-27_v93rv"
     }
   ],
   "speaking_prompts": [
@@ -581,7 +594,7 @@
       "coaching_tip": "注意浊音「だった」别清化",
       "clip_start": 725.8,
       "clip_end": 741.6,
-      "demo_audio": "./audio/N3-G47_q.mp3",
+      "demo_audio": "",
       "is_new_n2": false,
       "img": "./img/ch_1.jpg?v=2026-11-27_3f23a9_jp4",
       "model_audio": "./audio/spk_0.mp3?v=2026-11-27_3f23a9_jp4",
@@ -624,7 +637,7 @@
       "coaching_tip": "求准许用使役形「帰らせて」",
       "clip_start": 881.7,
       "clip_end": 903.7,
-      "demo_audio": "./audio/N3-G123_q.mp3",
+      "demo_audio": "",
       "is_new_n2": false,
       "img": "./img/ch_2.jpg?v=2026-11-27_3f23a9_jp4",
       "model_audio": "./audio/spk_1.mp3?v=2026-11-27_3f23a9_jp4",

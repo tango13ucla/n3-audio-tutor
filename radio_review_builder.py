@@ -336,7 +336,7 @@ def _extract_ja_demo_from_turn(txt: str) -> str:
 def _resolve_word_audio(word: str, manifest: dict[str, Any]) -> str:
     vc_map = manifest.get("vocab_cards") or {}
     vc_aud = vc_map.get(word) or {}
-    for k in ("full", "rev", "front"):
+    for k in ("word", "phrase", "full", "rev", "front"):
         if vc_aud.get(k):
             return str(vc_aud[k])
     w_map = manifest.get("words") or {}
@@ -354,9 +354,13 @@ def _resolve_hook_audio(word: str, manifest: dict[str, Any]) -> str:
 
 
 def _resolve_point_audio(point_id: str, manifest: dict[str, Any]) -> str:
-    for suffix in ("_q.mp3", "_exp.mp3"):
-        rel = f"./audio/{point_id}{suffix}"
-        if os.path.exists(os.path.join(BASE_DIR, "audio", f"{point_id}{suffix}")):
+    # v93 Zero-Spoiler Audio Guard: non-listening `*_q.mp3` clips intentionally have a 0.55s silent blank
+    # where the answer goes (Playbook #35), so NEVER use them as review or speaking model audio!
+    # Dedicated exact-sentence MP3s (`audio/rv/rv_*.mp3` & `audio/spk_*.mp3`) are synthesized instead.
+    pid = str(point_id or "").strip()
+    if pid.startswith(("N3-L", "Q-2026")):
+        rel = f"./audio/{pid}_q.mp3"
+        if os.path.exists(os.path.join(BASE_DIR, "audio", f"{pid}_q.mp3")):
             return rel
     return ""
 

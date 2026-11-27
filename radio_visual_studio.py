@@ -2287,6 +2287,53 @@ async def _synth_speaking_prompt_audios(
                 sp["ask_spoken"] = ask_txt
 
 
+async def _synth_review_item_audios(
+    review_items: list[dict[str, Any]],
+    ver_tag: str,
+) -> None:
+    """
+    v93 WYSIWYG Audio Guarantee for Radio Review Cards:
+    Synthesize exact Tokyo-Japanese studio MP3s (`audio/rv_ex_*.mp3` / `audio/rv_w_*.mp3`)
+    matching the EXACT `ja_example` and `title/kana` printed on each review card so tapping
+    an example sentence NEVER plays an unrelated grammar-audit sentence or blanked quiz audio.
+    """
+    os.makedirs(AUDIO_DIR, exist_ok=True)
+    for fn in os.listdir(AUDIO_DIR):
+        if re.match(r"^rv_(?:ex|w)_\d+\.mp3$", fn):
+            try:
+                os.remove(os.path.join(AUDIO_DIR, fn))
+            except OSError:
+                pass
+    voices = ["ja-JP-NanamiNeural", "ja-JP-KeitaNeural"]
+    for idx, item in enumerate(review_items):
+        if not isinstance(item, dict):
+            continue
+        # Strip any blanked non-listening quiz `*_q.mp3` that may have been carried over
+        da = str(item.get("demo_audio") or "")
+        if da.endswith("_q.mp3") and not any(tok in da for tok in ("N3-L", "Q-2026")):
+            item["demo_audio"] = ""
+        kind = str(item.get("kind") or "")
+        if kind == "vocab":
+            if not item.get("word_audio") and not item.get("demo_audio"):
+                speak_w = str(item.get("kana") or item.get("title") or "").strip()
+                if speak_w:
+                    dest_w = os.path.join(AUDIO_DIR, f"rv_w_{idx}.mp3")
+                    ok_w = await _edge_tts_to_mp3(speak_w, voices[idx % len(voices)], "-4%", dest_w)
+                    if ok_w:
+                        rel_w = f"./audio/rv_w_{idx}.mp3?v={ver_tag}"
+                        item["word_audio"] = rel_w
+                        item["demo_audio"] = rel_w
+        else:
+            ex_ja = str(item.get("ja_example") or "").strip()
+            if ex_ja and not ex_ja.startswith(str(item.get("title") or "") + "（"):
+                dest_ex = os.path.join(AUDIO_DIR, f"rv_ex_{idx}.mp3")
+                ok_ex = await _edge_tts_to_mp3(ex_ja, voices[idx % len(voices)], "-4%", dest_ex)
+                if ok_ex:
+                    rel_ex = f"./audio/rv_ex_{idx}.mp3?v={ver_tag}"
+                    item["story_ex_audio"] = rel_ex
+                    item["ex_audio"] = rel_ex
+
+
 def _cinema_grade_filter(grade: str) -> str:
     """Cohesive NHK / Criterion editorial color palette per scene mood."""
     g = str(grade or "editorial").strip().lower()
@@ -2968,7 +3015,7 @@ async def build_episode_visuals_async(
                     if int(ch_m.get("idx", -1)) == ch_idx:
                         ch_m["img"] = rel_poster
 
-        # 2. Keep grammar/vocab review flashcards clean & decoupled (thumbnail only)
+        # 2. Keep grammar/vocab review flashcards clean & decoupled (thumbnail only) + WYSIWYG exact sentence audio
         for item in review_items:
             ch_idx = int(item.get("chapter_idx", 0))
             if chapter_posters.get(ch_idx):
@@ -2976,12 +3023,16 @@ async def build_episode_visuals_async(
             item.pop("video_url", None)
             item.pop("vtt_url", None)
             item.pop("subtitles", None)
+        await _synth_review_item_audios(review_items, ver_tag)
 
         # 3. Attach posters AND render real native Japanese studio audio for speaking prompts
         for sp in speaking_prompts:
             ch_idx = int(sp.get("chapter_idx", 0))
             if chapter_posters.get(ch_idx):
                 sp["img"] = chapter_posters[ch_idx]
+            da = str(sp.get("demo_audio") or "")
+            if da.endswith("_q.mp3") and not any(tok in da for tok in ("N3-L", "Q-2026")):
+                sp["demo_audio"] = ""
         await _synth_speaking_prompt_audios(speaking_prompts, ver_tag)
 
         # 4. Build today's cohesive 720p HD stereo ALL-JAPANESE Documentary Short Video

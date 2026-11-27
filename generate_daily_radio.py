@@ -874,13 +874,14 @@ def update_story_memory_index(
     # Resolve N2 grammar IDs -> `〜...` point names when available
     n2_id_to_pt: dict[str, str] = {}
     try:
-        from n2_prep.n2_curriculum_engine import load_n2_grammar_bank
-        for _g in load_n2_grammar_bank():
+        from n2_prep.n2_grammar_syllabus import N2_GRAMMAR_SYLLABUS
+        for _g in N2_GRAMMAR_SYLLABUS:
             if _g.get("id") and _g.get("point"):
                 n2_id_to_pt[str(_g["id"])] = str(_g["point"])
     except Exception:
         pass
 
+    block_texts: list[tuple[str, str, str]] = []
     for b in story_blocks:
         tab = str(b.get("short_tab") or "").strip()
         hook = _clean_story_hook(str(b.get("title") or ""), tab)
@@ -901,6 +902,7 @@ def update_story_memory_index(
                 _put(pkey[1:], tab, hook, ja_short)
         # Also catch explicit `〜...` grammar patterns or inline swap words inside turns
         joined_turns = "\n".join(str(t) for _, t in (b.get("raw_turns") or b.get("turns") or []))
+        block_texts.append((tab, hook, joined_turns))
         for m in SWAP_TOKEN_RE.finditer(joined_turns):
             zh_c, ja_k = m.group(1).strip(), m.group(2).strip()
             ent = ive.VOCAB_BY_KANA.get(ja_k)
@@ -910,20 +912,26 @@ def update_story_memory_index(
                     _put(kj, tab, hook, f"{kj}（{ja_k}）")
                 _put(ja_k, tab, hook, f"{kj or zh_c}（{ja_k}）")
 
-    # Also index today's focused/new/graduated immersion words cleanly if not already placed
-    if isinstance(imm_vocab_report, dict) and story_blocks:
-        default_tab = str(story_blocks[0].get("short_tab") or "锵锵")
-        default_hook = _clean_story_hook(str(story_blocks[0].get("title") or ""), default_tab)
+    # Index today's focused/new/graduated immersion words ONLY against the exact story block where they actually appeared
+    if isinstance(imm_vocab_report, dict) and block_texts:
         for bucket in ("today_new", "today_graduated", "rumination_words"):
             for item in (imm_vocab_report.get(bucket) or []):
                 if not isinstance(item, dict):
                     continue
                 kj = str(item.get("kanji") or "").strip()
                 ka = str(item.get("kana") or "").strip()
+                matched_blk = None
+                for b_tab, b_hook, b_txt in block_texts:
+                    if (kj and kj in b_txt) or (ka and ka in b_txt):
+                        matched_blk = (b_tab, b_hook)
+                        break
+                if not matched_blk:
+                    continue
+                m_tab, m_hook = matched_blk
                 if kj and kj not in entries:
-                    _put(kj, default_tab, default_hook, f"{kj}（{ka}）" if ka else kj)
+                    _put(kj, m_tab, m_hook, f"{kj}（{ka}）" if ka else kj)
                 if ka and ka not in entries:
-                    _put(ka, default_tab, default_hook, f"{kj}（{ka}）" if kj else ka)
+                    _put(ka, m_tab, m_hook, f"{kj}（{ka}）" if kj else ka)
 
     # Prune entries older than 45 days to keep the index crisp and lean
     idx_data["entries"] = {

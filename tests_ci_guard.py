@@ -1757,15 +1757,15 @@ def test_v91_wysiwyg_ledger_and_word_audio_guard():
 
 
 def test_v92_sprint_dialogue_blackboard_clinic_guard() -> None:
-    """Gate 27: Verify v92 Sprint Dialogue & Living Kyoto Blackboard Clinic (24 MP3s, 0 bare kana, 8-day radio banter, CLINIC telemetry, manifest preservation)."""
+    """Gate 27: Verify v92/v93 Sprint Dialogue & Living Kyoto Blackboard Clinic (26 MP3s, 0 bare kana, 8-day radio banter, CLINIC telemetry, manifest preservation)."""
     import dialogue_blackboard_clinic as dbc
     import run_brain_algorithm as rba
 
-    # 1. All 24 clinics across 3 packs, zero em dashes, zero PII, zero bare kana in Mandarin TTS spans
-    assert len(dbc.CONFUSION_CLINICS) == 10
+    # 1. All 26 clinics across 3 packs, zero em dashes, zero PII, zero bare kana in Mandarin TTS spans
+    assert len(dbc.CONFUSION_CLINICS) == 12
     assert len(dbc.LEECH_CLINICS) == 8
     assert len(dbc.LISTENING_CLINICS) == 6
-    assert len(dbc.ALL_CLINICS) == 24
+    assert len(dbc.ALL_CLINICS) == 26
     dbc_src = (BASE_DIR / "dialogue_blackboard_clinic.py").read_text(encoding="utf-8")
     assert "—" not in dbc_src, "dialogue_blackboard_clinic.py must contain zero em dashes"
     for pii_tok in ("Yangfan", "吴杨帆", "IBJ", "Anna Yang"):
@@ -1778,10 +1778,10 @@ def test_v92_sprint_dialogue_blackboard_clinic_guard() -> None:
                         f"Bare kana leaked into Mandarin TTS span in {c['id']}: {seg!r}"
                     )
 
-    # 2. All 24 studio MP3s exist on disk and are registered in audio/audio_manifest.json with cues
+    # 2. All 26 studio MP3s exist on disk and are registered in audio/audio_manifest.json with cues
     man = json.loads((BASE_DIR / "audio" / "audio_manifest.json").read_text(encoding="utf-8"))
     dc_man = man.get("dialogue_clinics") or {}
-    assert len(dc_man) >= 24, f"Expected >=24 dialogue_clinics in audio_manifest.json, got {len(dc_man)}"
+    assert len(dc_man) >= 26, f"Expected >=26 dialogue_clinics in audio_manifest.json, got {len(dc_man)}"
     for c in dbc.ALL_CLINICS:
         cid = c["id"]
         meta = dc_man.get(cid) or {}
@@ -1832,7 +1832,7 @@ def test_v92_sprint_dialogue_blackboard_clinic_guard() -> None:
     bh_src = (BASE_DIR / "build_html.py").read_text(encoding="utf-8")
     for sym in ("openBlackboardClinic", "findClinicForQuiz", "stopClinicAudio", "openClinicCatalogModal", "kb-slate"):
         assert sym in bh_src, f"build_html.py missing v92 symbol: {sym}"
-    print("[PASS 27/28] v92 Sprint Dialogue & Living Kyoto Blackboard Clinic (24 studio MP3s, 8-day radio banter & CLINIC telemetry) verified!")
+    print("[PASS 27/29] v92/v94 Sprint Dialogue & Living Kyoto Blackboard Clinic (26 studio MP3s, 8-day radio banter & CLINIC telemetry) verified!")
 
 
 def test_v93_grammar_mini_podcasts_guard() -> None:
@@ -1891,7 +1891,125 @@ def test_v93_grammar_mini_podcasts_guard() -> None:
     bh_src = (BASE_DIR / "build_html.py").read_text(encoding="utf-8")
     for sym in ("radio-gpod-stage", "teach-gpod-strip", "openGpodFromLedger", "switchRadioChannel", "markGpodHeard", "Self-test 37"):
         assert sym in bh_src, f"build_html.py missing v93 grammar mini-podcast symbol: {sym}"
-    print(f"[PASS 28/28] v93 《锵锵语法微课》 ({len(eps)} studio episodes, atomic Kanji+Kana, Car/Preparation/Ledger hooks) verified!")
+    print(f"[PASS 28/29] v93 《锵锵语法微课》 ({len(eps)} studio episodes, atomic Kanji+Kana, Car/Preparation/Ledger hooks) verified!")
+
+
+def test_v94_whole_app_cross_match_integrity_guard() -> None:
+    """Gate 29 (v94): Verify Whole-App Cross-Match Integrity (100% real clinic match_ids, zero trap keywords, zero pack leaks across all cards/ledgers, all 11 twin variants, zero blanked *_q.mp3 in review/speaking, N2 story_memory_index import)."""
+    import adaptive_bank as ab
+    import dialogue_blackboard_clinic as dbc
+    import radio_review_builder as rrb
+    import tutor_data as td
+
+    # 1. Every single `match_ids` entry across all 26 clinics MUST exist in the real DB (bans fake prefixes like N3-G1 / N3-G2!)
+    live = json.loads((BASE_DIR / "n3_live_state.json").read_text(encoding="utf-8"))
+    real_ids: set[str] = set()
+    for sec in ("grammar_points", "vocab_points", "conjugation_points", "listening_points"):
+        for it in (live.get(sec) or []):
+            if it.get("id"):
+                real_ids.add(str(it["id"]))
+    for pid, it in (td.TUTOR_ITEMS.items() if isinstance(td.TUTOR_ITEMS, dict) else []):
+        real_ids.add(str(pid))
+        for slot in ("primary", "variant"):
+            q = it.get(slot) if isinstance(it, dict) else None
+            if isinstance(q, dict) and q.get("id"):
+                real_ids.add(str(q["id"]))
+    for c in (
+        list(ab.EXTRA_PRIMARY_CARDS)
+        + list(ab.NEW_PRIMARY_CARDS)
+        + list(ab.VARIANT_CARDS)
+        + list(ab.NEW_VARIANT_CARDS)
+    ):
+        if isinstance(c, dict) and c.get("id"):
+            real_ids.add(str(c["id"]))
+
+    banned_short_traps = {
+        "N3-G1", "N3-G2", "先", "後", "ただ", "でも", "ちょっと", "决定", "方案",
+        "かける", "間に", "余り", "依頼", "くれる", "もらう", "わりに", "ばかり", "こそ",
+    }
+    for cl in dbc.ALL_CLINICS:
+        mids = cl.get("match_ids") or []
+        mterms = cl.get("match_terms") or []
+        assert mids or mterms, f"Clinic {cl['id']} missing match_ids and match_terms"
+        for mid in mids:
+            assert mid in real_ids, f"Clinic {cl['id']} references nonexistent ID {mid!r}!"
+        for kw in list(mids) + list(mterms):
+            assert kw not in banned_short_traps, f"Clinic {cl['id']} contains banned trap keyword {kw!r}!"
+
+    # 2. Strict pack isolation & exact accuracy across ALL 26 clinics via match_clinic_strict
+    assert dbc.match_clinic_strict(["N3-G123", "VAR9-09"], "〜させてもらう", "grammar")["id"] == "CB11"
+    assert dbc.match_clinic_strict(["N3-G107"], "〜だけしか〜ない", "grammar")["id"] == "CB08"
+    assert dbc.match_clinic_strict(["N3-G124"], "〜おきに", "grammar")["id"] == "CB07"
+    assert dbc.match_clinic_strict(["N3-G132"], "〜ばかりに", "grammar")["id"] == "CB08"
+    assert dbc.match_clinic_strict(["N3-G127"], "必ずしも〜ない", "grammar")["id"] == "CB06"
+    assert dbc.match_clinic_strict(["N3-G22"], "〜てたまらない", "grammar")["id"] == "CB09"
+    assert dbc.match_clinic_strict(["N3-G16"], "〜しだい", "grammar")["id"] == "CB12"
+    assert dbc.match_clinic_strict(["N3-G80"], "〜きり", "grammar")["id"] == "CB12"
+    assert dbc.match_clinic_strict(["N3-G100"], "〜か何か", "grammar") is None
+    assert dbc.match_clinic_strict(["N3-G118"], "〜一度に", "grammar") is None
+    assert dbc.match_clinic_strict(["Q-20261114-005"], "〜させていただきます", "listening")["id"] == "LN04"
+    assert dbc.match_clinic_strict(["N3-L35"], "発話表現・目上への依頼", "listening")["id"] == "LN04"
+    assert dbc.match_clinic_strict(["N3-L42"], "〜ていただけないでしょうか", "listening")["id"] == "LN04"
+    assert dbc.match_clinic_strict(["N3-L50"], "数字・時間「早めに」＋集合修正", "listening")["id"] == "LN03"
+    assert dbc.match_clinic_strict(["N3-L54"], "談話標識「そうじゃなくて」", "listening")["id"] == "LN02"
+    assert dbc.match_clinic_strict(["N3-L40"], "即時応答・依頼への承諾", "listening")["id"] == "LN05"
+    assert dbc.match_clinic_strict(["VAR-V11"], "ばったり", "vocab") is None
+    assert dbc.match_clinic_strict(["G-014"], "〜かわりに", "grammar") is None
+    assert dbc.match_clinic_strict(["G-018"], "〜ことにする", "grammar") is None
+    assert dbc.match_clinic_strict(["G-031"], "〜ばかりか", "grammar") is None
+    assert dbc.match_clinic_strict(["G-090"], "〜ばかりだ", "grammar") is None
+    assert dbc.match_clinic_strict([], "見せる → お目にかける", "henkei") is None
+    assert dbc.match_clinic_strict([], "間に合う ↔ 間に合わせる", "henkei") is None
+    assert dbc.match_clinic_strict([], "お先に", "listening") is None
+    assert dbc.match_clinic_strict([], "間に合う", "listening") is None
+    assert dbc.match_clinic_strict([], "〜たばかり", "listening") is None
+
+    # 3. Radio review / speaking blanked *_q.mp3 guard
+    man = json.loads((BASE_DIR / "audio" / "audio_manifest.json").read_text(encoding="utf-8"))
+    assert rrb._resolve_point_audio("N3-G123", man) == "", "Non-listening N3-G123_q.mp3 must NEVER be returned as review demo_audio!"
+    assert rrb._resolve_point_audio("N3-G47", man) == "", "Non-listening N3-G47_q.mp3 must NEVER be returned as review demo_audio!"
+
+    # 4. All 11 twin variants must be mapped in build_html.py TWIN_CARD_MAP
+    bh_src = (BASE_DIR / "build_html.py").read_text(encoding="utf-8")
+    for twin_id in ("VAR-G05", "VAR-G10", "VAR-G13", "VAR-G20", "VAR-G22", "VAR-H01", "VAR-H02", "VAR-V06", "VAR-V10", "VAR-V11", "VAR-V16"):
+        assert f'"{twin_id}"' in bh_src, f"build_html.py missing twin variant mapping for {twin_id}"
+
+    # 5. generate_daily_radio.py must import real N2_GRAMMAR_SYLLABUS (no dead load_n2_grammar_bank)
+    gdr_src = (BASE_DIR / "generate_daily_radio.py").read_text(encoding="utf-8")
+    assert "load_n2_grammar_bank" not in gdr_src, "Dead import load_n2_grammar_bank still present in generate_daily_radio.py!"
+    assert "from n2_prep.n2_grammar_syllabus import N2_GRAMMAR_SYLLABUS" in gdr_src, "generate_daily_radio.py missing N2_GRAMMAR_SYLLABUS import!"
+
+    # 6. Verify today's daily_radio_meta.json review_items have zero blanked *_q.mp3 and 100% WYSIWYG ex/word audio
+    drm_path = BASE_DIR / "audio" / "daily_radio_meta.json"
+    if drm_path.exists():
+        drm = json.loads(drm_path.read_text(encoding="utf-8"))
+        for rv in (drm.get("review_items") or []):
+            for ak in ("demo_audio", "ex_audio", "story_ex_audio", "word_audio"):
+                u = str(rv.get(ak) or "").split("?")[0]
+                assert not (u.endswith("_q.mp3") and "N3-L" not in u and "Q-2026" not in u), f"Blanked quiz audio leaked in daily_radio_meta review {rv.get('id')}.{ak}: {u}"
+            if rv.get("kind") == "vocab":
+                wa = str(rv.get("word_audio") or rv.get("demo_audio") or "").split("?")[0].lstrip("./")
+                assert wa and (BASE_DIR / wa).exists(), f"Vocab review item {rv.get('title')} missing audio file on disk: {wa}"
+            else:
+                ea = str(rv.get("story_ex_audio") or rv.get("ex_audio") or "").split("?")[0].lstrip("./")
+                assert ea and "/ga/ga_" not in ea and (BASE_DIR / ea).exists(), f"Grammar review item {rv.get('title')} missing WYSIWYG podcast sentence audio: {ea}"
+
+    # 7. GPOD G-116f (ご存じだ) must be scoped strictly to ご存じだ / K-008, never hijacking parent 尊敬語特殊動詞组
+    gpod_mf = json.loads((BASE_DIR / "audio" / "grammar_pods" / "manifest.json").read_text(encoding="utf-8"))
+    g116f_ep = next((e for e in (gpod_mf.get("episodes") or []) if e.get("gid") == "G-116f"), None)
+    if g116f_ep:
+        pkeys = list(g116f_ep.get("point_keys") or [])
+        assert "尊敬語特殊動詞组" not in pkeys, "GPOD G-116f (ご存じだ) must NOT claim parent 尊敬語特殊動詞组!"
+        assert "K-008" in pkeys and "ご存じだ" in pkeys, f"GPOD G-116f point_keys incomplete: {pkeys}"
+
+    # 8. Zero double-correct synonym choices from exam_choice_enricher (VAR-G22 & N3-G105)
+    import exam_choice_enricher as ece
+    ch_g22 = ece.enrich_card_choices(["しかたがない", "かまわない"], "しかたがない", point_key="〜てたまらない", subject="文法")
+    assert "たまらない" not in ch_g22 and "しょうがない" not in ch_g22 and len(ch_g22) == 4, f"VAR-G22 synonym leak: {ch_g22}"
+    ch_g105 = ece.enrich_card_choices(["たために", "るために"], "たために", point_key="〜ために（原因）", subject="文法")
+    assert "たせいで" not in ch_g105 and len(ch_g105) == 4, f"N3-G105 synonym leak: {ch_g105}"
+
+    print("[PASS 29/29] v94 Whole-App Cross-Match Integrity (26 clinics verified IDs, zero trap substrings, 11 twin variants, confusion hygiene, WYSIWYG review audio, GPOD G-116f precision, zero synonym double-correct & N2 echo import) verified!")
 
 
 def main() -> int:
@@ -1923,7 +2041,8 @@ def main() -> int:
     test_v91_wysiwyg_ledger_and_word_audio_guard()
     test_v92_sprint_dialogue_blackboard_clinic_guard()
     test_v93_grammar_mini_podcasts_guard()
-    print("[ALL PASS] tests_ci_guard.py 28/28 gates green!")
+    test_v94_whole_app_cross_match_integrity_guard()
+    print("[ALL PASS] tests_ci_guard.py 29/29 gates green!")
     return 0
 
 

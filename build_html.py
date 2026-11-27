@@ -2011,7 +2011,20 @@ try:
 except Exception:
     pass
 
-# v83 Episodic-to-Semantic Memory Bridge ("锵锵回声"): attach matched podcast story echoes to today's quiz points
+# v83/v93 Episodic-to-Semantic Memory Bridge ("锵锵回声"): attach matched podcast story echoes cleanly (twin-variant aware!)
+_TWIN_KEY_OVERRIDE = {
+    "VAR-G05": "〜ついでに",
+    "VAR-G10": "〜はずがない",
+    "VAR-G13": "〜そうだ（様態）",
+    "VAR-G20": "〜ことにしている",
+    "VAR-G22": "〜てしかたがない",
+    "VAR-H01": "いただく",
+    "VAR-H02": "使役形",
+    "VAR-V06": "しっかり",
+    "VAR-V10": "ぴったり",
+    "VAR-V11": "ばったり",
+    "VAR-V16": "すっきり",
+}
 _story_mem_entries = {}
 _story_mem_path = os.path.join(BASE_DIR, "audio", "story_memory_index.json")
 if os.path.exists(_story_mem_path):
@@ -2022,27 +2035,46 @@ if os.path.exists(_story_mem_path):
     except Exception:
         _story_mem_entries = {}
 if _story_mem_entries:
-    for _pt in ordered_points:
-        _cands = [
-            str(_pt.get("id") or "").strip(),
-            str(_pt.get("point_key") or "").strip(),
-            str(_pt.get("point") or "").strip(),
-            str(_pt.get("point_key") or "").strip().lstrip("〜～"),
-            str((_pt.get("primary") or {}).get("answer") or "").strip(),
-        ]
-        _hit = None
-        for _ck in _cands:
+    def _lookup_story_echo(cands):
+        for _ck in cands:
             if _ck and _ck in _story_mem_entries:
-                _hit = _story_mem_entries[_ck]
-                break
-        if isinstance(_hit, dict) and _hit.get("tab") and _hit.get("hook"):
-            _pt["story_echo"] = {
-                "tab": clean_zen_text(str(_hit["tab"])),
-                "hook": clean_zen_text(str(_hit["hook"])),
-                "date": str(_hit.get("date") or ""),
-            }
+                _h = _story_mem_entries[_ck]
+                if isinstance(_h, dict) and _h.get("tab") and _h.get("hook"):
+                    return {
+                        "tab": clean_zen_text(str(_h["tab"])),
+                        "hook": clean_zen_text(str(_h["hook"])),
+                        "date": str(_h.get("date") or ""),
+                    }
+        return None
 
-# Enrich radio review cards with clean Jobs x Zen distilled text & studio 3-beat audio links (zero mutation to script_sig!)
+    for _pt in ordered_points:
+        _prim_q = _pt.get("primary") or {}
+        _prim_id = str(_prim_q.get("id") or "").strip()
+        if _prim_id in _TWIN_KEY_OVERRIDE:
+            _tk = _TWIN_KEY_OVERRIDE[_prim_id]
+            _se_twin = _lookup_story_echo([_prim_id, _tk, _tk.lstrip("〜～")])
+            if _se_twin:
+                _prim_q["story_echo"] = _se_twin
+        else:
+            _se_pt = _lookup_story_echo([
+                str(_pt.get("id") or "").strip(),
+                str(_pt.get("point_key") or "").strip(),
+                str(_pt.get("point") or "").strip(),
+                str(_pt.get("point_key") or "").strip().lstrip("〜～"),
+                str(_prim_q.get("answer") or "").strip(),
+            ])
+            if _se_pt:
+                _pt["story_echo"] = _se_pt
+        _var_q = _pt.get("variant")
+        if isinstance(_var_q, dict):
+            _vid = str(_var_q.get("id") or "").strip()
+            if _vid in _TWIN_KEY_OVERRIDE:
+                _tkv = _TWIN_KEY_OVERRIDE[_vid]
+                _se_v = _lookup_story_echo([_vid, _tkv, _tkv.lstrip("〜～")])
+                if _se_v:
+                    _var_q["story_echo"] = _se_v
+
+# Enrich radio review cards with clean Jobs x Zen distilled text & 100% WYSIWYG studio audio (zero mutation to script_sig!)
 _ga_cur_by_gid = {}
 try:
     from grammar_audit_cards import GA_CARD_CURATION as _GA_CUR_MAP
@@ -2069,9 +2101,22 @@ for _sg in (live_state.get("grammar_points") or []):
         _n3_meaning_enrich[_snm] = _sm
         _n3_meaning_enrich[clean_grammar_front_name(_snm)] = _sm
         _n3_meaning_enrich[_snm.lstrip("〜～")] = _sm
+
+
+def _is_blanked_quiz_audio(url: str) -> bool:
+    u = str(url or "").split("?")[0]
+    return u.endswith("_q.mp3") and not any(tok in u for tok in ("N3-L", "Q-2026"))
+
+
+for _sp_clean in (radio_meta.get("speaking_prompts") or []):
+    if isinstance(_sp_clean, dict) and _is_blanked_quiz_audio(_sp_clean.get("demo_audio", "")):
+        _sp_clean["demo_audio"] = ""
+
 for _rv in (radio_meta.get("review_items") or []):
     if not isinstance(_rv, dict):
         continue
+    if _is_blanked_quiz_audio(_rv.get("demo_audio", "")):
+        _rv["demo_audio"] = ""
     _rtitle = str(_rv.get("title") or "").strip()
     _rkind = str(_rv.get("kind") or "").strip()
     if _rkind == "vocab":
@@ -2088,7 +2133,7 @@ for _rv in (radio_meta.get("review_items") or []):
             _rv["mnemonic_scene"] = _vref.get("mnemonic_scene") or _rv_scene
             _rv["rev_audio"] = _vref.get("rev_audio") or ""
             _rv["hook_audio"] = _vref.get("hook_audio") or ""
-            _rv["word_audio"] = _vref.get("word_audio") or _rv.get("demo_audio") or ""
+            _rv["word_audio"] = _vref.get("word_audio") or _rv.get("word_audio") or _rv.get("demo_audio") or ""
             _rv["phrase_audio"] = _vref.get("phrase_audio") or _rv.get("word_audio") or ""
         else:
             _rv["zh_card"] = distill_card_zh(_rv.get("zh", ""), _rtitle, _rtitle)
@@ -2096,6 +2141,23 @@ for _rv in (radio_meta.get("review_items") or []):
             _rv["mnemonic_card"] = _rv_dist
             _rv["mnemonic_cue"] = _rv_cue
             _rv["mnemonic_scene"] = _rv_scene
+            _rw_aud = _rv.get("word_audio") or _rv.get("demo_audio") or (rich_words.get(_rtitle) or {}).get("audio") or ""
+            if _rw_aud:
+                _rv["word_audio"] = _rw_aud
+                if _rtitle and _rtitle not in rich_words:
+                    rich_words[_rtitle] = {
+                        "head": _rtitle,
+                        "kana": str(_rv.get("kana") or ""),
+                        "pos": "名词",
+                        "zh": _rv["zh_card"] or str(_rv.get("zh") or ""),
+                        "audio": _rw_aud,
+                        "trap_hl": list(_rv.get("trap_hl") or []),
+                        "trap_tag": str(_rv.get("trap_tag") or ""),
+                        "zh_opaque": False,
+                        "mnemonic": _rv_dist,
+                        "mnemonic_cue": _rv_cue,
+                        "mnemonic_scene": _rv_scene,
+                    }
     else:
         _rfront = clean_grammar_front_name(_rtitle)
         _gref = (
@@ -2114,16 +2176,31 @@ for _rv in (radio_meta.get("review_items") or []):
         _cur_m = clean_zen_text(str(_cur_tup[0])) if isinstance(_cur_tup, (tuple, list)) and _cur_tup else ""
         _n2_m = _n2_soul_enrich.get(_rtitle) or _n2_soul_enrich.get(_rfront) or ""
         _n3_m = _n3_meaning_enrich.get(_rtitle) or _n3_meaning_enrich.get(_rfront) or _n3_meaning_enrich.get(_rfront.lstrip("〜～")) or ""
+        _rv_ex_txt = str(_rv.get("ja_example") or "").strip()
+        _story_ex_aud = str(_rv.get("story_ex_audio") or "").strip()
         if _gref:
             _rv["zh_card"] = _cur_m or _gref.get("meaning") or _n2_m or _n3_m or _rv.get("zh") or ""
             _rv["rule_card"] = _gref.get("rule") or ""
             _rv["hl"] = _gref.get("hl") or []
             _rv["pat_audio"] = _gref.get("pat_audio") or ""
-            _rv["ex_audio"] = _gref.get("ex_audio") or _rv.get("demo_audio") or ""
             _rv["hook_audio"] = _gref.get("hook_audio") or ""
-            _rv["rev_audio"] = _gref.get("rev_audio") or ""
+            # v93 WYSIWYG Guard: ONLY bind grammar-audit `ex_audio`/`rev_audio` if `ja_example` matches `_gref.ex_ja`!
+            # Otherwise preserve the dedicated exact-podcast-sentence MP3 (`story_ex_audio`)!
+            _gref_ex_txt = str(_gref.get("ex_ja") or "").strip()
+            _same_ex = bool(_rv_ex_txt and _gref_ex_txt and _rv_ex_txt == _gref_ex_txt)
+            if _story_ex_aud:
+                _rv["ex_audio"] = _story_ex_aud
+                _rv["rev_audio"] = ""
+            elif _same_ex:
+                _rv["ex_audio"] = _gref.get("ex_audio") or ""
+                _rv["rev_audio"] = _gref.get("rev_audio") or ""
+            else:
+                _rv["ex_audio"] = ""
+                _rv["rev_audio"] = ""
         else:
             _rv["zh_card"] = _cur_m or _n2_m or _n3_m or clean_zen_text(str(_rv.get("zh") or ""))
+            if _story_ex_aud:
+                _rv["ex_audio"] = _story_ex_aud
 
 # v85: Build Hands-Free Conjugation & Keigo Drill Deck + Speaking Prompt ask_spoken
 from conjugation_drills import CONJUGATION_DRILLS as _CONJ_DRILLS_RAW, build_speaking_ask_spoken as _build_spk_ask_spoken
@@ -11308,11 +11385,10 @@ function getGpodForPoint(ref) {
   if (ref.point_key && GPOD_BY_KEY[ref.point_key]) return GPOD_BY_KEY[ref.point_key];
   if (ref.point && GPOD_BY_KEY[ref.point]) return GPOD_BY_KEY[ref.point];
   if (ref.name && GPOD_BY_KEY[ref.name]) return GPOD_BY_KEY[ref.name];
-  // Match parent group (e.g. G-116 -> G-116f) or clean point prefix without parentheses
+  // Match clean point prefix without Chinese parentheses (never cross-map split parent groups like G-116 -> G-116f)
   const rawPt = String(ref.point_key || ref.point || ref.name || "").trim();
   const bare = rawPt.replace(/[（(][^）)]*[）)]/g, "").trim();
   if (bare && GPOD_BY_KEY[bare]) return GPOD_BY_KEY[bare];
-  if (ref.gid === "G-116" && GPOD_BY_GID["G-116f"]) return GPOD_BY_GID["G-116f"];
   return null;
 }
 
@@ -11955,6 +12031,9 @@ function playQuizQuestionAudio(qObj, toggleIfSame, rateOverride) {
 function playMainClip(url, kind, toggleIfSame) {
   if (!url) return;
   if (!radioPlayer.paused) radioPlayer.pause();
+  try { if (typeof pauseGpodSilently === "function") pauseGpodSilently(); } catch (e) {}
+  try { if (typeof stopClinicAudio === "function") stopClinicAudio(); } catch (e) {}
+  try { if (typeof stopRadioReviewAudio === "function") stopRadioReviewAudio(); } catch (e) {}
   if (toggleIfSame && activeKind === kind && !player.paused) {
     stopQuizAudio();
     return;
@@ -12641,6 +12720,8 @@ function toggleRadioPlay(forcePlay) {
   }
   activeAudioChannel = "daily";
   if (typeof pauseGpodSilently === "function") pauseGpodSilently();
+  if (typeof stopClinicAudio === "function") stopClinicAudio();
+  if (typeof stopRadioReviewAudio === "function") stopRadioReviewAudio();
   if (typeof stopAllHandsFreeVoice === "function") stopAllHandsFreeVoice();
   else if (typeof stopVocabVoiceCoach === "function") stopVocabVoiceCoach(true);
   if (activeKind !== null || (typeof player !== "undefined" && !player.paused) || (typeof wordPlayer !== "undefined" && !wordPlayer.paused)) {
@@ -13446,6 +13527,7 @@ function toggleGpodPlay(forcePlay) {
   }
   activeAudioChannel = "gpod";
   if (typeof stopClinicAudio === "function") stopClinicAudio();
+  if (typeof stopRadioReviewAudio === "function") stopRadioReviewAudio();
   if (typeof stopAllHandsFreeVoice === "function") stopAllHandsFreeVoice();
   else if (typeof stopVocabVoiceCoach === "function") stopVocabVoiceCoach(true);
   if (activeKind !== null || (typeof player !== "undefined" && !player.paused) || (typeof wordPlayer !== "undefined" && !wordPlayer.paused)) {
@@ -14336,6 +14418,8 @@ const JA_ASR = (() => {
       try { if (typeof wordPlayer !== "undefined" && wordPlayer) wordPlayer.pause(); } catch (e) {}
     }
     try { if (typeof stopRadioReviewAudio === "function") stopRadioReviewAudio(); } catch (e) {}
+    try { if (typeof pauseGpodSilently === "function") pauseGpodSilently(); } catch (e) {}
+    try { if (typeof stopClinicAudio === "function") stopClinicAudio(); } catch (e) {}
     try {
       if (typeof radioInitialized !== "undefined" && radioInitialized && radioPlayer && !radioPlayer.paused) {
         radioPlayer.pause();
@@ -15236,6 +15320,9 @@ function playReviewPodcastClip(item, rateVal, toggleKey, forcePlay) {
     return;
   }
   stopRadioReviewAudio();
+  try { if (typeof pauseGpodSilently === "function") pauseGpodSilently(); } catch (e) {}
+  try { if (typeof stopClinicAudio === "function") stopClinicAudio(); } catch (e) {}
+  try { if (typeof stopQuizAudio === "function") stopQuizAudio(); } catch (e) {}
   if (radioInitialized && !radioPlayer.paused) {
     radioPlayer.pause();
     syncRadioUI(false);
@@ -15296,6 +15383,9 @@ function playReviewPodcastClip(item, rateVal, toggleKey, forcePlay) {
 function playReviewZoneAudio(item, zone) {
   if (!item) return;
   stopRadioReviewAudio();
+  try { if (typeof pauseGpodSilently === "function") pauseGpodSilently(); } catch (e) {}
+  try { if (typeof stopClinicAudio === "function") stopClinicAudio(); } catch (e) {}
+  try { if (typeof stopQuizAudio === "function") stopQuizAudio(); } catch (e) {}
   if (radioInitialized && !radioPlayer.paused) {
     radioPlayer.pause();
     syncRadioUI(false);
@@ -15311,8 +15401,8 @@ function playReviewZoneAudio(item, zone) {
   if (zone === "head") {
     zoneElId = "rv-head";
     targetUrl = isVocab
-      ? (item.phrase_audio || item.word_audio || item.rev_audio || item.demo_audio || "")
-      : (item.pat_audio || item.ex_audio || item.demo_audio || "");
+      ? (item.word_audio || item.phrase_audio || item.demo_audio || "")
+      : (item.pat_audio || item.story_ex_audio || item.ex_audio || "");
     fallbackJa = item.kana || item.title || "";
   } else if (zone === "kana") {
     zoneElId = "rv-kana-box";
@@ -15322,16 +15412,19 @@ function playReviewZoneAudio(item, zone) {
     zoneElId = "rv-zh-box";
     targetUrl = isVocab
       ? (item.phrase_audio || item.word_audio || item.rev_audio || "")
-      : (item.hook_audio || item.rev_audio || item.ex_audio || item.demo_audio || "");
+      : (item.hook_audio || item.pat_audio || item.story_ex_audio || item.ex_audio || "");
+    fallbackJa = isVocab ? (item.kana || item.title || "") : (item.ja_example || item.title || "");
   } else if (zone === "hook") {
     zoneElId = "rv-hook-box";
-    targetUrl = item.hook_audio || item.rev_audio || item.word_audio || "";
+    targetUrl = item.hook_audio || item.rev_audio || item.word_audio || item.pat_audio || "";
   } else if (zone === "ex") {
     zoneElId = "rv-ex-box";
-    targetUrl = item.ex_audio || item.demo_audio || item.phrase_audio || "";
+    targetUrl = item.story_ex_audio || item.ex_audio || item.phrase_audio || "";
     fallbackJa = item.ja_example || item.title || "";
   } else {
-    targetUrl = item.rev_audio || item.ex_audio || item.phrase_audio || item.demo_audio || item.word_audio || "";
+    targetUrl = isVocab
+      ? (item.rev_audio || item.word_audio || item.phrase_audio || item.demo_audio || "")
+      : (item.story_ex_audio || item.ex_audio || item.pat_audio || item.hook_audio || "");
   }
   if (zoneElId) setRvSpeakingZone(zoneElId);
   const doneCb = () => {
@@ -17113,27 +17206,17 @@ function renderTutor() {
   const leftStampTone = fullyPassed ? "" : " moss-tone";
   const rightStampLabel = fullyPassed ? "下一题" : (stillNeedsVariantPass ? "3 题后复考" : `未过 · ${retryCopy}`);
   const mainBtnLabel = fullyPassed ? "下一题" : (stillNeedsVariantPass ? "继续 · 3 题后复考" : `未过 · ${retryCopy}`);
-  const _twinTitleMap = {
-    "VAR-G05": "〜ついでに（顺便做另一件事）",
-    "VAR-G10": "〜はずがない（按理绝不可能）",
-    "VAR-G13": "〜そうだ（样态 · 眼看就要…）",
-    "VAR-G20": "〜ことにしている（个人坚持习惯）",
-    "VAR-G22": "〜てしかたがない（…得受不了）",
-    "VAR-H01": "食べる／飲む → いただく（謙譲）",
-    "VAR-H02": "一段动词 使役形（させる）",
-  };
-  const resPointTitle = displayPointName(_twinTitleMap[q.id] || (
-    p.subject === "词汇" && q.answer && /^[\u3040-\u30ffー]+$/.test(q.answer) && p.point && !p.point.includes(q.answer) && !/[\u4e00-\u9fff]/.test(p.point)
-      ? q.answer
-      : (p.point || "")
-  ));
-  const confWrong = (DATA.confusion_pairs && (DATA.confusion_pairs[p.point_key] || DATA.confusion_pairs[p.point])) || "";
-  const _ansStr = String(q.answer || "").trim();
-  const confHintHTML = (confWrong && confWrong !== _ansStr && (!_ansStr || (!_ansStr.includes(confWrong) && !confWrong.includes(_ansStr))) && !q.is_listening)
+  const effTarget = getEffectiveCardTarget(p, q);
+  const resPointTitle = displayPointName(effTarget.title || "");
+  const confWrong = effTarget.isTwin
+    ? ""
+    : ((DATA.confusion_pairs && (DATA.confusion_pairs[p.point_key] || DATA.confusion_pairs[p.point])) || "");
+  const confHintHTML = isRelevantConfusionHint(confWrong, q)
     ? `<div class="res-cue"><span class="cue-tag">常混</span><span class="cue-txt">历史易误选「${escapeHtml(confWrong)}」，注意和正解区分</span></div>`
     : "";
-  const storyEchoHTML = (p.story_echo && p.story_echo.tab && p.story_echo.hook)
-    ? `<div class="res-cue res-echo" id="res-story-echo"><span class="cue-tag">锵锵</span><span class="cue-txt">「${escapeHtml(p.story_echo.tab)}」${escapeHtml(p.story_echo.hook)}</span></div>`
+  const activeStoryEcho = effTarget.isTwin ? (q.story_echo || null) : (q.story_echo || p.story_echo || null);
+  const storyEchoHTML = (activeStoryEcho && activeStoryEcho.tab && activeStoryEcho.hook)
+    ? `<div class="res-cue res-echo" id="res-story-echo"><span class="cue-tag">锵锵</span><span class="cue-txt">「${escapeHtml(activeStoryEcho.tab)}」${escapeHtml(activeStoryEcho.hook)}</span></div>`
     : "";
   const matchedClinic = (!isCorrect || isUnsure) ? findClinicForQuiz(p, q) : null;
   const clinicHintHTML = matchedClinic
@@ -23291,43 +23374,149 @@ function getFeaturedClinic() {
   return CLINIC_BY_ID[fid] || CLINIC_ITEMS[0] || null;
 }
 
+const TWIN_CARD_MAP = {
+  "VAR-G05": { title: "〜ついでに（顺便做另一件事）", key: "〜ついでに" },
+  "VAR-G10": { title: "〜はずがない（按理绝不可能）", key: "〜はずがない" },
+  "VAR-G13": { title: "〜そうだ（样态 · 眼看就要…）", key: "〜そうだ（様態）" },
+  "VAR-G20": { title: "〜ことにしている（个人坚持习惯）", key: "〜ことにしている" },
+  "VAR-G22": { title: "〜てしかたがない（…得受不了）", key: "〜てしかたがない" },
+  "VAR-H01": { title: "食べる／飲む → いただく（謙譲）", key: "いただく" },
+  "VAR-H02": { title: "一段动词 使役形（させる）", key: "使役形" },
+  "VAR-V06": { title: "しっかり（牢牢地 · 扎实可靠）", key: "しっかり" },
+  "VAR-V10": { title: "ぴったり（严丝合缝 · 刚刚好）", key: "ぴったり" },
+  "VAR-V11": { title: "ばったり（意外巧遇 · 撞个正着）", key: "ばったり" },
+  "VAR-V16": { title: "すっきり（清爽利落 · 神清气爽）", key: "すっきり" },
+};
+
+function getEffectiveCardTarget(p, q) {
+  const qid = String((q && q.id) || "").trim();
+  if (qid && TWIN_CARD_MAP[qid]) {
+    const t = TWIN_CARD_MAP[qid];
+    return { isTwin: true, title: t.title, key: t.key, ids: [qid] };
+  }
+  const subj = String((p && p.subject) || "");
+  const ans = String((q && q.answer) || "").trim();
+  const pt = String((p && p.point) || "").trim();
+  const ptCore = pt.replace(/[（(][^）)]*[）)]/g, "").trim();
+  if (
+    (subj === "词汇" || subj === "語彙")
+    && ans
+    && /^[\u3040-\u30ffー]+$/.test(ans)
+    && ptCore
+    && /^[\u3040-\u30ffー]+$/.test(ptCore)
+    && ptCore !== ans
+    && !ptCore.includes(ans)
+    && !ans.includes(ptCore)
+  ) {
+    return { isTwin: true, title: ans, key: ans, ids: qid ? [qid] : [] };
+  }
+  const ids = [];
+  if (p && p.id) ids.push(String(p.id).trim());
+  if (qid && !ids.includes(qid)) ids.push(qid);
+  return {
+    isTwin: false,
+    title: pt,
+    key: String((p && p.point_key) || pt || "").trim(),
+    ids,
+  };
+}
+
+function isRelevantConfusionHint(confWrong, q) {
+  const cw = String(confWrong || "").trim();
+  if (!cw || !q || q.is_listening) return false;
+  const prompt = String(q.prompt || "");
+  if (prompt.includes("★")) return false;
+  const ans = String(q.answer || "").trim();
+  if (cw === ans || (ans && (ans.includes(cw) || cw.includes(ans)))) return false;
+  const choices = Array.isArray(q.choices) ? q.choices : [];
+  if (choices.includes(cw)) return true;
+  // Reading-question distractors must belong to this question's own choices (e.g. avoid past-tense ちょめた on present 貯める)
+  if (prompt.includes("の読み方")) return false;
+  // Reject any historical wrong choice carrying kanji not present in this sentence (e.g. 帰らせて on 考える, 着れる on 食べる)
+  const sentCtx = `${prompt} ${q.full_ja || ""}`;
+  const kanjiChars = cw.match(/[\u4e00-\u9fff]/g) || [];
+  for (let i = 0; i < kanjiChars.length; i++) {
+    if (!sentCtx.includes(kanjiChars[i])) return false;
+  }
+  // Reject verb-prefixed historical strings (e.g. するはずがない on 使うしかない) when verb isn't in this sentence
+  if (/^(する|して|した|できる|でき|いく|いっ|くる|き)/.test(cw) && !sentCtx.includes(cw.slice(0, 2))) {
+    return false;
+  }
+  return true;
+}
+
+function _normClinicTxt(s) {
+  return String(s || "").replace(/[~～]/g, "〜").trim();
+}
+
+function _allowedClinicPacks(modStr) {
+  const m = String(modStr || "").trim().toLowerCase();
+  if (m === "listening" || m === "聴解" || m === "听力") return ["listening"];
+  if (m === "vocab" || m === "語彙" || m === "词汇") return ["leech", "confusion"];
+  return ["confusion", "leech"];
+}
+
 function findClinicForText(idStr, nameStr, modStr) {
   if (!CLINIC_ITEMS.length) return null;
-  const hay = `${idStr || ""} ${nameStr || ""}`.trim();
-  if (!hay) return null;
-  const prefOrder = modStr === "listening"
-    ? ["listening", "confusion", "leech"]
-    : (modStr === "vocab" ? ["leech", "confusion"] : ["confusion", "leech", "listening"]);
-  for (let pi = 0; pi < prefOrder.length; pi++) {
-    const pk = prefOrder[pi];
-    for (let i = 0; i < CLINIC_ITEMS.length; i++) {
-      const c = CLINIC_ITEMS[i];
-      if (!c || c.pack !== pk || !Array.isArray(c.triggers)) continue;
-      for (let t = 0; t < c.triggers.length; t++) {
-        const kw = c.triggers[t];
-        if (kw && hay.includes(kw)) return c;
+  const packs = _allowedClinicPacks(modStr);
+  const idTokens = String(idStr || "").split(/\s+/).map(x => x.trim()).filter(Boolean);
+  const headNorm = _normClinicTxt(nameStr);
+
+  // Pass 1 (Highest priority): exact token-level match on match_ids (ZERO substring matching!)
+  if (idTokens.length) {
+    for (let pi = 0; pi < packs.length; pi++) {
+      const pk = packs[pi];
+      for (let i = 0; i < CLINIC_ITEMS.length; i++) {
+        const c = CLINIC_ITEMS[i];
+        if (!c || c.pack !== pk) continue;
+        const mids = Array.isArray(c.match_ids) ? c.match_ids : [];
+        for (let t = 0; t < idTokens.length; t++) {
+          if (mids.includes(idTokens[t])) return c;
+        }
       }
     }
   }
+
+  // Pass 2: strict head-term match against normalized Japanese title/headword with explicit exclusions
+  if (headNorm) {
+    for (let pi = 0; pi < packs.length; pi++) {
+      const pk = packs[pi];
+      for (let i = 0; i < CLINIC_ITEMS.length; i++) {
+        const c = CLINIC_ITEMS[i];
+        if (!c || c.pack !== pk) continue;
+        const excls = Array.isArray(c.exclude_terms) ? c.exclude_terms : [];
+        let excluded = false;
+        for (let e = 0; e < excls.length; e++) {
+          const ex = _normClinicTxt(excls[e]);
+          if (ex && headNorm.includes(ex)) { excluded = true; break; }
+        }
+        if (excluded) continue;
+        const mterms = Array.isArray(c.match_terms) ? c.match_terms : [];
+        for (let t = 0; t < mterms.length; t++) {
+          const mt = _normClinicTxt(mterms[t]);
+          if (mt && headNorm.includes(mt)) return c;
+        }
+      }
+    }
+  }
+
+  // Pass 3: zero blind catch-all fallback
   return null;
 }
 
 function findClinicForQuiz(p, q) {
   if (!p || !q || !CLINIC_ITEMS.length) return null;
-  const combined = `${p.id || ""} ${p.point || ""} ${p.point_key || ""} ${q.id || ""} ${q.answer || ""} ${q.full_ja || ""} ${q.why_line || ""}`;
+  const eff = getEffectiveCardTarget(p, q);
+  const idStr = eff.ids.join(" ");
   if (q.is_listening) {
-    const direct = findClinicForText(`${p.id || ""} ${q.id || ""}`, `${p.point || ""} ${q.full_ja || ""} ${q.why_line || ""}`, "listening");
-    if (direct && direct.pack === "listening") return direct;
-    if (/即時応答|発話|誉め|遅刻|お礼|承諾/.test(combined)) return CLINIC_BY_ID["LN05"] || CLINIC_ITEMS.find(x => x.pack === "listening") || null;
-    if (/時|分|日|前日|翌日|早め/.test(combined)) return CLINIC_BY_ID["LN03"] || null;
-    if (/いただけ|させて|いらして|依頼/.test(combined)) return CLINIC_BY_ID["LN04"] || null;
-    return CLINIC_BY_ID["LN02"] || CLINIC_ITEMS.find(x => x.pack === "listening") || null;
+    // Listening cards match strictly inside listening pack via exact ID or clean listening point title (NEVER blind fallback!)
+    return findClinicForText(idStr, `${eff.title || ""} ${eff.key || ""}`, "listening");
   }
   const subj = String(p.subject || "");
   const modHint = (subj === "词汇" || subj === "語彙") ? "vocab" : "grammar";
-  const hit = findClinicForText(`${p.id || ""} ${q.id || ""}`, `${p.point || ""} ${p.point_key || ""} ${q.answer || ""}`, modHint);
-  if (hit && hit.pack !== "listening") return hit;
-  return null;
+  const isStar = String(q.prompt || "").includes("★");
+  const headStr = `${eff.title || ""} ${eff.key || ""}${(!isStar && eff.isTwin && q.answer) ? (" " + q.answer) : ""}`;
+  return findClinicForText(idStr, headStr, modHint);
 }
 
 function ensureClinicAudio() {
@@ -23505,16 +23694,23 @@ function syncClinicPlaybackUI(forceEnd) {
   if (fillEl) fillEl.style.width = `${Math.min(100, Math.max(0, (cur / Math.max(1, dur)) * 100)).toFixed(1)}%`;
 }
 
+function pauseNonClinicAudio() {
+  try { if (typeof stopQuizAudio === "function") stopQuizAudio(); } catch (e) {}
+  try { if (typeof stopVocabAudioAndTimers === "function") stopVocabAudioAndTimers(); } catch (e) {}
+  try { if (typeof stopRadioReviewAudio === "function") stopRadioReviewAudio(); } catch (e) {}
+  try {
+    if (typeof radioPlayer !== "undefined" && radioPlayer && !radioPlayer.paused) {
+      radioPlayer.pause();
+      if (typeof syncRadioUI === "function") syncRadioUI(false);
+    }
+  } catch (e) {}
+  try { if (typeof pauseGpodSilently === "function") pauseGpodSilently(); } catch (e) {}
+}
+
 function openBlackboardClinic(clinicId, opts) {
   const clinic = CLINIC_BY_ID[clinicId] || getFeaturedClinic();
   if (!clinic) return;
-  try { if (player && !player.paused) player.pause(); } catch (e) {}
-  try { if (typeof stopVocabAudioAndTimers === "function") stopVocabAudioAndTimers(); } catch (e) {}
-  try {
-    const ra = document.getElementById("radio-audio");
-    if (ra && !ra.paused) ra.pause();
-  } catch (e) {}
-  try { if (typeof pauseGpodSilently === "function") pauseGpodSilently(); } catch (e) {}
+  pauseNonClinicAudio();
   activeClinicId = clinic.id;
   clinicCurStep = 0;
   clinicCurCueIdx = 0;
@@ -23543,6 +23739,7 @@ function toggleClinicPlay() {
   if (!a.paused) {
     a.pause();
   } else {
+    pauseNonClinicAudio();
     if (!a.src || !a.src.includes(c.id)) {
       a.src = c.audio;
     }
@@ -23559,6 +23756,7 @@ function replayClinicAudio() {
   const c = CLINIC_BY_ID[activeClinicId];
   const a = ensureClinicAudio();
   if (!c || !a) return;
+  pauseNonClinicAudio();
   clinicCurStep = 0;
   clinicCurCueIdx = 0;
   a.src = c.audio;
@@ -24718,7 +24916,7 @@ function buildLedgerExtraHTML(it) {
       </button>`;
     }
   }
-  const liClinic = findClinicForText(it.gid || it.point_id || "", `${it.name || ""} ${it.sub || ""}`, dashMod);
+  const liClinic = findClinicForText(it.gid || it.point_id || "", it.name || "", dashMod);
   const clinicBtnHTML = liClinic
     ? `<button type="button" class="kb-li-btn" onclick="event.stopPropagation();openBlackboardClinic('${liClinic.id}')">
         <span class="kb-entry-dot"></span>
@@ -29705,14 +29903,14 @@ if (!isPostN3_35) {
   sb.switchMode('tutor');
 }
 
-// Self-test 36 (v92): Sprint Dialogue & Living Kyoto Blackboard Clinic (24 clinics, quiet wrong-only triggers, synced slate steps, catalog browser & CLINIC telemetry)
+// Self-test 36 (v92/v93): Sprint Dialogue & Living Kyoto Blackboard Clinic (26 clinics, quiet wrong-only triggers, synced slate steps, catalog browser & CLINIC telemetry)
 {
   const clItems36 = vm.runInNewContext('(DATA.dialogue_clinics && DATA.dialogue_clinics.items) || []', sb);
   if (!/\.kb-step\s*\{[^}]*white-space:\s*normal/.test(html) || !/\.kb-entry-btn\s*\{[^}]*white-space:\s*normal/.test(html)) {
     throw new Error('Self-test 36 failed: .kb-step and .kb-entry-btn must declare white-space: normal to override global button nowrap');
   }
-  if (clItems36.length !== 24) {
-    throw new Error('Self-test 36 failed: expected 24 dialogue clinics, got ' + clItems36.length);
+  if (clItems36.length !== 26) {
+    throw new Error('Self-test 36 failed: expected 26 dialogue clinics, got ' + clItems36.length);
   }
   for (const cl of clItems36) {
     const rawStr = JSON.stringify(cl);
@@ -29841,11 +30039,182 @@ if (gpods37.length > 0) {
   sb.switchRadioChannel('daily');
   sb.switchMode('tutor');
 }
+
+// Self-test 38 (v94): Exhaustive Cross-App Match Integrity Gate (Zero False Clinic Matches, Twin Variant Isolation, Confusion Hygiene & WYSIWYG Review Audio)
+{
+  // 38.1 Regression matrix for every exact clinic mismatch caught in v94 audit
+  const cases38 = [
+    ['N3-G123', '〜させてもらう（礼貌请求许可做…）', '语法', 'VAR9-09', false, 'させてもらっ', 'CB11'],
+    ['N3-G107', '〜だけしか〜ない（仅仅只剩这么一点儿）', '语法', 'VAR11-20', false, 'だけしか', 'CB08'],
+    ['N3-G124', '〜おきに（每隔固定间隔重复 vs 〜ごとに）', '语法', 'N3-G124', false, 'おきに', 'CB07'],
+    ['N3-G132', '〜ばかりに（偏偏只因为…导致遗憾后果）', '语法', 'VAR11-48', false, 'ばかりに', 'CB08'],
+    ['N3-G127', '必ずしも〜ない（未必一定全都…）', '语法', 'VAR9-10', false, '必ずしも', 'CB06'],
+    ['N3-G22', '〜てたまらない／しかたがない', '语法', 'VAR-G22', false, 'しかたがない', 'CB09'],
+    ['N3-G16', '〜しだい（一…就立即）', '语法', 'VAR-G16', false, 'しだい', 'CB12'],
+    ['N3-G80', '〜きり（自从那一次之后就再也没有…）', '语法', 'VAR11-11', false, '読んだきり', 'CB12'],
+    ['N3-G100', '〜か何か（…之类的什么东西）', '语法', 'VAR11-09', false, 'か何か', null],
+    ['N3-G118', '〜一度に（一口气同时一起…）', '语法', 'VAR12-03', false, '一度に', null],
+    ['Q-20261114-005', '〜させていただきます', '听力', 'Q-20261114-005', true, 'うん', 'LN04'],
+    ['N3-L35', '発話表現・目上への依頼', '听力', 'N3-L35', true, 'この書類', 'LN04'],
+    ['N3-L42', '〜ていただけないでしょうか（极礼貌请求）', '听力', 'N3-L42', true, '窓側', 'LN04'],
+    ['N3-L50', '数字・時間「早めに」＋集合修正', '听力', 'N3-L50', true, '九時四十五分', 'LN03'],
+    ['N3-L54', '談話標識「そうじゃなくて」（纠正反转）', '听力', 'N3-L54', true, '店の場所', 'LN02'],
+    ['N3-L40', '即時応答・依頼への承諾', '听力', 'N3-L40', true, 'はい、かしこまりました', 'LN05'],
+    ['N3-V11', 'こっそり', '词汇', 'VAR-V11', false, 'ばったり', null],
+    ['N3-V16', 'がっかり（失望泄气）', '词汇', 'VAR-V16', false, 'すっきり', 'CB10'],
+    ['G-20261114-05', '〜にしたがって', '语法', 'VAR-G05', false, 'ついでに', 'CB09'],
+  ];
+  for (const [pid, pt, subj, qid, isL, ans, expCid] of cases38) {
+    const got = vm.runInNewContext(
+      `findClinicForQuiz(${JSON.stringify({ id: pid, point: pt, point_key: pt, subject: subj })}, ${JSON.stringify({ id: qid, is_listening: isL, answer: ans })})`,
+      sb
+    );
+    const gotId = got ? got.id : null;
+    if (gotId !== expCid) {
+      throw new Error(`Self-test 38 failed: ${pid}/${qid} expected clinic ${expCid}, got ${gotId}`);
+    }
+  }
+
+  // 38.2 Zero false positives in Ledger across all 4 tabs (grammar/henkei/listening/vocab)
+  const ledgerNeg38 = [
+    ['G-014', '〜かわりに', 'grammar'],
+    ['G-018', '〜ことにする', 'grammar'],
+    ['G-031', '〜ばかりか', 'grammar'],
+    ['G-090', '〜ばかりだ', 'grammar'],
+    ['', '見せる → お目にかける', 'henkei'],
+    ['', 'かかる ↔ かける', 'henkei'],
+    ['', '間に合う ↔ 間に合わせる', 'henkei'],
+    ['', '五段动词 れる尊敬', 'henkei'],
+    ['N3-H46', 'れる／られる尊敬与受身／可能的辨析', 'henkei'],
+    ['', '〜とく', 'listening'],
+    ['', 'お先に', 'listening'],
+    ['', '「今日にでも。」', 'listening'],
+    ['', '間に合う', 'listening'],
+    ['', '〜たばかり', 'listening'],
+  ];
+  for (const [idStr, nm, mod] of ledgerNeg38) {
+    const got = vm.runInNewContext(`findClinicForText(${JSON.stringify(idStr)}, ${JSON.stringify(nm)}, ${JSON.stringify(mod)})`, sb);
+    if (got) {
+      throw new Error(`Self-test 38 failed: false positive ledger match [${mod}] ${idStr} "${nm}" -> ${got.id}`);
+    }
+  }
+  for (const modKey of ['grammar', 'henkei', 'vocab']) {
+    const leak = vm.runInNewContext(`
+      ((DATA.mastery && DATA.mastery.${modKey} && DATA.mastery.${modKey}.items) || [])
+        .map(it => ({ it, c: findClinicForText(it.gid || it.point_id || "", it.name || "", "${modKey}") }))
+        .find(x => x.c && x.c.pack === "listening")
+    `, sb);
+    if (leak) {
+      throw new Error(`Self-test 38 failed: ${modKey} ledger item "${leak.it.name}" leaked into listening clinic ${leak.c.id}`);
+    }
+  }
+
+  // 38.3 Screenshot regression: N3-G123 wrong answer shows CB11 (NEVER CB04!) and suppresses foreign-verb 帰らせて
+  const pG123Idx = vm.runInNewContext('DATA.points.findIndex(p => p && p.id === "N3-G123")', sb);
+  if (pG123Idx >= 0) {
+    vm.runInNewContext(`
+      curPointId = "N3-G123";
+      viewStage = "result";
+      activeQuizObj = DATA.points[${pG123Idx}].primary;
+      currentChoices = activeQuizObj.choices.slice();
+      pickedVal = "させてくれ";
+      renderTutor();
+    `, sb);
+    const g123Html = (els['voice-card'] && els['voice-card'].innerHTML) || '';
+    if (!g123Html.includes('CB11') || g123Html.includes('CB04') || g123Html.includes('半途')) {
+      throw new Error('Self-test 38 failed: N3-G123 must show CB11 and NEVER CB04');
+    }
+    if (g123Html.includes('帰らせて')) {
+      throw new Error('Self-test 38 failed: N3-G123 (考える) must NOT display foreign-verb confusion hint 帰らせて');
+    }
+  }
+
+  // 38.4 Twin variant VAR-V11 (ばったり) under N3-V11 (こっそり) must show ばったり title, zero こっそり clinic, zero 末班电车 echo
+  const pV11Idx = vm.runInNewContext('DATA.points.findIndex(p => p && p.id === "N3-V11" && p.primary && p.primary.id === "VAR-V11")', sb);
+  if (pV11Idx >= 0) {
+    vm.runInNewContext(`
+      curPointId = "N3-V11";
+      viewStage = "result";
+      activeQuizObj = DATA.points[${pV11Idx}].primary;
+      currentChoices = activeQuizObj.choices.slice();
+      pickedVal = "こっそり";
+      renderTutor();
+    `, sb);
+    const v11Html = (els['voice-card'] && els['voice-card'].innerHTML) || '';
+    if (!v11Html.includes('ばったり') || v11Html.includes('res-clinic-btn') || v11Html.includes('末班电车')) {
+      throw new Error('Self-test 38 failed: VAR-V11 (ばったり) leaked parent こっそり clinic or 末班电车 story echo');
+    }
+  }
+
+  // 38.5 Star-order question must NEVER show 常混 distractor
+  const starConf = vm.runInNewContext('isRelevantConfusionHint("音楽会は", { prompt: "【★ 语序排列】激しい雨が降って ＿ ＿ ★ ＿", answer: "野外の", choices: ["いる", "にもかかわらず", "野外の", "音楽会は"], is_listening: false })', sb);
+  if (starConf) {
+    throw new Error('Self-test 38 failed: ★ star-order question must never display 常混 hint');
+  }
+
+  // 38.6 Radio review WYSIWYG audio guard: ZERO blanked *_q.mp3 and every vocab/grammar review item has clean audio
+  const rvItems38 = vm.runInNewContext('(DATA.radio && DATA.radio.review_items) || []', sb);
+  for (const rv of rvItems38) {
+    for (const k of ['demo_audio', 'ex_audio', 'word_audio', 'rev_audio']) {
+      const u = String(rv[k] || '').split('?')[0];
+      if (u.endsWith('_q.mp3') && !u.includes('N3-L') && !u.includes('Q-2026')) {
+        throw new Error(`Self-test 38 failed: review item ${rv.id} leaked blanked quiz audio in ${k}: ${u}`);
+      }
+    }
+    if (rv.kind === 'vocab' && !rv.word_audio && !rv.demo_audio) {
+      throw new Error(`Self-test 38 failed: vocab review item ${rv.title} has no studio word audio`);
+    }
+    if (rv.kind !== 'vocab' && rv.ex_audio && String(rv.ex_audio).includes('/ga/ga_')) {
+      throw new Error(`Self-test 38 failed: grammar review item ${rv.title} borrowed unrelated grammar-audit ex_audio ${rv.ex_audio}`);
+    }
+  }
+
+  // 38.7 GPOD G-116f (ご存じだ) precision: must match N3-H19 (K-008) & G-116f, NEVER hijack N3-G121 (いらっしゃる) or split parent G-116
+  const gpodN3G121 = vm.runInNewContext('getGpodForPoint({ id: "N3-G121", point: "尊敬语特殊动词（いらっしゃる／召し上がる等）", point_key: "尊敬語特殊動詞组" })', sb);
+  const gpodG116Parent = vm.runInNewContext('getGpodForPoint({ gid: "G-116", name: "尊敬語特殊動詞组" })', sb);
+  const gpodN3H19 = vm.runInNewContext('getGpodForPoint({ id: "N3-H19", point: "知る → ご存じだ（尊敬）", point_key: "K-008" })', sb);
+  if (gpodN3G121 || gpodG116Parent) {
+    throw new Error('Self-test 38 failed: GPOD G-116f (ご存じだ) leaked onto N3-G121/G-116 parent');
+  }
+  if (!gpodN3H19 || gpodN3H19.gid !== 'G-116f') {
+    throw new Error('Self-test 38 failed: N3-H19 (ご存じだ / K-008) failed to match GPOD G-116f');
+  }
+
+  // 38.8 Zero double-correct synonym choices & zero leaked cross-card scenario notes on VAR-G22
+  const varG22 = vm.runInNewContext('(DATA.points || []).map(p => p.primary).find(q => q && q.id === "VAR-G22")', sb);
+  if (varG22) {
+    if ((varG22.choices || []).includes('たまらない')) {
+      throw new Error('Self-test 38 failed: VAR-G22 (痛くてしかたがない) still contains double-correct synonym たまらない');
+    }
+    const g22NotesStr = JSON.stringify(varG22.opt_notes || {});
+    if (g22NotesStr.includes('会いたくて') || g22NotesStr.includes('倒霉透顶')) {
+      throw new Error('Self-test 38 failed: VAR-G22 opt_notes leaked foreign card scenario text');
+    }
+  }
+
+  // 38.9 6-player audio mutual exclusion: playMainClip pauses gpodPlayer; openBlackboardClinic pauses radioPlayer
+  vm.runInNewContext(`
+    gpodPlayer.paused = false;
+    playMainClip('./audio/done.mp3', 'teach', false);
+  `, sb);
+  if (!vm.runInNewContext('gpodPlayer.paused', sb)) {
+    throw new Error('Self-test 38 failed: playMainClip did not pause gpodPlayer');
+  }
+  vm.runInNewContext(`
+    radioPlayer.paused = false;
+    gpodPlayer.paused = false;
+    openBlackboardClinic('CB11', { autoplay: false });
+  `, sb);
+  if (!vm.runInNewContext('radioPlayer.paused && gpodPlayer.paused', sb)) {
+    throw new Error('Self-test 38 failed: openBlackboardClinic did not pause radioPlayer and gpodPlayer');
+  }
+  sb.closeModal();
+}
 """
     subprocess.run(["node", "-", HTML_PATH], input=smoke_js, text=True, check=True)
 
 sw_path = os.path.join(BASE_DIR, "sw.js")
-SW_CACHE_NAME = "n3-studio-tutor-v93"
+SW_CACHE_NAME = "n3-studio-tutor-v94"
 if not _IS_SIM_OUTPUT and os.path.exists(sw_path):
     with open(sw_path, encoding="utf-8") as sf:
         sw_src = sf.read()

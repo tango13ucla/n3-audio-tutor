@@ -71,10 +71,10 @@ CONFUSION_CLINICS: list[dict] = [
         "tag": "易混拆雷",
         "title": "敬语「知道」防反",
         "subtitle": "ご存じだ vs 存じる・存じ上げる",
-        "triggers": [
-            "ご存じ", "存じる", "存じ上げる", "存じ上げ", "N3-H19", "N3-H41",
-            "知る → ご存じ", "知る → 存じる",
-        ],
+        "match_ids": ["N3-H19", "N3-H41"],
+        "match_terms": ["ご存じ", "存じる", "存じ上げる", "存じ上げ"],
+        "exclude_terms": [],
+        "triggers": ["ご存じ", "存じる", "存じ上げる", "存じ上げ", "N3-H19", "N3-H41"],
         "board_steps": [
             {
                 "kind": "pitfall",
@@ -122,11 +122,25 @@ CONFUSION_CLINICS: list[dict] = [
         "tag": "易混拆雷",
         "title": "敬语「来去吃给」双向轴",
         "subtitle": "いらっしゃる・召し上がる vs 参る・いただく・差し上げる",
+        "match_ids": [
+            "N3-H11", "N3-H14", "N3-H16", "N3-H17", "N3-H18", "N3-H20",
+            "N3-H31", "N3-H32", "N3-H33", "N3-H36", "N3-H37", "N3-H38",
+            "N3-H39", "N3-H40", "N3-H42", "N3-H43", "N3-H44", "N3-H45",
+            "N3-G121", "N3-G122", "N3-G29",
+            "G-116", "G-117", "G-119", "H-20261114-01", "VAR-H01",
+        ],
+        "match_terms": [
+            "いらっしゃる", "召し上がる", "参る", "お目にかかる", "差し上げる",
+            "申す", "申し上げる", "お〜になる", "お〜する", "お＋ます词干",
+            "尊敬語特殊動詞", "謙譲語特殊動詞", "授受敬语升级", "尊敬语不能用于自己",
+            "ご覧になる", "おっしゃる", "くださる", "なさる", "お休みになる",
+            "お召しになる", "伺う", "いただく", "ていらっしゃいます",
+        ],
+        "exclude_terms": ["ご存じ", "存じる", "存じ上げ", "させて", "お目にかける"],
         "triggers": [
             "いらっしゃる", "召し上がる", "参る", "いただく", "お目にかかる",
             "差し上げる", "申す", "申し上げる", "お〜になる", "お〜する",
             "N3-H37", "N3-H38", "N3-H42", "N3-H43", "N3-H44", "N3-H45", "N3-G121",
-            "尊敬语", "謙譲", "お＋ます词干",
         ],
         "board_steps": [
             {
@@ -175,8 +189,14 @@ CONFUSION_CLINICS: list[dict] = [
         "tag": "易混拆雷",
         "title": "转折让步三兄弟",
         "subtitle": "〜くせに vs 〜ながらも vs 〜にしては",
+        "match_ids": [
+            "N3-G45", "N3-G63", "N3-G138", "N3-G23",
+            "G-015", "G-026", "G-027", "G-036", "GX-10", "G-20261114-06",
+        ],
+        "match_terms": ["くせに", "ながらも", "にしては", "にもかかわらず", "〜わりに"],
+        "exclude_terms": ["かわりに"],
         "triggers": [
-            "くせに", "ながらも", "にしては", "にもかかわらず", "わりに",
+            "くせに", "ながらも", "にしては", "にもかかわらず", "〜わりに",
             "N3-G45", "N3-G63", "G-015", "G-026", "G-027", "G-036",
         ],
         "board_steps": [
@@ -226,9 +246,15 @@ CONFUSION_CLINICS: list[dict] = [
         "tag": "易混拆雷",
         "title": "半途・老毛病・一直放着",
         "subtitle": "〜かけだ vs 〜がちだ vs 〜っぱなし",
+        "match_ids": [
+            "G-001", "G-002", "GX-02", "GQ-20261114-01",
+            "N3-G30", "N3-G19", "N3-G125",
+        ],
+        "match_terms": ["かけだ", "かけの", "〜かけ", "がちだ", "〜がち", "っぱなし"],
+        "exclude_terms": ["お目にかける", "電話をかける", "かかる"],
         "triggers": [
-            "かけだ", "かけの", "かける", "がちだ", "がち", "っぱなし",
-            "G-001", "G-002", "N3-G1", "N3-G2",
+            "かけだ", "かけの", "がちだ", "っぱなし",
+            "G-001", "G-002", "GX-02", "N3-G30", "N3-G19", "N3-G125",
         ],
         "board_steps": [
             {
@@ -277,9 +303,10 @@ CONFUSION_CLINICS: list[dict] = [
         "tag": "易混拆雷",
         "title": "期间连着做 vs 期间某瞬间",
         "subtitle": "〜あいだ vs 〜あいだに vs 〜うちに",
-        "triggers": [
-            "あいだ", "間に", "あいだに", "うちに", "N3-G39", "G-010",
-        ],
+        "match_ids": ["N3-G39", "N3-G136", "G-010", "G-120"],
+        "match_terms": ["〜あいだ", "あいだに", "〜うちに"],
+        "exclude_terms": ["間に合う", "間に合わせ"],
+        "triggers": ["〜あいだ", "あいだに", "〜うちに", "N3-G39", "N3-G136", "G-010", "G-120"],
         "board_steps": [
             {
                 "kind": "pitfall",
@@ -327,9 +354,17 @@ CONFUSION_CLINICS: list[dict] = [
         "tag": "易混拆雷",
         "title": "「わけ」家族四连辨",
         "subtitle": "わけがない vs わけではない vs わけだ vs わけにはいかない",
+        "match_ids": [
+            "G-20261114-09", "G-035", "G-086", "G-102", "G-103", "G-104", "GB-05",
+            "N3-G38", "N3-G64", "N3-G127", "N3-G150", "N3-G153", "VAR-G10",
+        ],
+        "match_terms": [
+            "わけがない", "わけではない", "わけだ", "わけにはいかない", "はずがない", "必ずしも",
+        ],
+        "exclude_terms": [],
         "triggers": [
             "わけがない", "わけではない", "わけだ", "わけにはいかない", "はずがない",
-            "G-20261114-09", "G-035", "VAR-G10", "必ずしも",
+            "G-20261114-09", "G-035", "VAR-G10", "必ずしも", "N3-G127",
         ],
         "board_steps": [
             {
@@ -378,9 +413,10 @@ CONFUSION_CLINICS: list[dict] = [
         "tag": "易混拆雷",
         "title": "「每」字三姐妹分水岭",
         "subtitle": "〜ごとに vs 〜おきに vs 〜たびに",
-        "triggers": [
-            "ごとに", "おきに", "たびに", "N3-G61", "N3-G124", "G-020",
-        ],
+        "match_ids": ["N3-G61", "N3-G124", "N3-G146", "G-020", "G-056", "GB-02"],
+        "match_terms": ["〜ごとに", "〜おきに", "〜たびに", "ごとに", "おきに", "たびに"],
+        "exclude_terms": [],
+        "triggers": ["ごとに", "おきに", "たびに", "N3-G61", "N3-G124", "G-020", "GB-02"],
         "board_steps": [
             {
                 "kind": "pitfall",
@@ -428,8 +464,14 @@ CONFUSION_CLINICS: list[dict] = [
         "tag": "易混拆雷",
         "title": "「净是・只好・偏偏只因」",
         "subtitle": "〜ばかり vs 〜しかない vs 〜ばかりに vs 〜だけしか〜ない",
+        "match_ids": [
+            "N3-G33", "N3-G56", "N3-G86", "N3-G107", "N3-G132", "N3-G147",
+            "G-003", "G-030", "G-060", "G-061", "G-065", "GB-10",
+        ],
+        "match_terms": ["〜しかない", "〜ばかりに", "てばかりいる", "だけしか", "〜だらけ", "〜ばかり"],
+        "exclude_terms": ["ばかりか", "ばかりだ", "ばかりでなく", "たばかり"],
         "triggers": [
-            "ばかり", "しかない", "ばかりに", "だけしか", "だらけ",
+            "〜しかない", "〜ばかりに", "だけしか", "〜だらけ", "〜ばかり",
             "N3-G33", "N3-G56", "N3-G107", "N3-G132", "G-003", "G-030", "G-060",
         ],
         "board_steps": [
@@ -479,8 +521,14 @@ CONFUSION_CLINICS: list[dict] = [
         "tag": "易混拆雷",
         "title": "顺便・正因为・受不了",
         "subtitle": "〜ついでに vs 〜からこそ vs 〜てたまらない",
+        "match_ids": [
+            "N3-G22", "N3-G60", "N3-G140",
+            "G-013", "G-016", "G-023", "G-025", "G-20261114-03", "VAR-G05", "VAR-G22",
+        ],
+        "match_terms": ["ついでに", "からこそ", "〜こそ", "てたまらない", "てしかたがない", "しかたがない"],
+        "exclude_terms": ["ようこそ", "こちらこそ"],
         "triggers": [
-            "ついでに", "からこそ", "こそ", "てたまらない", "てしかたがない",
+            "ついでに", "からこそ", "〜こそ", "てたまらない", "てしかたがない",
             "N3-G22", "N3-G60", "G-013", "G-016", "G-023", "G-025", "VAR-G05", "VAR-G22",
         ],
         "board_steps": [
@@ -530,9 +578,12 @@ CONFUSION_CLINICS: list[dict] = [
         "tag": "易混拆雷",
         "title": "顽固拟态词四连拆",
         "subtitle": "こっそり・そっくり・ぼんやり・ぼろぼろ・はっきり",
+        "match_ids": ["N3-V29", "VAR-V10", "VAR-V16"],
+        "match_terms": ["ぴったり", "すっきり", "こっそり", "そっくり", "ぼんやり", "ぼろぼろ", "はっきり"],
+        "exclude_terms": ["ばったり"],
         "triggers": [
             "こっそり", "そっくり", "ぼんやり", "ぼろぼろ", "はっきり", "ぴったり", "すっきり",
-            "N3-V11", "N3-V33", "N3-V34", "N3-V29", "V-20261114-05",
+            "N3-V29", "VAR-V10", "VAR-V16",
         ],
         "board_steps": [
             {
@@ -575,6 +626,123 @@ CONFUSION_CLINICS: list[dict] = [
             ("teacher", 3, "记住首音密码：{{jp:こっそり}} 偷偷，{{jp:そっくり}} 超像，{{jp:ぼんやり}} 发呆，{{jp:ぼろぼろ}} 破烂，{{jp:はっきり}} 清楚。"),
         ],
     },
+    {
+        "id": "CB11",
+        "pack": "confusion",
+        "tag": "易混拆雷",
+        "title": "求准许与使役方向",
+        "subtitle": "〜させてもらう vs 〜させてくれ · させる／せる",
+        "match_ids": [
+            "N3-G123", "GB-01", "G-125", "G-20261114-01",
+            "N3-H26", "N3-H27", "N3-H28", "H-20261114-02", "VAR-H02",
+        ],
+        "match_terms": [
+            "させてもらう", "させていただく", "させていただ", "させてくれ",
+            "〜てくれる／もらう", "使役形", "使役受身",
+        ],
+        "exclude_terms": [],
+        "triggers": [
+            "させてもらう", "させていただく", "させてくれ",
+            "N3-G123", "GB-01", "N3-H26", "N3-H27", "N3-H28", "VAR-H02",
+        ],
+        "board_steps": [
+            {
+                "kind": "pitfall",
+                "badge": "常踩坑",
+                "wrong_ja": "× 考えさせてくれてもいいですか。 / × 考えせてもらう",
+                "why_zh": "对上司绝不能用平辈「させてくれ」；一段动词（考える）去る必须接「させ」，不能漏掉「さ」。",
+            },
+            {
+                "kind": "split",
+                "left_tag": "礼貌求准许（我做）",
+                "left_ja": "〜させてもらう / 〜させていただく",
+                "left_zh": "谦逊请示「承蒙允许我去做」；对上司必选 もらう/いただく",
+                "right_tag": "使役变形双轨",
+                "right_ja": "五段 あ段＋せる / 一段 去る＋させる",
+                "right_zh": "帰る→帰らせる；考える→考えさせる（绝不漏 さ）",
+            },
+            {
+                "kind": "example",
+                "badge": "考场原味句",
+                "lines": [
+                    {"tag": "一段动词", "ja": "もう少し自分で考えさせてもらってもよろしいでしょうか。", "zh": "这件事能允许我自己再斟酌一下吗？"},
+                    {"tag": "五段动词", "ja": "体調が悪いので、早めに帰らせてもらえますか。", "zh": "身体不太舒服，今天能让我早点回去吗？"},
+                ],
+            },
+            {
+                "kind": "rule",
+                "badge": "一秒定胜负",
+                "rule_zh": "求准许选 させてもらう（绝不对长辈用 させてくれ）；一段动词先去 る 再接 させる，五段变 あ段 接 せる。",
+            },
+        ],
+        "turns": [
+            ("partner", 0, "老师，刚才那道「让我自己再想想」的 {{jp:考えさせてもらっても}}，我一眼选了 {{jp:させてくれ}}，而且老分不清前面是 {{jp:せ}} 还是 {{jp:させ}}！"),
+            ("teacher", 0, "你刚好把这道题的两个考场雷全踩中了！其实拆成两把尺子，三秒就能锁死。"),
+            ("teacher", 1, "第一把尺子看敬意：{{jp:させてくれ}} 是平辈哥们口吻「让我干吧」，对前辈上司请示必须把姿态放低，选 {{jp:させてもらう}} 或更客气的 {{jp:させていただく}}。第二把尺子看动词变形：五段动词变 あ段 加 {{jp:せる}}，比如 {{jp:帰る}} 变 {{jp:帰らせる}}；一段动词像 {{jp:考える}}，去掉 る 后面必须带全 {{jp:させる}}，绝对不能省掉那个「さ」！"),
+            ("partner", 1, "怪不得 {{jp:考えせてもらっ}} 直接出局，一段动词少个「さ」就残了！"),
+            ("teacher", 2, "听这两句一段和五段的黄金对照，一听就牢："),
+            ("ja_f", 2, "もう少し自分で考えさせてもらってもよろしいでしょうか。"),
+            ("ja_m", 2, "体調が悪いので、早めに帰らせてもらえますか。"),
+            ("teacher", 3, "记住口诀：对上求准许锁死 {{jp:させてもらう}}，一段补全 {{jp:させる}}，五段变 あ段 加 {{jp:せる}}。"),
+        ],
+    },
+    {
+        "id": "CB12",
+        "pack": "confusion",
+        "tag": "易混拆雷",
+        "title": "时间触发四连辨",
+        "subtitle": "〜しだい vs 〜たとたん vs 〜きり vs 〜たところ",
+        "match_ids": [
+            "N3-G16", "N3-G145", "N3-G80", "N3-G49", "N3-G47",
+            "G-049", "G-055", "G-044", "G-122", "G-114", "G-20261114-02",
+        ],
+        "match_terms": ["〜しだい", "たとたん", "〜きり", "〜たところ", "ところだった", "〜ところだ"],
+        "exclude_terms": ["きる／", "きれない"],
+        "triggers": [
+            "〜しだい", "たとたん", "〜きり", "〜たところ", "ところだった",
+            "N3-G16", "N3-G145", "N3-G80", "N3-G49", "N3-G47", "G-049", "G-055", "G-044", "G-122", "G-114",
+        ],
+        "board_steps": [
+            {
+                "kind": "pitfall",
+                "badge": "常踩坑",
+                "wrong_ja": "× 窓を開けしだい、冷たい風が入ってきた。",
+                "why_zh": "「しだい」只讲将来的计划动作（一决定就立刻联系你）；已经发生且出乎意料的瞬间要用「たとたん」！",
+            },
+            {
+                "kind": "split",
+                "left_tag": "将来立刻 / 瞬间意外",
+                "left_ja": "〜しだい（将来计划） / 〜たとたん（已发意外）",
+                "left_zh": "しだい 接ます形表承诺；たとたん 接た形表瞬间变故",
+                "right_tag": "从此再没 / 试后发现",
+                "right_ja": "〜きり（再无下文） / 〜たところ（查完发现）",
+                "right_zh": "きり 后常配否定；たところ 后接意外查明的结果",
+            },
+            {
+                "kind": "example",
+                "badge": "时间轴一下切清",
+                "lines": [
+                    {"tag": "将来承诺", "ja": "日程が決まりしだい、すぐにご連絡します。", "zh": "日程一敲定，立刻联系您。"},
+                    {"tag": "从此断联", "ja": "彼は国へ帰ったきり、一度も連絡がない。", "zh": "他回国之后就再也没联系过。"},
+                ],
+            },
+            {
+                "kind": "rule",
+                "badge": "一秒定胜负",
+                "rule_zh": "将来承诺选 しだい，瞬间意外选 たとたん，从此没下文选 きり，试着一问发现结果选 たところ。",
+            },
+        ],
+        "turns": [
+            ("partner", 0, "老师，时间先后这几个 {{jp:しだい}}、{{jp:たとたん}}、{{jp:きり}}、{{jp:たところ}}，放一起我老分不清谁接过去、谁接将来！"),
+            ("teacher", 0, "画一条时间轴，四个句型各自占一格，完全不打架。"),
+            ("teacher", 1, "最前面指向将来的是 {{jp:しだい}}，接动词ます形，专用于职场承诺「一有结果我就立刻通知您」；已经发生的瞬间意外用 {{jp:たとたん}}，像「刚站起来就眼前一黑」；一去不复返、后头配否定的叫 {{jp:きり}}；试着做完或打听完意外发现结果用 {{jp:たところ}}；要是差一点酿成坏事没发生，就是 {{jp:ところだった}}。"),
+            ("partner", 1, "哇，按将来、瞬间、再没下文、查后发现这么一排，一眼就能筛掉三个干扰项！"),
+            ("teacher", 2, "听这两句考场最高频的示范："),
+            ("ja_f", 2, "日程が決まりしだい、すぐにご連絡します。"),
+            ("ja_m", 2, "彼は国へ帰ったきり、一度も連絡がない。"),
+            ("teacher", 3, "记住口诀：将来承诺 {{jp:しだい}}，瞬间意外 {{jp:たとたん}}，再无下文 {{jp:きり}}，试后发现 {{jp:たところ}}。"),
+        ],
+    },
 ]
 
 # ============================================================================
@@ -588,6 +756,9 @@ LEECH_CLINICS: list[dict] = [
         "tag": "换脑对谈",
         "title": "钉子户重塑：慰める",
         "subtitle": "なぐさめる · 拍肩膀安慰朋友",
+        "match_ids": ["N3-V17"],
+        "match_terms": ["慰める", "なぐさめる"],
+        "exclude_terms": [],
         "triggers": ["慰める", "N3-V17", "なぐさめる"],
         "board_steps": [
             {
@@ -632,6 +803,9 @@ LEECH_CLINICS: list[dict] = [
         "tag": "换脑对谈",
         "title": "钉子户重塑：こっそり",
         "subtitle": "半夜踮脚偷吃布丁的画面",
+        "match_ids": ["N3-V11"],
+        "match_terms": ["こっそり"],
+        "exclude_terms": ["ばったり"],
         "triggers": ["こっそり", "N3-V11"],
         "board_steps": [
             {
@@ -676,7 +850,10 @@ LEECH_CLINICS: list[dict] = [
         "tag": "换脑对谈",
         "title": "钉子户重塑：ぼんやり",
         "subtitle": "没喝咖啡眼神发虚发呆",
-        "triggers": ["ぼんやり"],
+        "match_ids": ["N3-V27"],
+        "match_terms": ["ぼんやり"],
+        "exclude_terms": [],
+        "triggers": ["ぼんやり", "N3-V27"],
         "board_steps": [
             {
                 "kind": "pitfall",
@@ -720,6 +897,9 @@ LEECH_CLINICS: list[dict] = [
         "tag": "换脑对谈",
         "title": "钉子户重塑：ぼろぼろ",
         "subtitle": "旧鞋开胶・眼泪掉珠・身心累垮",
+        "match_ids": ["N3-V33"],
+        "match_terms": ["ぼろぼろ", "ばらばら"],
+        "exclude_terms": [],
         "triggers": ["ぼろぼろ", "N3-V33", "ばらばら"],
         "board_steps": [
             {
@@ -764,7 +944,10 @@ LEECH_CLINICS: list[dict] = [
         "tag": "换脑对谈",
         "title": "钉子户重塑：余る",
         "subtitle": "あまる · 多出来用不完、剩下来",
-        "triggers": ["余る", "あまる", "余り"],
+        "match_ids": ["N3-V32"],
+        "match_terms": ["余る", "あまる"],
+        "exclude_terms": ["あまり（に）", "あまり〜"],
+        "triggers": ["余る", "あまる", "N3-V32"],
         "board_steps": [
             {
                 "kind": "pitfall",
@@ -808,7 +991,10 @@ LEECH_CLINICS: list[dict] = [
         "tag": "换脑对谈",
         "title": "钉子户重塑：めったに & せっかく",
         "subtitle": "极少难得（必配否定）vs 好不容易",
-        "triggers": ["めったに", "せっかく", "N3-V25"],
+        "match_ids": ["N3-V25", "N3-V37", "G-132", "GX-08"],
+        "match_terms": ["めったに", "せっかく"],
+        "exclude_terms": ["せっかくですが"],
+        "triggers": ["めったに", "せっかく", "N3-V25", "N3-V37", "G-132", "GX-08"],
         "board_steps": [
             {
                 "kind": "pitfall",
@@ -854,6 +1040,9 @@ LEECH_CLINICS: list[dict] = [
         "tag": "换脑对谈",
         "title": "钉子户重塑：そっくり",
         "subtitle": "连笑声都一模一样（配助词 に）",
+        "match_ids": ["N3-V34"],
+        "match_terms": ["そっくり"],
+        "exclude_terms": [],
         "triggers": ["そっくり", "N3-V34"],
         "board_steps": [
             {
@@ -898,7 +1087,10 @@ LEECH_CLINICS: list[dict] = [
         "tag": "换脑对谈",
         "title": "钉子户三连：ついてない・はっきり・しゃがむ",
         "subtitle": "倒霉蹲下系鞋带说清楚，一幕串三词",
-        "triggers": ["ついてない", "はっきり", "しゃがむ", "V-20261114-05"],
+        "match_ids": ["N3-V12", "V-20261114-01", "V-20261114-05"],
+        "match_terms": ["ついてない", "はっきり", "しゃがむ"],
+        "exclude_terms": [],
+        "triggers": ["ついてない", "はっきり", "しゃがむ", "N3-V12", "V-20261114-01", "V-20261114-05"],
         "board_steps": [
             {
                 "kind": "pitfall",
@@ -950,8 +1142,16 @@ LISTENING_CLINICS: list[dict] = [
         "tag": "听弦外之音",
         "title": "委婉拒绝与礼貌禁止",
         "subtitle": "ちょっと… / せっかくですが / ご遠慮ください",
+        "match_ids": ["N3-L41", "N3-L44", "N3-L17", "N3-L53", "Q-20261114-002"],
+        "match_terms": [
+            "ご遠慮", "遠慮", "婉曲拒绝", "委婉拒绝", "「ちょっと…」で断る",
+            "「〜はちょっとな」", "せっかくですが", "礼貌禁止", "また今度誘って",
+            "おかまいなく", "ちゃだめ",
+        ],
+        "exclude_terms": [],
         "triggers": [
-            "遠慮", "ご遠慮", "N3-L44", "断る", "ちょっと", "せっかく", "禁止", "拒绝",
+            "ご遠慮", "遠慮", "婉曲拒绝", "委婉拒绝", "「ちょっと…」で断る",
+            "「〜はちょっとな」", "せっかくですが", "礼貌禁止", "N3-L41", "N3-L44", "N3-L17", "N3-L53",
         ],
         "board_steps": [
             {
@@ -998,8 +1198,15 @@ LISTENING_CLINICS: list[dict] = [
         "tag": "听弦外之音",
         "title": "先顺后转与纠偏反转",
         "subtitle": "そうじゃなくて / 〜たいんですが / でもね",
+        "match_ids": ["N3-L30", "N3-L43", "N3-L54"],
+        "match_terms": [
+            "そうじゃなくて", "じゃなくて", "たいんですが",
+            "〜ことも考えました。でも", "纠正反转", "后续转折",
+        ],
+        "exclude_terms": [],
         "triggers": [
-            "そうじゃなくて", "たいんですが", "N3-L54", "N3-L43", "转折", "纠正", "でも", "ただ",
+            "そうじゃなくて", "じゃなくて", "たいんですが",
+            "N3-L30", "N3-L43", "N3-L54",
         ],
         "board_steps": [
             {
@@ -1044,9 +1251,10 @@ LISTENING_CLINICS: list[dict] = [
         "tag": "听弦外之音",
         "title": "时间提前与日期偏移",
         "subtitle": "早めに・前日・翌日・集合修正",
-        "triggers": [
-            "早めに", "前日", "翌日", "次の日", "数字", "時間", "日付", "N3-L50", "N3-L51", "集合",
-        ],
+        "match_ids": ["N3-L49", "N3-L50", "N3-L51"],
+        "match_terms": ["早めに", "前日", "翌日", "次の日", "集合修正", "分もあれば"],
+        "exclude_terms": [],
+        "triggers": ["早めに", "前日", "翌日", "次の日", "N3-L49", "N3-L50", "N3-L51"],
         "board_steps": [
             {
                 "kind": "pitfall",
@@ -1090,9 +1298,19 @@ LISTENING_CLINICS: list[dict] = [
         "tag": "听弦外之音",
         "title": "谁来做动作与礼貌请求",
         "subtitle": "〜ていただけないでしょうか / 〜させていただきます / いらしてください",
+        "match_ids": [
+            "Q-20261114-005", "N3-L35", "N3-L36", "N3-L42",
+            "N3-L45", "N3-L46", "N3-L47", "N3-L48",
+        ],
+        "match_terms": [
+            "させていただき", "させていただきます", "ていただけないでしょうか", "ていただけない",
+            "いらしてください", "目上への依頼", "話し言葉敬語", "お渡しできます",
+            "ご覧ください", "〜てもらえる？/〜てくれる？",
+        ],
+        "exclude_terms": [],
         "triggers": [
-            "させていただき", "ていただけない", "いらして", "目上への依頼",
-            "Q-20261114-005", "N3-L35", "N3-L42", "N3-L45", "依頼", "くれる", "もらう",
+            "させていただき", "ていただけない", "いらしてください", "目上への依頼",
+            "Q-20261114-005", "N3-L35", "N3-L36", "N3-L42", "N3-L45", "N3-L46", "N3-L47", "N3-L48",
         ],
         "board_steps": [
             {
@@ -1139,9 +1357,14 @@ LISTENING_CLINICS: list[dict] = [
         "tag": "听弦外之音",
         "title": "即时应答与日本社交分寸",
         "subtitle": "被夸奖・致谢・迟到致歉・爽快应承",
+        "match_ids": ["N3-L33", "N3-L34", "N3-L37", "N3-L38", "N3-L39", "N3-L40"],
+        "match_terms": [
+            "即時応答", "発話表現", "誉められ", "遅刻の謝罪", "目上へのお礼", "依頼への承諾",
+        ],
+        "exclude_terms": ["目上への依頼", "店での許可"],
         "triggers": [
-            "即時応答", "発話表現", "誉められ", "遅刻", "お礼", "承諾",
-            "N3-L33", "N3-L34", "N3-L37", "N3-L40",
+            "即時応答", "発話表現", "誉められ", "遅刻の謝罪", "目上へのお礼", "依頼への承諾",
+            "N3-L33", "N3-L34", "N3-L37", "N3-L38", "N3-L39", "N3-L40",
         ],
         "board_steps": [
             {
@@ -1188,8 +1411,15 @@ LISTENING_CLINICS: list[dict] = [
         "tag": "听弦外之音",
         "title": "临时改主意与最终拍板",
         "subtitle": "やっぱり… / まず…それから…",
+        "match_ids": ["N3-L10", "N3-L26", "N3-L31"],
+        "match_terms": [
+            "やっぱり", "やはり", "「まず/先に/その前に」", "「後にして」",
+            "「〜ことにした」", "推翻原计划", "先排除后做",
+        ],
+        "exclude_terms": [],
         "triggers": [
-            "やっぱり", "やはり", "まず", "それから", "先", "後", "方案", "决定",
+            "やっぱり", "やはり", "「まず/先に/その前に」", "「後にして」",
+            "「〜ことにした」", "N3-L10", "N3-L26", "N3-L31",
         ],
         "board_steps": [
             {
@@ -1704,6 +1934,55 @@ async def generate_all_clinic_audio(force: bool = False) -> dict:
     return existing
 
 
+def _allowed_packs_for_mod(mod_str: str) -> list[str]:
+    m = str(mod_str or "").strip().lower()
+    if m in ("listening", "聴解", "听力"):
+        return ["listening"]
+    if m in ("vocab", "語彙", "词汇"):
+        return ["leech", "confusion"]
+    # grammar / henkei / 活用 / 文法 / 语法 -> NEVER cross-leak into listening!
+    return ["confusion", "leech"]
+
+
+def match_clinic_strict(id_tokens: list[str], head_text: str, mod_str: str) -> dict | None:
+    """
+    Canonical v93 zero-false-positive clinic matcher (mirrored identically in JS):
+    1. Strict pack isolation (grammar/henkei/vocab NEVER leak into listening; listening ONLY matches listening).
+    2. Pass 1 (Highest priority): exact token membership in `match_ids` (ZERO substring matching!).
+    3. Pass 2: term match ONLY against normalized head_text (NEVER Chinese sub-meanings or unrelated examples),
+       strictly respecting `exclude_terms`.
+    4. Pass 3: ZERO blind catch-all fallback (returns None if nothing genuinely matches).
+    """
+    packs = _allowed_packs_for_mod(mod_str)
+    tok_set = {str(t).strip() for t in (id_tokens or []) if str(t or "").strip()}
+    head_norm = str(head_text or "").replace("~", "〜").replace("～", "〜").strip()
+
+    # Pass 1: exact ID match across allowed packs in priority order
+    if tok_set:
+        for pk in packs:
+            for c in ALL_CLINICS:
+                if c.get("pack") != pk:
+                    continue
+                mids = c.get("match_ids") or []
+                if any(tid in mids for tid in tok_set):
+                    return c
+
+    # Pass 2: strict head-term match with explicit exclusions
+    if head_norm:
+        for pk in packs:
+            for c in ALL_CLINICS:
+                if c.get("pack") != pk:
+                    continue
+                excls = [str(e).replace("~", "〜").replace("～", "〜") for e in (c.get("exclude_terms") or []) if e]
+                if any(ex in head_norm for ex in excls):
+                    continue
+                mterms = [str(t).replace("~", "〜").replace("～", "〜") for t in (c.get("match_terms") or []) if t]
+                if any(mt in head_norm for mt in mterms):
+                    return c
+
+    return None
+
+
 def build_clinics_payload(audio_manifest: dict, study_date_str: str) -> dict:
     """Assemble lightweight runtime payload embedded into build_html.py DATA."""
     clinic_man = audio_manifest.get("dialogue_clinics") or {}
@@ -1716,6 +1995,9 @@ def build_clinics_payload(audio_manifest: dict, study_date_str: str) -> dict:
             "tag": c["tag"],
             "title": c["title"],
             "subtitle": c["subtitle"],
+            "match_ids": list(c.get("match_ids") or []),
+            "match_terms": list(c.get("match_terms") or []),
+            "exclude_terms": list(c.get("exclude_terms") or []),
             "triggers": list(c["triggers"]),
             "board_steps": c["board_steps"],
             "audio": meta.get("audio") or f"./audio/clinic/{c['id']}.mp3",
@@ -1740,7 +2022,7 @@ def build_clinics_payload(audio_manifest: dict, study_date_str: str) -> dict:
 if __name__ == "__main__":
     import argparse
 
-    ap = argparse.ArgumentParser(description="Synthesize v92 Sprint Dialogue & Blackboard Clinic MP3s")
-    ap.add_argument("--force", action="store_true", help="Force re-synthesis of all 24 clips")
+    ap = argparse.ArgumentParser(description="Synthesize v93 Sprint Dialogue & Blackboard Clinic MP3s")
+    ap.add_argument("--force", action="store_true", help="Force re-synthesis of all 26 clips")
     args = ap.parse_args()
     asyncio.run(generate_all_clinic_audio(force=args.force))

@@ -839,7 +839,25 @@ def reconcile_adaptive_telemetry(state: dict, fallback_day_tag: str = "") -> Non
             if _is_green_or_later_clean_pass(k, f_day) or (v_day and f_day and v_day >= f_day):
                 rv_fast.pop(k, None)
 
-    # 4) Rebuild active `confusion_pairs` (real wrong option selections, never "不确定", retired once green)
+    # 4) Rebuild active `confusion_pairs` (real wrong option selections, never "不确定", never ★ star-order chunks, never correct answers, retired once green)
+    _star_qids: set[str] = set()
+    _ans_by_qid: dict[str, str] = {}
+    try:
+        import adaptive_bank as _ab_cp
+        for _c in (
+            list(getattr(_ab_cp, "EXTRA_PRIMARY_CARDS", []))
+            + list(getattr(_ab_cp, "NEW_PRIMARY_CARDS", []))
+            + list(getattr(_ab_cp, "VARIANT_CARDS", []))
+            + list(getattr(_ab_cp, "NEW_VARIANT_CARDS", []))
+        ):
+            if isinstance(_c, dict) and _c.get("id"):
+                _cid = str(_c["id"])
+                if "★" in str(_c.get("prompt") or ""):
+                    _star_qids.add(_cid)
+                if _c.get("answer"):
+                    _ans_by_qid[_cid] = str(_c["answer"]).strip()
+    except Exception:
+        pass
     conf_counts: dict[str, dict[str, int]] = {}
     conf_last_day: dict[str, str] = {}
     skip_choice_prefixes = ("记词:", "闪卡:", "盘点:", "听后复盘:", "语法微课:", "开口:", "试读:", "Grok:", "N3实考:")
@@ -855,12 +873,11 @@ def reconcile_adaptive_telemetry(state: dict, fallback_day_tag: str = "") -> Non
                     except Exception:
                         continue
                     rec_id = str(rec.get("id") or rec.get("question_id") or "").strip()
-                    if not rec_id or rec_id.startswith(("LK:", "HES:", "SPK:", "RV:", "GPOD:", "RADIO_FB:", "N3_SCORE:", "GA-", "VC-", "FLASH-", "GROK-", "N3L-", "N3-L", "L-")):
+                    if not rec_id or rec_id.startswith(("LK:", "HES:", "SPK:", "RV:", "GPOD:", "RADIO_FB:", "N3_SCORE:", "GA-", "VC-", "FLASH-", "GROK-", "N3L-", "N3-L", "L-", "CLINIC:", "MP:", "SL:", "CD:", "MR:", "R432:")):
                         continue
-                    if rec_id.startswith("MOCK:"):
-                        inner_id = rec_id[5:].strip()
-                        if inner_id.startswith(("N3L-", "N3-L", "L-")):
-                            continue
+                    inner_id = rec_id[5:].strip() if rec_id.startswith("MOCK:") else rec_id
+                    if inner_id.startswith(("N3L-", "N3-L", "L-")) or inner_id in _star_qids:
+                        continue
                     is_ok = str(rec.get("correct", "")).lower() == "true" or rec.get("correct") is True
                     if is_ok:
                         continue
@@ -869,6 +886,8 @@ def reconcile_adaptive_telemetry(state: dict, fallback_day_tag: str = "") -> Non
                     if ch.startswith("模拟错:"):
                         ch = ch[len("模拟错:"):].strip()
                     if not pt or not ch or ch in ("不确定", "未作答") or ch.startswith(skip_choice_prefixes) or len(ch) > 14 or "。" in ch:
+                        continue
+                    if inner_id in _ans_by_qid and ch == _ans_by_qid[inner_id]:
                         continue
                     if pt in SKIP_VOCAB_ENROLL or pt.startswith("N3L-"):
                         continue
