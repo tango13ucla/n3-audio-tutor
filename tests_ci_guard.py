@@ -1753,7 +1753,86 @@ def test_v91_wysiwyg_ledger_and_word_audio_guard():
                 and (not x.get("ex_ja") or not x.get("ex_audio"))
             ]
             assert not non_split_no_ex, f"Ledger grammar rows missing expanded ex_ja/ex_audio: {non_split_no_ex[:8]}"
-    print("[PASS 26/26] v91 100% WYSIWYG ledger audio, clean audio_alias, slash-pair pats & kana-forced single-Kanji verified!")
+    print("[PASS 26/27] v91 100% WYSIWYG ledger audio, clean audio_alias, slash-pair pats & kana-forced single-Kanji verified!")
+
+
+def test_v92_sprint_dialogue_blackboard_clinic_guard() -> None:
+    """Gate 27: Verify v92 Sprint Dialogue & Living Kyoto Blackboard Clinic (24 MP3s, 0 bare kana, 8-day radio banter, CLINIC telemetry, manifest preservation)."""
+    import dialogue_blackboard_clinic as dbc
+    import run_brain_algorithm as rba
+
+    # 1. All 24 clinics across 3 packs, zero em dashes, zero PII, zero bare kana in Mandarin TTS spans
+    assert len(dbc.CONFUSION_CLINICS) == 10
+    assert len(dbc.LEECH_CLINICS) == 8
+    assert len(dbc.LISTENING_CLINICS) == 6
+    assert len(dbc.ALL_CLINICS) == 24
+    dbc_src = (BASE_DIR / "dialogue_blackboard_clinic.py").read_text(encoding="utf-8")
+    assert "—" not in dbc_src, "dialogue_blackboard_clinic.py must contain zero em dashes"
+    for pii_tok in ("Yangfan", "吴杨帆", "IBJ", "Anna Yang"):
+        assert pii_tok not in dbc_src, f"PII leak detected in dialogue_blackboard_clinic.py: {pii_tok}"
+    for c in dbc.ALL_CLINICS:
+        for spk, _st, txt in c["turns"]:
+            if spk in ("partner", "teacher"):
+                for kind, seg in dbc._split_inline_jp(txt):
+                    assert not (kind == "zh" and re.search(r"[\u3040-\u30ff]", seg)), (
+                        f"Bare kana leaked into Mandarin TTS span in {c['id']}: {seg!r}"
+                    )
+
+    # 2. All 24 studio MP3s exist on disk and are registered in audio/audio_manifest.json with cues
+    man = json.loads((BASE_DIR / "audio" / "audio_manifest.json").read_text(encoding="utf-8"))
+    dc_man = man.get("dialogue_clinics") or {}
+    assert len(dc_man) >= 24, f"Expected >=24 dialogue_clinics in audio_manifest.json, got {len(dc_man)}"
+    for c in dbc.ALL_CLINICS:
+        cid = c["id"]
+        meta = dc_man.get(cid) or {}
+        assert meta.get("audio") and float(meta.get("duration") or 0) >= 12.0, f"Invalid manifest meta for {cid}: {meta}"
+        assert isinstance(meta.get("cues"), list) and len(meta["cues"]) == len(c["turns"]), f"Cue count mismatch for {cid}"
+        mp3_p = BASE_DIR / "audio" / "clinic" / f"{cid}.mp3"
+        assert mp3_p.exists() and mp3_p.stat().st_size > 15000, f"Missing or tiny clinic MP3: {mp3_p}"
+
+    # 3. generate_neural_audio.py must preserve dialogue_clinics on nightly rebuilds
+    gna_src = (BASE_DIR / "generate_neural_audio.py").read_text(encoding="utf-8")
+    assert 'old_manifest.get("dialogue_clinics")' in gna_src, "generate_neural_audio.py must preserve dialogue_clinics!"
+
+    # 4. Pack D 8-day pre-exam Qiang-Qiang banter (11/28..12/05 ONLY; 11/27 & 12/07 strictly None)
+    assert dbc.get_radio_exam_clinic_block("2026-11-27") is None, "Locked 2026-11-27 radio must NOT be altered!"
+    assert dbc.get_radio_exam_clinic_block("2026-12-06") is None, "Exam day 2026-12-06 must NOT inject banter!"
+    assert dbc.get_radio_exam_clinic_block("2026-12-07") is None, "N2 climb 2026-12-07 must NOT inject N3 banter!"
+    for day in ("2026-11-28", "2026-11-29", "2026-11-30", "2026-12-01", "2026-12-02", "2026-12-03", "2026-12-04", "2026-12-05"):
+        blk = dbc.get_radio_exam_clinic_block(day)
+        assert blk and len(blk.get("turns") or []) >= 5, f"Missing pre-exam radio banter for {day}"
+        joined = "".join(str(t[1]) for t in blk["turns"])
+        assert "心里默念" not in joined and "—" not in joined, f"Invalid radio banter text on {day}"
+
+    # 5. CLINIC: telemetry ingestion in run_brain_algorithm.py
+    import os
+    import tempfile
+    st_t = {"mastery": {}, "sla_telemetry": {}}
+    orig_log, orig_snap = rba.LOG_PATH, rba.SNAPSHOT_PATH
+    with tempfile.TemporaryDirectory(prefix="clinic_gate27_") as td:
+        tlog = os.path.join(td, "practice_log.jsonl")
+        with open(tlog, "w", encoding="utf-8") as f:
+            f.write(json.dumps({
+                "id": "CLINIC:CB01",
+                "point": "敬语「知道」防反",
+                "choice": "黑板对谈已听完",
+                "correct": True,
+                "ts": "2026-11-27T18:00:00Z",
+            }, ensure_ascii=False) + "\n")
+        rba.LOG_PATH = tlog
+        rba.SNAPSHOT_PATH = os.path.join(td, "no_snap.json")
+        try:
+            rba.apply_practice_logs(st_t, "20261127")
+        finally:
+            rba.LOG_PATH, rba.SNAPSHOT_PATH = orig_log, orig_snap
+    dc_tel = (st_t.get("sla_telemetry") or {}).get("dialogue_clinics") or {}
+    assert "CB01" in dc_tel and int(dc_tel["CB01"].get("plays") or 0) == 1, f"CLINIC telemetry failed: {dc_tel}"
+
+    # 6. build_html.py UI wiring & cache version alignment
+    bh_src = (BASE_DIR / "build_html.py").read_text(encoding="utf-8")
+    for sym in ("openBlackboardClinic", "findClinicForQuiz", "stopClinicAudio", "openClinicCatalogModal", "kb-slate"):
+        assert sym in bh_src, f"build_html.py missing v92 symbol: {sym}"
+    print("[PASS 27/27] v92 Sprint Dialogue & Living Kyoto Blackboard Clinic (24 studio MP3s, 8-day radio banter & CLINIC telemetry) verified!")
 
 
 def main() -> int:
@@ -1783,7 +1862,8 @@ def main() -> int:
     test_v88_sla_linguistics_master_guard()
     test_v90_nhk_cinema_hd_visual_studio_guard()
     test_v91_wysiwyg_ledger_and_word_audio_guard()
-    print("[ALL PASS] tests_ci_guard.py 26/26 gates green!")
+    test_v92_sprint_dialogue_blackboard_clinic_guard()
+    print("[ALL PASS] tests_ci_guard.py 27/27 gates green!")
     return 0
 
 

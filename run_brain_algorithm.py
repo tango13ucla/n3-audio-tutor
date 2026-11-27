@@ -374,10 +374,10 @@ def apply_practice_logs(state: dict, fallback_day_tag: str = "") -> int:
                             slips.pop(pt, None)
                     continue
 
-                # SLA v86 Telemetry: Anti-Fossilization Slips (SLIP:), Minimal Pairs (MP:),
+                # SLA v86+ Telemetry: Anti-Fossilization Slips (SLIP:), Minimal Pairs (MP:),
                 # Shadowing (SHAD:), 4/3/2 Fluency Retell (RET432:), N2 Micro-Reading (READ:),
-                # and Weekend Real-Tutor Mission checkoff (TUTOR_USE:).
-                if rec_id.startswith(("SLIP:", "MP:", "SHAD:", "RET432:", "READ:", "TUTOR_USE:")):
+                # Weekend Real-Tutor Mission checkoff (TUTOR_USE:), and v92 Blackboard Clinic (CLINIC:).
+                if rec_id.startswith(("SLIP:", "MP:", "SHAD:", "RET432:", "READ:", "TUTOR_USE:", "CLINIC:")):
                     day_tag_sla = _iso_to_day_tag(ts, fallback_day_tag)
                     sla_st = state.setdefault("sla_telemetry", {
                         "fossil_slips": {},
@@ -386,6 +386,7 @@ def apply_practice_logs(state: dict, fallback_day_tag: str = "") -> int:
                         "retell_432_days": [],
                         "micro_readings": {},
                         "tutor_used": {},
+                        "dialogue_clinics": {},
                     })
                     if rec_id.startswith("SLIP:"):
                         sid = rec_id.split(":", 1)[1]
@@ -426,6 +427,13 @@ def apply_practice_logs(state: dict, fallback_day_tag: str = "") -> int:
                         # Using an expression in real human conversation clears any pending speaking slip!
                         spk_slips = (state.get("speaking_practice") or {}).get("slips") or {}
                         spk_slips.pop(expr, None)
+                    elif rec_id.startswith("CLINIC:"):
+                        cid = rec_id.split(":", 1)[1]
+                        dcs = sla_st.setdefault("dialogue_clinics", {})
+                        cur = dcs.get(cid) or {"plays": 0, "last_date": ""}
+                        cur["plays"] = int(cur.get("plays") or 0) + 1
+                        cur["last_date"] = max(str(cur.get("last_date") or ""), day_tag_sla)
+                        dcs[cid] = cur
                     continue
 
                 # Post-Listening 5-Min Contextual Review ("RV:<id>"):

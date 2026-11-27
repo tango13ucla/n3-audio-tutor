@@ -840,7 +840,7 @@ def update_story_memory_index(
     """
     Maintains a rolling 45-day episodic-to-semantic bridge (`audio/story_memory_index.json`)
     mapping N3/N2 grammar point keys and vocabulary words to the exact 《锵锵三人行》 story
-    where Yangfan last heard them — ZERO PII, compact JSON for calm 1-line Quiz recall cues.
+    where the learner last heard them — ZERO PII, compact JSON for calm 1-line Quiz recall cues.
     """
     idx_data: dict = {"schema": "story-memory-index/1", "updated": today_str, "entries": {}}
     if os.path.exists(index_path):
@@ -3144,6 +3144,22 @@ async def main():
         _mc2 = _build_micro_check_turns(story_blocks[ad1_after + 1 : ad2_after + 1], 1)
         if _mc2:
             ad2_out_turns = _mc2 + (ad2_out_turns if ad2_out_turns else [("W", "咱们再去一下广告，《锵锵三人行》，广告之后见！")])
+
+    # v92 Pre-Exam Sprint (2026-11-28 .. 2026-12-05 ONLY): weave one natural 60-90s 3-host
+    # tea-house exam-rival banter right before the World Finale (zero pop-quiz pauses, keeps
+    # authentic sudden ending untouched, and never alters locked 2026-11-27 or N2 Climb 12/07+!)
+    if "2026-11-28" <= today_str <= "2026-12-05" and imm_profile["ja_ratio"] < 0.65 and story_blocks:
+        try:
+            import dialogue_blackboard_clinic as _dbc
+            _ex_clinic = _dbc.get_radio_exam_clinic_block(today_str)
+            if _ex_clinic and _ex_clinic.get("turns"):
+                _clinic_turns = list(_ex_clinic["turns"]) + [("PAUSE", 0.55)]
+                _tgt_idx = len(story_blocks) - 1 if story_blocks[-1].get("is_world_finale") else max(0, len(story_blocks) - 1)
+                story_blocks[_tgt_idx]["raw_turns"] = _clinic_turns + list(story_blocks[_tgt_idx]["raw_turns"])
+                story_blocks[_tgt_idx]["events"] = turns_to_expanded_events(story_blocks[_tgt_idx]["raw_turns"])
+                story_blocks[_tgt_idx]["exam_clinic_id"] = _ex_clinic["clinic_id"]
+        except Exception as _ce:
+            print(f"[warn] exam clinic banter skipped: {_ce}")
 
     opening_evs = turns_to_expanded_events(opening_turns) if opening_turns else []
     ad1_out_evs = turns_to_expanded_events(ad1_out_turns) if ad1_out_turns else []

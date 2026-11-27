@@ -600,6 +600,8 @@ async def main():
         new_manifest["fossil_slips"] = dict(old_manifest["fossil_slips"])
     if isinstance(old_manifest.get("minimal_pairs"), dict):
         new_manifest["minimal_pairs"] = dict(old_manifest["minimal_pairs"])
+    if isinstance(old_manifest.get("dialogue_clinics"), dict):
+        new_manifest["dialogue_clinics"] = dict(old_manifest["dialogue_clinics"])
     can_synth = (edge_tts is not None) and (shutil.which("ffmpeg") is not None)
 
     voice_map = await detect_voice_map()

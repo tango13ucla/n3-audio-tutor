@@ -2261,6 +2261,9 @@ except Exception:
 tutor_mission_payload = _build_tutor_mission(live_state, _night_sum_for_mission, phase=active_phase, max_items=3)
 leech_words_payload = [str(x.get("word") or "") for x in (_leeches_info.get("vocab") or []) if x.get("word")]
 
+from dialogue_blackboard_clinic import build_clinics_payload as _build_clinics_payload
+dialogue_clinics_payload = _build_clinics_payload(audio_manifest, plan_date_str)
+
 payload = json.dumps({
     "plan_date": plan_date_str,
     "phase": active_phase,
@@ -2281,6 +2284,7 @@ payload = json.dumps({
     "conj_drills": conj_drills_payload,
     "fossil_slips": fossil_slips_payload,
     "minimal_pairs": minimal_pairs_payload,
+    "dialogue_clinics": dialogue_clinics_payload,
     "tutor_mission": tutor_mission_payload,
     "micro_reading": micro_reading_payload,
     "leech_words": leech_words_payload,
@@ -4831,6 +4835,422 @@ html = r"""<!DOCTYPE html>
     font-size: 11.5px; color: var(--ochre); margin-left: 8px;
   }
   .vc-leech-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ochre); display: inline-block; }
+
+  /* v92: Living Kyoto Slate Blackboard & Quiet Dialogue Triggers */
+  .kb-entry-btn {
+    width: 100%;
+    margin-top: 8px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--hairline-strong);
+    background: var(--sheet);
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    text-align: left;
+    white-space: normal;
+    color: var(--sumi);
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  .kb-entry-btn:active { background: var(--tap-bg); }
+  .kb-entry-btn.is-done {
+    background: var(--moss-soft);
+    border-color: var(--moss-border);
+  }
+  .kb-entry-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--ochre); flex-shrink: 0;
+  }
+  .kb-entry-btn.is-done .kb-entry-dot { background: var(--moss); }
+  .kb-entry-txt {
+    flex: 1; min-width: 0;
+    font-size: 13px; line-height: 1.42;
+    color: var(--ink-2);
+    text-wrap: pretty;
+    white-space: normal;
+  }
+  .kb-entry-txt b { font-weight: 500; color: var(--sumi); }
+  .kb-entry-arr {
+    font-size: 15px; color: var(--ink-3); opacity: 0.6; flex-shrink: 0;
+  }
+  .kb-vc-btn {
+    margin-top: 10px;
+    padding: 7px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--hairline-strong);
+    background: transparent;
+    color: var(--ink-2);
+    font-size: 12.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .kb-vc-btn:active { background: var(--tap-bg); color: var(--sumi); }
+  .kb-li-btn {
+    margin-top: 8px;
+    width: 100%;
+    padding: 9px 11px;
+    border-radius: 10px;
+    border: 1px solid var(--hairline);
+    background: transparent;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-align: left;
+    white-space: normal;
+    font-size: 12.5px;
+    color: var(--ink-2);
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .kb-li-btn:active { background: var(--tap-bg); }
+  .kb-li-btn b { font-weight: 500; color: var(--sumi); }
+  .kb-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .kb-head-main { flex: 1; min-width: 0; }
+  .kb-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    letter-spacing: 0.08em;
+    color: var(--ink-3);
+    margin-bottom: 3px;
+  }
+  .kb-tag-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ochre); }
+  .kb-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--sumi);
+    line-height: 1.3;
+    text-wrap: balance;
+    margin: 0;
+  }
+  .kb-sub {
+    font-family: var(--ja-sans);
+    font-size: 12px;
+    color: var(--ink-3);
+    margin-top: 3px;
+    line-height: 1.42;
+    text-wrap: balance;
+  }
+  .kb-head-acts {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .kb-pill-btn {
+    height: 28px;
+    padding: 0 9px;
+    border-radius: 999px;
+    border: 1px solid var(--hairline-strong);
+    background: transparent;
+    color: var(--ink-2);
+    font-size: 11.5px;
+    font-variant-numeric: tabular-nums;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    touch-action: manipulation;
+    white-space: nowrap;
+  }
+  .kb-pill-btn:active { background: var(--tap-bg); color: var(--sumi); }
+  .kb-slate {
+    background: #171B18;
+    color: #F2EEE6;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 11px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+  .kb-step {
+    border-radius: 10px;
+    padding: 9px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.02);
+    opacity: 0.48;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: opacity 0.24s ease, border-color 0.24s ease, background 0.24s ease;
+    text-align: left;
+    white-space: normal;
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    color: inherit;
+  }
+  .kb-step.is-drawn { opacity: 0.88; }
+  .kb-step.is-active {
+    opacity: 1;
+    border-color: rgba(242, 238, 230, 0.36);
+    background: rgba(255, 255, 255, 0.07);
+  }
+  .kb-step-badge {
+    display: inline-block;
+    font-size: 10.5px;
+    letter-spacing: 0.07em;
+    color: #A8A69E;
+    margin-bottom: 4px;
+  }
+  .kb-step-badge.red { color: #E27D68; }
+  .kb-step-badge.moss { color: #8AC097; }
+  .kb-pitfall-ja {
+    font-family: var(--ja-sans);
+    font-size: 13px;
+    line-height: 1.48;
+    color: #F09887;
+    text-decoration: line-through;
+    text-decoration-thickness: 1.6px;
+    text-decoration-color: #DF6650;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+  .kb-pitfall-why {
+    font-size: 12px;
+    line-height: 1.48;
+    color: #CBC8BF;
+    margin-top: 3px;
+    white-space: normal;
+    text-wrap: pretty;
+  }
+  .kb-split-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px;
+    width: 100%;
+  }
+  .kb-split-col {
+    background: rgba(255, 255, 255, 0.035);
+    border-radius: 8px;
+    padding: 7px 8px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    min-width: 0;
+    overflow: hidden;
+  }
+  .kb-split-tag {
+    font-size: 10.5px;
+    letter-spacing: 0.03em;
+    margin-bottom: 3px;
+    white-space: normal;
+  }
+  .kb-split-tag.left { color: #8AC097; }
+  .kb-split-tag.right { color: #E0B572; }
+  .kb-split-ja {
+    font-family: var(--ja-sans);
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #F6F2EA;
+    line-height: 1.4;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+  .kb-split-zh {
+    font-size: 11.5px;
+    color: #C4C1B8;
+    margin-top: 3px;
+    line-height: 1.42;
+    white-space: normal;
+    text-wrap: pretty;
+  }
+  .kb-ex-list { display: flex; flex-direction: column; gap: 6px; }
+  .kb-ex-line { display: flex; align-items: flex-start; gap: 7px; min-width: 0; }
+  .kb-ex-tag {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: rgba(138, 192, 151, 0.16);
+    color: #9BD0A8;
+    flex-shrink: 0;
+    margin-top: 2px;
+    white-space: nowrap;
+  }
+  .kb-ex-body { flex: 1; min-width: 0; }
+  .kb-ex-ja {
+    font-family: var(--ja-sans);
+    font-size: 13px;
+    color: #F6F2EA;
+    line-height: 1.45;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+  .kb-ex-zh {
+    font-size: 11.5px;
+    color: #B9B6AE;
+    line-height: 1.4;
+    margin-top: 1px;
+    white-space: normal;
+  }
+  .kb-rule-txt {
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: #EDF3EE;
+    font-weight: 500;
+    white-space: normal;
+    text-wrap: pretty;
+  }
+  .kb-voice-strip {
+    margin-top: 10px;
+    padding: 9px 11px;
+    border-radius: 12px;
+    border: 1px solid var(--hairline);
+    background: var(--sheet);
+  }
+  .kb-voice-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 5px;
+  }
+  .kb-spk-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--sumi);
+  }
+  .kb-spk-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--ochre);
+  }
+  .kb-spk-dot.teacher { background: var(--moss); }
+  .kb-spk-dot.ja { background: var(--bengara); }
+  .kb-time-lbl {
+    font-size: 11.5px;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .kb-caption {
+    font-size: 13px;
+    line-height: 1.52;
+    color: var(--ink-2);
+    min-height: 38px;
+    white-space: normal;
+    text-wrap: pretty;
+    word-break: break-word;
+  }
+  .kb-prog-track {
+    height: 2px;
+    border-radius: 999px;
+    background: var(--hairline);
+    margin-top: 7px;
+    overflow: hidden;
+  }
+  .kb-prog-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--moss);
+    transition: width 0.15s linear;
+  }
+  .kb-ctrl-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .kb-play-btn {
+    flex: 1;
+    height: 44px;
+    border-radius: 12px;
+    border: 1px solid var(--sumi);
+    background: var(--sumi);
+    color: var(--washi);
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .kb-play-btn.is-done {
+    background: var(--moss-soft);
+    border-color: var(--moss-border);
+    color: var(--moss);
+  }
+  .kb-cat-tabs {
+    display: flex;
+    gap: 6px;
+    margin: 8px 0 10px;
+  }
+  .kb-cat-tab {
+    flex: 1;
+    height: 32px;
+    border-radius: 999px;
+    border: 1px solid var(--hairline-strong);
+    background: transparent;
+    color: var(--ink-2);
+    font-size: 12px;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .kb-cat-tab.on {
+    background: var(--sumi);
+    border-color: var(--sumi);
+    color: var(--washi);
+    font-weight: 500;
+  }
+  .kb-cat-list {
+    display: flex;
+    flex-direction: column;
+    max-height: 52dvh;
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+  .kb-cat-list::-webkit-scrollbar { display: none; }
+  .kb-cat-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 11px 2px;
+    border-bottom: 1px solid var(--hairline);
+    text-align: left;
+    white-space: normal;
+    background: transparent;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    width: 100%;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .kb-cat-row:last-child { border-bottom: none; }
+  .kb-cat-main { flex: 1; min-width: 0; }
+  .kb-cat-title { font-size: 14px; font-weight: 500; color: var(--sumi); }
+  .kb-cat-sub { font-family: var(--ja-sans); font-size: 12px; color: var(--ink-3); margin-top: 2px; white-space: normal; }
+  .kb-cat-dur { font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums; flex-shrink: 0; }
+  .kb-cat-dur.done { color: var(--moss); font-weight: 500; }
+  @media (max-height: 720px) {
+    .kb-slate { padding: 9px; gap: 6px; }
+    .kb-step { padding: 7px 9px; }
+    .kb-voice-strip { margin-top: 8px; padding: 8px 10px; }
+    .kb-caption { font-size: 12.5px; min-height: 34px; }
+    .kb-ctrl-row { margin-top: 8px; }
+  }
+
   @keyframes rvAudioPulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.55; }
@@ -14722,6 +15142,16 @@ function renderRadioReviewStage() {
             ? `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.2 8.4L6.6 11.6L12.8 4.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>今日 4/3/2 提速复述已完成</span>`
             : `<span>4/3/2 提速复述（2 分钟练流利度）›</span>`}
         </button>
+        ${(() => {
+          const fc = getFeaturedClinic();
+          if (!fc) return "";
+          const fcDone = isClinicDone(fc.id);
+          return `<button type="button" class="rfb-done-link${fcDone ? " is-saved" : ""}" id="rv-done-clinic-btn" onclick="openBlackboardClinic('${fc.id}')">
+            ${fcDone
+              ? `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.2 8.4L6.6 11.6L12.8 4.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>今日黑板拆雷已完成 · ${escapeHtml(fc.title)}</span>`
+              : `<span>今日黑板拆雷对谈 · ${escapeHtml(fc.title)}（${Math.round(fc.duration || 40)}秒）›</span>`}
+          </button>`;
+        })()}
       </div>
       <div class="vc-dock">
         <button type="button" class="vc-btn mid" onclick="closeRadioReview()">回到随身听</button>
@@ -15605,6 +16035,14 @@ function renderTutor() {
   const storyEchoHTML = (p.story_echo && p.story_echo.tab && p.story_echo.hook)
     ? `<div class="res-cue res-echo" id="res-story-echo"><span class="cue-tag">锵锵</span><span class="cue-txt">「${escapeHtml(p.story_echo.tab)}」${escapeHtml(p.story_echo.hook)}</span></div>`
     : "";
+  const matchedClinic = (!isCorrect || isUnsure) ? findClinicForQuiz(p, q) : null;
+  const clinicHintHTML = matchedClinic
+    ? `<button type="button" class="kb-entry-btn${isClinicDone(matchedClinic.id) ? " is-done" : ""}" id="res-clinic-btn" onclick="openBlackboardClinic('${matchedClinic.id}')">
+        <span class="kb-entry-dot"></span>
+        <span class="kb-entry-txt"><b>${q.is_listening ? "听弦外之音" : "黑板对谈"}</b> · ${escapeHtml(matchedClinic.title)}（${Math.round(matchedClinic.duration || 35)}秒）</span>
+        <span class="kb-entry-arr">›</span>
+      </button>`
+    : "";
 
   box.innerHTML = `
     <div class="tutor-stamp right" id="tutor-st-right">${rightStampLabel}</div>
@@ -15623,6 +16061,7 @@ function renderTutor() {
       ${q.why_line ? `<div class="res-cue vc-tap-zone vc-live" id="res-why-cue" onclick="playMainClip(activeQuizObj.exp_audio, 'exp', true)"><span class="cue-tag">要点</span><span class="cue-txt">${escapeHtml(q.why_line)}</span></div>` : ""}
       ${confHintHTML}
       ${storyEchoHTML}
+      ${clinicHintHTML}
       <div class="opt-breakdown${q.is_listening ? " is-listen" : ""}">${optRowsHTML}</div>
     </div>
 
@@ -17598,6 +18037,10 @@ function renderVocabStage() {
   const showVocabMic = JA_ASR.supported();
 
   const isLeechWord = Array.isArray(DATA.leech_words) && DATA.leech_words.includes(card.word);
+  const vcClinic = (isLeechWord || isRequeued) ? findClinicForText(card.key || "", `${card.word || ""} ${card.target || ""}`, "vocab") : null;
+  const vcClinicBtnHTML = vcClinic
+    ? `<button type="button" class="kb-vc-btn" id="vc-clinic-btn" onclick="event.stopPropagation();openBlackboardClinic('${vcClinic.id}')"><span class="kb-entry-dot"></span><span>换角度听对谈（${Math.round(vcClinic.duration || 28)}秒）›</span></button>`
+    : "";
   box.innerHTML = `
     <div class="meta-bar">
       <span class="overline${isRequeued ? " warm" : ""}">${escapeHtml(leftLabel)}${isLeechWord ? `<span class="vc-leech-cue"><span class="vc-leech-dot"></span>换角度记</span>` : ""}</span>
@@ -17620,6 +18063,7 @@ function renderVocabStage() {
           ${kanaHtml ? `<div class="vc-kana vc-tap-zone vc-live" id="vc-kana-box" data-vc-zone="word">${kanaHtml}</div>` : ""}
           ${zhDisplay ? `<div class="vc-zh${quietZh ? " quiet" : ""} vc-tap-zone vc-live" id="vc-zh-box" data-vc-zone="phrase">${escapeHtml(zhDisplay)}</div>` : ""}
           ${mnDisplay ? `<div class="vc-hook vc-tap-zone vc-live" id="vc-hook-box" data-vc-zone="hook">${renderZenMnemonicHTML(card.mnemonic_cue, card.mnemonic_scene, mnDisplay)}</div>` : ""}
+          ${vcClinicBtnHTML}
         </div>
         <div class="mic-feedback" id="vc-mic-feedback"></div>
       </div>
@@ -21686,6 +22130,395 @@ function openTutorMissionModal() {
   showAppModal();
 }
 
+// ================= v92: LIVING KYOTO BLACKBOARD DIALOGUE CLINIC =================
+const CLINIC_ITEMS = (DATA.dialogue_clinics && Array.isArray(DATA.dialogue_clinics.items))
+  ? DATA.dialogue_clinics.items
+  : [];
+const CLINIC_BY_ID = {};
+CLINIC_ITEMS.forEach(c => { if (c && c.id) CLINIC_BY_ID[c.id] = c; });
+
+let clinicAudioEl = null;
+let activeClinicId = "";
+let clinicSpeed = 1.0;
+let clinicPlaying = false;
+let clinicCurStep = 0;
+let clinicCurCueIdx = 0;
+let clinicCatalogPack = "confusion";
+
+function loadClinicDoneMap() {
+  try {
+    const raw = localStorage.getItem("n3_clinic_done_v1");
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) { return {}; }
+}
+
+function isClinicDone(cid) {
+  if (!cid) return false;
+  const map = loadClinicDoneMap();
+  return !!map[cid];
+}
+
+function markClinicDone(cid) {
+  if (!cid) return;
+  const map = loadClinicDoneMap();
+  const alreadyToday = map[cid] === DATA.plan_date;
+  map[cid] = DATA.plan_date;
+  try { localStorage.setItem("n3_clinic_done_v1", JSON.stringify(map)); } catch (e) {}
+  if (!alreadyToday) {
+    const c = CLINIC_BY_ID[cid];
+    pushSlaRecord(`CLINIC:${cid}`, c ? c.title : cid, "黑板对谈已听完", true);
+  }
+}
+
+function getFeaturedClinic() {
+  const fid = (DATA.dialogue_clinics && DATA.dialogue_clinics.featured_id) || "CB01";
+  return CLINIC_BY_ID[fid] || CLINIC_ITEMS[0] || null;
+}
+
+function findClinicForText(idStr, nameStr, modStr) {
+  if (!CLINIC_ITEMS.length) return null;
+  const hay = `${idStr || ""} ${nameStr || ""}`.trim();
+  if (!hay) return null;
+  const prefOrder = modStr === "listening"
+    ? ["listening", "confusion", "leech"]
+    : (modStr === "vocab" ? ["leech", "confusion"] : ["confusion", "leech", "listening"]);
+  for (let pi = 0; pi < prefOrder.length; pi++) {
+    const pk = prefOrder[pi];
+    for (let i = 0; i < CLINIC_ITEMS.length; i++) {
+      const c = CLINIC_ITEMS[i];
+      if (!c || c.pack !== pk || !Array.isArray(c.triggers)) continue;
+      for (let t = 0; t < c.triggers.length; t++) {
+        const kw = c.triggers[t];
+        if (kw && hay.includes(kw)) return c;
+      }
+    }
+  }
+  return null;
+}
+
+function findClinicForQuiz(p, q) {
+  if (!p || !q || !CLINIC_ITEMS.length) return null;
+  const combined = `${p.id || ""} ${p.point || ""} ${p.point_key || ""} ${q.id || ""} ${q.answer || ""} ${q.full_ja || ""} ${q.why_line || ""}`;
+  if (q.is_listening) {
+    const direct = findClinicForText(`${p.id || ""} ${q.id || ""}`, `${p.point || ""} ${q.full_ja || ""} ${q.why_line || ""}`, "listening");
+    if (direct && direct.pack === "listening") return direct;
+    if (/即時応答|発話|誉め|遅刻|お礼|承諾/.test(combined)) return CLINIC_BY_ID["LN05"] || CLINIC_ITEMS.find(x => x.pack === "listening") || null;
+    if (/時|分|日|前日|翌日|早め/.test(combined)) return CLINIC_BY_ID["LN03"] || null;
+    if (/いただけ|させて|いらして|依頼/.test(combined)) return CLINIC_BY_ID["LN04"] || null;
+    return CLINIC_BY_ID["LN02"] || CLINIC_ITEMS.find(x => x.pack === "listening") || null;
+  }
+  const subj = String(p.subject || "");
+  const modHint = (subj === "词汇" || subj === "語彙") ? "vocab" : "grammar";
+  const hit = findClinicForText(`${p.id || ""} ${q.id || ""}`, `${p.point || ""} ${p.point_key || ""} ${q.answer || ""}`, modHint);
+  if (hit && hit.pack !== "listening") return hit;
+  return null;
+}
+
+function ensureClinicAudio() {
+  if (clinicAudioEl) return clinicAudioEl;
+  if (typeof Audio !== "function") return null;
+  const a = new Audio();
+  a.preload = "auto";
+  a.addEventListener("timeupdate", () => syncClinicPlaybackUI(false));
+  a.addEventListener("play", () => {
+    clinicPlaying = true;
+    syncClinicControlsUI();
+  });
+  a.addEventListener("pause", () => {
+    clinicPlaying = false;
+    syncClinicControlsUI();
+  });
+  a.addEventListener("ended", () => {
+    clinicPlaying = false;
+    if (activeClinicId) {
+      markClinicDone(activeClinicId);
+      const c = CLINIC_BY_ID[activeClinicId];
+      if (c && Array.isArray(c.board_steps)) clinicCurStep = c.board_steps.length - 1;
+    }
+    syncClinicPlaybackUI(true);
+    syncClinicControlsUI();
+    try { renderDashboard(true); } catch (e) {}
+  });
+  clinicAudioEl = a;
+  return a;
+}
+
+function stopClinicAudio() {
+  clinicPlaying = false;
+  if (clinicAudioEl) {
+    try { clinicAudioEl.pause(); } catch (e) {}
+  }
+}
+
+function formatClinicSec(sec) {
+  const s = Math.max(0, Math.round(Number(sec || 0)));
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return `${m}:${r < 10 ? "0" : ""}${r}`;
+}
+
+function renderBlackboardStepHTML(st, idx) {
+  if (!st) return "";
+  const stateCls = idx === clinicCurStep ? " is-active" : (idx < clinicCurStep ? " is-drawn" : "");
+  if (st.kind === "pitfall") {
+    return `<button type="button" class="kb-step${stateCls}" data-kb-step="${idx}" onclick="seekClinicToStep(${idx})">
+      <span class="kb-step-badge red">${escapeHtml(st.badge || "常踩坑")}</span>
+      <div class="kb-pitfall-ja" lang="ja">${escapeHtml(st.wrong_ja || "")}</div>
+      <div class="kb-pitfall-why">${escapeHtml(st.why_zh || "")}</div>
+    </button>`;
+  }
+  if (st.kind === "split") {
+    return `<button type="button" class="kb-step${stateCls}" data-kb-step="${idx}" onclick="seekClinicToStep(${idx})">
+      <div class="kb-split-grid">
+        <div class="kb-split-col">
+          <div class="kb-split-tag left">${escapeHtml(st.left_tag || "")}</div>
+          <div class="kb-split-ja" lang="ja">${escapeHtml(st.left_ja || "")}</div>
+          <div class="kb-split-zh">${escapeHtml(st.left_zh || "")}</div>
+        </div>
+        <div class="kb-split-col">
+          <div class="kb-split-tag right">${escapeHtml(st.right_tag || "")}</div>
+          <div class="kb-split-ja" lang="ja">${escapeHtml(st.right_ja || "")}</div>
+          <div class="kb-split-zh">${escapeHtml(st.right_zh || "")}</div>
+        </div>
+      </div>
+    </button>`;
+  }
+  if (st.kind === "example") {
+    const linesHTML = (st.lines || []).map(ln => `
+      <div class="kb-ex-line">
+        <span class="kb-ex-tag">${escapeHtml(ln.tag || "例")}</span>
+        <div class="kb-ex-body">
+          <div class="kb-ex-ja" lang="ja">${escapeHtml(ln.ja || "")}</div>
+          <div class="kb-ex-zh">${escapeHtml(ln.zh || "")}</div>
+        </div>
+      </div>`).join("");
+    return `<button type="button" class="kb-step${stateCls}" data-kb-step="${idx}" onclick="seekClinicToStep(${idx})">
+      <span class="kb-step-badge moss">${escapeHtml(st.badge || "考场对照")}</span>
+      <div class="kb-ex-list">${linesHTML}</div>
+    </button>`;
+  }
+  return `<button type="button" class="kb-step${stateCls}" data-kb-step="${idx}" onclick="seekClinicToStep(${idx})">
+    <span class="kb-step-badge moss">${escapeHtml(st.badge || "一秒定胜负")}</span>
+    <div class="kb-rule-txt">${escapeHtml(st.rule_zh || "")}</div>
+  </button>`;
+}
+
+function renderBlackboardClinicModal(clinic) {
+  const mc = document.getElementById("modal-content");
+  if (!mc || !clinic) return;
+  const cues = Array.isArray(clinic.cues) ? clinic.cues : [];
+  const initCue = cues[clinicCurCueIdx] || cues[0] || { spk: "partner", label: "搭档", text: "" };
+  const spkCls = initCue.spk === "teacher" ? "teacher" : ((initCue.spk === "ja_m" || initCue.spk === "ja_f") ? "ja" : "");
+  const doneNow = isClinicDone(clinic.id);
+  const stepsHTML = (clinic.board_steps || []).map((st, i) => renderBlackboardStepHTML(st, i)).join("");
+  const playLabel = clinicPlaying ? "暂停对谈" : (doneNow ? "已听完 ✓ · 重听" : "开始听对谈");
+  mc.innerHTML = `
+    <div class="kb-head">
+      <div class="kb-head-main">
+        <div class="kb-tag"><span class="kb-tag-dot"></span><span>${escapeHtml(clinic.tag || "黑板对谈")}</span></div>
+        <h3 class="kb-title">${escapeHtml(clinic.title || "")}</h3>
+        <div class="kb-sub">${escapeHtml(clinic.subtitle || "")}</div>
+      </div>
+      <div class="kb-head-acts">
+        <button type="button" class="kb-pill-btn" id="kb-spd-btn" onclick="toggleClinicSpeed()">${clinicSpeed === 0.85 ? "0.85x" : "1.0x"}</button>
+        <button type="button" class="kb-pill-btn" onclick="openClinicCatalogModal('${clinic.pack || "confusion"}')">全部 ${CLINIC_ITEMS.length} 组</button>
+      </div>
+    </div>
+    <div class="kb-slate" id="kb-slate-board">${stepsHTML}</div>
+    <div class="kb-voice-strip">
+      <div class="kb-voice-top">
+        <span class="kb-spk-pill" id="kb-spk-pill"><span class="kb-spk-dot ${spkCls}"></span><span>${escapeHtml(initCue.label || "老师")}</span></span>
+        <span class="kb-time-lbl" id="kb-time-lbl">0:00 / ${formatClinicSec(clinic.duration)}</span>
+      </div>
+      <div class="kb-caption" id="kb-caption">${escapeHtml(initCue.text || "")}</div>
+      <div class="kb-prog-track"><div class="kb-prog-fill" id="kb-prog-fill"></div></div>
+    </div>
+    <div class="kb-ctrl-row">
+      <button type="button" class="kb-play-btn${doneNow && !clinicPlaying ? " is-done" : ""}" id="kb-play-btn" onclick="toggleClinicPlay()">${playLabel}</button>
+      <button type="button" class="ghost-btn" onclick="replayClinicAudio()">重听</button>
+      <button type="button" class="ghost-btn" onclick="closeModal()">返回</button>
+    </div>
+  `;
+}
+
+function syncClinicControlsUI() {
+  const btn = document.getElementById("kb-play-btn");
+  if (!btn) return;
+  const doneNow = isClinicDone(activeClinicId);
+  btn.textContent = clinicPlaying ? "暂停对谈" : (doneNow ? "已听完 ✓ · 重听" : "继续听对谈");
+  btn.classList.toggle("is-done", doneNow && !clinicPlaying);
+}
+
+function syncClinicPlaybackUI(forceEnd) {
+  const c = CLINIC_BY_ID[activeClinicId];
+  if (!c) return;
+  const a = clinicAudioEl;
+  const dur = (a && isFinite(a.duration) && a.duration > 1) ? a.duration : Number(c.duration || 35);
+  const cur = forceEnd ? dur : (a ? Number(a.currentTime || 0) : 0);
+  const cues = Array.isArray(c.cues) ? c.cues : [];
+  let cueIdx = 0;
+  for (let i = 0; i < cues.length; i++) {
+    if (cur + 0.08 >= Number(cues[i].t || 0)) cueIdx = i;
+  }
+  clinicCurCueIdx = cueIdx;
+  const cue = cues[cueIdx] || cues[0];
+  if (cue && typeof cue.step === "number") {
+    clinicCurStep = cue.step;
+  }
+  if (dur > 5 && cur / dur >= 0.85 && !isClinicDone(activeClinicId)) {
+    markClinicDone(activeClinicId);
+  }
+  const board = document.getElementById("kb-slate-board");
+  if (board && board.querySelectorAll) {
+    const stepNodes = board.querySelectorAll(".kb-step");
+    stepNodes.forEach((el, idx) => {
+      el.classList.toggle("is-active", idx === clinicCurStep);
+      el.classList.toggle("is-drawn", idx < clinicCurStep || !!forceEnd);
+    });
+  }
+  const spkEl = document.getElementById("kb-spk-pill");
+  if (spkEl && cue) {
+    const spkCls = cue.spk === "teacher" ? "teacher" : ((cue.spk === "ja_m" || cue.spk === "ja_f") ? "ja" : "");
+    spkEl.innerHTML = `<span class="kb-spk-dot ${spkCls}"></span><span>${escapeHtml(cue.label || "老师")}</span>`;
+  }
+  const capEl = document.getElementById("kb-caption");
+  if (capEl && cue) capEl.textContent = cue.text || "";
+  const timeEl = document.getElementById("kb-time-lbl");
+  if (timeEl) timeEl.textContent = `${formatClinicSec(cur)} / ${formatClinicSec(dur)}`;
+  const fillEl = document.getElementById("kb-prog-fill");
+  if (fillEl) fillEl.style.width = `${Math.min(100, Math.max(0, (cur / Math.max(1, dur)) * 100)).toFixed(1)}%`;
+}
+
+function openBlackboardClinic(clinicId, opts) {
+  const clinic = CLINIC_BY_ID[clinicId] || getFeaturedClinic();
+  if (!clinic) return;
+  try { if (player && !player.paused) player.pause(); } catch (e) {}
+  try { if (typeof stopVocabAudioAndTimers === "function") stopVocabAudioAndTimers(); } catch (e) {}
+  try {
+    const ra = document.getElementById("radio-audio");
+    if (ra && !ra.paused) ra.pause();
+  } catch (e) {}
+  activeClinicId = clinic.id;
+  clinicCurStep = 0;
+  clinicCurCueIdx = 0;
+  clinicPlaying = false;
+  renderBlackboardClinicModal(clinic);
+  showAppModal();
+  const a = ensureClinicAudio();
+  if (a && clinic.audio) {
+    try {
+      a.pause();
+      a.src = clinic.audio;
+      a.playbackRate = clinicSpeed;
+      a.currentTime = 0;
+      if (!(opts && opts.autoplay === false)) {
+        const p = a.play();
+        if (p && typeof p.catch === "function") p.catch(() => {});
+      }
+    } catch (e) {}
+  }
+}
+
+function toggleClinicPlay() {
+  const c = CLINIC_BY_ID[activeClinicId];
+  const a = ensureClinicAudio();
+  if (!c || !a) return;
+  if (!a.paused) {
+    a.pause();
+  } else {
+    if (!a.src || !a.src.includes(c.id)) {
+      a.src = c.audio;
+    }
+    if (isFinite(a.duration) && a.currentTime >= a.duration - 0.25) {
+      a.currentTime = 0;
+    }
+    a.playbackRate = clinicSpeed;
+    const p = a.play();
+    if (p && typeof p.catch === "function") p.catch(() => {});
+  }
+}
+
+function replayClinicAudio() {
+  const c = CLINIC_BY_ID[activeClinicId];
+  const a = ensureClinicAudio();
+  if (!c || !a) return;
+  clinicCurStep = 0;
+  clinicCurCueIdx = 0;
+  a.src = c.audio;
+  a.playbackRate = clinicSpeed;
+  a.currentTime = 0;
+  syncClinicPlaybackUI(false);
+  const p = a.play();
+  if (p && typeof p.catch === "function") p.catch(() => {});
+}
+
+function toggleClinicSpeed() {
+  clinicSpeed = clinicSpeed === 1.0 ? 0.85 : 1.0;
+  if (clinicAudioEl) {
+    try { clinicAudioEl.playbackRate = clinicSpeed; } catch (e) {}
+  }
+  const btn = document.getElementById("kb-spd-btn");
+  if (btn) btn.textContent = clinicSpeed === 0.85 ? "0.85x" : "1.0x";
+}
+
+function seekClinicToStep(stepIdx) {
+  const c = CLINIC_BY_ID[activeClinicId];
+  if (!c) return;
+  const cues = Array.isArray(c.cues) ? c.cues : [];
+  const targetCue = cues.find(x => Number(x.step) === Number(stepIdx));
+  clinicCurStep = Number(stepIdx);
+  if (targetCue) clinicCurCueIdx = cues.indexOf(targetCue);
+  const a = ensureClinicAudio();
+  if (a && targetCue) {
+    try {
+      if (!a.src || !a.src.includes(c.id)) a.src = c.audio;
+      a.currentTime = Math.max(0, Number(targetCue.t || 0));
+      a.playbackRate = clinicSpeed;
+      const p = a.play();
+      if (p && typeof p.catch === "function") p.catch(() => {});
+    } catch (e) {}
+  }
+  syncClinicPlaybackUI(false);
+}
+
+function openClinicCatalogModal(pack) {
+  stopClinicAudio();
+  clinicCatalogPack = pack || "confusion";
+  const mc = document.getElementById("modal-content");
+  if (!mc) return;
+  const doneMap = loadClinicDoneMap();
+  const packs = [
+    { key: "confusion", label: "易混语法", count: CLINIC_ITEMS.filter(x => x.pack === "confusion").length },
+    { key: "leech", label: "钉子户词", count: CLINIC_ITEMS.filter(x => x.pack === "leech").length },
+    { key: "listening", label: "听力套路", count: CLINIC_ITEMS.filter(x => x.pack === "listening").length },
+  ];
+  const list = CLINIC_ITEMS.filter(x => x.pack === clinicCatalogPack);
+  const tabsHTML = packs.map(pk => `
+    <button type="button" class="kb-cat-tab${pk.key === clinicCatalogPack ? " on" : ""}" onclick="openClinicCatalogModal('${pk.key}')">${pk.label} ${pk.count}</button>
+  `).join("");
+  const rowsHTML = list.map(c => {
+    const isD = !!doneMap[c.id];
+    return `
+      <button type="button" class="kb-cat-row" onclick="openBlackboardClinic('${c.id}')">
+        <div class="kb-cat-main">
+          <div class="kb-cat-title">${escapeHtml(c.title)}</div>
+          <div class="kb-cat-sub">${escapeHtml(c.subtitle)}</div>
+        </div>
+        <span class="kb-cat-dur${isD ? " done" : ""}">${isD ? "已听 ✓" : `${Math.round(c.duration || 35)}秒 ›`}</span>
+      </button>`;
+  }).join("");
+  mc.innerHTML = `
+    <h3 class="modal-h">考前黑板对谈 · ${CLINIC_ITEMS.length} 组</h3>
+    <p class="zb-sheet-sub">两人对谈配动态黑板，每组半分钟，专拆最容易混的考点与钉子户。</p>
+    <div class="kb-cat-tabs">${tabsHTML}</div>
+    <div class="kb-cat-list">${rowsHTML}</div>
+    <div class="dock-row" style="margin-top:12px;">
+      <button type="button" class="ghost-btn" style="flex:1;" onclick="closeModal()">返回</button>
+    </div>
+  `;
+  showAppModal();
+}
+
 function openN3ScoreModal() {
   const cur = getLocalN3RealScore();
   const valStr = cur ? String(cur.total) : "";
@@ -22508,7 +23341,21 @@ function renderDashboard(forceRefresh) {
           <button type="button" class="dash-quiet-btn${tmAllDone ? " moss" : ""}" onclick="openTutorMissionModal()">${tmAllDone ? "查看 ›" : "去用 ›"}</button>
         </div>`;
     }
-    mockEntryEl.innerHTML = mockRowHTML + mrRowHTML + tmRowHTML + n3CalRowHTML;
+    let clinicRowHTML = "";
+    const featClinic = getFeaturedClinic();
+    if (featClinic) {
+      const cDone = isClinicDone(featClinic.id);
+      const cDur = Math.round(featClinic.duration || 40);
+      clinicRowHTML = `
+        <div class="dash-quiet-row${cDone ? " is-done" : ""}" id="dash-clinic-row">
+          <div class="dash-quiet-txt">
+            <div>${cDone ? `考前黑板对谈 · 今日已拆雷 ✓` : `<b>考前黑板对谈</b> · 今日拆雷（${cDur}秒）`}</div>
+            <div class="dash-quiet-sub">${escapeHtml(featClinic.title)} · ${escapeHtml(featClinic.subtitle)}</div>
+          </div>
+          <button type="button" class="dash-quiet-btn${cDone ? " moss" : ""}" onclick="openBlackboardClinic('${featClinic.id}')">${cDone ? "重听 ›" : "去听 ›"}</button>
+        </div>`;
+    }
+    mockEntryEl.innerHTML = mockRowHTML + clinicRowHTML + mrRowHTML + tmRowHTML + n3CalRowHTML;
   }
 
   document.getElementById("dash-summary").innerHTML = pillarMeta.map(({ k, m, c }) => {
@@ -22747,7 +23594,15 @@ function buildLedgerExtraHTML(it) {
       </button>`;
     }
   }
-  return noteHTML + exHTML + gaBarHTML;
+  const liClinic = findClinicForText(it.gid || it.point_id || "", `${it.name || ""} ${it.sub || ""}`, dashMod);
+  const clinicBtnHTML = liClinic
+    ? `<button type="button" class="kb-li-btn" onclick="event.stopPropagation();openBlackboardClinic('${liClinic.id}')">
+        <span class="kb-entry-dot"></span>
+        <span class="kb-entry-txt"><b>黑板对谈</b> · ${escapeHtml(liClinic.title)}（${Math.round(liClinic.duration || 35)}秒）</span>
+        <span class="kb-entry-arr">›</span>
+      </button>`
+    : "";
+  return noteHTML + exHTML + clinicBtnHTML + gaBarHTML;
 }
 
 function togglePtNote(i) {
@@ -22881,6 +23736,7 @@ function renderMasteryList() {
 function closeModal(fromPop) {
   if (radioFbCloseTimer) { clearTimeout(radioFbCloseTimer); radioFbCloseTimer = null; }
   try { stopRadioFbMic(); } catch (e) {}
+  try { stopClinicAudio(); } catch (e) {}
   try {
     const mv = document.getElementById("story-modal-video");
     if (mv && typeof mv.pause === "function") mv.pause();
@@ -27724,11 +28580,92 @@ if (!isPostN3_35) {
   }
   sb.switchMode('tutor');
 }
+
+// Self-test 36 (v92): Sprint Dialogue & Living Kyoto Blackboard Clinic (24 clinics, quiet wrong-only triggers, synced slate steps, catalog browser & CLINIC telemetry)
+{
+  const clItems36 = vm.runInNewContext('(DATA.dialogue_clinics && DATA.dialogue_clinics.items) || []', sb);
+  if (!/\.kb-step\s*\{[^}]*white-space:\s*normal/.test(html) || !/\.kb-entry-btn\s*\{[^}]*white-space:\s*normal/.test(html)) {
+    throw new Error('Self-test 36 failed: .kb-step and .kb-entry-btn must declare white-space: normal to override global button nowrap');
+  }
+  if (clItems36.length !== 24) {
+    throw new Error('Self-test 36 failed: expected 24 dialogue clinics, got ' + clItems36.length);
+  }
+  for (const cl of clItems36) {
+    const rawStr = JSON.stringify(cl);
+    if (!cl.audio || !Array.isArray(cl.board_steps) || cl.board_steps.length < 3 || !Array.isArray(cl.cues) || cl.cues.length < 4 || rawStr.includes('—')) {
+      throw new Error('Self-test 36 failed: malformed or em-dash clinic entry ' + cl.id);
+    }
+  }
+  const hitCB36 = vm.runInNewContext('findClinicForQuiz({ id: "N3-H19", point: "知る → ご存じだ（尊敬）", subject: "活用" }, { id: "N3-H19", is_listening: false, answer: "ご存じですか" })', sb);
+  const hitLC36 = vm.runInNewContext('findClinicForQuiz({ id: "N3-V17", point: "慰める（なぐさめる）", subject: "词汇" }, { id: "N3-V17", is_listening: false, answer: "なぐさめる" })', sb);
+  const hitLN36 = vm.runInNewContext('findClinicForQuiz({ id: "N3-L44", point: "〜はご遠慮ください", subject: "听力" }, { id: "N3-L44", is_listening: true, full_ja: "館内での撮影はご遠慮ください。", why_line: "礼貌禁止" })', sb);
+  if (!hitCB36 || hitCB36.id !== 'CB01' || !hitLC36 || hitLC36.id !== 'LC01' || !hitLN36 || hitLN36.id !== 'LN01') {
+    throw new Error('Self-test 36 failed: clinic matcher mismatch: ' + JSON.stringify({ cb: hitCB36 && hitCB36.id, lc: hitLC36 && hitLC36.id, ln: hitLN36 && hitLN36.id }));
+  }
+  sb.openBlackboardClinic('CB01', { autoplay: false });
+  const kbModalHtml36 = (els['modal-content'] && els['modal-content'].innerHTML) || '';
+  if (!kbModalHtml36.includes('kb-slate') || !kbModalHtml36.includes('kb-pitfall-ja') || !kbModalHtml36.includes('kb-split-grid') || !kbModalHtml36.includes('kb-caption') || kbModalHtml36.includes('—')) {
+    throw new Error('Self-test 36 failed: Living Kyoto Blackboard modal HTML broken or contains em dash');
+  }
+  sb.seekClinicToStep(2);
+  if (vm.runInNewContext('clinicCurStep', sb) !== 2) {
+    throw new Error('Self-test 36 failed: seekClinicToStep(2) did not update clinicCurStep');
+  }
+  sb.toggleClinicSpeed();
+  if (vm.runInNewContext('clinicSpeed', sb) !== 0.85) {
+    throw new Error('Self-test 36 failed: toggleClinicSpeed did not toggle to 0.85x');
+  }
+  sb.toggleClinicSpeed();
+  sb.markClinicDone('CB01');
+  const ob36 = vm.runInNewContext('loadOutbox()', sb);
+  if (!ob36.some(r => Array.isArray(r) && r[0] === 'CLINIC:CB01')) {
+    throw new Error('Self-test 36 failed: markClinicDone did not log CLINIC:CB01 to outbox');
+  }
+  sb.openClinicCatalogModal('leech');
+  const catHtml36 = (els['modal-content'] && els['modal-content'].innerHTML) || '';
+  if (!catHtml36.includes('慰める') || !catHtml36.includes('こっそり') || catHtml36.includes('—')) {
+    throw new Error('Self-test 36 failed: Clinic catalog modal missing leeches or contains em dash');
+  }
+  sb.closeModal();
+  sb.renderDashboard(true);
+  const dashHtml36 = (els['dash-mock-entry'] && els['dash-mock-entry'].innerHTML) || '';
+  if (!dashHtml36.includes('dash-clinic-row') || !dashHtml36.includes('考前黑板对谈')) {
+    throw new Error('Self-test 36 failed: Summary missing quiet 考前黑板对谈 row');
+  }
+  const exLedger36 = vm.runInNewContext('buildLedgerExtraHTML({ gid: "G-015", name: "〜くせに", sub: "明明却" })', sb);
+  if (!exLedger36.includes('kb-li-btn') || !exLedger36.includes('CB03')) {
+    throw new Error('Self-test 36 failed: expanded ledger row missing CB03 blackboard button');
+  }
+  // Verify wrong quiz answer shows quiet trigger, while correct fast-pass stays 100% clean
+  const pKeigoIdx36 = vm.runInNewContext('DATA.points.findIndex(p => p && p.id === "N3-H19")', sb);
+  if (pKeigoIdx36 >= 0) {
+    vm.runInNewContext(`
+      curPointId = "N3-H19";
+      viewStage = "result";
+      activeQuizObj = DATA.points[${pKeigoIdx36}].primary;
+      currentChoices = activeQuizObj.choices.slice();
+      pickedVal = currentChoices.find(c => c !== activeQuizObj.answer) || "wrong";
+      renderTutor();
+    `, sb);
+    const wrongHtml36 = (els['voice-card'] && els['voice-card'].innerHTML) || '';
+    if (!wrongHtml36.includes('res-clinic-btn') || !wrongHtml36.includes('CB01')) {
+      throw new Error('Self-test 36 failed: wrong quiz answer missing quiet CB01 blackboard trigger');
+    }
+    vm.runInNewContext(`
+      pickedVal = activeQuizObj.answer;
+      renderTutor();
+    `, sb);
+    const rightHtml36 = (els['voice-card'] && els['voice-card'].innerHTML) || '';
+    if (rightHtml36.includes('res-clinic-btn')) {
+      throw new Error('Self-test 36 failed: fast correct answer must NOT show blackboard clinic trigger');
+    }
+  }
+}
 """
     subprocess.run(["node", "-", HTML_PATH], input=smoke_js, text=True, check=True)
 
 sw_path = os.path.join(BASE_DIR, "sw.js")
-SW_CACHE_NAME = "n3-studio-tutor-v91"
+SW_CACHE_NAME = "n3-studio-tutor-v92"
 if not _IS_SIM_OUTPUT and os.path.exists(sw_path):
     with open(sw_path, encoding="utf-8") as sf:
         sw_src = sf.read()
