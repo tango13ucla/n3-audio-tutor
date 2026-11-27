@@ -447,21 +447,89 @@ def stitch_turns(turns: list, clip_lookup: dict, silence_lookup: dict, out_path:
     return os.path.exists(out_path) and os.path.getsize(out_path) > 0
 
 
-def _build_n2_q_turns(prompt_str: str, full_ja_str: str) -> list[tuple[str, object]]:
-    """Mask the blank with a 0.55s pause so N2 question audio NEVER leaks the answer out loud!"""
-    m_bl = re.search(r"[（(]\s*　*\s*[）)]", prompt_str or "")
-    if m_bl:
-        pre = prompt_str[: m_bl.start()].strip(" 、，")
-        post = prompt_str[m_bl.end() :].strip()
+_Q_BLANK_SPLIT_RE = re.compile(
+    r"(?:[（(]\s*　*\s*[）)]|(?:[＿_]\s*)+★(?:\s*[＿_])+|[＿_]{2,})"
+)
+
+
+def build_masked_q_turns(prompt_str: str, full_ja_str: str = "", speaker: str = "JF") -> list[tuple[str, object]]:
+    """Mask EVERY blank / star-order slot / kanji-reading target with a 0.55s pause so question audio NEVER leaks the answer!"""
+    raw = str(prompt_str or "").strip()
+    # Strip Chinese rubric tags/instructions (e.g. 【★ 语序排列】 / \n选出填入 ★ 的正确词块：)
+    cleaned = re.sub(r"【[^】]*】", "", raw)
+    cleaned = re.sub(r"\n?选出[^\n]*", "", cleaned).strip()
+    # Kanji reading questions: 「X」の読み方は？ -> mask 「X」 with pause
+    km = re.search(r"「([^」]+)」の読み方", cleaned)
+    if km:
+        target_kanji = km.group(1)
+        body = re.sub(r"「[^」]+」の読み方は？?", "", cleaned).strip()
+        if f"「{target_kanji}」" in body:
+            body = body.replace(f"「{target_kanji}」", "（　　）", 1)
+        elif target_kanji in body:
+            body = body.replace(target_kanji, "（　　）", 1)
+        cleaned = body
+    if _Q_BLANK_SPLIT_RE.search(cleaned):
+        parts = _Q_BLANK_SPLIT_RE.split(cleaned)
         turns_q: list[tuple[str, object]] = []
-        if pre:
-            turns_q.append(("JF", pre))
-        turns_q.append(("PAUSE", 0.55))
-        if post and re.search(r"[\u3040-\u30ff\u4e00-\u9fff]", post):
-            turns_q.append(("JF", post))
+        for idx_p, seg in enumerate(parts):
+            seg_s = seg.strip(" 、，\n")
+            if idx_p > 0 and turns_q and turns_q[-1][0] != "PAUSE":
+                turns_q.append(("PAUSE", 0.55))
+            if seg_s and re.search(r"[\u3040-\u30ff\u4e00-\u9fff]", seg_s):
+                turns_q.append((speaker, seg_s))
+        while turns_q and turns_q[-1][0] == "PAUSE":
+            turns_q.pop()
         if turns_q:
             return turns_q
-    return [("JF", full_ja_str)]
+    if full_ja_str:
+        return [(speaker, full_ja_str)]
+    return []
+
+
+def _build_n2_q_turns(prompt_str: str, full_ja_str: str) -> list[tuple[str, object]]:
+    """Mask every blank with a 0.55s pause so N2 question audio NEVER leaks the answer out loud!"""
+    return build_masked_q_turns(prompt_str, full_ja_str, speaker="JF")
+
+
+def sanitize_q_turns_no_spoiler(
+    q_turns: list,
+    prompt_str: str,
+    answer_str: str,
+    choices: list | None = None,
+    full_ja_str: str = "",
+    is_listening: bool = False,
+) -> list:
+    """Runtime zero-spoiler shield: if a non-listening blank/star-order/kanji card's q_turns leaks the answer, auto-mask from prompt."""
+    if is_listening or not prompt_str:
+        return q_turns
+    has_blank = bool(_Q_BLANK_SPLIT_RE.search(prompt_str) or re.search(r"「[^」]+」の読み方", prompt_str))
+    if not has_blank:
+        return q_turns
+    q_text = "".join(str(v) for s, v in (q_turns or []) if s != "PAUSE")
+    q_clean = re.sub(r"[\s、。！？・「」『』（）()]+", "", q_text)
+    full_clean = re.sub(r"[\s、。！？・「」『』（）()]+", "", full_ja_str or "")
+    ans_clean = re.sub(r"[\s、。！？・「」『』（）()]+", "", answer_str or "")
+    p_no_rubric = re.sub(r"【[^】]*】|\n?选出[^\n]*|「[^」]+」の読み方は？?", "", prompt_str)
+    p_clean = re.sub(r"[\s、。！？・「」『』（）()＿★_]+", "", p_no_rubric)
+    leaked = False
+    if full_clean and q_clean == full_clean:
+        leaked = True
+    elif ans_clean and q_clean.count(ans_clean) > p_clean.count(ans_clean):
+        leaked = True
+    elif "★" in prompt_str and choices:
+        if any(
+            (cc := re.sub(r"[\s、。！？・「」『』（）()]+", "", str(ch)))
+            and q_clean.count(cc) > p_clean.count(cc)
+            for ch in choices
+        ):
+            leaked = True
+    if leaked:
+        spk = next((s for s, _ in (q_turns or []) if s in ("JF", "JM")), "JF")
+        masked = build_masked_q_turns(prompt_str, "", speaker=spk)
+        if masked:
+            print(f"[SPOILER-SHIELD] Auto-masked leaked q_turns from prompt: {prompt_str[:48]!r} -> {masked}")
+            return masked
+    return q_turns
 
 
 def _clean_n2_spoken_zh(raw_s: str) -> str:
@@ -605,19 +673,34 @@ async def main():
             }
 
     for qid, card in _all_synth_cards.items():
-        q_sig = "v18q:+0%:" + json.dumps(card["q_turns"], ensure_ascii=False)
+        _meta_q = card_meta_lookup.get(qid) or {}
+        _subj_q = str(card.get("subject") or _meta_q.get("subject") or "")
+        _is_lis_q = bool(card.get("is_listening") or ("聴解" in _subj_q) or ("听" in _subj_q))
+        _prompt_q = str(card.get("prompt") or _meta_q.get("prompt") or _meta_q.get("prompt_display") or "")
+        _ans_q = str(card.get("answer") or _meta_q.get("answer") or "")
+        _full_q = str(card.get("full_ja") or _meta_q.get("full_ja") or "")
+        _choices_q = card.get("choices") or _meta_q.get("choices") or []
+        safe_q_turns = sanitize_q_turns_no_spoiler(
+            card.get("q_turns") or [],
+            prompt_str=_prompt_q,
+            answer_str=_ans_q,
+            choices=_choices_q,
+            full_ja_str=_full_q,
+            is_listening=_is_lis_q,
+        )
+        q_sig = "v18q:+0%:" + json.dumps(safe_q_turns, ensure_ascii=False)
         q_hash = hashlib.sha256(q_sig.encode("utf-8")).hexdigest()[:12]
         hashes_q[qid] = q_hash
         q_file = f"{qid}_q.mp3"
         q_abs = os.path.join(AUDIO_DIR, q_file)
         if old_manifest.get(q_file) != q_hash or not os.path.exists(q_abs):
             q_expanded = []
-            for spk, val in card["q_turns"]:
+            for spk, val in safe_q_turns:
                 q_expanded.extend(expand_q_turn(spk, val))
             to_build_q[qid] = q_expanded
 
         # Split blind listening cards into stem + 3 option clips so retries can shuffle 1/2/3 audio!
-        q_turns = card.get("q_turns") or []
+        q_turns = safe_q_turns
         first_opt_idx = next(
             (i for i, (s, v) in enumerate(q_turns) if s in ("JF", "JM") and LISTEN_OPT_RE.match(str(v))),
             None,

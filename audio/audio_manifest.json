@@ -12712,73 +12712,73 @@
       }
     }
   },
-  "VAR13-01_q.mp3": "69167797b4b7",
+  "VAR13-01_q.mp3": "2dec23e5a74b",
   "VAR13-01_exp.mp3": "a939a9c694ed",
   "meta:VAR13-01": {
-    "q_audio": "./audio/VAR13-01_q.mp3?v=69167797",
+    "q_audio": "./audio/VAR13-01_q.mp3?v=2dec23e5",
     "exp_audio": "./audio/VAR13-01_exp.mp3?v=a939a9c6",
     "spoken_text": "难得人家大老远跑来一趟，总不能就那样让人空手回去。 完整语序：そのまま → 手ぶらで → 帰す（★）→ わけには（いかない）。 「动词辞书形＋わけにはいかない」锁定「帰す」必须紧贴在「わけには」前面（第 3 位 ★）。"
   },
-  "VAR13-02_q.mp3": "5580f62ccb95",
+  "VAR13-02_q.mp3": "fcb2c9478bdb",
   "VAR13-02_exp.mp3": "fd25dc663ae5",
   "meta:VAR13-02": {
-    "q_audio": "./audio/VAR13-02_q.mp3?v=5580f62c",
+    "q_audio": "./audio/VAR13-02_q.mp3?v=fcb2c947",
     "exp_audio": "./audio/VAR13-02_exp.mp3?v=fd25dc66",
     "spoken_text": "按他来日本才半年来说，敬语用得非常地道。 完整语序：半年 → にしては → 敬語の（★）→ 使い方が。 「まだ半年＋にしては」收束前半句，后半句主语「敬語の＋使い方が」相连，第 3 位 ★ 是「敬語の」。"
   },
-  "VAR13-03_q.mp3": "1829d67abf1e",
+  "VAR13-03_q.mp3": "e6947d63dfa4",
   "VAR13-03_exp.mp3": "9d4ba02a67df",
   "meta:VAR13-03": {
-    "q_audio": "./audio/VAR13-03_q.mp3?v=1829d67a",
+    "q_audio": "./audio/VAR13-03_q.mp3?v=e6947d63",
     "exp_audio": "./audio/VAR13-03_exp.mp3?v=9d4ba02a",
     "spoken_text": "最近忙翻了，别说去旅行，连休息的时间都挤不出来。 完整语序：行く → どころか → 休む（★）→ 時間（すら取れない）。 「旅行に行く＋どころか」接更轻底线「休む＋時間すら」，第 3 位 ★ 必是「休む」。"
   },
-  "VAR13-04_q.mp3": "6a4dd6d6e9b6",
+  "VAR13-04_q.mp3": "e667a00e3465",
   "VAR13-04_exp.mp3": "b73368bef997",
   "meta:VAR13-04": {
-    "q_audio": "./audio/VAR13-04_q.mp3?v=6a4dd6d6",
+    "q_audio": "./audio/VAR13-04_q.mp3?v=e667a00e",
     "exp_audio": "./audio/VAR13-04_exp.mp3?v=b73368be",
     "spoken_text": "那款新产品不仅功能出色，连设计都非常漂亮。 完整语序：優れている → ばかりか → デザイン（★）→ まで。 「機能が優れている＋ばかりか」递进引出「デザイン＋まで」，第 3 位 ★ 是「デザイン」。"
   },
-  "VAR13-05_q.mp3": "c021da2182c7",
+  "VAR13-05_q.mp3": "af068b1f12c2",
   "VAR13-05_exp.mp3": "36d044626670",
   "meta:VAR13-05": {
-    "q_audio": "./audio/VAR13-05_q.mp3?v=c021da21",
+    "q_audio": "./audio/VAR13-05_q.mp3?v=af068b1f",
     "exp_audio": "./audio/VAR13-05_exp.mp3?v=36d04462",
     "spoken_text": "休息日老在家里躺着不动的话，身体会变僵硬退化的。 完整语序：ごろごろ → して → ばかり（★）→ いると。 固定构型「动词て形＋ばかり＋いる」锁定「して → ばかり（★）→ いると」。"
   },
-  "VAR13-06_q.mp3": "8ba6a981e9b8",
+  "VAR13-06_q.mp3": "f28a24f27243",
   "VAR13-06_exp.mp3": "342a7aa647c0",
   "meta:VAR13-06": {
-    "q_audio": "./audio/VAR13-06_q.mp3?v=8ba6a981",
+    "q_audio": "./audio/VAR13-06_q.mp3?v=f28a24f2",
     "exp_audio": "./audio/VAR13-06_exp.mp3?v=342a7aa6",
     "spoken_text": "他每晚都学到那么晚，肯定能考过的。 完整语序：勉強して → いた → のだから（★）→ きっと。 「勉強していた＋のだから」收束理由句，副词「きっと」领起后半句「合格するにちがいない」。"
   },
-  "VAR13-07_q.mp3": "3d498700afc3",
+  "VAR13-07_q.mp3": "5f56e1d91382",
   "VAR13-07_exp.mp3": "e5485f6347dc",
   "meta:VAR13-07": {
-    "q_audio": "./audio/VAR13-07_q.mp3?v=3d498700",
+    "q_audio": "./audio/VAR13-07_q.mp3?v=5f56e1d9",
     "exp_audio": "./audio/VAR13-07_exp.mp3?v=e5485f63",
     "spoken_text": "他做的菜好吃到一点儿也不输给专门店里吃到的。 完整语序：食べる → もの → にも（★）→ 少しも（負けないほど）。 「専門店で食べるもの＋にも」作对比对象，「少しも」呼应后方否定「負けない」。"
   },
-  "VAR13-08_q.mp3": "e73dcf8a3db7",
+  "VAR13-08_q.mp3": "5052daa3ff51",
   "VAR13-08_exp.mp3": "6eb3d5b2cdc8",
   "meta:VAR13-08": {
-    "q_audio": "./audio/VAR13-08_q.mp3?v=e73dcf8a",
+    "q_audio": "./audio/VAR13-08_q.mp3?v=5052daa3",
     "exp_audio": "./audio/VAR13-08_exp.mp3?v=6eb3d5b2",
     "spoken_text": "因为临时有急事，今天能让我早点结束工作回去吗？ 完整语序：早めに → 仕事を → 切り上げて（★）→ 帰らせて（いただけませんか）。 「仕事を切り上げて＋帰らせて＋いただけませんか」一气呵成，第 3 位 ★ 是「切り上げて」。"
   },
-  "VAR13-09_q.mp3": "5acf8179f32e",
+  "VAR13-09_q.mp3": "a8481d26e2c8",
   "VAR13-09_exp.mp3": "c858eb9733f9",
   "meta:VAR13-09": {
-    "q_audio": "./audio/VAR13-09_q.mp3?v=5acf8179",
+    "q_audio": "./audio/VAR13-09_q.mp3?v=a8481d26",
     "exp_audio": "./audio/VAR13-09_exp.mp3?v=c858eb97",
     "spoken_text": "随着越来越接近山顶，气温不断降了下来。 完整语序：近づく → に → したがって（★）→ どんどん。 「动词辞书形＋に＋したがって」表伴随变化，副词「どんどん」修饰后句「気温が下がってきた」。"
   },
-  "VAR13-10_q.mp3": "fc12ac4ab997",
+  "VAR13-10_q.mp3": "38892106f925",
   "VAR13-10_exp.mp3": "addfdac6658b",
   "meta:VAR13-10": {
-    "q_audio": "./audio/VAR13-10_q.mp3?v=fc12ac4a",
+    "q_audio": "./audio/VAR13-10_q.mp3?v=38892106",
     "exp_audio": "./audio/VAR13-10_exp.mp3?v=addfdac6",
     "spoken_text": "尽管下着大雨，户外音乐会还是按原计划举行了。 完整语序：いる → にもかかわらず → 野外の（★）→ 音楽会は。 「降っている＋にもかかわらず」转折收前半句，后半句主语「野外の＋音楽会は」自然相连。"
   },

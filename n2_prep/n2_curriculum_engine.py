@@ -682,6 +682,38 @@ def _pick_n2_distractors(answer: str, family: str, all_items: list[dict]) -> lis
     return out[:3]
 
 
+# Explicit exact blank spans for inflected / paired N2 syllabus points so 100% of N2 cards blank cleanly with zero spoilers
+_N2_EXPLICIT_BLANK_SPANS: dict[str, tuple[str, bool]] = {
+    "N2G-028": ("一方で", False),
+    "N2G-041": ("がちになる", False),
+    "N2G-042": ("気味", False),
+    "N2G-044": ("っぽく", False),
+    "N2G-045": ("得る", False),
+    "N2G-056": ("でならない", False),
+    "N2G-076": ("ことは", False),
+    "N2G-079": ("かのうちに", False),
+    "N2G-085": ("抜いた", False),
+    "N2G-086": ("てばかりいても", False),
+    "N2G-109": ("だけあって", False),
+    "N2G-114": ("と比べ", False),
+    "N2G-117": ("ほど", False),
+    "N2G-128": ("にかかわる", False),
+    "N2G-129": ("抜きにしては", False),
+    "N2G-136": ("んばかりの", False),
+    "N2G-140": ("というより、むしろ", False),
+    "N2G-141": ("というか", True),
+    "N2G-142": ("さえ", False),
+    "N2G-150": ("どころの騒ぎではなく", False),
+    "N2G-158": ("させていただきます", False),
+    "N2G-159": ("いただき", False),
+    "N2G-160": ("お送りしております", False),
+    "N2G-180": ("一方で", False),
+    "N2G-181": ("やら", True),
+    "N2G-182": ("なり", True),
+    "N2G-186": ("ずにはいられなかった", False),
+}
+
+
 def build_n2_question_bank() -> list[dict[str, Any]]:
     """
     Build complete 190-point JLPT N2 Teach-First 4-Choice Question Bank.
@@ -703,33 +735,39 @@ def build_n2_question_bank() -> list[dict[str, Any]]:
             prim_raw = curated[0]
             vars_raw = curated[1:]
         else:
-            surf = _extract_primary_surface(pt, ex_ja)
-            if surf and surf in ex_ja:
-                prompt = ex_ja.replace(surf, "（　　）", 1)
-                ans = surf
+            explicit_span = _N2_EXPLICIT_BLANK_SPANS.get(gid)
+            if explicit_span and explicit_span[0] in ex_ja:
+                span_txt, replace_all = explicit_span
+                prompt = ex_ja.replace(span_txt, "（　　）") if replace_all else ex_ja.replace(span_txt, "（　　）", 1)
+                ans = span_txt
             else:
-                # Safe structural fallback if syllabus point is a 3-way synthesis card (e.g., N2G-185..190)
-                first_clause = re.split(r"\s*/\s*", pt)[0].replace("〜", "").replace("～", "").strip()
-                first_clause = re.sub(r"（[^）]*）", "", first_clause).strip()
-                first_clause = re.sub(r"\s+.*$", "", first_clause).strip() or "わけにはいかない"
-                if first_clause in ex_ja:
-                    prompt = ex_ja.replace(first_clause, "（　　）", 1)
-                    ans = first_clause
+                surf = _extract_primary_surface(pt, ex_ja)
+                if surf and surf in ex_ja:
+                    prompt = ex_ja.replace(surf, "（　　）", 1)
+                    ans = surf
                 else:
-                    # Extract matching sub-token from any slash option
-                    found = ""
-                    for part in re.split(r"\s*/\s*", pt):
-                        pc = re.sub(r"（[^）]*）", "", part.replace("〜", "").replace("～", "")).strip()
-                        pc = re.sub(r"\s+.*$", "", pc).strip()
-                        if pc and pc in ex_ja:
-                            found = pc
-                            break
-                    if found:
-                        prompt = ex_ja.replace(found, "（　　）", 1)
-                        ans = found
-                    else:
-                        prompt = f"「{pt}」に最も近い使い方はどれ？（例：{ex_ja}）"
+                    # Safe structural fallback if syllabus point is a 3-way synthesis card (e.g., N2G-185..190)
+                    first_clause = re.split(r"\s*/\s*", pt)[0].replace("〜", "").replace("～", "").strip()
+                    first_clause = re.sub(r"（[^）]*）", "", first_clause).strip()
+                    first_clause = re.sub(r"\s+.*$", "", first_clause).strip() or "わけにはいかない"
+                    if first_clause in ex_ja:
+                        prompt = ex_ja.replace(first_clause, "（　　）", 1)
                         ans = first_clause
+                    else:
+                        # Extract matching sub-token from any slash option
+                        found = ""
+                        for part in re.split(r"\s*/\s*", pt):
+                            pc = re.sub(r"（[^）]*）", "", part.replace("〜", "").replace("～", "")).strip()
+                            pc = re.sub(r"\s+.*$", "", pc).strip()
+                            if pc and pc in ex_ja:
+                                found = pc
+                                break
+                        if found:
+                            prompt = ex_ja.replace(found, "（　　）", 1)
+                            ans = found
+                        else:
+                            prompt = f"「{pt}」に最も近い使い方はどれ？（例：{ex_ja}）"
+                            ans = first_clause
             distractors = _pick_n2_distractors(ans, fam, N2_GRAMMAR_SYLLABUS)
             choices = [ans] + distractors
             opt_notes = {ans: f"本题语境正是「{pt}」：{soul}"}

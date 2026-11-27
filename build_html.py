@@ -15040,6 +15040,20 @@ function speakJapaneseFallback(text) {
   } catch (e) {}
 }
 
+function getSafeQuestionFallbackJa(card) {
+  if (!card || card.is_listening) return "";
+  const raw = String(card.prompt || "").trim();
+  if (!raw) return "";
+  let s = raw.replace(/【[^】]*】/g, "").replace(/\n?选出[^\n]*/g, "").trim();
+  const km = s.match(/「([^」]+)」の読み方/);
+  if (km) {
+    const tgt = km[1];
+    s = s.replace(/「[^」]+」の読み方は？?/g, "").replace(`「${tgt}」`, "、").replace(tgt, "、");
+  }
+  s = s.replace(/[（(]\s*　*\s*[）)]|(?:[＿_]\s*)+★(?:\s*[＿_])+|[＿_]{2,}/g, "、");
+  return s.replace(/、{2,}/g, "、").trim();
+}
+
 function playWordAudio(surface, pauseMainIfNeeded) {
   const info = DATA.words[surface];
   if (!info) return;
@@ -18314,7 +18328,7 @@ function playQuizVoiceListenSeq(qObj, rateVal, runTok, onDone) {
     runIdx(0);
     return;
   }
-  playGenericVoiceUrl(qObj.q_audio, qObj.full_ja || "", "ja-JP", () => qvToken, runTok, onDone, spd);
+  playGenericVoiceUrl(qObj.q_audio, getSafeQuestionFallbackJa(qObj), "ja-JP", () => qvToken, runTok, onDone, spd);
 }
 
 function commitQuizVoiceListeningAnswer(choiceVal, isUnsure) {
@@ -20771,8 +20785,9 @@ function playMockItemAudio(idx) {
   }
   if (card.q_audio) {
     playMainClip(card.q_audio, "q", true);
-  } else if (card.full_ja || card.prompt) {
-    speakJapaneseFallback(card.full_ja || card.prompt);
+  } else {
+    const safeFb = getSafeQuestionFallbackJa(card);
+    if (safeFb) speakJapaneseFallback(safeFb);
   }
 }
 
@@ -24590,54 +24605,56 @@ if (planD === '2026-11-22') {
   if (ptsLen !== 50) throw new Error('Self-test 7 failed: 2026-11-22 deck must stay locked at 50 cards, got ' + ptsLen);
   if (m120Init.ga && m120Init.ga.requiredToday) throw new Error('Self-test 7 failed: 2026-11-22 must NOT require GA in 3rd Enso Dot!');
 }
-sb.switchMode('vocab');
-sb.switchVocabSubMode('ga');
-const gaSess = vm.runInNewContext('A.gaSess', sb);
-const remainingUnaud = gaData.items.filter(x => !x.audit_code);
-const expectedGaBatch = Math.min(39, remainingUnaud.length);
-if (!gaSess || !Array.isArray(gaSess.queue) || (expectedGaBatch > 0 && gaSess.queue.length !== expectedGaBatch)) {
-  throw new Error('Self-test 7 failed: initial GA batch mismatch (expected ' + expectedGaBatch + ', got ' + (gaSess && gaSess.queue ? gaSess.queue.length : -1) + ')');
-}
-const firstItem = gaData.items.find(x => x.gid === gaSess.queue[0]) || gaData.items[0];
-const hasPri0Unaud = remainingUnaud.some(x => x.pri === 0);
-if (!firstItem || (hasPri0Unaud && firstItem.pri !== 0)) {
-  throw new Error('Self-test 7 failed: GA batch must start with priority-0 blind spots when unaudited pri-0 exist!');
-}
-const gaHtml = (els['vocab-stage-box'] && els['vocab-stage-box'].innerHTML) || '';
-if (expectedGaBatch > 0) {
-  if (!gaHtml.includes('ga-stage') || !gaHtml.includes('ga-spec-rail') || !gaHtml.includes('陌生') || !gaHtml.includes('易混') || !gaHtml.includes('看懂') || !gaHtml.includes('本能') || gaHtml.includes('—')) {
-    throw new Error('Self-test 7 failed: GA open Zen stage or 4 stops missing, or contains em dash!');
+if (m120Init.ga && m120Init.ga.showSubNav) {
+  sb.switchMode('vocab');
+  sb.switchVocabSubMode('ga');
+  const gaSess = vm.runInNewContext('A.gaSess', sb);
+  const remainingUnaud = gaData.items.filter(x => sb.getEffectiveGA(x.gid).code === 0);
+  const expectedGaBatch = Math.min(39, remainingUnaud.length);
+  if (!gaSess || !Array.isArray(gaSess.queue) || (expectedGaBatch > 0 && gaSess.queue.length !== expectedGaBatch)) {
+    throw new Error('Self-test 7 failed: initial GA batch mismatch (expected ' + expectedGaBatch + ', got ' + (gaSess && gaSess.queue ? gaSess.queue.length : -1) + ')');
   }
-  for (const banned of ['vc-card', '光谱', '原账', '11月未测', '按住沿线', '这一秒的真实感觉', '脑中过一遍', 'vc-hook-tag', '今日 ']) {
-    if (gaHtml.includes(banned)) {
-      throw new Error('Self-test 7 failed: un-Zen box or waste word leaked in GA UI: ' + banned);
+  const firstItem = gaData.items.find(x => x.gid === gaSess.queue[0]) || gaData.items[0];
+  const hasPri0Unaud = remainingUnaud.some(x => x.pri === 0);
+  if (!firstItem || (hasPri0Unaud && firstItem.pri !== 0)) {
+    throw new Error('Self-test 7 failed: GA batch must start with priority-0 blind spots when unaudited pri-0 exist!');
+  }
+  const gaHtml = (els['vocab-stage-box'] && els['vocab-stage-box'].innerHTML) || '';
+  if (expectedGaBatch > 0) {
+    if (!gaHtml.includes('ga-stage') || !gaHtml.includes('ga-spec-rail') || !gaHtml.includes('陌生') || !gaHtml.includes('易混') || !gaHtml.includes('看懂') || !gaHtml.includes('本能') || gaHtml.includes('—')) {
+      throw new Error('Self-test 7 failed: GA open Zen stage or 4 stops missing, or contains em dash!');
     }
+    for (const banned of ['vc-card', '光谱', '原账', '11月未测', '按住沿线', '这一秒的真实感觉', '脑中过一遍', 'vc-hook-tag', '今日 ']) {
+      if (gaHtml.includes(banned)) {
+        throw new Error('Self-test 7 failed: un-Zen box or waste word leaked in GA UI: ' + banned);
+      }
+    }
+    if (gaHtml.includes(`id="ga-eyebrow">${firstItem.family}`)) {
+      throw new Error('Self-test 7 failed: unflipped GA card leaked semantic family on eyebrow: ' + firstItem.family);
+    }
+    if (!gaHtml.includes(`id="ga-head">${firstItem.front_name}</div>`)) {
+      throw new Error('Self-test 7 failed: unflipped GA card did not render clean front_name: ' + firstItem.front_name);
+    }
+    // Commit code=1 (陌生) before reveal -> reveals family & full name + unified Zen dock synchronously, sets todo mastery
+    sb.commitGASpectrum(1);
+    if (!els['ga-eyebrow'] || !String(els['ga-eyebrow'].textContent || '').includes(firstItem.family) || !els['ga-head'] || els['ga-head'].textContent !== firstItem.name) {
+      throw new Error('Self-test 7 failed: revealing GA card did not unveil family & full name: ' + JSON.stringify({eye: els['ga-eyebrow'] && els['ga-eyebrow'].textContent, head: els['ga-head'] && els['ga-head'].textContent}));
+    }
+    const gaEntry1 = vm.runInNewContext(`A.gaMap["${firstItem.gid}"]`, sb);
+    const ov1Key = firstItem.parent_name || firstItem.name;
+    const ov1 = vm.runInNewContext(`A.masteryOverrides[${JSON.stringify(ov1Key)}]`, sb);
+    if (!Array.isArray(gaEntry1) || gaEntry1[0] !== 1 || !String(ov1 || '').startsWith('todo:')) {
+      throw new Error('Self-test 7 failed: spectrum 1 did not set code=1 and todo mastery: ' + JSON.stringify({gaEntry1, ov1, ov1Key}));
+    }
+    // Undo writes CRDT code=0 tombstone cleanly
+    sb.undoLastGA();
+    const gaEntryUndo = vm.runInNewContext(`A.gaMap["${firstItem.gid}"]`, sb);
+    if (!Array.isArray(gaEntryUndo) || gaEntryUndo[0] !== 0) {
+      throw new Error('Self-test 7 failed: undoLastGA did not write CRDT code=0 tombstone: ' + JSON.stringify(gaEntryUndo));
+    }
+  } else if (!gaHtml.includes('语法已全部盘完') || gaHtml.includes('—')) {
+    throw new Error('Self-test 7 failed: completed GA summary screen missing or contains em dash!');
   }
-  if (gaHtml.includes(`id="ga-eyebrow">${firstItem.family}`)) {
-    throw new Error('Self-test 7 failed: unflipped GA card leaked semantic family on eyebrow: ' + firstItem.family);
-  }
-  if (!gaHtml.includes(`id="ga-head">${firstItem.front_name}</div>`)) {
-    throw new Error('Self-test 7 failed: unflipped GA card did not render clean front_name: ' + firstItem.front_name);
-  }
-  // Commit code=1 (陌生) before reveal -> reveals family & full name + unified Zen dock synchronously, sets todo mastery
-  sb.commitGASpectrum(1);
-  if (!els['ga-eyebrow'] || !String(els['ga-eyebrow'].textContent || '').includes(firstItem.family) || !els['ga-head'] || els['ga-head'].textContent !== firstItem.name) {
-    throw new Error('Self-test 7 failed: revealing GA card did not unveil family & full name: ' + JSON.stringify({eye: els['ga-eyebrow'] && els['ga-eyebrow'].textContent, head: els['ga-head'] && els['ga-head'].textContent}));
-  }
-  const gaEntry1 = vm.runInNewContext(`A.gaMap["${firstItem.gid}"]`, sb);
-  const ov1Key = firstItem.parent_name || firstItem.name;
-  const ov1 = vm.runInNewContext(`A.masteryOverrides[${JSON.stringify(ov1Key)}]`, sb);
-  if (!Array.isArray(gaEntry1) || gaEntry1[0] !== 1 || !String(ov1 || '').startsWith('todo:')) {
-    throw new Error('Self-test 7 failed: spectrum 1 did not set code=1 and todo mastery: ' + JSON.stringify({gaEntry1, ov1, ov1Key}));
-  }
-  // Undo writes CRDT code=0 tombstone cleanly
-  sb.undoLastGA();
-  const gaEntryUndo = vm.runInNewContext(`A.gaMap["${firstItem.gid}"]`, sb);
-  if (!Array.isArray(gaEntryUndo) || gaEntryUndo[0] !== 0) {
-    throw new Error('Self-test 7 failed: undoLastGA did not write CRDT code=0 tombstone: ' + JSON.stringify(gaEntryUndo));
-  }
-} else if (!gaHtml.includes('语法已全部盘完') || gaHtml.includes('—')) {
-  throw new Error('Self-test 7 failed: completed GA summary screen missing or contains em dash!');
 }
 // Verify atomic split child syncs to parent group & henkei mastery (G-116e なさる -> K-005 + 尊敬語特殊動詞组)
 sb.setLedgerGrammarSpectrum('G-116a', 4);
@@ -25492,6 +25509,9 @@ for (const gi of gaItems24) {
 if (gaItems24.length > 0) {
   sb.switchMode('vocab');
   sb.switchVocabSubMode('ga');
+  const savedGaSess24 = vm.runInNewContext('A.gaSess ? JSON.parse(JSON.stringify(A.gaSess)) : null', sb);
+  const savedGaMap24 = vm.runInNewContext('A.gaMap ? JSON.parse(JSON.stringify(A.gaMap)) : {}', sb);
+  vm.runInNewContext('if (!A.gaSess || !A.gaSess.queue || !A.gaSess.queue.length) { const g0 = DATA.grammar_audit.items[0].gid; if (A.gaMap) A.gaMap[g0] = [0, nowUnixSec() + 99999, DATA.plan_date]; A.gaSess = { date: DATA.plan_date, queue: [g0], total: 1, cleared: 0, undoStack: [], done: false, updatedAt: nowUnixSec() }; gaRevealed = false; gaPendingNext = false; renderGrammarAuditStage(); }', sb);
   const gaHtml24 = (els['vocab-stage-box'] && els['vocab-stage-box'].innerHTML) || '';
   if (!gaHtml24.includes('data-ga-zone="pat"') || !gaHtml24.includes('data-ga-zone="hook"') || !gaHtml24.includes('data-ga-zone="ex"') || !gaHtml24.includes('重听') || !gaHtml24.includes('class="ga-ex-ja" lang="ja"')) {
     throw new Error('Self-test 24 failed: GA card missing direct-touch zones, lang="ja" example, or unified 重听 button');
@@ -25522,6 +25542,8 @@ if (gaItems24.length > 0) {
     throw new Error('Self-test 24 failed: gaPendingNext re-render did not preserve 重听 + 下一条 dock');
   }
   vm.runInNewContext('gaPendingNext = false; gaPendingCode = 0; gaRevealed = false;', sb);
+  vm.runInNewContext(`A.gaMap = ${JSON.stringify(savedGaMap24)};`, sb);
+  if (savedGaSess24) vm.runInNewContext(`A.gaSess = ${JSON.stringify(savedGaSess24)};`, sb);
 }
 sb.switchMode('radio', false);
 sb.openRadioReview(true);
@@ -25950,11 +25972,28 @@ if (!els['radio-view'].classList.contains('nav-from-left')) {
   throw new Error('Self-test 31 failed: moving left vocab->radio must apply nav-from-left');
 }
 sb.switchMode('tutor');
+// Self-test 32: Zero-spoiler question audio fallback guard (star-order, blank, kanji-reading NEVER speak answer)
+const fbStar32 = sb.getSafeQuestionFallbackJa({
+  prompt: '【★ 语序排列】激しい雨が降って ＿ ＿ ★ ＿ 予定通り行われた。\n选出填入 ★ 的正确词块：',
+  full_ja: '激しい雨が降っているにもかかわらず、野外の音楽会は予定通り行われた。',
+  is_listening: false
+});
+if (!fbStar32.includes('激しい雨が降って') || !fbStar32.includes('予定通り行われた') || fbStar32.includes('野外') || fbStar32.includes('にもかかわらず') || fbStar32.includes('★') || fbStar32.includes('选出')) {
+  throw new Error('Self-test 32 failed: star-order fallback leaked or malformed: ' + fbStar32);
+}
+const fbKanji32 = sb.getSafeQuestionFallbackJa({
+  prompt: 'その説明を聞いて、一つ「疑問」が浮かんだ。「疑問」の読み方は？',
+  full_ja: 'その説明を聞いて、一つ疑問が浮かんだ。',
+  is_listening: false
+});
+if (fbKanji32.includes('疑問') || !fbKanji32.includes('が浮かんだ')) {
+  throw new Error('Self-test 32 failed: kanji-reading fallback leaked target kanji: ' + fbKanji32);
+}
 """
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
 
 sw_path = os.path.join(BASE_DIR, "sw.js")
-SW_CACHE_NAME = "n3-studio-tutor-v86"
+SW_CACHE_NAME = "n3-studio-tutor-v87"
 if not _IS_SIM_OUTPUT and os.path.exists(sw_path):
     with open(sw_path, encoding="utf-8") as sf:
         sw_src = sf.read()

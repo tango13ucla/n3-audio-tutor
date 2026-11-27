@@ -1359,7 +1359,7 @@ def test_v86_native_pixel_fluidity_guard() -> None:
     man = json.loads((BASE_DIR / "manifest.json").read_text(encoding="utf-8"))
 
     for sym in (
-        'SW_CACHE_NAME = "n3-studio-tutor-v86"',
+        'SW_CACHE_NAME = "n3-studio-tutor-v87"',
         "100dvh",
         "touch-action: manipulation",
         "overscroll-behavior: contain",
@@ -1379,12 +1379,111 @@ def test_v86_native_pixel_fluidity_guard() -> None:
 
     html_out = (BASE_DIR / "index.html").read_text(encoding="utf-8")
     assert "navigator.vibrate" not in html_out, "FORBIDDEN navigator.vibrate found in index.html (violates 零触控震动)!"
-    assert 'CACHE_NAME = "n3-studio-tutor-v86"' in sw_src, "sw.js CACHE_NAME not bumped to v86!"
+    assert 'CACHE_NAME = "n3-studio-tutor-v87"' in sw_src, "sw.js CACHE_NAME not bumped to v87!"
     assert 'cache: "no-cache"' in sw_src, "sw.js should use ETag-conditional no-cache SWR revalidation!"
     assert "launch_handler" in man and "display_override" in man, "manifest.json missing launch_handler/display_override!"
     assert (BASE_DIR / "icon-192.png").stat().st_size > 2500, "icon-192.png looks low-res / broken!"
     assert (BASE_DIR / "icon-512.png").stat().st_size > 8000, "icon-512.png looks low-res / broken!"
-    print("[PASS 22/22] v86 120Hz native-app fluidity, O(1) tokenizer, lazy TTS, bottom-sheet physics, Android back-stack & crisp Ensō icons verified")
+    print("[PASS 22/23] v86/v87 120Hz native-app fluidity, O(1) tokenizer, lazy TTS, bottom-sheet physics, Android back-stack & crisp Ensō icons verified")
+
+
+def test_zero_question_audio_answer_leak_guard() -> None:
+    """Gate 23 (v87): Zero-tolerance guard ensuring NO non-listening N3/N2 question audio (or TTS fallback) EVER speaks the answer aloud."""
+    import hashlib
+    from adaptive_bank import EXTRA_PRIMARY_CARDS, NEW_PRIMARY_CARDS, NEW_VARIANT_CARDS, VARIANT_CARDS
+    from clear_explanations import CARDS_75
+    import generate_neural_audio as gna
+    from n2_prep.n2_curriculum_engine import build_n2_question_bank
+    from tutor_data import TUTOR_ITEMS
+
+    meta = {}
+    if isinstance(TUTOR_ITEMS, dict):
+        for tid, tv in TUTOR_ITEMS.items():
+            meta[tid] = dict(tv, id=tid)
+    for lst in (EXTRA_PRIMARY_CARDS, NEW_PRIMARY_CARDS, VARIANT_CARDS, NEW_VARIANT_CARDS):
+        for it in lst:
+            if it.get("id"):
+                meta[it["id"]] = it
+
+    manifest = json.loads((BASE_DIR / "audio" / "audio_manifest.json").read_text(encoding="utf-8"))
+
+    checked_n3 = 0
+    for qid, card in CARDS_75.items():
+        m = meta.get(qid, {})
+        subj = str(card.get("subject") or m.get("subject") or "")
+        if "聴解" in subj or "听" in subj or card.get("is_listening"):
+            continue
+        prompt = str(card.get("prompt") or m.get("prompt") or m.get("prompt_display") or "")
+        ans = str(card.get("answer") or m.get("answer") or "").strip()
+        full_ja = str(card.get("full_ja") or m.get("full_ja") or "").strip()
+        choices = card.get("choices") or m.get("choices") or []
+        q_turns = card.get("q_turns") or []
+        q_text = "".join(str(v) for s, v in q_turns if s != "PAUSE")
+        q_clean = re.sub(r"[\s、。！？・「」『』（）()]+", "", q_text)
+        full_clean = re.sub(r"[\s、。！？・「」『』（）()]+", "", full_ja)
+        ans_clean = re.sub(r"[\s、。！？・「」『』（）()]+", "", ans)
+        p_ja = re.sub(r"【[^】]*】|\n?选出[^\n]*|「[^」]+」の読み方は？?", "", prompt)
+        p_clean = re.sub(r"[\s、。！？・「」『』（）()＿★_]+", "", p_ja)
+
+        has_blank = bool(re.search(r"（\s*　*\s*）|\(\s*\)|＿|★", prompt))
+        is_star = ("★" in prompt) or ("语序排列" in prompt)
+
+        if has_blank:
+            assert not (full_clean and q_clean == full_clean), f"N3 {qid} q_turns speaks FULL answer sentence: {q_turns}"
+            if ans_clean:
+                assert q_clean.count(ans_clean) <= p_clean.count(ans_clean), f"N3 {qid} q_turns leaks answer {ans!r}: {q_turns}"
+        if is_star:
+            assert any(s == "PAUSE" for s, _ in q_turns), f"Star-order {qid} q_turns missing PAUSE for ★ blank: {q_turns}"
+            for ch in choices:
+                cc = re.sub(r"[\s、。！？・「」『』（）()]+", "", str(ch))
+                assert not (cc and q_clean.count(cc) > p_clean.count(cc)), f"Star-order {qid} q_turns leaks choice chunk {ch!r}: {q_turns}"
+        km = re.search(r"「([^」]+)」の読み方", prompt)
+        if km:
+            assert km.group(1) not in q_text, f"Kanji-reading {qid} q_turns speaks target kanji {km.group(1)!r}: {q_turns}"
+
+        # Verify manifest hash and on-disk MP3 are in sync for every card!
+        q_sig = "v18q:+0%:" + json.dumps(q_turns, ensure_ascii=False)
+        q_hash = hashlib.sha256(q_sig.encode("utf-8")).hexdigest()[:12]
+        q_file = f"{qid}_q.mp3"
+        assert manifest.get(q_file) == q_hash, f"Stale MP3 manifest hash for {q_file}: disk={manifest.get(q_file)} vs expected={q_hash}"
+        assert (BASE_DIR / "audio" / q_file).exists(), f"Missing question audio file on disk: audio/{q_file}"
+        checked_n3 += 1
+
+    # Audit ALL N2 cards (100% real blanks + 100% zero-spoiler _build_n2_q_turns)
+    n2_bank = build_n2_question_bank()
+    checked_n2 = 0
+    for np in n2_bank:
+        for nc in ([np["primary"]] + list(np.get("variants") or [])):
+            checked_n2 += 1
+            p_n2 = nc["prompt"]
+            assert "（　　）" in p_n2 and "に最も近い使い方はどれ" not in p_n2, f"N2 {nc['id']} missing real blank: {p_n2}"
+            qt_n2 = gna._build_n2_q_turns(p_n2, nc["full_ja"])
+            q_n2_clean = re.sub(r"[\s、。！？・「」『』（）()]+", "", "".join(str(v) for s, v in qt_n2 if s != "PAUSE"))
+            full_n2_clean = re.sub(r"[\s、。！？・「」『』（）()]+", "", nc["full_ja"])
+            ans_n2_clean = re.sub(r"[\s、。！？・「」『』（）()]+", "", nc["answer"])
+            has_mid_blank = bool(re.search(r"[\u3040-\u30ff\u4e00-\u9fff].*[（(]\s*　*\s*[）)].*[\u3040-\u30ff\u4e00-\u9fff]", p_n2))
+            if has_mid_blank:
+                assert any(s == "PAUSE" for s, _ in qt_n2), f"N2 {nc['id']} mid-sentence blank missing PAUSE: {qt_n2}"
+            assert q_n2_clean != full_n2_clean, f"N2 {nc['id']} q_turns speaks full sentence: {qt_n2}"
+            p_n2_clean = re.sub(r"[\s、。！？・「」『』（）()]+", "", p_n2)
+            if ans_n2_clean:
+                assert q_n2_clean.count(ans_n2_clean) <= p_n2_clean.count(ans_n2_clean), f"N2 {nc['id']} q_turns leaks answer {nc['answer']!r}: {qt_n2}"
+
+    # Audit runtime spoiler shield & frontend zero-full_ja fallback
+    shielded = gna.sanitize_q_turns_no_spoiler(
+        [("JF", "激しい雨が降っているにもかかわらず、野外の音楽会は予定通り行われた。")],
+        prompt_str="【★ 语序排列】激しい雨が降って ＿ ＿ ★ ＿ 予定通り行われた。\n选出填入 ★ 的正确词块：",
+        answer_str="野外の",
+        choices=["いる", "にもかかわらず", "野外の", "音楽会は"],
+        full_ja_str="激しい雨が降っているにもかかわらず、野外の音楽会は予定通り行われた。",
+    )
+    assert any(s == "PAUSE" for s, _ in shielded) and all("野外" not in str(v) for _, v in shielded), f"Spoiler shield failed: {shielded}"
+
+    bh_src = (BASE_DIR / "build_html.py").read_text(encoding="utf-8")
+    assert "function getSafeQuestionFallbackJa(" in bh_src, "build_html.py missing getSafeQuestionFallbackJa!"
+    assert 'playGenericVoiceUrl(qObj.q_audio, qObj.full_ja' not in bh_src, "build_html.py still passes qObj.full_ja to question fallback TTS!"
+    assert 'speakJapaneseFallback(card.full_ja || card.prompt)' not in bh_src, "build_html.py mock player still passes card.full_ja to question fallback TTS!"
+    print(f"[PASS 23/23] Zero-spoiler question audio verified across {checked_n3} N3 cards (manifest+MP3 synced) + {checked_n2} N2 cards + frontend fallbacks")
 
 
 def main() -> int:
@@ -1410,7 +1509,8 @@ def main() -> int:
     test_v84_hands_free_voice_vocab_coach_guard()
     test_v85_whole_app_voice_studio_guard()
     test_v86_native_pixel_fluidity_guard()
-    print("[ALL PASS] tests_ci_guard.py 22/22 gates green!")
+    test_zero_question_audio_answer_leak_guard()
+    print("[ALL PASS] tests_ci_guard.py 23/23 gates green!")
     return 0
 
 
