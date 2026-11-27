@@ -4063,6 +4063,16 @@
       "word": "./audio/words/vc_e5017e70a4_word.mp3?v=75168f24",
       "clean": "./audio/words/vc_e5017e70a4_clean.mp3?v=5f721163",
       "ask": "./audio/words/vc_e5017e70a4_ask.mp3?v=2599f9fd"
+    },
+    "記憶": {
+      "front": "",
+      "rev": "./audio/words/vc_2892879e37_rev.mp3?v=88e11c1f",
+      "full": "./audio/words/vc_2892879e37_rev.mp3?v=88e11c1f",
+      "hook": "./audio/words/vc_2892879e37_hook.mp3?v=5c8f21cf",
+      "phrase": "./audio/words/vc_2892879e37_phrase.mp3?v=6740b3d6",
+      "word": "./audio/words/vc_2892879e37_word.mp3?v=083fcb07",
+      "clean": "./audio/words/vc_2892879e37_clean.mp3?v=9db7f20c",
+      "ask": "./audio/words/vc_2892879e37_ask.mp3?v=10b95d03"
     }
   },
   "vocab_card_hashes": {
@@ -5025,7 +5035,13 @@
     "vc_coach_rv_spk_near.mp3": "0f41333b28",
     "vc_coach_rv_spk_miss.mp3": "1c1063a43b",
     "vc_coach_rv_done.mp3": "0fc84d29b9",
-    "vc_coach_rv_grammar_ask.mp3": "1c97c62f1b"
+    "vc_coach_rv_grammar_ask.mp3": "1c97c62f1b",
+    "vc_2892879e37_rev.mp3": "88e11c1f1d",
+    "vc_2892879e37_hook.mp3": "5c8f21cfca",
+    "vc_2892879e37_phrase.mp3": "6740b3d651",
+    "vc_2892879e37_word.mp3": "083fcb07ce",
+    "vc_2892879e37_clean.mp3": "9db7f20ca8",
+    "vc_2892879e37_ask.mp3": "10b95d03e7"
   },
   "ga_cards": {
     "G-001": {
@@ -6760,6 +6776,438 @@
     "ga_GX-11_ex.mp3": "9d98a76fd1",
     "ga_GX-11_hook.mp3": "bc14e8662c",
     "ga_GX-11_rev.mp3": "1e1dbfc20a"
+  },
+  "voice_coach": {
+    "ok_1": "./audio/words/vc_coach_ok_1.mp3?v=e84d33a1",
+    "ok_2": "./audio/words/vc_coach_ok_2.mp3?v=e11fd59b",
+    "ok_3": "./audio/words/vc_coach_ok_3.mp3?v=c6c971ca",
+    "sokuon_miss": "./audio/words/vc_coach_sokuon_miss.mp3?v=7d11a0f0",
+    "sokuon_extra": "./audio/words/vc_coach_sokuon_extra.mp3?v=861b8b0b",
+    "length_short": "./audio/words/vc_coach_length_short.mp3?v=5f0d5372",
+    "length_long": "./audio/words/vc_coach_length_long.mp3?v=cdefdbb9",
+    "voicing": "./audio/words/vc_coach_voicing.mp3?v=ee22c8b6",
+    "near": "./audio/words/vc_coach_near.mp3?v=b3ed118b",
+    "miss": "./audio/words/vc_coach_miss.mp3?v=0b9df5d0",
+    "blank": "./audio/words/vc_coach_blank.mp3?v=e3f1325e",
+    "shadow_ask": "./audio/words/vc_coach_shadow_ask.mp3?v=8942bb55",
+    "shadow_ok": "./audio/words/vc_coach_shadow_ok.mp3?v=ac7e220e",
+    "shadow_close": "./audio/words/vc_coach_shadow_close.mp3?v=70dec28c",
+    "repeat": "./audio/words/vc_coach_repeat.mp3?v=b8676b29",
+    "auto_pause": "./audio/words/vc_coach_auto_pause.mp3?v=71d71773",
+    "batch_done": "./audio/words/vc_coach_batch_done.mp3?v=3bbd3c84",
+    "audio_reveal": "./audio/words/vc_coach_audio_reveal.mp3?v=c74d733c",
+    "listen_ok_1": "./audio/words/vc_coach_listen_ok_1.mp3?v=52e95178",
+    "listen_ok_2": "./audio/words/vc_coach_listen_ok_2.mp3?v=39c88dff",
+    "listen_ok_3": "./audio/words/vc_coach_listen_ok_3.mp3?v=e0bd648f",
+    "listen_wrong_1": "./audio/words/vc_coach_listen_wrong_1.mp3?v=224279c8",
+    "listen_wrong_2": "./audio/words/vc_coach_listen_wrong_2.mp3?v=65d52f2a",
+    "listen_wrong_3": "./audio/words/vc_coach_listen_wrong_3.mp3?v=71db3fe4",
+    "listen_unsure_1": "./audio/words/vc_coach_listen_unsure_1.mp3?v=b27e170e",
+    "listen_unsure_2": "./audio/words/vc_coach_listen_unsure_2.mp3?v=5e0541a9",
+    "listen_unsure_3": "./audio/words/vc_coach_listen_unsure_3.mp3?v=22a08069",
+    "listen_slow": "./audio/words/vc_coach_listen_slow.mp3?v=be5c9b44",
+    "listen_unclear": "./audio/words/vc_coach_listen_unclear.mp3?v=ea6dff06",
+    "listen_done": "./audio/words/vc_coach_listen_done.mp3?v=0ac46a0b",
+    "conj_ranuki": "./audio/words/vc_coach_conj_ranuki.mp3?v=44e4d9c8",
+    "conj_iku_te": "./audio/words/vc_coach_conj_iku_te.mp3?v=4dcb31d9",
+    "conj_pass_caus": "./audio/words/vc_coach_conj_pass_caus.mp3?v=d3bd5078",
+    "conj_keigo_dir": "./audio/words/vc_coach_conj_keigo_dir.mp3?v=49bf6522",
+    "conj_done": "./audio/words/vc_coach_conj_done.mp3?v=0d1a32d1",
+    "rv_intro": "./audio/words/vc_coach_rv_intro.mp3?v=a22e4e23",
+    "rv_spk_intro": "./audio/words/vc_coach_rv_spk_intro.mp3?v=6bd49528",
+    "rv_spk_ok": "./audio/words/vc_coach_rv_spk_ok.mp3?v=c0898a59",
+    "rv_spk_near": "./audio/words/vc_coach_rv_spk_near.mp3?v=0f41333b",
+    "rv_spk_miss": "./audio/words/vc_coach_rv_spk_miss.mp3?v=1c1063a4",
+    "rv_done": "./audio/words/vc_coach_rv_done.mp3?v=0fc84d29",
+    "rv_grammar_ask": "./audio/words/vc_coach_rv_grammar_ask.mp3?v=1c97c62f"
+  },
+  "conj_drills": {
+    "CJ01": {
+      "ask": "./audio/conj/cj_cj01_ask.mp3?v=fd268be7",
+      "teach": "./audio/conj/cj_cj01_teach.mp3?v=49d827fd",
+      "model": "./audio/conj/cj_cj01_model.mp3?v=e9fd58b0"
+    },
+    "CJ02": {
+      "ask": "./audio/conj/cj_cj02_ask.mp3?v=9a227e48",
+      "teach": "./audio/conj/cj_cj02_teach.mp3?v=0af92631",
+      "model": "./audio/conj/cj_cj02_model.mp3?v=08f1de8d"
+    },
+    "CJ03": {
+      "ask": "./audio/conj/cj_cj03_ask.mp3?v=cd664f32",
+      "teach": "./audio/conj/cj_cj03_teach.mp3?v=8b02903e",
+      "model": "./audio/conj/cj_cj03_model.mp3?v=b7ff3da0"
+    },
+    "CJ04": {
+      "ask": "./audio/conj/cj_cj04_ask.mp3?v=0d027240",
+      "teach": "./audio/conj/cj_cj04_teach.mp3?v=e05bce8f",
+      "model": "./audio/conj/cj_cj04_model.mp3?v=3e461004"
+    },
+    "CJ05": {
+      "ask": "./audio/conj/cj_cj05_ask.mp3?v=80cd1d1c",
+      "teach": "./audio/conj/cj_cj05_teach.mp3?v=ac6565a2",
+      "model": "./audio/conj/cj_cj05_model.mp3?v=45fb6a79"
+    },
+    "CJ06": {
+      "ask": "./audio/conj/cj_cj06_ask.mp3?v=0b88c592",
+      "teach": "./audio/conj/cj_cj06_teach.mp3?v=656eda91",
+      "model": "./audio/conj/cj_cj06_model.mp3?v=f7027cc3"
+    },
+    "CJ07": {
+      "ask": "./audio/conj/cj_cj07_ask.mp3?v=a4e9ded3",
+      "teach": "./audio/conj/cj_cj07_teach.mp3?v=31bad1f5",
+      "model": "./audio/conj/cj_cj07_model.mp3?v=edad14a9"
+    },
+    "CJ08": {
+      "ask": "./audio/conj/cj_cj08_ask.mp3?v=0062da8a",
+      "teach": "./audio/conj/cj_cj08_teach.mp3?v=49de6c2a",
+      "model": "./audio/conj/cj_cj08_model.mp3?v=ebf48716"
+    },
+    "CJ09": {
+      "ask": "./audio/conj/cj_cj09_ask.mp3?v=a77b15e2",
+      "teach": "./audio/conj/cj_cj09_teach.mp3?v=8ca03bcd",
+      "model": "./audio/conj/cj_cj09_model.mp3?v=00f718f2"
+    },
+    "CJ10": {
+      "ask": "./audio/conj/cj_cj10_ask.mp3?v=81dbde8a",
+      "teach": "./audio/conj/cj_cj10_teach.mp3?v=2391ff34",
+      "model": "./audio/conj/cj_cj10_model.mp3?v=470ae589"
+    },
+    "CJ11": {
+      "ask": "./audio/conj/cj_cj11_ask.mp3?v=a958f383",
+      "teach": "./audio/conj/cj_cj11_teach.mp3?v=410b252e",
+      "model": "./audio/conj/cj_cj11_model.mp3?v=fae9b92e"
+    },
+    "CJ12": {
+      "ask": "./audio/conj/cj_cj12_ask.mp3?v=7cd35918",
+      "teach": "./audio/conj/cj_cj12_teach.mp3?v=b414d2ac",
+      "model": "./audio/conj/cj_cj12_model.mp3?v=406d0c91"
+    },
+    "CJ13": {
+      "ask": "./audio/conj/cj_cj13_ask.mp3?v=c5ce11e7",
+      "teach": "./audio/conj/cj_cj13_teach.mp3?v=b5b19410",
+      "model": "./audio/conj/cj_cj13_model.mp3?v=5aeda759"
+    },
+    "CJ14": {
+      "ask": "./audio/conj/cj_cj14_ask.mp3?v=f64af9eb",
+      "teach": "./audio/conj/cj_cj14_teach.mp3?v=c4a565ab",
+      "model": "./audio/conj/cj_cj14_model.mp3?v=a46a1764"
+    },
+    "CJ15": {
+      "ask": "./audio/conj/cj_cj15_ask.mp3?v=1dfdded1",
+      "teach": "./audio/conj/cj_cj15_teach.mp3?v=899ef972",
+      "model": "./audio/conj/cj_cj15_model.mp3?v=54585c9d"
+    },
+    "CJ16": {
+      "ask": "./audio/conj/cj_cj16_ask.mp3?v=c4cbb65b",
+      "teach": "./audio/conj/cj_cj16_teach.mp3?v=317dce0d",
+      "model": "./audio/conj/cj_cj16_model.mp3?v=bbaa032f"
+    },
+    "CJ17": {
+      "ask": "./audio/conj/cj_cj17_ask.mp3?v=f8be612f",
+      "teach": "./audio/conj/cj_cj17_teach.mp3?v=293a2d90",
+      "model": "./audio/conj/cj_cj17_model.mp3?v=6dcbe100"
+    },
+    "CJ18": {
+      "ask": "./audio/conj/cj_cj18_ask.mp3?v=06c42f38",
+      "teach": "./audio/conj/cj_cj18_teach.mp3?v=5b56bdac",
+      "model": "./audio/conj/cj_cj18_model.mp3?v=cc4c2da9"
+    },
+    "CJ19": {
+      "ask": "./audio/conj/cj_cj19_ask.mp3?v=fc9829df",
+      "teach": "./audio/conj/cj_cj19_teach.mp3?v=0b65e8e5",
+      "model": "./audio/conj/cj_cj19_model.mp3?v=ab09b629"
+    },
+    "CJ20": {
+      "ask": "./audio/conj/cj_cj20_ask.mp3?v=964b143a",
+      "teach": "./audio/conj/cj_cj20_teach.mp3?v=98e11a74",
+      "model": "./audio/conj/cj_cj20_model.mp3?v=fca12830"
+    },
+    "CJ21": {
+      "ask": "./audio/conj/cj_cj21_ask.mp3?v=65ed9d10",
+      "teach": "./audio/conj/cj_cj21_teach.mp3?v=e66e3c78",
+      "model": "./audio/conj/cj_cj21_model.mp3?v=d1d1b5f8"
+    },
+    "CJ22": {
+      "ask": "./audio/conj/cj_cj22_ask.mp3?v=03ad1bd7",
+      "teach": "./audio/conj/cj_cj22_teach.mp3?v=f0ab4d1f",
+      "model": "./audio/conj/cj_cj22_model.mp3?v=33a2b18c"
+    },
+    "CJ23": {
+      "ask": "./audio/conj/cj_cj23_ask.mp3?v=f5fea085",
+      "teach": "./audio/conj/cj_cj23_teach.mp3?v=4f54e7d1",
+      "model": "./audio/conj/cj_cj23_model.mp3?v=87fad0be"
+    },
+    "CJ24": {
+      "ask": "./audio/conj/cj_cj24_ask.mp3?v=243772af",
+      "teach": "./audio/conj/cj_cj24_teach.mp3?v=5a143cb5",
+      "model": "./audio/conj/cj_cj24_model.mp3?v=c913a336"
+    },
+    "CJ25": {
+      "ask": "./audio/conj/cj_cj25_ask.mp3?v=fc0c9578",
+      "teach": "./audio/conj/cj_cj25_teach.mp3?v=fbc1f2c7",
+      "model": "./audio/conj/cj_cj25_model.mp3?v=85f1b3dd"
+    },
+    "CJ26": {
+      "ask": "./audio/conj/cj_cj26_ask.mp3?v=46cff04c",
+      "teach": "./audio/conj/cj_cj26_teach.mp3?v=6b1e88d8",
+      "model": "./audio/conj/cj_cj26_model.mp3?v=6912d783"
+    },
+    "CJ27": {
+      "ask": "./audio/conj/cj_cj27_ask.mp3?v=06065444",
+      "teach": "./audio/conj/cj_cj27_teach.mp3?v=60e3e408",
+      "model": "./audio/conj/cj_cj27_model.mp3?v=cc058842"
+    },
+    "CJ28": {
+      "ask": "./audio/conj/cj_cj28_ask.mp3?v=08e4feed",
+      "teach": "./audio/conj/cj_cj28_teach.mp3?v=34f9088d",
+      "model": "./audio/conj/cj_cj28_model.mp3?v=f361365c"
+    },
+    "CJ29": {
+      "ask": "./audio/conj/cj_cj29_ask.mp3?v=05a59da9",
+      "teach": "./audio/conj/cj_cj29_teach.mp3?v=dfa189cb",
+      "model": "./audio/conj/cj_cj29_model.mp3?v=17997d22"
+    },
+    "CJ30": {
+      "ask": "./audio/conj/cj_cj30_ask.mp3?v=525e51ba",
+      "teach": "./audio/conj/cj_cj30_teach.mp3?v=31057cf3",
+      "model": "./audio/conj/cj_cj30_model.mp3?v=d0103c3d"
+    },
+    "CJ31": {
+      "ask": "./audio/conj/cj_cj31_ask.mp3?v=49555488",
+      "teach": "./audio/conj/cj_cj31_teach.mp3?v=9de101b3",
+      "model": "./audio/conj/cj_cj31_model.mp3?v=32360ed2"
+    },
+    "CJ32": {
+      "ask": "./audio/conj/cj_cj32_ask.mp3?v=7b10f39d",
+      "teach": "./audio/conj/cj_cj32_teach.mp3?v=97e46ced",
+      "model": "./audio/conj/cj_cj32_model.mp3?v=8a7c57cc"
+    },
+    "CJ33": {
+      "ask": "./audio/conj/cj_cj33_ask.mp3?v=aacc7ece",
+      "teach": "./audio/conj/cj_cj33_teach.mp3?v=1993d60f",
+      "model": "./audio/conj/cj_cj33_model.mp3?v=b3ac2618"
+    },
+    "CJ34": {
+      "ask": "./audio/conj/cj_cj34_ask.mp3?v=8b6b99b0",
+      "teach": "./audio/conj/cj_cj34_teach.mp3?v=39952b8f",
+      "model": "./audio/conj/cj_cj34_model.mp3?v=48e4e036"
+    },
+    "CJ35": {
+      "ask": "./audio/conj/cj_cj35_ask.mp3?v=2148d130",
+      "teach": "./audio/conj/cj_cj35_teach.mp3?v=d8bd58fd",
+      "model": "./audio/conj/cj_cj35_model.mp3?v=1fde4fd6"
+    },
+    "CJ36": {
+      "ask": "./audio/conj/cj_cj36_ask.mp3?v=dbaa6f75",
+      "teach": "./audio/conj/cj_cj36_teach.mp3?v=7f59b486",
+      "model": "./audio/conj/cj_cj36_model.mp3?v=93eb42f9"
+    },
+    "CJ37": {
+      "ask": "./audio/conj/cj_cj37_ask.mp3?v=e9281a40",
+      "teach": "./audio/conj/cj_cj37_teach.mp3?v=fb67994b",
+      "model": "./audio/conj/cj_cj37_model.mp3?v=59ef0d91"
+    },
+    "CJ38": {
+      "ask": "./audio/conj/cj_cj38_ask.mp3?v=206ed42d",
+      "teach": "./audio/conj/cj_cj38_teach.mp3?v=201ce905",
+      "model": "./audio/conj/cj_cj38_model.mp3?v=a277ade6"
+    },
+    "CJ39": {
+      "ask": "./audio/conj/cj_cj39_ask.mp3?v=a3b973d6",
+      "teach": "./audio/conj/cj_cj39_teach.mp3?v=4d341c2e",
+      "model": "./audio/conj/cj_cj39_model.mp3?v=ae856a4f"
+    },
+    "CJ40": {
+      "ask": "./audio/conj/cj_cj40_ask.mp3?v=d7224850",
+      "teach": "./audio/conj/cj_cj40_teach.mp3?v=69ebef74",
+      "model": "./audio/conj/cj_cj40_model.mp3?v=809acb0b"
+    },
+    "CJ41": {
+      "ask": "./audio/conj/cj_cj41_ask.mp3?v=e739ad0e",
+      "teach": "./audio/conj/cj_cj41_teach.mp3?v=9edd8a49",
+      "model": "./audio/conj/cj_cj41_model.mp3?v=ac7aad33"
+    },
+    "CJ42": {
+      "ask": "./audio/conj/cj_cj42_ask.mp3?v=223ffdeb",
+      "teach": "./audio/conj/cj_cj42_teach.mp3?v=76bbd596",
+      "model": "./audio/conj/cj_cj42_model.mp3?v=fd61abb9"
+    },
+    "CJ43": {
+      "ask": "./audio/conj/cj_cj43_ask.mp3?v=21364727",
+      "teach": "./audio/conj/cj_cj43_teach.mp3?v=d3d41c40",
+      "model": "./audio/conj/cj_cj43_model.mp3?v=89a3cab6"
+    },
+    "CJ44": {
+      "ask": "./audio/conj/cj_cj44_ask.mp3?v=b57b4523",
+      "teach": "./audio/conj/cj_cj44_teach.mp3?v=f1148f4c",
+      "model": "./audio/conj/cj_cj44_model.mp3?v=85bc53c8"
+    },
+    "CJ45": {
+      "ask": "./audio/conj/cj_cj45_ask.mp3?v=f7d20a3b",
+      "teach": "./audio/conj/cj_cj45_teach.mp3?v=6ee4d17a",
+      "model": "./audio/conj/cj_cj45_model.mp3?v=5fac8755"
+    },
+    "CJ46": {
+      "ask": "./audio/conj/cj_cj46_ask.mp3?v=53f8d014",
+      "teach": "./audio/conj/cj_cj46_teach.mp3?v=c5d9f41d",
+      "model": "./audio/conj/cj_cj46_model.mp3?v=b14e375b"
+    },
+    "CJ47": {
+      "ask": "./audio/conj/cj_cj47_ask.mp3?v=c1c1ec58",
+      "teach": "./audio/conj/cj_cj47_teach.mp3?v=d0edd55a",
+      "model": "./audio/conj/cj_cj47_model.mp3?v=4ffd78bb"
+    },
+    "CJ48": {
+      "ask": "./audio/conj/cj_cj48_ask.mp3?v=32e70753",
+      "teach": "./audio/conj/cj_cj48_teach.mp3?v=53373383",
+      "model": "./audio/conj/cj_cj48_model.mp3?v=a050d43f"
+    }
+  },
+  "conj_drill_hashes": {
+    "cj_cj01_ask.mp3": "fd268be7c6",
+    "cj_cj01_teach.mp3": "49d827fd22",
+    "cj_cj01_model.mp3": "e9fd58b008",
+    "cj_cj02_ask.mp3": "9a227e4819",
+    "cj_cj02_teach.mp3": "0af9263194",
+    "cj_cj02_model.mp3": "08f1de8d69",
+    "cj_cj03_ask.mp3": "cd664f323b",
+    "cj_cj03_teach.mp3": "8b02903e15",
+    "cj_cj03_model.mp3": "b7ff3da08f",
+    "cj_cj04_ask.mp3": "0d027240ba",
+    "cj_cj04_teach.mp3": "e05bce8f4d",
+    "cj_cj04_model.mp3": "3e461004b5",
+    "cj_cj05_ask.mp3": "80cd1d1cde",
+    "cj_cj05_teach.mp3": "ac6565a21b",
+    "cj_cj05_model.mp3": "45fb6a7934",
+    "cj_cj06_ask.mp3": "0b88c59277",
+    "cj_cj06_teach.mp3": "656eda91e3",
+    "cj_cj06_model.mp3": "f7027cc38a",
+    "cj_cj07_ask.mp3": "a4e9ded3d1",
+    "cj_cj07_teach.mp3": "31bad1f524",
+    "cj_cj07_model.mp3": "edad14a9c4",
+    "cj_cj08_ask.mp3": "0062da8a7a",
+    "cj_cj08_teach.mp3": "49de6c2a95",
+    "cj_cj08_model.mp3": "ebf48716de",
+    "cj_cj09_ask.mp3": "a77b15e23b",
+    "cj_cj09_teach.mp3": "8ca03bcd11",
+    "cj_cj09_model.mp3": "00f718f230",
+    "cj_cj10_ask.mp3": "81dbde8ad8",
+    "cj_cj10_teach.mp3": "2391ff3400",
+    "cj_cj10_model.mp3": "470ae5897a",
+    "cj_cj11_ask.mp3": "a958f383bd",
+    "cj_cj11_teach.mp3": "410b252ec4",
+    "cj_cj11_model.mp3": "fae9b92e10",
+    "cj_cj12_ask.mp3": "7cd35918fd",
+    "cj_cj12_teach.mp3": "b414d2ac23",
+    "cj_cj12_model.mp3": "406d0c91e2",
+    "cj_cj13_ask.mp3": "c5ce11e7fb",
+    "cj_cj13_teach.mp3": "b5b1941051",
+    "cj_cj13_model.mp3": "5aeda759ee",
+    "cj_cj14_ask.mp3": "f64af9ebbe",
+    "cj_cj14_teach.mp3": "c4a565ab11",
+    "cj_cj14_model.mp3": "a46a1764d6",
+    "cj_cj15_ask.mp3": "1dfdded117",
+    "cj_cj15_teach.mp3": "899ef97282",
+    "cj_cj15_model.mp3": "54585c9d4a",
+    "cj_cj16_ask.mp3": "c4cbb65b41",
+    "cj_cj16_teach.mp3": "317dce0d9a",
+    "cj_cj16_model.mp3": "bbaa032f4d",
+    "cj_cj17_ask.mp3": "f8be612ff9",
+    "cj_cj17_teach.mp3": "293a2d90b4",
+    "cj_cj17_model.mp3": "6dcbe100a5",
+    "cj_cj18_ask.mp3": "06c42f384b",
+    "cj_cj18_teach.mp3": "5b56bdac7e",
+    "cj_cj18_model.mp3": "cc4c2da91b",
+    "cj_cj19_ask.mp3": "fc9829df28",
+    "cj_cj19_teach.mp3": "0b65e8e5a6",
+    "cj_cj19_model.mp3": "ab09b62995",
+    "cj_cj20_ask.mp3": "964b143a48",
+    "cj_cj20_teach.mp3": "98e11a7491",
+    "cj_cj20_model.mp3": "fca12830c7",
+    "cj_cj21_ask.mp3": "65ed9d10b7",
+    "cj_cj21_teach.mp3": "e66e3c7863",
+    "cj_cj21_model.mp3": "d1d1b5f83e",
+    "cj_cj22_ask.mp3": "03ad1bd762",
+    "cj_cj22_teach.mp3": "f0ab4d1f27",
+    "cj_cj22_model.mp3": "33a2b18c98",
+    "cj_cj23_ask.mp3": "f5fea08586",
+    "cj_cj23_teach.mp3": "4f54e7d14f",
+    "cj_cj23_model.mp3": "87fad0be79",
+    "cj_cj24_ask.mp3": "243772af6a",
+    "cj_cj24_teach.mp3": "5a143cb50f",
+    "cj_cj24_model.mp3": "c913a3367c",
+    "cj_cj25_ask.mp3": "fc0c957882",
+    "cj_cj25_teach.mp3": "fbc1f2c7d0",
+    "cj_cj25_model.mp3": "85f1b3ddca",
+    "cj_cj26_ask.mp3": "46cff04c1d",
+    "cj_cj26_teach.mp3": "6b1e88d894",
+    "cj_cj26_model.mp3": "6912d7838b",
+    "cj_cj27_ask.mp3": "06065444c9",
+    "cj_cj27_teach.mp3": "60e3e408bf",
+    "cj_cj27_model.mp3": "cc05884245",
+    "cj_cj28_ask.mp3": "08e4feed3a",
+    "cj_cj28_teach.mp3": "34f9088dd4",
+    "cj_cj28_model.mp3": "f361365caa",
+    "cj_cj29_ask.mp3": "05a59da93f",
+    "cj_cj29_teach.mp3": "dfa189cb14",
+    "cj_cj29_model.mp3": "17997d22c9",
+    "cj_cj30_ask.mp3": "525e51ba5e",
+    "cj_cj30_teach.mp3": "31057cf3db",
+    "cj_cj30_model.mp3": "d0103c3d29",
+    "cj_cj31_ask.mp3": "4955548865",
+    "cj_cj31_teach.mp3": "9de101b342",
+    "cj_cj31_model.mp3": "32360ed239",
+    "cj_cj32_ask.mp3": "7b10f39d9c",
+    "cj_cj32_teach.mp3": "97e46ced42",
+    "cj_cj32_model.mp3": "8a7c57ccc8",
+    "cj_cj33_ask.mp3": "aacc7ecef4",
+    "cj_cj33_teach.mp3": "1993d60faa",
+    "cj_cj33_model.mp3": "b3ac2618c9",
+    "cj_cj34_ask.mp3": "8b6b99b0a8",
+    "cj_cj34_teach.mp3": "39952b8fc5",
+    "cj_cj34_model.mp3": "48e4e0369a",
+    "cj_cj35_ask.mp3": "2148d130bc",
+    "cj_cj35_teach.mp3": "d8bd58fdf0",
+    "cj_cj35_model.mp3": "1fde4fd63f",
+    "cj_cj36_ask.mp3": "dbaa6f7565",
+    "cj_cj36_teach.mp3": "7f59b4866e",
+    "cj_cj36_model.mp3": "93eb42f90b",
+    "cj_cj37_ask.mp3": "e9281a40c2",
+    "cj_cj37_teach.mp3": "fb67994b4a",
+    "cj_cj37_model.mp3": "59ef0d9141",
+    "cj_cj38_ask.mp3": "206ed42d70",
+    "cj_cj38_teach.mp3": "201ce90590",
+    "cj_cj38_model.mp3": "a277ade666",
+    "cj_cj39_ask.mp3": "a3b973d642",
+    "cj_cj39_teach.mp3": "4d341c2e93",
+    "cj_cj39_model.mp3": "ae856a4f00",
+    "cj_cj40_ask.mp3": "d7224850c7",
+    "cj_cj40_teach.mp3": "69ebef74e6",
+    "cj_cj40_model.mp3": "809acb0b19",
+    "cj_cj41_ask.mp3": "e739ad0e24",
+    "cj_cj41_teach.mp3": "9edd8a4902",
+    "cj_cj41_model.mp3": "ac7aad336b",
+    "cj_cj42_ask.mp3": "223ffdeb19",
+    "cj_cj42_teach.mp3": "76bbd59636",
+    "cj_cj42_model.mp3": "fd61abb964",
+    "cj_cj43_ask.mp3": "2136472792",
+    "cj_cj43_teach.mp3": "d3d41c4014",
+    "cj_cj43_model.mp3": "89a3cab649",
+    "cj_cj44_ask.mp3": "b57b4523f1",
+    "cj_cj44_teach.mp3": "f1148f4c0b",
+    "cj_cj44_model.mp3": "85bc53c828",
+    "cj_cj45_ask.mp3": "f7d20a3be5",
+    "cj_cj45_teach.mp3": "6ee4d17ab1",
+    "cj_cj45_model.mp3": "5fac87556c",
+    "cj_cj46_ask.mp3": "53f8d0140e",
+    "cj_cj46_teach.mp3": "c5d9f41df0",
+    "cj_cj46_model.mp3": "b14e375bef",
+    "cj_cj47_ask.mp3": "c1c1ec58d9",
+    "cj_cj47_teach.mp3": "d0edd55a29",
+    "cj_cj47_model.mp3": "4ffd78bb3f",
+    "cj_cj48_ask.mp3": "32e70753d0",
+    "cj_cj48_teach.mp3": "53373383ce",
+    "cj_cj48_model.mp3": "a050d43fb5"
   },
   "num_JF_1.mp3": "b67108e5b8a0",
   "num_JF_2.mp3": "faee77d48904",
@@ -12754,437 +13202,5 @@
     "exp_audio": "./audio/VAR11-60_exp.mp3?v=395a4bcb",
     "spoken_text": "关于下周碰头会的事，我打算稍后由我这边再向贵司负责人请教具体需求。 动作发出者是「私から（我这边）」，自己向对方打听请教必须压低自己用谦让语「伺う」。 动作主语是「我」去问/拜访对方＝谦让语「伺う」；「お〜になる」只能抬高对方。"
   },
-  "done.mp3": "33da2bfc13f6",
-  "voice_coach": {
-    "ok_1": "./audio/words/vc_coach_ok_1.mp3?v=e84d33a1",
-    "ok_2": "./audio/words/vc_coach_ok_2.mp3?v=e11fd59b",
-    "ok_3": "./audio/words/vc_coach_ok_3.mp3?v=c6c971ca",
-    "sokuon_miss": "./audio/words/vc_coach_sokuon_miss.mp3?v=7d11a0f0",
-    "sokuon_extra": "./audio/words/vc_coach_sokuon_extra.mp3?v=861b8b0b",
-    "length_short": "./audio/words/vc_coach_length_short.mp3?v=5f0d5372",
-    "length_long": "./audio/words/vc_coach_length_long.mp3?v=cdefdbb9",
-    "voicing": "./audio/words/vc_coach_voicing.mp3?v=ee22c8b6",
-    "near": "./audio/words/vc_coach_near.mp3?v=b3ed118b",
-    "miss": "./audio/words/vc_coach_miss.mp3?v=0b9df5d0",
-    "blank": "./audio/words/vc_coach_blank.mp3?v=e3f1325e",
-    "shadow_ask": "./audio/words/vc_coach_shadow_ask.mp3?v=8942bb55",
-    "shadow_ok": "./audio/words/vc_coach_shadow_ok.mp3?v=ac7e220e",
-    "shadow_close": "./audio/words/vc_coach_shadow_close.mp3?v=70dec28c",
-    "repeat": "./audio/words/vc_coach_repeat.mp3?v=b8676b29",
-    "auto_pause": "./audio/words/vc_coach_auto_pause.mp3?v=71d71773",
-    "batch_done": "./audio/words/vc_coach_batch_done.mp3?v=3bbd3c84",
-    "audio_reveal": "./audio/words/vc_coach_audio_reveal.mp3?v=c74d733c",
-    "listen_ok_1": "./audio/words/vc_coach_listen_ok_1.mp3?v=52e95178",
-    "listen_ok_2": "./audio/words/vc_coach_listen_ok_2.mp3?v=39c88dff",
-    "listen_ok_3": "./audio/words/vc_coach_listen_ok_3.mp3?v=e0bd648f",
-    "listen_wrong_1": "./audio/words/vc_coach_listen_wrong_1.mp3?v=224279c8",
-    "listen_wrong_2": "./audio/words/vc_coach_listen_wrong_2.mp3?v=65d52f2a",
-    "listen_wrong_3": "./audio/words/vc_coach_listen_wrong_3.mp3?v=71db3fe4",
-    "listen_unsure_1": "./audio/words/vc_coach_listen_unsure_1.mp3?v=b27e170e",
-    "listen_unsure_2": "./audio/words/vc_coach_listen_unsure_2.mp3?v=5e0541a9",
-    "listen_unsure_3": "./audio/words/vc_coach_listen_unsure_3.mp3?v=22a08069",
-    "listen_slow": "./audio/words/vc_coach_listen_slow.mp3?v=be5c9b44",
-    "listen_unclear": "./audio/words/vc_coach_listen_unclear.mp3?v=ea6dff06",
-    "listen_done": "./audio/words/vc_coach_listen_done.mp3?v=0ac46a0b",
-    "conj_ranuki": "./audio/words/vc_coach_conj_ranuki.mp3?v=44e4d9c8",
-    "conj_iku_te": "./audio/words/vc_coach_conj_iku_te.mp3?v=4dcb31d9",
-    "conj_pass_caus": "./audio/words/vc_coach_conj_pass_caus.mp3?v=d3bd5078",
-    "conj_keigo_dir": "./audio/words/vc_coach_conj_keigo_dir.mp3?v=49bf6522",
-    "conj_done": "./audio/words/vc_coach_conj_done.mp3?v=0d1a32d1",
-    "rv_intro": "./audio/words/vc_coach_rv_intro.mp3?v=a22e4e23",
-    "rv_spk_intro": "./audio/words/vc_coach_rv_spk_intro.mp3?v=6bd49528",
-    "rv_spk_ok": "./audio/words/vc_coach_rv_spk_ok.mp3?v=c0898a59",
-    "rv_spk_near": "./audio/words/vc_coach_rv_spk_near.mp3?v=0f41333b",
-    "rv_spk_miss": "./audio/words/vc_coach_rv_spk_miss.mp3?v=1c1063a4",
-    "rv_done": "./audio/words/vc_coach_rv_done.mp3?v=0fc84d29",
-    "rv_grammar_ask": "./audio/words/vc_coach_rv_grammar_ask.mp3?v=1c97c62f"
-  },
-  "conj_drills": {
-    "CJ01": {
-      "ask": "./audio/conj/cj_cj01_ask.mp3?v=fd268be7",
-      "teach": "./audio/conj/cj_cj01_teach.mp3?v=49d827fd",
-      "model": "./audio/conj/cj_cj01_model.mp3?v=e9fd58b0"
-    },
-    "CJ02": {
-      "ask": "./audio/conj/cj_cj02_ask.mp3?v=9a227e48",
-      "teach": "./audio/conj/cj_cj02_teach.mp3?v=0af92631",
-      "model": "./audio/conj/cj_cj02_model.mp3?v=08f1de8d"
-    },
-    "CJ03": {
-      "ask": "./audio/conj/cj_cj03_ask.mp3?v=cd664f32",
-      "teach": "./audio/conj/cj_cj03_teach.mp3?v=8b02903e",
-      "model": "./audio/conj/cj_cj03_model.mp3?v=b7ff3da0"
-    },
-    "CJ04": {
-      "ask": "./audio/conj/cj_cj04_ask.mp3?v=0d027240",
-      "teach": "./audio/conj/cj_cj04_teach.mp3?v=e05bce8f",
-      "model": "./audio/conj/cj_cj04_model.mp3?v=3e461004"
-    },
-    "CJ05": {
-      "ask": "./audio/conj/cj_cj05_ask.mp3?v=80cd1d1c",
-      "teach": "./audio/conj/cj_cj05_teach.mp3?v=ac6565a2",
-      "model": "./audio/conj/cj_cj05_model.mp3?v=45fb6a79"
-    },
-    "CJ06": {
-      "ask": "./audio/conj/cj_cj06_ask.mp3?v=0b88c592",
-      "teach": "./audio/conj/cj_cj06_teach.mp3?v=656eda91",
-      "model": "./audio/conj/cj_cj06_model.mp3?v=f7027cc3"
-    },
-    "CJ07": {
-      "ask": "./audio/conj/cj_cj07_ask.mp3?v=a4e9ded3",
-      "teach": "./audio/conj/cj_cj07_teach.mp3?v=31bad1f5",
-      "model": "./audio/conj/cj_cj07_model.mp3?v=edad14a9"
-    },
-    "CJ08": {
-      "ask": "./audio/conj/cj_cj08_ask.mp3?v=0062da8a",
-      "teach": "./audio/conj/cj_cj08_teach.mp3?v=49de6c2a",
-      "model": "./audio/conj/cj_cj08_model.mp3?v=ebf48716"
-    },
-    "CJ09": {
-      "ask": "./audio/conj/cj_cj09_ask.mp3?v=a77b15e2",
-      "teach": "./audio/conj/cj_cj09_teach.mp3?v=8ca03bcd",
-      "model": "./audio/conj/cj_cj09_model.mp3?v=00f718f2"
-    },
-    "CJ10": {
-      "ask": "./audio/conj/cj_cj10_ask.mp3?v=81dbde8a",
-      "teach": "./audio/conj/cj_cj10_teach.mp3?v=2391ff34",
-      "model": "./audio/conj/cj_cj10_model.mp3?v=470ae589"
-    },
-    "CJ11": {
-      "ask": "./audio/conj/cj_cj11_ask.mp3?v=a958f383",
-      "teach": "./audio/conj/cj_cj11_teach.mp3?v=410b252e",
-      "model": "./audio/conj/cj_cj11_model.mp3?v=fae9b92e"
-    },
-    "CJ12": {
-      "ask": "./audio/conj/cj_cj12_ask.mp3?v=7cd35918",
-      "teach": "./audio/conj/cj_cj12_teach.mp3?v=b414d2ac",
-      "model": "./audio/conj/cj_cj12_model.mp3?v=406d0c91"
-    },
-    "CJ13": {
-      "ask": "./audio/conj/cj_cj13_ask.mp3?v=c5ce11e7",
-      "teach": "./audio/conj/cj_cj13_teach.mp3?v=b5b19410",
-      "model": "./audio/conj/cj_cj13_model.mp3?v=5aeda759"
-    },
-    "CJ14": {
-      "ask": "./audio/conj/cj_cj14_ask.mp3?v=f64af9eb",
-      "teach": "./audio/conj/cj_cj14_teach.mp3?v=c4a565ab",
-      "model": "./audio/conj/cj_cj14_model.mp3?v=a46a1764"
-    },
-    "CJ15": {
-      "ask": "./audio/conj/cj_cj15_ask.mp3?v=1dfdded1",
-      "teach": "./audio/conj/cj_cj15_teach.mp3?v=899ef972",
-      "model": "./audio/conj/cj_cj15_model.mp3?v=54585c9d"
-    },
-    "CJ16": {
-      "ask": "./audio/conj/cj_cj16_ask.mp3?v=c4cbb65b",
-      "teach": "./audio/conj/cj_cj16_teach.mp3?v=317dce0d",
-      "model": "./audio/conj/cj_cj16_model.mp3?v=bbaa032f"
-    },
-    "CJ17": {
-      "ask": "./audio/conj/cj_cj17_ask.mp3?v=f8be612f",
-      "teach": "./audio/conj/cj_cj17_teach.mp3?v=293a2d90",
-      "model": "./audio/conj/cj_cj17_model.mp3?v=6dcbe100"
-    },
-    "CJ18": {
-      "ask": "./audio/conj/cj_cj18_ask.mp3?v=06c42f38",
-      "teach": "./audio/conj/cj_cj18_teach.mp3?v=5b56bdac",
-      "model": "./audio/conj/cj_cj18_model.mp3?v=cc4c2da9"
-    },
-    "CJ19": {
-      "ask": "./audio/conj/cj_cj19_ask.mp3?v=fc9829df",
-      "teach": "./audio/conj/cj_cj19_teach.mp3?v=0b65e8e5",
-      "model": "./audio/conj/cj_cj19_model.mp3?v=ab09b629"
-    },
-    "CJ20": {
-      "ask": "./audio/conj/cj_cj20_ask.mp3?v=964b143a",
-      "teach": "./audio/conj/cj_cj20_teach.mp3?v=98e11a74",
-      "model": "./audio/conj/cj_cj20_model.mp3?v=fca12830"
-    },
-    "CJ21": {
-      "ask": "./audio/conj/cj_cj21_ask.mp3?v=65ed9d10",
-      "teach": "./audio/conj/cj_cj21_teach.mp3?v=e66e3c78",
-      "model": "./audio/conj/cj_cj21_model.mp3?v=d1d1b5f8"
-    },
-    "CJ22": {
-      "ask": "./audio/conj/cj_cj22_ask.mp3?v=03ad1bd7",
-      "teach": "./audio/conj/cj_cj22_teach.mp3?v=f0ab4d1f",
-      "model": "./audio/conj/cj_cj22_model.mp3?v=33a2b18c"
-    },
-    "CJ23": {
-      "ask": "./audio/conj/cj_cj23_ask.mp3?v=f5fea085",
-      "teach": "./audio/conj/cj_cj23_teach.mp3?v=4f54e7d1",
-      "model": "./audio/conj/cj_cj23_model.mp3?v=87fad0be"
-    },
-    "CJ24": {
-      "ask": "./audio/conj/cj_cj24_ask.mp3?v=243772af",
-      "teach": "./audio/conj/cj_cj24_teach.mp3?v=5a143cb5",
-      "model": "./audio/conj/cj_cj24_model.mp3?v=c913a336"
-    },
-    "CJ25": {
-      "ask": "./audio/conj/cj_cj25_ask.mp3?v=fc0c9578",
-      "teach": "./audio/conj/cj_cj25_teach.mp3?v=fbc1f2c7",
-      "model": "./audio/conj/cj_cj25_model.mp3?v=85f1b3dd"
-    },
-    "CJ26": {
-      "ask": "./audio/conj/cj_cj26_ask.mp3?v=46cff04c",
-      "teach": "./audio/conj/cj_cj26_teach.mp3?v=6b1e88d8",
-      "model": "./audio/conj/cj_cj26_model.mp3?v=6912d783"
-    },
-    "CJ27": {
-      "ask": "./audio/conj/cj_cj27_ask.mp3?v=06065444",
-      "teach": "./audio/conj/cj_cj27_teach.mp3?v=60e3e408",
-      "model": "./audio/conj/cj_cj27_model.mp3?v=cc058842"
-    },
-    "CJ28": {
-      "ask": "./audio/conj/cj_cj28_ask.mp3?v=08e4feed",
-      "teach": "./audio/conj/cj_cj28_teach.mp3?v=34f9088d",
-      "model": "./audio/conj/cj_cj28_model.mp3?v=f361365c"
-    },
-    "CJ29": {
-      "ask": "./audio/conj/cj_cj29_ask.mp3?v=05a59da9",
-      "teach": "./audio/conj/cj_cj29_teach.mp3?v=dfa189cb",
-      "model": "./audio/conj/cj_cj29_model.mp3?v=17997d22"
-    },
-    "CJ30": {
-      "ask": "./audio/conj/cj_cj30_ask.mp3?v=525e51ba",
-      "teach": "./audio/conj/cj_cj30_teach.mp3?v=31057cf3",
-      "model": "./audio/conj/cj_cj30_model.mp3?v=d0103c3d"
-    },
-    "CJ31": {
-      "ask": "./audio/conj/cj_cj31_ask.mp3?v=49555488",
-      "teach": "./audio/conj/cj_cj31_teach.mp3?v=9de101b3",
-      "model": "./audio/conj/cj_cj31_model.mp3?v=32360ed2"
-    },
-    "CJ32": {
-      "ask": "./audio/conj/cj_cj32_ask.mp3?v=7b10f39d",
-      "teach": "./audio/conj/cj_cj32_teach.mp3?v=97e46ced",
-      "model": "./audio/conj/cj_cj32_model.mp3?v=8a7c57cc"
-    },
-    "CJ33": {
-      "ask": "./audio/conj/cj_cj33_ask.mp3?v=aacc7ece",
-      "teach": "./audio/conj/cj_cj33_teach.mp3?v=1993d60f",
-      "model": "./audio/conj/cj_cj33_model.mp3?v=b3ac2618"
-    },
-    "CJ34": {
-      "ask": "./audio/conj/cj_cj34_ask.mp3?v=8b6b99b0",
-      "teach": "./audio/conj/cj_cj34_teach.mp3?v=39952b8f",
-      "model": "./audio/conj/cj_cj34_model.mp3?v=48e4e036"
-    },
-    "CJ35": {
-      "ask": "./audio/conj/cj_cj35_ask.mp3?v=2148d130",
-      "teach": "./audio/conj/cj_cj35_teach.mp3?v=d8bd58fd",
-      "model": "./audio/conj/cj_cj35_model.mp3?v=1fde4fd6"
-    },
-    "CJ36": {
-      "ask": "./audio/conj/cj_cj36_ask.mp3?v=dbaa6f75",
-      "teach": "./audio/conj/cj_cj36_teach.mp3?v=7f59b486",
-      "model": "./audio/conj/cj_cj36_model.mp3?v=93eb42f9"
-    },
-    "CJ37": {
-      "ask": "./audio/conj/cj_cj37_ask.mp3?v=e9281a40",
-      "teach": "./audio/conj/cj_cj37_teach.mp3?v=fb67994b",
-      "model": "./audio/conj/cj_cj37_model.mp3?v=59ef0d91"
-    },
-    "CJ38": {
-      "ask": "./audio/conj/cj_cj38_ask.mp3?v=206ed42d",
-      "teach": "./audio/conj/cj_cj38_teach.mp3?v=201ce905",
-      "model": "./audio/conj/cj_cj38_model.mp3?v=a277ade6"
-    },
-    "CJ39": {
-      "ask": "./audio/conj/cj_cj39_ask.mp3?v=a3b973d6",
-      "teach": "./audio/conj/cj_cj39_teach.mp3?v=4d341c2e",
-      "model": "./audio/conj/cj_cj39_model.mp3?v=ae856a4f"
-    },
-    "CJ40": {
-      "ask": "./audio/conj/cj_cj40_ask.mp3?v=d7224850",
-      "teach": "./audio/conj/cj_cj40_teach.mp3?v=69ebef74",
-      "model": "./audio/conj/cj_cj40_model.mp3?v=809acb0b"
-    },
-    "CJ41": {
-      "ask": "./audio/conj/cj_cj41_ask.mp3?v=e739ad0e",
-      "teach": "./audio/conj/cj_cj41_teach.mp3?v=9edd8a49",
-      "model": "./audio/conj/cj_cj41_model.mp3?v=ac7aad33"
-    },
-    "CJ42": {
-      "ask": "./audio/conj/cj_cj42_ask.mp3?v=223ffdeb",
-      "teach": "./audio/conj/cj_cj42_teach.mp3?v=76bbd596",
-      "model": "./audio/conj/cj_cj42_model.mp3?v=fd61abb9"
-    },
-    "CJ43": {
-      "ask": "./audio/conj/cj_cj43_ask.mp3?v=21364727",
-      "teach": "./audio/conj/cj_cj43_teach.mp3?v=d3d41c40",
-      "model": "./audio/conj/cj_cj43_model.mp3?v=89a3cab6"
-    },
-    "CJ44": {
-      "ask": "./audio/conj/cj_cj44_ask.mp3?v=b57b4523",
-      "teach": "./audio/conj/cj_cj44_teach.mp3?v=f1148f4c",
-      "model": "./audio/conj/cj_cj44_model.mp3?v=85bc53c8"
-    },
-    "CJ45": {
-      "ask": "./audio/conj/cj_cj45_ask.mp3?v=f7d20a3b",
-      "teach": "./audio/conj/cj_cj45_teach.mp3?v=6ee4d17a",
-      "model": "./audio/conj/cj_cj45_model.mp3?v=5fac8755"
-    },
-    "CJ46": {
-      "ask": "./audio/conj/cj_cj46_ask.mp3?v=53f8d014",
-      "teach": "./audio/conj/cj_cj46_teach.mp3?v=c5d9f41d",
-      "model": "./audio/conj/cj_cj46_model.mp3?v=b14e375b"
-    },
-    "CJ47": {
-      "ask": "./audio/conj/cj_cj47_ask.mp3?v=c1c1ec58",
-      "teach": "./audio/conj/cj_cj47_teach.mp3?v=d0edd55a",
-      "model": "./audio/conj/cj_cj47_model.mp3?v=4ffd78bb"
-    },
-    "CJ48": {
-      "ask": "./audio/conj/cj_cj48_ask.mp3?v=32e70753",
-      "teach": "./audio/conj/cj_cj48_teach.mp3?v=53373383",
-      "model": "./audio/conj/cj_cj48_model.mp3?v=a050d43f"
-    }
-  },
-  "conj_drill_hashes": {
-    "cj_cj01_ask.mp3": "fd268be7c6",
-    "cj_cj01_teach.mp3": "49d827fd22",
-    "cj_cj01_model.mp3": "e9fd58b008",
-    "cj_cj02_ask.mp3": "9a227e4819",
-    "cj_cj02_teach.mp3": "0af9263194",
-    "cj_cj02_model.mp3": "08f1de8d69",
-    "cj_cj03_ask.mp3": "cd664f323b",
-    "cj_cj03_teach.mp3": "8b02903e15",
-    "cj_cj03_model.mp3": "b7ff3da08f",
-    "cj_cj04_ask.mp3": "0d027240ba",
-    "cj_cj04_teach.mp3": "e05bce8f4d",
-    "cj_cj04_model.mp3": "3e461004b5",
-    "cj_cj05_ask.mp3": "80cd1d1cde",
-    "cj_cj05_teach.mp3": "ac6565a21b",
-    "cj_cj05_model.mp3": "45fb6a7934",
-    "cj_cj06_ask.mp3": "0b88c59277",
-    "cj_cj06_teach.mp3": "656eda91e3",
-    "cj_cj06_model.mp3": "f7027cc38a",
-    "cj_cj07_ask.mp3": "a4e9ded3d1",
-    "cj_cj07_teach.mp3": "31bad1f524",
-    "cj_cj07_model.mp3": "edad14a9c4",
-    "cj_cj08_ask.mp3": "0062da8a7a",
-    "cj_cj08_teach.mp3": "49de6c2a95",
-    "cj_cj08_model.mp3": "ebf48716de",
-    "cj_cj09_ask.mp3": "a77b15e23b",
-    "cj_cj09_teach.mp3": "8ca03bcd11",
-    "cj_cj09_model.mp3": "00f718f230",
-    "cj_cj10_ask.mp3": "81dbde8ad8",
-    "cj_cj10_teach.mp3": "2391ff3400",
-    "cj_cj10_model.mp3": "470ae5897a",
-    "cj_cj11_ask.mp3": "a958f383bd",
-    "cj_cj11_teach.mp3": "410b252ec4",
-    "cj_cj11_model.mp3": "fae9b92e10",
-    "cj_cj12_ask.mp3": "7cd35918fd",
-    "cj_cj12_teach.mp3": "b414d2ac23",
-    "cj_cj12_model.mp3": "406d0c91e2",
-    "cj_cj13_ask.mp3": "c5ce11e7fb",
-    "cj_cj13_teach.mp3": "b5b1941051",
-    "cj_cj13_model.mp3": "5aeda759ee",
-    "cj_cj14_ask.mp3": "f64af9ebbe",
-    "cj_cj14_teach.mp3": "c4a565ab11",
-    "cj_cj14_model.mp3": "a46a1764d6",
-    "cj_cj15_ask.mp3": "1dfdded117",
-    "cj_cj15_teach.mp3": "899ef97282",
-    "cj_cj15_model.mp3": "54585c9d4a",
-    "cj_cj16_ask.mp3": "c4cbb65b41",
-    "cj_cj16_teach.mp3": "317dce0d9a",
-    "cj_cj16_model.mp3": "bbaa032f4d",
-    "cj_cj17_ask.mp3": "f8be612ff9",
-    "cj_cj17_teach.mp3": "293a2d90b4",
-    "cj_cj17_model.mp3": "6dcbe100a5",
-    "cj_cj18_ask.mp3": "06c42f384b",
-    "cj_cj18_teach.mp3": "5b56bdac7e",
-    "cj_cj18_model.mp3": "cc4c2da91b",
-    "cj_cj19_ask.mp3": "fc9829df28",
-    "cj_cj19_teach.mp3": "0b65e8e5a6",
-    "cj_cj19_model.mp3": "ab09b62995",
-    "cj_cj20_ask.mp3": "964b143a48",
-    "cj_cj20_teach.mp3": "98e11a7491",
-    "cj_cj20_model.mp3": "fca12830c7",
-    "cj_cj21_ask.mp3": "65ed9d10b7",
-    "cj_cj21_teach.mp3": "e66e3c7863",
-    "cj_cj21_model.mp3": "d1d1b5f83e",
-    "cj_cj22_ask.mp3": "03ad1bd762",
-    "cj_cj22_teach.mp3": "f0ab4d1f27",
-    "cj_cj22_model.mp3": "33a2b18c98",
-    "cj_cj23_ask.mp3": "f5fea08586",
-    "cj_cj23_teach.mp3": "4f54e7d14f",
-    "cj_cj23_model.mp3": "87fad0be79",
-    "cj_cj24_ask.mp3": "243772af6a",
-    "cj_cj24_teach.mp3": "5a143cb50f",
-    "cj_cj24_model.mp3": "c913a3367c",
-    "cj_cj25_ask.mp3": "fc0c957882",
-    "cj_cj25_teach.mp3": "fbc1f2c7d0",
-    "cj_cj25_model.mp3": "85f1b3ddca",
-    "cj_cj26_ask.mp3": "46cff04c1d",
-    "cj_cj26_teach.mp3": "6b1e88d894",
-    "cj_cj26_model.mp3": "6912d7838b",
-    "cj_cj27_ask.mp3": "06065444c9",
-    "cj_cj27_teach.mp3": "60e3e408bf",
-    "cj_cj27_model.mp3": "cc05884245",
-    "cj_cj28_ask.mp3": "08e4feed3a",
-    "cj_cj28_teach.mp3": "34f9088dd4",
-    "cj_cj28_model.mp3": "f361365caa",
-    "cj_cj29_ask.mp3": "05a59da93f",
-    "cj_cj29_teach.mp3": "dfa189cb14",
-    "cj_cj29_model.mp3": "17997d22c9",
-    "cj_cj30_ask.mp3": "525e51ba5e",
-    "cj_cj30_teach.mp3": "31057cf3db",
-    "cj_cj30_model.mp3": "d0103c3d29",
-    "cj_cj31_ask.mp3": "4955548865",
-    "cj_cj31_teach.mp3": "9de101b342",
-    "cj_cj31_model.mp3": "32360ed239",
-    "cj_cj32_ask.mp3": "7b10f39d9c",
-    "cj_cj32_teach.mp3": "97e46ced42",
-    "cj_cj32_model.mp3": "8a7c57ccc8",
-    "cj_cj33_ask.mp3": "aacc7ecef4",
-    "cj_cj33_teach.mp3": "1993d60faa",
-    "cj_cj33_model.mp3": "b3ac2618c9",
-    "cj_cj34_ask.mp3": "8b6b99b0a8",
-    "cj_cj34_teach.mp3": "39952b8fc5",
-    "cj_cj34_model.mp3": "48e4e0369a",
-    "cj_cj35_ask.mp3": "2148d130bc",
-    "cj_cj35_teach.mp3": "d8bd58fdf0",
-    "cj_cj35_model.mp3": "1fde4fd63f",
-    "cj_cj36_ask.mp3": "dbaa6f7565",
-    "cj_cj36_teach.mp3": "7f59b4866e",
-    "cj_cj36_model.mp3": "93eb42f90b",
-    "cj_cj37_ask.mp3": "e9281a40c2",
-    "cj_cj37_teach.mp3": "fb67994b4a",
-    "cj_cj37_model.mp3": "59ef0d9141",
-    "cj_cj38_ask.mp3": "206ed42d70",
-    "cj_cj38_teach.mp3": "201ce90590",
-    "cj_cj38_model.mp3": "a277ade666",
-    "cj_cj39_ask.mp3": "a3b973d642",
-    "cj_cj39_teach.mp3": "4d341c2e93",
-    "cj_cj39_model.mp3": "ae856a4f00",
-    "cj_cj40_ask.mp3": "d7224850c7",
-    "cj_cj40_teach.mp3": "69ebef74e6",
-    "cj_cj40_model.mp3": "809acb0b19",
-    "cj_cj41_ask.mp3": "e739ad0e24",
-    "cj_cj41_teach.mp3": "9edd8a4902",
-    "cj_cj41_model.mp3": "ac7aad336b",
-    "cj_cj42_ask.mp3": "223ffdeb19",
-    "cj_cj42_teach.mp3": "76bbd59636",
-    "cj_cj42_model.mp3": "fd61abb964",
-    "cj_cj43_ask.mp3": "2136472792",
-    "cj_cj43_teach.mp3": "d3d41c4014",
-    "cj_cj43_model.mp3": "89a3cab649",
-    "cj_cj44_ask.mp3": "b57b4523f1",
-    "cj_cj44_teach.mp3": "f1148f4c0b",
-    "cj_cj44_model.mp3": "85bc53c828",
-    "cj_cj45_ask.mp3": "f7d20a3be5",
-    "cj_cj45_teach.mp3": "6ee4d17ab1",
-    "cj_cj45_model.mp3": "5fac87556c",
-    "cj_cj46_ask.mp3": "53f8d0140e",
-    "cj_cj46_teach.mp3": "c5d9f41df0",
-    "cj_cj46_model.mp3": "b14e375bef",
-    "cj_cj47_ask.mp3": "c1c1ec58d9",
-    "cj_cj47_teach.mp3": "d0edd55a29",
-    "cj_cj47_model.mp3": "4ffd78bb3f",
-    "cj_cj48_ask.mp3": "32e70753d0",
-    "cj_cj48_teach.mp3": "53373383ce",
-    "cj_cj48_model.mp3": "a050d43fb5"
-  }
+  "done.mp3": "33da2bfc13f6"
 }
