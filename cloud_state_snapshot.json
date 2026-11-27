@@ -1,7 +1,7 @@
 {
   "v": 15,
   "app": "n3-zen",
-  "updatedAt": 1795731611,
+  "updatedAt": 1795742948,
   "dates": {
     "2026-11-14": {
       "resetAt": 0,
@@ -4075,7 +4075,7 @@
       "resetAt": 0,
       "radioMaxSec": 2669,
       "radioPos": [
-        0,
+        2658,
         1795727679
       ],
       "radioSig": "4c5591b0",
@@ -4172,10 +4172,10 @@
         ]
       },
       "flashProg": [
-        14,
+        20,
         24,
         0,
-        1795727729
+        1795742936
       ]
     },
     "2026-12-06": {
@@ -5607,8 +5607,8 @@
       1795503294
     ],
     "自慢": [
-      "todo:20261125",
-      1795673788
+      "wip1:20261126",
+      1795742903
     ],
     "〜てばかりいる": [
       "todo:20261124",
@@ -5752,7 +5752,7 @@
     ],
     "象徴": [
       "todo:20261126",
-      1795727722
+      1795742919
     ],
     "予算": [
       "done",
@@ -5775,8 +5775,8 @@
       1795724036
     ],
     "世間": [
-      "todo:20261125",
-      1795673796
+      "todo:20261126",
+      1795742936
     ],
     "様子": [
       "wip1:20261124",
@@ -6040,7 +6040,27 @@
     ],
     "うろうろ": [
       "todo:20261126",
-      1795727708
+      1795742906
+    ],
+    "現象": [
+      "todo:20261126",
+      1795742943
+    ],
+    "絶対": [
+      "done",
+      1795742929
+    ],
+    "発達": [
+      "wip1:20261126",
+      1795742934
+    ],
+    "実施": [
+      "todo:20261126",
+      1795742939
+    ],
+    "実際": [
+      "todo:20261126",
+      1795742948
     ]
   },
   "grammarAudit": {
@@ -6833,94 +6853,6 @@
     }
   },
   "records": [
-    {
-      "id": "N3-G94",
-      "point": "〜ような気がする",
-      "choice": "ような気がする",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-25T07:33:41.000Z"
-    },
-    {
-      "id": "N3-G35",
-      "point": "〜ぶりに",
-      "choice": "ぶりに",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-25T07:33:45.000Z"
-    },
-    {
-      "id": "N3-G155",
-      "point": "〜うえに",
-      "choice": "うえに",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-25T07:33:59.000Z"
-    },
-    {
-      "id": "VAR9-39",
-      "point": "T-034",
-      "choice": "届いて",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-25T07:34:09.000Z"
-    },
-    {
-      "id": "N3-G94",
-      "point": "〜ような気がする",
-      "choice": "ような気がする",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-25T07:34:18.000Z"
-    },
-    {
-      "id": "VAR9-39",
-      "point": "T-034",
-      "choice": "届けて",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-25T07:34:39.000Z"
-    },
-    {
-      "id": "HES:N3-G156",
-      "point": "〜だけでなく",
-      "choice": "犹豫过关",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-25T07:34:58.000Z"
-    },
-    {
-      "id": "N3-G156",
-      "point": "〜だけでなく",
-      "choice": "だけでなく",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-25T07:34:58.000Z"
-    },
-    {
-      "id": "VAR9-32",
-      "point": "K-008",
-      "choice": "ご存じ",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-25T07:35:08.000Z"
-    },
-    {
-      "id": "N3-G147",
-      "point": "〜てばかりいる",
-      "choice": "たばかりで",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-25T07:35:19.000Z"
-    },
-    {
-      "id": "VAR9-33",
-      "point": "K-014",
-      "choice": "お聞きになり",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-25T07:35:30.000Z"
-    },
     {
       "id": "N3-G147",
       "point": "〜てばかりいる",
@@ -9232,6 +9164,94 @@
       "correct": "true",
       "ask_again": "false",
       "ts": "2026-11-26T21:15:29.000Z"
+    },
+    {
+      "id": "VC-自慢",
+      "point": "自慢",
+      "choice": "记词:记住",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-27T01:28:23.000Z"
+    },
+    {
+      "id": "VC-うろうろ",
+      "point": "うろうろ",
+      "choice": "记词:记住",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-27T01:28:26.000Z"
+    },
+    {
+      "id": "VC-世間",
+      "point": "世間",
+      "choice": "记词:没记住",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-27T01:28:33.000Z"
+    },
+    {
+      "id": "VC-象徴",
+      "point": "象徴",
+      "choice": "记词:记住",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-27T01:28:39.000Z"
+    },
+    {
+      "id": "VC-現象",
+      "point": "現象",
+      "choice": "记词:没记住",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-27T01:28:44.000Z"
+    },
+    {
+      "id": "VC-絶対",
+      "point": "絶対",
+      "choice": "记词:太熟",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-27T01:28:49.000Z"
+    },
+    {
+      "id": "VC-発達",
+      "point": "発達",
+      "choice": "记词:记住",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-27T01:28:54.000Z"
+    },
+    {
+      "id": "VC-世間",
+      "point": "世間",
+      "choice": "记词:记住",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-27T01:28:56.000Z"
+    },
+    {
+      "id": "VC-実施",
+      "point": "実施",
+      "choice": "记词:没记住",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-27T01:28:59.000Z"
+    },
+    {
+      "id": "VC-現象",
+      "point": "現象",
+      "choice": "记词:没记住",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-27T01:29:03.000Z"
+    },
+    {
+      "id": "VC-実際",
+      "point": "実際",
+      "choice": "记词:没记住",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-27T01:29:08.000Z"
     }
   ]
 }

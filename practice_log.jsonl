@@ -1871,3 +1871,14 @@
 {"id": "VC-はっきり", "point": "はっきり", "choice": "记词:记住", "correct": "true", "ask_again": "false", "ts": "2026-11-26T21:15:13.000Z"}
 {"id": "VC-象徴", "point": "象徴", "choice": "记词:没记住", "correct": "false", "ask_again": "false", "ts": "2026-11-26T21:15:22.000Z"}
 {"id": "VC-ぎっしり", "point": "ぎっしり", "choice": "记词:记住", "correct": "true", "ask_again": "false", "ts": "2026-11-26T21:15:29.000Z"}
+{"id": "VC-自慢", "point": "自慢", "choice": "记词:记住", "correct": "true", "ask_again": "false", "ts": "2026-11-27T01:28:23.000Z"}
+{"id": "VC-うろうろ", "point": "うろうろ", "choice": "记词:记住", "correct": "true", "ask_again": "false", "ts": "2026-11-27T01:28:26.000Z"}
+{"id": "VC-世間", "point": "世間", "choice": "记词:没记住", "correct": "false", "ask_again": "false", "ts": "2026-11-27T01:28:33.000Z"}
+{"id": "VC-象徴", "point": "象徴", "choice": "记词:记住", "correct": "true", "ask_again": "false", "ts": "2026-11-27T01:28:39.000Z"}
+{"id": "VC-現象", "point": "現象", "choice": "记词:没记住", "correct": "false", "ask_again": "false", "ts": "2026-11-27T01:28:44.000Z"}
+{"id": "VC-絶対", "point": "絶対", "choice": "记词:太熟", "correct": "true", "ask_again": "false", "ts": "2026-11-27T01:28:49.000Z"}
+{"id": "VC-発達", "point": "発達", "choice": "记词:记住", "correct": "true", "ask_again": "false", "ts": "2026-11-27T01:28:54.000Z"}
+{"id": "VC-世間", "point": "世間", "choice": "记词:记住", "correct": "true", "ask_again": "false", "ts": "2026-11-27T01:28:56.000Z"}
+{"id": "VC-実施", "point": "実施", "choice": "记词:没记住", "correct": "false", "ask_again": "false", "ts": "2026-11-27T01:28:59.000Z"}
+{"id": "VC-現象", "point": "現象", "choice": "记词:没记住", "correct": "false", "ask_again": "false", "ts": "2026-11-27T01:29:03.000Z"}
+{"id": "VC-実際", "point": "実際", "choice": "记词:没记住", "correct": "false", "ask_again": "false", "ts": "2026-11-27T01:29:08.000Z"}
