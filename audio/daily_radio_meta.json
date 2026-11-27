@@ -3,13 +3,13 @@
   "phase": "n3_sprint",
   "track_label": "N3",
   "n2_day": 0,
-  "radio_ver": "v46_qq_40m_stereo_zmy_brain_bridge",
+  "radio_ver": "v47_qq_40m_real_pace_stereo_zmy",
   "display_date": "锵锵三人",
   "days_left": 9,
-  "script_sig": "3f23a9550acd68",
-  "audio_url": "./audio/daily_radio.mp3?v=2026-11-27_3f23a9",
-  "duration_sec": 2240.7,
-  "duration_label": "37 分钟",
+  "script_sig": "a411a7c936c596",
+  "audio_url": "./audio/daily_radio.mp3?v=2026-11-27_a411a7",
+  "duration_sec": 2629.1,
+  "duration_label": "44 分钟",
   "hosts": "文涛 · 文道 · 子东",
   "immersion_365": {
     "day_of_365": 13,
@@ -213,31 +213,31 @@
     {
       "idx": 1,
       "title": "淀号惊魂",
-      "start": 369.2,
+      "start": 431.3,
       "img": "./img/ch_1.jpg?v=2026-11-27_3f23a9_jp4"
     },
     {
       "idx": 2,
       "title": "孤身换人质",
-      "start": 788.9,
+      "start": 923.0,
       "img": "./img/ch_2.jpg?v=2026-11-27_3f23a9_jp4"
     },
     {
       "idx": 3,
       "title": "加贺百万石",
-      "start": 1156.9,
+      "start": 1349.7,
       "img": "./img/ch_3.jpg?v=2026-11-27_3f23a9_jp4"
     },
     {
       "idx": 4,
       "title": "金泽风骨",
-      "start": 1549.6,
+      "start": 1814.2,
       "img": "./img/ch_4.jpg?v=2026-11-27_3f23a9_jp4"
     },
     {
       "idx": 5,
       "title": "日本看世界",
-      "start": 1888.6,
+      "start": 2210.4,
       "img": "./img/ch_5.jpg?v=2026-11-27_3f23a9_jp4"
     }
   ],
@@ -253,7 +253,7 @@
       "title": "北陆与地方赤字铁道的生死簿：为什么日本偏远县宁可年年倒贴几十亿，也不敢轻拆最后一个车站",
       "ja_focus": "新幹線が開通すると並行在来線は自治体で維持することになっている。過疎が進むにつれて赤字が増え、存続か廃止か厳しい判断を下すしかない。",
       "start": 0.0,
-      "end": 369.2
+      "end": 431.3
     },
     {
       "chapter": 1,
@@ -265,8 +265,8 @@
       ],
       "title": "富士山上空拔出武士刀，汉城机场伪装平壤穿帮：一九七零年淀号劫机惊魂记（上）",
       "ja_focus": "富士山の上空を飛んでいる最中に事件が起きた。平壌のふりをした空港でもう少しで騙せるところだった。",
-      "start": 369.2,
-      "end": 788.9
+      "start": 431.3,
+      "end": 923.0
     },
     {
       "chapter": 2,
@@ -278,8 +278,8 @@
       ],
       "title": "三十六岁高官两手空空踏上舷梯：山村新治郎独自换下九十九名乘客的铁血时刻（下）",
       "ja_focus": "わたしに行かせてもらいたいと申し出た。政府の代表として飛行機に乗り、身分を確認したうえで乗客が解放された。",
-      "start": 788.9,
-      "end": 1156.9
+      "start": 923.0,
+      "end": 1349.7
     },
     {
       "chapter": 3,
@@ -291,8 +291,8 @@
       ],
       "title": "前田家三百年装傻保命的政治暗棋：加贺百万石为何不敢造大炮，反把巨额财政全砸进金箔、能剧和秘密水利（上）",
       "ja_focus": "芳春院は江戸へ行ったきり十四年も戻らなかった。幕府の警戒にもかかわらず、藩を守るために文化へ巨額の資金を注いだ。",
-      "start": 1156.9,
-      "end": 1549.6
+      "start": 1349.7,
+      "end": 1814.2
     },
     {
       "chapter": 4,
@@ -304,8 +304,8 @@
       ],
       "title": "躲过二战焦土的武士暗巷、铃木大拙的禅与圆形美术馆：金泽如何不抄东京走出百年格调（下）",
       "ja_focus": "戦災を免れたことから江戸の町割りが今も残る。伝統を守りながらも現代建築を迎え入れたからこそ、独自の品格が生まれた。",
-      "start": 1549.6,
-      "end": 1888.6
+      "start": 1814.2,
+      "end": 2210.4
     },
     {
       "chapter": 5,
@@ -317,8 +317,8 @@
       ],
       "title": "从日本看世界：德国放宽债务刹车重振军工与欧洲防务自主，日本看出了什么寒意",
       "ja_focus": "報道によれば欧州の防衛予算は過去最高水準だ。ドイツの転換に対して東京でも議論が深まり、巨額の国債を抱える日本にとって同じ道は簡単ではない。",
-      "start": 1888.6,
-      "end": 2240.7
+      "start": 2210.4,
+      "end": 2629.1
     }
   ],
   "review_items": [
@@ -344,8 +344,8 @@
       "nuance": "本期播客出现 2 次 · 累计 2 次",
       "twin": "",
       "mnemonic": "赤 训读 あか + 字 浊 じ：红(あか)字记账就是亏损赤字 → あかじ",
-      "clip_start": 231.0,
-      "clip_end": 251.0,
+      "clip_start": 270.8,
+      "clip_end": 290.8,
       "demo_audio": "./audio/rv_w_0.mp3?v=2026-11-27_v93rv",
       "hook_audio": "",
       "is_new_n2": true,
@@ -374,8 +374,8 @@
       "nuance": "走投无路「别无他法、只好…」用「动词原形＋しかない」；「原形＋ことはない」则是劝人不必做某事。",
       "twin": "歩いて帰るしかない：原形 ＋ しかない ＝ 没别的招，只好走回去 · 对比 急ぐことはない：原形 ＋ ことはない ＝ 没必要着急",
       "mnemonic": "",
-      "clip_start": 280.7,
-      "clip_end": 292.1,
+      "clip_start": 328.6,
+      "clip_end": 341.4,
       "demo_audio": "",
       "hook_audio": "",
       "is_new_n2": false,
@@ -405,8 +405,8 @@
       "nuance": "前有「あと少しで・もう少しで・危うく」，表示险些出岔子但最后躲过去了，用「原形＋ところだった」。",
       "twin": "乗り遅れるところだった：あと少しで／もう少しで＋原形＋ところだった＝差点就误车（实际赶上了） · 对比 着くはずだった：本来理应到达（实际没到）",
       "mnemonic": "",
-      "clip_start": 725.8,
-      "clip_end": 741.6,
+      "clip_start": 848.5,
+      "clip_end": 866.3,
       "demo_audio": "",
       "hook_audio": "",
       "is_new_n2": false,
@@ -438,8 +438,8 @@
       "nuance": "本期播客出现 1 次 · 累计 2 次",
       "twin": "",
       "mnemonic": "“Key-Key(きき)” 危机时刻连按两次警报 → きき",
-      "clip_start": 803.1,
-      "clip_end": 823.1,
+      "clip_start": 939.9,
+      "clip_end": 959.9,
       "demo_audio": "./audio/words/w_0b344fa096.mp3",
       "hook_audio": "",
       "is_new_n2": true,
@@ -467,8 +467,8 @@
       "nuance": "向长辈、上司或同事客气请求许可「请允许我做某事」，用「使役て形＋もらう／いただく」。",
       "twin": "帰らせてもらう：使役て形＋もらう＝承蒙对方准许让我早退 · 对比 帰られる：被别人回家（语法与意思均不通）",
       "mnemonic": "",
-      "clip_start": 881.7,
-      "clip_end": 903.7,
+      "clip_start": 1032.3,
+      "clip_end": 1054.3,
       "demo_audio": "",
       "hook_audio": "",
       "is_new_n2": false,
@@ -498,8 +498,8 @@
       "nuance": "表示「自从那一次做完某事之后，就再也没有下文」，后多接否定，用「た形＋きり」。",
       "twin": "会ったきり連絡がない：た形＋きり＋否定＝自那次见面之后一直杳无音信 · 对比 会うたびに元気をもらう：原形＋たびに＝每次见面都充满干劲",
       "mnemonic": "",
-      "clip_start": 1251.3,
-      "clip_end": 1273.3,
+      "clip_start": 1463.5,
+      "clip_end": 1485.5,
       "demo_audio": "",
       "hook_audio": "",
       "is_new_n2": false,
@@ -529,8 +529,8 @@
       "nuance": "虽然存在某不足但依然具备另一特点，用带「も」的逆接「〜ながらも」。",
       "twin": "小さいながらも人気だ：虽然店面小却味道好（带「も」表转折） · 对比 音楽を聴きながら歩く：一边听歌一边走（不带「も」表同时）",
       "mnemonic": "",
-      "clip_start": 1767.3,
-      "clip_end": 1789.3,
+      "clip_start": 2071.3,
+      "clip_end": 2093.3,
       "demo_audio": "",
       "hook_audio": "",
       "is_new_n2": false,
@@ -560,8 +560,8 @@
       "nuance": "引出消息来源（报道、天气预报、某人说的话），并呼应句尾传闻「そうだ／ということだ」，用「〜によると／によれば」。",
       "twin": "天気予報によると〜そうだ：据天气预报称…（句尾必配传闻そうだ／らしい） · 对比 予報に対して不満だ：针对预报表示不满",
       "mnemonic": "",
-      "clip_start": 1997.8,
-      "clip_end": 2014.4,
+      "clip_start": 2339.2,
+      "clip_end": 2357.4,
       "demo_audio": "",
       "hook_audio": "",
       "is_new_n2": false,
@@ -592,14 +592,13 @@
       "model_ja": "もう少しで乗り遅れるところだった。",
       "model_zh": "差一点就误车了。",
       "coaching_tip": "注意浊音「だった」别清化",
-      "clip_start": 725.8,
-      "clip_end": 741.6,
+      "clip_start": 848.5,
+      "clip_end": 866.3,
       "demo_audio": "",
       "is_new_n2": false,
       "img": "./img/ch_1.jpg?v=2026-11-27_3f23a9_jp4",
       "model_audio": "./audio/spk_0.mp3?v=2026-11-27_3f23a9_jp4",
-      "ask_audio": "./audio/spk_0_ask.mp3?v=2026-11-27_3f23a9_jp4",
-      "ask_spoken": "想表达「差点错过末班车」，试着用「ところだった」说一句日语。"
+      "ask_audio": "./audio/spk_0_ask.mp3?v=2026-11-27_3f23a9_jp4"
     },
     {
       "id": "SPK-N3-G123",
@@ -635,14 +634,13 @@
       "model_ja": "早めに帰らせてもらえますか。",
       "model_zh": "能让我早点回去吗？",
       "coaching_tip": "求准许用使役形「帰らせて」",
-      "clip_start": 881.7,
-      "clip_end": 903.7,
+      "clip_start": 1032.3,
+      "clip_end": 1054.3,
       "demo_audio": "",
       "is_new_n2": false,
       "img": "./img/ch_2.jpg?v=2026-11-27_3f23a9_jp4",
       "model_audio": "./audio/spk_1.mp3?v=2026-11-27_3f23a9_jp4",
-      "ask_audio": "./audio/spk_1_ask.mp3?v=2026-11-27_3f23a9_jp4",
-      "ask_spoken": "想表达「让我早点回去」，试着用「させてもらう」说一句日语。"
+      "ask_audio": "./audio/spk_1_ask.mp3?v=2026-11-27_3f23a9_jp4"
     }
   ],
   "next_program": {

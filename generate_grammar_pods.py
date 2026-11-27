@@ -49,7 +49,7 @@ STATE_PATH = os.path.join(BASE_DIR, "n3_live_state.json")
 SNAP_PATH = os.path.join(BASE_DIR, "cloud_state_snapshot.json")
 PT_TZ = datetime.timezone(datetime.timedelta(hours=-8))
 
-POD_ENGINE_VER = "gpod_v1_qq_stereo"
+POD_ENGINE_VER = "gpod_v2_qq_real_pace"
 
 # ---------------------------------------------------------------------------
 # 19 Hand-Crafted Broadcast-Grade 《锵锵三人行》 Mini-Podcast Scripts (~2:00-2:50 each)
@@ -716,7 +716,7 @@ async def synth_one_grammar_pod(
 
     if dry_test:
         chars = sum(len(str(v)) for k, v in raw_turns if k not in ("PAUSE", "LATCH"))
-        return max(95.0, chars * 0.195 + 2.5)
+        return max(95.0, chars * 0.215 + 2.5)
 
     tmpdir = tempfile.mkdtemp(prefix=f"gpod_{pod['gid']}_")
     try:

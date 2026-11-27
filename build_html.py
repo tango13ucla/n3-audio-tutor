@@ -30109,22 +30109,26 @@ if (gpods37.length > 0) {
     }
   }
 
-  // 38.3 Screenshot regression: N3-G123 wrong answer shows CB11 (NEVER CB04!) and suppresses foreign-verb 帰らせて
+  // 38.3 Screenshot regression: N3-G123 / VAR9-09 (考える) wrong answer shows CB11 (NEVER CB04!) and suppresses foreign-verb 帰らせて
   const pG123Idx = vm.runInNewContext('DATA.points.findIndex(p => p && p.id === "N3-G123")', sb);
   if (pG123Idx >= 0) {
-    vm.runInNewContext(`
+    const hasForeignConf = vm.runInNewContext(`(() => {
+      const pt = DATA.points[${pG123Idx}];
+      const allQ = [pt.primary].concat(pt.variants || []).filter(Boolean);
+      const qVar9 = allQ.find(x => x.id === "VAR9-09") || pt.primary;
       curPointId = "N3-G123";
       viewStage = "result";
-      activeQuizObj = DATA.points[${pG123Idx}].primary;
+      activeQuizObj = qVar9;
       currentChoices = activeQuizObj.choices.slice();
       pickedVal = "させてくれ";
       renderTutor();
-    `, sb);
+      return qVar9.id === "VAR9-09" ? isRelevantConfusionHint("帰らせて", qVar9) : false;
+    })()`, sb);
     const g123Html = (els['voice-card'] && els['voice-card'].innerHTML) || '';
     if (!g123Html.includes('CB11') || g123Html.includes('CB04') || g123Html.includes('半途')) {
       throw new Error('Self-test 38 failed: N3-G123 must show CB11 and NEVER CB04');
     }
-    if (g123Html.includes('帰らせて')) {
+    if (hasForeignConf || g123Html.includes('常混：帰らせて')) {
       throw new Error('Self-test 38 failed: N3-G123 (考える) must NOT display foreign-verb confusion hint 帰らせて');
     }
   }
@@ -30214,7 +30218,7 @@ if (gpods37.length > 0) {
     subprocess.run(["node", "-", HTML_PATH], input=smoke_js, text=True, check=True)
 
 sw_path = os.path.join(BASE_DIR, "sw.js")
-SW_CACHE_NAME = "n3-studio-tutor-v94"
+SW_CACHE_NAME = "n3-studio-tutor-v95"
 if not _IS_SIM_OUTPUT and os.path.exists(sw_path):
     with open(sw_path, encoding="utf-8") as sf:
         sw_src = sf.read()

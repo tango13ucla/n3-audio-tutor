@@ -1096,12 +1096,12 @@ def test_v45_broadcast_authenticity_guard() -> None:
     for expected_v in ("zh-CN-YunxiNeural", "zh-TW-YunJheNeural", "zh-CN-YunjianNeural", "ja-JP-KeitaNeural", "zh-CN-YunyangNeural"):
         assert expected_v in gdr_src, f"generate_daily_radio.py missing native v45 voice {expected_v}"
     mock_vmap = {
-        "W_MID": ("zh-CN-YunxiNeural", "+7%", "-2Hz"),
-        "W_JA_INLINE": ("ja-JP-KeitaNeural", "+4%", "-1Hz"),
-        "D_MID": ("zh-TW-YunJheNeural", "+3%", "-4Hz"),
-        "D_JA_INLINE": ("ja-JP-KeitaNeural", "+1%", "-4Hz"),
-        "X_MID": ("zh-CN-YunjianNeural", "+8%", "+2Hz"),
-        "X_JA_INLINE": ("ja-JP-KeitaNeural", "+4%", "+2Hz"),
+        "W_MID": ("zh-CN-YunxiNeural", "-9%", "-1Hz"),
+        "W_JA_INLINE": ("ja-JP-KeitaNeural", "-3%", "-1Hz"),
+        "D_MID": ("zh-CN-YunyangNeural", "-8%", "-5Hz"),
+        "D_JA_INLINE": ("ja-JP-KeitaNeural", "-5%", "-4Hz"),
+        "X_MID": ("zh-CN-YunjianNeural", "-5%", "+3Hz"),
+        "X_JA_INLINE": ("ja-JP-KeitaNeural", "-3%", "+2Hz"),
     }
     for spk_k in ("W_MID", "D_MID", "X_MID"):
         jv, _jr, _jp = gdr.inline_ja_voice_cfg(spk_k, mock_vmap, "たつみようすい")
@@ -1180,7 +1180,7 @@ def test_v82_jobs_zen_and_telemetry_hygiene_guard() -> None:
 
 
 def test_v46_stereo_cognitive_n2_long_horizon_guard() -> None:
-    """Gate 19: Guard v46 studio stereo soundstage, cognitive ear-pin/story-echo bridge, 10+ turn endings across ALL unplayed + N2 Vol.1-3, N2 audio answer-leak fix, and 2027 N1 continuity."""
+    """Gate 19: Guard v46/v47 studio stereo soundstage, cognitive ear-pin/story-echo bridge, 10+ turn endings across ALL unplayed + N2 Vol.1-3, N2 audio answer-leak fix, and 2027 N1 continuity."""
     import importlib
     import generate_daily_radio as gdr
     import generate_neural_audio as gna
@@ -1211,7 +1211,7 @@ def test_v46_stereo_cognitive_n2_long_horizon_guard() -> None:
         assert not re.search(r"[ぁ-んァ-ヶー]", tail10_txt), f"N2 Day {n2_day} final 10 turns must be 100% pure Chinese!"
         assert len(tail10_txt) >= 250, f"N2 Day {n2_day} final 10 turns too short ({len(tail10_txt)} < 250)!"
 
-    # 2. v46 stereo spatializer, room glue, 0.24s pre-JA breath, live feedback auto-tuning, zero bilingual roll-call regression & episodic bridge
+    # 2. v46/v47 stereo spatializer, room glue, 0.24s pre-JA breath, live feedback auto-tuning, zero bilingual roll-call regression & episodic bridge
     gdr_src = (BASE_DIR / "generate_daily_radio.py").read_text(encoding="utf-8")
     for sym in (
         "def pan_stereo(",
@@ -1219,10 +1219,10 @@ def test_v46_stereo_cognitive_n2_long_horizon_guard() -> None:
         "STUDIO_JA_BACKCHANNEL_POOL",
         "recent_radio_feedback",
         "def update_story_memory_index(",
-        "v46_qq_40m_stereo_zmy_brain_bridge",
+        "v47_qq_40m_real_pace_stereo_zmy",
         "n2_auto_",
     ):
-        assert sym in gdr_src, f"generate_daily_radio.py missing v46 symbol {sym}"
+        assert sym in gdr_src, f"generate_daily_radio.py missing v46/v47 symbol {sym}"
     assert "opening_turns = POST_N3_BILINGUAL_OPENING" not in gdr_src, "Regression: templated POST_N3_BILINGUAL_OPENING roll-call re-enabled!"
     evs_ja = gdr.expand_turn_events("W", "你看这句：けいざいがゆたかになるにしたがって、こころのくうきょさをかんじるひとがふえた。")
     assert any(k == "PAUSE" and float(v) >= 0.24 for k, v in evs_ja), f"Missing 0.24s pre-JA cognitive breath: {evs_ja}"
@@ -2012,6 +2012,51 @@ def test_v94_whole_app_cross_match_integrity_guard() -> None:
     print("[PASS 29/29] v94 Whole-App Cross-Match Integrity (26 clinics verified IDs, zero trap substrings, 11 twin variants, confusion hygiene, WYSIWYG review audio, GPOD G-116f precision, zero synonym double-correct & N2 echo import) verified!")
 
 
+def test_v47_real_qiangqiang_pace_guard() -> None:
+    """Gate 30 (v47): Permanently guard real-Qiangqiang speech-rate calibration (~270-305 chars/min), 3 distinct reliable native voices, and relaxed tea-table pauses."""
+    import asyncio
+    import inspect
+    import generate_daily_radio as gdr
+    import generate_grammar_pods as ggp
+
+    # 1. Verify default native trio rates stay permanently calibrated to real 2012-2017 《锵锵三人行》 pace (NEVER regressing to +7%/+8%/+12%/+13%!)
+    orig_et = gdr.edge_tts
+    gdr.edge_tts = None
+    try:
+        vmap = asyncio.run(gdr.detect_voice_map("-12%"))
+    finally:
+        gdr.edge_tts = orig_et
+
+    def _pct(key: str) -> int:
+        return int(str(vmap[key][1]).replace("%", "").strip())
+
+    assert _pct("W_MID") <= -6 and _pct("W_JAB") <= 0, f"W (Yunxi) pace regressed too fast: {vmap['W_MID']} / {vmap['W_JAB']}"
+    assert _pct("D_MID") <= -6 and _pct("D_JAB") <= 0, f"D (Yunyang) pace regressed too fast: {vmap['D_MID']} / {vmap['D_JAB']}"
+    assert _pct("X_MID") <= -3 and _pct("X_JAB") <= 2, f"X (Yunjian) pace regressed too fast: {vmap['X_MID']} / {vmap['X_JAB']}"
+    # 3 distinct 100%-reliable native Chinese male voices (no mid-episode voice switching)
+    assert len({vmap["W_MID"][0], vmap["D_MID"][0], vmap["X_MID"][0]}) == 3, f"W/D/X voices not 3 distinct voices: {vmap['W_MID'][0]}, {vmap['D_MID'][0]}, {vmap['X_MID'][0]}"
+
+    # 2. Verify relaxed tea-table pauses
+    sig_cis = inspect.signature(gdr.compress_internal_silences)
+    assert float(sig_cis.parameters["max_pause_sec"].default) >= 0.38, "compress_internal_silences max_pause_sec tightened below 0.38s"
+    evs_mid = gdr.split_mandarin_natural("W", "第一句聊这个。第二句接着说。", "W_MID")
+    pauses_mid = [float(v) for k, v in evs_mid if k == "PAUSE"]
+    assert pauses_mid and pauses_mid[0] >= 0.20, f"Inter-sentence mid pause regressed too tight: {evs_mid}"
+
+    # 3. Verify on-disk daily radio & grammar pods are on calibrated v47 / gpod_v2
+    rm_path = BASE_DIR / "audio" / "daily_radio_meta.json"
+    if rm_path.exists():
+        rm = json.loads(rm_path.read_text(encoding="utf-8"))
+        if str(rm.get("date") or "") >= "2026-11-27":
+            assert str(rm.get("radio_ver") or "").startswith("v47_"), f"daily_radio_meta.json not on v47 real-pace: {rm.get('radio_ver')}"
+    assert ggp.POD_ENGINE_VER == "gpod_v2_qq_real_pace", f"Unexpected POD_ENGINE_VER: {ggp.POD_ENGINE_VER}"
+    gmf_path = BASE_DIR / "audio" / "grammar_pods" / "manifest.json"
+    if gmf_path.exists():
+        gmf = json.loads(gmf_path.read_text(encoding="utf-8"))
+        assert gmf.get("version") == "gpod_v2_qq_real_pace", f"grammar_pods manifest not rebuilt on gpod_v2_qq_real_pace: {gmf.get('version')}"
+    print(f"[PASS 30/30] v47 real-Qiangqiang calibrated pace (W={vmap['W_MID'][1]}, D={vmap['D_MID'][1]}, X={vmap['X_MID'][1]}, 3 distinct zero-fail voices & relaxed cadence) verified!")
+
+
 def main() -> int:
     test_all_python_files_syntax_and_names()
     test_apply_practice_logs_all_event_types()
@@ -2042,7 +2087,8 @@ def main() -> int:
     test_v92_sprint_dialogue_blackboard_clinic_guard()
     test_v93_grammar_mini_podcasts_guard()
     test_v94_whole_app_cross_match_integrity_guard()
-    print("[ALL PASS] tests_ci_guard.py 29/29 gates green!")
+    test_v47_real_qiangqiang_pace_guard()
+    print("[ALL PASS] tests_ci_guard.py 30/30 gates green!")
     return 0
 
 

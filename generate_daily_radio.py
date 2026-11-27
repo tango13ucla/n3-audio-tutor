@@ -946,9 +946,9 @@ def update_story_memory_index(
 
 
 def estimate_story_seconds(st: dict) -> float:
-    """Empirical v41-v45 studio timing: ~0.192s per spoken char + 2.5s transition."""
+    """Empirical v47 real-Qiangqiang studio timing (~4.75 chars/sec): ~0.210s per spoken char + 2.5s transition."""
     chars = sum(len(str(t)) for _, t in (st.get("turns") or []))
-    return chars * 0.192 + 2.5
+    return chars * 0.210 + 2.5
 
 
 def load_corpus_kb() -> dict:
@@ -980,16 +980,19 @@ def gear_gain_linear(spk_key: str) -> float:
 
 async def detect_voice_map(ja_sentence_rate: str = "-12%") -> dict:
     """
-    v45 100% Native Broadcast Voice Architecture (calibrated to real 2005-2017 《锵锵三人行》):
-    - W (窦文涛): zh-CN-YunxiNeural (lively, mischievous northern Chinese talk-show host, mid F0)
-    - D (梁文道): zh-TW-YunJheNeural (warm, gentle HK/Taiwanese Mandarin scholar baritone, lowest F0)
-    - X (许子东): zh-CN-YunjianNeural (crisp, dry middle-aged literary critic, highest F0 matching real 164.9Hz > 156.9Hz > 155.3Hz)
+    v47 Real-Qiangqiang Calibrated Native Broadcast Voice Architecture:
+    Empirically matched against 5 real 2012-2017 《锵锵三人行》 original TV broadcasts
+    (real trio pace: 4.35-5.15 chars/sec effective / 260-309 chars/min, 5.59-5.98 chars/sec articulation):
+    - W (窦文涛): zh-CN-YunxiNeural (-9% mid / -4% jab / -14% slow / -11% land, center pan 0%)
+    - D (梁文道): zh-CN-YunyangNeural (-8% mid / -3% jab / -13% slow / -10% land, -5Hz warm velvet baritone, left pan -22%;
+      100% zero-fail vs flaky zh-TW-YunJheNeural which suffered >70% Azure NoAudioReceived mid-episode dropouts)
+    - X (许子东): zh-CN-YunjianNeural (-5% mid / +0% jab / -10% slow / -7% land, +3Hz lean incisive critic, right pan +22%)
     - W_JA / D_JA / X_JA & *_JA_INLINE: ja-JP-KeitaNeural (100% native Tokyo Japanese pitch accent, host pitch-matched)
     - ANN / ANN_SHOW (凤凰卫视中文台导视): zh-CN-YunyangNeural calibrated to 张妙阳's exact tempo & 0.42s dramatic breath
       (while slots with `real_wav` play the extracted 2012 real original 张妙阳 broadcast recording directly!)
     """
     w_voice = "zh-CN-YunxiNeural"
-    d_voice = "zh-TW-YunJheNeural"
+    d_voice = "zh-CN-YunyangNeural"
     x_voice = "zh-CN-YunjianNeural"
     ja_voice = "ja-JP-KeitaNeural"
     ann_voice = "zh-CN-YunyangNeural"
@@ -1010,7 +1013,7 @@ async def detect_voice_map(ja_sentence_rate: str = "-12%") -> dict:
                 if cand_w in short_names:
                     w_voice = cand_w
                     break
-            for cand_d in ("zh-TW-YunJheNeural", "zh-HK-WanLungNeural", "ko-KR-HyunsuMultilingualNeural"):
+            for cand_d in ("zh-CN-YunyangNeural", "zh-TW-YunJheNeural", "ko-KR-HyunsuMultilingualNeural"):
                 if cand_d in short_names and cand_d != w_voice:
                     d_voice = cand_d
                     break
@@ -1027,42 +1030,42 @@ async def detect_voice_map(ja_sentence_rate: str = "-12%") -> dict:
                     ann_voice = cand_ann
                     break
             print(
-                f"Qiang-Qiang v45 native voices: W(文涛)={w_voice}, D(文道)={d_voice}, "
+                f"Qiang-Qiang v47 real-pace native voices: W(文涛)={w_voice}, D(文道)={d_voice}, "
                 f"X(子东)={x_voice}, JA={ja_voice}, ANN={ann_voice}, ja_rate={w_ja_rate}"
             )
         except Exception as e:
             print(f"[info] list_voices fallback to default native trio voices: {e}")
 
     vmap = {
-        # W (窦文涛): 清亮活泛北方口语 — 急切抢白(+12%) / 自然铺陈(+7%) / 沉吟蓄力(+1%) / 落锤点睛(+4%)
-        "W":             (w_voice, "+7%", "-2Hz"),
-        "W_MID":         (w_voice, "+7%", "-2Hz"),
-        "W_JAB":         (w_voice, "+12%", "-1Hz"),
-        "W_FAST":        (w_voice, "+12%", "-1Hz"),
-        "W_SLOW":        (w_voice, "+1%", "-3Hz"),
-        "W_LOW":         (w_voice, "+1%", "-3Hz"),
-        "W_LAND":        (w_voice, "+4%", "-2Hz"),
-        "W_JA_INLINE":   (ja_voice, "+4%", "-1Hz"),
+        # W (窦文涛): 真实演播室松弛北方口语 — 抢白(-4%) / 铺陈(-9%) / 沉吟(-14%) / 落锤(-11%)
+        "W":             (w_voice, "-9%", "-1Hz"),
+        "W_MID":         (w_voice, "-9%", "-1Hz"),
+        "W_JAB":         (w_voice, "-4%", "+0Hz"),
+        "W_FAST":        (w_voice, "-4%", "+0Hz"),
+        "W_SLOW":        (w_voice, "-14%", "-2Hz"),
+        "W_LOW":         (w_voice, "-14%", "-2Hz"),
+        "W_LAND":        (w_voice, "-11%", "-1Hz"),
+        "W_JA_INLINE":   (ja_voice, "-3%", "-1Hz"),
         "W_JA":          (ja_voice, w_ja_rate, "-1Hz"),
-        # D (梁文道): 港台温润儒雅书卷腔 — 短促应答(+8%) / 从容铺陈(+3%) / 思想转折(-2%) / 收束落定(+0%)
-        "D":             (d_voice, "+3%", "-4Hz"),
-        "D_MID":         (d_voice, "+3%", "-4Hz"),
-        "D_JAB":         (d_voice, "+8%", "-3Hz"),
-        "D_FAST":        (d_voice, "+8%", "-3Hz"),
-        "D_SLOW":        (d_voice, "-2%", "-5Hz"),
-        "D_LOW":         (d_voice, "-2%", "-5Hz"),
-        "D_LAND":        (d_voice, "+0%", "-4Hz"),
-        "D_JA_INLINE":   (ja_voice, "+1%", "-4Hz"),
+        # D (梁文道): 温厚醇和书卷男中音 — 应答(-3%) / 从容铺陈(-8%) / 思想沉吟(-13%) / 收束落定(-10%)
+        "D":             (d_voice, "-8%", "-5Hz"),
+        "D_MID":         (d_voice, "-8%", "-5Hz"),
+        "D_JAB":         (d_voice, "-3%", "-4Hz"),
+        "D_FAST":        (d_voice, "-3%", "-4Hz"),
+        "D_SLOW":        (d_voice, "-13%", "-6Hz"),
+        "D_LOW":         (d_voice, "-13%", "-6Hz"),
+        "D_LAND":        (d_voice, "-10%", "-5Hz"),
+        "D_JA_INLINE":   (ja_voice, "-5%", "-4Hz"),
         "D_JA":          (ja_voice, d_ja_rate, "-4Hz"),
-        # X (许子东): 干练犀利中年学者(真实F0最高) — 短刀拆台(+13%) / 文本细读(+8%) / 反讽沉吟(+2%) / 一针见血(+5%)
-        "X":             (x_voice, "+8%", "+2Hz"),
-        "X_MID":         (x_voice, "+8%", "+2Hz"),
-        "X_JAB":         (x_voice, "+13%", "+3Hz"),
-        "X_FAST":        (x_voice, "+13%", "+3Hz"),
-        "X_SLOW":        (x_voice, "+2%", "+1Hz"),
-        "X_LOW":         (x_voice, "+2%", "+1Hz"),
-        "X_LAND":        (x_voice, "+5%", "+2Hz"),
-        "X_JA_INLINE":   (ja_voice, "+4%", "+2Hz"),
+        # X (许子东): 干练犀利中年学者(真实F0最高) — 短刀拆台(+0%) / 文本细读(-5%) / 反讽沉吟(-10%) / 一针见血(-7%)
+        "X":             (x_voice, "-5%", "+3Hz"),
+        "X_MID":         (x_voice, "-5%", "+3Hz"),
+        "X_JAB":         (x_voice, "+0%", "+4Hz"),
+        "X_FAST":        (x_voice, "+0%", "+4Hz"),
+        "X_SLOW":        (x_voice, "-10%", "+2Hz"),
+        "X_LOW":         (x_voice, "-10%", "+2Hz"),
+        "X_LAND":        (x_voice, "-7%", "+3Hz"),
+        "X_JA_INLINE":   (ja_voice, "-3%", "+2Hz"),
         "X_JA":          (ja_voice, x_ja_rate, "+2Hz"),
         # ANN (凤凰卫视中文台导视 · 张妙阳节奏校准): 引语稳重(+0%, -2Hz) + 0.42s 招牌停顿 + 节目名醇厚落地(-5%, -3Hz)
         "ANN":           (ann_voice, "+0%", "-2Hz"),
@@ -1167,13 +1170,13 @@ def split_mandarin_natural(
         )
         if events:
             if sent_gear.endswith("_SLOW"):
-                events.append(("PAUSE", 0.30))
+                events.append(("PAUSE", 0.36))
             elif sent_gear.endswith("_JAB"):
-                events.append(("PAUSE", 0.11))
+                events.append(("PAUSE", 0.13))
             elif sent_gear.endswith("_LAND"):
-                events.append(("PAUSE", 0.23))
+                events.append(("PAUSE", 0.28))
             else:
-                events.append(("PAUSE", 0.17))
+                events.append(("PAUSE", 0.22))
 
         for sub_idx, sub in enumerate(slip_parts):
             # Avoid turning quoted grammar templates like 『明明……却……』 into 『明明，却，』 (which causes 0.6s TTS stalls)
@@ -1345,17 +1348,17 @@ def turn_switch_transition(prev_spk: str, prev_txt: str, next_spk: str, next_txt
         and (len(s) <= 14 or LATCH_START_RE.search(s))
     ):
         if p.endswith(("……", "…", "——")):
-            return ("LATCH", 0.085)
-        return ("LATCH", 0.058)
+            return ("LATCH", 0.072)
+        return ("LATCH", 0.048)
     if len(s) <= 18 or LATCH_START_RE.search(s):
-        return ("PAUSE", 0.038)
+        return ("PAUSE", 0.08)
     if SLOW_PIVOT_RE.search(s):
-        return ("PAUSE", 0.22)
+        return ("PAUSE", 0.30)
     if next_spk == "W":
-        return ("PAUSE", 0.095)
+        return ("PAUSE", 0.15)
     if next_spk == "D":
-        return ("PAUSE", 0.155)
-    return ("PAUSE", 0.115)
+        return ("PAUSE", 0.22)
+    return ("PAUSE", 0.17)
 
 
 def synth_gemini_turn_sync(spk: str, text: str, out_mp3: str) -> bool:
@@ -1460,9 +1463,9 @@ async def synth_turn(spk: str, voice_cfg: tuple, text: str, out_path: str, sem: 
             elif attempt == 2:
                 use_voice, use_rate, use_pitch, use_txt = voice, rate, "+0Hz", no_quotes_period
             elif attempt == 3:
-                use_voice, use_rate, use_pitch, use_txt = voice, "+0%", "+0Hz", no_quotes_period
+                use_voice, use_rate, use_pitch, use_txt = voice, rate, "+0Hz", bare_no_punct
             elif attempt == 4:
-                use_voice, use_rate, use_pitch, use_txt = voice, "+0%", "+0Hz", bare_no_punct
+                use_voice, use_rate, use_pitch, use_txt = voice, "-6%", "+0Hz", bare_no_punct
             else:
                 use_voice, use_rate, use_pitch, use_txt = alt_voice, rate, alt_pitch, bare_no_punct
             try:
@@ -1620,15 +1623,15 @@ def apply_backchannel_room_filter(arr: np.ndarray) -> np.ndarray:
 
 def compress_internal_silences(
     arr: np.ndarray,
-    max_pause_sec: float = 0.31,
-    keep_head_sec: float = 0.11,
-    keep_tail_sec: float = 0.12,
+    max_pause_sec: float = 0.40,
+    keep_head_sec: float = 0.14,
+    keep_tail_sec: float = 0.15,
     rms_thresh: float = 0.0042,
 ) -> np.ndarray:
     """
     Smoothly caps abnormal mid-sentence TTS dead-air stalls (e.g. 0.55s-2.0s pauses that
-    neural voices occasionally insert at commas or rare words) down to a natural ~0.23s breath
-    using a click-free 12ms raised-cosine crossfade. Never touches natural short pauses <=0.31s.
+    neural voices occasionally insert at commas or rare words) down to a natural ~0.29s breath
+    using a click-free 12ms raised-cosine crossfade. Never touches natural short pauses <=0.40s.
     """
     if np is None or len(arr) < int(SR * 0.5):
         return arr
@@ -1751,11 +1754,11 @@ def inline_ja_voice_cfg(spk_key: str, voice_map: dict, ja_kana: str) -> tuple[st
     try:
         zh_pct = int(str(rate_s).replace("%", "").strip())
     except Exception:
-        zh_pct = 6
+        zh_pct = -8
     if len(ja_kana) >= 9:
-        ja_pct = max(-6, min(0, zh_pct - 7))
+        ja_pct = max(-10, min(-3, zh_pct - 1))
     else:
-        ja_pct = max(-1, min(6, zh_pct - 2))
+        ja_pct = max(-6, min(0, zh_pct + 3))
     return (voice, f"{ja_pct:+d}%", pitch_s)
 
 
@@ -1893,7 +1896,7 @@ async def synth_edge_with_boundaries(
             elif attempt == 2:
                 u_v, u_r, u_p, u_t = voice, rate, "+0Hz", with_period
             elif attempt == 3:
-                u_v, u_r, u_p, u_t = voice, "+0%", "+0Hz", with_period
+                u_v, u_r, u_p, u_t = voice, "-6%", "+0Hz", with_period
             else:
                 u_v, u_r, u_p, u_t = alt_voice, rate, alt_pitch, with_period
             try:
@@ -3194,7 +3197,7 @@ async def main():
         ann_evs = []
 
     if use_v45_broadcast:
-        radio_ver_tag = "v46_qq_40m_stereo_zmy_brain_bridge"
+        radio_ver_tag = "v47_qq_40m_real_pace_stereo_zmy"
     elif today_str >= "2026-11-26":
         radio_ver_tag = "v43_qq_40m_storycraft_archival_real_outro"
     elif use_v42_ending:
@@ -3225,7 +3228,7 @@ async def main():
     if not dry_test and os.path.exists(RADIO_MP3_PATH) and os.path.exists(RADIO_META_PATH):
         try:
             old_meta = json.load(open(RADIO_META_PATH, encoding="utf-8"))
-            # Never overwrite already-published <= 2026-11-26 episodes mid-day; v46 starts fresh on 2026-11-27!
+            # Never overwrite already-published <= 2026-11-26 episodes mid-day; v47 real-pace starts on 2026-11-27!
             if old_meta.get("date") == today_str and (
                 old_meta.get("script_sig") == script_sig or today_str <= "2026-11-26"
             ) and os.path.getsize(RADIO_MP3_PATH) > 1_000_000:
@@ -3252,7 +3255,7 @@ async def main():
         *(b["events"] for b in story_blocks),
     ]
 
-    tmpdir = tempfile.mkdtemp(prefix="n3_radio_v46_")
+    tmpdir = tempfile.mkdtemp(prefix="n3_radio_v47_")
     try:
         unique_turns: dict[tuple[str, str], str] = {}
         mixed_keys: set[tuple[str, str]] = set()
@@ -3281,7 +3284,7 @@ async def main():
             clip_pcm: dict[tuple[str, str], np.ndarray] = {}
             for key in unique_turns:
                 plain_len = len(SWAP_TOKEN_RE.sub(lambda m: m.group(2), key[1]))
-                dur_s = max(0.32, plain_len * 0.192)
+                dur_s = max(0.32, plain_len * 0.210)
                 t = np.arange(int(SR * dur_s), dtype=np.float32) / SR
                 raw_tone = (0.11 * np.sin(2.0 * np.pi * 180.0 * t) + 0.05 * np.sin(2.0 * np.pi * 1650.0 * t)).astype(np.float32)
                 clip_pcm[key] = apply_host_vocal_timbre(raw_tone, key[0])
@@ -3752,6 +3755,7 @@ async def main():
         prev_chap_imgs: dict[int, str] = {}
         prev_spk_audios: dict[str, str] = {}
         prev_spk_ask_audios: dict[str, str] = {}
+        prev_rv_audios: dict[str, dict[str, str]] = {}
         need_visual_render = True
         if os.path.exists(RADIO_META_PATH):
             try:
@@ -3765,6 +3769,18 @@ async def main():
                     for ci, ch in enumerate(prev_meta.get("chapters") or []):
                         if isinstance(ch, dict) and ch.get("img"):
                             prev_chap_imgs[int(ch.get("idx", ci))] = str(ch["img"])
+                    for pit in (prev_meta.get("review_items") or []):
+                        if isinstance(pit, dict) and pit.get("id"):
+                            rec_a: dict[str, str] = {}
+                            for ak in ("word_audio", "demo_audio", "story_ex_audio", "ex_audio", "hook_audio"):
+                                av = str(pit.get(ak) or "").strip()
+                                if av:
+                                    arel = av.split("?")[0].lstrip("./")
+                                    aabs = os.path.join(BASE_DIR, arel)
+                                    if os.path.exists(aabs) and os.path.getsize(aabs) > 800:
+                                        rec_a[ak] = av
+                            if rec_a:
+                                prev_rv_audios[str(pit["id"])] = rec_a
                     for psp in (prev_meta.get("speaking_prompts") or []):
                         if isinstance(psp, dict) and psp.get("model_audio"):
                             ma_url = str(psp["model_audio"])
@@ -3801,7 +3817,10 @@ async def main():
                         bool(prev_spk_audios.get(str(sp.get("id") or "")) or prev_spk_audios.get(str(sp.get("model_ja") or "")))
                         for sp in speaking_prompts
                     )
-                    if video_ok and spk_ok and prev_meta.get("script_sig") == script_sig:
+                    prev_ch_titles = [str(c.get("title") or "") for c in (prev_meta.get("chapters") or []) if isinstance(c, dict)]
+                    cur_ch_titles = [str(c.get("title") or "") for c in chapters_meta]
+                    same_stories = bool(prev_ch_titles) and prev_ch_titles == cur_ch_titles
+                    if video_ok and spk_ok and (prev_meta.get("script_sig") == script_sig or same_stories):
                         need_visual_render = False
             except Exception:
                 pass
@@ -3846,6 +3865,13 @@ async def main():
                     img_v = prev_chap_imgs.get(int(sp.get("chapter_idx", -1)))
                     if img_v:
                         sp["img"] = img_v
+            if prev_rv_audios:
+                for it in review_items:
+                    rec_a = prev_rv_audios.get(str(it.get("id") or ""))
+                    if rec_a:
+                        for ak, av in rec_a.items():
+                            if not it.get(ak):
+                                it[ak] = av
             for sp in speaking_prompts:
                 if not sp.get("model_audio"):
                     ma = prev_spk_audios.get(str(sp.get("id") or "")) or prev_spk_audios.get(str(sp.get("model_ja") or ""))
