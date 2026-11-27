@@ -7209,6 +7209,244 @@
     "cj_cj48_teach.mp3": "53373383ce",
     "cj_cj48_model.mp3": "a050d43fb5"
   },
+  "fossil_slips": {
+    "SL01": {
+      "model": "./audio/sla/sl_sl01_model.mp3",
+      "ask": "./audio/sla/sl_sl01_ask.mp3",
+      "teach": "./audio/sla/sl_sl01_teach.mp3"
+    },
+    "SL02": {
+      "model": "./audio/sla/sl_sl02_model.mp3",
+      "teach": "./audio/sla/sl_sl02_teach.mp3",
+      "ask": "./audio/sla/sl_sl02_ask.mp3"
+    },
+    "SL03": {
+      "model": "./audio/sla/sl_sl03_model.mp3",
+      "ask": "./audio/sla/sl_sl03_ask.mp3",
+      "teach": "./audio/sla/sl_sl03_teach.mp3"
+    },
+    "SL04": {
+      "ask": "./audio/sla/sl_sl04_ask.mp3",
+      "model": "./audio/sla/sl_sl04_model.mp3",
+      "teach": "./audio/sla/sl_sl04_teach.mp3"
+    },
+    "SL05": {
+      "ask": "./audio/sla/sl_sl05_ask.mp3",
+      "teach": "./audio/sla/sl_sl05_teach.mp3",
+      "model": "./audio/sla/sl_sl05_model.mp3"
+    },
+    "SL06": {
+      "model": "./audio/sla/sl_sl06_model.mp3",
+      "ask": "./audio/sla/sl_sl06_ask.mp3",
+      "teach": "./audio/sla/sl_sl06_teach.mp3"
+    },
+    "SL07": {
+      "model": "./audio/sla/sl_sl07_model.mp3",
+      "ask": "./audio/sla/sl_sl07_ask.mp3",
+      "teach": "./audio/sla/sl_sl07_teach.mp3"
+    },
+    "SL08": {
+      "ask": "./audio/sla/sl_sl08_ask.mp3",
+      "teach": "./audio/sla/sl_sl08_teach.mp3",
+      "model": "./audio/sla/sl_sl08_model.mp3"
+    },
+    "SL09": {
+      "model": "./audio/sla/sl_sl09_model.mp3",
+      "teach": "./audio/sla/sl_sl09_teach.mp3",
+      "ask": "./audio/sla/sl_sl09_ask.mp3"
+    },
+    "SL10": {
+      "model": "./audio/sla/sl_sl10_model.mp3",
+      "teach": "./audio/sla/sl_sl10_teach.mp3",
+      "ask": "./audio/sla/sl_sl10_ask.mp3"
+    },
+    "SL11": {
+      "ask": "./audio/sla/sl_sl11_ask.mp3",
+      "model": "./audio/sla/sl_sl11_model.mp3",
+      "teach": "./audio/sla/sl_sl11_teach.mp3"
+    },
+    "SL12": {
+      "model": "./audio/sla/sl_sl12_model.mp3",
+      "ask": "./audio/sla/sl_sl12_ask.mp3",
+      "teach": "./audio/sla/sl_sl12_teach.mp3"
+    },
+    "SL13": {
+      "model": "./audio/sla/sl_sl13_model.mp3",
+      "ask": "./audio/sla/sl_sl13_ask.mp3",
+      "teach": "./audio/sla/sl_sl13_teach.mp3"
+    },
+    "SL14": {
+      "model": "./audio/sla/sl_sl14_model.mp3",
+      "ask": "./audio/sla/sl_sl14_ask.mp3",
+      "teach": "./audio/sla/sl_sl14_teach.mp3"
+    },
+    "SL15": {
+      "model": "./audio/sla/sl_sl15_model.mp3",
+      "ask": "./audio/sla/sl_sl15_ask.mp3",
+      "teach": "./audio/sla/sl_sl15_teach.mp3"
+    },
+    "SL16": {
+      "model": "./audio/sla/sl_sl16_model.mp3",
+      "ask": "./audio/sla/sl_sl16_ask.mp3",
+      "teach": "./audio/sla/sl_sl16_teach.mp3"
+    },
+    "SL17": {
+      "model": "./audio/sla/sl_sl17_model.mp3",
+      "ask": "./audio/sla/sl_sl17_ask.mp3",
+      "teach": "./audio/sla/sl_sl17_teach.mp3"
+    },
+    "SL18": {
+      "model": "./audio/sla/sl_sl18_model.mp3",
+      "ask": "./audio/sla/sl_sl18_ask.mp3",
+      "teach": "./audio/sla/sl_sl18_teach.mp3"
+    }
+  },
+  "minimal_pairs": {
+    "MP01": {
+      "speaker_a": "东京女声 · 标准",
+      "speaker_b": "东京男声 · 标准",
+      "a": "./audio/sla/mp_mp01_a.mp3",
+      "b": "./audio/sla/mp_mp01_b.mp3"
+    },
+    "MP02": {
+      "speaker_a": "职场女同事 · 轻快",
+      "speaker_b": "资深前辈 · 低沉",
+      "a": "./audio/sla/mp_mp02_a.mp3",
+      "b": "./audio/sla/mp_mp02_b.mp3"
+    },
+    "MP03": {
+      "speaker_a": "咖啡馆女声 · 松弛",
+      "speaker_b": "东京电台男声 · 偏快",
+      "b": "./audio/sla/mp_mp03_b.mp3",
+      "a": "./audio/sla/mp_mp03_a.mp3"
+    },
+    "MP04": {
+      "speaker_a": "东京女声 · 标准",
+      "speaker_b": "东京男声 · 标准",
+      "a": "./audio/sla/mp_mp04_a.mp3",
+      "b": "./audio/sla/mp_mp04_b.mp3"
+    },
+    "MP05": {
+      "speaker_a": "职场女同事 · 轻快",
+      "speaker_b": "资深前辈 · 低沉",
+      "a": "./audio/sla/mp_mp05_a.mp3",
+      "b": "./audio/sla/mp_mp05_b.mp3"
+    },
+    "MP06": {
+      "speaker_a": "咖啡馆女声 · 松弛",
+      "speaker_b": "东京电台男声 · 偏快",
+      "a": "./audio/sla/mp_mp06_a.mp3",
+      "b": "./audio/sla/mp_mp06_b.mp3"
+    },
+    "MP07": {
+      "speaker_a": "东京女声 · 标准",
+      "speaker_b": "东京男声 · 标准",
+      "a": "./audio/sla/mp_mp07_a.mp3",
+      "b": "./audio/sla/mp_mp07_b.mp3"
+    },
+    "MP08": {
+      "speaker_a": "职场女同事 · 轻快",
+      "speaker_b": "资深前辈 · 低沉",
+      "a": "./audio/sla/mp_mp08_a.mp3",
+      "b": "./audio/sla/mp_mp08_b.mp3"
+    },
+    "MP09": {
+      "speaker_a": "咖啡馆女声 · 松弛",
+      "speaker_b": "东京电台男声 · 偏快",
+      "b": "./audio/sla/mp_mp09_b.mp3",
+      "a": "./audio/sla/mp_mp09_a.mp3"
+    },
+    "MP10": {
+      "speaker_a": "东京女声 · 标准",
+      "speaker_b": "东京男声 · 标准",
+      "a": "./audio/sla/mp_mp10_a.mp3",
+      "b": "./audio/sla/mp_mp10_b.mp3"
+    },
+    "MP11": {
+      "speaker_a": "职场女同事 · 轻快",
+      "speaker_b": "资深前辈 · 低沉",
+      "a": "./audio/sla/mp_mp11_a.mp3",
+      "b": "./audio/sla/mp_mp11_b.mp3"
+    },
+    "MP12": {
+      "speaker_a": "咖啡馆女声 · 松弛",
+      "speaker_b": "东京电台男声 · 偏快",
+      "b": "./audio/sla/mp_mp12_b.mp3",
+      "a": "./audio/sla/mp_mp12_a.mp3"
+    },
+    "MP13": {
+      "speaker_a": "东京女声 · 标准",
+      "speaker_b": "东京男声 · 标准",
+      "a": "./audio/sla/mp_mp13_a.mp3",
+      "b": "./audio/sla/mp_mp13_b.mp3"
+    },
+    "MP14": {
+      "speaker_a": "职场女同事 · 轻快",
+      "speaker_b": "资深前辈 · 低沉",
+      "a": "./audio/sla/mp_mp14_a.mp3",
+      "b": "./audio/sla/mp_mp14_b.mp3"
+    },
+    "MP15": {
+      "speaker_a": "咖啡馆女声 · 松弛",
+      "speaker_b": "东京电台男声 · 偏快",
+      "a": "./audio/sla/mp_mp15_a.mp3",
+      "b": "./audio/sla/mp_mp15_b.mp3"
+    },
+    "MP16": {
+      "speaker_a": "东京女声 · 标准",
+      "speaker_b": "东京男声 · 标准",
+      "a": "./audio/sla/mp_mp16_a.mp3",
+      "b": "./audio/sla/mp_mp16_b.mp3"
+    },
+    "MP17": {
+      "speaker_a": "职场女同事 · 轻快",
+      "speaker_b": "资深前辈 · 低沉",
+      "a": "./audio/sla/mp_mp17_a.mp3",
+      "b": "./audio/sla/mp_mp17_b.mp3"
+    },
+    "MP18": {
+      "speaker_a": "咖啡馆女声 · 松弛",
+      "speaker_b": "东京电台男声 · 偏快",
+      "a": "./audio/sla/mp_mp18_a.mp3",
+      "b": "./audio/sla/mp_mp18_b.mp3"
+    },
+    "MP19": {
+      "speaker_a": "东京女声 · 标准",
+      "speaker_b": "东京男声 · 标准",
+      "a": "./audio/sla/mp_mp19_a.mp3",
+      "b": "./audio/sla/mp_mp19_b.mp3"
+    },
+    "MP20": {
+      "speaker_a": "职场女同事 · 轻快",
+      "speaker_b": "资深前辈 · 低沉",
+      "a": "./audio/sla/mp_mp20_a.mp3",
+      "b": "./audio/sla/mp_mp20_b.mp3"
+    },
+    "MP21": {
+      "speaker_a": "咖啡馆女声 · 松弛",
+      "speaker_b": "东京电台男声 · 偏快",
+      "b": "./audio/sla/mp_mp21_b.mp3",
+      "a": "./audio/sla/mp_mp21_a.mp3"
+    },
+    "MP22": {
+      "speaker_a": "东京女声 · 标准",
+      "speaker_b": "东京男声 · 标准",
+      "a": "./audio/sla/mp_mp22_a.mp3",
+      "b": "./audio/sla/mp_mp22_b.mp3"
+    },
+    "MP23": {
+      "speaker_a": "职场女同事 · 轻快",
+      "speaker_b": "资深前辈 · 低沉",
+      "a": "./audio/sla/mp_mp23_a.mp3",
+      "b": "./audio/sla/mp_mp23_b.mp3"
+    },
+    "MP24": {
+      "speaker_a": "咖啡馆女声 · 松弛",
+      "speaker_b": "东京电台男声 · 偏快",
+      "a": "./audio/sla/mp_mp24_a.mp3",
+      "b": "./audio/sla/mp_mp24_b.mp3"
+    }
+  },
   "num_JF_1.mp3": "b67108e5b8a0",
   "num_JF_2.mp3": "faee77d48904",
   "num_JF_3.mp3": "5e6ac3e418ce",
@@ -13202,243 +13440,5 @@
     "exp_audio": "./audio/VAR11-60_exp.mp3?v=395a4bcb",
     "spoken_text": "关于下周碰头会的事，我打算稍后由我这边再向贵司负责人请教具体需求。 动作发出者是「私から（我这边）」，自己向对方打听请教必须压低自己用谦让语「伺う」。 动作主语是「我」去问/拜访对方＝谦让语「伺う」；「お〜になる」只能抬高对方。"
   },
-  "done.mp3": "33da2bfc13f6",
-  "fossil_slips": {
-    "SL01": {
-      "model": "./audio/sla/sl_sl01_model.mp3",
-      "ask": "./audio/sla/sl_sl01_ask.mp3",
-      "teach": "./audio/sla/sl_sl01_teach.mp3"
-    },
-    "SL02": {
-      "model": "./audio/sla/sl_sl02_model.mp3",
-      "teach": "./audio/sla/sl_sl02_teach.mp3",
-      "ask": "./audio/sla/sl_sl02_ask.mp3"
-    },
-    "SL03": {
-      "model": "./audio/sla/sl_sl03_model.mp3",
-      "ask": "./audio/sla/sl_sl03_ask.mp3",
-      "teach": "./audio/sla/sl_sl03_teach.mp3"
-    },
-    "SL04": {
-      "ask": "./audio/sla/sl_sl04_ask.mp3",
-      "model": "./audio/sla/sl_sl04_model.mp3",
-      "teach": "./audio/sla/sl_sl04_teach.mp3"
-    },
-    "SL05": {
-      "ask": "./audio/sla/sl_sl05_ask.mp3",
-      "teach": "./audio/sla/sl_sl05_teach.mp3",
-      "model": "./audio/sla/sl_sl05_model.mp3"
-    },
-    "SL06": {
-      "model": "./audio/sla/sl_sl06_model.mp3",
-      "ask": "./audio/sla/sl_sl06_ask.mp3",
-      "teach": "./audio/sla/sl_sl06_teach.mp3"
-    },
-    "SL07": {
-      "model": "./audio/sla/sl_sl07_model.mp3",
-      "ask": "./audio/sla/sl_sl07_ask.mp3",
-      "teach": "./audio/sla/sl_sl07_teach.mp3"
-    },
-    "SL08": {
-      "ask": "./audio/sla/sl_sl08_ask.mp3",
-      "teach": "./audio/sla/sl_sl08_teach.mp3",
-      "model": "./audio/sla/sl_sl08_model.mp3"
-    },
-    "SL09": {
-      "model": "./audio/sla/sl_sl09_model.mp3",
-      "teach": "./audio/sla/sl_sl09_teach.mp3",
-      "ask": "./audio/sla/sl_sl09_ask.mp3"
-    },
-    "SL10": {
-      "model": "./audio/sla/sl_sl10_model.mp3",
-      "teach": "./audio/sla/sl_sl10_teach.mp3",
-      "ask": "./audio/sla/sl_sl10_ask.mp3"
-    },
-    "SL11": {
-      "ask": "./audio/sla/sl_sl11_ask.mp3",
-      "model": "./audio/sla/sl_sl11_model.mp3",
-      "teach": "./audio/sla/sl_sl11_teach.mp3"
-    },
-    "SL12": {
-      "model": "./audio/sla/sl_sl12_model.mp3",
-      "ask": "./audio/sla/sl_sl12_ask.mp3",
-      "teach": "./audio/sla/sl_sl12_teach.mp3"
-    },
-    "SL13": {
-      "model": "./audio/sla/sl_sl13_model.mp3",
-      "ask": "./audio/sla/sl_sl13_ask.mp3",
-      "teach": "./audio/sla/sl_sl13_teach.mp3"
-    },
-    "SL14": {
-      "model": "./audio/sla/sl_sl14_model.mp3",
-      "ask": "./audio/sla/sl_sl14_ask.mp3",
-      "teach": "./audio/sla/sl_sl14_teach.mp3"
-    },
-    "SL15": {
-      "model": "./audio/sla/sl_sl15_model.mp3",
-      "ask": "./audio/sla/sl_sl15_ask.mp3",
-      "teach": "./audio/sla/sl_sl15_teach.mp3"
-    },
-    "SL16": {
-      "model": "./audio/sla/sl_sl16_model.mp3",
-      "ask": "./audio/sla/sl_sl16_ask.mp3",
-      "teach": "./audio/sla/sl_sl16_teach.mp3"
-    },
-    "SL17": {
-      "model": "./audio/sla/sl_sl17_model.mp3",
-      "ask": "./audio/sla/sl_sl17_ask.mp3",
-      "teach": "./audio/sla/sl_sl17_teach.mp3"
-    },
-    "SL18": {
-      "model": "./audio/sla/sl_sl18_model.mp3",
-      "ask": "./audio/sla/sl_sl18_ask.mp3",
-      "teach": "./audio/sla/sl_sl18_teach.mp3"
-    }
-  },
-  "minimal_pairs": {
-    "MP01": {
-      "speaker_a": "东京女声 · 标准",
-      "speaker_b": "东京男声 · 标准",
-      "a": "./audio/sla/mp_mp01_a.mp3",
-      "b": "./audio/sla/mp_mp01_b.mp3"
-    },
-    "MP02": {
-      "speaker_a": "职场女同事 · 轻快",
-      "speaker_b": "资深前辈 · 低沉",
-      "a": "./audio/sla/mp_mp02_a.mp3",
-      "b": "./audio/sla/mp_mp02_b.mp3"
-    },
-    "MP03": {
-      "speaker_a": "咖啡馆女声 · 松弛",
-      "speaker_b": "东京电台男声 · 偏快",
-      "b": "./audio/sla/mp_mp03_b.mp3",
-      "a": "./audio/sla/mp_mp03_a.mp3"
-    },
-    "MP04": {
-      "speaker_a": "东京女声 · 标准",
-      "speaker_b": "东京男声 · 标准",
-      "a": "./audio/sla/mp_mp04_a.mp3",
-      "b": "./audio/sla/mp_mp04_b.mp3"
-    },
-    "MP05": {
-      "speaker_a": "职场女同事 · 轻快",
-      "speaker_b": "资深前辈 · 低沉",
-      "a": "./audio/sla/mp_mp05_a.mp3",
-      "b": "./audio/sla/mp_mp05_b.mp3"
-    },
-    "MP06": {
-      "speaker_a": "咖啡馆女声 · 松弛",
-      "speaker_b": "东京电台男声 · 偏快",
-      "a": "./audio/sla/mp_mp06_a.mp3",
-      "b": "./audio/sla/mp_mp06_b.mp3"
-    },
-    "MP07": {
-      "speaker_a": "东京女声 · 标准",
-      "speaker_b": "东京男声 · 标准",
-      "a": "./audio/sla/mp_mp07_a.mp3",
-      "b": "./audio/sla/mp_mp07_b.mp3"
-    },
-    "MP08": {
-      "speaker_a": "职场女同事 · 轻快",
-      "speaker_b": "资深前辈 · 低沉",
-      "a": "./audio/sla/mp_mp08_a.mp3",
-      "b": "./audio/sla/mp_mp08_b.mp3"
-    },
-    "MP09": {
-      "speaker_a": "咖啡馆女声 · 松弛",
-      "speaker_b": "东京电台男声 · 偏快",
-      "b": "./audio/sla/mp_mp09_b.mp3",
-      "a": "./audio/sla/mp_mp09_a.mp3"
-    },
-    "MP10": {
-      "speaker_a": "东京女声 · 标准",
-      "speaker_b": "东京男声 · 标准",
-      "a": "./audio/sla/mp_mp10_a.mp3",
-      "b": "./audio/sla/mp_mp10_b.mp3"
-    },
-    "MP11": {
-      "speaker_a": "职场女同事 · 轻快",
-      "speaker_b": "资深前辈 · 低沉",
-      "a": "./audio/sla/mp_mp11_a.mp3",
-      "b": "./audio/sla/mp_mp11_b.mp3"
-    },
-    "MP12": {
-      "speaker_a": "咖啡馆女声 · 松弛",
-      "speaker_b": "东京电台男声 · 偏快",
-      "b": "./audio/sla/mp_mp12_b.mp3",
-      "a": "./audio/sla/mp_mp12_a.mp3"
-    },
-    "MP13": {
-      "speaker_a": "东京女声 · 标准",
-      "speaker_b": "东京男声 · 标准",
-      "a": "./audio/sla/mp_mp13_a.mp3",
-      "b": "./audio/sla/mp_mp13_b.mp3"
-    },
-    "MP14": {
-      "speaker_a": "职场女同事 · 轻快",
-      "speaker_b": "资深前辈 · 低沉",
-      "a": "./audio/sla/mp_mp14_a.mp3",
-      "b": "./audio/sla/mp_mp14_b.mp3"
-    },
-    "MP15": {
-      "speaker_a": "咖啡馆女声 · 松弛",
-      "speaker_b": "东京电台男声 · 偏快",
-      "a": "./audio/sla/mp_mp15_a.mp3",
-      "b": "./audio/sla/mp_mp15_b.mp3"
-    },
-    "MP16": {
-      "speaker_a": "东京女声 · 标准",
-      "speaker_b": "东京男声 · 标准",
-      "a": "./audio/sla/mp_mp16_a.mp3",
-      "b": "./audio/sla/mp_mp16_b.mp3"
-    },
-    "MP17": {
-      "speaker_a": "职场女同事 · 轻快",
-      "speaker_b": "资深前辈 · 低沉",
-      "a": "./audio/sla/mp_mp17_a.mp3",
-      "b": "./audio/sla/mp_mp17_b.mp3"
-    },
-    "MP18": {
-      "speaker_a": "咖啡馆女声 · 松弛",
-      "speaker_b": "东京电台男声 · 偏快",
-      "a": "./audio/sla/mp_mp18_a.mp3",
-      "b": "./audio/sla/mp_mp18_b.mp3"
-    },
-    "MP19": {
-      "speaker_a": "东京女声 · 标准",
-      "speaker_b": "东京男声 · 标准",
-      "a": "./audio/sla/mp_mp19_a.mp3",
-      "b": "./audio/sla/mp_mp19_b.mp3"
-    },
-    "MP20": {
-      "speaker_a": "职场女同事 · 轻快",
-      "speaker_b": "资深前辈 · 低沉",
-      "a": "./audio/sla/mp_mp20_a.mp3",
-      "b": "./audio/sla/mp_mp20_b.mp3"
-    },
-    "MP21": {
-      "speaker_a": "咖啡馆女声 · 松弛",
-      "speaker_b": "东京电台男声 · 偏快",
-      "b": "./audio/sla/mp_mp21_b.mp3",
-      "a": "./audio/sla/mp_mp21_a.mp3"
-    },
-    "MP22": {
-      "speaker_a": "东京女声 · 标准",
-      "speaker_b": "东京男声 · 标准",
-      "a": "./audio/sla/mp_mp22_a.mp3",
-      "b": "./audio/sla/mp_mp22_b.mp3"
-    },
-    "MP23": {
-      "speaker_a": "职场女同事 · 轻快",
-      "speaker_b": "资深前辈 · 低沉",
-      "a": "./audio/sla/mp_mp23_a.mp3",
-      "b": "./audio/sla/mp_mp23_b.mp3"
-    },
-    "MP24": {
-      "speaker_a": "咖啡馆女声 · 松弛",
-      "speaker_b": "东京电台男声 · 偏快",
-      "a": "./audio/sla/mp_mp24_a.mp3",
-      "b": "./audio/sla/mp_mp24_b.mp3"
-    }
-  }
+  "done.mp3": "33da2bfc13f6"
 }

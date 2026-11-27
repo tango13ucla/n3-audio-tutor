@@ -1,38 +1,38 @@
 {
   "closed_study_day": "2026-11-26",
-  "summarized_at_pt": "2026-11-26T15:08:55-08:00",
-  "day_events_count": 24,
+  "summarized_at_pt": "2026-11-27T04:05:30-08:00",
+  "day_events_count": 190,
   "missed_or_unsure_points": [
+    "参る",
+    "いただく",
+    "お目にかかる",
+    "存じる／存じ上げる",
+    "〜ごとに",
+    "〜たところ",
+    "〜た結果",
+    "〜ていく",
+    "〜ついでに",
+    "〜うちに",
+    "〜かけだ",
+    "〜ずにはいられない",
+    "〜くせに",
+    "〜にしても",
+    "〜といっても",
+    "〜ばかり",
+    "〜にちがいない",
     "〜てもかまわない",
-    "〜ばかりに",
-    "〜に限る",
-    "〜だらけ",
-    "〜しだい",
-    "〜どころか",
+    "〜がちだ",
+    "記憶",
     "〜させてもらう",
-    "〜うえで",
-    "〜ところだ",
-    "〜おきに",
-    "〜にかけて",
-    "〜てたまらない",
-    "〜をはじめ",
-    "〜にしたがって",
-    "〜からこそ",
-    "〜わけがない",
+    "〜だらけ",
+    "〜ばかりに",
     "〜だけしか〜ない",
     "V-046",
-    "V-028",
-    "〜を中心に",
-    "〜いくら〜ても",
-    "〜らしく",
-    "謙譲語特殊動詞组",
-    "どんなに〜ても",
-    "はっきり",
-    "N3L-402",
-    "K-005",
-    "N3L-403",
-    "N3L-006",
-    "〜なんか"
+    "〜しかない",
+    "〜ながらも",
+    "〜おきに",
+    "〜きり",
+    "〜とともに"
   ],
   "missed_vocab_words": [
     "納得",
@@ -40,14 +40,30 @@
     "象徴",
     "ぼろぼろ",
     "慰める",
-    "うろうろ"
+    "うろうろ",
+    "世間",
+    "現象",
+    "実施",
+    "実際"
   ],
   "top_confusion_pairs": [
+    {
+      "point": "K-008",
+      "wrong_choice": "お知り",
+      "count": 5,
+      "last_date": "20261126"
+    },
     {
       "point": "はっきり",
       "wrong_choice": "ぼんやり",
       "count": 5,
       "last_date": "20261125"
+    },
+    {
+      "point": "〜てたまらない",
+      "wrong_choice": "かまわない",
+      "count": 4,
+      "last_date": "20261126"
     },
     {
       "point": "T-034",
@@ -68,16 +84,28 @@
       "last_date": "20261124"
     },
     {
-      "point": "K-008",
-      "wrong_choice": "お知り",
-      "count": 4,
-      "last_date": "20261123"
-    },
-    {
       "point": "からから",
       "wrong_choice": "がらがら",
       "count": 4,
       "last_date": "20261122"
+    },
+    {
+      "point": "〜たものだ",
+      "wrong_choice": "だところだ",
+      "count": 3,
+      "last_date": "20261126"
+    },
+    {
+      "point": "〜だけしか〜ない",
+      "wrong_choice": "だけでも",
+      "count": 3,
+      "last_date": "20261126"
+    },
+    {
+      "point": "〜にもかかわらず",
+      "wrong_choice": "音楽会は",
+      "count": 3,
+      "last_date": "20261126"
     },
     {
       "point": "謙譲語特殊動詞组",
@@ -98,16 +126,28 @@
       "last_date": "20261120"
     },
     {
-      "point": "〜てたまらない",
-      "wrong_choice": "かまわない",
-      "count": 3,
-      "last_date": "20261118"
-    },
-    {
       "point": "〜にしては",
       "wrong_choice": "にとって",
       "count": 3,
       "last_date": "20261117"
+    },
+    {
+      "point": "〜がちだ",
+      "wrong_choice": "ひきがち",
+      "count": 2,
+      "last_date": "20261126"
+    },
+    {
+      "point": "〜させてもらう",
+      "wrong_choice": "帰らせて",
+      "count": 2,
+      "last_date": "20261126"
+    },
+    {
+      "point": "V-046",
+      "wrong_choice": "買よう",
+      "count": 2,
+      "last_date": "20261126"
     },
     {
       "point": "〜にしたがって",
@@ -126,44 +166,81 @@
       "wrong_choice": "うかがって",
       "count": 2,
       "last_date": "20261125"
-    },
-    {
-      "point": "〜てもかまわない",
-      "wrong_choice": "てたまらない",
-      "count": 2,
-      "last_date": "20261125"
-    },
-    {
-      "point": "〜のように／ような",
-      "wrong_choice": "てほしい",
-      "count": 2,
-      "last_date": "20261125"
-    },
-    {
-      "point": "そっくり",
-      "wrong_choice": "うっかり",
-      "count": 2,
-      "last_date": "20261124"
-    },
-    {
-      "point": "〜きる／〜きれない",
-      "wrong_choice": "やすい",
-      "count": 2,
-      "last_date": "20261124"
-    },
-    {
-      "point": "〜てばかりいる",
-      "wrong_choice": "たばかりで",
-      "count": 2,
-      "last_date": "20261124"
-    },
-    {
-      "point": "〜たものだ",
-      "wrong_choice": "だところだ",
-      "count": 2,
-      "last_date": "20261124"
     }
   ],
+  "leech_words": [
+    {
+      "word": "慰める",
+      "wrong": 18,
+      "seen": 39,
+      "err_pct": 46,
+      "status": "red"
+    },
+    {
+      "word": "こっそり",
+      "wrong": 15,
+      "seen": 28,
+      "err_pct": 54,
+      "status": "yellow"
+    },
+    {
+      "word": "ぼんやり",
+      "wrong": 14,
+      "seen": 24,
+      "err_pct": 58,
+      "status": "green"
+    },
+    {
+      "word": "ぼろぼろ",
+      "wrong": 12,
+      "seen": 24,
+      "err_pct": 50,
+      "status": "red"
+    },
+    {
+      "word": "余る",
+      "wrong": 11,
+      "seen": 20,
+      "err_pct": 55,
+      "status": "green"
+    },
+    {
+      "word": "めったに",
+      "wrong": 10,
+      "seen": 20,
+      "err_pct": 50,
+      "status": "yellow"
+    },
+    {
+      "word": "そっくり",
+      "wrong": 10,
+      "seen": 22,
+      "err_pct": 45,
+      "status": "yellow"
+    },
+    {
+      "word": "ついてない",
+      "wrong": 10,
+      "seen": 24,
+      "err_pct": 42,
+      "status": "green"
+    },
+    {
+      "word": "はっきり",
+      "wrong": 10,
+      "seen": 24,
+      "err_pct": 42,
+      "status": "yellow"
+    },
+    {
+      "word": "しゃがむ",
+      "wrong": 9,
+      "seen": 16,
+      "err_pct": 56,
+      "status": "green"
+    }
+  ],
+  "leech_points": [],
   "looked_up_expressions": [],
   "looked_up_words_count": 20,
   "top_looked_up_words": [
@@ -269,5 +346,5 @@
     }
   ],
   "recent_radio_feedback": [],
-  "ever_seen_cards_count": 460
+  "ever_seen_cards_count": 488
 }

@@ -1,8 +1,8 @@
 {
   "schema": "n3-grok-cloud-brief/1",
-  "study_date": "2026-11-26",
-  "updated_at": "2026-11-27 00:11 PT",
-  "days_left": 10,
+  "study_date": "2026-11-27",
+  "updated_at": "2026-11-27 04:05 PT",
+  "days_left": 9,
   "grok_cloud_ingest_url": "https://ntfy.sh/n3grok_9c71e4b2a85f13d06e24ab891f03",
   "grammar": {
     "red": [

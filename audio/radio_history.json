@@ -121,7 +121,15 @@
       "uchi23_s3a_kobayashi_part1",
       "uchi23_s3b_mishima_contrast_part2",
       "uchi23_s4_world_brain_ai"
+    ],
+    "2026-11-27": [
+      "uchi18_s1_news_fallback",
+      "uchi18_s2a_yodogo_part1",
+      "uchi18_s2b_yodogo_part2",
+      "uchi18_s3a_kanazawa_part1",
+      "uchi18_s3b_kanazawa_part2",
+      "uchi18_s4_world_europe_defense"
     ]
   },
-  "last_date": "2026-11-26"
+  "last_date": "2026-11-27"
 }
