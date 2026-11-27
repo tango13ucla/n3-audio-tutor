@@ -1124,9 +1124,15 @@ def select_n2_daily_quiz_deck(
     study_date_tag: str = "",
 ) -> list[dict[str, Any]]:
     """
-    Build the daily N2 quiz deck ("先教后练" + "+1/+5/+14" spaced callbacks + FSRS DSR
-    long-horizon retention scheduler + leech context-variant rotation + N3 listening/henkei bridge).
-    Travel floor Days 8-34 gently caps at 26 cards; Home sprint runs 50 cards.
+    Build the daily N2/N1 quiz deck ("先教后练" + "+1/+5/+14" spaced callbacks + FSRS DSR
+    long-horizon retention scheduler + leech context-variant rotation + listening/henkei/vocab bridge).
+
+    Scientific SLA 3-Tier Pacing (Nation Four Strands: keep deliberate drilling <= 25% of study time
+    so reading, listening, shadowing & 365-day adherence never burn out):
+      - Europe travel floor (Days 8-34, 12/14-01/09): 22 cards/day (~9-10 min)
+      - Steady N2/N1 climb (normal days): 36 cards/day (~15-18 min; 20 grammar + 8 listening + 4 henkei + 4 vocab)
+      - Final 21-day pre-exam sprint (2027-03-11..03-31 before Mar N2 target & 2027-11-15..12-05 before Dec N1):
+        48 cards/day (24 grammar + 10 listening + 8 henkei + 6 vocab) to sharpen speed & exam stamina.
     """
     try:
         from fsrs_engine import is_leech_item, item_retrievability_on_day
@@ -1134,9 +1140,24 @@ def select_n2_daily_quiz_deck(
         item_retrievability_on_day = None
         is_leech_item = None
 
-    cap = 26 if is_travel_floor else 50
     clamped_day = max(1, min(90, int(n2_day or 1)))
     day_tag = str(study_date_tag or "").replace("-", "")[:8] or (N2_START_DATE + datetime.timedelta(days=max(0, clamped_day - 1))).strftime("%Y%m%d")
+    is_final_sprint = (
+        ("20270311" <= day_tag <= "20270331")
+        or ("20271115" <= day_tag <= "20271205")
+    )
+    if is_travel_floor:
+        cap = 22
+        n2_gram_budget = 12
+        bridge_quotas = {"听力": 4, "活用": 3, "词汇": 3}
+    elif is_final_sprint:
+        cap = 48
+        n2_gram_budget = 24
+        bridge_quotas = {"听力": 10, "活用": 8, "词汇": 6}
+    else:
+        cap = 36
+        n2_gram_budget = 20
+        bridge_quotas = {"听力": 8, "活用": 4, "词汇": 4}
     by_id = {p["id"]: p for p in n2_bank}
     chosen: list[dict[str, Any]] = []
     chosen_ids: set[str] = set()
@@ -1193,7 +1214,6 @@ def select_n2_daily_quiz_deck(
         return (tier, r_now, -overdue, -p["day"], p["id"])
 
     unlocked.sort(key=_fsrs_sort_key)
-    n2_gram_budget = 14 if is_travel_floor else 26
     for p in unlocked:
         if len(chosen) >= n2_gram_budget:
             break
@@ -1208,7 +1228,6 @@ def select_n2_daily_quiz_deck(
             _add(p)
 
     # 5. Interleave authentic Listening, Henkei & Vocab bridge cards so all 4 exam skills climb together
-    bridge_quotas = {"听力": 5, "活用": 4, "词汇": 3} if is_travel_floor else {"听力": 10, "活用": 8, "词汇": 6}
     for subj, q_need in bridge_quotas.items():
         pool = [p for p in n3_bridge_candidates if p.get("subject") == subj and p["id"] not in chosen_ids]
         added = 0

@@ -875,8 +875,9 @@ def test_exam_day_and_n2_zero_to_120_transition_contract() -> None:
         # 3. Isolated multi-date build_html.py dry-runs (all 22 Node self-tests per date!)
         for d_str, exp_phase, exp_track, exp_min, exp_max in (
             ("2026-12-06", "exam_day", "N3", 12, 12),
-            ("2026-12-07", "n2_climb", "N2", 45, 50),
-            ("2026-12-20", "n2_climb", "N2", 20, 26),
+            ("2026-12-07", "n2_climb", "N2", 32, 36),
+            ("2026-12-20", "n2_climb", "N2", 18, 22),
+            ("2027-03-20", "n2_climb", "N2", 44, 48),
         ):
             out_html = os.path.join(td, f"sim_{d_str}.html")
             env = dict(os.environ, FORCE_STUDY_DATE=d_str, OUTPUT_HTML_PATH=out_html)
