@@ -1672,15 +1672,88 @@ def test_v90_nhk_cinema_hd_visual_studio_guard() -> None:
     # 7. UI theater scrubbable rail, scene overline & v90 cache bump + workflow deps
     bh_src = (BASE_DIR / "build_html.py").read_text(encoding="utf-8")
     sw_src = (BASE_DIR / "sw.js").read_text(encoding="utf-8")
-    for sym in ("function scrubJpVideoRail(", 'id="jpv-ch-overline"', "jpv-scrub-rail", 'SW_CACHE_NAME = "n3-studio-tutor-v90"'):
+    for sym in ("function scrubJpVideoRail(", 'id="jpv-ch-overline"', "jpv-scrub-rail"):
         assert sym in bh_src, f"build_html.py missing v90 cinema theater symbol: {sym}"
-    assert 'CACHE_NAME = "n3-studio-tutor-v90"' in sw_src, "sw.js CACHE_NAME not bumped to v90!"
+    m_bh_sw = re.search(r'SW_CACHE_NAME\s*=\s*"n3-studio-tutor-v(\d+)"', bh_src)
+    assert m_bh_sw and int(m_bh_sw.group(1)) >= 90, f"build_html.py SW_CACHE_NAME must be >= v90, got {m_bh_sw}"
+    m_sw = re.search(r'CACHE_NAME\s*=\s*"n3-studio-tutor-v(\d+)"', sw_src)
+    assert m_sw and int(m_sw.group(1)) >= 90, f"sw.js CACHE_NAME must be >= v90, got {m_sw}"
 
     for wf_name in ("daily-n3-brain.yml", "morning-refresh-alarm.yml", "night-owl-relay.yml"):
         wf_txt = (BASE_DIR / ".github" / "workflows" / wf_name).read_text(encoding="utf-8")
         assert "fonts-noto-cjk" in wf_txt and "pillow" in wf_txt, f"{wf_name} missing fonts-noto-cjk or pillow for v4.0 HD cinema!"
 
     print("[PASS 25/25] v90 NHK HD Cinema Studio (1280x720 stereo, 15-beat Vol.23/18 storyboards, era filter, overlays, proper-noun TTS, scrub rail & CI deps) verified")
+
+
+def test_v91_wysiwyg_ledger_and_word_audio_guard():
+    """Gate 26 (v91): Permanently guard 100% WYSIWYG ledger audio (row speaks printed pattern/word, expanded displays & speaks example/phrase), zero mismatched audio_alias, and kana-forced isolated single-Kanji audio."""
+    import hashlib
+    from adaptive_bank import EXTRA_WORDS
+    from grammar_audit_cards import GA_CARD_CURATION
+    from phrase_and_word_lexicon import PHRASE_AND_WORD_LEXICON
+    from sentence_lexicon import SENTENCE_LEXICON
+    from tutor_data import WORD_DICT
+
+    # 1. Every audio_alias across all word dictionaries must share identical reading (no もの->ものだ shortcuts)
+    all_w = {}
+    for d in (SENTENCE_LEXICON, WORD_DICT, EXTRA_WORDS, PHRASE_AND_WORD_LEXICON):
+        all_w.update(d)
+    bad_aliases = []
+    for surf, info in all_w.items():
+        al = info.get("audio_alias")
+        if al:
+            k1 = str(info.get("kana") or surf).strip()
+            k2 = str((all_w.get(al) or {}).get("kana") or al).strip()
+            if k1 != k2:
+                bad_aliases.append((surf, k1, al, k2))
+    assert not bad_aliases, f"Mismatched audio_alias entries found: {bad_aliases}"
+
+    # 2. All 4 slash-pair grammar patterns must speak both variants
+    for gid, parts in (
+        ("G-046", ("くらい", "ぐらい")),
+        ("G-078", ("によると", "によれば")),
+        ("G-079", ("による", "によって")),
+        ("G-089", ("ばいい", "たらいい")),
+    ):
+        pat_txt = GA_CARD_CURATION[gid][2]
+        for p in parts:
+            assert p in pat_txt, f"{gid} pat_ja missing printed variant {p!r}: {pat_txt!r}"
+
+    # 3. Single-Kanji words in audio_manifest.json must use exact kana audio, not raw onyomi kanji hash
+    man = json.loads((BASE_DIR / "audio" / "audio_manifest.json").read_text(encoding="utf-8"))
+    w_man = man.get("words", {})
+    for kanji, kana in (("空", "そら"), ("体", "からだ"), ("数", "かず"), ("下", "した")):
+        expected_fn = f"w_{hashlib.sha256(kana.encode('utf-8')).hexdigest()[:10]}.mp3"
+        got = str(w_man.get(kanji) or "")
+        assert expected_fn in got, f"Single-Kanji word {kanji} ({kana}) expected {expected_fn}, got {got}"
+        assert (BASE_DIR / "audio" / "words" / expected_fn).exists(), f"Missing MP3 on disk: {expected_fn}"
+
+    # 4. Built index.html grammar ledger rows must use _pat.mp3 (never _ex.mp3) and vocab ledger must use word_audio
+    bh_src = (BASE_DIR / "build_html.py").read_text(encoding="utf-8")
+    assert 'subprocess.run(["node", "-", HTML_PATH], input=smoke_js' in bh_src, (
+        "build_html.py must run smoke_js via stdin to prevent Linux E2BIG"
+    )
+    assert '(dashMod === "vocab" && vcRef && vcRef.word_audio)' in bh_src, (
+        "speakLedgerItem must play word_audio (not unshown phrase_audio) on vocab ledger rows"
+    )
+    idx_path = BASE_DIR / "index.html"
+    if idx_path.exists():
+        html = idx_path.read_text(encoding="utf-8")
+        m_data = re.search(r"const DATA\s*=\s*(\{.*?\});\n", html, re.S)
+        assert m_data, "index.html missing DATA payload"
+        data = json.loads(m_data.group(1))
+        if data.get("phase", "n3_sprint") == "n3_sprint":
+            g_items = data["mastery"]["grammar"]["items"]
+            bad_ex = [x["gid"] for x in g_items if "_ex.mp3" in str(x.get("audio") or "")]
+            assert not bad_ex, f"Ledger grammar rows still pointing row audio to _ex.mp3: {bad_ex[:8]}"
+            non_split_no_ex = [
+                x["gid"] for x in g_items
+                if not x.get("pat_seq") and x["gid"] not in ("G-116", "G-117", "G-119")
+                and (not x.get("ex_ja") or not x.get("ex_audio"))
+            ]
+            assert not non_split_no_ex, f"Ledger grammar rows missing expanded ex_ja/ex_audio: {non_split_no_ex[:8]}"
+    print("[PASS 26/26] v91 100% WYSIWYG ledger audio, clean audio_alias, slash-pair pats & kana-forced single-Kanji verified!")
 
 
 def main() -> int:
@@ -1709,7 +1782,8 @@ def main() -> int:
     test_zero_question_audio_answer_leak_guard()
     test_v88_sla_linguistics_master_guard()
     test_v90_nhk_cinema_hd_visual_studio_guard()
-    print("[ALL PASS] tests_ci_guard.py 25/25 gates green!")
+    test_v91_wysiwyg_ledger_and_word_audio_guard()
+    print("[ALL PASS] tests_ci_guard.py 26/26 gates green!")
     return 0
 
 

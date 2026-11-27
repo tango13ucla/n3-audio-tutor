@@ -79,6 +79,8 @@ JA_SPAN_RE = re.compile(r"([\u3040-\u30ffー]+(?:[、。！？\s]+[\u3040-\u30ff
 KANJI_FORCE_KANA = {
     "半年", "内緒", "貯める", "貯金", "出張", "主張", "書類", "万年筆",
     "封筒", "終電", "寮", "私用", "風邪", "一日中", "三日間", "今週中", "夜中",
+    "辛い", "一方", "工夫", "大家", "生物", "市場", "上手", "下手", "人気",
+    "大人", "今日", "明日", "昨日", "大勢", "十分", "一言", "一日", "二十歳",
 }
 
 JA_PHRASE_OVERRIDES = [
@@ -594,6 +596,10 @@ async def main():
     new_manifest["voice_coach"] = dict(old_voice_coach)
     new_manifest["conj_drills"] = dict(old_conj_map)
     new_manifest["conj_drill_hashes"] = dict(old_conj_hashes)
+    if isinstance(old_manifest.get("fossil_slips"), dict):
+        new_manifest["fossil_slips"] = dict(old_manifest["fossil_slips"])
+    if isinstance(old_manifest.get("minimal_pairs"), dict):
+        new_manifest["minimal_pairs"] = dict(old_manifest["minimal_pairs"])
     can_synth = (edge_tts is not None) and (shutil.which("ffmpeg") is not None)
 
     voice_map = await detect_voice_map()
@@ -912,6 +918,14 @@ async def main():
 
     if not partial_only:
         word_sem = asyncio.Semaphore(8)
+        _SINGLE_KANJI_RE = re.compile(r"^[\u4e00-\u9fff]$")
+        _SINGLE_KANJI_PRIMARY_KANA = {
+            "月": "つき",
+            "時": "とき",
+            "年": "とし",
+            "十": "じゅう",
+            "方": "かた",
+        }
 
         async def process_word(surface, info):
             alias = info.get("audio_alias")
@@ -921,8 +935,12 @@ async def main():
                     new_manifest["words"][surface] = old_words[alias]
                     return
             speak_str = surface.replace("〜", "").strip()
-            if surface in KANJI_FORCE_KANA and info.get("kana"):
-                speak_str = info["kana"]
+            raw_kana = str(info.get("kana") or "").strip()
+            clean_kana = re.split(r"[／/・、\s]", raw_kana)[0].strip() if raw_kana else ""
+            if speak_str in _SINGLE_KANJI_PRIMARY_KANA:
+                speak_str = _SINGLE_KANJI_PRIMARY_KANA[speak_str]
+            elif (_SINGLE_KANJI_RE.match(speak_str) or surface in KANJI_FORCE_KANA) and clean_kana:
+                speak_str = clean_kana
             w_hash = hashlib.sha256(speak_str.encode("utf-8")).hexdigest()[:10]
             w_file = f"w_{w_hash}.mp3"
             w_abs = os.path.join(WORDS_AUDIO_DIR, w_file)

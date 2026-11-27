@@ -145,11 +145,13 @@ for fam in KANA_ADVERBS_36:
                     "tip": ad.get("colloc", ""),
                 }
 
+_vc_word_audio_early = audio_manifest.get("vocab_cards", {})
 rich_words = {}
 for surf, info in merged_raw_words.items():
     entry = dict(info)
     alias = info.get("audio_alias")
-    entry["audio"] = word_audio_map.get(surf) or (word_audio_map.get(alias, "") if alias else "")
+    vc_w_aud = (_vc_word_audio_early.get(surf) or {}).get("word") or ""
+    entry["audio"] = vc_w_aud or word_audio_map.get(surf) or (word_audio_map.get(alias, "") if alias else "")
     kana_val = str(entry.get("kana") or surf).strip()
     if HAS_KANJI_RE.search(surf) and kana_val != surf:
         thl, ttag, opq = analyze_kanji_reading_trap(
@@ -1407,15 +1409,24 @@ for g_idx, p in enumerate(live_state.get("grammar_points", [])):
     verdict_code = _ga_vmap.get(verdict_raw, 0)
     g_pid = point_id_by_key.get(nm, "")
 
-    # Resolve clean meaning & studio audio for the top-level ledger grammar row too
+    # Resolve clean meaning & studio audio for the top-level ledger grammar row (WYSIWYG: row 听音 speaks printed pattern; expanded row displays & speaks example)
+    _is_split_row = bool(gid in GA_ATOMIC_SPLITS and GA_ATOMIC_SPLITS[gid])
     _g_aud_entry = ga_audio_manifest.get(gid) or {}
-    if not _g_aud_entry and gid in GA_ATOMIC_SPLITS and GA_ATOMIC_SPLITS[gid]:
+    if not _g_aud_entry and _is_split_row:
         _g_aud_entry = ga_audio_manifest.get(GA_ATOMIC_SPLITS[gid][0][0]) or {}
     _g_spec_top = build_grammar_audit_spec({
         "gid": gid, "name": nm, "meaning": meaning_clean, "rule": rule_txt, "ex_ja": ex_ja,
-    }) if gid not in GA_ATOMIC_SPLITS else None
+    }) if not _is_split_row else None
     _ledger_sub = _g_spec_top["meaning"] if _g_spec_top else meaning_clean
-    _ledger_audio = str(_g_aud_entry.get("ex") or _g_aud_entry.get("pat") or _g_aud_entry.get("rev") or "")
+    _ledger_pat_seq = []
+    if _is_split_row and len(GA_ATOMIC_SPLITS[gid]) == 2:
+        _ledger_pat_seq = [
+            str((ga_audio_manifest.get(sk[0]) or {}).get("pat") or "")
+            for sk in GA_ATOMIC_SPLITS[gid]
+        ]
+        _ledger_pat_seq = [u for u in _ledger_pat_seq if u]
+    _ledger_audio = str(_g_aud_entry.get("pat") or _g_aud_entry.get("ex") or _g_aud_entry.get("rev") or "")
+    _ledger_ex_audio = "" if _is_split_row else str(_g_aud_entry.get("ex") or "")
 
     grammar_items.append({
         "gid": gid,
@@ -1432,6 +1443,11 @@ for g_idx, p in enumerate(live_state.get("grammar_points", [])):
         "audit_code": verdict_code,
         "point_id": g_pid,
         "audio": _ledger_audio,
+        "pat_seq": _ledger_pat_seq,
+        "ex_ja": "" if _is_split_row else ex_ja,
+        "ex_zh": "" if _is_split_row else ex_zh,
+        "ex_audio": _ledger_ex_audio,
+        "hl": (_g_spec_top["hl"] if _g_spec_top else []),
         "note": clean_zen_text((_g_spec_top["cue"] if _g_spec_top else "") or p.get("exam_alert") or p.get("note", "")),
     })
 
@@ -1625,7 +1641,7 @@ for p in live_state.get("vocab_tracked", []):
         "last_date": _norm_last_date(p, v_pid),
         "hesitant": bool(w in _hesitant_points or v_pid in _hesitant_points),
         "point_id": v_pid,
-        "audio": resolve_word_audio(w),
+        "audio": (vc_audio_manifest.get(w) or {}).get("word") or resolve_word_audio(w),
         "note": combined_note,
     })
 
@@ -1650,7 +1666,7 @@ for kw, pitch, desc in CORE_N3_KANA_VOCAB:
         "last_date": _norm_last_date({}, kw_pid),
         "hesitant": bool(kw in _hesitant_points or kw_pid in _hesitant_points),
         "point_id": kw_pid,
-        "audio": resolve_word_audio(kw),
+        "audio": (vc_audio_manifest.get(kw) or {}).get("word") or resolve_word_audio(kw),
         "note": combined_note,
     })
 
@@ -5167,6 +5183,97 @@ html = r"""<!DOCTYPE html>
     color: var(--ink-2);
     line-height: 1.62;
   }
+  .li-ex-btn {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    width: 100%;
+    margin-top: 8px;
+    padding: 4px 0 4px 16.5px;
+    text-align: left;
+    white-space: normal;
+    cursor: pointer;
+    transition: opacity 0.14s ease, color 0.14s ease;
+  }
+  .li-ex-btn:active { opacity: 0.65; }
+  .li-ex-spk {
+    flex-shrink: 0;
+    width: 15px;
+    height: 15px;
+    margin-top: 4px;
+    color: var(--ink-3);
+    transition: color 0.14s ease;
+  }
+  .li-ex-btn.is-playing .li-ex-spk,
+  .li-ex-btn.is-playing .li-ex-ja { color: var(--moss); }
+  .li-ex-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+  }
+  .li-ex-ja {
+    font-family: var(--sans-jp);
+    font-size: 14.5px;
+    font-weight: 400;
+    color: var(--sumi);
+    line-height: 1.55;
+    white-space: normal;
+    word-break: break-word;
+  }
+  .li-ex-ja .li-hl {
+    color: var(--moss);
+    font-weight: 500;
+  }
+  .li-ex-zh {
+    font-size: 12.8px;
+    color: var(--ink-3);
+    line-height: 1.5;
+    white-space: normal;
+  }
+  .li-ga-subplay {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--sans-jp);
+    font-size: 13.5px;
+    font-weight: 400;
+    color: var(--sumi);
+    min-width: 92px;
+    padding: 4px 0;
+    text-align: left;
+    cursor: pointer;
+    transition: opacity 0.14s ease, color 0.14s ease;
+  }
+  .li-ga-subplay:active { opacity: 0.65; }
+  .li-ga-subplay svg {
+    width: 13px;
+    height: 13px;
+    margin-top: 0;
+    color: var(--ink-3);
+    flex-shrink: 0;
+    transition: color 0.14s ease;
+  }
+  .li-ga-subplay.is-playing,
+  .li-ga-subplay.is-playing svg { color: var(--moss); }
+  .li-ga-subex {
+    display: block;
+    width: 100%;
+    margin-top: 2px;
+    padding: 2px 0 4px 19px;
+    font-family: var(--sans-jp);
+    font-size: 13px;
+    color: var(--ink-2);
+    line-height: 1.5;
+    text-align: left;
+    white-space: normal;
+    word-break: break-word;
+    cursor: pointer;
+    transition: opacity 0.14s ease, color 0.14s ease;
+  }
+  .li-ga-subex:active { opacity: 0.65; }
+  .li-ga-subex.is-playing { color: var(--moss); }
 
   /* ================= 6. PROGRESS & CROSS-DEVICE SYNC MODAL (NATIVE GPU BOTTOM SHEET) ================= */
   .modal-mask {
@@ -22487,11 +22594,112 @@ function onDashSearchInput() {
   }, 70);
 }
 
+const LEDGER_SPK_SVG = `<svg class="li-ex-spk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.5 8.5a5 5 0 0 1 0 7"></path></svg>`;
+
+function highlightLedgerEx(exJa, hlList) {
+  const txt = String(exJa || "");
+  const list = Array.isArray(hlList) ? hlList : [];
+  for (const h of list) {
+    if (!h) continue;
+    const idx = txt.indexOf(h);
+    if (idx >= 0) {
+      return escapeHtml(txt.slice(0, idx)) + `<span class="li-hl">${escapeHtml(h)}</span>` + escapeHtml(txt.slice(idx + h.length));
+    }
+  }
+  return escapeHtml(txt);
+}
+
+function clearLedgerPlaying() {
+  if (typeof document !== "undefined" && typeof document.querySelectorAll === "function") {
+    document.querySelectorAll(".li-ex-btn.is-playing, .li-ga-subplay.is-playing, .li-ga-subex.is-playing").forEach(el => el.classList.remove("is-playing"));
+  }
+}
+
+function playAudioSequence(urls, fallbackJa) {
+  const list = (Array.isArray(urls) ? urls : []).filter(Boolean);
+  clearLedgerPlaying();
+  if (!list.length) {
+    if (fallbackJa) speakJapaneseFallback(fallbackJa);
+    return;
+  }
+  if (!player.paused) {
+    player.pause();
+    syncAudioButtons();
+  }
+  const myToken = ++vcToken;
+  let idx = 0;
+  const next = () => {
+    if (vcToken !== myToken) return;
+    if (idx >= list.length) return;
+    const u = list[idx++];
+    playUrlOnWordPlayer(u, myToken, () => {
+      if (vcToken !== myToken) return;
+      if (idx < list.length) {
+        vcTimer = setTimeout(next, 220);
+      }
+    }, () => {
+      if (vcToken !== myToken) return;
+      if (idx < list.length) next();
+      else if (fallbackJa) speakJapaneseFallback(fallbackJa);
+    });
+  };
+  next();
+}
+
+function playLedgerClip(url, fallbackJa, btnEl, ev) {
+  if (ev) ev.stopPropagation();
+  clearLedgerPlaying();
+  if (btnEl && btnEl.classList) btnEl.classList.add("is-playing");
+  if (!player.paused) {
+    player.pause();
+    syncAudioButtons();
+  }
+  const myToken = ++vcToken;
+  const clearHl = () => {
+    if (btnEl && btnEl.classList) btnEl.classList.remove("is-playing");
+  };
+  if (url) {
+    playUrlOnWordPlayer(url, myToken, clearHl, () => {
+      clearHl();
+      if (fallbackJa) speakJapaneseFallback(fallbackJa);
+    });
+  } else if (fallbackJa) {
+    speakJapaneseFallback(fallbackJa);
+    setTimeout(clearHl, 1400);
+  }
+}
+
+function playLedgerItemEx(ev, btnEl) {
+  if (ev) ev.stopPropagation();
+  const it = (expandedPt !== null && lastLedgerItems[expandedPt]) ? lastLedgerItems[expandedPt] : null;
+  if (!it) return;
+  playLedgerClip(it.ex_audio || "", it.ex_ja || it.name, btnEl, null);
+}
+
+function playLedgerItemPhrase(ev, btnEl) {
+  if (ev) ev.stopPropagation();
+  const it = (expandedPt !== null && lastLedgerItems[expandedPt]) ? lastLedgerItems[expandedPt] : null;
+  if (!it) return;
+  const vcRef = DATA.vocab_cards && DATA.vocab_cards[it.name];
+  if (!vcRef) return;
+  playLedgerClip(vcRef.phrase_audio || vcRef.word_audio || "", vcRef.chunk_ja || it.name, btnEl, null);
+}
+
+function playLedgerSub(ev, cgid, slot, btnEl) {
+  if (ev) ev.stopPropagation();
+  const cit = GA_BY_GID[cgid];
+  if (!cit) return;
+  const url = slot === "ex" ? (cit.ex_audio || cit.pat_audio || "") : (cit.pat_audio || cit.ex_audio || "");
+  const fb = slot === "ex" ? (cit.ex_ja || cit.name) : (cit.pat_ja || cit.name);
+  playLedgerClip(url, fb, btnEl, null);
+}
+
 function buildLedgerExtraHTML(it) {
   if (!it) return "";
   const noteHTML = (it.note || it.family)
     ? `<div class="li-note">${escapeHtml([it.family, it.note].filter(Boolean).join(" · "))}</div>`
     : "";
+  let exHTML = "";
   let gaBarHTML = "";
   if (dashMod === "grammar" && it.gid) {
     const splitKids = Array.isArray(GA_SPLIT_MAP[it.gid]) ? GA_SPLIT_MAP[it.gid] : null;
@@ -22502,14 +22710,24 @@ function buildLedgerExtraHTML(it) {
         if (!cit) return "";
         const ceff = getEffectiveGA(cgid);
         return `<div class="li-ga-subrow">
-          <span class="li-ga-subname">${escapeHtml(cit.name)}</span>
+          <button type="button" class="li-ga-subplay" lang="ja" onclick="playLedgerSub(event, '${cgid}', 'pat', this)">${LEDGER_SPK_SVG}<span>${escapeHtml(cit.name)}</span></button>
           <span class="li-ga-subbtns">${[1, 2, 3, 4].map(c => {
             const sp = GA_SPECTRUM[c];
             return `<button type="button" class="li-ga-btn ${sp.cls}${ceff && ceff.code === c ? " on" : ""}" onclick="setLedgerGrammarSpectrum('${cgid}', ${c}, event)">${sp.label}</button>`;
           }).join("")}</span>
+          ${cit.ex_ja ? `<button type="button" class="li-ga-subex" lang="ja" onclick="playLedgerSub(event, '${cgid}', 'ex', this)">${escapeHtml(cit.ex_ja)}</button>` : ""}
         </div>`;
       }).join("")}</div>`;
     } else {
+      if (it.ex_ja) {
+        exHTML = `<button type="button" class="li-ex-btn" onclick="playLedgerItemEx(event, this)">
+          ${LEDGER_SPK_SVG}
+          <span class="li-ex-body">
+            <span class="li-ex-ja" lang="ja">${highlightLedgerEx(it.ex_ja, it.hl)}</span>
+            ${it.ex_zh ? `<span class="li-ex-zh">${escapeHtml(it.ex_zh)}</span>` : ""}
+          </span>
+        </button>`;
+      }
       gaBarHTML = `<div class="li-ga-bar">
         <span class="li-ga-lbl">盘点</span>
         ${[1, 2, 3, 4].map(c => {
@@ -22518,8 +22736,18 @@ function buildLedgerExtraHTML(it) {
         }).join("")}
       </div>`;
     }
+  } else if (dashMod === "vocab") {
+    const vcRef = DATA.vocab_cards && DATA.vocab_cards[it.name];
+    if (vcRef && vcRef.chunk_ja && vcRef.chunk_ja !== it.name) {
+      exHTML = `<button type="button" class="li-ex-btn" onclick="playLedgerItemPhrase(event, this)">
+        ${LEDGER_SPK_SVG}
+        <span class="li-ex-body">
+          <span class="li-ex-ja" lang="ja">${escapeHtml(vcRef.chunk_ja)}</span>
+        </span>
+      </button>`;
+    }
   }
-  return noteHTML + gaBarHTML;
+  return noteHTML + exHTML + gaBarHTML;
 }
 
 function togglePtNote(i) {
@@ -22541,8 +22769,9 @@ function togglePtNote(i) {
 }
 
 function speakLedgerItem(name, audioUrl) {
+  clearLedgerPlaying();
   const vcRef = DATA.vocab_cards && DATA.vocab_cards[name];
-  const preferred = (dashMod === "vocab" && vcRef && (vcRef.phrase_audio || vcRef.word_audio)) || audioUrl || "";
+  const preferred = (dashMod === "vocab" && vcRef && vcRef.word_audio) || audioUrl || "";
   if (preferred) {
     playDirectUrl(preferred, name);
   } else if (DATA.words[name]) {
@@ -22552,10 +22781,24 @@ function speakLedgerItem(name, audioUrl) {
   }
 }
 
+function speakLedgerRow(i, ev) {
+  if (ev) ev.stopPropagation();
+  const it = lastLedgerItems[i];
+  if (!it) return;
+  if (dashMod === "grammar" && it.gid && Array.isArray(GA_SPLIT_MAP[it.gid]) && GA_SPLIT_MAP[it.gid].length > 2 && expandedPt !== i) {
+    togglePtNote(i);
+  }
+  if (dashMod === "grammar" && Array.isArray(it.pat_seq) && it.pat_seq.length > 1) {
+    playAudioSequence(it.pat_seq, it.name);
+    return;
+  }
+  speakLedgerItem(it.name, it.audio || "");
+}
+
 let ledgerRenderSeq = 0;
 
 function buildLedgerRowHTML(it, i) {
-  const canSpeak = !!(it.audio || dashMod === "vocab" || DATA.words[it.name]);
+  const canSpeak = !!(it.audio || (Array.isArray(it.pat_seq) && it.pat_seq.length) || dashMod === "vocab" || DATA.words[it.name]);
   const stNum = Math.max(0, Math.min(3, Number(it.streak || (it.tier === "done" ? 3 : (it.tier === "wip" ? 1 : 0)))));
   const stCls = it.tier === "done" ? "s-done" : (it.tier === "wip" ? "s-wip" : "");
   const splitKids = (dashMod === "grammar" && it.gid && Array.isArray(GA_SPLIT_MAP[it.gid])) ? GA_SPLIT_MAP[it.gid] : null;
@@ -22584,8 +22827,8 @@ function buildLedgerRowHTML(it, i) {
           <span class="li-sub">${escapeHtml(it.sub)}</span>
           ${staleHTML}
           <span class="li-streak ${stCls}">${stNum}/3</span>
-          ${canSpeak ? `<button class="li-act" onclick='event.stopPropagation();speakLedgerItem(${JSON.stringify(it.name)}, ${JSON.stringify(it.audio || "")})'>听音</button>` : ""}
-          ${it.point_id ? `<button class="li-act" onclick="event.stopPropagation();jumpToPointById('${it.point_id}')">练习</button>` : ""}
+          ${canSpeak ? `<button type="button" class="li-act" onclick="speakLedgerRow(${i}, event)">听音</button>` : ""}
+          ${it.point_id ? `<button type="button" class="li-act" onclick="event.stopPropagation();jumpToPointById('${it.point_id}')">练习</button>` : ""}
         </div>
       </div>
       <div class="li-extra">${extraHTML}</div>
@@ -25457,7 +25700,7 @@ if shutil.which("node"):
     smoke_js = r"""
 const fs = require('fs');
 const vm = require('vm');
-const html = fs.readFileSync(process.argv[1], 'utf8');
+const html = fs.readFileSync(process.argv[process.argv.length - 1], 'utf8');
 const m = html.match(/<script[^>]*>([\s\S]*?)<\/script>/);
 if (!m) throw new Error('No <script> found in index.html');
 function makeEl(id) {
@@ -27421,11 +27664,71 @@ sb.onRadioScrubCommit(125);
 if (!vm.runInNewContext('radioScrubActive === false', sb)) {
   throw new Error('Self-test 33 failed: onRadioScrubCommit did not cleanly exit scrub state');
 }
+
+// Self-test 35 (v91): 100% WYSIWYG Ledger Audio (row 听音 = exact printed pattern/word; expanded = visible & tappable example/phrase; zero bad audio_alias / single-Kanji misread)
+const phase35 = vm.runInNewContext('DATA.phase || "n3_sprint"', sb);
+const isPostN3_35 = phase35 === 'n2_climb' || phase35 === 'n1_sprint';
+if (!isPostN3_35) {
+  const gItems35 = vm.runInNewContext('DATA.mastery.grammar.items || []', sb);
+  const badExRow35 = gItems35.filter(x => x.audio && String(x.audio).includes('_ex.mp3')).map(x => x.gid);
+  if (badExRow35.length > 0) {
+    throw new Error('Self-test 35 failed: ledger grammar row audio still uses _ex.mp3 instead of _pat.mp3: ' + JSON.stringify(badExRow35.slice(0, 8)));
+  }
+  const g001_35 = gItems35.find(x => x.gid === 'G-001');
+  if (!g001_35 || !String(g001_35.audio || '').includes('ga_G-001_pat.mp3') || !g001_35.ex_ja || !String(g001_35.ex_audio || '').includes('ga_G-001_ex.mp3')) {
+    throw new Error('Self-test 35 failed: G-001 missing WYSIWYG pat audio or expanded ex_ja/ex_audio');
+  }
+  for (const pairGid of ['G-098', 'G-124', 'G-125']) {
+    const pIt = gItems35.find(x => x.gid === pairGid);
+    if (!pIt || !Array.isArray(pIt.pat_seq) || pIt.pat_seq.length !== 2 || !pIt.pat_seq.every(u => String(u).includes('_pat.mp3'))) {
+      throw new Error('Self-test 35 failed: paired grammar row missing 2-part pat_seq: ' + pairGid);
+    }
+  }
+  sb.switchMode('dash');
+  sb.selectDashMod('grammar');
+  sb.selectDashTier('todo');
+  const gExtra35 = sb.buildLedgerExtraHTML(g001_35);
+  if (!gExtra35.includes('li-ex-btn') || !gExtra35.includes('playLedgerItemEx') || !gExtra35.includes('li-hl') || !gExtra35.includes('テーブルの上に')) {
+    throw new Error('Self-test 35 failed: expanded grammar ledger row missing tappable highlighted example sentence: ' + gExtra35);
+  }
+  sb.selectDashMod('vocab');
+  const vDoc35 = vm.runInNewContext('(DATA.mastery.vocab.items || []).find(x => x.name === "書類")', sb);
+  if (vDoc35) {
+    sb.speakLedgerItem('書類', vDoc35.audio);
+    const playedSrc35 = vm.runInNewContext('String(wordPlayer.src || "")', sb);
+    if (playedSrc35.includes('_phrase.mp3')) {
+      throw new Error('Self-test 35 failed: vocab ledger 听音 played unshown _phrase.mp3 instead of single word: ' + playedSrc35);
+    }
+    const vExtra35 = sb.buildLedgerExtraHTML(vDoc35);
+    if (!vExtra35.includes('playLedgerItemPhrase') || !vExtra35.includes('書類を出す')) {
+      throw new Error('Self-test 35 failed: expanded vocab ledger row missing tappable phrase');
+    }
+  }
+  const badAliases35 = [
+    ['もの', 'ものだ'], ['さえ', 'さえあれば'], ['こそ', 'からこそ'],
+    ['落として', '落としてしまった'], ['来られる', '来られますか'], ['ほんと', '本当'],
+  ];
+  for (const [wA, wB] of badAliases35) {
+    const aA = vm.runInNewContext(`(DATA.words[${JSON.stringify(wA)}] || {}).audio || ''`, sb);
+    const aB = vm.runInNewContext(`(DATA.words[${JSON.stringify(wB)}] || {}).audio || ''`, sb);
+    if (aA && aB && aA === aB) {
+      throw new Error('Self-test 35 failed: mismatched audio_alias collision between ' + wA + ' and ' + wB);
+    }
+  }
+  const badSingleKanji35 = { '空': 'w_2f8267a89a.mp3', '体': 'w_d08d660b7d.mp3', '数': 'w_a8df40502f.mp3', '下': 'w_13c12b064b.mp3' };
+  for (const [sk, oldFile] of Object.entries(badSingleKanji35)) {
+    const curAud = vm.runInNewContext(`(DATA.words[${JSON.stringify(sk)}] || {}).audio || ''`, sb);
+    if (curAud.includes(oldFile)) {
+      throw new Error('Self-test 35 failed: single-kanji word still uses misread onyomi audio: ' + sk + ' -> ' + curAud);
+    }
+  }
+  sb.switchMode('tutor');
+}
 """
-    subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
+    subprocess.run(["node", "-", HTML_PATH], input=smoke_js, text=True, check=True)
 
 sw_path = os.path.join(BASE_DIR, "sw.js")
-SW_CACHE_NAME = "n3-studio-tutor-v90"
+SW_CACHE_NAME = "n3-studio-tutor-v91"
 if not _IS_SIM_OUTPUT and os.path.exists(sw_path):
     with open(sw_path, encoding="utf-8") as sf:
         sw_src = sf.read()
