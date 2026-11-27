@@ -512,12 +512,14 @@ async def main():
     old_vc_hashes = old_manifest.get("vocab_card_hashes", {})
     old_ga_map = old_manifest.get("ga_cards", {})
     old_ga_hashes = old_manifest.get("ga_card_hashes", {})
+    old_voice_coach = old_manifest.get("voice_coach", {})
     new_manifest = dict(old_manifest) if partial_only else {}
     new_manifest["words"] = dict(old_words)
     new_manifest["vocab_cards"] = dict(old_vc_map)
     new_manifest["vocab_card_hashes"] = dict(old_vc_hashes)
     new_manifest["ga_cards"] = dict(old_ga_map)
     new_manifest["ga_card_hashes"] = dict(old_ga_hashes)
+    new_manifest["voice_coach"] = dict(old_voice_coach)
     can_synth = (edge_tts is not None) and (shutil.which("ffmpeg") is not None)
 
     voice_map = await detect_voice_map()
@@ -848,8 +850,8 @@ async def main():
             return []
         return expand_exp_turn("T", txt, False) if JA_SPAN_RE.search(txt) else [("T_VC", txt)]
 
-    # Studio Bilingual Vocab Cards (Zen v21: Mnemonic FIRST -> Target Word SECOND -> Full Phrase LAST + direct-touch clips)
-    from vocab_cards import build_dynamic_vocab_card, build_vocab_audio_spec
+    # Studio Bilingual Vocab Cards (Zen v21: Mnemonic FIRST -> Target Word SECOND -> Full Phrase LAST + direct-touch clips + v84 Hands-Free Voice Coach)
+    from vocab_cards import VOICE_COACH_LINES, build_dynamic_vocab_card, build_vocab_audio_spec
     vc_all_cards = {}
     if not ga_only:
         for vw, vspec in VOCAB_CARDS.items():
@@ -876,6 +878,7 @@ async def main():
 
     vc_jobs = {}
     vc_specs = {}
+    coach_specs = {}
     vc_tag = "edge:Brian_v21_hook_word_phrase"
     for vw, vc in vc_all_cards.items():
         vc_id = hashlib.sha256(vw.encode("utf-8")).hexdigest()[:10]
@@ -884,6 +887,7 @@ async def main():
         word_ja = aspec["word_ja"]
         chunk_ja = aspec["chunk_ja"]
         hook_only_turns = _to_bilingual_turns(aspec["hook_spoken"])
+        ask_turns = _to_bilingual_turns(aspec["ask_spoken"])
 
         # 1) Isolated target word clip (for kana reading tap + front audio on kana/ear-first cards)
         word_turns = [("JF", word_ja)]
@@ -918,6 +922,10 @@ async def main():
         rev_file = f"vc_{vc_id}_rev.mp3"
         rev_hash = hashlib.sha256((f"v21vcr:{vc_tag}:" + json.dumps(rev_turns, ensure_ascii=False)).encode("utf-8")).hexdigest()[:10]
 
+        # 6) Hands-Free Voice Coach spoken question clip (eyes-free Mandarin prompt, zero reading spoiler!)
+        ask_file = f"vc_{vc_id}_ask.mp3"
+        ask_hash = hashlib.sha256((f"v84vca:{vc_tag}:" + json.dumps(ask_turns, ensure_ascii=False)).encode("utf-8")).hexdigest()[:10]
+
         vc_specs[vw] = {
             "mode": mode,
             "front": (word_file, word_hash, word_turns) if mode != "kanji_read" else None,
@@ -927,12 +935,26 @@ async def main():
             "phrase": (phrase_file, phrase_hash, phrase_turns),
             "word": (word_file, word_hash, word_turns),
             "clean": (clean_file, clean_hash, clean_turns),
+            "ask": (ask_file, ask_hash, ask_turns) if ask_turns else None,
         }
-        for slot_key in ("rev", "hook", "phrase", "word", "clean"):
-            fn, fh, ft = vc_specs[vw][slot_key]
+        for slot_key in ("rev", "hook", "phrase", "word", "clean", "ask"):
+            slot_item = vc_specs[vw].get(slot_key)
+            if not slot_item:
+                continue
+            fn, fh, ft = slot_item
             f_abs = os.path.join(WORDS_AUDIO_DIR, fn)
             if old_vc_hashes.get(fn) != fh or not os.path.exists(f_abs):
                 vc_jobs[fn] = (fh, ft)
+
+    if not ga_only:
+        for ck, cline in VOICE_COACH_LINES.items():
+            cturns = _to_bilingual_turns(cline)
+            cfn = f"vc_coach_{ck}.mp3"
+            chash = hashlib.sha256((f"v84coach:{vc_tag}:" + json.dumps(cturns, ensure_ascii=False)).encode("utf-8")).hexdigest()[:10]
+            coach_specs[ck] = (cfn, chash, cturns)
+            cf_abs = os.path.join(WORDS_AUDIO_DIR, cfn)
+            if old_vc_hashes.get(cfn) != chash or not os.path.exists(cf_abs):
+                vc_jobs[cfn] = (chash, cturns)
 
     vc_built_ok = set()
     if can_synth and vc_jobs:
@@ -982,13 +1004,13 @@ async def main():
                 if stitch_turns(turns, vc_lookup, vc_sil, out_abs, vc_tmp, fn.replace(".mp3", "")):
                     vc_built_ok.add(fn)
                     new_manifest["vocab_card_hashes"][fn] = fh
-            print(f"Synthesized {len(vc_built_ok)}/{len(vc_jobs)} bilingual vocab card MP3s (v21 hook->word->phrase).")
+            print(f"Synthesized {len(vc_built_ok)}/{len(vc_jobs)} bilingual vocab & voice coach MP3s (v21/v84).")
         finally:
             shutil.rmtree(vc_tmp, ignore_errors=True)
 
     for vw, spec in vc_specs.items():
         entry = {}
-        for slot in ("front", "rev", "full", "hook", "phrase", "word", "clean"):
+        for slot in ("front", "rev", "full", "hook", "phrase", "word", "clean", "ask"):
             item = spec.get(slot)
             if not item:
                 entry[slot] = ""
@@ -1003,6 +1025,14 @@ async def main():
             else:
                 entry[slot] = ""
         new_manifest["vocab_cards"][vw] = entry
+
+    for ck, (cfn, chash, _) in coach_specs.items():
+        cf_abs = os.path.join(WORDS_AUDIO_DIR, cfn)
+        if os.path.exists(cf_abs):
+            if cfn not in vc_jobs or cfn in vc_built_ok:
+                new_manifest["vocab_card_hashes"][cfn] = chash
+            ver = new_manifest["vocab_card_hashes"].get(cfn, chash)[:8]
+            new_manifest["voice_coach"][ck] = f"./audio/words/{cfn}?v={ver}"
 
     # Studio 3-Beat Grammar Audit Cards (Zen v22: Core Cue FIRST -> Pattern SECOND -> Full Example LAST + direct-touch clips)
     if not vocab_only:

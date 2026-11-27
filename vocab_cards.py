@@ -1761,6 +1761,25 @@ _SHINJITAI_TO_ZH = str.maketrans({
     "響": "响", "択": "择", "責": "责", "記": "记", "憶": "忆", "興": "兴", "構": "构",
     "独": "独", "礼": "礼", "儀": "仪", "評": "评", "貴": "贵", "幹": "干", "員": "员",
     "値": "值", "映": "映", "護": "护", "譲": "让", "奪": "夺", "諦": "谛", "輝": "辉",
+    "緒": "绪", "簾": "帘", "徴": "征", "納": "纳", "様": "样", "囲": "围", "組": "组",
+    "慣": "惯", "壊": "坏", "隠": "隐", "騒": "骚", "鋭": "锐", "鍵": "键", "拡": "扩",
+    "緩": "缓", "継": "继", "締": "缔", "編": "编", "縦": "纵", "縮": "缩", "績": "绩",
+    "繊": "纤", "織": "织", "聴": "听", "職": "职", "臓": "脏", "臨": "临", "舗": "铺",
+    "葉": "叶", "蔵": "藏", "衝": "冲", "装": "装", "裏": "里", "補": "补", "製": "制",
+    "視": "视", "覧": "览", "訳": "译", "診": "诊", "詞": "词", "詩": "诗", "詳": "详",
+    "誇": "夸", "語": "语", "誠": "诚", "誤": "误", "請": "请", "諾": "诺", "講": "讲",
+    "謝": "谢", "豊": "丰", "財": "财", "貨": "货", "販": "贩", "貫": "贯", "貼": "贴",
+    "賀": "贺", "購": "购", "贈": "赠", "跡": "迹", "躍": "跃", "軽": "轻", "較": "较",
+    "載": "载", "輪": "轮", "辺": "边", "農": "农", "郷": "乡", "酔": "醉", "鉱": "矿",
+    "銅": "铜", "銭": "钱", "鋼": "钢", "錯": "错", "鍋": "锅", "鏡": "镜", "鐘": "钟",
+    "門": "门", "閲": "阅", "闘": "斗", "陥": "陷", "陰": "阴", "陸": "陆", "陽": "阳",
+    "隊": "队", "階": "阶", "随": "随", "障": "障", "隣": "邻", "難": "难", "雲": "云",
+    "霊": "灵", "霧": "雾", "静": "静", "韻": "韵", "項": "项", "須": "须", "預": "预",
+    "頑": "顽", "領": "领", "頻": "频", "額": "额", "願": "愿", "飢": "饥", "飯": "饭",
+    "飲": "饮", "飼": "饲", "飽": "饱", "飾": "饰", "養": "养", "馬": "马", "駆": "驱",
+    "騎": "骑", "驚": "惊", "髪": "发", "魚": "鱼", "鮮": "鲜", "鳥": "鸟", "鳴": "鸣",
+    "鶏": "鸡", "塩": "盐", "麗": "丽", "麦": "麦", "麺": "面", "黒": "黑", "黙": "默",
+    "歯": "齿", "龍": "龙", "亀": "龟",
 })
 
 OPAQUE_KANJI_WORDS = {
@@ -2490,6 +2509,99 @@ def distill_card_mnemonic(mnemonic: str, has_trap_tag: bool = False, target_word
     return scene
 
 
+VOICE_COACH_LINES = {
+    "ok_1": "对，读得很准。",
+    "ok_2": "漂亮，一拍不差。",
+    "ok_3": "没错，就是这个音。",
+    "sokuon_miss": "差一点，中间漏了个促音停顿。你要这样想：",
+    "sokuon_extra": "这里没有促音，拍子要连着读。你要这样想：",
+    "length_short": "长音读短了，尾音要拉满两拍。你要这样想：",
+    "length_long": "短音拖长了，收紧别拖拍。你要这样想：",
+    "voicing": "清浊音差了一拍，注意听清浊。你要这样想：",
+    "near": "很接近了，再核对一下细节。你要这样想：",
+    "miss": "这个音发偏了，别急，你要这样想：",
+    "blank": "没事，我带你记一遍。你要这样想：",
+    "shadow_ask": "来，照着再跟读一遍。",
+    "shadow_ok": "对了，这遍稳了，过几个词我再抽考你。",
+    "shadow_close": "记在心里就行，过几个词我再考你。",
+    "repeat": "好，再听一遍。",
+    "auto_pause": "好像暂时不方便说话，我先暂停，随时点一下继续。",
+    "batch_done": "这组词全部对考过关了，辛苦。",
+    "audio_reveal": "时间到，听标准读音和口诀：",
+}
+
+_VOICE_ASK_GLOSS_OVERRIDE = {
+    "ゆっくり": "慢慢地、悠闲地",
+    "しといて": "提前做好",
+    "でしょう": "大概吧、推测确认",
+    "について": "关于某个话题",
+    "よろしい": "可以、礼貌说法",
+    "少し": "一点点、稍微",
+    "高い": "贵的、高的",
+    "買い物": "买东西、购物",
+}
+
+
+def build_vocab_ask_spoken(vc: dict) -> str:
+    """Build a crisp, natural, zero-spoiler Mandarin eyes-free question for Hands-Free Voice Coach."""
+    word = str(vc.get("word") or vc.get("target") or "").strip()
+    mode = str(vc.get("mode") or "kana_meaning").strip()
+    raw_zh = str(vc.get("zh") or "").strip()
+
+    if word in _VOICE_ASK_GLOSS_OVERRIDE:
+        return f"{_VOICE_ASK_GLOSS_OVERRIDE[word]}，日语怎么说？"
+
+    # Clean meaning core and optional short collocation hint
+    parts = [p.strip() for p in re.split(r"\s*·\s*", raw_zh) if p.strip()]
+    core_raw = parts[0] if parts else ""
+    colloc_raw = parts[1] if len(parts) >= 2 else ""
+
+    def _clean_zh_seg(txt: str) -> str:
+        s = re.sub(r"[（(][^）)]*[）)]", "", str(txt or ""))
+        s = re.sub(r"[…\.]+", "", s)
+        s = re.sub(r"[。！？；;—–\-~〜↔＝=]+", "，", s)
+        s = re.sub(r"[/／]", "", s)
+        s = re.sub(r"[\u3040-\u30ff]+", "", s)
+        s = re.sub(r"\s+", "", s)
+        s = re.sub(r"[，、]{2,}", "，", s).strip(" ，、")
+        return s
+
+    core = _clean_zh_seg(core_raw)
+    colloc = _clean_zh_seg(colloc_raw)
+
+    # Cap core to 1-2 short natural glosses so every prompt takes ~2 seconds
+    core_bits = [b.strip() for b in re.split(r"[、，]", core) if len(b.strip()) >= 2 or len(core) <= 3]
+    if len(core_bits) > 2:
+        core = "、".join(core_bits[:2])
+    elif core_bits:
+        core = "、".join(core_bits)
+    if len(core) > 12 and core_bits:
+        core = core_bits[0][:12]
+
+    if not core:
+        core = _VOICE_ASK_GLOSS_OVERRIDE.get(word, "这个词")
+
+    if mode == "kanji_read":
+        has_kana_tail = bool(re.search(r"[\u3040-\u30ff]", word))
+        simp_word = word.translate(_SHINJITAI_TO_ZH)
+        if not has_kana_tail and len(simp_word) >= 2:
+            # Pure Kanji compound (e.g. 書類, 出張, 印象, 予算, 内緒, 遠慮)
+            if simp_word in core or core in simp_word:
+                if colloc and len(colloc) <= 8 and colloc != core and simp_word not in colloc:
+                    return f"{simp_word}，{colloc}，日语怎么读？"
+                return f"{simp_word}，日语怎么读？"
+            return f"{core}，汉字写{simp_word}，日语怎么读？"
+        # Kanji + okurigana verb / adjective / phrase (e.g. 貯める, 備える, 慰める, 仲直り, 前もって)
+        if colloc and len(colloc) <= 9 and colloc not in core and core not in colloc:
+            return f"{core}，比如{colloc}，日语怎么说？"
+        return f"{core}，日语怎么说？"
+
+    # Pure kana mimetic / adverb / verb (e.g. うっかり, ぐったり, ばったり, こっそり, そっと)
+    if colloc and len(colloc) <= 9 and colloc not in core and core not in colloc:
+        return f"{core}，比如{colloc}，日语怎么说？"
+    return f"{core}，日语怎么说？"
+
+
 def build_vocab_audio_spec(vc: dict) -> dict:
     """Build ordered 3-beat spoken components: Mnemonic FIRST -> Target Word SECOND -> Full Phrase LAST."""
     word = str(vc.get("word") or vc.get("target") or "").strip()
@@ -2517,12 +2629,14 @@ def build_vocab_audio_spec(vc: dict) -> dict:
 
     # Direct spoken mnemonic without double-meaning chatter: Mnemonic -> Word -> Full Phrase
     reveal_spoken = hook_spoken
+    ask_spoken = build_vocab_ask_spoken(vc)
 
     return {
         "word_ja": word_ja,
         "chunk_ja": chunk_ja,
         "hook_spoken": hook_spoken,
         "reveal_spoken": reveal_spoken,
+        "ask_spoken": ask_spoken,
     }
 
 

@@ -2731,7 +2731,8 @@
       "hook": "./audio/words/vc_670e15a718_hook.mp3?v=b4e37b0b",
       "phrase": "./audio/words/vc_670e15a718_phrase.mp3?v=7fbb69b1",
       "word": "./audio/words/vc_670e15a718_word.mp3?v=e69677e9",
-      "clean": "./audio/words/vc_670e15a718_clean.mp3?v=2a2c1383"
+      "clean": "./audio/words/vc_670e15a718_clean.mp3?v=2a2c1383",
+      "ask": "./audio/words/vc_670e15a718_ask.mp3?v=96a24738"
     },
     "出張": {
       "front": "",
@@ -2740,7 +2741,8 @@
       "hook": "./audio/words/vc_ba0fa030a7_hook.mp3?v=05584175",
       "phrase": "./audio/words/vc_ba0fa030a7_phrase.mp3?v=35dba455",
       "word": "./audio/words/vc_ba0fa030a7_word.mp3?v=67595345",
-      "clean": "./audio/words/vc_ba0fa030a7_clean.mp3?v=02c756f8"
+      "clean": "./audio/words/vc_ba0fa030a7_clean.mp3?v=02c756f8",
+      "ask": "./audio/words/vc_ba0fa030a7_ask.mp3?v=65834f33"
     },
     "内緒": {
       "front": "",
@@ -2749,7 +2751,8 @@
       "hook": "./audio/words/vc_0c316b4939_hook.mp3?v=27dcdd97",
       "phrase": "./audio/words/vc_0c316b4939_phrase.mp3?v=fbf1069d",
       "word": "./audio/words/vc_0c316b4939_word.mp3?v=6c1c7afa",
-      "clean": "./audio/words/vc_0c316b4939_clean.mp3?v=c2bc1354"
+      "clean": "./audio/words/vc_0c316b4939_clean.mp3?v=c2bc1354",
+      "ask": "./audio/words/vc_0c316b4939_ask.mp3?v=891c7902"
     },
     "貯める": {
       "front": "",
@@ -2758,7 +2761,8 @@
       "hook": "./audio/words/vc_84a9ffea89_hook.mp3?v=3ca58b54",
       "phrase": "./audio/words/vc_84a9ffea89_phrase.mp3?v=ca9dab0a",
       "word": "./audio/words/vc_84a9ffea89_word.mp3?v=84169f34",
-      "clean": "./audio/words/vc_84a9ffea89_clean.mp3?v=d562ed4e"
+      "clean": "./audio/words/vc_84a9ffea89_clean.mp3?v=d562ed4e",
+      "ask": "./audio/words/vc_84a9ffea89_ask.mp3?v=e508c768"
     },
     "備える": {
       "front": "",
@@ -2767,7 +2771,8 @@
       "hook": "./audio/words/vc_6a0d1c3d3b_hook.mp3?v=dd6aa9f0",
       "phrase": "./audio/words/vc_6a0d1c3d3b_phrase.mp3?v=ba92b49c",
       "word": "./audio/words/vc_6a0d1c3d3b_word.mp3?v=d6b6bf8a",
-      "clean": "./audio/words/vc_6a0d1c3d3b_clean.mp3?v=bd58a014"
+      "clean": "./audio/words/vc_6a0d1c3d3b_clean.mp3?v=bd58a014",
+      "ask": "./audio/words/vc_6a0d1c3d3b_ask.mp3?v=734f3e76"
     },
     "沈む": {
       "front": "",
@@ -2776,7 +2781,8 @@
       "hook": "./audio/words/vc_0d503792ad_hook.mp3?v=55fff85a",
       "phrase": "./audio/words/vc_0d503792ad_phrase.mp3?v=53632b45",
       "word": "./audio/words/vc_0d503792ad_word.mp3?v=cc7ec77b",
-      "clean": "./audio/words/vc_0d503792ad_clean.mp3?v=f363a681"
+      "clean": "./audio/words/vc_0d503792ad_clean.mp3?v=f363a681",
+      "ask": "./audio/words/vc_0d503792ad_ask.mp3?v=4ed77a4a"
     },
     "許す": {
       "front": "",
@@ -2785,7 +2791,8 @@
       "hook": "./audio/words/vc_c89f9ff18e_hook.mp3?v=3a568a35",
       "phrase": "./audio/words/vc_c89f9ff18e_phrase.mp3?v=1a83f082",
       "word": "./audio/words/vc_c89f9ff18e_word.mp3?v=414d4939",
-      "clean": "./audio/words/vc_c89f9ff18e_clean.mp3?v=cfdc5fa9"
+      "clean": "./audio/words/vc_c89f9ff18e_clean.mp3?v=cfdc5fa9",
+      "ask": "./audio/words/vc_c89f9ff18e_ask.mp3?v=5dcf6c4d"
     },
     "輝く": {
       "front": "",
@@ -2794,7 +2801,8 @@
       "hook": "./audio/words/vc_cde6d4e2d5_hook.mp3?v=4705f330",
       "phrase": "./audio/words/vc_cde6d4e2d5_phrase.mp3?v=19d4f823",
       "word": "./audio/words/vc_cde6d4e2d5_word.mp3?v=879b8bd5",
-      "clean": "./audio/words/vc_cde6d4e2d5_clean.mp3?v=9719d80a"
+      "clean": "./audio/words/vc_cde6d4e2d5_clean.mp3?v=9719d80a",
+      "ask": "./audio/words/vc_cde6d4e2d5_ask.mp3?v=7d2d0e78"
     },
     "余る": {
       "front": "",
@@ -2803,7 +2811,8 @@
       "hook": "./audio/words/vc_0c5c646035_hook.mp3?v=23e19902",
       "phrase": "./audio/words/vc_0c5c646035_phrase.mp3?v=4c23854d",
       "word": "./audio/words/vc_0c5c646035_word.mp3?v=2a89481c",
-      "clean": "./audio/words/vc_0c5c646035_clean.mp3?v=e80bb419"
+      "clean": "./audio/words/vc_0c5c646035_clean.mp3?v=e80bb419",
+      "ask": "./audio/words/vc_0c5c646035_ask.mp3?v=9e1ea5e0"
     },
     "慰める": {
       "front": "",
@@ -2812,7 +2821,8 @@
       "hook": "./audio/words/vc_a00239088e_hook.mp3?v=9086637e",
       "phrase": "./audio/words/vc_a00239088e_phrase.mp3?v=55d9b5eb",
       "word": "./audio/words/vc_a00239088e_word.mp3?v=ada3b74e",
-      "clean": "./audio/words/vc_a00239088e_clean.mp3?v=27180929"
+      "clean": "./audio/words/vc_a00239088e_clean.mp3?v=27180929",
+      "ask": "./audio/words/vc_a00239088e_ask.mp3?v=6a0bcd7e"
     },
     "任せる": {
       "front": "",
@@ -2821,7 +2831,8 @@
       "hook": "./audio/words/vc_c18f0cb434_hook.mp3?v=40a0ce92",
       "phrase": "./audio/words/vc_c18f0cb434_phrase.mp3?v=ba466da6",
       "word": "./audio/words/vc_c18f0cb434_word.mp3?v=4282e83a",
-      "clean": "./audio/words/vc_c18f0cb434_clean.mp3?v=11bc4cf8"
+      "clean": "./audio/words/vc_c18f0cb434_clean.mp3?v=11bc4cf8",
+      "ask": "./audio/words/vc_c18f0cb434_ask.mp3?v=48385efa"
     },
     "代表": {
       "front": "",
@@ -2830,7 +2841,8 @@
       "hook": "./audio/words/vc_9db6b1dec8_hook.mp3?v=f16b892a",
       "phrase": "./audio/words/vc_9db6b1dec8_phrase.mp3?v=d8a410f8",
       "word": "./audio/words/vc_9db6b1dec8_word.mp3?v=4205c806",
-      "clean": "./audio/words/vc_9db6b1dec8_clean.mp3?v=58986b2c"
+      "clean": "./audio/words/vc_9db6b1dec8_clean.mp3?v=58986b2c",
+      "ask": "./audio/words/vc_9db6b1dec8_ask.mp3?v=813f1330"
     },
     "減る": {
       "front": "",
@@ -2839,7 +2851,8 @@
       "hook": "./audio/words/vc_c7c64ce8bf_hook.mp3?v=e83e6e01",
       "phrase": "./audio/words/vc_c7c64ce8bf_phrase.mp3?v=c6559d69",
       "word": "./audio/words/vc_c7c64ce8bf_word.mp3?v=2f3eb6ec",
-      "clean": "./audio/words/vc_c7c64ce8bf_clean.mp3?v=53ebc6c4"
+      "clean": "./audio/words/vc_c7c64ce8bf_clean.mp3?v=53ebc6c4",
+      "ask": "./audio/words/vc_c7c64ce8bf_ask.mp3?v=aff6805d"
     },
     "続く": {
       "front": "",
@@ -2848,7 +2861,8 @@
       "hook": "./audio/words/vc_2c763d541c_hook.mp3?v=c0c172e1",
       "phrase": "./audio/words/vc_2c763d541c_phrase.mp3?v=56069d31",
       "word": "./audio/words/vc_2c763d541c_word.mp3?v=13adbee8",
-      "clean": "./audio/words/vc_2c763d541c_clean.mp3?v=710d4fdd"
+      "clean": "./audio/words/vc_2c763d541c_clean.mp3?v=710d4fdd",
+      "ask": "./audio/words/vc_2c763d541c_ask.mp3?v=216f55d8"
     },
     "囲む": {
       "front": "",
@@ -2857,7 +2871,8 @@
       "hook": "./audio/words/vc_5894cef523_hook.mp3?v=e62b5ad5",
       "phrase": "./audio/words/vc_5894cef523_phrase.mp3?v=2f1b32f2",
       "word": "./audio/words/vc_5894cef523_word.mp3?v=bd3ae9ec",
-      "clean": "./audio/words/vc_5894cef523_clean.mp3?v=087dd9bd"
+      "clean": "./audio/words/vc_5894cef523_clean.mp3?v=087dd9bd",
+      "ask": "./audio/words/vc_5894cef523_ask.mp3?v=79063f5c"
     },
     "仲直り": {
       "front": "",
@@ -2866,7 +2881,8 @@
       "hook": "./audio/words/vc_1b5905ab75_hook.mp3?v=10ecd22b",
       "phrase": "./audio/words/vc_1b5905ab75_phrase.mp3?v=302c4b1a",
       "word": "./audio/words/vc_1b5905ab75_word.mp3?v=1cea5e7a",
-      "clean": "./audio/words/vc_1b5905ab75_clean.mp3?v=604418ce"
+      "clean": "./audio/words/vc_1b5905ab75_clean.mp3?v=604418ce",
+      "ask": "./audio/words/vc_1b5905ab75_ask.mp3?v=eeb1e310"
     },
     "次々に": {
       "front": "",
@@ -2875,7 +2891,8 @@
       "hook": "./audio/words/vc_2673bef76c_hook.mp3?v=cc33407b",
       "phrase": "./audio/words/vc_2673bef76c_phrase.mp3?v=9db01219",
       "word": "./audio/words/vc_2673bef76c_word.mp3?v=2bcc5844",
-      "clean": "./audio/words/vc_2673bef76c_clean.mp3?v=83700c8d"
+      "clean": "./audio/words/vc_2673bef76c_clean.mp3?v=83700c8d",
+      "ask": "./audio/words/vc_2673bef76c_ask.mp3?v=479405f0"
     },
     "組む": {
       "front": "",
@@ -2884,7 +2901,8 @@
       "hook": "./audio/words/vc_f74f9c6537_hook.mp3?v=b431aa79",
       "phrase": "./audio/words/vc_f74f9c6537_phrase.mp3?v=b51fbbc9",
       "word": "./audio/words/vc_f74f9c6537_word.mp3?v=68ba0dfa",
-      "clean": "./audio/words/vc_f74f9c6537_clean.mp3?v=69ec367d"
+      "clean": "./audio/words/vc_f74f9c6537_clean.mp3?v=69ec367d",
+      "ask": "./audio/words/vc_f74f9c6537_ask.mp3?v=4bc3bfa0"
     },
     "加える": {
       "front": "",
@@ -2893,7 +2911,8 @@
       "hook": "./audio/words/vc_b0fb165ff5_hook.mp3?v=ff4d600c",
       "phrase": "./audio/words/vc_b0fb165ff5_phrase.mp3?v=b45c610f",
       "word": "./audio/words/vc_b0fb165ff5_word.mp3?v=a16d4a6a",
-      "clean": "./audio/words/vc_b0fb165ff5_clean.mp3?v=9c247797"
+      "clean": "./audio/words/vc_b0fb165ff5_clean.mp3?v=9c247797",
+      "ask": "./audio/words/vc_b0fb165ff5_ask.mp3?v=2277056b"
     },
     "やり直す": {
       "front": "",
@@ -2902,7 +2921,8 @@
       "hook": "./audio/words/vc_bb9965eed1_hook.mp3?v=550c9bc4",
       "phrase": "./audio/words/vc_bb9965eed1_phrase.mp3?v=4d8b653a",
       "word": "./audio/words/vc_bb9965eed1_word.mp3?v=b0a51b98",
-      "clean": "./audio/words/vc_bb9965eed1_clean.mp3?v=6f001ed4"
+      "clean": "./audio/words/vc_bb9965eed1_clean.mp3?v=6f001ed4",
+      "ask": "./audio/words/vc_bb9965eed1_ask.mp3?v=5c6c3241"
     },
     "疑問": {
       "front": "",
@@ -2911,7 +2931,8 @@
       "hook": "./audio/words/vc_d6cf25b9e4_hook.mp3?v=e0f9dd13",
       "phrase": "./audio/words/vc_d6cf25b9e4_phrase.mp3?v=dd641c27",
       "word": "./audio/words/vc_d6cf25b9e4_word.mp3?v=8ea9c499",
-      "clean": "./audio/words/vc_d6cf25b9e4_clean.mp3?v=90d94408"
+      "clean": "./audio/words/vc_d6cf25b9e4_clean.mp3?v=90d94408",
+      "ask": "./audio/words/vc_d6cf25b9e4_ask.mp3?v=d3806264"
     },
     "恐ろしい": {
       "front": "",
@@ -2920,7 +2941,8 @@
       "hook": "./audio/words/vc_39b2958cf2_hook.mp3?v=41bc6406",
       "phrase": "./audio/words/vc_39b2958cf2_phrase.mp3?v=72472e6f",
       "word": "./audio/words/vc_39b2958cf2_word.mp3?v=24620c24",
-      "clean": "./audio/words/vc_39b2958cf2_clean.mp3?v=9ddb6934"
+      "clean": "./audio/words/vc_39b2958cf2_clean.mp3?v=9ddb6934",
+      "ask": "./audio/words/vc_39b2958cf2_ask.mp3?v=2c91c23a"
     },
     "指示": {
       "front": "",
@@ -2929,7 +2951,8 @@
       "hook": "./audio/words/vc_fb3a4d745b_hook.mp3?v=b931b3e4",
       "phrase": "./audio/words/vc_fb3a4d745b_phrase.mp3?v=bd50070e",
       "word": "./audio/words/vc_fb3a4d745b_word.mp3?v=1c10b1cd",
-      "clean": "./audio/words/vc_fb3a4d745b_clean.mp3?v=13e007d2"
+      "clean": "./audio/words/vc_fb3a4d745b_clean.mp3?v=13e007d2",
+      "ask": "./audio/words/vc_fb3a4d745b_ask.mp3?v=db1471e2"
     },
     "慣れる": {
       "front": "",
@@ -2938,7 +2961,8 @@
       "hook": "./audio/words/vc_79d9b17c9e_hook.mp3?v=7a891fc4",
       "phrase": "./audio/words/vc_79d9b17c9e_phrase.mp3?v=5e650de6",
       "word": "./audio/words/vc_79d9b17c9e_word.mp3?v=5896a29b",
-      "clean": "./audio/words/vc_79d9b17c9e_clean.mp3?v=eae54573"
+      "clean": "./audio/words/vc_79d9b17c9e_clean.mp3?v=eae54573",
+      "ask": "./audio/words/vc_79d9b17c9e_ask.mp3?v=ada66e7d"
     },
     "守る": {
       "front": "",
@@ -2947,7 +2971,8 @@
       "hook": "./audio/words/vc_c31c3968d9_hook.mp3?v=a6f2a071",
       "phrase": "./audio/words/vc_c31c3968d9_phrase.mp3?v=14254c49",
       "word": "./audio/words/vc_c31c3968d9_word.mp3?v=c6bd7615",
-      "clean": "./audio/words/vc_c31c3968d9_clean.mp3?v=688ecd46"
+      "clean": "./audio/words/vc_c31c3968d9_clean.mp3?v=688ecd46",
+      "ask": "./audio/words/vc_c31c3968d9_ask.mp3?v=f4085b28"
     },
     "増える": {
       "front": "",
@@ -2956,7 +2981,8 @@
       "hook": "./audio/words/vc_09409e80f6_hook.mp3?v=c5832e14",
       "phrase": "./audio/words/vc_09409e80f6_phrase.mp3?v=4be4c7dc",
       "word": "./audio/words/vc_09409e80f6_word.mp3?v=9519ff06",
-      "clean": "./audio/words/vc_09409e80f6_clean.mp3?v=6ad72eb1"
+      "clean": "./audio/words/vc_09409e80f6_clean.mp3?v=6ad72eb1",
+      "ask": "./audio/words/vc_09409e80f6_ask.mp3?v=ddc2221d"
     },
     "予算": {
       "front": "",
@@ -2965,7 +2991,8 @@
       "hook": "./audio/words/vc_e18c54d4fc_hook.mp3?v=3909ce3f",
       "phrase": "./audio/words/vc_e18c54d4fc_phrase.mp3?v=60756b32",
       "word": "./audio/words/vc_e18c54d4fc_word.mp3?v=aeb187c7",
-      "clean": "./audio/words/vc_e18c54d4fc_clean.mp3?v=b8cc7832"
+      "clean": "./audio/words/vc_e18c54d4fc_clean.mp3?v=b8cc7832",
+      "ask": "./audio/words/vc_e18c54d4fc_ask.mp3?v=301171c2"
     },
     "遅れる": {
       "front": "",
@@ -2974,7 +3001,8 @@
       "hook": "./audio/words/vc_423710e0b5_hook.mp3?v=9e54bc5e",
       "phrase": "./audio/words/vc_423710e0b5_phrase.mp3?v=30f4a96e",
       "word": "./audio/words/vc_423710e0b5_word.mp3?v=36534555",
-      "clean": "./audio/words/vc_423710e0b5_clean.mp3?v=40599bd2"
+      "clean": "./audio/words/vc_423710e0b5_clean.mp3?v=40599bd2",
+      "ask": "./audio/words/vc_423710e0b5_ask.mp3?v=75223919"
     },
     "通勤": {
       "front": "",
@@ -2983,7 +3011,8 @@
       "hook": "./audio/words/vc_e2f4e57b1b_hook.mp3?v=4874e618",
       "phrase": "./audio/words/vc_e2f4e57b1b_phrase.mp3?v=93cbd91c",
       "word": "./audio/words/vc_e2f4e57b1b_word.mp3?v=5419b282",
-      "clean": "./audio/words/vc_e2f4e57b1b_clean.mp3?v=1e1faba5"
+      "clean": "./audio/words/vc_e2f4e57b1b_clean.mp3?v=1e1faba5",
+      "ask": "./audio/words/vc_e2f4e57b1b_ask.mp3?v=5c7455b3"
     },
     "発表": {
       "front": "",
@@ -2992,7 +3021,8 @@
       "hook": "./audio/words/vc_f5cce0d314_hook.mp3?v=cc7fcfa8",
       "phrase": "./audio/words/vc_f5cce0d314_phrase.mp3?v=013304f3",
       "word": "./audio/words/vc_f5cce0d314_word.mp3?v=1b642a9f",
-      "clean": "./audio/words/vc_f5cce0d314_clean.mp3?v=5a6953d4"
+      "clean": "./audio/words/vc_f5cce0d314_clean.mp3?v=5a6953d4",
+      "ask": "./audio/words/vc_f5cce0d314_ask.mp3?v=1cae79d7"
     },
     "有料": {
       "front": "",
@@ -3001,7 +3031,8 @@
       "hook": "./audio/words/vc_1c7d329f60_hook.mp3?v=726cc5af",
       "phrase": "./audio/words/vc_1c7d329f60_phrase.mp3?v=5dffb593",
       "word": "./audio/words/vc_1c7d329f60_word.mp3?v=d4d18854",
-      "clean": "./audio/words/vc_1c7d329f60_clean.mp3?v=ee3a53be"
+      "clean": "./audio/words/vc_1c7d329f60_clean.mp3?v=ee3a53be",
+      "ask": "./audio/words/vc_1c7d329f60_ask.mp3?v=a5fdb099"
     },
     "払う": {
       "front": "",
@@ -3010,7 +3041,8 @@
       "hook": "./audio/words/vc_45988c6cec_hook.mp3?v=3cc60c5d",
       "phrase": "./audio/words/vc_45988c6cec_phrase.mp3?v=b0ef4018",
       "word": "./audio/words/vc_45988c6cec_word.mp3?v=3f843e0b",
-      "clean": "./audio/words/vc_45988c6cec_clean.mp3?v=ce9f95ca"
+      "clean": "./audio/words/vc_45988c6cec_clean.mp3?v=ce9f95ca",
+      "ask": "./audio/words/vc_45988c6cec_ask.mp3?v=1712e706"
     },
     "封筒": {
       "front": "",
@@ -3019,7 +3051,8 @@
       "hook": "./audio/words/vc_9ec068ebd5_hook.mp3?v=66fcc65e",
       "phrase": "./audio/words/vc_9ec068ebd5_phrase.mp3?v=4651f3d9",
       "word": "./audio/words/vc_9ec068ebd5_word.mp3?v=17f64b98",
-      "clean": "./audio/words/vc_9ec068ebd5_clean.mp3?v=0239dfb4"
+      "clean": "./audio/words/vc_9ec068ebd5_clean.mp3?v=0239dfb4",
+      "ask": "./audio/words/vc_9ec068ebd5_ask.mp3?v=32d4cbb5"
     },
     "終電": {
       "front": "",
@@ -3028,7 +3061,8 @@
       "hook": "./audio/words/vc_03e3320c99_hook.mp3?v=205d7075",
       "phrase": "./audio/words/vc_03e3320c99_phrase.mp3?v=7773b3d8",
       "word": "./audio/words/vc_03e3320c99_word.mp3?v=1bb4d01b",
-      "clean": "./audio/words/vc_03e3320c99_clean.mp3?v=1d39db18"
+      "clean": "./audio/words/vc_03e3320c99_clean.mp3?v=1d39db18",
+      "ask": "./audio/words/vc_03e3320c99_ask.mp3?v=da2f8a64"
     },
     "一日中": {
       "front": "",
@@ -3037,7 +3071,8 @@
       "hook": "./audio/words/vc_90b5bb125e_hook.mp3?v=b1aa7d09",
       "phrase": "./audio/words/vc_90b5bb125e_phrase.mp3?v=82c03928",
       "word": "./audio/words/vc_90b5bb125e_word.mp3?v=298a3a33",
-      "clean": "./audio/words/vc_90b5bb125e_clean.mp3?v=e1914f77"
+      "clean": "./audio/words/vc_90b5bb125e_clean.mp3?v=e1914f77",
+      "ask": "./audio/words/vc_90b5bb125e_ask.mp3?v=6c62abec"
     },
     "前もって": {
       "front": "",
@@ -3046,7 +3081,8 @@
       "hook": "./audio/words/vc_73c4f2eb14_hook.mp3?v=962b148a",
       "phrase": "./audio/words/vc_73c4f2eb14_phrase.mp3?v=652a1036",
       "word": "./audio/words/vc_73c4f2eb14_word.mp3?v=4698ed84",
-      "clean": "./audio/words/vc_73c4f2eb14_clean.mp3?v=ae8a6739"
+      "clean": "./audio/words/vc_73c4f2eb14_clean.mp3?v=ae8a6739",
+      "ask": "./audio/words/vc_73c4f2eb14_ask.mp3?v=b03b8d08"
     },
     "後にして": {
       "front": "",
@@ -3055,7 +3091,8 @@
       "hook": "./audio/words/vc_28f965c877_hook.mp3?v=def43902",
       "phrase": "./audio/words/vc_28f965c877_phrase.mp3?v=eea07588",
       "word": "./audio/words/vc_28f965c877_word.mp3?v=e80ee097",
-      "clean": "./audio/words/vc_28f965c877_clean.mp3?v=5f45e846"
+      "clean": "./audio/words/vc_28f965c877_clean.mp3?v=5f45e846",
+      "ask": "./audio/words/vc_28f965c877_ask.mp3?v=bfc90e0c"
     },
     "暖簾": {
       "front": "",
@@ -3064,7 +3101,8 @@
       "hook": "./audio/words/vc_46a85b7fa5_hook.mp3?v=52e7bca6",
       "phrase": "./audio/words/vc_46a85b7fa5_phrase.mp3?v=81fdc3e5",
       "word": "./audio/words/vc_46a85b7fa5_word.mp3?v=2109dfb6",
-      "clean": "./audio/words/vc_46a85b7fa5_clean.mp3?v=b56c601e"
+      "clean": "./audio/words/vc_46a85b7fa5_clean.mp3?v=b56c601e",
+      "ask": "./audio/words/vc_46a85b7fa5_ask.mp3?v=3aadf9c0"
     },
     "こっそり": {
       "front": "./audio/words/vc_5c596be6e3_word.mp3?v=a4de59bc",
@@ -3073,7 +3111,8 @@
       "hook": "./audio/words/vc_5c596be6e3_hook.mp3?v=a7eeb257",
       "phrase": "./audio/words/vc_5c596be6e3_phrase.mp3?v=915d54c9",
       "word": "./audio/words/vc_5c596be6e3_word.mp3?v=a4de59bc",
-      "clean": "./audio/words/vc_5c596be6e3_clean.mp3?v=f037b7ff"
+      "clean": "./audio/words/vc_5c596be6e3_clean.mp3?v=f037b7ff",
+      "ask": "./audio/words/vc_5c596be6e3_ask.mp3?v=18088185"
     },
     "ばったり": {
       "front": "./audio/words/vc_81b38c97f9_word.mp3?v=a5bff09e",
@@ -3082,7 +3121,8 @@
       "hook": "./audio/words/vc_81b38c97f9_hook.mp3?v=e02c7be3",
       "phrase": "./audio/words/vc_81b38c97f9_phrase.mp3?v=9cf3c790",
       "word": "./audio/words/vc_81b38c97f9_word.mp3?v=a5bff09e",
-      "clean": "./audio/words/vc_81b38c97f9_clean.mp3?v=86879abe"
+      "clean": "./audio/words/vc_81b38c97f9_clean.mp3?v=86879abe",
+      "ask": "./audio/words/vc_81b38c97f9_ask.mp3?v=ed661f80"
     },
     "ぎりぎり": {
       "front": "./audio/words/vc_27153583c6_word.mp3?v=265120ff",
@@ -3091,7 +3131,8 @@
       "hook": "./audio/words/vc_27153583c6_hook.mp3?v=f1f2f870",
       "phrase": "./audio/words/vc_27153583c6_phrase.mp3?v=3593b5e2",
       "word": "./audio/words/vc_27153583c6_word.mp3?v=265120ff",
-      "clean": "./audio/words/vc_27153583c6_clean.mp3?v=eb424ee0"
+      "clean": "./audio/words/vc_27153583c6_clean.mp3?v=eb424ee0",
+      "ask": "./audio/words/vc_27153583c6_ask.mp3?v=767f97d6"
     },
     "うっかり": {
       "front": "./audio/words/vc_fd5ea95f0c_word.mp3?v=2e79a263",
@@ -3100,7 +3141,8 @@
       "hook": "./audio/words/vc_fd5ea95f0c_hook.mp3?v=1e903bee",
       "phrase": "./audio/words/vc_fd5ea95f0c_phrase.mp3?v=5e974822",
       "word": "./audio/words/vc_fd5ea95f0c_word.mp3?v=2e79a263",
-      "clean": "./audio/words/vc_fd5ea95f0c_clean.mp3?v=23c94922"
+      "clean": "./audio/words/vc_fd5ea95f0c_clean.mp3?v=23c94922",
+      "ask": "./audio/words/vc_fd5ea95f0c_ask.mp3?v=343f82e1"
     },
     "すっかり": {
       "front": "./audio/words/vc_eddf457dda_word.mp3?v=41acbf10",
@@ -3109,7 +3151,8 @@
       "hook": "./audio/words/vc_eddf457dda_hook.mp3?v=b4dcd2ba",
       "phrase": "./audio/words/vc_eddf457dda_phrase.mp3?v=dad753ce",
       "word": "./audio/words/vc_eddf457dda_word.mp3?v=41acbf10",
-      "clean": "./audio/words/vc_eddf457dda_clean.mp3?v=5e4b78b9"
+      "clean": "./audio/words/vc_eddf457dda_clean.mp3?v=5e4b78b9",
+      "ask": "./audio/words/vc_eddf457dda_ask.mp3?v=13557b88"
     },
     "しっかり": {
       "front": "./audio/words/vc_3adac82bd9_word.mp3?v=c1f2d299",
@@ -3118,7 +3161,8 @@
       "hook": "./audio/words/vc_3adac82bd9_hook.mp3?v=02ebe7c5",
       "phrase": "./audio/words/vc_3adac82bd9_phrase.mp3?v=b356f09d",
       "word": "./audio/words/vc_3adac82bd9_word.mp3?v=c1f2d299",
-      "clean": "./audio/words/vc_3adac82bd9_clean.mp3?v=1a62c490"
+      "clean": "./audio/words/vc_3adac82bd9_clean.mp3?v=1a62c490",
+      "ask": "./audio/words/vc_3adac82bd9_ask.mp3?v=32434c1e"
     },
     "はっきり": {
       "front": "./audio/words/vc_0187d547c1_word.mp3?v=81fbcbd9",
@@ -3127,7 +3171,8 @@
       "hook": "./audio/words/vc_0187d547c1_hook.mp3?v=1c2824c0",
       "phrase": "./audio/words/vc_0187d547c1_phrase.mp3?v=190c9ced",
       "word": "./audio/words/vc_0187d547c1_word.mp3?v=81fbcbd9",
-      "clean": "./audio/words/vc_0187d547c1_clean.mp3?v=8103d99b"
+      "clean": "./audio/words/vc_0187d547c1_clean.mp3?v=8103d99b",
+      "ask": "./audio/words/vc_0187d547c1_ask.mp3?v=004a3f9d"
     },
     "ぴったり": {
       "front": "./audio/words/vc_1929bf0f57_word.mp3?v=88af9082",
@@ -3136,7 +3181,8 @@
       "hook": "./audio/words/vc_1929bf0f57_hook.mp3?v=949cc858",
       "phrase": "./audio/words/vc_1929bf0f57_phrase.mp3?v=0767ebcd",
       "word": "./audio/words/vc_1929bf0f57_word.mp3?v=88af9082",
-      "clean": "./audio/words/vc_1929bf0f57_clean.mp3?v=4e6b9fb0"
+      "clean": "./audio/words/vc_1929bf0f57_clean.mp3?v=4e6b9fb0",
+      "ask": "./audio/words/vc_1929bf0f57_ask.mp3?v=c68df072"
     },
     "ぐったり": {
       "front": "./audio/words/vc_8024d8566b_word.mp3?v=66b4e0b9",
@@ -3145,7 +3191,8 @@
       "hook": "./audio/words/vc_8024d8566b_hook.mp3?v=879b71cb",
       "phrase": "./audio/words/vc_8024d8566b_phrase.mp3?v=2f819fd3",
       "word": "./audio/words/vc_8024d8566b_word.mp3?v=66b4e0b9",
-      "clean": "./audio/words/vc_8024d8566b_clean.mp3?v=58a9f246"
+      "clean": "./audio/words/vc_8024d8566b_clean.mp3?v=58a9f246",
+      "ask": "./audio/words/vc_8024d8566b_ask.mp3?v=401bfa56"
     },
     "ぐっすり": {
       "front": "./audio/words/vc_be8f9ef659_word.mp3?v=ed4d7550",
@@ -3154,7 +3201,8 @@
       "hook": "./audio/words/vc_be8f9ef659_hook.mp3?v=bf870ab8",
       "phrase": "./audio/words/vc_be8f9ef659_phrase.mp3?v=9783c356",
       "word": "./audio/words/vc_be8f9ef659_word.mp3?v=ed4d7550",
-      "clean": "./audio/words/vc_be8f9ef659_clean.mp3?v=7b583e85"
+      "clean": "./audio/words/vc_be8f9ef659_clean.mp3?v=7b583e85",
+      "ask": "./audio/words/vc_be8f9ef659_ask.mp3?v=72d8c472"
     },
     "うっとり": {
       "front": "./audio/words/vc_73e140a2fb_word.mp3?v=0516fbf6",
@@ -3163,7 +3211,8 @@
       "hook": "./audio/words/vc_73e140a2fb_hook.mp3?v=fbb047ce",
       "phrase": "./audio/words/vc_73e140a2fb_phrase.mp3?v=6fec587b",
       "word": "./audio/words/vc_73e140a2fb_word.mp3?v=0516fbf6",
-      "clean": "./audio/words/vc_73e140a2fb_clean.mp3?v=f61b60e4"
+      "clean": "./audio/words/vc_73e140a2fb_clean.mp3?v=f61b60e4",
+      "ask": "./audio/words/vc_73e140a2fb_ask.mp3?v=e3d92527"
     },
     "がっかり": {
       "front": "./audio/words/vc_0660262493_word.mp3?v=f254b480",
@@ -3172,7 +3221,8 @@
       "hook": "./audio/words/vc_0660262493_hook.mp3?v=8ff99ed7",
       "phrase": "./audio/words/vc_0660262493_phrase.mp3?v=e1eb47db",
       "word": "./audio/words/vc_0660262493_word.mp3?v=f254b480",
-      "clean": "./audio/words/vc_0660262493_clean.mp3?v=867d9b6e"
+      "clean": "./audio/words/vc_0660262493_clean.mp3?v=867d9b6e",
+      "ask": "./audio/words/vc_0660262493_ask.mp3?v=3732f86e"
     },
     "すっきり": {
       "front": "./audio/words/vc_74be55b76f_word.mp3?v=5005225d",
@@ -3181,7 +3231,8 @@
       "hook": "./audio/words/vc_74be55b76f_hook.mp3?v=16ed69e5",
       "phrase": "./audio/words/vc_74be55b76f_phrase.mp3?v=2aae44ff",
       "word": "./audio/words/vc_74be55b76f_word.mp3?v=5005225d",
-      "clean": "./audio/words/vc_74be55b76f_clean.mp3?v=76a2943e"
+      "clean": "./audio/words/vc_74be55b76f_clean.mp3?v=76a2943e",
+      "ask": "./audio/words/vc_74be55b76f_ask.mp3?v=fbc4014e"
     },
     "そっくり": {
       "front": "./audio/words/vc_8656fddab7_word.mp3?v=f95055cc",
@@ -3190,7 +3241,8 @@
       "hook": "./audio/words/vc_8656fddab7_hook.mp3?v=b79280bd",
       "phrase": "./audio/words/vc_8656fddab7_phrase.mp3?v=91412670",
       "word": "./audio/words/vc_8656fddab7_word.mp3?v=f95055cc",
-      "clean": "./audio/words/vc_8656fddab7_clean.mp3?v=fe3ceafb"
+      "clean": "./audio/words/vc_8656fddab7_clean.mp3?v=fe3ceafb",
+      "ask": "./audio/words/vc_8656fddab7_ask.mp3?v=858ff28a"
     },
     "がらがら": {
       "front": "./audio/words/vc_5bd2170424_word.mp3?v=1a12b9f2",
@@ -3199,7 +3251,8 @@
       "hook": "./audio/words/vc_5bd2170424_hook.mp3?v=c65d0fbb",
       "phrase": "./audio/words/vc_5bd2170424_phrase.mp3?v=2412816a",
       "word": "./audio/words/vc_5bd2170424_word.mp3?v=1a12b9f2",
-      "clean": "./audio/words/vc_5bd2170424_clean.mp3?v=b6c130ed"
+      "clean": "./audio/words/vc_5bd2170424_clean.mp3?v=b6c130ed",
+      "ask": "./audio/words/vc_5bd2170424_ask.mp3?v=ebf2bfcc"
     },
     "ぎっしり": {
       "front": "./audio/words/vc_47204d9050_word.mp3?v=f3cc9de9",
@@ -3208,7 +3261,8 @@
       "hook": "./audio/words/vc_47204d9050_hook.mp3?v=925ff08f",
       "phrase": "./audio/words/vc_47204d9050_phrase.mp3?v=23a839a7",
       "word": "./audio/words/vc_47204d9050_word.mp3?v=f3cc9de9",
-      "clean": "./audio/words/vc_47204d9050_clean.mp3?v=f23997b6"
+      "clean": "./audio/words/vc_47204d9050_clean.mp3?v=f23997b6",
+      "ask": "./audio/words/vc_47204d9050_ask.mp3?v=26a9114b"
     },
     "ばらばら": {
       "front": "./audio/words/vc_47de3336ca_word.mp3?v=98592438",
@@ -3217,7 +3271,8 @@
       "hook": "./audio/words/vc_47de3336ca_hook.mp3?v=f24ea92e",
       "phrase": "./audio/words/vc_47de3336ca_phrase.mp3?v=746f542b",
       "word": "./audio/words/vc_47de3336ca_word.mp3?v=98592438",
-      "clean": "./audio/words/vc_47de3336ca_clean.mp3?v=bfe910d0"
+      "clean": "./audio/words/vc_47de3336ca_clean.mp3?v=bfe910d0",
+      "ask": "./audio/words/vc_47de3336ca_ask.mp3?v=5a96d974"
     },
     "ぼろぼろ": {
       "front": "./audio/words/vc_99b98aa3d1_word.mp3?v=06f5d93e",
@@ -3226,7 +3281,8 @@
       "hook": "./audio/words/vc_99b98aa3d1_hook.mp3?v=4fd0caa5",
       "phrase": "./audio/words/vc_99b98aa3d1_phrase.mp3?v=adc09f2b",
       "word": "./audio/words/vc_99b98aa3d1_word.mp3?v=06f5d93e",
-      "clean": "./audio/words/vc_99b98aa3d1_clean.mp3?v=5fe14715"
+      "clean": "./audio/words/vc_99b98aa3d1_clean.mp3?v=5fe14715",
+      "ask": "./audio/words/vc_99b98aa3d1_ask.mp3?v=1644db3e"
     },
     "からから": {
       "front": "./audio/words/vc_ab4ec9d2ef_word.mp3?v=40788563",
@@ -3235,7 +3291,8 @@
       "hook": "./audio/words/vc_ab4ec9d2ef_hook.mp3?v=a72f00e8",
       "phrase": "./audio/words/vc_ab4ec9d2ef_phrase.mp3?v=24651ae5",
       "word": "./audio/words/vc_ab4ec9d2ef_word.mp3?v=40788563",
-      "clean": "./audio/words/vc_ab4ec9d2ef_clean.mp3?v=07da9d55"
+      "clean": "./audio/words/vc_ab4ec9d2ef_clean.mp3?v=07da9d55",
+      "ask": "./audio/words/vc_ab4ec9d2ef_ask.mp3?v=d4fd623c"
     },
     "ぶらぶら": {
       "front": "./audio/words/vc_c351406210_word.mp3?v=b6f95f11",
@@ -3244,7 +3301,8 @@
       "hook": "./audio/words/vc_c351406210_hook.mp3?v=6c50aca7",
       "phrase": "./audio/words/vc_c351406210_phrase.mp3?v=2d4f91ab",
       "word": "./audio/words/vc_c351406210_word.mp3?v=b6f95f11",
-      "clean": "./audio/words/vc_c351406210_clean.mp3?v=02bed481"
+      "clean": "./audio/words/vc_c351406210_clean.mp3?v=02bed481",
+      "ask": "./audio/words/vc_c351406210_ask.mp3?v=8a3b01b8"
     },
     "うろうろ": {
       "front": "./audio/words/vc_09013d19fa_word.mp3?v=9bedc999",
@@ -3253,7 +3311,8 @@
       "hook": "./audio/words/vc_09013d19fa_hook.mp3?v=e98b0183",
       "phrase": "./audio/words/vc_09013d19fa_phrase.mp3?v=e5916aeb",
       "word": "./audio/words/vc_09013d19fa_word.mp3?v=9bedc999",
-      "clean": "./audio/words/vc_09013d19fa_clean.mp3?v=c151ac2e"
+      "clean": "./audio/words/vc_09013d19fa_clean.mp3?v=c151ac2e",
+      "ask": "./audio/words/vc_09013d19fa_ask.mp3?v=40e64bfa"
     },
     "だんだん": {
       "front": "./audio/words/vc_72a974c5fc_word.mp3?v=3a667741",
@@ -3262,7 +3321,8 @@
       "hook": "./audio/words/vc_72a974c5fc_hook.mp3?v=b48a44a5",
       "phrase": "./audio/words/vc_72a974c5fc_phrase.mp3?v=56f22b6c",
       "word": "./audio/words/vc_72a974c5fc_word.mp3?v=3a667741",
-      "clean": "./audio/words/vc_72a974c5fc_clean.mp3?v=bc7a9140"
+      "clean": "./audio/words/vc_72a974c5fc_clean.mp3?v=bc7a9140",
+      "ask": "./audio/words/vc_72a974c5fc_ask.mp3?v=d1cb7509"
     },
     "どんどん": {
       "front": "./audio/words/vc_b2830632c7_word.mp3?v=d5030a19",
@@ -3271,7 +3331,8 @@
       "hook": "./audio/words/vc_b2830632c7_hook.mp3?v=c0d2b44b",
       "phrase": "./audio/words/vc_b2830632c7_phrase.mp3?v=941b2b69",
       "word": "./audio/words/vc_b2830632c7_word.mp3?v=d5030a19",
-      "clean": "./audio/words/vc_b2830632c7_clean.mp3?v=187ea8b8"
+      "clean": "./audio/words/vc_b2830632c7_clean.mp3?v=187ea8b8",
+      "ask": "./audio/words/vc_b2830632c7_ask.mp3?v=61a8aecd"
     },
     "そろそろ": {
       "front": "./audio/words/vc_8503d949ff_word.mp3?v=801e6ab2",
@@ -3280,7 +3341,8 @@
       "hook": "./audio/words/vc_8503d949ff_hook.mp3?v=e0128cb1",
       "phrase": "./audio/words/vc_8503d949ff_phrase.mp3?v=64009e57",
       "word": "./audio/words/vc_8503d949ff_word.mp3?v=801e6ab2",
-      "clean": "./audio/words/vc_8503d949ff_clean.mp3?v=211c4c54"
+      "clean": "./audio/words/vc_8503d949ff_clean.mp3?v=211c4c54",
+      "ask": "./audio/words/vc_8503d949ff_ask.mp3?v=4b5f5bf0"
     },
     "いよいよ": {
       "front": "./audio/words/vc_623bc95bc4_word.mp3?v=04d5098a",
@@ -3289,7 +3351,8 @@
       "hook": "./audio/words/vc_623bc95bc4_hook.mp3?v=036c05d0",
       "phrase": "./audio/words/vc_623bc95bc4_phrase.mp3?v=ffa445c3",
       "word": "./audio/words/vc_623bc95bc4_word.mp3?v=04d5098a",
-      "clean": "./audio/words/vc_623bc95bc4_clean.mp3?v=da4a9915"
+      "clean": "./audio/words/vc_623bc95bc4_clean.mp3?v=da4a9915",
+      "ask": "./audio/words/vc_623bc95bc4_ask.mp3?v=0c1bca74"
     },
     "めったに": {
       "front": "./audio/words/vc_49388ef5a5_word.mp3?v=71176407",
@@ -3298,7 +3361,8 @@
       "hook": "./audio/words/vc_49388ef5a5_hook.mp3?v=64728197",
       "phrase": "./audio/words/vc_49388ef5a5_phrase.mp3?v=1022384b",
       "word": "./audio/words/vc_49388ef5a5_word.mp3?v=71176407",
-      "clean": "./audio/words/vc_49388ef5a5_clean.mp3?v=8dd738ce"
+      "clean": "./audio/words/vc_49388ef5a5_clean.mp3?v=8dd738ce",
+      "ask": "./audio/words/vc_49388ef5a5_ask.mp3?v=84652e17"
     },
     "せっかく": {
       "front": "./audio/words/vc_579acd8505_word.mp3?v=0bcc018b",
@@ -3307,7 +3371,8 @@
       "hook": "./audio/words/vc_579acd8505_hook.mp3?v=3e0a2e70",
       "phrase": "./audio/words/vc_579acd8505_phrase.mp3?v=079c3a9b",
       "word": "./audio/words/vc_579acd8505_word.mp3?v=0bcc018b",
-      "clean": "./audio/words/vc_579acd8505_clean.mp3?v=079ec645"
+      "clean": "./audio/words/vc_579acd8505_clean.mp3?v=079ec645",
+      "ask": "./audio/words/vc_579acd8505_ask.mp3?v=40ddbd33"
     },
     "わざわざ": {
       "front": "./audio/words/vc_6ddd832bcd_word.mp3?v=bf7a784a",
@@ -3316,7 +3381,8 @@
       "hook": "./audio/words/vc_6ddd832bcd_hook.mp3?v=7ebf6ee1",
       "phrase": "./audio/words/vc_6ddd832bcd_phrase.mp3?v=47e43caa",
       "word": "./audio/words/vc_6ddd832bcd_word.mp3?v=bf7a784a",
-      "clean": "./audio/words/vc_6ddd832bcd_clean.mp3?v=c5692155"
+      "clean": "./audio/words/vc_6ddd832bcd_clean.mp3?v=c5692155",
+      "ask": "./audio/words/vc_6ddd832bcd_ask.mp3?v=0047166f"
     },
     "やっと": {
       "front": "./audio/words/vc_e9f03fd24b_word.mp3?v=6808095f",
@@ -3325,7 +3391,8 @@
       "hook": "./audio/words/vc_e9f03fd24b_hook.mp3?v=2d629aeb",
       "phrase": "./audio/words/vc_e9f03fd24b_phrase.mp3?v=e54dd1bb",
       "word": "./audio/words/vc_e9f03fd24b_word.mp3?v=6808095f",
-      "clean": "./audio/words/vc_e9f03fd24b_clean.mp3?v=94a6d6e2"
+      "clean": "./audio/words/vc_e9f03fd24b_clean.mp3?v=94a6d6e2",
+      "ask": "./audio/words/vc_e9f03fd24b_ask.mp3?v=698079ba"
     },
     "つい": {
       "front": "./audio/words/vc_8fc55a91be_word.mp3?v=a237b1ed",
@@ -3334,7 +3401,8 @@
       "hook": "./audio/words/vc_8fc55a91be_hook.mp3?v=fb874496",
       "phrase": "./audio/words/vc_8fc55a91be_phrase.mp3?v=67eb3e7d",
       "word": "./audio/words/vc_8fc55a91be_word.mp3?v=a237b1ed",
-      "clean": "./audio/words/vc_8fc55a91be_clean.mp3?v=4c0e855c"
+      "clean": "./audio/words/vc_8fc55a91be_clean.mp3?v=4c0e855c",
+      "ask": "./audio/words/vc_8fc55a91be_ask.mp3?v=818de9cc"
     },
     "ついてない": {
       "front": "./audio/words/vc_c66465b029_word.mp3?v=c4a4f440",
@@ -3343,7 +3411,8 @@
       "hook": "./audio/words/vc_c66465b029_hook.mp3?v=888ff823",
       "phrase": "./audio/words/vc_c66465b029_phrase.mp3?v=1da5c478",
       "word": "./audio/words/vc_c66465b029_word.mp3?v=c4a4f440",
-      "clean": "./audio/words/vc_c66465b029_clean.mp3?v=3731e401"
+      "clean": "./audio/words/vc_c66465b029_clean.mp3?v=3731e401",
+      "ask": "./audio/words/vc_c66465b029_ask.mp3?v=23483e2e"
     },
     "しゃがむ": {
       "front": "./audio/words/vc_e817e6cff7_word.mp3?v=b9733d96",
@@ -3352,7 +3421,8 @@
       "hook": "./audio/words/vc_e817e6cff7_hook.mp3?v=25ae7919",
       "phrase": "./audio/words/vc_e817e6cff7_phrase.mp3?v=2de73d61",
       "word": "./audio/words/vc_e817e6cff7_word.mp3?v=b9733d96",
-      "clean": "./audio/words/vc_e817e6cff7_clean.mp3?v=349f75d1"
+      "clean": "./audio/words/vc_e817e6cff7_clean.mp3?v=349f75d1",
+      "ask": "./audio/words/vc_e817e6cff7_ask.mp3?v=9479c9d5"
     },
     "かわいがる": {
       "front": "./audio/words/vc_dd21d6eeb6_word.mp3?v=9ddf3b85",
@@ -3361,7 +3431,8 @@
       "hook": "./audio/words/vc_dd21d6eeb6_hook.mp3?v=2e9be431",
       "phrase": "./audio/words/vc_dd21d6eeb6_phrase.mp3?v=e48992ca",
       "word": "./audio/words/vc_dd21d6eeb6_word.mp3?v=9ddf3b85",
-      "clean": "./audio/words/vc_dd21d6eeb6_clean.mp3?v=b339f18b"
+      "clean": "./audio/words/vc_dd21d6eeb6_clean.mp3?v=b339f18b",
+      "ask": "./audio/words/vc_dd21d6eeb6_ask.mp3?v=263e7ee5"
     },
     "わけ": {
       "front": "./audio/words/vc_53d3f1e75c_word.mp3?v=5d77e4e0",
@@ -3370,7 +3441,8 @@
       "hook": "./audio/words/vc_53d3f1e75c_hook.mp3?v=e5c925df",
       "phrase": "./audio/words/vc_53d3f1e75c_phrase.mp3?v=53f3042a",
       "word": "./audio/words/vc_53d3f1e75c_word.mp3?v=5d77e4e0",
-      "clean": "./audio/words/vc_53d3f1e75c_clean.mp3?v=4f40d1fe"
+      "clean": "./audio/words/vc_53d3f1e75c_clean.mp3?v=4f40d1fe",
+      "ask": "./audio/words/vc_53d3f1e75c_ask.mp3?v=5969fa9b"
     },
     "やっぱり": {
       "front": "./audio/words/vc_25161e4413_word.mp3?v=747116ef",
@@ -3379,7 +3451,8 @@
       "hook": "./audio/words/vc_25161e4413_hook.mp3?v=3d940378",
       "phrase": "./audio/words/vc_25161e4413_phrase.mp3?v=62c991bd",
       "word": "./audio/words/vc_25161e4413_word.mp3?v=747116ef",
-      "clean": "./audio/words/vc_25161e4413_clean.mp3?v=0f34af65"
+      "clean": "./audio/words/vc_25161e4413_clean.mp3?v=0f34af65",
+      "ask": "./audio/words/vc_25161e4413_ask.mp3?v=cac1ec91"
     },
     "無断": {
       "front": "",
@@ -3388,7 +3461,8 @@
       "hook": "./audio/words/vc_9777a97fe6_hook.mp3?v=1af361f3",
       "phrase": "./audio/words/vc_9777a97fe6_phrase.mp3?v=7401a257",
       "word": "./audio/words/vc_9777a97fe6_word.mp3?v=1620a3e8",
-      "clean": "./audio/words/vc_9777a97fe6_clean.mp3?v=5522f5cb"
+      "clean": "./audio/words/vc_9777a97fe6_clean.mp3?v=5522f5cb",
+      "ask": "./audio/words/vc_9777a97fe6_ask.mp3?v=13e99aaf"
     },
     "ゆっくり": {
       "front": "./audio/words/vc_da12b4a6e0_word.mp3?v=db02ef49",
@@ -3397,7 +3471,8 @@
       "hook": "./audio/words/vc_da12b4a6e0_hook.mp3?v=784dff56",
       "phrase": "./audio/words/vc_da12b4a6e0_phrase.mp3?v=ad50433b",
       "word": "./audio/words/vc_da12b4a6e0_word.mp3?v=db02ef49",
-      "clean": "./audio/words/vc_da12b4a6e0_clean.mp3?v=10b58f12"
+      "clean": "./audio/words/vc_da12b4a6e0_clean.mp3?v=10b58f12",
+      "ask": "./audio/words/vc_da12b4a6e0_ask.mp3?v=19df383e"
     },
     "だ": {
       "front": "./audio/words/vc_8b53bf6f98_front.mp3?v=70222cb4",
@@ -3411,7 +3486,8 @@
       "hook": "./audio/words/vc_c0f56aca3e_hook.mp3?v=66eba7b1",
       "phrase": "./audio/words/vc_c0f56aca3e_phrase.mp3?v=abbeac1b",
       "word": "./audio/words/vc_c0f56aca3e_word.mp3?v=967a04f5",
-      "clean": "./audio/words/vc_c0f56aca3e_clean.mp3?v=20aeca61"
+      "clean": "./audio/words/vc_c0f56aca3e_clean.mp3?v=20aeca61",
+      "ask": "./audio/words/vc_c0f56aca3e_ask.mp3?v=e1a796bb"
     },
     "買い物": {
       "front": "",
@@ -3420,7 +3496,8 @@
       "hook": "./audio/words/vc_1665c269b3_hook.mp3?v=463eb482",
       "phrase": "./audio/words/vc_1665c269b3_phrase.mp3?v=d1a9aed2",
       "word": "./audio/words/vc_1665c269b3_word.mp3?v=e3cb86fb",
-      "clean": "./audio/words/vc_1665c269b3_clean.mp3?v=0e475cc8"
+      "clean": "./audio/words/vc_1665c269b3_clean.mp3?v=0e475cc8",
+      "ask": "./audio/words/vc_1665c269b3_ask.mp3?v=58b90819"
     },
     "こと": {
       "front": "./audio/words/vc_2ab01f1ec0_front.mp3?v=a4f440a1",
@@ -3444,7 +3521,8 @@
       "hook": "./audio/words/vc_55bd630b22_hook.mp3?v=09ecb526",
       "phrase": "./audio/words/vc_55bd630b22_phrase.mp3?v=e116a402",
       "word": "./audio/words/vc_55bd630b22_word.mp3?v=e0aa2d16",
-      "clean": "./audio/words/vc_55bd630b22_clean.mp3?v=e2a4733e"
+      "clean": "./audio/words/vc_55bd630b22_clean.mp3?v=e2a4733e",
+      "ask": "./audio/words/vc_55bd630b22_ask.mp3?v=f39f242f"
     },
     "しといて": {
       "front": "./audio/words/vc_9550dc5f28_word.mp3?v=2cd2e13c",
@@ -3453,7 +3531,8 @@
       "hook": "./audio/words/vc_9550dc5f28_hook.mp3?v=6c05ad99",
       "phrase": "./audio/words/vc_9550dc5f28_phrase.mp3?v=697b67a8",
       "word": "./audio/words/vc_9550dc5f28_word.mp3?v=2cd2e13c",
-      "clean": "./audio/words/vc_9550dc5f28_clean.mp3?v=3471ca3c"
+      "clean": "./audio/words/vc_9550dc5f28_clean.mp3?v=3471ca3c",
+      "ask": "./audio/words/vc_9550dc5f28_ask.mp3?v=c7aa057c"
     },
     "でしょう": {
       "front": "./audio/words/vc_fb31c8c0a0_word.mp3?v=77e46b37",
@@ -3462,7 +3541,8 @@
       "hook": "./audio/words/vc_fb31c8c0a0_hook.mp3?v=94e4762c",
       "phrase": "./audio/words/vc_fb31c8c0a0_phrase.mp3?v=78e2816f",
       "word": "./audio/words/vc_fb31c8c0a0_word.mp3?v=77e46b37",
-      "clean": "./audio/words/vc_fb31c8c0a0_clean.mp3?v=b406eafa"
+      "clean": "./audio/words/vc_fb31c8c0a0_clean.mp3?v=b406eafa",
+      "ask": "./audio/words/vc_fb31c8c0a0_ask.mp3?v=d42888f0"
     },
     "について": {
       "front": "./audio/words/vc_5d8618e957_word.mp3?v=a43df27f",
@@ -3471,7 +3551,8 @@
       "hook": "./audio/words/vc_5d8618e957_hook.mp3?v=23765096",
       "phrase": "./audio/words/vc_5d8618e957_phrase.mp3?v=ecdba7b5",
       "word": "./audio/words/vc_5d8618e957_word.mp3?v=a43df27f",
-      "clean": "./audio/words/vc_5d8618e957_clean.mp3?v=7556eb1c"
+      "clean": "./audio/words/vc_5d8618e957_clean.mp3?v=7556eb1c",
+      "ask": "./audio/words/vc_5d8618e957_ask.mp3?v=a3ed25bc"
     },
     "よろしい": {
       "front": "./audio/words/vc_a129bd226f_word.mp3?v=54cfce43",
@@ -3480,7 +3561,8 @@
       "hook": "./audio/words/vc_a129bd226f_hook.mp3?v=d9acddf7",
       "phrase": "./audio/words/vc_a129bd226f_phrase.mp3?v=117a4566",
       "word": "./audio/words/vc_a129bd226f_word.mp3?v=54cfce43",
-      "clean": "./audio/words/vc_a129bd226f_clean.mp3?v=72a8b664"
+      "clean": "./audio/words/vc_a129bd226f_clean.mp3?v=72a8b664",
+      "ask": "./audio/words/vc_a129bd226f_ask.mp3?v=f629c55b"
     },
     "少し": {
       "front": "",
@@ -3489,7 +3571,8 @@
       "hook": "./audio/words/vc_7b6eba65f9_hook.mp3?v=aebaaee0",
       "phrase": "./audio/words/vc_7b6eba65f9_phrase.mp3?v=d30b270b",
       "word": "./audio/words/vc_7b6eba65f9_word.mp3?v=0181a205",
-      "clean": "./audio/words/vc_7b6eba65f9_clean.mp3?v=1ad7bb6d"
+      "clean": "./audio/words/vc_7b6eba65f9_clean.mp3?v=1ad7bb6d",
+      "ask": "./audio/words/vc_7b6eba65f9_ask.mp3?v=6abc9962"
     },
     "丁寧": {
       "front": "",
@@ -3498,7 +3581,8 @@
       "hook": "./audio/words/vc_f938db4473_hook.mp3?v=2c00eee5",
       "phrase": "./audio/words/vc_f938db4473_phrase.mp3?v=01c98759",
       "word": "./audio/words/vc_f938db4473_word.mp3?v=fd1f8666",
-      "clean": "./audio/words/vc_f938db4473_clean.mp3?v=6a5e8e9d"
+      "clean": "./audio/words/vc_f938db4473_clean.mp3?v=6a5e8e9d",
+      "ask": "./audio/words/vc_f938db4473_ask.mp3?v=be4df992"
     },
     "迷惑": {
       "front": "",
@@ -3507,7 +3591,8 @@
       "hook": "./audio/words/vc_471bae1ab0_hook.mp3?v=3aae37e7",
       "phrase": "./audio/words/vc_471bae1ab0_phrase.mp3?v=f0f48cf2",
       "word": "./audio/words/vc_471bae1ab0_word.mp3?v=461d252f",
-      "clean": "./audio/words/vc_471bae1ab0_clean.mp3?v=b734ddee"
+      "clean": "./audio/words/vc_471bae1ab0_clean.mp3?v=b734ddee",
+      "ask": "./audio/words/vc_471bae1ab0_ask.mp3?v=39a823cf"
     },
     "遠慮": {
       "front": "",
@@ -3516,7 +3601,8 @@
       "hook": "./audio/words/vc_af000cda1f_hook.mp3?v=aa0768f7",
       "phrase": "./audio/words/vc_af000cda1f_phrase.mp3?v=da81979b",
       "word": "./audio/words/vc_af000cda1f_word.mp3?v=40115c6e",
-      "clean": "./audio/words/vc_af000cda1f_clean.mp3?v=f5829e8e"
+      "clean": "./audio/words/vc_af000cda1f_clean.mp3?v=f5829e8e",
+      "ask": "./audio/words/vc_af000cda1f_ask.mp3?v=492f139b"
     },
     "自慢": {
       "front": "",
@@ -3525,7 +3611,8 @@
       "hook": "./audio/words/vc_863c6a494c_hook.mp3?v=ee9d6d16",
       "phrase": "./audio/words/vc_863c6a494c_phrase.mp3?v=5fc203ff",
       "word": "./audio/words/vc_863c6a494c_word.mp3?v=c66da115",
-      "clean": "./audio/words/vc_863c6a494c_clean.mp3?v=ad1ea522"
+      "clean": "./audio/words/vc_863c6a494c_clean.mp3?v=ad1ea522",
+      "ask": "./audio/words/vc_863c6a494c_ask.mp3?v=0f70f546"
     },
     "油断": {
       "front": "",
@@ -3534,7 +3621,8 @@
       "hook": "./audio/words/vc_56dbd9229b_hook.mp3?v=7ca19916",
       "phrase": "./audio/words/vc_56dbd9229b_phrase.mp3?v=3b5df734",
       "word": "./audio/words/vc_56dbd9229b_word.mp3?v=00ce5239",
-      "clean": "./audio/words/vc_56dbd9229b_clean.mp3?v=8e6f98b5"
+      "clean": "./audio/words/vc_56dbd9229b_clean.mp3?v=8e6f98b5",
+      "ask": "./audio/words/vc_56dbd9229b_ask.mp3?v=f0502573"
     },
     "都合": {
       "front": "",
@@ -3543,7 +3631,8 @@
       "hook": "./audio/words/vc_ad6dc9cfcd_hook.mp3?v=207b7259",
       "phrase": "./audio/words/vc_ad6dc9cfcd_phrase.mp3?v=3836c2fc",
       "word": "./audio/words/vc_ad6dc9cfcd_word.mp3?v=06fb441e",
-      "clean": "./audio/words/vc_ad6dc9cfcd_clean.mp3?v=43b80a3c"
+      "clean": "./audio/words/vc_ad6dc9cfcd_clean.mp3?v=43b80a3c",
+      "ask": "./audio/words/vc_ad6dc9cfcd_ask.mp3?v=a294fdff"
     },
     "工夫": {
       "front": "",
@@ -3552,7 +3641,8 @@
       "hook": "./audio/words/vc_4038540539_hook.mp3?v=80125761",
       "phrase": "./audio/words/vc_4038540539_phrase.mp3?v=cf11cda8",
       "word": "./audio/words/vc_4038540539_word.mp3?v=e1211aed",
-      "clean": "./audio/words/vc_4038540539_clean.mp3?v=88d776be"
+      "clean": "./audio/words/vc_4038540539_clean.mp3?v=88d776be",
+      "ask": "./audio/words/vc_4038540539_ask.mp3?v=0ca54cb1"
     },
     "納得": {
       "front": "",
@@ -3561,7 +3651,8 @@
       "hook": "./audio/words/vc_402c81a22f_hook.mp3?v=6573bca4",
       "phrase": "./audio/words/vc_402c81a22f_phrase.mp3?v=e9b3fc5a",
       "word": "./audio/words/vc_402c81a22f_word.mp3?v=766593b8",
-      "clean": "./audio/words/vc_402c81a22f_clean.mp3?v=a17ab0d1"
+      "clean": "./audio/words/vc_402c81a22f_clean.mp3?v=a17ab0d1",
+      "ask": "./audio/words/vc_402c81a22f_ask.mp3?v=6f03ea6b"
     },
     "世間": {
       "front": "",
@@ -3570,7 +3661,8 @@
       "hook": "./audio/words/vc_984099131c_hook.mp3?v=db3412da",
       "phrase": "./audio/words/vc_984099131c_phrase.mp3?v=f84c3d55",
       "word": "./audio/words/vc_984099131c_word.mp3?v=acf50419",
-      "clean": "./audio/words/vc_984099131c_clean.mp3?v=080816e2"
+      "clean": "./audio/words/vc_984099131c_clean.mp3?v=080816e2",
+      "ask": "./audio/words/vc_984099131c_ask.mp3?v=4660e301"
     },
     "様子": {
       "front": "",
@@ -3579,7 +3671,8 @@
       "hook": "./audio/words/vc_24d1438162_hook.mp3?v=08546afa",
       "phrase": "./audio/words/vc_24d1438162_phrase.mp3?v=356726fd",
       "word": "./audio/words/vc_24d1438162_word.mp3?v=425ca57f",
-      "clean": "./audio/words/vc_24d1438162_clean.mp3?v=82a660c3"
+      "clean": "./audio/words/vc_24d1438162_clean.mp3?v=82a660c3",
+      "ask": "./audio/words/vc_24d1438162_ask.mp3?v=eb3fc65b"
     },
     "表情": {
       "front": "",
@@ -3588,7 +3681,8 @@
       "hook": "./audio/words/vc_c762ed73d4_hook.mp3?v=5f7eae1a",
       "phrase": "./audio/words/vc_c762ed73d4_phrase.mp3?v=015839be",
       "word": "./audio/words/vc_c762ed73d4_word.mp3?v=b7d2e026",
-      "clean": "./audio/words/vc_c762ed73d4_clean.mp3?v=cd2be9b1"
+      "clean": "./audio/words/vc_c762ed73d4_clean.mp3?v=cd2be9b1",
+      "ask": "./audio/words/vc_c762ed73d4_ask.mp3?v=d2d7533b"
     },
     "印象": {
       "front": "",
@@ -3597,7 +3691,8 @@
       "hook": "./audio/words/vc_2ea6cd2705_hook.mp3?v=1e0be4e1",
       "phrase": "./audio/words/vc_2ea6cd2705_phrase.mp3?v=742188a1",
       "word": "./audio/words/vc_2ea6cd2705_word.mp3?v=a86d20ab",
-      "clean": "./audio/words/vc_2ea6cd2705_clean.mp3?v=545535b2"
+      "clean": "./audio/words/vc_2ea6cd2705_clean.mp3?v=545535b2",
+      "ask": "./audio/words/vc_2ea6cd2705_ask.mp3?v=01392807"
     },
     "現象": {
       "front": "",
@@ -3606,7 +3701,8 @@
       "hook": "./audio/words/vc_60f2b940f3_hook.mp3?v=ee1b4f96",
       "phrase": "./audio/words/vc_60f2b940f3_phrase.mp3?v=0674e925",
       "word": "./audio/words/vc_60f2b940f3_word.mp3?v=1dba191d",
-      "clean": "./audio/words/vc_60f2b940f3_clean.mp3?v=e1eea1e6"
+      "clean": "./audio/words/vc_60f2b940f3_clean.mp3?v=e1eea1e6",
+      "ask": "./audio/words/vc_60f2b940f3_ask.mp3?v=be09f0e5"
     },
     "絶対": {
       "front": "",
@@ -3615,7 +3711,8 @@
       "hook": "./audio/words/vc_1cbe031abd_hook.mp3?v=ee574b5f",
       "phrase": "./audio/words/vc_1cbe031abd_phrase.mp3?v=baae4301",
       "word": "./audio/words/vc_1cbe031abd_word.mp3?v=f06b5371",
-      "clean": "./audio/words/vc_1cbe031abd_clean.mp3?v=608ba635"
+      "clean": "./audio/words/vc_1cbe031abd_clean.mp3?v=608ba635",
+      "ask": "./audio/words/vc_1cbe031abd_ask.mp3?v=9811fb14"
     },
     "発達": {
       "front": "",
@@ -3624,7 +3721,8 @@
       "hook": "./audio/words/vc_0a41d42a56_hook.mp3?v=921892ec",
       "phrase": "./audio/words/vc_0a41d42a56_phrase.mp3?v=7dc86743",
       "word": "./audio/words/vc_0a41d42a56_word.mp3?v=210fd231",
-      "clean": "./audio/words/vc_0a41d42a56_clean.mp3?v=20836887"
+      "clean": "./audio/words/vc_0a41d42a56_clean.mp3?v=20836887",
+      "ask": "./audio/words/vc_0a41d42a56_ask.mp3?v=05fdc6fe"
     },
     "発見": {
       "front": "",
@@ -3633,7 +3731,8 @@
       "hook": "./audio/words/vc_eff44e759d_hook.mp3?v=9a1b4cd0",
       "phrase": "./audio/words/vc_eff44e759d_phrase.mp3?v=98541a49",
       "word": "./audio/words/vc_eff44e759d_word.mp3?v=61d81df9",
-      "clean": "./audio/words/vc_eff44e759d_clean.mp3?v=f2f03d66"
+      "clean": "./audio/words/vc_eff44e759d_clean.mp3?v=f2f03d66",
+      "ask": "./audio/words/vc_eff44e759d_ask.mp3?v=a8c4981f"
     },
     "実施": {
       "front": "",
@@ -3642,7 +3741,8 @@
       "hook": "./audio/words/vc_134a2c1e96_hook.mp3?v=6990d13c",
       "phrase": "./audio/words/vc_134a2c1e96_phrase.mp3?v=156e623d",
       "word": "./audio/words/vc_134a2c1e96_word.mp3?v=201f0dc2",
-      "clean": "./audio/words/vc_134a2c1e96_clean.mp3?v=21dbc13a"
+      "clean": "./audio/words/vc_134a2c1e96_clean.mp3?v=21dbc13a",
+      "ask": "./audio/words/vc_134a2c1e96_ask.mp3?v=d6cc1dd3"
     },
     "実際": {
       "front": "",
@@ -3651,7 +3751,8 @@
       "hook": "./audio/words/vc_a4e3057f99_hook.mp3?v=2a807b6b",
       "phrase": "./audio/words/vc_a4e3057f99_phrase.mp3?v=6dca0ad3",
       "word": "./audio/words/vc_a4e3057f99_word.mp3?v=8443e790",
-      "clean": "./audio/words/vc_a4e3057f99_clean.mp3?v=5b9ba110"
+      "clean": "./audio/words/vc_a4e3057f99_clean.mp3?v=5b9ba110",
+      "ask": "./audio/words/vc_a4e3057f99_ask.mp3?v=8c72b675"
     },
     "欠席": {
       "front": "",
@@ -3660,7 +3761,8 @@
       "hook": "./audio/words/vc_80497d75f0_hook.mp3?v=b20cdd38",
       "phrase": "./audio/words/vc_80497d75f0_phrase.mp3?v=561225cd",
       "word": "./audio/words/vc_80497d75f0_word.mp3?v=33d1237a",
-      "clean": "./audio/words/vc_80497d75f0_clean.mp3?v=871f3f48"
+      "clean": "./audio/words/vc_80497d75f0_clean.mp3?v=871f3f48",
+      "ask": "./audio/words/vc_80497d75f0_ask.mp3?v=cc26d7a3"
     },
     "結果": {
       "front": "",
@@ -3669,7 +3771,8 @@
       "hook": "./audio/words/vc_e3bf3a629b_hook.mp3?v=b294793a",
       "phrase": "./audio/words/vc_e3bf3a629b_phrase.mp3?v=5b0127e7",
       "word": "./audio/words/vc_e3bf3a629b_word.mp3?v=db9f0d9b",
-      "clean": "./audio/words/vc_e3bf3a629b_clean.mp3?v=1c463cb8"
+      "clean": "./audio/words/vc_e3bf3a629b_clean.mp3?v=1c463cb8",
+      "ask": "./audio/words/vc_e3bf3a629b_ask.mp3?v=8eba19c7"
     },
     "苦労": {
       "front": "",
@@ -3678,7 +3781,8 @@
       "hook": "./audio/words/vc_f7a53e0c33_hook.mp3?v=954b4407",
       "phrase": "./audio/words/vc_f7a53e0c33_phrase.mp3?v=f5325e0a",
       "word": "./audio/words/vc_f7a53e0c33_word.mp3?v=e4e4accf",
-      "clean": "./audio/words/vc_f7a53e0c33_clean.mp3?v=05ea83a2"
+      "clean": "./audio/words/vc_f7a53e0c33_clean.mp3?v=05ea83a2",
+      "ask": "./audio/words/vc_f7a53e0c33_ask.mp3?v=4fbf65c0"
     },
     "常識": {
       "front": "",
@@ -3687,7 +3791,8 @@
       "hook": "./audio/words/vc_5751930644_hook.mp3?v=fd3c9c17",
       "phrase": "./audio/words/vc_5751930644_phrase.mp3?v=2c56629d",
       "word": "./audio/words/vc_5751930644_word.mp3?v=851eda2c",
-      "clean": "./audio/words/vc_5751930644_clean.mp3?v=342c6cac"
+      "clean": "./audio/words/vc_5751930644_clean.mp3?v=342c6cac",
+      "ask": "./audio/words/vc_5751930644_ask.mp3?v=50dfde06"
     },
     "順番": {
       "front": "",
@@ -3696,7 +3801,8 @@
       "hook": "./audio/words/vc_bef45cce45_hook.mp3?v=0c7796f9",
       "phrase": "./audio/words/vc_bef45cce45_phrase.mp3?v=2422111c",
       "word": "./audio/words/vc_bef45cce45_word.mp3?v=1205de83",
-      "clean": "./audio/words/vc_bef45cce45_clean.mp3?v=56c39eb3"
+      "clean": "./audio/words/vc_bef45cce45_clean.mp3?v=56c39eb3",
+      "ask": "./audio/words/vc_bef45cce45_ask.mp3?v=9a803785"
     },
     "話題": {
       "front": "",
@@ -3705,7 +3811,8 @@
       "hook": "./audio/words/vc_eb36bceb27_hook.mp3?v=c0b71faa",
       "phrase": "./audio/words/vc_eb36bceb27_phrase.mp3?v=5b184522",
       "word": "./audio/words/vc_eb36bceb27_word.mp3?v=df2646a1",
-      "clean": "./audio/words/vc_eb36bceb27_clean.mp3?v=bc311ebc"
+      "clean": "./audio/words/vc_eb36bceb27_clean.mp3?v=bc311ebc",
+      "ask": "./audio/words/vc_eb36bceb27_ask.mp3?v=09bce17d"
     },
     "頼る": {
       "front": "",
@@ -3714,7 +3821,8 @@
       "hook": "./audio/words/vc_d5f767c7ca_hook.mp3?v=54c13e91",
       "phrase": "./audio/words/vc_d5f767c7ca_phrase.mp3?v=6791d11f",
       "word": "./audio/words/vc_d5f767c7ca_word.mp3?v=2ae70f34",
-      "clean": "./audio/words/vc_d5f767c7ca_clean.mp3?v=ff7ba177"
+      "clean": "./audio/words/vc_d5f767c7ca_clean.mp3?v=ff7ba177",
+      "ask": "./audio/words/vc_d5f767c7ca_ask.mp3?v=9b51b800"
     },
     "届ける": {
       "front": "",
@@ -3723,7 +3831,8 @@
       "hook": "./audio/words/vc_75a6ff7951_hook.mp3?v=75f3d8c9",
       "phrase": "./audio/words/vc_75a6ff7951_phrase.mp3?v=9bcdd920",
       "word": "./audio/words/vc_75a6ff7951_word.mp3?v=af4aaa82",
-      "clean": "./audio/words/vc_75a6ff7951_clean.mp3?v=bcc64125"
+      "clean": "./audio/words/vc_75a6ff7951_clean.mp3?v=bcc64125",
+      "ask": "./audio/words/vc_75a6ff7951_ask.mp3?v=f245c4b4"
     },
     "断る": {
       "front": "",
@@ -3732,7 +3841,8 @@
       "hook": "./audio/words/vc_92767b1634_hook.mp3?v=28f8300d",
       "phrase": "./audio/words/vc_92767b1634_phrase.mp3?v=1cb51872",
       "word": "./audio/words/vc_92767b1634_word.mp3?v=fc6cec33",
-      "clean": "./audio/words/vc_92767b1634_clean.mp3?v=43199c76"
+      "clean": "./audio/words/vc_92767b1634_clean.mp3?v=43199c76",
+      "ask": "./audio/words/vc_92767b1634_ask.mp3?v=6200da8b"
     },
     "諦める": {
       "front": "",
@@ -3741,7 +3851,8 @@
       "hook": "./audio/words/vc_b1d986a78f_hook.mp3?v=79d2e51e",
       "phrase": "./audio/words/vc_b1d986a78f_phrase.mp3?v=9e38eaaf",
       "word": "./audio/words/vc_b1d986a78f_word.mp3?v=01454f9b",
-      "clean": "./audio/words/vc_b1d986a78f_clean.mp3?v=a3b54b38"
+      "clean": "./audio/words/vc_b1d986a78f_clean.mp3?v=a3b54b38",
+      "ask": "./audio/words/vc_b1d986a78f_ask.mp3?v=bd938912"
     },
     "譲る": {
       "front": "",
@@ -3750,7 +3861,8 @@
       "hook": "./audio/words/vc_a74c508c57_hook.mp3?v=2c1bfd57",
       "phrase": "./audio/words/vc_a74c508c57_phrase.mp3?v=7f3d49d8",
       "word": "./audio/words/vc_a74c508c57_word.mp3?v=337e8282",
-      "clean": "./audio/words/vc_a74c508c57_clean.mp3?v=807a4d3e"
+      "clean": "./audio/words/vc_a74c508c57_clean.mp3?v=807a4d3e",
+      "ask": "./audio/words/vc_a74c508c57_ask.mp3?v=e5bdc33e"
     },
     "省く": {
       "front": "",
@@ -3759,7 +3871,8 @@
       "hook": "./audio/words/vc_5f84fe3708_hook.mp3?v=7e19cc1b",
       "phrase": "./audio/words/vc_5f84fe3708_phrase.mp3?v=a1631d6e",
       "word": "./audio/words/vc_5f84fe3708_word.mp3?v=c4817d70",
-      "clean": "./audio/words/vc_5f84fe3708_clean.mp3?v=00127a10"
+      "clean": "./audio/words/vc_5f84fe3708_clean.mp3?v=00127a10",
+      "ask": "./audio/words/vc_5f84fe3708_ask.mp3?v=973d694d"
     },
     "奪う": {
       "front": "",
@@ -3768,7 +3881,8 @@
       "hook": "./audio/words/vc_6f31043fbc_hook.mp3?v=3461e098",
       "phrase": "./audio/words/vc_6f31043fbc_phrase.mp3?v=1906a6a2",
       "word": "./audio/words/vc_6f31043fbc_word.mp3?v=e4ccc749",
-      "clean": "./audio/words/vc_6f31043fbc_clean.mp3?v=f0ebe88e"
+      "clean": "./audio/words/vc_6f31043fbc_clean.mp3?v=f0ebe88e",
+      "ask": "./audio/words/vc_6f31043fbc_ask.mp3?v=fff0078f"
     },
     "疑う": {
       "front": "",
@@ -3777,7 +3891,8 @@
       "hook": "./audio/words/vc_fdf2d69723_hook.mp3?v=1a9ef593",
       "phrase": "./audio/words/vc_fdf2d69723_phrase.mp3?v=74a58e68",
       "word": "./audio/words/vc_fdf2d69723_word.mp3?v=bedb00e7",
-      "clean": "./audio/words/vc_fdf2d69723_clean.mp3?v=e964f555"
+      "clean": "./audio/words/vc_fdf2d69723_clean.mp3?v=e964f555",
+      "ask": "./audio/words/vc_fdf2d69723_ask.mp3?v=c219d483"
     },
     "あわてる": {
       "front": "./audio/words/vc_92a54cf26c_word.mp3?v=9be8c4cf",
@@ -3786,7 +3901,8 @@
       "hook": "./audio/words/vc_92a54cf26c_hook.mp3?v=e4ffedd3",
       "phrase": "./audio/words/vc_92a54cf26c_phrase.mp3?v=6fb8e393",
       "word": "./audio/words/vc_92a54cf26c_word.mp3?v=9be8c4cf",
-      "clean": "./audio/words/vc_92a54cf26c_clean.mp3?v=104b6e64"
+      "clean": "./audio/words/vc_92a54cf26c_clean.mp3?v=104b6e64",
+      "ask": "./audio/words/vc_92a54cf26c_ask.mp3?v=1d4c108f"
     },
     "なまける": {
       "front": "./audio/words/vc_b051137480_word.mp3?v=7f4fc934",
@@ -3795,7 +3911,8 @@
       "hook": "./audio/words/vc_b051137480_hook.mp3?v=3a5cc967",
       "phrase": "./audio/words/vc_b051137480_phrase.mp3?v=1f2d7636",
       "word": "./audio/words/vc_b051137480_word.mp3?v=7f4fc934",
-      "clean": "./audio/words/vc_b051137480_clean.mp3?v=8869b83e"
+      "clean": "./audio/words/vc_b051137480_clean.mp3?v=8869b83e",
+      "ask": "./audio/words/vc_b051137480_ask.mp3?v=ad6964f6"
     },
     "ふざける": {
       "front": "./audio/words/vc_4659e31905_word.mp3?v=826f7608",
@@ -3804,7 +3921,8 @@
       "hook": "./audio/words/vc_4659e31905_hook.mp3?v=5d56683a",
       "phrase": "./audio/words/vc_4659e31905_phrase.mp3?v=ab1b0643",
       "word": "./audio/words/vc_4659e31905_word.mp3?v=826f7608",
-      "clean": "./audio/words/vc_4659e31905_clean.mp3?v=d2f734e3"
+      "clean": "./audio/words/vc_4659e31905_clean.mp3?v=d2f734e3",
+      "ask": "./audio/words/vc_4659e31905_ask.mp3?v=ee6b3ebc"
     },
     "うなずく": {
       "front": "./audio/words/vc_9068de97b3_word.mp3?v=5fdc4588",
@@ -3813,7 +3931,8 @@
       "hook": "./audio/words/vc_9068de97b3_hook.mp3?v=8a440d54",
       "phrase": "./audio/words/vc_9068de97b3_phrase.mp3?v=08353536",
       "word": "./audio/words/vc_9068de97b3_word.mp3?v=5fdc4588",
-      "clean": "./audio/words/vc_9068de97b3_clean.mp3?v=df11a907"
+      "clean": "./audio/words/vc_9068de97b3_clean.mp3?v=df11a907",
+      "ask": "./audio/words/vc_9068de97b3_ask.mp3?v=8d767476"
     },
     "つぶやく": {
       "front": "./audio/words/vc_64c94271b5_word.mp3?v=f1d98142",
@@ -3822,7 +3941,8 @@
       "hook": "./audio/words/vc_64c94271b5_hook.mp3?v=db752672",
       "phrase": "./audio/words/vc_64c94271b5_phrase.mp3?v=97817234",
       "word": "./audio/words/vc_64c94271b5_word.mp3?v=f1d98142",
-      "clean": "./audio/words/vc_64c94271b5_clean.mp3?v=fe5efac4"
+      "clean": "./audio/words/vc_64c94271b5_clean.mp3?v=fe5efac4",
+      "ask": "./audio/words/vc_64c94271b5_ask.mp3?v=b0b15dbf"
     },
     "ほっとする": {
       "front": "./audio/words/vc_7d88757140_word.mp3?v=c023dcba",
@@ -3831,7 +3951,8 @@
       "hook": "./audio/words/vc_7d88757140_hook.mp3?v=cabab7d3",
       "phrase": "./audio/words/vc_7d88757140_phrase.mp3?v=8af0030e",
       "word": "./audio/words/vc_7d88757140_word.mp3?v=c023dcba",
-      "clean": "./audio/words/vc_7d88757140_clean.mp3?v=67ec7ac9"
+      "clean": "./audio/words/vc_7d88757140_clean.mp3?v=67ec7ac9",
+      "ask": "./audio/words/vc_7d88757140_ask.mp3?v=1f129785"
     },
     "いらいら": {
       "front": "./audio/words/vc_ddbeeaee3d_word.mp3?v=9885eb2a",
@@ -3840,7 +3961,8 @@
       "hook": "./audio/words/vc_ddbeeaee3d_hook.mp3?v=7f8b57e0",
       "phrase": "./audio/words/vc_ddbeeaee3d_phrase.mp3?v=df7536f5",
       "word": "./audio/words/vc_ddbeeaee3d_word.mp3?v=9885eb2a",
-      "clean": "./audio/words/vc_ddbeeaee3d_clean.mp3?v=66c183e7"
+      "clean": "./audio/words/vc_ddbeeaee3d_clean.mp3?v=66c183e7",
+      "ask": "./audio/words/vc_ddbeeaee3d_ask.mp3?v=d6f826b4"
     },
     "どきどき": {
       "front": "./audio/words/vc_76b4fd7426_word.mp3?v=e66244b9",
@@ -3849,7 +3971,8 @@
       "hook": "./audio/words/vc_76b4fd7426_hook.mp3?v=def758ea",
       "phrase": "./audio/words/vc_76b4fd7426_phrase.mp3?v=7f50ea57",
       "word": "./audio/words/vc_76b4fd7426_word.mp3?v=e66244b9",
-      "clean": "./audio/words/vc_76b4fd7426_clean.mp3?v=f5e3827a"
+      "clean": "./audio/words/vc_76b4fd7426_clean.mp3?v=f5e3827a",
+      "ask": "./audio/words/vc_76b4fd7426_ask.mp3?v=53e5c787"
     },
     "わくわく": {
       "front": "./audio/words/vc_7b41855e9c_word.mp3?v=ade759a6",
@@ -3858,7 +3981,8 @@
       "hook": "./audio/words/vc_7b41855e9c_hook.mp3?v=6a5ab75f",
       "phrase": "./audio/words/vc_7b41855e9c_phrase.mp3?v=cd3a5fc2",
       "word": "./audio/words/vc_7b41855e9c_word.mp3?v=ade759a6",
-      "clean": "./audio/words/vc_7b41855e9c_clean.mp3?v=815f25a9"
+      "clean": "./audio/words/vc_7b41855e9c_clean.mp3?v=815f25a9",
+      "ask": "./audio/words/vc_7b41855e9c_ask.mp3?v=3ca70936"
     },
     "にこにこ": {
       "front": "./audio/words/vc_b69bceffa4_word.mp3?v=61691b4e",
@@ -3867,7 +3991,8 @@
       "hook": "./audio/words/vc_b69bceffa4_hook.mp3?v=9da85b55",
       "phrase": "./audio/words/vc_b69bceffa4_phrase.mp3?v=dcd2b652",
       "word": "./audio/words/vc_b69bceffa4_word.mp3?v=61691b4e",
-      "clean": "./audio/words/vc_b69bceffa4_clean.mp3?v=72f06b79"
+      "clean": "./audio/words/vc_b69bceffa4_clean.mp3?v=72f06b79",
+      "ask": "./audio/words/vc_b69bceffa4_ask.mp3?v=4b593a73"
     },
     "ざっと": {
       "front": "./audio/words/vc_9631839b64_word.mp3?v=f61307d5",
@@ -3876,7 +4001,8 @@
       "hook": "./audio/words/vc_9631839b64_hook.mp3?v=963c5f98",
       "phrase": "./audio/words/vc_9631839b64_phrase.mp3?v=2c1ed0fc",
       "word": "./audio/words/vc_9631839b64_word.mp3?v=f61307d5",
-      "clean": "./audio/words/vc_9631839b64_clean.mp3?v=89a65454"
+      "clean": "./audio/words/vc_9631839b64_clean.mp3?v=89a65454",
+      "ask": "./audio/words/vc_9631839b64_ask.mp3?v=3a8d5bfb"
     },
     "そっと": {
       "front": "./audio/words/vc_4f0ade2a69_word.mp3?v=4cf6876e",
@@ -3885,7 +4011,8 @@
       "hook": "./audio/words/vc_4f0ade2a69_hook.mp3?v=e17822af",
       "phrase": "./audio/words/vc_4f0ade2a69_phrase.mp3?v=78cad119",
       "word": "./audio/words/vc_4f0ade2a69_word.mp3?v=4cf6876e",
-      "clean": "./audio/words/vc_4f0ade2a69_clean.mp3?v=80199d0b"
+      "clean": "./audio/words/vc_4f0ade2a69_clean.mp3?v=80199d0b",
+      "ask": "./audio/words/vc_4f0ade2a69_ask.mp3?v=f2aa4bd6"
     },
     "じっと": {
       "front": "./audio/words/vc_b54efe3ba1_word.mp3?v=ea0cf3a2",
@@ -3894,7 +4021,8 @@
       "hook": "./audio/words/vc_b54efe3ba1_hook.mp3?v=fa5485b6",
       "phrase": "./audio/words/vc_b54efe3ba1_phrase.mp3?v=2b6033e3",
       "word": "./audio/words/vc_b54efe3ba1_word.mp3?v=ea0cf3a2",
-      "clean": "./audio/words/vc_b54efe3ba1_clean.mp3?v=4f3e1a73"
+      "clean": "./audio/words/vc_b54efe3ba1_clean.mp3?v=4f3e1a73",
+      "ask": "./audio/words/vc_b54efe3ba1_ask.mp3?v=7f14b6ed"
     },
     "ぐっと": {
       "front": "./audio/words/vc_f781478ca3_word.mp3?v=0f45b7f9",
@@ -3903,7 +4031,8 @@
       "hook": "./audio/words/vc_f781478ca3_hook.mp3?v=53b4035a",
       "phrase": "./audio/words/vc_f781478ca3_phrase.mp3?v=c2310821",
       "word": "./audio/words/vc_f781478ca3_word.mp3?v=0f45b7f9",
-      "clean": "./audio/words/vc_f781478ca3_clean.mp3?v=e6fd5754"
+      "clean": "./audio/words/vc_f781478ca3_clean.mp3?v=e6fd5754",
+      "ask": "./audio/words/vc_f781478ca3_ask.mp3?v=b6d5bd40"
     },
     "さっと": {
       "front": "./audio/words/vc_5e06a598a4_word.mp3?v=9dfed22d",
@@ -3912,7 +4041,8 @@
       "hook": "./audio/words/vc_5e06a598a4_hook.mp3?v=3a8eda9d",
       "phrase": "./audio/words/vc_5e06a598a4_phrase.mp3?v=201c7d73",
       "word": "./audio/words/vc_5e06a598a4_word.mp3?v=9dfed22d",
-      "clean": "./audio/words/vc_5e06a598a4_clean.mp3?v=e12af8cf"
+      "clean": "./audio/words/vc_5e06a598a4_clean.mp3?v=e12af8cf",
+      "ask": "./audio/words/vc_5e06a598a4_ask.mp3?v=c74fcd4b"
     },
     "ふと": {
       "front": "./audio/words/vc_ff5409a66b_word.mp3?v=5ee845f2",
@@ -3921,7 +4051,8 @@
       "hook": "./audio/words/vc_ff5409a66b_hook.mp3?v=8053316a",
       "phrase": "./audio/words/vc_ff5409a66b_phrase.mp3?v=955d7de0",
       "word": "./audio/words/vc_ff5409a66b_word.mp3?v=5ee845f2",
-      "clean": "./audio/words/vc_ff5409a66b_clean.mp3?v=051c1485"
+      "clean": "./audio/words/vc_ff5409a66b_clean.mp3?v=051c1485",
+      "ask": "./audio/words/vc_ff5409a66b_ask.mp3?v=07398daf"
     },
     "象徴": {
       "front": "",
@@ -3930,7 +4061,8 @@
       "hook": "./audio/words/vc_e5017e70a4_hook.mp3?v=79edc581",
       "phrase": "./audio/words/vc_e5017e70a4_phrase.mp3?v=5d89663b",
       "word": "./audio/words/vc_e5017e70a4_word.mp3?v=75168f24",
-      "clean": "./audio/words/vc_e5017e70a4_clean.mp3?v=5f721163"
+      "clean": "./audio/words/vc_e5017e70a4_clean.mp3?v=5f721163",
+      "ask": "./audio/words/vc_e5017e70a4_ask.mp3?v=2599f9fd"
     }
   },
   "vocab_card_hashes": {
@@ -4719,7 +4851,157 @@
     "vc_a129bd226f_phrase.mp3": "117a4566cf",
     "vc_a129bd226f_word.mp3": "54cfce4359",
     "vc_7b6eba65f9_phrase.mp3": "d30b270b5c",
-    "vc_7b6eba65f9_word.mp3": "0181a205ea"
+    "vc_7b6eba65f9_word.mp3": "0181a205ea",
+    "vc_670e15a718_ask.mp3": "96a24738a6",
+    "vc_ba0fa030a7_ask.mp3": "65834f3385",
+    "vc_0c316b4939_ask.mp3": "891c7902eb",
+    "vc_84a9ffea89_ask.mp3": "e508c7681c",
+    "vc_6a0d1c3d3b_ask.mp3": "734f3e7689",
+    "vc_0d503792ad_ask.mp3": "4ed77a4a15",
+    "vc_c89f9ff18e_ask.mp3": "5dcf6c4d5c",
+    "vc_cde6d4e2d5_ask.mp3": "7d2d0e78d0",
+    "vc_0c5c646035_ask.mp3": "9e1ea5e093",
+    "vc_a00239088e_ask.mp3": "6a0bcd7e1e",
+    "vc_c18f0cb434_ask.mp3": "48385efac0",
+    "vc_9db6b1dec8_ask.mp3": "813f133042",
+    "vc_c7c64ce8bf_ask.mp3": "aff6805df4",
+    "vc_2c763d541c_ask.mp3": "216f55d8ec",
+    "vc_5894cef523_ask.mp3": "79063f5cc6",
+    "vc_1b5905ab75_ask.mp3": "eeb1e31012",
+    "vc_2673bef76c_ask.mp3": "479405f00f",
+    "vc_f74f9c6537_ask.mp3": "4bc3bfa082",
+    "vc_b0fb165ff5_ask.mp3": "2277056b95",
+    "vc_bb9965eed1_ask.mp3": "5c6c3241b7",
+    "vc_d6cf25b9e4_ask.mp3": "d38062648a",
+    "vc_39b2958cf2_ask.mp3": "2c91c23a72",
+    "vc_fb3a4d745b_ask.mp3": "db1471e23b",
+    "vc_79d9b17c9e_ask.mp3": "ada66e7d2a",
+    "vc_c31c3968d9_ask.mp3": "f4085b28ec",
+    "vc_09409e80f6_ask.mp3": "ddc2221d77",
+    "vc_e18c54d4fc_ask.mp3": "301171c2f3",
+    "vc_423710e0b5_ask.mp3": "752239192c",
+    "vc_e2f4e57b1b_ask.mp3": "5c7455b398",
+    "vc_f5cce0d314_ask.mp3": "1cae79d730",
+    "vc_1c7d329f60_ask.mp3": "a5fdb09927",
+    "vc_45988c6cec_ask.mp3": "1712e7063e",
+    "vc_9ec068ebd5_ask.mp3": "32d4cbb5d6",
+    "vc_03e3320c99_ask.mp3": "da2f8a644e",
+    "vc_90b5bb125e_ask.mp3": "6c62abecd6",
+    "vc_73c4f2eb14_ask.mp3": "b03b8d0879",
+    "vc_28f965c877_ask.mp3": "bfc90e0c0c",
+    "vc_46a85b7fa5_ask.mp3": "3aadf9c005",
+    "vc_e5017e70a4_ask.mp3": "2599f9fdbd",
+    "vc_5c596be6e3_ask.mp3": "1808818507",
+    "vc_81b38c97f9_ask.mp3": "ed661f8027",
+    "vc_27153583c6_ask.mp3": "767f97d64b",
+    "vc_fd5ea95f0c_ask.mp3": "343f82e19c",
+    "vc_eddf457dda_ask.mp3": "13557b889e",
+    "vc_3adac82bd9_ask.mp3": "32434c1e23",
+    "vc_0187d547c1_ask.mp3": "004a3f9d38",
+    "vc_1929bf0f57_ask.mp3": "c68df07207",
+    "vc_8024d8566b_ask.mp3": "401bfa5619",
+    "vc_be8f9ef659_ask.mp3": "72d8c47283",
+    "vc_73e140a2fb_ask.mp3": "e3d92527f1",
+    "vc_0660262493_ask.mp3": "3732f86eac",
+    "vc_74be55b76f_ask.mp3": "fbc4014edb",
+    "vc_8656fddab7_ask.mp3": "858ff28a39",
+    "vc_5bd2170424_ask.mp3": "ebf2bfcc4f",
+    "vc_47204d9050_ask.mp3": "26a9114bee",
+    "vc_47de3336ca_ask.mp3": "5a96d9745d",
+    "vc_99b98aa3d1_ask.mp3": "1644db3e08",
+    "vc_ab4ec9d2ef_ask.mp3": "d4fd623c71",
+    "vc_c351406210_ask.mp3": "8a3b01b81c",
+    "vc_09013d19fa_ask.mp3": "40e64bface",
+    "vc_72a974c5fc_ask.mp3": "d1cb750911",
+    "vc_b2830632c7_ask.mp3": "61a8aecd6a",
+    "vc_8503d949ff_ask.mp3": "4b5f5bf042",
+    "vc_623bc95bc4_ask.mp3": "0c1bca7462",
+    "vc_49388ef5a5_ask.mp3": "84652e1775",
+    "vc_579acd8505_ask.mp3": "40ddbd33e8",
+    "vc_6ddd832bcd_ask.mp3": "0047166ff9",
+    "vc_e9f03fd24b_ask.mp3": "698079ba3f",
+    "vc_8fc55a91be_ask.mp3": "818de9ccf4",
+    "vc_c66465b029_ask.mp3": "23483e2edc",
+    "vc_e817e6cff7_ask.mp3": "9479c9d5fe",
+    "vc_dd21d6eeb6_ask.mp3": "263e7ee5fd",
+    "vc_53d3f1e75c_ask.mp3": "5969fa9b8b",
+    "vc_25161e4413_ask.mp3": "cac1ec9153",
+    "vc_55bd630b22_ask.mp3": "f39f242f6d",
+    "vc_9777a97fe6_ask.mp3": "13e99aaff1",
+    "vc_f938db4473_ask.mp3": "be4df9925b",
+    "vc_471bae1ab0_ask.mp3": "39a823cf80",
+    "vc_af000cda1f_ask.mp3": "492f139b2d",
+    "vc_863c6a494c_ask.mp3": "0f70f54637",
+    "vc_56dbd9229b_ask.mp3": "f0502573e5",
+    "vc_ad6dc9cfcd_ask.mp3": "a294fdff81",
+    "vc_4038540539_ask.mp3": "0ca54cb1b9",
+    "vc_402c81a22f_ask.mp3": "6f03ea6b0f",
+    "vc_984099131c_ask.mp3": "4660e301a0",
+    "vc_24d1438162_ask.mp3": "eb3fc65b8c",
+    "vc_c762ed73d4_ask.mp3": "d2d7533b13",
+    "vc_2ea6cd2705_ask.mp3": "0139280777",
+    "vc_60f2b940f3_ask.mp3": "be09f0e53b",
+    "vc_1cbe031abd_ask.mp3": "9811fb1463",
+    "vc_0a41d42a56_ask.mp3": "05fdc6fe8b",
+    "vc_eff44e759d_ask.mp3": "a8c4981f21",
+    "vc_134a2c1e96_ask.mp3": "d6cc1dd35e",
+    "vc_a4e3057f99_ask.mp3": "8c72b67554",
+    "vc_80497d75f0_ask.mp3": "cc26d7a34d",
+    "vc_e3bf3a629b_ask.mp3": "8eba19c71a",
+    "vc_f7a53e0c33_ask.mp3": "4fbf65c0e9",
+    "vc_5751930644_ask.mp3": "50dfde06ae",
+    "vc_bef45cce45_ask.mp3": "9a80378549",
+    "vc_eb36bceb27_ask.mp3": "09bce17d3e",
+    "vc_d5f767c7ca_ask.mp3": "9b51b800c4",
+    "vc_75a6ff7951_ask.mp3": "f245c4b47d",
+    "vc_92767b1634_ask.mp3": "6200da8b70",
+    "vc_b1d986a78f_ask.mp3": "bd9389128a",
+    "vc_a74c508c57_ask.mp3": "e5bdc33eb8",
+    "vc_5f84fe3708_ask.mp3": "973d694d15",
+    "vc_6f31043fbc_ask.mp3": "fff0078f2e",
+    "vc_fdf2d69723_ask.mp3": "c219d48327",
+    "vc_92a54cf26c_ask.mp3": "1d4c108f2f",
+    "vc_b051137480_ask.mp3": "ad6964f625",
+    "vc_4659e31905_ask.mp3": "ee6b3ebce9",
+    "vc_9068de97b3_ask.mp3": "8d767476e1",
+    "vc_64c94271b5_ask.mp3": "b0b15dbf4f",
+    "vc_7d88757140_ask.mp3": "1f12978581",
+    "vc_ddbeeaee3d_ask.mp3": "d6f826b462",
+    "vc_76b4fd7426_ask.mp3": "53e5c787e7",
+    "vc_7b41855e9c_ask.mp3": "3ca7093614",
+    "vc_b69bceffa4_ask.mp3": "4b593a73a9",
+    "vc_9631839b64_ask.mp3": "3a8d5bfb25",
+    "vc_4f0ade2a69_ask.mp3": "f2aa4bd644",
+    "vc_b54efe3ba1_ask.mp3": "7f14b6ed24",
+    "vc_f781478ca3_ask.mp3": "b6d5bd40fc",
+    "vc_5e06a598a4_ask.mp3": "c74fcd4ba5",
+    "vc_ff5409a66b_ask.mp3": "07398dafe6",
+    "vc_da12b4a6e0_ask.mp3": "19df383ede",
+    "vc_c0f56aca3e_ask.mp3": "e1a796bbb9",
+    "vc_1665c269b3_ask.mp3": "58b90819f1",
+    "vc_9550dc5f28_ask.mp3": "c7aa057c80",
+    "vc_fb31c8c0a0_ask.mp3": "d42888f049",
+    "vc_5d8618e957_ask.mp3": "a3ed25bc82",
+    "vc_a129bd226f_ask.mp3": "f629c55b5e",
+    "vc_7b6eba65f9_ask.mp3": "6abc99629b",
+    "vc_coach_ok_1.mp3": "e84d33a140",
+    "vc_coach_ok_2.mp3": "e11fd59bb7",
+    "vc_coach_ok_3.mp3": "c6c971cab2",
+    "vc_coach_sokuon_miss.mp3": "7d11a0f077",
+    "vc_coach_sokuon_extra.mp3": "861b8b0b95",
+    "vc_coach_length_short.mp3": "5f0d5372e1",
+    "vc_coach_length_long.mp3": "cdefdbb97a",
+    "vc_coach_voicing.mp3": "ee22c8b65d",
+    "vc_coach_near.mp3": "b3ed118b4c",
+    "vc_coach_miss.mp3": "0b9df5d0b8",
+    "vc_coach_blank.mp3": "e3f1325ed7",
+    "vc_coach_shadow_ask.mp3": "8942bb55b0",
+    "vc_coach_shadow_ok.mp3": "ac7e220e8e",
+    "vc_coach_shadow_close.mp3": "70dec28ca9",
+    "vc_coach_repeat.mp3": "b8676b2953",
+    "vc_coach_auto_pause.mp3": "71d7177352",
+    "vc_coach_batch_done.mp3": "3bbd3c84c7",
+    "vc_coach_audio_reveal.mp3": "c74d733cbb"
   },
   "ga_cards": {
     "G-001": {
@@ -12448,5 +12730,25 @@
     "exp_audio": "./audio/VAR11-60_exp.mp3?v=395a4bcb",
     "spoken_text": "关于下周碰头会的事，我打算稍后由我这边再向贵司负责人请教具体需求。 动作发出者是「私から（我这边）」，自己向对方打听请教必须压低自己用谦让语「伺う」。 动作主语是「我」去问/拜访对方＝谦让语「伺う」；「お〜になる」只能抬高对方。"
   },
-  "done.mp3": "33da2bfc13f6"
+  "done.mp3": "33da2bfc13f6",
+  "voice_coach": {
+    "ok_1": "./audio/words/vc_coach_ok_1.mp3?v=e84d33a1",
+    "ok_2": "./audio/words/vc_coach_ok_2.mp3?v=e11fd59b",
+    "ok_3": "./audio/words/vc_coach_ok_3.mp3?v=c6c971ca",
+    "sokuon_miss": "./audio/words/vc_coach_sokuon_miss.mp3?v=7d11a0f0",
+    "sokuon_extra": "./audio/words/vc_coach_sokuon_extra.mp3?v=861b8b0b",
+    "length_short": "./audio/words/vc_coach_length_short.mp3?v=5f0d5372",
+    "length_long": "./audio/words/vc_coach_length_long.mp3?v=cdefdbb9",
+    "voicing": "./audio/words/vc_coach_voicing.mp3?v=ee22c8b6",
+    "near": "./audio/words/vc_coach_near.mp3?v=b3ed118b",
+    "miss": "./audio/words/vc_coach_miss.mp3?v=0b9df5d0",
+    "blank": "./audio/words/vc_coach_blank.mp3?v=e3f1325e",
+    "shadow_ask": "./audio/words/vc_coach_shadow_ask.mp3?v=8942bb55",
+    "shadow_ok": "./audio/words/vc_coach_shadow_ok.mp3?v=ac7e220e",
+    "shadow_close": "./audio/words/vc_coach_shadow_close.mp3?v=70dec28c",
+    "repeat": "./audio/words/vc_coach_repeat.mp3?v=b8676b29",
+    "auto_pause": "./audio/words/vc_coach_auto_pause.mp3?v=71d71773",
+    "batch_done": "./audio/words/vc_coach_batch_done.mp3?v=3bbd3c84",
+    "audio_reveal": "./audio/words/vc_coach_audio_reveal.mp3?v=c74d733c"
+  }
 }

@@ -1665,6 +1665,7 @@ for vw in all_vc_keys:
     hook_aud = vc_aud.get("hook") or ""
     phrase_aud = vc_aud.get("phrase") or vc_aud.get("clean") or w_aud
     clean_aud = vc_aud.get("clean") or ""
+    ask_aud = vc_aud.get("ask") or ""
     aspec = build_vocab_audio_spec(spec)
     raw_mn = spec.get("mnemonic") or get_pronunciation_mnemonic(vw, str((rich_words.get(vw) or {}).get("head") or ""))
     _vc_cue, _vc_scene = split_card_mnemonic(raw_mn, has_trap_tag=bool(spec.get("trap_tag")), target_word=vw)
@@ -1688,6 +1689,7 @@ for vw in all_vc_keys:
         "zh_speak": spec.get("zh_speak", ""),
         "hook_spoken": aspec.get("hook_spoken", ""),
         "reveal_spoken": aspec.get("reveal_spoken", ""),
+        "ask_spoken": aspec.get("ask_spoken", ""),
         "front_audio": front_aud,
         "rev_audio": rev_aud,
         "full_audio": full_aud,
@@ -1695,6 +1697,7 @@ for vw in all_vc_keys:
         "phrase_audio": phrase_aud,
         "clean_audio": clean_aud,
         "word_audio": w_aud,
+        "ask_audio": ask_aud,
     }
 
 # Anti-Interference Confusable Twin Graph (Nation 2000; Tinkham 1997; Waring 1997)
@@ -1818,6 +1821,7 @@ if active_phase in ("n2_climb", "n1_sprint") and _N2_SYLLABUS and _build_n2_vcar
             "mnemonic": _mn_raw,
         })
         _phrase_aud = _vc_aud.get("phrase") or _clean_aud or _w_aud
+        _ask_aud = _vc_aud.get("ask") or ""
         vocab_cards_payload[_vw] = {
             "mode": _vc["mode"],
             "chunk_ja": _vc["chunk_ja"],
@@ -1837,6 +1841,7 @@ if active_phase in ("n2_climb", "n1_sprint") and _N2_SYLLABUS and _build_n2_vcar
             "zh_speak": _vc.get("zh_speak", ""),
             "hook_spoken": _n2_aspec.get("hook_spoken") or _mn_distilled or _vc["kana"],
             "reveal_spoken": _n2_aspec.get("reveal_spoken") or _vc["zh"],
+            "ask_spoken": _n2_aspec.get("ask_spoken") or "",
             "front_audio": _front_aud,
             "rev_audio": _rev_aud,
             "full_audio": _full_aud,
@@ -1844,6 +1849,7 @@ if active_phase in ("n2_climb", "n1_sprint") and _N2_SYLLABUS and _build_n2_vcar
             "phrase_audio": _phrase_aud,
             "clean_audio": _clean_aud,
             "word_audio": _w_aud,
+            "ask_audio": _ask_aud,
         }
         rich_words.setdefault(_vw, {
             "head": _vw,
@@ -1962,6 +1968,18 @@ asr_kana_map = {
     "計画": "けいかく", "会議": "かいぎ", "電話": "でんわ", "技術": "ぎじゅつ", "進歩": "しんぽ",
     "感想": "かんそう", "運動": "うんどう", "東京": "とうきょう", "約束": "やくそく",
     "許す": "ゆるす", "許せない": "ゆるせない", "加える": "くわえる", "組む": "くむ", "指示": "しじ",
+    "主張": "しゅちょう", "種類": "しゅるい", "所長": "しょちょう", "洋三": "ようぞう",
+    "自署": "じしょ", "柿": "かき", "鍵": "かぎ", "貯金": "ちょきん", "無料": "むりょう",
+    "支持": "しじ", "私事": "しじ", "大票": "だいひょう", "実地": "じっち", "結界": "けっかい",
+    "減少": "げんしょう", "延長": "えんちょう", "準備": "じゅんび", "残る": "のこる",
+    "続ける": "つづける", "貯めます": "ためます", "備えます": "そなえます", "沈みます": "しずみます",
+    "許します": "ゆるします", "輝きます": "かがやきます", "余ります": "あまります",
+    "慰めます": "なぐさめます", "任せます": "まかせます", "減ります": "へります",
+    "続きます": "つづきます", "囲みます": "かこみます", "頼ります": "たよります",
+    "届けます": "とどけます", "断ります": "ことわります", "諦めます": "あきらめます",
+    "譲ります": "ゆずります", "省きます": "はぶきます", "奪います": "うばいます",
+    "疑います": "うたがいます", "慣れます": "なれます", "守ります": "まもります",
+    "増えます": "ふえます", "遅れます": "おくれます", "払います": "はらいます",
 }
 for _vw, _vc in vocab_cards_payload.items():
     if isinstance(_vc, dict) and _vc.get("kana"):
@@ -2106,6 +2124,7 @@ payload = json.dumps({
     "asr_kana": asr_kana_map,
     "vocab_cards": vocab_cards_payload,
     "vocab_twins": vocab_twins_map,
+    "voice_coach": audio_manifest.get("voice_coach", {}),
     "grammar_audit": {
         "active_from": "2026-11-23",
         "daily_target": ga_daily_target,
@@ -5339,6 +5358,173 @@ html = r"""<!DOCTYPE html>
     color: var(--cta-fg);
     border: 1px solid var(--cta-border);
     font-weight: 500;
+  }
+
+  /* v84 Hands-Free Interactive Voice Vocab Coach ("语音对考" · Jobs x Kyoto Zen) */
+  .vc-aux-btn.voice-entry {
+    gap: 6px;
+    padding: 0 11px;
+    color: var(--ink-2);
+  }
+  .vc-voice-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--moss);
+    flex-shrink: 0;
+    opacity: 0.88;
+  }
+  .vc-voice-stage {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 12px 8px 6px;
+    gap: 0;
+  }
+  @keyframes zenOrbListen {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 var(--moss-soft); }
+    50% { transform: scale(1.045); box-shadow: 0 0 0 14px transparent; }
+  }
+  @keyframes zenOrbSpeak {
+    0%, 100% { transform: scale(1); opacity: 0.92; }
+    50% { transform: scale(1.03); opacity: 1; }
+  }
+  .vc-voice-orb {
+    width: 60px;
+    height: 60px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    border: 1.5px solid var(--hairline-strong);
+    background: transparent;
+    color: var(--ink-2);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+    transition: border-color 0.25s ease, background 0.25s ease, color 0.25s ease, transform 0.25s ease;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .vc-voice-orb.is-speaking {
+    border-color: var(--sumi);
+    color: var(--sumi);
+    animation: zenOrbSpeak 1.9s ease-in-out infinite;
+  }
+  .vc-voice-orb.is-listening {
+    border-color: var(--moss);
+    background: var(--moss-soft);
+    color: var(--moss);
+    animation: zenOrbListen 1.5s ease-in-out infinite;
+  }
+  .vc-voice-orb.is-ok {
+    border-color: var(--moss-border);
+    background: var(--moss-soft);
+    color: var(--moss);
+  }
+  .vc-voice-orb.is-coach {
+    border-color: var(--bengara);
+    color: var(--bengara);
+  }
+  .vc-voice-status {
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: var(--ink-3);
+    min-height: 20px;
+    margin-bottom: 14px;
+    text-wrap: balance;
+  }
+  .vc-voice-status.ok { color: var(--moss); }
+  .vc-voice-status.ng { color: var(--bengara); }
+  .vc-voice-status.live { color: var(--ink-2); }
+  .vc-voice-cue-kanji {
+    font-family: var(--sans-jp);
+    font-size: 40px;
+    font-weight: 300;
+    color: var(--sumi);
+    line-height: 1.24;
+    letter-spacing: 0.04em;
+    margin-bottom: 8px;
+    text-wrap: balance;
+  }
+  .vc-voice-cue-zh {
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--sumi);
+    line-height: 1.5;
+    max-width: 310px;
+    text-wrap: balance;
+  }
+  .vc-voice-cue-zh.sub {
+    font-size: 16px;
+    color: var(--ink-2);
+  }
+  .vc-voice-heard {
+    margin-top: 14px;
+    min-height: 22px;
+    font-size: 13.5px;
+    color: var(--ink-3);
+    letter-spacing: 0.02em;
+    max-width: 310px;
+    line-height: 1.5;
+    text-wrap: balance;
+  }
+  .vc-voice-heard.ok { color: var(--moss); font-weight: 500; }
+  .vc-voice-heard.ng { color: var(--bengara); font-weight: 500; }
+  .vc-voice-reveal {
+    width: 100%;
+    max-width: 336px;
+    margin-top: 2px;
+  }
+  .vc-voice-reveal .vc-chunk {
+    font-size: 34px;
+  }
+  .vc-voice-reveal .vc-chunk.len-9 { font-size: 29px; }
+  .vc-voice-reveal .vc-chunk.len-long { font-size: 26px; }
+  .vc-voice-reveal .vc-kana {
+    margin-top: 8px;
+    margin-bottom: 6px;
+  }
+  .vc-voice-reveal .vc-hook {
+    margin-top: 14px;
+    padding-top: 12px;
+  }
+  .vc-voice-hint {
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--ink-3);
+    opacity: 0.78;
+    letter-spacing: 0.03em;
+    text-wrap: balance;
+  }
+  .vc-btn.voice-exhale {
+    flex: 1.32;
+    background: var(--moss-soft);
+    color: var(--moss);
+    border: 1px solid var(--moss-border);
+    font-weight: 500;
+    letter-spacing: 0.06em;
+  }
+  .vc-btn.voice-exhale:active { opacity: 0.82; transform: scale(0.988); }
+  @media (max-height: 700px) {
+    .vc-voice-stage { padding: 4px 6px 2px; }
+    .vc-voice-orb { width: 42px; height: 42px; margin-bottom: 6px; }
+    .vc-voice-orb svg { width: 18px; height: 18px; }
+    .vc-voice-status { margin-bottom: 6px; font-size: 12px; min-height: 18px; }
+    .vc-voice-cue-kanji { font-size: 32px; margin-bottom: 4px; }
+    .vc-voice-cue-zh { font-size: 18px; }
+    .vc-voice-cue-zh.sub { font-size: 14.5px; }
+    .vc-voice-heard { margin-top: 6px; min-height: 18px; font-size: 12px; }
+    .vc-voice-reveal .vc-chunk { font-size: 26px; }
+    .vc-voice-reveal .vc-chunk.len-long { font-size: 22px; }
+    .vc-voice-reveal .vc-kana { font-size: 18px; margin-top: 4px; margin-bottom: 3px; }
+    .vc-voice-reveal .vc-zh { font-size: 15px; }
+    .vc-voice-reveal .vc-hook { margin-top: 8px; padding-top: 8px; }
+    .vc-voice-hint { margin-top: 8px; font-size: 11.5px; }
   }
 
   /* Position #3 Zen Sub-Bar ("记词 · 语法盘点" — auto-retires once 156/156 complete) */
@@ -10020,11 +10206,14 @@ function primeDailyAudioBundle() {
       }
     });
   });
-  // Priority 3: Active vocab cards (pre-cache real studio MP3s so every card speaks instantly & offline)
+  // Priority 3: Active vocab cards & Hands-Free Voice Coach clips (instant 0ms & offline driving!)
+  const vcCoachObj = DATA.voice_coach || {};
+  Object.values(vcCoachObj).forEach(addU);
   const vcObj = DATA.vocab_cards || {};
   Object.keys(vcObj).forEach(k => {
     const c = vcObj[k];
     if (c) {
+      addU(c.ask_audio);
       addU(c.rev_audio);
       addU(c.phrase_audio);
       addU(c.hook_audio);
@@ -10417,6 +10606,7 @@ function toggleRadioPlay(forcePlay) {
     syncRadioUI(false);
     return;
   }
+  if (typeof stopVocabVoiceCoach === "function") stopVocabVoiceCoach(true);
   if (activeKind !== null || (typeof player !== "undefined" && !player.paused) || (typeof wordPlayer !== "undefined" && !wordPlayer.paused)) {
     stopQuizAudio();
   }
@@ -11130,32 +11320,84 @@ const JA_ASR = (() => {
     return tips;
   }
 
+  function buildPoliteKanaVariants(kanaH) {
+    const k = String(kanaH || "").trim();
+    if (k.length < 3) return [];
+    const last = k[k.length - 1];
+    const stem = k.slice(0, -1);
+    const out = [];
+    if (last === "る") {
+      out.push(stem + "ます", stem + "ります");
+    } else if (last === "む") {
+      out.push(stem + "みます");
+    } else if (last === "す") {
+      out.push(stem + "します");
+    } else if (last === "く") {
+      out.push(stem + "きます");
+    } else if (last === "ぐ") {
+      out.push(stem + "ぎます");
+    } else if (last === "う") {
+      out.push(stem + "います");
+    } else if (last === "ぶ") {
+      out.push(stem + "びます");
+    } else if (last === "つ") {
+      out.push(stem + "ちます");
+    }
+    return out;
+  }
+
+  function detectVoiceCommand(rawAlts, targetKana) {
+    const alts = (Array.isArray(rawAlts) ? rawAlts : [rawAlts])
+      .map(x => String(x || "").trim())
+      .filter(Boolean);
+    const tgtH = toHira(targetKana || "");
+    for (let i = 0; i < alts.length; i++) {
+      const h = toHira(alts[i]);
+      const k = resolveKana(alts[i]);
+      if (tgtH && (h === tgtH || k === tgtH)) continue;
+      if (/^(?:もういちど|もう1ど|もっかい|もういっかい|りぴーと|もう一度|もう一回)$/.test(h) || /^(?:もういちど|もっかい|もういっかい|りぴーと)$/.test(k)) {
+        return "repeat";
+      }
+      if (/^(?:すとっぷ|ぽーず|おわり|終わり|やめる|とめて|止めて|いちじていし|一時停止)$/.test(h) || /^(?:すとっぷ|ぽーず|おわり|やめる|とめて|いちじていし)$/.test(k)) {
+        return "pause";
+      }
+      if (/^(?:わからない|わかんない|わかりません|分かりません|分からない|ぱす|すきっぷ|つぎ|次|とばす|飛ばす)$/.test(h) || /^(?:わからない|わかんない|わかりません|ぱす|すきっぷ|つぎ|とばす)$/.test(k)) {
+        return "skip";
+      }
+    }
+    return "";
+  }
+
   function analyzePronunciation(rawAlts, targetWord, targetKana, targetChunk) {
     const alts = (Array.isArray(rawAlts) ? rawAlts : [rawAlts])
       .map(x => String(x || "").trim())
       .filter(Boolean);
     if (!alts.length) {
-      return { ok: false, kind: "empty", heard: "", verdict: "没听清，靠近一点再试一次" };
+      return { ok: false, kind: "empty", subkind: "empty", heard: "", verdict: "没听清，靠近一点再试一次" };
     }
     const tgtWordH = toHira(targetWord || "");
     const tgtKanaH = toHira(targetKana || resolveKana(targetWord || ""));
     const tgtChunkH = toHira(targetChunk || "");
     const tgtChunkK = resolveKana(targetChunk || "");
+    const politeKanas = buildPoliteKanaVariants(tgtKanaH);
     const bestRaw = alts[0];
 
     for (let i = 0; i < alts.length; i++) {
       const a = alts[i];
       const aH = toHira(a);
       const aK = resolveKana(a);
+      const hitPolite = politeKanas.length > 0 && politeKanas.some(pk => aH === pk || aK === pk || aH.includes(pk) || aK.includes(pk));
       if (
         (tgtWordH && (aH === tgtWordH || aH.includes(tgtWordH))) ||
         (tgtKanaH && (aH === tgtKanaH || aK === tgtKanaH || (tgtKanaH.length >= 2 && (aH.includes(tgtKanaH) || aK.includes(tgtKanaH))))) ||
+        hitPolite ||
         (tgtChunkH && tgtChunkH.length >= 3 && (aH === tgtChunkH || aH.includes(tgtChunkH))) ||
         (tgtChunkK && tgtChunkK.length >= 3 && (aK === tgtChunkK || aK.includes(tgtChunkK)))
       ) {
         return {
           ok: true,
           kind: "exact",
+          subkind: "exact",
           heard: a,
           verdict: "读准了"
         };
@@ -11169,27 +11411,33 @@ const JA_ASR = (() => {
 
     if (tgtKanaH && heardKana && !/[\u4e00-\u9faf]/.test(heardKana)) {
       if (stripDakuten(heardKana) === stripDakuten(tgtKanaH)) {
-        return { ok: false, kind: "voicing", heard: dispHeard, verdict: `清浊音差了一拍，目标「${tgtKanaH}」` };
+        return { ok: false, kind: "voicing", subkind: "voicing", heard: dispHeard, verdict: `清浊音差了一拍，目标「${tgtKanaH}」` };
       }
       if (stripSokuon(heardKana) === stripSokuon(tgtKanaH)) {
-        const msg = tgtKanaH.includes("っ") && !heardKana.includes("っ")
+        const isMiss = tgtKanaH.includes("っ") && !heardKana.includes("っ");
+        const msg = isMiss
           ? `漏了促音「っ」停顿，目标「${tgtKanaH}」`
           : `多出了促音「っ」，目标「${tgtKanaH}」`;
-        return { ok: false, kind: "sokuon", heard: dispHeard, verdict: msg };
+        return { ok: false, kind: "sokuon", subkind: isMiss ? "sokuon_miss" : "sokuon_extra", heard: dispHeard, verdict: msg };
       }
       if (collapseLongVowels(heardKana) === collapseLongVowels(tgtKanaH)) {
-        return { ok: false, kind: "length", heard: dispHeard, verdict: `长短音差了一拍，目标「${tgtKanaH}」` };
+        const isTooShort = heardKana.length < tgtKanaH.length;
+        const msg = isTooShort
+          ? `长音读短了一拍，目标「${tgtKanaH}」`
+          : `短音拖长了一拍，目标「${tgtKanaH}」`;
+        return { ok: false, kind: "length", subkind: isTooShort ? "length_short" : "length_long", heard: dispHeard, verdict: msg };
       }
       const deepA = stripDakuten(collapseLongVowels(stripSokuon(heardKana)));
       const deepT = stripDakuten(collapseLongVowels(stripSokuon(tgtKanaH)));
       if (deepA === deepT || levenshtein(heardKana, tgtKanaH) <= 2) {
-        return { ok: false, kind: "near", heard: dispHeard, verdict: `很接近，再核对一拍「${tgtKanaH}」` };
+        return { ok: false, kind: "near", subkind: "near", heard: dispHeard, verdict: `很接近，再核对一拍「${tgtKanaH}」` };
       }
     }
 
     return {
       ok: false,
       kind: "miss",
+      subkind: "miss",
       heard: dispHeard,
       verdict: tgtKanaH ? `和「${tgtKanaH}」有点偏，听示范跟读一遍` : "读音有点偏，再试一次"
     };
@@ -11332,12 +11580,16 @@ const JA_ASR = (() => {
   function start(tag, handlers) {
     stop();
     if (!supported()) {
-      if (handlers && handlers.onError) handlers.onError("当前浏览器不支持实时收音，听示范直接跟读即可。");
+      if (handlers && handlers.onError) handlers.onError("当前浏览器不支持实时收音，听示范直接跟读即可。", "unsupported");
       return false;
     }
     // Mute every active audio player before opening the mic so playback never leaks into ASR!
     try { if (typeof stopQuizAudio === "function") stopQuizAudio(); } catch (e) {}
-    try { if (typeof stopVocabAudioAndTimers === "function") stopVocabAudioAndTimers(); } catch (e) {}
+    if (!(handlers && handlers.skipStopVocab)) {
+      try { if (typeof stopVocabAudioAndTimers === "function") stopVocabAudioAndTimers(); } catch (e) {}
+    } else {
+      try { if (typeof wordPlayer !== "undefined" && wordPlayer) wordPlayer.pause(); } catch (e) {}
+    }
     try { if (typeof stopRadioReviewAudio === "function") stopRadioReviewAudio(); } catch (e) {}
     try {
       if (typeof radioInitialized !== "undefined" && radioInitialized && radioPlayer && !radioPlayer.paused) {
@@ -11349,8 +11601,8 @@ const JA_ASR = (() => {
 
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     const isSentenceMode = !!(handlers && handlers.sentenceMode);
-    const silenceMs = isSentenceMode ? 2100 : 1200;
-    const maxCapMs = isSentenceMode ? 12500 : 7500;
+    const silenceMs = (handlers && handlers.silenceMs) || (isSentenceMode ? 2100 : 1200);
+    const maxCapMs = (handlers && handlers.maxCapMs) || (isSentenceMode ? 12500 : 7500);
     try {
       rec = new SR();
       rec.lang = "ja-JP";
@@ -11359,7 +11611,7 @@ const JA_ASR = (() => {
       // Continuous capture prevents Android Chrome from chopping you off when pausing 0.6s mid-sentence!
       rec.continuous = true;
     } catch (e) {
-      if (handlers && handlers.onError) handlers.onError("语音识别初始化失败，请稍后重试。");
+      if (handlers && handlers.onError) handlers.onError("语音识别初始化失败，请稍后重试。", "init");
       return false;
     }
 
@@ -11372,11 +11624,14 @@ const JA_ASR = (() => {
       if (committed) return;
       committed = true;
       const doneCb = handlers && handlers.onFinal;
+      const emptyCb = handlers && handlers.onEmpty;
       const endCb = handlers && handlers.onEnd;
       const captured = latestAlts.slice();
       stop();
       if (captured.length && doneCb) {
         doneCb(captured);
+      } else if (emptyCb) {
+        emptyCb();
       } else if (endCb) {
         endCb();
       }
@@ -11429,6 +11684,12 @@ const JA_ASR = (() => {
         commitCaptured();
         return;
       }
+      if (code === "no-speech" && handlers && handlers.onEmpty) {
+        committed = true;
+        stop();
+        handlers.onEmpty();
+        return;
+      }
       const errMap = {
         "not-allowed": "请允许浏览器使用麦克风权限，点地址栏左侧图标打开即可。",
         "service-not-allowed": "请允许浏览器使用麦克风权限，点地址栏左侧图标打开即可。",
@@ -11441,7 +11702,7 @@ const JA_ASR = (() => {
       const errCb = handlers && handlers.onError;
       committed = true;
       stop();
-      if (msg && errCb) errCb(msg);
+      if (msg && errCb) errCb(msg, code);
     };
 
     rec.onend = () => {
@@ -11459,7 +11720,7 @@ const JA_ASR = (() => {
     } catch (e) {
       committed = true;
       stop();
-      if (handlers && handlers.onError) handlers.onError("麦克风启动失败，再点一次试试。");
+      if (handlers && handlers.onError) handlers.onError("麦克风启动失败，再点一次试试。", "start");
       return false;
     }
   }
@@ -11477,6 +11738,7 @@ const JA_ASR = (() => {
     resolveKana,
     expandGrammarStems,
     detectSpokenTraps,
+    detectVoiceCommand,
     analyzePronunciation,
     analyzeSpokenOutput
   };
@@ -14430,7 +14692,10 @@ function switchMode(m, autoPlayRadio) {
   clearActiveWordToken();
   JA_ASR.stop();
   if (m !== "tutor" && m !== "mock") stopQuizAudio();
-  if (m !== "vocab") stopVocabAudioAndTimers();
+  if (m !== "vocab") {
+    if (typeof stopVocabVoiceCoach === "function") stopVocabVoiceCoach(true);
+    stopVocabAudioAndTimers();
+  }
   if (m !== "radio") stopRadioReviewAudio();
   if (m !== "mock" && typeof stopMockTimer === "function") stopMockTimer();
   if (m !== "body" && window.ZB && typeof window.ZB.stopPacer === "function") window.ZB.stopPacer(false);
@@ -14567,6 +14832,7 @@ function getVocabCardSpec(surface) {
       zh_speak: typeof pre.zh_speak === "string" ? pre.zh_speak : cleanSpeakZh(rawZh),
       hook_spoken: pre.hook_spoken || "",
       reveal_spoken: pre.reveal_spoken || pre.hook_spoken || "",
+      ask_spoken: pre.ask_spoken || `${cleanSpeakZh(rawZh) || surface}，日语怎么说？`,
       front_audio: pre.front_audio || "",
       rev_audio: pre.rev_audio || "",
       full_audio: pre.full_audio || pre.rev_audio || "",
@@ -14574,6 +14840,7 @@ function getVocabCardSpec(surface) {
       phrase_audio: pre.phrase_audio || pre.clean_audio || wordAud,
       clean_audio: pre.clean_audio || "",
       word_audio: wordAud,
+      ask_audio: pre.ask_audio || "",
       source: isTapped ? "今日查词" : ""
     };
   }
@@ -14613,6 +14880,7 @@ function getVocabCardSpec(surface) {
     zh_speak: (!hasKanji || zhOpaque) ? cleanSpeakZh(zh) : "",
     hook_spoken: cleanSpeakZh(w.mnemonic || ""),
     reveal_spoken: cleanSpeakZh(w.mnemonic || zh || ""),
+    ask_spoken: `${cleanSpeakZh(zh) || surface}，日语怎么说？`,
     front_audio: "",
     rev_audio: "",
     full_audio: "",
@@ -14620,6 +14888,7 @@ function getVocabCardSpec(surface) {
     phrase_audio: dynWordAud,
     clean_audio: "",
     word_audio: dynWordAud,
+    ask_audio: "",
     source: isTapped ? "今日查词" : ""
   };
 }
@@ -14757,6 +15026,7 @@ function ensureVocabSession(forceNewBatch) {
     const byKey = getVocabMasteryLookup();
     const refSet = new Set(Array.isArray(A.vocabSess.refreshWords) ? A.vocabSess.refreshWords : []);
     const filtered = A.vocabSess.queue.filter(sw => {
+      if (typeof vcVoiceState !== "undefined" && vcVoiceState && vcVoiceState.pendingPopWord === sw) return true;
       if (refSet.has(sw)) return true;
       const it = byKey[sw] || null;
       return getEffectiveMastery((it && it.key) || sw, sw).tier !== "done";
@@ -15013,6 +15283,7 @@ function warmUpcomingVocabCards() {
   if (!sess || !Array.isArray(sess.queue)) return;
   sess.queue.slice(0, 5).forEach(sw => {
     const c = getVocabCardSpec(sw);
+    if (c.ask_audio) warmAudio(c.ask_audio);
     if (c.rev_audio) warmAudio(c.rev_audio);
     if (c.phrase_audio) warmAudio(c.phrase_audio);
     if (c.hook_audio) warmAudio(c.hook_audio);
@@ -15040,6 +15311,7 @@ function renderChunkHighlightHTML(chunkJa, target) {
 }
 
 let vocabSubMode = "vocab";
+let vcPracticeMode = "card";
 let gaRevealed = false;
 let gaPendingNext = false;
 let gaPendingCode = 0;
@@ -15073,6 +15345,7 @@ function updateVocabSubNav() {
 function switchVocabSubMode(sub) {
   const target = (sub === "ga" && GA_ITEMS_LIST.length > 0) ? "ga" : "vocab";
   vocabSubMode = target;
+  if (typeof stopVocabVoiceCoach === "function") stopVocabVoiceCoach(true);
   stopVocabAudioAndTimers();
   updateVocabSubNav();
   if (vocabSubMode === "ga") {
@@ -15082,7 +15355,11 @@ function switchVocabSubMode(sub) {
     vcRevealed = false;
     vcPendingLeft = false;
     vcAnimating = false;
-    dealCurrentVocabCard(true);
+    if (vcPracticeMode === "voice") {
+      renderVocabStage();
+    } else {
+      dealCurrentVocabCard(true);
+    }
   }
 }
 
@@ -15111,10 +15388,15 @@ function enterVocabMode() {
   vcRevealed = false;
   vcPendingLeft = false;
   vcAnimating = false;
-  dealCurrentVocabCard(true);
+  if (vcPracticeMode === "voice") {
+    renderVocabStage();
+  } else {
+    dealCurrentVocabCard(true);
+  }
 }
 
 function startNextVocabBatch() {
+  if (typeof stopVocabVoiceCoach === "function") stopVocabVoiceCoach(true);
   stopVocabAudioAndTimers();
   vocabSubMode = "vocab";
   ensureVocabSession(true);
@@ -15122,7 +15404,12 @@ function startNextVocabBatch() {
   vcPendingLeft = false;
   vcAnimating = false;
   updateVocabSubNav();
-  dealCurrentVocabCard(true);
+  if (vcPracticeMode === "voice") {
+    resetVocabVoiceState("idle");
+    renderVocabStage();
+  } else {
+    dealCurrentVocabCard(true);
+  }
 }
 
 function onRemoteVocabSync() {
@@ -15135,6 +15422,7 @@ function onRemoteVocabSync() {
     }
     return;
   }
+  if (vcPracticeMode === "voice" && vcVoiceState && vcVoiceState.running) return;
   if (vcAnimating || vcPendingLeft) return;
   const sess = ensureVocabSession(false);
   if (!sess.queue.length) renderVocabStage();
@@ -15715,6 +16003,11 @@ function renderVocabStage() {
     return;
   }
 
+  if (vcPracticeMode === "voice") {
+    renderVocabVoiceStage(box, sess);
+    return;
+  }
+
   const word = sess.queue[0];
   const card = getVocabCardSpec(word);
   const eff = getEffectiveMastery(card.key, card.word);
@@ -15780,6 +16073,7 @@ function renderVocabStage() {
     <div class="vc-aux-row" id="vc-aux-row">
       <button type="button" class="vc-aux-btn seal" id="vc-seal-btn" onclick="triggerVocabAction('up')">太熟</button>
       <div class="vc-aux-right">
+        <button type="button" class="vc-aux-btn voice-entry" id="vc-voice-mode-btn" onclick="switchVocabPracticeMode('voice', event)"><span class="vc-voice-dot" aria-hidden="true"></span>语音对考</button>
         ${showVocabMic ? `<button type="button" class="vc-aux-btn mic-btn" id="vc-mic-btn" onclick="toggleVocabMicCheck(event)">试读</button>` : ""}
         <button type="button" class="vc-aux-btn replay" id="vc-replay-btn" onclick="replayVocabAudio(event)">重听</button>
       </div>
@@ -15856,6 +16150,868 @@ function toggleVocabMicCheck(ev) {
       if (f && f.textContent === waitPrompt) f.textContent = "";
     }
   });
+}
+
+// ================= v84 HANDS-FREE INTERACTIVE VOICE VOCAB COACH ("语音对考") =================
+let vcVoiceToken = 0;
+let vcVoiceTimer = null;
+let vcVoiceWakeLock = null;
+let vcVoicePraiseIdx = 0;
+let vcVoiceAudioCtx = null;
+let vcVoiceState = {
+  running: false,
+  phase: "idle",
+  audioOnly: false,
+  revealed: false,
+  statusText: "开车或走路时免看屏对考",
+  heardText: "",
+  verdictTone: "",
+  silentStreak: 0,
+  pendingRequeueWord: "",
+  pendingPopWord: "",
+  everStarted: false
+};
+
+const VC_COACH_FALLBACK_TEXT = {
+  ok_1: "对，读得很准。",
+  ok_2: "漂亮，一拍不差。",
+  ok_3: "没错，就是这个音。",
+  sokuon_miss: "差一点，中间漏了个促音停顿。你要这样想：",
+  sokuon_extra: "这里没有促音，拍子要连着读。你要这样想：",
+  length_short: "长音读短了，尾音要拉满两拍。你要这样想：",
+  length_long: "短音拖长了，收紧别拖拍。你要这样想：",
+  voicing: "清浊音差了一拍，注意听清浊。你要这样想：",
+  near: "很接近了，再核对一下细节。你要这样想：",
+  miss: "这个音发偏了，别急，你要这样想：",
+  blank: "没事，我带你记一遍。你要这样想：",
+  shadow_ask: "来，照着再跟读一遍。",
+  shadow_ok: "对了，这遍稳了，过几个词我再抽考你。",
+  shadow_close: "记在心里就行，过几个词我再考你。",
+  repeat: "好，再听一遍。",
+  auto_pause: "好像暂时不方便说话，我先暂停，随时点一下继续。",
+  batch_done: "这组词全部对考过关了，辛苦。",
+  audio_reveal: "时间到，听标准读音和口诀："
+};
+
+function resetVocabVoiceState(phaseName) {
+  vcVoiceState = {
+    running: false,
+    phase: phaseName || "idle",
+    audioOnly: !JA_ASR.supported(),
+    revealed: false,
+    statusText: !JA_ASR.supported() ? "当前浏览器切为免看屏听答模式" : "开车或走路时免看屏对考",
+    heardText: "",
+    verdictTone: "",
+    silentStreak: 0,
+    pendingRequeueWord: "",
+    pendingPopWord: "",
+    everStarted: false
+  };
+}
+
+function playZenVoiceChime(kind) {
+  try {
+    const AC = (typeof window !== "undefined") && (window.AudioContext || window.webkitAudioContext);
+    if (!AC) return;
+    if (!vcVoiceAudioCtx) vcVoiceAudioCtx = new AC();
+    if (vcVoiceAudioCtx.state === "suspended") vcVoiceAudioCtx.resume().catch(() => {});
+    const ctx = vcVoiceAudioCtx;
+    const now = ctx.currentTime;
+    const playTone = (freq, startOff, dur, gainPeak) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, now + startOff);
+      gain.gain.setValueAtTime(0.0001, now + startOff);
+      gain.gain.exponentialRampToValueAtTime(gainPeak, now + startOff + 0.014);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + startOff + dur);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now + startOff);
+      osc.stop(now + startOff + dur + 0.02);
+    };
+    if (kind === "ok") {
+      playTone(523.25, 0, 0.14, 0.085);
+      playTone(659.25, 0.09, 0.22, 0.095);
+    } else if (kind === "coach") {
+      playTone(349.23, 0, 0.16, 0.075);
+    } else {
+      playTone(587.33, 0, 0.18, 0.085);
+    }
+  } catch (e) {}
+}
+
+function acquireVoiceWakeLock() {
+  try {
+    if (typeof navigator !== "undefined" && navigator.wakeLock && typeof navigator.wakeLock.request === "function") {
+      navigator.wakeLock.request("screen").then(lock => {
+        if (!vcVoiceState.running) {
+          try { lock.release(); } catch (e) {}
+          return;
+        }
+        vcVoiceWakeLock = lock;
+      }).catch(() => {});
+    }
+  } catch (e) {}
+}
+
+function releaseVoiceWakeLock() {
+  if (vcVoiceWakeLock) {
+    try { vcVoiceWakeLock.release(); } catch (e) {}
+    vcVoiceWakeLock = null;
+  }
+}
+
+function flushVoicePendingQueue() {
+  const sess = A.vocabSess;
+  const popW = vcVoiceState.pendingPopWord;
+  const reqW = vcVoiceState.pendingRequeueWord;
+  vcVoiceState.pendingPopWord = "";
+  vcVoiceState.pendingRequeueWord = "";
+  if (!sess || !Array.isArray(sess.queue)) return;
+  let dirty = false;
+  if (popW && sess.queue[0] === popW) {
+    sess.queue.shift();
+    sess.done = sess.queue.length === 0;
+    dirty = true;
+  } else if (reqW && sess.queue[0] === reqW) {
+    requeueCurrentFailedCard(sess);
+    dirty = true;
+  }
+  if (dirty) saveAdaptiveState();
+}
+
+function stopVocabVoiceCoach(keepPracticeMode) {
+  vcVoiceToken += 1;
+  if (vcVoiceTimer) {
+    clearTimeout(vcVoiceTimer);
+    vcVoiceTimer = null;
+  }
+  if (JA_ASR.isActive("vc_coach")) JA_ASR.stop();
+  try {
+    wordPlayer.onended = null;
+    wordPlayer.onerror = null;
+    wordPlayer.pause();
+  } catch (e) {}
+  try { if ("speechSynthesis" in window) window.speechSynthesis.cancel(); } catch (e) {}
+  releaseVoiceWakeLock();
+  flushVoicePendingQueue();
+  vcVoiceState.running = false;
+  if (vcVoiceState.phase !== "idle" && vcVoiceState.phase !== "done") {
+    vcVoiceState.phase = "paused";
+    vcVoiceState.statusText = "已暂停";
+  }
+  if (!keepPracticeMode) {
+    vcPracticeMode = "card";
+  }
+}
+
+function warmVoiceCoachClips() {
+  const vcMap = (DATA && DATA.voice_coach) || {};
+  Object.values(vcMap).forEach(u => { if (u) warmAudio(u); });
+  warmUpcomingVocabCards();
+}
+
+function playVoiceUrlStep(url, fallbackTxt, fallbackLang, runTok, onDone) {
+  if (vcVoiceToken !== runTok) return;
+  const finish = () => {
+    if (vcVoiceToken !== runTok) return;
+    if (onDone) onDone();
+  };
+  const runFallback = () => {
+    if (vcVoiceToken !== runTok) return;
+    if (fallbackTxt) {
+      speakUtteranceLang(fallbackTxt, fallbackLang || "zh-CN", fallbackLang === "ja-JP" ? 0.98 : 1.04, finish);
+    } else {
+      vcVoiceTimer = setTimeout(finish, 260);
+    }
+  };
+  if (!url) {
+    runFallback();
+    return;
+  }
+  if (typeof radioInitialized !== "undefined" && radioInitialized && radioPlayer && !radioPlayer.paused) {
+    radioPlayer.pause();
+    if (typeof syncRadioUI === "function") syncRadioUI(false);
+  }
+  let settled = false;
+  const safety = setTimeout(() => {
+    if (settled || vcVoiceToken !== runTok) return;
+    settled = true;
+    wordPlayer.onended = null;
+    wordPlayer.onerror = null;
+    finish();
+  }, 16000);
+  const doneOk = () => {
+    if (settled || vcVoiceToken !== runTok) return;
+    settled = true;
+    clearTimeout(safety);
+    wordPlayer.onended = null;
+    wordPlayer.onerror = null;
+    finish();
+  };
+  const doneErr = () => {
+    if (settled || vcVoiceToken !== runTok) return;
+    settled = true;
+    clearTimeout(safety);
+    wordPlayer.onended = null;
+    wordPlayer.onerror = null;
+    runFallback();
+  };
+  try {
+    const resolved = audioBlobMap.has(url) ? audioBlobMap.get(url) : url;
+    if (!audioBlobMap.has(url)) warmAudio(url);
+    wordPlayer.onended = doneOk;
+    wordPlayer.onerror = doneErr;
+    if (wordPlayer.src === resolved) {
+      try { wordPlayer.currentTime = 0; } catch (e) {}
+    } else {
+      wordPlayer.src = resolved;
+    }
+    wordPlayer.playbackRate = 1.0;
+    const pr = wordPlayer.play();
+    if (pr && typeof pr.catch === "function") pr.catch(doneErr);
+  } catch (e) {
+    doneErr();
+  }
+}
+
+function playVoiceCoachCue(cueKey, runTok, onDone) {
+  const vcMap = (DATA && DATA.voice_coach) || {};
+  const url = vcMap[cueKey] || "";
+  const fb = VC_COACH_FALLBACK_TEXT[cueKey] || "";
+  playVoiceUrlStep(url, fb, "zh-CN", runTok, onDone);
+}
+
+function commitVocabVoiceOutcome(card, isOk, spkLabel, deferQueueAdvance) {
+  const sess = A.vocabSess;
+  if (!sess || !sess.queue.length || !card) return;
+  const word = card.word;
+  const stamp = nowUnixSec();
+  if (isOk) {
+    const isRefreshWord = Array.isArray(sess.refreshWords) && sess.refreshWords.includes(word);
+    const hadFailToday = Array.isArray(sess.failedWords) && sess.failedWords.includes(word);
+    if (isRefreshWord && !hadFailToday) {
+      setMasteryTier(card.key, "done", stamp);
+      setMasteryTier(card.word, "done", stamp);
+      sess.refreshWords = sess.refreshWords.filter(w => w !== word);
+    } else {
+      applyMasteryAction(card.key, card.word, hadFailToday ? "recover" : "pass", stamp);
+    }
+    pushVocabRecord(card, "记词:记住", true, stamp);
+    pushSpokenRecord(`W-${card.word}`, card.key || card.word, spkLabel || "试读:准确", true);
+    applyMasteryOverrides();
+    refreshMarkedWordTokens();
+    if (!Array.isArray(sess.clearedWords)) sess.clearedWords = [];
+    if (!sess.clearedWords.includes(word)) sess.clearedWords.push(word);
+    sess.cleared = Math.min(sess.total, (sess.cleared || 0) + 1);
+    const remainingAfterPop = Math.max(0, sess.queue.length - (sess.queue[0] === word ? 1 : 0));
+    if (deferQueueAdvance) {
+      vcVoiceState.pendingPopWord = word;
+      sess.done = remainingAfterPop === 0;
+    } else {
+      if (sess.queue[0] === word) sess.queue.shift();
+      sess.done = sess.queue.length === 0;
+    }
+    sess.updatedAt = stamp;
+    saveAdaptiveState();
+    recordFlashProgress(sess.cleared, sess.total, sess.done);
+    renderGreenBoard();
+    scheduleCloudPush(90);
+  } else {
+    if (!Array.isArray(sess.failedWords)) sess.failedWords = [];
+    if (!sess.failedWords.includes(word)) sess.failedWords.push(word);
+    if (Array.isArray(sess.refreshWords)) sess.refreshWords = sess.refreshWords.filter(w => w !== word);
+    applyMasteryAction(card.key, card.word, "fail", stamp);
+    if (card.pointId && A.pts[card.pointId]) {
+      const ps = A.pts[card.pointId];
+      ps.retestAt = Math.max(stamp, (ps.greenAt || 0) + 1);
+      ps.status = "learning";
+      ps.dueStep = A.step + 2;
+      recomputeStatusesFromCRDT(A);
+    }
+    pushVocabRecord(card, "记词:没记住", false, stamp);
+    pushSpokenRecord(`W-${card.word}`, card.key || card.word, spkLabel || "试读:待巩固", false);
+    applyMasteryOverrides();
+    refreshMarkedWordTokens();
+    if (deferQueueAdvance) {
+      vcVoiceState.pendingRequeueWord = word;
+    } else if (sess.queue[0] === word) {
+      requeueCurrentFailedCard(sess);
+    }
+    saveAdaptiveState();
+    renderGreenBoard();
+    scheduleCloudPush(100);
+  }
+}
+
+function advanceVoiceCoachToNext(runTok, delayMs) {
+  if (vcVoiceToken !== runTok || !vcVoiceState.running) return;
+  flushVoicePendingQueue();
+  const sess = ensureVocabSession(false);
+  if (!sess.queue.length) {
+    vcVoiceState.running = false;
+    vcVoiceState.phase = "done";
+    vcVoiceState.statusText = "这组词全部对考过关";
+    releaseVoiceWakeLock();
+    playVoiceCoachCue("batch_done", runTok, () => {
+      if (vcVoiceToken === runTok) renderVocabStage();
+    });
+    renderVocabStage();
+    return;
+  }
+  vcVoiceTimer = setTimeout(() => {
+    if (vcVoiceToken !== runTok || !vcVoiceState.running) return;
+    askCurrentVoiceCard(runTok);
+  }, Math.max(120, delayMs || 650));
+}
+
+function runVoiceCoachTeachingBranch(card, subkind, verdictLine, heardTxt, allowShadow, runTok) {
+  if (vcVoiceToken !== runTok || !vcVoiceState.running) return;
+  vcVoiceState.revealed = true;
+  vcVoiceState.phase = "coaching";
+  vcVoiceState.verdictTone = "ng";
+  vcVoiceState.heardText = heardTxt ? `听到「${heardTxt}」` : "";
+  vcVoiceState.statusText = verdictLine || "听口诀再记一遍";
+  playZenVoiceChime("coach");
+
+  // Record honest miss once for this card (deferred requeue so the revealed card stays visible during coaching & shadowing!)
+  if (vcVoiceState.pendingRequeueWord !== card.word) {
+    commitVocabVoiceOutcome(card, false, `试读:${String(verdictLine || subkind || "待练").slice(0, 18)}`, true);
+  }
+  renderVocabStage();
+
+  const coachKeyMap = {
+    sokuon_miss: "sokuon_miss",
+    sokuon_extra: "sokuon_extra",
+    length_short: "length_short",
+    length_long: "length_long",
+    voicing: "voicing",
+    near: "near",
+    blank: "blank",
+    miss: "miss"
+  };
+  const cueKey = coachKeyMap[subkind] || "miss";
+
+  playVoiceCoachCue(cueKey, runTok, () => {
+    if (vcVoiceToken !== runTok || !vcVoiceState.running) return;
+    vcVoiceTimer = setTimeout(() => {
+      if (vcVoiceToken !== runTok || !vcVoiceState.running) return;
+      const revUrl = card.rev_audio || card.full_audio || card.hook_audio || "";
+      const playRevDone = () => {
+        if (vcVoiceToken !== runTok || !vcVoiceState.running) return;
+        if (!allowShadow || vcVoiceState.audioOnly || !JA_ASR.supported()) {
+          advanceVoiceCoachToNext(runTok, 900);
+          return;
+        }
+        // Interactive consolidation: invite ONE quick shadowing repeat!
+        vcVoiceState.phase = "shadowing";
+        vcVoiceState.verdictTone = "";
+        vcVoiceState.statusText = "来，照着跟读一遍";
+        vcVoiceState.heardText = "";
+        renderVocabStage();
+        playVoiceCoachCue("shadow_ask", runTok, () => {
+          if (vcVoiceToken !== runTok || !vcVoiceState.running) return;
+          vcVoiceTimer = setTimeout(() => {
+            if (vcVoiceToken !== runTok || !vcVoiceState.running) return;
+            playZenVoiceChime("listen");
+            vcVoiceTimer = setTimeout(() => {
+              if (vcVoiceToken !== runTok || !vcVoiceState.running) return;
+              openVoiceCoachShadowMic(card, runTok);
+            }, 180);
+          }, 260);
+        });
+      };
+      if (revUrl) {
+        playVoiceUrlStep(revUrl, card.reveal_spoken || card.kana, "zh-CN", runTok, playRevDone);
+      } else {
+        playBilingualFallback(card, true, vcToken, playRevDone);
+      }
+    }, 90);
+  });
+}
+
+function openVoiceCoachShadowMic(card, runTok) {
+  if (vcVoiceToken !== runTok || !vcVoiceState.running) return;
+  const targetSurface = card.target || card.word;
+  JA_ASR.start("vc_coach", {
+    sentenceMode: false,
+    skipStopVocab: true,
+    silenceMs: 1200,
+    maxCapMs: 5600,
+    onInterim: (txt) => {
+      if (vcVoiceToken !== runTok) return;
+      const hEl = document.getElementById("vc-voice-heard");
+      if (hEl) { hEl.className = "vc-voice-heard"; hEl.textContent = `听到：${txt}`; }
+    },
+    onFinal: (alts) => {
+      if (vcVoiceToken !== runTok || !vcVoiceState.running) return;
+      const cmd = JA_ASR.detectVoiceCommand(alts, card.kana);
+      if (cmd === "pause") {
+        pauseVocabVoiceCoach("已暂停");
+        return;
+      }
+      const shRes = JA_ASR.analyzePronunciation(alts, targetSurface, card.kana, card.chunk_ja);
+      vcVoiceState.phase = "shadow_feedback";
+      if (shRes.ok) {
+        vcVoiceState.verdictTone = "ok";
+        vcVoiceState.statusText = "跟读稳了 · 稍后再抽考";
+        vcVoiceState.heardText = `✓ ${shRes.heard}`;
+        playZenVoiceChime("ok");
+        renderVocabStage();
+        playVoiceCoachCue("shadow_ok", runTok, () => advanceVoiceCoachToNext(runTok, 550));
+      } else {
+        vcVoiceState.verdictTone = "";
+        vcVoiceState.statusText = "稍后回炉再考";
+        vcVoiceState.heardText = shRes.heard ? `听到「${shRes.heard}」` : "";
+        renderVocabStage();
+        playVoiceCoachCue("shadow_close", runTok, () => advanceVoiceCoachToNext(runTok, 550));
+      }
+    },
+    onEmpty: () => {
+      if (vcVoiceToken !== runTok || !vcVoiceState.running) return;
+      vcVoiceState.phase = "shadow_feedback";
+      vcVoiceState.statusText = "稍后回炉再考";
+      renderVocabStage();
+      playVoiceCoachCue("shadow_close", runTok, () => advanceVoiceCoachToNext(runTok, 450));
+    },
+    onError: (msg, code) => {
+      if (vcVoiceToken !== runTok || !vcVoiceState.running) return;
+      if (code === "not-allowed" || code === "service-not-allowed") {
+        vcVoiceState.audioOnly = true;
+        vcVoiceState.statusText = "未开启麦克风 · 已切为免看屏听答";
+        renderVocabStage();
+        advanceVoiceCoachToNext(runTok, 900);
+        return;
+      }
+      advanceVoiceCoachToNext(runTok, 450);
+    }
+  });
+}
+
+function handleVocabVoiceResponse(card, alts, runTok) {
+  if (vcVoiceToken !== runTok || !vcVoiceState.running) return;
+  vcVoiceState.silentStreak = 0;
+  const cmd = JA_ASR.detectVoiceCommand(alts, card.kana);
+  if (cmd === "pause") {
+    pauseVocabVoiceCoach("已暂停");
+    return;
+  }
+  if (cmd === "repeat") {
+    vcVoiceState.statusText = "再听一遍问题";
+    vcVoiceState.heardText = "";
+    renderVocabStage();
+    playVoiceCoachCue("repeat", runTok, () => {
+      if (vcVoiceToken === runTok && vcVoiceState.running) askCurrentVoiceCard(runTok);
+    });
+    return;
+  }
+  if (cmd === "skip") {
+    runVoiceCoachTeachingBranch(card, "blank", "没事，先听口诀记一遍", "", true, runTok);
+    return;
+  }
+
+  const targetSurface = card.target || card.word;
+  const res = JA_ASR.analyzePronunciation(alts, targetSurface, card.kana, card.chunk_ja);
+  if (res.ok) {
+    vcVoiceState.revealed = true;
+    vcVoiceState.phase = "correct";
+    vcVoiceState.verdictTone = "ok";
+    vcVoiceState.statusText = "读准了";
+    vcVoiceState.heardText = `✓ ${res.heard}`;
+    playZenVoiceChime("ok");
+    commitVocabVoiceOutcome(card, true, "试读:准确", true);
+    renderVocabStage();
+
+    const praiseKey = ["ok_1", "ok_2", "ok_3"][vcVoicePraiseIdx % 3];
+    vcVoicePraiseIdx += 1;
+    playVoiceCoachCue(praiseKey, runTok, () => {
+      if (vcVoiceToken !== runTok || !vcVoiceState.running) return;
+      const phraseUrl = card.phrase_audio || card.word_audio || "";
+      if (phraseUrl) {
+        vcVoiceTimer = setTimeout(() => {
+          if (vcVoiceToken !== runTok || !vcVoiceState.running) return;
+          playVoiceUrlStep(phraseUrl, card.chunk_ja || card.kana, "ja-JP", runTok, () => {
+            advanceVoiceCoachToNext(runTok, 700);
+          });
+        }, 140);
+      } else {
+        advanceVoiceCoachToNext(runTok, 700);
+      }
+    });
+    return;
+  }
+
+  runVoiceCoachTeachingBranch(card, res.subkind || res.kind, res.verdict, res.heard, true, runTok);
+}
+
+function askCurrentVoiceCard(runTok) {
+  if (vcVoiceToken !== runTok || !vcVoiceState.running) return;
+  flushVoicePendingQueue();
+  const sess = ensureVocabSession(false);
+  if (!sess.queue.length) {
+    advanceVoiceCoachToNext(runTok, 120);
+    return;
+  }
+  warmUpcomingVocabCards();
+  const word = sess.queue[0];
+  const card = getVocabCardSpec(word);
+  vcVoiceState.revealed = false;
+  vcVoiceState.phase = "asking";
+  vcVoiceState.verdictTone = "";
+  vcVoiceState.heardText = "";
+  vcVoiceState.statusText = "私教提问中";
+  renderVocabStage();
+
+  playVoiceUrlStep(card.ask_audio, card.ask_spoken, "zh-CN", runTok, () => {
+    if (vcVoiceToken !== runTok || !vcVoiceState.running) return;
+    // Graceful Audio-Only Hands-Free Recall fallback (when browser lacks SpeechRecognition or mic denied)
+    if (vcVoiceState.audioOnly || !JA_ASR.supported()) {
+      vcVoiceState.phase = "listening";
+      vcVoiceState.statusText = "默想日语读音…";
+      renderVocabStage();
+      vcVoiceTimer = setTimeout(() => {
+        if (vcVoiceToken !== runTok || !vcVoiceState.running) return;
+        vcVoiceState.revealed = true;
+        vcVoiceState.phase = "coaching";
+        vcVoiceState.statusText = "听标准读音与口诀";
+        renderVocabStage();
+        playVoiceCoachCue("audio_reveal", runTok, () => {
+          if (vcVoiceToken !== runTok || !vcVoiceState.running) return;
+          const revUrl = card.rev_audio || card.full_audio || "";
+          playVoiceUrlStep(revUrl, card.reveal_spoken || card.kana, "zh-CN", runTok, () => {
+            if (vcVoiceToken !== runTok || !vcVoiceState.running) return;
+            // Rotate peacefully in audio-only listen mode without faking 3/3 green mastery!
+            if (sess.queue.length > 1) {
+              const curW = sess.queue.shift();
+              sess.queue.push(curW);
+              saveAdaptiveState();
+            }
+            advanceVoiceCoachToNext(runTok, 1100);
+          });
+        });
+      }, 4200);
+      return;
+    }
+
+    // 280ms Bluetooth A2DP->HFP settle buffer + Kyoto listen chime -> open mic hands-free!
+    vcVoiceTimer = setTimeout(() => {
+      if (vcVoiceToken !== runTok || !vcVoiceState.running) return;
+      vcVoiceState.phase = "listening";
+      vcVoiceState.statusText = "请用日语回答";
+      vcVoiceState.heardText = "";
+      renderVocabStage();
+      playZenVoiceChime("listen");
+      vcVoiceTimer = setTimeout(() => {
+        if (vcVoiceToken !== runTok || !vcVoiceState.running) return;
+        JA_ASR.start("vc_coach", {
+          sentenceMode: false,
+          skipStopVocab: true,
+          silenceMs: 1350,
+          maxCapMs: 6800,
+          onInterim: (txt) => {
+            if (vcVoiceToken !== runTok) return;
+            const hEl = document.getElementById("vc-voice-heard");
+            if (hEl) { hEl.className = "vc-voice-heard"; hEl.textContent = `听到：${txt}`; }
+          },
+          onFinal: (alts) => {
+            handleVocabVoiceResponse(card, alts, runTok);
+          },
+          onEmpty: () => {
+            if (vcVoiceToken !== runTok || !vcVoiceState.running) return;
+            vcVoiceState.silentStreak = (vcVoiceState.silentStreak || 0) + 1;
+            if (vcVoiceState.silentStreak >= 2) {
+              vcVoiceState.running = false;
+              vcVoiceState.phase = "paused";
+              vcVoiceState.statusText = "暂时没听到声音，已自动暂停";
+              releaseVoiceWakeLock();
+              renderVocabStage();
+              playVoiceCoachCue("auto_pause", runTok, () => {});
+              return;
+            }
+            runVoiceCoachTeachingBranch(card, "blank", "先听一遍口诀与读音", "", false, runTok);
+          },
+          onError: (msg, code) => {
+            if (vcVoiceToken !== runTok || !vcVoiceState.running) return;
+            if (code === "not-allowed" || code === "service-not-allowed") {
+              vcVoiceState.audioOnly = true;
+              vcVoiceState.statusText = "麦克风未开 · 已切为免看屏听答";
+              renderVocabStage();
+              vcVoiceTimer = setTimeout(() => askCurrentVoiceCard(runTok), 900);
+              return;
+            }
+            vcVoiceState.running = false;
+            vcVoiceState.phase = "paused";
+            vcVoiceState.statusText = msg || "已暂停，轻点继续";
+            releaseVoiceWakeLock();
+            renderVocabStage();
+          }
+        });
+      }, 180);
+    }, 280);
+  });
+}
+
+function startVocabVoiceCoach(ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  const sess = ensureVocabSession(false);
+  if (!sess.queue.length) {
+    renderVocabStage();
+    return;
+  }
+  stopVocabAudioAndTimers();
+  vcVoiceToken += 1;
+  const runTok = vcVoiceToken;
+  vcPracticeMode = "voice";
+  vcVoiceState.running = true;
+  vcVoiceState.everStarted = true;
+  vcVoiceState.silentStreak = 0;
+  vcVoiceState.audioOnly = !JA_ASR.supported();
+  warmVoiceCoachClips();
+  acquireVoiceWakeLock();
+  askCurrentVoiceCard(runTok);
+}
+
+function pauseVocabVoiceCoach(labelTxt, ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  stopVocabVoiceCoach(true);
+  vcVoiceState.phase = "paused";
+  vcVoiceState.statusText = labelTxt || "已暂停";
+  renderVocabStage();
+}
+
+function onVoiceCoachOrbTap(ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  if (!vcVoiceState.running) {
+    startVocabVoiceCoach();
+    return;
+  }
+  if ((vcVoiceState.phase === "listening" || vcVoiceState.phase === "shadowing") && JA_ASR.isActive("vc_coach")) {
+    JA_ASR.finishNow();
+    return;
+  }
+  pauseVocabVoiceCoach("已暂停");
+}
+
+function voiceCoachSkipToExplain(ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  const sess = ensureVocabSession(false);
+  if (!sess.queue.length) return;
+  const card = getVocabCardSpec(sess.queue[0]);
+  if (!vcVoiceState.running) {
+    startVocabVoiceCoach();
+    return;
+  }
+  if (vcVoiceState.phase === "listening" || vcVoiceState.phase === "asking") {
+    if (vcVoiceTimer) { clearTimeout(vcVoiceTimer); vcVoiceTimer = null; }
+    if (JA_ASR.isActive("vc_coach")) JA_ASR.stop();
+    try { wordPlayer.onended = null; wordPlayer.onerror = null; wordPlayer.pause(); } catch (e) {}
+    vcVoiceToken += 1;
+    const runTok = vcVoiceToken;
+    runVoiceCoachTeachingBranch(card, "blank", "没事，先听口诀记一遍", "", false, runTok);
+    return;
+  }
+  // During coaching / shadowing / correct -> jump straight to next word!
+  if (vcVoiceTimer) { clearTimeout(vcVoiceTimer); vcVoiceTimer = null; }
+  if (JA_ASR.isActive("vc_coach")) JA_ASR.stop();
+  try { wordPlayer.onended = null; wordPlayer.onerror = null; wordPlayer.pause(); } catch (e) {}
+  vcVoiceToken += 1;
+  const runTok = vcVoiceToken;
+  advanceVoiceCoachToNext(runTok, 140);
+}
+
+function voiceCoachRepeatCurrent(ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  const sess = ensureVocabSession(false);
+  if (!sess.queue.length) return;
+  if (vcVoiceTimer) { clearTimeout(vcVoiceTimer); vcVoiceTimer = null; }
+  if (JA_ASR.isActive("vc_coach")) JA_ASR.stop();
+  try { wordPlayer.onended = null; wordPlayer.onerror = null; wordPlayer.pause(); } catch (e) {}
+  vcVoiceToken += 1;
+  const runTok = vcVoiceToken;
+  vcVoiceState.running = true;
+  vcVoiceState.everStarted = true;
+  vcVoiceState.silentStreak = 0;
+  acquireVoiceWakeLock();
+  askCurrentVoiceCard(runTok);
+}
+
+function voiceCoachSealCurrent(ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  const sess = ensureVocabSession(false);
+  if (!sess.queue.length) return;
+  const wasRunning = vcVoiceState.running;
+  const word = sess.queue[0];
+  const card = getVocabCardSpec(word);
+  const stamp = nowUnixSec();
+  if (vcVoiceTimer) { clearTimeout(vcVoiceTimer); vcVoiceTimer = null; }
+  if (JA_ASR.isActive("vc_coach")) JA_ASR.stop();
+  try { wordPlayer.onended = null; wordPlayer.onerror = null; wordPlayer.pause(); } catch (e) {}
+  vcVoiceState.pendingRequeueWord = "";
+  vcVoiceState.pendingPopWord = "";
+  if (Array.isArray(sess.refreshWords)) sess.refreshWords = sess.refreshWords.filter(w => w !== word);
+  applyMasteryAction(card.key, card.word, "seal", stamp);
+  if (card.pointId && A.pts[card.pointId]) {
+    const ps = A.pts[card.pointId];
+    ps.greenAt = Math.max(ps.greenAt || 0, stamp, (ps.retestAt || 0) + 1);
+    recomputeStatusesFromCRDT(A);
+  }
+  pushVocabRecord(card, "记词:太熟", true, stamp);
+  applyMasteryOverrides();
+  refreshMarkedWordTokens();
+  sess.queue.shift();
+  if (!Array.isArray(sess.clearedWords)) sess.clearedWords = [];
+  if (!sess.clearedWords.includes(word)) sess.clearedWords.push(word);
+  sess.cleared = Math.min(sess.total, (sess.cleared || 0) + 1);
+  sess.done = sess.queue.length === 0;
+  sess.updatedAt = stamp;
+  saveAdaptiveState();
+  recordFlashProgress(sess.cleared, sess.total, sess.done);
+  renderGreenBoard();
+  scheduleCloudPush(80);
+  if (wasRunning && sess.queue.length) {
+    vcVoiceToken += 1;
+    advanceVoiceCoachToNext(vcVoiceToken, 180);
+  } else {
+    if (!sess.queue.length) {
+      vcVoiceState.running = false;
+      vcVoiceState.phase = "done";
+      releaseVoiceWakeLock();
+    }
+    renderVocabStage();
+  }
+}
+
+function switchVocabPracticeMode(mode, ev, autoStart) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  const target = mode === "voice" ? "voice" : "card";
+  if (target === "card") {
+    stopVocabVoiceCoach(false);
+    vcPracticeMode = "card";
+    vcRevealed = false;
+    vcPendingLeft = false;
+    vcAnimating = false;
+    dealCurrentVocabCard(true);
+    return;
+  }
+  stopVocabAudioAndTimers();
+  JA_ASR.stop();
+  vcPracticeMode = "voice";
+  warmVoiceCoachClips();
+  resetVocabVoiceState("idle");
+  const shouldStart = typeof autoStart === "boolean" ? autoStart : true;
+  if (shouldStart) {
+    startVocabVoiceCoach();
+  } else {
+    renderVocabStage();
+  }
+}
+
+function renderVocabVoiceStage(box, sess) {
+  const word = sess.queue[0];
+  const card = getVocabCardSpec(word);
+  const eff = getEffectiveMastery(card.key, card.word);
+  const isRequeued = Array.isArray(sess.failedWords) && sess.failedWords.includes(word);
+  const posNum = Math.min(Math.max(1, sess.total), (sess.cleared || 0) + 1);
+  const leftLabel = isRequeued
+    ? `语音回炉 · 余 ${sess.queue.length}`
+    : `语音对考 · ${posNum} / ${sess.total}`;
+
+  const st = vcVoiceState;
+  const isKanjiCard = card.mode === "kanji_read";
+  const hasTargetKanji = /[\u4e00-\u9faf\u3400-\u4dbf]/.test(card.target || card.word);
+  const kanaHtml = (hasTargetKanji && card.kana)
+    ? renderTrapKanaHTML(card.target || card.word, card.kana, card.trap_hl, card.trap_tag)
+    : "";
+  const zhDisplay = card.zh_card || card.zh || "";
+  const mnDisplay = card.mnemonic_card || card.mnemonic || "";
+  const chunkLen = String(card.chunk_ja || "").length;
+  const chunkLenCls = chunkLen >= 10 ? " len-long" : (chunkLen === 9 ? " len-9" : (chunkLen === 8 ? " len-8" : ""));
+
+  let orbCls = "vc-voice-orb";
+  let orbSvg = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="21"/></svg>`;
+  if (st.phase === "listening" || st.phase === "shadowing") {
+    orbCls += " is-listening";
+  } else if (st.phase === "asking") {
+    orbCls += " is-speaking";
+    orbSvg = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.8 5.8a9 9 0 0 1 0 12.4"/></svg>`;
+  } else if (st.phase === "correct" || (st.phase === "shadow_feedback" && st.verdictTone === "ok")) {
+    orbCls += " is-ok";
+    orbSvg = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>`;
+  } else if (st.phase === "coaching") {
+    orbCls += " is-coach";
+    orbSvg = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>`;
+  }
+
+  let statusCls = "vc-voice-status";
+  if (st.verdictTone === "ok") statusCls += " ok";
+  else if (st.verdictTone === "ng") statusCls += " ng";
+  else if (st.running) statusCls += " live";
+
+  const heardCls = "vc-voice-heard" + (st.verdictTone === "ok" ? " ok" : (st.verdictTone === "ng" ? " ng" : ""));
+
+  let centerBodyHTML = "";
+  if (st.revealed) {
+    centerBodyHTML = `
+      <div class="vc-voice-reveal">
+        <div class="vc-chunk${chunkLenCls} vc-tap-zone vc-live" lang="ja" id="vc-chunk-box" onclick="playVocabZoneAudio('phrase', event)">${renderChunkHighlightHTML(card.chunk_ja, card.target)}</div>
+        ${kanaHtml ? `<div class="vc-kana vc-tap-zone vc-live" id="vc-kana-box" onclick="playVocabZoneAudio('word', event)">${kanaHtml}</div>` : ""}
+        ${zhDisplay ? `<div class="vc-zh${isKanjiCard && !card.zh_opaque ? " quiet" : ""}">${escapeHtml(zhDisplay)}</div>` : ""}
+        ${mnDisplay ? `<div class="vc-hook vc-tap-zone vc-live" id="vc-hook-box" onclick="playVocabZoneAudio('hook', event)">${renderZenMnemonicHTML(card.mnemonic_cue, card.mnemonic_scene, mnDisplay)}</div>` : ""}
+      </div>
+      <div class="${heardCls}" id="vc-voice-heard">${escapeHtml(st.heardText || "")}</div>
+    `;
+  } else {
+    centerBodyHTML = `
+      ${isKanjiCard ? `<div class="vc-voice-cue-kanji" lang="ja">${escapeHtml(card.target || card.word)}</div>` : ""}
+      <div class="vc-voice-cue-zh${isKanjiCard ? " sub" : ""}">${escapeHtml(zhDisplay || card.ask_spoken || "")}</div>
+      <div class="${heardCls}" id="vc-voice-heard">${escapeHtml(st.heardText || "")}</div>
+      ${(!st.audioOnly && (st.phase === "listening" || st.phase === "idle"))
+        ? `<div class="vc-voice-hint">可说「もういちど」重问 · 「わからない」听讲解</div>`
+        : ""}
+    `;
+  }
+
+  let dockHTML = "";
+  if (st.running) {
+    const rightLbl = (st.phase === "listening" || st.phase === "asking") ? "不会 · 听讲解" : "下一词";
+    dockHTML = `
+      <button type="button" class="vc-btn mid" id="vc-voice-pause-btn" onclick="pauseVocabVoiceCoach('已暂停', event)">暂停</button>
+      <button type="button" class="vc-btn voice-exhale" id="vc-voice-skip-btn" onclick="voiceCoachSkipToExplain(event)">${rightLbl}</button>
+    `;
+  } else {
+    const startLbl = st.audioOnly
+      ? (st.everStarted ? "继续听答" : "开始免看屏听答")
+      : (st.everStarted ? "继续语音对考" : "开始语音对考");
+    dockHTML = `
+      <button type="button" class="vc-btn ok" id="vc-voice-start-btn" onclick="startVocabVoiceCoach(event)">${startLbl}</button>
+    `;
+  }
+
+  box.innerHTML = `
+    <div class="meta-bar">
+      <span class="overline${isRequeued ? " warm" : ""}">${escapeHtml(leftLabel)}</span>
+      <div class="vc-meta-right">
+        <span id="vc-meta-dots" style="display:inline-flex;align-items:center;gap:6px;">${renderStreakDotsHTML(eff.streak)}</span>
+      </div>
+    </div>
+
+    <div class="vc-voice-stage" id="vc-voice-stage">
+      <button type="button" class="${orbCls}" id="vc-voice-orb" onclick="onVoiceCoachOrbTap(event)" aria-label="${st.running ? "暂停或结束回答" : "开始语音对考"}">${orbSvg}</button>
+      <div class="${statusCls}" id="vc-voice-status">${escapeHtml(st.statusText || "")}</div>
+      ${centerBodyHTML}
+    </div>
+
+    <div class="vc-aux-row" id="vc-aux-row">
+      <button type="button" class="vc-aux-btn seal" id="vc-back-card-btn" onclick="switchVocabPracticeMode('card', event)">切回刷卡</button>
+      <div class="vc-aux-right">
+        <button type="button" class="vc-aux-btn" id="vc-voice-seal-btn" onclick="voiceCoachSealCurrent(event)">太熟</button>
+        <button type="button" class="vc-aux-btn replay" id="vc-voice-repeat-btn" onclick="voiceCoachRepeatCurrent(event)">重问</button>
+      </div>
+    </div>
+
+    <div class="vc-dock" id="vc-dock-row">${dockHTML}</div>
+  `;
 }
 
 // ================= ATOMIC 1-BY-1 GRAMMAR SELF-AUDIT (ZEN OPEN-CANVAS) =================
@@ -21801,11 +22957,95 @@ const resEchoHtml28 = (els['voice-card'] && els['voice-card'].innerHTML) || '';
 if (!resEchoHtml28.includes('id="res-story-echo"') || !resEchoHtml28.includes(echoPt28.story_echo.tab) || resEchoHtml28.includes('—')) {
   throw new Error('Self-test 28 failed: Quiz Answer screen did not render clean borderless 锵锵回声 story echo');
 }
+
+// Self-test 29 (v84): Dual-Mode Swipe + Hands-Free Interactive Voice Vocab Coach ("语音对考")
+const vcCoach29 = vm.runInNewContext('DATA.voice_coach || {}', sb);
+const reqCoachKeys29 = ['ok_1', 'ok_2', 'ok_3', 'sokuon_miss', 'sokuon_extra', 'length_short', 'length_long', 'voicing', 'near', 'miss', 'blank', 'shadow_ask', 'shadow_ok', 'shadow_close', 'repeat', 'auto_pause', 'batch_done', 'audio_reveal'];
+for (const ck29 of reqCoachKeys29) {
+  if (!vcCoach29[ck29] || !String(vcCoach29[ck29]).includes('.mp3')) {
+    throw new Error('Self-test 29 failed: missing studio voice_coach clip for ' + ck29);
+  }
+}
+const vcCards29 = vm.runInNewContext('DATA.vocab_cards || {}', sb);
+const phase29 = vm.runInNewContext('DATA.phase || "n3_sprint"', sb);
+for (const [vw29, c29] of Object.entries(vcCards29)) {
+  const askTxt29 = String((c29 && c29.ask_spoken) || '');
+  if (!askTxt29 || askTxt29.includes('—') || /[\u3040-\u30ff]/.test(askTxt29)) {
+    throw new Error('Self-test 29 failed: invalid/spoiler ask_spoken on ' + vw29 + ': ' + askTxt29);
+  }
+  if (phase29 === 'n3_sprint' && !String((c29 && c29.ask_audio) || '').includes('_ask.mp3')) {
+    throw new Error('Self-test 29 failed: missing pre-baked studio ask_audio for N3 word ' + vw29);
+  }
+}
+const asr29 = sb.window.JA_ASR;
+const pSok29 = asr29.analyzePronunciation(['主張'], '出張', 'しゅっちょう', '海外に出張する');
+if (pSok29.ok || pSok29.subkind !== 'sokuon_miss') {
+  throw new Error('Self-test 29 failed: 主張 vs 出張 must produce subkind=sokuon_miss: ' + JSON.stringify(pSok29));
+}
+const pLen29 = asr29.analyzePronunciation(['洋三'], '予算', 'よさん', '予算を組む');
+if (pLen29.ok || pLen29.subkind !== 'length_long') {
+  throw new Error('Self-test 29 failed: 洋三 vs 予算 must produce subkind=length_long: ' + JSON.stringify(pLen29));
+}
+const pPolite29 = asr29.analyzePronunciation(['貯めます'], '貯める', 'ためる', 'お金を貯める');
+if (!pPolite29.ok) {
+  throw new Error('Self-test 29 failed: polite form 貯めます should pass for 貯める: ' + JSON.stringify(pPolite29));
+}
+if (asr29.detectVoiceCommand(['もういちど'], 'しゅっちょう') !== 'repeat' || asr29.detectVoiceCommand(['わからない'], 'しょるい') !== 'skip' || asr29.detectVoiceCommand(['ストップ'], 'しょるい') !== 'pause' || asr29.detectVoiceCommand(['つぎつぎに'], 'つぎつぎに') !== '') {
+  throw new Error('Self-test 29 failed: hands-free voice command detection mismatch');
+}
+sb.window.webkitSpeechRecognition = function() {};
+sb.switchMode('vocab');
+sb.switchVocabSubMode('vocab');
+sb.switchVocabPracticeMode('card');
+const cardModeHtml29 = (els['vocab-stage-box'] && els['vocab-stage-box'].innerHTML) || '';
+if (!cardModeHtml29.includes('id="vc-voice-mode-btn"') || !cardModeHtml29.includes('语音对考') || cardModeHtml29.includes('—')) {
+  throw new Error('Self-test 29 failed: swipe vocab screen missing quiet 语音对考 entry or contains em dash');
+}
+sb.switchVocabPracticeMode('voice', null, false);
+const voiceIdleHtml29 = (els['vocab-stage-box'] && els['vocab-stage-box'].innerHTML) || '';
+const voiceMeta29 = voiceIdleHtml29.split('vc-voice-stage')[0] || '';
+if (!voiceIdleHtml29.includes('id="vc-voice-orb"') || !voiceIdleHtml29.includes('切回刷卡') || !voiceIdleHtml29.includes('开始语音对考') || voiceMeta29.includes('<button') || voiceIdleHtml29.includes('—')) {
+  throw new Error('Self-test 29 failed: Voice Coach idle sanctuary broken, violates 上看下点, or contains em dash');
+}
+// Simulate live voice response -> miss (honest coaching + deferred requeue) & pass (honest green + deferred pop)
+const firstW29 = vm.runInNewContext('A.vocabSess.queue[0]', sb);
+const firstCard29 = sb.getVocabCardSpec(firstW29);
+vm.runInNewContext('vcVoiceToken += 1; vcVoiceState.running = true; vcVoiceState.everStarted = true;', sb);
+const runTok29 = vm.runInNewContext('vcVoiceToken', sb);
+sb.handleVocabVoiceResponse(firstCard29, ['まったくちがう'], runTok29);
+const coachMissHtml29 = (els['vocab-stage-box'] && els['vocab-stage-box'].innerHTML) || '';
+const pendReq29 = vm.runInNewContext('vcVoiceState.pendingRequeueWord', sb);
+if (!coachMissHtml29.includes('vc-voice-reveal') || pendReq29 !== firstW29 || coachMissHtml29.includes('—')) {
+  throw new Error('Self-test 29 failed: voice miss did not reveal mnemonic/kana or defer requeue cleanly');
+}
+sb.flushVoicePendingQueue();
+const secondW29 = vm.runInNewContext('A.vocabSess.queue[0]', sb);
+const secondCard29 = sb.getVocabCardSpec(secondW29);
+const clearedBefore29 = vm.runInNewContext('A.vocabSess.cleared || 0', sb);
+vm.runInNewContext('vcVoiceToken += 1; vcVoiceState.running = true;', sb);
+const runTok29b = vm.runInNewContext('vcVoiceToken', sb);
+sb.handleVocabVoiceResponse(secondCard29, [secondCard29.kana || secondCard29.word], runTok29b);
+const coachOkHtml29 = (els['vocab-stage-box'] && els['vocab-stage-box'].innerHTML) || '';
+const clearedAfter29 = vm.runInNewContext('A.vocabSess.cleared || 0', sb);
+if (!coachOkHtml29.includes('is-ok') || !coachOkHtml29.includes('读准了') || clearedAfter29 !== clearedBefore29 + 1) {
+  throw new Error('Self-test 29 failed: voice exact match did not exhale green or advance cleared count');
+}
+sb.flushVoicePendingQueue();
+// Graceful audio-only fallback when SpeechRecognition is unsupported
+sb.window.SpeechRecognition = undefined;
+sb.window.webkitSpeechRecognition = undefined;
+sb.switchVocabPracticeMode('voice', null, false);
+const audioOnlyHtml29 = (els['vocab-stage-box'] && els['vocab-stage-box'].innerHTML) || '';
+if (!audioOnlyHtml29.includes('开始免看屏听答') || audioOnlyHtml29.includes('—')) {
+  throw new Error('Self-test 29 failed: unsupported browser did not fall back to 免看屏听答 cleanly');
+}
+sb.window.webkitSpeechRecognition = function() {};
+sb.switchVocabPracticeMode('card');
 """
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
 
 sw_path = os.path.join(BASE_DIR, "sw.js")
-SW_CACHE_NAME = "n3-studio-tutor-v83"
+SW_CACHE_NAME = "n3-studio-tutor-v84"
 if not _IS_SIM_OUTPUT and os.path.exists(sw_path):
     with open(sw_path, encoding="utf-8") as sf:
         sw_src = sf.read()

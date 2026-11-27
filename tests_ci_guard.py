@@ -1241,7 +1241,67 @@ def test_v46_stereo_cognitive_n2_long_horizon_guard() -> None:
     for fname in ("build_html.py", "generate_daily_radio.py", "generate_neural_audio.py"):
         fsrc = (BASE_DIR / fname).read_text(encoding="utf-8")
         assert '"n1_sprint"' in fsrc, f"{fname} missing n1_sprint continuity handling!"
-    print(f"[PASS 19/19] v46 studio stereo, cognitive ear-pin/story-echo ({len(smi_data['entries'])} hooks), N2 Vol.1-3 & 2027 N1 continuity verified")
+    print(f"[PASS 19/20] v46 studio stereo, cognitive ear-pin/story-echo ({len(smi_data['entries'])} hooks), N2 Vol.1-3 & 2027 N1 continuity verified")
+
+
+def test_v84_hands_free_voice_vocab_coach_guard() -> None:
+    """Gate 20 (v84): Guard dual-mode Swipe + Hands-Free Voice Vocab Coach prompts, studio MP3s & UI contracts."""
+    from vocab_cards import VOCAB_CARDS, VOICE_COACH_LINES, build_dynamic_vocab_card, build_vocab_ask_spoken
+    from adaptive_bank import CORE_N3_KANA_VOCAB, EXTRA_WORDS
+    from phrase_and_word_lexicon import PHRASE_AND_WORD_LEXICON
+    from sentence_lexicon import SENTENCE_LEXICON
+    from tutor_data import WORD_DICT
+    from n2_prep.n2_curriculum_engine import build_n2_vocab_cards
+
+    assert len(VOICE_COACH_LINES) >= 18, f"Expected >=18 VOICE_COACH_LINES, got {len(VOICE_COACH_LINES)}"
+    for ck, line in VOICE_COACH_LINES.items():
+        assert line.strip() and "—" not in line, f"Bad VOICE_COACH_LINES[{ck}]: {line!r}"
+
+    manifest = json.loads((BASE_DIR / "audio" / "audio_manifest.json").read_text(encoding="utf-8"))
+    vc_coach = manifest.get("voice_coach") or {}
+    for ck in VOICE_COACH_LINES:
+        rel = str(vc_coach.get(ck) or "").split("?")[0].lstrip("./")
+        assert rel and (BASE_DIR / rel).exists(), f"Missing studio voice_coach MP3 on disk for {ck}: {rel!r}"
+
+    rich = dict(SENTENCE_LEXICON)
+    rich.update(WORD_DICT)
+    rich.update(EXTRA_WORDS)
+    rich.update(PHRASE_AND_WORD_LEXICON)
+    live_state = json.loads((BASE_DIR / "n3_live_state.json").read_text(encoding="utf-8"))
+    n3_words: list[str] = []
+    seen: set[str] = set()
+    for w in list(VOCAB_CARDS.keys()) + [p["word"] for p in live_state.get("vocab_tracked", [])] + [x[0] for x in CORE_N3_KANA_VOCAB]:
+        if w and w not in seen:
+            seen.add(w)
+            n3_words.append(w)
+
+    vc_manifest = manifest.get("vocab_cards") or {}
+    for w in n3_words:
+        c = build_dynamic_vocab_card(w, rich.get(w, {}))
+        ask = build_vocab_ask_spoken(c)
+        assert ask and "—" not in ask and not re.search(r"[\u3040-\u30ff]", ask), f"Invalid/spoiler ask_spoken for N3 {w}: {ask!r}"
+        ask_rel = str((vc_manifest.get(w) or {}).get("ask") or "").split("?")[0].lstrip("./")
+        assert ask_rel and (BASE_DIR / ask_rel).exists(), f"Missing studio ask MP3 on disk for N3 word {w}: {ask_rel!r}"
+
+    n2_cards = build_n2_vocab_cards()
+    for w, vc in n2_cards.items():
+        vc2 = dict(vc)
+        vc2["word"] = w
+        ask = build_vocab_ask_spoken(vc2)
+        assert ask and "—" not in ask and not re.search(r"[\u3040-\u30ff]", ask), f"Invalid/spoiler ask_spoken for N2 {w}: {ask!r}"
+
+    bh_src = (BASE_DIR / "build_html.py").read_text(encoding="utf-8")
+    for sym in (
+        "function switchVocabPracticeMode(",
+        "function renderVocabVoiceStage(",
+        "function handleVocabVoiceResponse(",
+        "function detectVoiceCommand(",
+        "function acquireVoiceWakeLock(",
+        'SW_CACHE_NAME = "n3-studio-tutor-v84"',
+    ):
+        assert sym in bh_src, f"build_html.py missing v84 Voice Coach symbol: {sym}"
+
+    print(f"[PASS 20/20] v84 Hands-Free Voice Vocab Coach ({len(n3_words)} N3 ask MP3s + {len(n2_cards)} N2 prompts + {len(VOICE_COACH_LINES)} studio coach clips) verified")
 
 
 def main() -> int:
@@ -1264,7 +1324,8 @@ def main() -> int:
     test_v45_broadcast_authenticity_guard()
     test_v82_jobs_zen_and_telemetry_hygiene_guard()
     test_v46_stereo_cognitive_n2_long_horizon_guard()
-    print("[ALL PASS] tests_ci_guard.py 19/19 gates green!")
+    test_v84_hands_free_voice_vocab_coach_guard()
+    print("[ALL PASS] tests_ci_guard.py 20/20 gates green!")
     return 0
 
 
