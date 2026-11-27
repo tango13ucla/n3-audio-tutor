@@ -503,6 +503,125 @@ def _format_n2_pedagogy_instruction(n2_pedagogy: dict | None, act_role: str = "s
     return "\n".join(lines) + "\n"
 
 
+CLOUD_SYNC_CONFIG_PATH = os.path.join(BASE_DIR, "cloud_sync_config.json")
+
+
+def _load_live_news_ntfy_topic() -> str:
+    env_t = (os.environ.get("LIVE_NEWS_NTFY_TOPIC") or "").strip()
+    if env_t:
+        return env_t
+    if os.path.exists(CLOUD_SYNC_CONFIG_PATH):
+        try:
+            cfg = json.load(open(CLOUD_SYNC_CONFIG_PATH, encoding="utf-8"))
+            return str(cfg.get("live_news_ntfy_topic") or "").strip()
+        except Exception:
+            return ""
+    return ""
+
+
+def encode_ntfy_news_chunks(story: dict, today_str: str, chunk_size: int = 2600) -> list[str]:
+    """Compress a validated live-news story into <=3KB ntfy.sh JSON chunks with SHA integrity."""
+    import base64
+    import gzip
+    import hashlib
+
+    raw = json.dumps(story, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    sha12 = hashlib.sha256(raw).hexdigest()[:12]
+    b64 = base64.b64encode(gzip.compress(raw, compresslevel=9)).decode("ascii")
+    parts = [b64[i : i + chunk_size] for i in range(0, len(b64), chunk_size)] or [""]
+    total = len(parts)
+    return [
+        json.dumps(
+            {"v": 1, "date": str(today_str)[:10], "uid": sha12[:8], "sha": sha12, "i": idx, "n": total, "d": ch},
+            ensure_ascii=False,
+            separators=(",", ":"),
+        )
+        for idx, ch in enumerate(parts)
+    ]
+
+
+def decode_ntfy_news_chunks(messages: list[str], today_str: str) -> dict | None:
+    """Reassemble newest complete SHA-verified chunked live-news story for `today_str`."""
+    import base64
+    import gzip
+    import hashlib
+
+    target_d = str(today_str)[:10]
+    buckets: dict[str, dict] = {}
+    order: list[str] = []
+    for raw_msg in messages or []:
+        s = str(raw_msg or "").strip()
+        if not s.startswith("{"):
+            continue
+        try:
+            obj = json.loads(s)
+        except Exception:
+            continue
+        # Handle both ntfy event wrapper (`{"event":"message","message":"{...}"}`) and raw payload JSON
+        if isinstance(obj, dict) and obj.get("event") == "message" and isinstance(obj.get("message"), str):
+            try:
+                obj = json.loads(obj["message"])
+            except Exception:
+                continue
+        if not isinstance(obj, dict) or obj.get("v") != 1 or str(obj.get("date") or "")[:10] != target_d:
+            continue
+        uid = str(obj.get("uid") or "").strip()
+        sha = str(obj.get("sha") or "").strip()
+        idx = int(obj.get("i", -1))
+        total = int(obj.get("n", 0))
+        chunk = str(obj.get("d") or "")
+        if not uid or not sha or total <= 0 or not (0 <= idx < total):
+            continue
+        if uid not in buckets:
+            buckets[uid] = {"n": total, "sha": sha, "parts": {}}
+            order.append(uid)
+        buckets[uid]["parts"][idx] = chunk
+
+    for uid in reversed(order):
+        b = buckets[uid]
+        if len(b["parts"]) != b["n"]:
+            continue
+        try:
+            b64 = "".join(b["parts"][i] for i in range(b["n"]))
+            raw = gzip.decompress(base64.b64decode(b64.encode("ascii")))
+            if hashlib.sha256(raw).hexdigest()[:12] != b["sha"]:
+                continue
+            story = json.loads(raw.decode("utf-8"))
+            if isinstance(story, dict) and isinstance(story.get("turns"), list):
+                story["turns"] = _sanitize_generated_turns(story["turns"])
+                return story
+        except Exception:
+            continue
+    return None
+
+
+def fetch_relayed_live_news_from_ntfy(today_str: str, timeout: float = 10.0) -> dict | None:
+    """Pull today's pre-authored Gemini live NHK news from private workspace ntfy relay (zero-PII)."""
+    topic = _load_live_news_ntfy_topic()
+    if not topic:
+        return None
+    url = f"https://ntfy.sh/{topic}/json?poll=1&since=all"
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "N3LiveNewsRelay/1.0"})
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            lines = resp.read().decode("utf-8", errors="replace").splitlines()
+    except Exception as e:
+        print(f"[info] live news ntfy relay poll skipped: {e}")
+        return None
+    story = decode_ntfy_news_chunks(lines, today_str)
+    if not story:
+        return None
+    story.setdefault("id", f"live_nhk_news_{today_str}")
+    story["tier"] = "live_news"
+    story["is_news_slot"] = True
+    story["additive_news_opener"] = True
+    story["short_tab"] = str(story.get("short_tab") or "今日新闻")[:6]
+    if validate_generated_story(story, require_light_explain=False, min_chars=1000):
+        return story
+    print("[info] Relayed live news failed strict phonetic/depth gate; skipping.")
+    return None
+
+
 def maybe_generate_live_news_story(
     today_str: str,
     imm_profile: dict,
@@ -511,16 +630,34 @@ def maybe_generate_live_news_story(
     dry_test: bool = False,
     n2_pedagogy: dict | None = None,
 ) -> dict | None:
-    if dry_test:
-        return None
     cache_path = os.path.join(AUDIO_DIR, f"live_news_{today_str}.json")
+    if dry_test:
+        if os.environ.get("ALLOW_CACHED_LIVE_NEWS_IN_DRY_TEST") == "1" and os.path.exists(cache_path):
+            try:
+                cached = json.load(open(cache_path, encoding="utf-8"))
+                cached["turns"] = _sanitize_generated_turns(cached.get("turns") or [])
+                if validate_generated_story(cached, require_light_explain=False, min_chars=1000):
+                    return cached
+            except Exception:
+                pass
+        return None
     if os.path.exists(cache_path):
         try:
             cached = json.load(open(cache_path, encoding="utf-8"))
-            if validate_generated_story(cached, require_light_explain=(imm_profile.get("ja_ratio", 0.14) < 0.45), min_chars=1500):
+            cached["turns"] = _sanitize_generated_turns(cached.get("turns") or [])
+            if validate_generated_story(cached, require_light_explain=False, min_chars=1000):
                 return cached
         except Exception:
             pass
+
+    # Priority 1: Pull freshly Gemini-authored live Japan news from private brain ntfy relay
+    relayed = fetch_relayed_live_news_from_ntfy(today_str)
+    if relayed:
+        os.makedirs(AUDIO_DIR, exist_ok=True)
+        with open(cache_path, "w", encoding="utf-8") as f:
+            json.dump(relayed, f, ensure_ascii=False, indent=2)
+        print(f"[live-news] Loaded validated daily Japan news via cloud relay: {relayed.get('title')}")
+        return relayed
 
     raw_headlines = fetch_live_nhk_news(max_items=10)
     headlines = rank_headlines_by_editorial_taste(raw_headlines, limit=6)
@@ -554,7 +691,7 @@ def maybe_generate_live_news_story(
         "- 窦文涛(W)：俗人真性情、爱自嘲出糗、开场第一轮短平快抛悬念钩子（35到60字，五秒内让嘉宾插话），常蹦出4到15字短反应（『真的假的？』『等会儿』『哪儿啊』），绝不当捧哏报幕员；\n"
         "- 梁文道(D)：港台温厚书卷腔、慢火铺陈画面与来龙去脉，爱自然带出『其实你想想看啊』『某种程度上讲』『说起来挺吊诡的』；\n"
         "- 许子东(X)：冷幽默世情大师、敢随时打断抬杠泼冷水，爱用『不不不，我的问题是』『对不对？』一句点破荒诞与体面背后的算盘。\n"
-        "请从今日真实日本新闻里【只挑一件最有戏剧反差与人情冷暖的真新闻】像聊大故事一样剥洋葱讲透（适配 40 分钟节目第一幕：约 6 分钟，20 到 26 轮，约 1,800 到 2,100 字，长短句交错，穿插4到15字真实短插话）。\n"
+        "请从今日真实日本新闻里【挑 2 件最有现实反差与社会肌理的当日日本真新闻（一主一辅，如政经/科技/企业治理/地方社会）】像老友喝茶聊当日新闻一样聊透（适配 45 分钟节目开篇『今日日本新闻』热身幕：约 4.5 到 5 分钟，15 到 22 轮，约 1,350 到 1,650 字，长短句交错，穿插 4 到 15 字真实短插话）。\n"
         "【听众底线：学过三年日语的内行听众，严禁一切游客科普与入门老梗！】：\n"
         "听众已系统学日语三年、深度游历过日本多地并常看日本电视原版节目。绝对禁止聊任何游客/入门老梗（京都茶泡饭逐客令、京都人夸手表钢琴阴阳怪气、京都公交挤行李/清水寺/岚山/艺伎观光公害、大阪阿姨炫耀砍价/指枪喊砰、敬语内外科普或报联相=菠菜或鞠躬章、平安夜吃肯德基、红白跨年荞麦面一百零八下钟声、忠犬八公基础科普、便利店拉面樱花鞠躬常识）。\n"
         "欢迎深挖真正有历史纵深与权力/产业肌理的非京阪东地方史（如北陆金泽加贺百万石、长崎出岛、北海道东北铁道与过疏、九州冲绳地方史）及日本真实政经、法制、公司治理、土木防灾、医疗免疫、建筑艺术与科技暗流。\n"
@@ -562,16 +699,17 @@ def maybe_generate_live_news_story(
         + n2_block +
         "核心铁律（死守故事感与聊天人味）：\n"
         "1. 【写活人，严禁百科流水账与鸡汤感叹】：绝不报菜名、绝不堆干巴巴的数据年表、绝不喊『血脉偾张』『拼出底色』这类播音腔口号！多用句号和问号，每两三轮最多出现一个感叹号；三人要有互相打趣、轻微拌嘴和人情冷暖的留白。\n"
-        "2. 【100% 真实新闻，严禁编造人物】：只能聊输入里的真实新闻与真实日本历史社会脉络，绝对不允许虚构任何假朋友、假同事、假邻居故事！\n"
-        "3. 【开篇与收束自然衔接】：开篇第一轮 W 直接以『《锵锵三人行》！』短钩子切入今日最热日本新闻，第二轮立即由 X 或 D 调侃接茬；最后两轮由 D/W 自然预告待会儿回来要深聊的今日两段日本真实公共记忆大故事（参考 companion_titles），以『待会儿回来，……』收住悬念即可，不要自己抢说『先进广告』，把原版进广告口播留给系统由文涛统一喊出。\n"
-        "4. 【呼吸感黄金文法节奏（本章严格只放 2 到 3 个核心语法点，每 600 字以上才自然带出 1 个！）】：严禁每说三两句就急刹车讲语法课！先让故事连贯推进两三分钟、情绪铺足了，再由 D/X 顺着人物处境自然抛出一句完整日文示范并一两句大白话点透，绝不打断叙事流！\n"
-        "5. 【零洋泾浜碎词 · 自然带出高价值词账】：严禁在中文句里像撒胡椒面一样乱塞 `いえ / くるま / じかん / おかね / せかい / くに / みせ` 这类入门小词把句子切碎！只保留真正带日式文化质感的新闻专词，并优先从 `immersion_vocab_ledger` 的 `priority_to_introduce` 与 `learning_in_progress` 中自然织入 1 到 2 个贴合语境的实词（中文语境自然提到即可，系统会自动无缝衔接日语）。\n"
+        "2. 【100% 真实当日日本新闻，严禁编造人物】：只能聊输入里的真实新闻与真实日本社会脉络，绝对不允许虚构任何假朋友、假同事、假邻居故事！\n"
+        "3. 【开篇与收束自然衔接】：开篇第一轮 W 直接以『《锵锵三人行》！』短钩子切入今日最热日本新闻，第二轮立即由 X 或 D 调侃接茬；最后两轮由 D/W 自然收束新闻、把话头引向紧接着的本期重头长故事（参考 companion_titles），千万不要说『广告之后见』或『进广告』（本段后不进广告，直接顺入第一幕长故事）。\n"
+        "4. 【轻盈自然的日语节奏（本章只顺手带出 1 到 2 个核心日语表达，绝不急刹车上课！）】：让新闻聊天一气呵成，只在情绪到位处自然抛出一两句完整日文表达并一两句大白话点透。\n"
+        "5. 【零洋泾浜碎词 · 自然带出高价值词账】：严禁在中文句里像撒胡椒面一样乱塞 `いえ / くるま / じかん / おかね / せかい / くに / みせ` 这类入门小词把句子切碎！只保留真正带日式文化质感的新闻专词。\n"
         f"6. {ramp_line}\n"
         "7. 【语音合成硬铁律】：对白文本中凡出现日文词句，必须 100% 写成纯平假名或纯片假名（前后留空格或中文标点），严禁汉字紧贴假名，严禁夹杂单字中文孤岛，严禁破折号（—/——），严禁任何英文字母或阿拉伯数字（数字全写中文），严禁『哈哈』『噗』或考试倒计时。\n"
-        "输出严格为 JSON：{\"short_tab\": \"今日时局\", \"title\": \"...\", \"ja_focus\": \"...(此处可正常写日文汉字假名供屏幕显示)\", "
+        "输出严格为 JSON：{\"short_tab\": \"今日新闻\", \"title\": \"...\", \"ja_focus\": \"...(此处可正常写日文汉字假名供屏幕显示)\", "
         "\"turns\": [[\"W\", \"...\"], [\"X\", \"...\"], [\"D\", \"...\"], ...]}"
     )
     usr_prompt = json.dumps({
+        "today_date": today_str,
         "nhk_live_headlines": headlines,
         "last_night_priority_targets": combined_targets[:4],
         "n2_episode_pedagogy": n2_pedagogy or {},
@@ -598,20 +736,21 @@ def maybe_generate_live_news_story(
             "id": f"live_nhk_news_{today_str}",
             "tier": "live_news",
             "is_news_slot": True,
-            "short_tab": str(parsed.get("short_tab") or "今日时局")[:6],
+            "additive_news_opener": True,
+            "short_tab": str(parsed.get("short_tab") or "今日新闻")[:6],
             "tags": ["今日日本时局", "N2新语法首秀" if n2_pids else "真实日本公共记忆", "润物细无声N3"],
             "title": str(parsed.get("title") or "今日日本时局观察"),
-            "point_ids": n2_pids or ["N3-G13", "N3-G55", "N3-G67"],
+            "point_ids": n2_pids or ["N3-G74", "N3-G67"],
             "ja_focus": str(parsed.get("ja_focus") or ""),
             "turns": _sanitize_generated_turns(parsed.get("turns") or []),
         }
-        if validate_generated_story(story, require_light_explain=(imm_profile.get("ja_ratio", 0.14) < 0.45), min_chars=1500):
+        if validate_generated_story(story, require_light_explain=False, min_chars=1000):
             os.makedirs(AUDIO_DIR, exist_ok=True)
             with open(cache_path, "w", encoding="utf-8") as f:
                 json.dump(story, f, ensure_ascii=False, indent=2)
-            print(f"[live-news] Generated validated 40m-tier NHK current-affairs roundtable: {story['title']}")
+            print(f"[live-news] Generated validated 45m-tier NHK current-affairs opener: {story['title']}")
             return story
-        print("[info] Generated live news story did not pass strict phonetic/depth gate; using curated 40m Uchi bank.")
+        print("[info] Generated live news story did not pass strict phonetic/depth gate; using curated Uchi bank.")
     except Exception as e:
         print(f"[info] Failed to parse live news JSON: {e}")
     return None

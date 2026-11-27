@@ -2734,7 +2734,10 @@ async def main():
                     _vpref = _dom_prefixes[0]
                     _full_vol_objs = [st for st in candidate_pool if _uchi_vol_prefix(st["id"]) == _vpref]
                     if live_news_story and live_news_story["id"] not in [st["id"] for st in _full_vol_objs]:
-                        _full_vol_objs = [live_news_story] + [st for st in _full_vol_objs if not st.get("is_news_slot")]
+                        if today_str >= "2026-11-28":
+                            _full_vol_objs = [live_news_story] + list(_full_vol_objs)
+                        else:
+                            _full_vol_objs = [live_news_story] + [st for st in _full_vol_objs if not st.get("is_news_slot")]
                     if live_world_finale_story and live_world_finale_story["id"] not in [st["id"] for st in _full_vol_objs]:
                         _full_vol_objs = [st for st in _full_vol_objs if not _is_world_finale_story(st)] + [live_world_finale_story]
                     pinned_today_ids = [st["id"] for st in _full_vol_objs]
@@ -2756,8 +2759,11 @@ async def main():
 
     if _n2_radio_bundle and _n2_radio_bundle.get("stories") and not pinned_today_ids:
         _n2_acts = list(_n2_radio_bundle["stories"])
-        if live_news_story and any(st.get("is_news_slot") for st in _n2_acts):
-            _n2_acts = [live_news_story] + [st for st in _n2_acts if not st.get("is_news_slot")]
+        if live_news_story:
+            if today_str >= "2026-11-28":
+                _n2_acts = [live_news_story] + _n2_acts
+            elif any(st.get("is_news_slot") for st in _n2_acts):
+                _n2_acts = [live_news_story] + [st for st in _n2_acts if not st.get("is_news_slot")]
         selected_stories = _n2_acts
     elif _phase_info.get("phase") in ("n2_climb", "n1_sprint") and len(_n2_auto_acts) >= 3 and not pinned_today_ids:
         # Day 4+ automated N2/N1 pedagogy-anchored episode (`n2_auto_{YYYYMMDD}_1..4` + live news & world finale)
@@ -2789,8 +2795,9 @@ async def main():
                 if str(st.get("id") or "").startswith(f"uchi_night_focus_{today_str.replace('-', '')}") and st not in picked_list:
                     picked_list.append(st)
             _vol_chapters = list(vol_groups[cohesive_vp])
-            if live_news_story and any(st.get("is_news_slot") for st in _vol_chapters):
-                # Cleanly replace fallback Act-1 news slot with today's fresh live NHK news
+            if live_news_story and today_str < "2026-11-28" and any(st.get("is_news_slot") for st in _vol_chapters):
+                # Legacy (< 2026-11-28) replacement mode; from 2026-11-28 onward live daily Japan news
+                # is an additive ~4.5-5m opener targeting ~45 min total without ever dropping curated Act 1!
                 _vol_chapters = [st for st in _vol_chapters if not st.get("is_news_slot")]
             if live_world_finale_story:
                 # Cleanly replace fallback final-1/5 world slot with today's fresh live World-from-Japan finale
@@ -2875,9 +2882,14 @@ async def main():
                 st_turns[0] = (spk0, f"《锵锵三人行》，{txt0}")
         elif ch_idx > 0 and st_turns:
             spk0, txt0 = st_turns[0][0], str(st_turns[0][1]).strip()
-            txt0_clean = re.sub(r"^《锵锵三人行》[，、：\s]*", "", txt0).strip()
+            txt0_clean = re.sub(r"^《锵锵三人行》[！!，、：。\s]*", "", txt0).strip()
             if txt0_clean and txt0_clean != txt0:
-                st_turns[0] = (spk0, f"哎，再说回眼跟前儿这笔账，{txt0_clean}")
+                if ch_idx == 1 and story_blocks and str(story_blocks[0].get("id") or "").startswith("live_nhk_news_"):
+                    st_turns[0] = (spk0, txt0_clean)
+                elif txt0_clean.startswith(("广告回来", "欢迎回来")):
+                    st_turns[0] = (spk0, txt0)
+                else:
+                    st_turns[0] = (spk0, f"哎，再说回眼跟前儿这笔账，{txt0_clean}")
         story_blocks.append({
             "id": str(st.get("id") or ""),
             "chapter": ch_idx,
@@ -2972,9 +2984,19 @@ async def main():
         b["events"] = turns_to_expanded_events(b["raw_turns"])
 
     # Compute exact ad-break positions upfront (never splitting pair_part=1 from pair_part=2;
-    # for 6-scene v37 [News, S1a, S1b, S2a, S2b, WorldFinale], breaks cleanly land after ch 0 and ch 2!)
+    # for 6-scene [Act1, S1a, S1b, S2a, S2b, World] breaks land after ch 0 and ch 2;
+    # for 7-scene [LiveNews, Act1, S1a, S1b, S2a, S2b, World] breaks land after ch 1 and ch 3!)
     total_stories = len(story_blocks)
     if (
+        total_stories == 7
+        and str(story_blocks[0].get("id") or "").startswith("live_nhk_news_")
+        and story_blocks[-1].get("is_world_finale")
+        and story_blocks[2].get("pair_part") == 1
+        and story_blocks[4].get("pair_part") == 1
+    ):
+        ad1_after = 1
+        ad2_after = 3
+    elif (
         total_stories == 6
         and story_blocks[-1].get("is_world_finale")
         and story_blocks[1].get("pair_part") == 1

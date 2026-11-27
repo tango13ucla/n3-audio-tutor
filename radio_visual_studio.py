@@ -1979,10 +1979,19 @@ def _resolve_jp_video_script(
 ) -> dict[str, Any]:
     long_n2 = bool(today_str and str(today_str)[:10] >= "2026-12-07")
     # 1) Check curated NHK-grade gold scripts first
+    has_prepended_live_news = (
+        len(story_blocks) >= 7
+        and str(story_blocks[0].get("id") or "").startswith("live_nhk_news_")
+    )
     for blk in story_blocks:
         sid = str(blk.get("id") or "").strip()
         if sid in CURATED_JP_VIDEO_SCRIPTS:
             raw_curated = json.loads(json.dumps(CURATED_JP_VIDEO_SCRIPTS[sid], ensure_ascii=False))
+            if has_prepended_live_news and int(blk.get("chapter", 0)) >= 2:
+                max_ch = len(story_blocks) - 1
+                for ln in raw_curated.get("lines") or []:
+                    if isinstance(ln, dict) and "ch" in ln:
+                        ln["ch"] = min(max_ch, int(ln["ch"]) + 1)
             return _ensure_script_meets_word_and_cue_floor(raw_curated, story_blocks, target_words)
     # 2) In CI with LLM key, author a fresh tailored ALL-JAPANESE documentary script (3-4m in N2/N1!)
     gram_pts = [str(it.get("title") or "") for it in (review_items or []) if it.get("kind") == "grammar"]
@@ -2977,7 +2986,11 @@ async def build_episode_visuals_async(
             if sid in CURATED_BEAT_STORYBOARDS:
                 storyboard_id = sid
                 break
-    curated_posters = CURATED_CHAPTER_POSTERS.get(storyboard_id) or {}
+    raw_curated_posters = CURATED_CHAPTER_POSTERS.get(storyboard_id) or {}
+    if len(story_blocks) >= 7 and str(story_blocks[0].get("id") or "").startswith("live_nhk_news_"):
+        curated_posters = {int(k) + 1: v for k, v in raw_curated_posters.items()}
+    else:
+        curated_posters = dict(raw_curated_posters)
 
     try:
         # 1. Fetch chapter posters + backup stills (+ HD video clips when not driven by a curated storyboard)

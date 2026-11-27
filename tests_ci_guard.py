@@ -2069,6 +2069,96 @@ def test_v47_real_qiangqiang_pace_guard() -> None:
     print(f"[PASS 30/30] v47 real-Qiangqiang calibrated pace (W={vmap['W_MID'][1]}, D={vmap['D_MID'][1]}, X={vmap['X_MID'][1]}, 3 distinct zero-fail voices & relaxed cadence) verified!")
 
 
+def test_v48_additive_daily_jp_news_45m_guard() -> None:
+    """Gate 31: Guard ~45-min additive daily Japan news opener, chunked ntfy relay integrity, 7-chapter ad breaks & JP video ch offset."""
+    import os
+    import subprocess
+    import daily_news_salon_gen as dnsg
+    import radio_visual_studio as rvs
+    import tutor_prefs as tp
+
+    # 1. Config has live_news_ntfy_topic & 43-47 min (~45 min) target duration
+    cfg = json.loads((BASE_DIR / "cloud_sync_config.json").read_text(encoding="utf-8"))
+    topic = str(cfg.get("live_news_ntfy_topic") or "").strip()
+    assert topic.startswith("n3news_") and len(topic) >= 20, f"Missing/weak live_news_ntfy_topic: {topic!r}"
+    rp = tp.radio_prefs()
+    assert rp["episode_minutes"] == (43, 47), f"Expected 43-47m radio target, got {rp['episode_minutes']}"
+
+    # 2. Chunked gzip+b64 ntfy relay round-trip (multi-chunk >4KB raw -> <=2800B chunks -> SHA-verified reassembly)
+    sample_turns = [
+        ("W", "《锵锵三人行》！今天东京政坛和商界同时爆出两件耐人寻味的新鲜事，咱们先趁热拆开聊聊。"),
+        ("X", "怎么着，国会里又为了税制吵成一锅粥了？"),
+        ("D", "参议院表决仅仅相差四票惊险过关，其实你想想看啊，这背后折射的是执政联盟眼下极其微妙的票数平衡。"),
+        ("W", "仅仅差四票？那另一头商界又出了什么岔子，连大报社和百年百货店一块儿中招？"),
+        ("X", "几家大型企业接连披露外部系统遭非法入侵，用户信息外泄数百万条，对不对？平时嘴上天天喊安全第一，外包链条一松全漏风。"),
+        ("D", "据日媒最新报道，相关企业正紧急排查外部营销接口。引述消息出处正是 によれば ： ほうどうによれば、がいぶシステムからじょうほうがもれた 。"),
+        ("W", "听着后背发凉，数字化走得越快，看不见的供应链暗门反倒越多。"),
+        ("X", "而且你看日本企业一遇到这类风波，一边拼命鞠躬发声明，另一边老旧外包架构几年都改不动。"),
+        ("D", "两面对比正是 いっぽうで ： デジタルか がすすむいっぽうで、あんぜんかんりのおくれがめだっている 。"),
+        ("W", "真是表里反差极大，既要追赶新效率，又得补上最底层的老漏洞。"),
+        ("X", "这跟咱们今天紧接着要聊的深水大主题，其实骨子里还真串成一条线，都在问什么是真正不能妥协的底线。"),
+        ("D", "好了，今日东京这两件新鲜事聊透，咱们这就顺着这股劲儿，进今天真正的主菜。"),
+    ]
+    # Pad naturally past 1100 chars so multi-chunk & validator both run at realistic size
+    while sum(len(t[1]) for t in sample_turns) < 1350:
+        sample_turns.insert(-2, ("W", "说到底日本社会每次出这类事，表面看着风平浪静，底下制度磨合和观念碰撞其实激烈得很。"))
+        sample_turns.insert(-2, ("D", "某种程度上讲，这正是观察当代日本最耐看的地方，比光看表面热闹有意思得多。"))
+    sample_story = {
+        "id": "live_nhk_news_2026-11-28",
+        "tier": "live_news",
+        "is_news_slot": True,
+        "additive_news_opener": True,
+        "short_tab": "今日新闻",
+        "tags": ["今日日本时局", "真实日本公共记忆", "润物细无声N3"],
+        "title": "参议院四票险胜与日企外包数据外泄：今日东京政经双线观察",
+        "point_ids": ["N3-G74", "N3-G67"],
+        "ja_focus": "報道によれば外部システムから情報が漏れた。デジタル化が進む一方で安全管理の遅れが目立つ。",
+        "turns": sample_turns,
+    }
+    assert dnsg.validate_generated_story(sample_story, require_light_explain=False, min_chars=1000)
+    chunks = dnsg.encode_ntfy_news_chunks(sample_story, "2026-11-28", chunk_size=900)
+    assert len(chunks) >= 2 and all(len(c.encode("utf-8")) < 3500 for c in chunks), f"Chunk sizing unexpected: {[len(c) for c in chunks]}"
+    wrapped_events = [json.dumps({"event": "message", "message": c}, ensure_ascii=False) for c in chunks]
+    decoded = dnsg.decode_ntfy_news_chunks(wrapped_events, "2026-11-28")
+    assert decoded and decoded["title"] == sample_story["title"] and len(decoded["turns"]) == len(sample_turns)
+
+    # 3. Additive 7-chapter assembly on 2026-11-28: keeps uchi26_s1 intact + aligns ad breaks after ch 1 & ch 3
+    tmp_cache = BASE_DIR / "audio" / "live_news_2026-11-28.json"
+    existed = tmp_cache.exists()
+    prev_bytes = tmp_cache.read_bytes() if existed else None
+    try:
+        tmp_cache.write_text(json.dumps(sample_story, ensure_ascii=False), encoding="utf-8")
+        env = dict(os.environ, ALLOW_CACHED_LIVE_NEWS_IN_DRY_TEST="1")
+        out = subprocess.run(
+            [sys.executable, str(BASE_DIR / "generate_daily_radio.py"), "--dry-test", "--dry-date", "2026-11-28"],
+            cwd=str(BASE_DIR), env=env, check=True, capture_output=True, text=True,
+        ).stdout
+        assert "Verified 7 Qiang-Qiang stories" in out or "'live_nhk_news_2026-11-28'" in out, f"7-ch additive news missing: {out}"
+        for must_id in ("live_nhk_news_2026-11-28", "uchi26_s1_news_fallback", "uchi26_s2a_otogawa_zen_part1", "uchi26_s4_world_attention_neuro"):
+            assert must_id in out, f"Additive 7-ch episode dropped {must_id}: {out}"
+    finally:
+        if existed and prev_bytes is not None:
+            tmp_cache.write_bytes(prev_bytes)
+        elif tmp_cache.exists():
+            tmp_cache.unlink()
+
+    # 4. Curated JP video script shifts ch 0..5 -> 1..6 cleanly when live_nhk_news_* sits at ch 0
+    mock_blocks_7 = [
+        {"id": "live_nhk_news_2026-11-28", "chapter": 0, "short_tab": "今日新闻", "title": "今日新闻", "ja_focus": ""},
+        {"id": "uchi26_s1_news_fallback", "chapter": 1, "short_tab": "禅者初心", "title": "禅者初心", "ja_focus": ""},
+        {"id": "uchi26_s2a_otogawa_zen_part1", "chapter": 2, "short_tab": "怪僧乙川", "title": "怪僧乙川", "ja_focus": ""},
+        {"id": "uchi26_s2b_otogawa_next_part2", "chapter": 3, "short_tab": "精神顾问", "title": "精神顾问", "ja_focus": ""},
+        {"id": "uchi26_s3a_hasui_kyoto_part1", "chapter": 4, "short_tab": "巴水苔寺", "title": "巴水苔寺", "ja_focus": ""},
+        {"id": "uchi26_s3b_miyake_craft_part2", "chapter": 5, "short_tab": "三宅燕三条", "title": "三宅燕三条", "ja_focus": ""},
+        {"id": "uchi26_s4_world_attention_neuro", "chapter": 6, "short_tab": "日本看世界", "title": "日本看世界", "ja_focus": ""},
+    ]
+    tw = rvs._collect_daily_target_words({}, [])
+    shifted = rvs._resolve_jp_video_script(mock_blocks_7, tw, [], today_str="2026-11-28")
+    chs = [int(ln["ch"]) for ln in shifted.get("lines") or []]
+    assert min(chs) == 1 and max(chs) == 6, f"Expected curated JP video ch shifted to 1..6 for 7-ch live news, got {min(chs)}..{max(chs)}"
+    print(f"[PASS 31/31] v48 ~45m additive daily Japan news opener (chunked ntfy relay, 7-ch assembly preserving Act 1 & ch-shifted JP video) verified!")
+
+
 def main() -> int:
     test_all_python_files_syntax_and_names()
     test_apply_practice_logs_all_event_types()
@@ -2100,7 +2190,8 @@ def main() -> int:
     test_v93_grammar_mini_podcasts_guard()
     test_v94_whole_app_cross_match_integrity_guard()
     test_v47_real_qiangqiang_pace_guard()
-    print("[ALL PASS] tests_ci_guard.py 30/30 gates green!")
+    test_v48_additive_daily_jp_news_45m_guard()
+    print("[ALL PASS] tests_ci_guard.py 31/31 gates green!")
     return 0
 
 

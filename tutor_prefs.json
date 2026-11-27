@@ -77,11 +77,12 @@
     ],
     "avoid_story_ids": [],
     "episode_minutes": [
-      38,
-      42
+      43,
+      47
     ],
+    "additive_daily_jp_news": true,
     "perspective": "uchi_real_public_memory_and_world_from_japan",
-    "story_structure": "4_act_jp_news_2_real_stories_plus_final_fifth_world_from_japan",
+    "story_structure": "live_jp_news_opener_plus_curated_deep_stories_and_world_from_japan",
     "teaching_balance": "natural_1_35x_grammar_inline_8hit3d_40m",
     "authentic_outro_with_next_program": true,
     "world_finale_share": 0.2,

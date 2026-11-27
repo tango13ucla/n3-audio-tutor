@@ -1,4 +1,5 @@
 {
   "ntfy_topic": "n3zen_e843a12f060d2710ea5f1697eed5",
-  "grok_ntfy_topic": "n3grok_9c71e4b2a85f13d06e24ab891f03"
+  "grok_ntfy_topic": "n3grok_9c71e4b2a85f13d06e24ab891f03",
+  "live_news_ntfy_topic": "n3news_f955b72596c8404104dfc2e8"
 }
