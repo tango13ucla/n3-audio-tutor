@@ -2306,8 +2306,10 @@ html = r"""<!DOCTYPE html>
     padding: 0;
     width: 100%;
     height: 100%;
+    height: 100dvh;
     overflow: hidden;
     overscroll-behavior: none;
+    touch-action: manipulation;
     background: var(--washi);
   }
 
@@ -2317,8 +2319,10 @@ html = r"""<!DOCTYPE html>
     inset: 0;
     width: 100%;
     height: 100%;
+    height: 100dvh;
     overflow: hidden;
     overscroll-behavior: none;
+    touch-action: manipulation;
     background: var(--washi);
     color: var(--sumi);
     font-family: var(--sans);
@@ -2349,7 +2353,7 @@ html = r"""<!DOCTYPE html>
     .zen-shell.wide-mode { max-width: 800px; }
   }
 
-  button {
+  button, a {
     font-family: inherit;
     white-space: nowrap;
     background: none;
@@ -2357,6 +2361,7 @@ html = r"""<!DOCTYPE html>
     padding: 0;
     color: inherit;
     cursor: pointer;
+    touch-action: manipulation;
   }
 
   /* Portrait guard (phone only): counter-rotate the app when the OS rotates to landscape anyway */
@@ -2531,6 +2536,7 @@ html = r"""<!DOCTYPE html>
     min-height: 0;
     display: flex;
     flex-direction: column;
+    contain: layout style;
   }
   .zen-panel.hidden {
     display: none;
@@ -2547,31 +2553,34 @@ html = r"""<!DOCTYPE html>
     flex-direction: column;
     justify-content: space-between;
     padding-top: 14px;
-    animation: fadeTurn 0.18s ease-out;
-    will-change: transform, opacity;
+    animation: fadeTurn 0.19s cubic-bezier(0.22, 1, 0.36, 1);
   }
   @keyframes fadeTurn {
-    from { opacity: 0.48; }
-    to { opacity: 1; }
+    from { opacity: 0.45; transform: translate3d(0, 4px, 0) scale(0.994); }
+    to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
   }
 
   /* Tactile Tinder-style card physics on Result & Teach pages (frameless open Washi) */
   .stage-wrap.tutor-dragging {
     transition: none !important;
     animation: none !important;
+    will-change: transform;
   }
   .stage-wrap.tutor-settling {
+    will-change: transform, opacity;
     transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease;
   }
   .stage-wrap.tutor-fly-right {
+    will-change: transform, opacity;
     transform: translate3d(118%, 8px, 0) rotate(6.5deg) !important;
     opacity: 0 !important;
-    transition: transform 0.21s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.19s ease !important;
+    transition: transform 0.19s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.17s ease !important;
   }
   .stage-wrap.tutor-fly-left {
+    will-change: transform, opacity;
     transform: translate3d(-118%, 8px, 0) rotate(-6.5deg) !important;
     opacity: 0 !important;
-    transition: transform 0.21s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.19s ease !important;
+    transition: transform 0.19s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.17s ease !important;
   }
   .tutor-stamp {
     position: absolute;
@@ -2648,6 +2657,7 @@ html = r"""<!DOCTYPE html>
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+    overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
     touch-action: pan-y;
     display: flex;
@@ -2709,7 +2719,8 @@ html = r"""<!DOCTYPE html>
       background: var(--sumi);
       border-radius: 2px;
       pointer-events: none;
-      transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1), width 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+      will-change: transform, width;
+      transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), width 0.24s cubic-bezier(0.22, 1, 0.36, 1);
     }
     .thumb-link {
       position: relative;
@@ -2720,24 +2731,40 @@ html = r"""<!DOCTYPE html>
       font-weight: 500;
       color: var(--ink-3);
       letter-spacing: 0.04em;
-      transition: color 0.2s ease;
+      transition: color 0.16s ease, opacity 0.12s ease;
     }
     .thumb-link.active {
       color: var(--sumi);
       font-weight: 600;
     }
     .thumb-link.is-playing { color: var(--moss); }
-    .thumb-link:active { opacity: 0.6; }
+    .thumb-link:active,
+    .thumb-link.is-pressed { opacity: 0.56; }
     .zen-panel:not(.hidden) {
-      animation: zenModeIn 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+      animation: zenModeIn 0.19s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .zen-panel.nav-from-right:not(.hidden) {
+      animation: zenSlideFromRight 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .zen-panel.nav-from-left:not(.hidden) {
+      animation: zenSlideFromLeft 0.2s cubic-bezier(0.22, 1, 0.36, 1);
     }
     @keyframes zenModeIn {
-      from { opacity: 0.35; transform: translateY(4px); }
-      to { opacity: 1; transform: translateY(0); }
+      from { opacity: 0.45; transform: translate3d(0, 4px, 0); }
+      to { opacity: 1; transform: translate3d(0, 0, 0); }
+    }
+    @keyframes zenSlideFromRight {
+      from { opacity: 0.45; transform: translate3d(12px, 0, 0); }
+      to { opacity: 1; transform: translate3d(0, 0, 0); }
+    }
+    @keyframes zenSlideFromLeft {
+      from { opacity: 0.45; transform: translate3d(-12px, 0, 0); }
+      to { opacity: 1; transform: translate3d(0, 0, 0); }
     }
 
     .ledger-back-fab { display: none !important; }
     .ledger-scroll {
+      overscroll-behavior: contain;
       padding-bottom: 38px;
       -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 36px), transparent 100%);
       mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 36px), transparent 100%);
@@ -2748,9 +2775,11 @@ html = r"""<!DOCTYPE html>
     .rv-dock,
     .ga-spec-wrap {
       padding-bottom: clamp(16px, 4.4vh, 44px);
+      padding-bottom: clamp(16px, 4.4dvh, 44px);
     }
     .radio-dock {
       padding-bottom: clamp(8px, 1.4vh, 14px);
+      padding-bottom: clamp(8px, 1.4dvh, 14px);
     }
     .zen-shell.has-mini-bar .action-dock,
     .zen-shell.has-mini-bar .vc-dock,
@@ -3994,6 +4023,8 @@ html = r"""<!DOCTYPE html>
     padding-bottom: 8px;
     border-bottom: 1px solid var(--hairline);
     overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     -webkit-mask-image: none;
     mask-image: none;
@@ -4354,6 +4385,7 @@ html = r"""<!DOCTYPE html>
     min-height: 0;
     width: 100%;
     overflow-y: auto;
+    overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
     display: flex;
     flex-direction: column;
@@ -4376,6 +4408,7 @@ html = r"""<!DOCTYPE html>
   .jpv-frame {
     position: relative;
     width: min(100%, calc(min(33vh, 240px) * 16 / 9));
+    width: min(100%, calc(min(33dvh, 240px) * 16 / 9));
     max-width: 520px;
     aspect-ratio: 16 / 9;
     border-radius: 12px;
@@ -4736,7 +4769,11 @@ html = r"""<!DOCTYPE html>
     padding: 13px 0;
     border-bottom: 1px solid var(--hairline);
     cursor: pointer;
+    content-visibility: auto;
+    contain-intrinsic-size: auto 66px;
+    transition: opacity 0.12s ease;
   }
+  .ledger-item.is-pressed { opacity: 0.68; }
   .li-row {
     display: flex;
     justify-content: space-between;
@@ -4843,50 +4880,89 @@ html = r"""<!DOCTYPE html>
     line-height: 1.62;
   }
 
-  /* ================= 6. PROGRESS & CROSS-DEVICE SYNC MODAL ================= */
+  /* ================= 6. PROGRESS & CROSS-DEVICE SYNC MODAL (NATIVE GPU BOTTOM SHEET) ================= */
   .modal-mask {
     position: fixed;
     inset: 0;
-    background: rgba(28, 27, 24, 0.32);
-    display: none;
+    background: rgba(28, 27, 24, 0.34);
+    display: flex;
     align-items: center;
     justify-content: center;
     padding: 28px;
     z-index: 100;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.2s ease, visibility 0s linear 0.22s;
   }
   @media (prefers-color-scheme: dark) {
-    .modal-mask { background: rgba(10, 9, 8, 0.66); }
+    .modal-mask { background: rgba(10, 9, 8, 0.68); }
   }
-  @media (max-width: 859px), (max-height: 520px) {
-    .modal-mask {
-      align-items: flex-end;
-      padding: 16px 16px calc(24px + env(safe-area-inset-bottom));
-    }
+  .modal-mask.open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition: opacity 0.2s ease, visibility 0s linear 0s;
   }
-  .modal-mask.open { display: flex; }
+  .modal-mask.sheet-dragging {
+    transition: none !important;
+  }
   .modal-card {
     width: 100%;
     max-width: 396px;
     max-height: 82vh;
+    max-height: 82dvh;
     overflow-y: auto;
+    overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     background: var(--sheet);
     border: 1px solid var(--hairline-strong);
     border-radius: 16px;
     padding: 24px 22px;
-    animation: modalRise 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+    transform: translate3d(0, 18px, 0) scale(0.985);
+    opacity: 0;
+    transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.18s ease;
   }
-  @keyframes modalRise {
-    from { opacity: 0.4; transform: translateY(12px); }
-    to { opacity: 1; transform: translateY(0); }
+  .modal-mask.open .modal-card {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 1;
+  }
+  .modal-card.sheet-dragging {
+    transition: none !important;
+    will-change: transform;
+  }
+  @media (max-width: 859px), (max-height: 520px) {
+    .modal-mask {
+      align-items: flex-end;
+      padding: 16px 14px calc(18px + env(safe-area-inset-bottom) + var(--kb-pad, 0px));
+    }
+    .modal-card {
+      border-radius: 20px;
+      padding: 22px 20px 22px;
+      transform: translate3d(0, 108%, 0);
+      opacity: 1;
+      transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .modal-mask.open .modal-card {
+      transform: translate3d(0, 0, 0);
+    }
+    .modal-card::before {
+      content: "";
+      display: block;
+      width: 34px;
+      height: 3.5px;
+      border-radius: 2px;
+      background: var(--hairline-strong);
+      margin: -10px auto 14px;
+    }
   }
   .modal-card::-webkit-scrollbar { display: none; }
   .modal-h { margin: 0 0 12px; font-size: 18px; font-weight: 500; letter-spacing: 0.05em; }
   .modal-body { margin: 0 0 14px; font-size: 15.5px; color: var(--ink-2); line-height: 1.85; font-variant-numeric: tabular-nums; }
   .modal-promise { margin: 0 0 16px; padding-top: 12px; border-top: 1px solid var(--hairline); font-size: 14.5px; color: var(--moss); line-height: 1.65; font-weight: 400; }
   .sync-box {
-    margin: 0 0 18px;
+    margin: 0 0 16px;
     padding: 12px 14px;
     border-radius: 12px;
     background: var(--soft-bg);
@@ -4908,11 +4984,90 @@ html = r"""<!DOCTYPE html>
     font-weight: 500;
     color: var(--sumi);
     letter-spacing: 0.04em;
+    transition: transform 0.12s ease, background 0.14s ease;
   }
   .sync-btn.copied {
     border-color: var(--moss);
     color: var(--moss);
   }
+  .install-app-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0 0 16px;
+    padding: 12px 2px;
+    border-top: 1px solid var(--hairline);
+    border-bottom: 1px solid var(--hairline);
+  }
+  .install-app-copy { min-width: 0; }
+  .install-app-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--sumi);
+    letter-spacing: 0.03em;
+  }
+  .install-app-sub {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--ink-3);
+    line-height: 1.45;
+  }
+  .install-app-btn {
+    flex-shrink: 0;
+    height: 34px;
+    padding: 0 14px;
+    border-radius: 9px;
+    border: 1px solid var(--moss-border);
+    background: var(--moss-soft);
+    color: var(--moss);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    transition: opacity 0.12s ease, transform 0.12s ease;
+  }
+  .install-app-btn.is-pressed,
+  .install-app-btn:active { opacity: 0.72; transform: scale(0.97); }
+  .install-app-hint {
+    margin: -10px 0 14px;
+    font-size: 12.5px;
+    color: var(--ink-2);
+    line-height: 1.55;
+  }
+  @media (max-height: 760px) {
+    .modal-mask { padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
+    .modal-card { max-height: 88dvh; padding: 22px 18px 18px; }
+    .modal-h { margin-bottom: 8px; font-size: 17px; }
+    .modal-body { margin-bottom: 10px; font-size: 14.5px; line-height: 1.64; }
+    .modal-promise { margin-bottom: 11px; padding-top: 9px; font-size: 13.5px; line-height: 1.52; }
+    .sync-box { margin-bottom: 11px; padding: 10px 12px; }
+    .sync-note { margin-bottom: 7px; font-size: 13px; }
+    .sync-btn { height: 40px; }
+    .install-app-row { margin-bottom: 11px; padding: 9px 2px; }
+    .modal-card .dock-row { margin-top: 8px; }
+    .modal-card .sumi-btn, .modal-card .ghost-btn { height: 44px; }
+  }
+
+  /* 0ms Instant Native Glass Press Feedback (Zero Haptic Vibration, Pure Visual Response) */
+  .zen-choice.is-pressed { background: var(--tap-bg); border-color: var(--hairline-strong); transform: scale(0.988); }
+  .listen-num-btn.is-pressed { background: var(--tap-bg); transform: scale(0.97); }
+  .sumi-btn.is-pressed,
+  .zb-btn-primary.is-pressed { opacity: 0.86; transform: scale(0.988); }
+  .ghost-btn.is-pressed,
+  .dock-replay-btn.is-pressed,
+  .vc-btn.is-pressed,
+  .sync-btn.is-pressed { opacity: 0.76; transform: scale(0.986); }
+  .zb-round-dot.is-pressed,
+  .enso-btn.is-pressed,
+  .play-toggle-btn.is-pressed,
+  .step-time-btn.is-pressed,
+  .radio-spd-pill.is-pressed,
+  .rmb-play-btn.is-pressed { transform: scale(0.93); opacity: 0.78; }
+  .zb-sheet-row.is-pressed,
+  .zb-ritual-left.is-pressed,
+  .zb-hero-tap.is-pressed,
+  .pillar-row.is-pressed,
+  .chap-link.is-pressed { opacity: 0.66; }
 
   /* ================= 7. ONE-HANDED SWIPE VOCAB SANCTUARY ("记词") ================= */
   .night-bar {
@@ -6174,6 +6329,7 @@ html = r"""<!DOCTYPE html>
     min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
+    overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     display: flex;
@@ -6181,12 +6337,12 @@ html = r"""<!DOCTYPE html>
     padding: 0 0 10px;
   }
   .zb-stage::-webkit-scrollbar { display: none; }
-  .zb-panel { display: none; flex-direction: column; flex: 1; min-height: 100%; will-change: transform, opacity; }
+  .zb-panel { display: none; flex-direction: column; flex: 1; min-height: 100%; }
   .zb-panel.active { display: flex; }
-  .zb-panel.zb-slide-r { animation: zbSlideR 0.23s cubic-bezier(0.22, 1, 0.36, 1); }
-  .zb-panel.zb-slide-l { animation: zbSlideL 0.23s cubic-bezier(0.22, 1, 0.36, 1); }
-  @keyframes zbSlideR { from { opacity: 0.28; transform: translateX(16px); } to { opacity: 1; transform: translateX(0); } }
-  @keyframes zbSlideL { from { opacity: 0.28; transform: translateX(-16px); } to { opacity: 1; transform: translateX(0); } }
+  .zb-panel.zb-slide-r { will-change: transform, opacity; animation: zbSlideR 0.21s cubic-bezier(0.22, 1, 0.36, 1); }
+  .zb-panel.zb-slide-l { will-change: transform, opacity; animation: zbSlideL 0.21s cubic-bezier(0.22, 1, 0.36, 1); }
+  @keyframes zbSlideR { from { opacity: 0.32; transform: translate3d(14px, 0, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
+  @keyframes zbSlideL { from { opacity: 0.32; transform: translate3d(-14px, 0, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
 
   /* Generous Zen Ma (余白) floating the single focal decision cleanly into the right-thumb arc */
   .zb-ma { flex: 1 1 36px; min-height: 20px; max-height: 92px; }
@@ -7394,7 +7550,7 @@ html = r"""<!DOCTYPE html>
         <div>
           <div class="ledger-controls">
             <div class="tier-links" id="tier-tabs"></div>
-            <input type="search" class="zen-search" id="pt-search" placeholder="检索…" oninput="renderMasteryList()" />
+            <input type="search" class="zen-search" id="pt-search" placeholder="检索…" oninput="onDashSearchInput()" />
           </div>
           <div id="point-list"></div>
         </div>
@@ -7781,6 +7937,246 @@ document.addEventListener("contextmenu", e => {
     e.preventDefault();
   }
 });
+
+// ================= NATIVE APP FLUIDITY CORE (v86: 0ms Press · VisualViewport · Pixel Back Stack · Sheet Drag · 1-Tap PWA) =================
+(function initNativeViewportAndTouch() {
+  try {
+    const root = document.documentElement;
+    const syncKeyboardPad = () => {
+      if (!window.visualViewport || !root || !root.style || !root.style.setProperty) return;
+      const vv = window.visualViewport;
+      const kb = Math.max(0, Math.round(window.innerHeight - vv.height - (vv.offsetTop || 0)));
+      root.style.setProperty("--kb-pad", (kb > 40 ? kb : 0) + "px");
+    };
+    if (window.visualViewport && window.visualViewport.addEventListener) {
+      window.visualViewport.addEventListener("resize", syncKeyboardPad, { passive: true });
+      window.visualViewport.addEventListener("scroll", syncKeyboardPad, { passive: true });
+    }
+  } catch (e) {}
+
+  // 0ms Instant Visual Press Feedback (eliminates Android Chrome's ~100ms :active delay, zero vibration)
+  const PRESS_SEL = ".zen-choice, .listen-num-btn, .sumi-btn, .ghost-btn, .dock-replay-btn, .vc-btn, .zb-btn-primary, .zb-round-dot, .thumb-link, .enso-btn, .zb-sheet-row, .zb-ritual-left, .zb-hero-tap, .pillar-row, .ledger-item, .play-toggle-btn, .step-time-btn, .radio-spd-pill, .rmb-play-btn, .sync-btn, .install-app-btn, .chap-link";
+  let pressedEl = null, pressX = 0, pressY = 0;
+  const clearPressed = () => {
+    if (pressedEl) {
+      pressedEl.classList.remove("is-pressed");
+      pressedEl = null;
+    }
+  };
+  document.addEventListener("pointerdown", e => {
+    if (typeof e.button === "number" && e.button !== 0) return;
+    const t = e.target && e.target.closest ? e.target.closest(PRESS_SEL) : null;
+    if (!t || t.disabled) return;
+    clearPressed();
+    pressedEl = t;
+    pressX = e.clientX || 0;
+    pressY = e.clientY || 0;
+    t.classList.add("is-pressed");
+  }, { passive: true });
+  document.addEventListener("pointermove", e => {
+    if (!pressedEl) return;
+    if (Math.hypot((e.clientX || 0) - pressX, (e.clientY || 0) - pressY) > 10) clearPressed();
+  }, { passive: true });
+  document.addEventListener("pointerup", clearPressed, { passive: true });
+  document.addEventListener("pointercancel", clearPressed, { passive: true });
+  window.addEventListener("blur", clearPressed, { passive: true });
+})();
+
+// Quiet 1-Tap PWA Install & Persistent Storage (zero main-screen banners!)
+let deferredInstallPrompt = null;
+function isStandaloneApp() {
+  try {
+    if (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) return true;
+    if (typeof navigator !== "undefined" && navigator.standalone === true) return true;
+  } catch (e) {}
+  return false;
+}
+window.addEventListener("beforeinstallprompt", e => {
+  try { e.preventDefault(); } catch (err) {}
+  deferredInstallPrompt = e;
+});
+window.addEventListener("appinstalled", () => {
+  deferredInstallPrompt = null;
+  const row = document.getElementById("install-app-row");
+  if (row) row.style.display = "none";
+  const hint = document.getElementById("install-app-hint");
+  if (hint) hint.style.display = "none";
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (e) {}
+});
+if (isStandaloneApp()) {
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (e) {}
+}
+function triggerPwaInstall() {
+  if (deferredInstallPrompt && typeof deferredInstallPrompt.prompt === "function") {
+    const dp = deferredInstallPrompt;
+    deferredInstallPrompt = null;
+    try {
+      dp.prompt();
+      if (dp.userChoice && typeof dp.userChoice.then === "function") {
+        dp.userChoice.then(res => {
+          if (res && res.outcome === "accepted") {
+            if (typeof closeModal === "function") closeModal();
+          }
+        }).catch(() => {});
+      }
+    } catch (e) {}
+    return;
+  }
+  const hint = document.getElementById("install-app-hint");
+  if (hint) {
+    const isIOS = /iPhone|iPad|iPod/i.test((navigator && navigator.userAgent) || "");
+    hint.textContent = isIOS
+      ? "点底部「分享」按钮，选「添加到主屏幕」，即可去掉浏览器栏全屏打开。"
+      : "点浏览器右上角 ⋮ 菜单，选「添加到主屏幕」或「安装应用」，即可去掉地址栏全屏更跟手。";
+    hint.style.display = "block";
+  }
+}
+
+// Native Android Pixel Edge-Back & History Layer Stack (prevents Chrome from exiting the tab when a sheet/subview is open)
+const NAV_LAYER_STACK = [];
+let navPoppingSilent = false;
+let handlingPopstate = false;
+function pushNavLayer(layer) {
+  if (!layer || handlingPopstate) return;
+  if (NAV_LAYER_STACK.length && NAV_LAYER_STACK[NAV_LAYER_STACK.length - 1] === layer) return;
+  NAV_LAYER_STACK.push(layer);
+  try {
+    if (typeof history !== "undefined" && typeof history.pushState === "function") {
+      history.pushState({ zenLayer: layer, depth: NAV_LAYER_STACK.length }, "");
+    }
+  } catch (e) {}
+}
+function popNavLayer(layer) {
+  if (!layer || handlingPopstate) return;
+  const idx = NAV_LAYER_STACK.lastIndexOf(layer);
+  if (idx < 0) return;
+  const isTop = idx === NAV_LAYER_STACK.length - 1;
+  NAV_LAYER_STACK.splice(idx, 1);
+  if (isTop) {
+    try {
+      if (typeof history !== "undefined" && typeof history.back === "function" && history.state && history.state.zenLayer === layer) {
+        navPoppingSilent = true;
+        history.back();
+        setTimeout(() => { navPoppingSilent = false; }, 120);
+      }
+    } catch (e) {}
+  }
+}
+window.addEventListener("popstate", () => {
+  if (navPoppingSilent) {
+    navPoppingSilent = false;
+    return;
+  }
+  if (!NAV_LAYER_STACK.length) return;
+  const top = NAV_LAYER_STACK.pop();
+  handlingPopstate = true;
+  try {
+    const mm = document.getElementById("app-modal");
+    if (top === "modal" || (mm && mm.classList.contains("open"))) {
+      if (typeof closeModal === "function") closeModal(true);
+    } else if (top === "mock") {
+      if (typeof exitMockSprint === "function") exitMockSprint();
+    } else if (top === "quiz_voice") {
+      if (typeof exitQuizVoiceMode === "function") exitQuizVoiceMode();
+    } else if (top === "vocab_voice") {
+      if (typeof switchVocabPracticeMode === "function") switchVocabPracticeMode("card");
+    } else if (top === "radio_review") {
+      if (typeof closeRadioReview === "function") closeRadioReview();
+    } else if (top === "dash") {
+      if (activeMode === "dash" && typeof switchMode === "function") switchMode(prevNonDashMode || "tutor");
+    }
+  } catch (e) {}
+  handlingPopstate = false;
+});
+
+let ttsEverSpoken = false;
+function safeCancelSpeechSynthesis() {
+  if (!ttsEverSpoken) return;
+  try {
+    const ss = window.speechSynthesis;
+    if (ss && (ss.speaking || ss.pending)) ss.cancel();
+  } catch (e) {}
+}
+
+function showAppModal() {
+  const mm = document.getElementById("app-modal");
+  const mc = document.getElementById("modal-content");
+  if (!mm) return;
+  if (mc) {
+    mc.classList.remove("sheet-dragging");
+    mc.style.transform = "";
+  }
+  mm.classList.remove("sheet-dragging");
+  mm.style.background = "";
+  const alreadyOpen = mm.classList.contains("open");
+  mm.classList.add("open");
+  if (!alreadyOpen) pushNavLayer("modal");
+  if (mc) {
+    const resetScroll = () => { try { mc.scrollTop = 0; } catch (e) {} };
+    if (typeof requestAnimationFrame === "function") requestAnimationFrame(resetScroll);
+    else resetScroll();
+  }
+}
+
+(function bindBottomSheetDragDismiss() {
+  const mm = document.getElementById("app-modal");
+  const mc = document.getElementById("modal-content");
+  if (!mm || !mc || !mc.addEventListener) return;
+  let dragging = false, sy = 0, dy = 0, st = 0, rafId = 0;
+  const applyDragFrame = () => {
+    rafId = 0;
+    if (!dragging) return;
+    mc.style.transform = `translate3d(0, ${dy.toFixed(1)}px, 0)`;
+    const fade = Math.max(0.08, 1 - dy / 340);
+    mm.style.opacity = fade.toFixed(3);
+  };
+  mc.addEventListener("touchstart", e => {
+    if (!mm.classList.contains("open") || !e.touches || e.touches.length !== 1) return;
+    if (window.innerWidth > 859 && window.innerHeight > 520) return;
+    if ((mc.scrollTop || 0) > 2) return;
+    const tag = (e.target && e.target.tagName || "").toLowerCase();
+    if (tag === "input" || tag === "textarea") return;
+    sy = fpY(e.touches[0]);
+    dy = 0;
+    st = performance.now();
+    dragging = false;
+  }, { passive: true });
+  mc.addEventListener("touchmove", e => {
+    if (!mm.classList.contains("open") || !e.touches || e.touches.length !== 1) return;
+    if (window.innerWidth > 859 && window.innerHeight > 520) return;
+    const curDy = fpY(e.touches[0]) - sy;
+    if (!dragging) {
+      if ((mc.scrollTop || 0) > 2 || curDy < 10) return;
+      dragging = true;
+      mc.classList.add("sheet-dragging");
+      mm.classList.add("sheet-dragging");
+    }
+    if (dragging) {
+      if (e.cancelable) e.preventDefault();
+      dy = Math.max(0, curDy);
+      if (!rafId) rafId = requestAnimationFrame(applyDragFrame);
+    }
+  }, { passive: false });
+  const endSheetDrag = () => {
+    if (!dragging) return;
+    dragging = false;
+    if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
+    mc.classList.remove("sheet-dragging");
+    mm.classList.remove("sheet-dragging");
+    const dt = Math.max(1, performance.now() - st);
+    const vy = dy / dt;
+    mm.style.opacity = "";
+    if (dy > 84 || (dy > 34 && vy > 0.45)) {
+      mc.style.transform = "";
+      if (typeof closeModal === "function") closeModal();
+    } else {
+      mc.style.transform = "";
+    }
+    dy = 0;
+  };
+  mc.addEventListener("touchend", endSheetDrag, { passive: true });
+  mc.addEventListener("touchcancel", endSheetDrag, { passive: true });
+})();
 
 // ================= MASTER ALGORITHM + REAL-TIME CLOUD CRDT SYNC =================
 const CARD_TO_POINT_ID = {};
@@ -9638,6 +10034,31 @@ Object.keys(PARTICLE_FALLBACK).forEach(pk => {
 
 const DICT_KEYS = Object.keys(DATA.words).sort((a, b) => b.length - a.length);
 const CONTENT_KEYS = DICT_KEYS.filter(k => k.length >= 3 && !PARTICLE_FALLBACK[k]);
+const DICT_BY_CH = new Map();
+for (let _di = 0; _di < DICT_KEYS.length; _di++) {
+  const _w = DICT_KEYS[_di];
+  if (!_w) continue;
+  const _ch = _w[0];
+  let _arr = DICT_BY_CH.get(_ch);
+  if (!_arr) { _arr = []; DICT_BY_CH.set(_ch, _arr); }
+  _arr.push(_w);
+}
+const CONTENT_BY_CH = new Map();
+for (let _ci = 0; _ci < CONTENT_KEYS.length; _ci++) {
+  const _cw = CONTENT_KEYS[_ci];
+  if (!_cw) continue;
+  const _ch = _cw[0];
+  let _arr = CONTENT_BY_CH.get(_ch);
+  if (!_arr) { _arr = []; CONTENT_BY_CH.set(_ch, _arr); }
+  _arr.push(_cw);
+}
+const VOCAB_MKEY_BY_SURFACE = new Map();
+((DATA.mastery && DATA.mastery.vocab && DATA.mastery.vocab.items) || []).forEach(it => {
+  if (!it) return;
+  const mk = it.key || it.name;
+  if (it.name && !VOCAB_MKEY_BY_SURFACE.has(it.name)) VOCAB_MKEY_BY_SURFACE.set(it.name, mk);
+  if (it.key && !VOCAB_MKEY_BY_SURFACE.has(it.key)) VOCAB_MKEY_BY_SURFACE.set(it.key, mk);
+});
 const INTERJECTION_SET = new Set(["はい", "ええ", "うん", "いや", "あれ", "ほら", "あ", "え", "お"]);
 const TRIVIAL_TAP_WORDS = new Set([
   "この", "その", "あの", "ここ", "そこ", "あそこ", "これ", "それ", "あれ", "どれ", "どちら",
@@ -9645,8 +10066,11 @@ const TRIVIAL_TAP_WORDS = new Set([
 ]);
 
 function hasLongerContentWordAt(src, pos) {
-  for (let c = 0; c < CONTENT_KEYS.length; c++) {
-    if (src.startsWith(CONTENT_KEYS[c], pos)) return true;
+  if (pos >= src.length) return false;
+  const bucket = CONTENT_BY_CH.get(src[pos]);
+  if (!bucket) return false;
+  for (let c = 0; c < bucket.length; c++) {
+    if (src.startsWith(bucket[c], pos)) return true;
   }
   return false;
 }
@@ -9811,14 +10235,7 @@ function isWordMarkedForReading(surface) {
   const inTapped = Array.isArray(A.tappedWords) && A.tappedWords.includes(surface);
   const inFailed = !!(A.vocabSess && Array.isArray(A.vocabSess.failedWords) && A.vocabSess.failedWords.includes(surface));
   if (!inTapped && !inFailed) return false;
-  let mKey = surface;
-  const vItems = (DATA.mastery && DATA.mastery.vocab && DATA.mastery.vocab.items) ? DATA.mastery.vocab.items : [];
-  for (let i = 0; i < vItems.length; i++) {
-    if (vItems[i].name === surface || vItems[i].key === surface) {
-      mKey = vItems[i].key || surface;
-      break;
-    }
-  }
+  const mKey = VOCAB_MKEY_BY_SURFACE.get(surface) || surface;
   return getEffectiveMastery(mKey, surface).tier !== "done";
 }
 
@@ -9866,7 +10283,7 @@ function renderTrapKanaHTML(surface, kana, trapHl, trapTag) {
   return html;
 }
 
-// Tokenize full sentence first so multi-character words & conjugated chunks never get split in half!
+// Tokenize full sentence first using O(1) first-char indexed buckets so multi-character words never split!
 function renderJapaneseWithHighlight(text, highlightTarget) {
   const src = String(text || "");
   const target = String(highlightTarget || "").split("（")[0].trim();
@@ -9877,17 +10294,20 @@ function renderJapaneseWithHighlight(text, highlightTarget) {
   let i = 0;
   while (i < src.length) {
     let matched = null;
-    for (let k = 0; k < DICT_KEYS.length; k++) {
-      const w = DICT_KEYS[k];
-      if (!src.startsWith(w, i)) continue;
-      if (INTERJECTION_SET.has(w) && i > 0 && !"「『（(、。！？!? \n\t：:".includes(src[i - 1])) {
-        continue;
+    const bucket = DICT_BY_CH.get(src[i]);
+    if (bucket) {
+      for (let k = 0; k < bucket.length; k++) {
+        const w = bucket[k];
+        if (!src.startsWith(w, i)) continue;
+        if (INTERJECTION_SET.has(w) && i > 0 && !"「『（(、。！？!? \n\t：:".includes(src[i - 1])) {
+          continue;
+        }
+        if (w.length === 2 && PARTICLE_FALLBACK[w] && hasLongerContentWordAt(src, i + 1)) {
+          continue;
+        }
+        matched = w;
+        break;
       }
-      if (w.length === 2 && PARTICLE_FALLBACK[w] && hasLongerContentWordAt(src, i + 1)) {
-        continue;
-      }
-      matched = w;
-      break;
     }
     if (matched) {
       const tStart = i;
@@ -10569,7 +10989,7 @@ function ensureRadioReady() {
     } else {
       radioUsingLocalBlob = false;
       radioPlayer.src = DATA.radio.audio_url;
-      primeRadioLocalBlob(true);
+      setTimeout(() => primeRadioLocalBlob(true), 180);
     }
     if (savedPos > 2) {
       applyRadioSeek(savedPos);
@@ -10728,7 +11148,7 @@ function openStoryArtModal(idx, overrideMedia) {
       </div>
     </div>
   `;
-  modal.classList.add("open");
+  showAppModal();
 }
 
 function setupMediaSession(segTitle) {
@@ -10940,11 +11360,15 @@ function renderRadioChapters(activeChapIdx) {
     strip._fadeBound = true;
     strip.addEventListener("scroll", () => updateChapterStripFade(strip), { passive: true });
   }
-  const activeBtn = strip.querySelector ? strip.querySelector(".chap-link.active") : null;
-  if (activeBtn && typeof activeBtn.scrollIntoView === "function") {
-    try { activeBtn.scrollIntoView({ behavior: "auto", inline: "center", block: "nearest" }); } catch (e) {}
-  }
-  updateChapterStripFade(strip);
+  const syncStripLayout = () => {
+    const activeBtn = strip.querySelector ? strip.querySelector(".chap-link.active") : null;
+    if (activeBtn && typeof activeBtn.scrollIntoView === "function") {
+      try { activeBtn.scrollIntoView({ behavior: "auto", inline: "center", block: "nearest" }); } catch (e) {}
+    }
+    updateChapterStripFade(strip);
+  };
+  if (typeof requestAnimationFrame === "function") requestAnimationFrame(syncStripLayout);
+  else syncStripLayout();
 }
 
 function updateRadioLiveDisplay(t) {
@@ -11885,7 +12309,7 @@ const JA_ASR = (() => {
         if (typeof syncRadioUI === "function") syncRadioUI(false);
       }
     } catch (e) {}
-    try { if ("speechSynthesis" in window) window.speechSynthesis.cancel(); } catch (e) {}
+    safeCancelSpeechSynthesis();
 
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     const isSentenceMode = !!(handlers && handlers.sentenceMode);
@@ -12300,13 +12724,18 @@ function updateRadioReviewEntryBadge() {
     const showCta = !!(meta && meta.needsClose);
     cta.style.display = showCta ? "flex" : "none";
     const strip = document.getElementById("radio-chap-pills");
-    if (showCta && strip && typeof strip.scrollWidth === "number") {
+    if (showCta && strip) {
       const chaps = (DATA.radio && DATA.radio.chapters) || [];
       const onLastChap = lastRenderedSegIdx >= Math.max(0, chaps.length - 1);
-      if (onLastChap) {
-        try { strip.scrollLeft = strip.scrollWidth; } catch (e) {}
-      }
-      updateChapterStripFade(strip);
+      const syncStrip = () => {
+        if (typeof strip.scrollWidth !== "number") return;
+        if (onLastChap) {
+          try { strip.scrollLeft = strip.scrollWidth; } catch (e) {}
+        }
+        updateChapterStripFade(strip);
+      };
+      if (typeof requestAnimationFrame === "function") requestAnimationFrame(syncStrip);
+      else syncStrip();
     }
   }
 }
@@ -12508,6 +12937,7 @@ function openRadioJpVideo() {
   const rStage = document.getElementById("radio-review-stage");
   if (pStage) pStage.classList.add("hidden");
   if (rStage) rStage.classList.remove("hidden");
+  pushNavLayer("radio_review");
   renderRadioReviewStage();
 }
 
@@ -12648,9 +13078,7 @@ function stopRadioReviewAudio() {
     wordPlayer.onerror = null;
     wordPlayer.pause();
   } catch (e) {}
-  try {
-    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
-  } catch (e) {}
+  safeCancelSpeechSynthesis();
   syncRvAudioButtons();
 }
 
@@ -12884,6 +13312,7 @@ function openRadioReview(forceRestart) {
   const rStage = document.getElementById("radio-review-stage");
   if (pStage) pStage.classList.add("hidden");
   if (rStage) rStage.classList.remove("hidden");
+  pushNavLayer("radio_review");
   advanceRadioReviewPointer();
   if (typeof Image !== "undefined" && DATA.radio && Array.isArray(DATA.radio.story_arts)) {
     DATA.radio.story_arts.forEach(a => { if (a && a.img) { const im = new Image(); im.src = a.img; } });
@@ -12902,6 +13331,7 @@ function closeRadioReview() {
   const rStage = document.getElementById("radio-review-stage");
   if (rStage) rStage.classList.add("hidden");
   if (pStage) pStage.classList.remove("hidden");
+  popNavLayer("radio_review");
   paintRadioSeekProgress(radioPlayer.currentTime || 0);
   updateRadioReviewEntryBadge();
 }
@@ -12922,6 +13352,7 @@ function openRadioSpeaking(startIdx) {
   const rStage = document.getElementById("radio-review-stage");
   if (pStage) pStage.classList.add("hidden");
   if (rStage) rStage.classList.remove("hidden");
+  pushNavLayer("radio_review");
   rvMode = "speak";
   rvSpeakPassedSession = false;
   rvSpeakAutoPlayedId = "";
@@ -13382,10 +13813,27 @@ function bindRadioReviewCardGestures(cardEl) {
   let hasDragged = false;
   let activePid = null;
   let downTarget = null;
-  let sx = 0, sy = 0, st = 0;
+  let sx = 0, sy = 0, st = 0, lastDx = 0, lastDy = 0, rafId = 0;
+  let stR = null, stL = null;
   let tappedArt = false;
   let tappedTok = false;
   const DRAG_DEADZONE = 12;
+
+  const paintDrag = () => {
+    rafId = 0;
+    if (!tracking || !hasDragged) return;
+    cardEl.style.transform = `translate3d(${lastDx.toFixed(1)}px, ${(lastDy * 0.42).toFixed(1)}px, 0) rotate(${(lastDx * 0.036).toFixed(2)}deg)`;
+    if (lastDx > 18) {
+      if (stR) stR.style.opacity = String(Math.min(1, (lastDx - 16) / 50));
+      if (stL) stL.style.opacity = "0";
+    } else if (lastDx < -18) {
+      if (stL) stL.style.opacity = String(Math.min(1, (-lastDx - 16) / 50));
+      if (stR) stR.style.opacity = "0";
+    } else {
+      if (stR) stR.style.opacity = "0";
+      if (stL) stL.style.opacity = "0";
+    }
+  };
 
   cardEl.addEventListener("pointerdown", e => {
     if (rvAnimating) return;
@@ -13397,7 +13845,10 @@ function bindRadioReviewCardGestures(cardEl) {
     downTarget = e.target || null;
     sx = fpX(e);
     sy = fpY(e);
+    lastDx = 0; lastDy = 0;
     st = performance.now();
+    stR = document.getElementById("rv-st-right");
+    stL = document.getElementById("rv-st-left");
     tappedArt = !!(e.target && e.target.closest && e.target.closest(".rv-art-vignette"));
     tappedTok = !!(e.target && e.target.closest && e.target.closest(".w-tok"));
     cardEl.classList.remove("settling");
@@ -13406,32 +13857,21 @@ function bindRadioReviewCardGestures(cardEl) {
 
   cardEl.addEventListener("pointermove", e => {
     if (!tracking || e.pointerId !== activePid) return;
-    const dx = fpX(e) - sx;
-    const dy = fpY(e) - sy;
+    lastDx = fpX(e) - sx;
+    lastDy = fpY(e) - sy;
     if (!hasDragged) {
-      if (Math.hypot(dx, dy) < DRAG_DEADZONE) return;
+      if (Math.hypot(lastDx, lastDy) < DRAG_DEADZONE) return;
       hasDragged = true;
       cardEl.classList.add("dragging");
     }
-    cardEl.style.transform = `translate3d(${dx.toFixed(1)}px, ${(dy * 0.42).toFixed(1)}px, 0) rotate(${(dx * 0.036).toFixed(2)}deg)`;
-    const stR = document.getElementById("rv-st-right");
-    const stL = document.getElementById("rv-st-left");
-    if (dx > 18) {
-      if (stR) stR.style.opacity = String(Math.min(1, (dx - 16) / 50));
-      if (stL) stL.style.opacity = "0";
-    } else if (dx < -18) {
-      if (stL) stL.style.opacity = String(Math.min(1, (-dx - 16) / 50));
-      if (stR) stR.style.opacity = "0";
-    } else {
-      if (stR) stR.style.opacity = "0";
-      if (stL) stL.style.opacity = "0";
-    }
+    if (!rafId) rafId = requestAnimationFrame(paintDrag);
   });
 
   function finishGesture(e, isCancel) {
     if (!tracking || e.pointerId !== activePid) return;
     tracking = false;
     activePid = null;
+    if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
     const tapTarget = downTarget;
     downTarget = null;
     try { cardEl.releasePointerCapture(e.pointerId); } catch (err) {}
@@ -14128,6 +14568,54 @@ function toggleDashLedger(ev) {
   }
 }
 
+let lastEnsoRenderSig = "";
+let lastRightRenderSig = "";
+let lastTutorRenderSig = "";
+let upcomingQuizWarmTimer = null;
+
+function scheduleWarmUpcomingQuiz() {
+  if (upcomingQuizWarmTimer) clearTimeout(upcomingQuizWarmTimer);
+  upcomingQuizWarmTimer = setTimeout(() => {
+    upcomingQuizWarmTimer = null;
+    try {
+      const cands = (DATA.points || []).filter(pt => pt && pt.id !== curPointId && A.pts[pt.id] && A.pts[pt.id].status !== "green");
+      const due = cands.filter(pt => A.pts[pt.id].dueStep <= A.step + 1);
+      const pool = (due.length ? due : cands).slice(0, 2);
+      pool.forEach(pt => {
+        const ps = A.pts[pt.id];
+        if (pt.teach_first && ps && ps.status === "unseen" && !ps.audioPrimed && pt.teach && pt.teach.audio) {
+          warmAudio(pt.teach.audio);
+        }
+        const q = getQuizForPoint(pt, ps);
+        if (!q) return;
+        if (q.is_listening && q.listen_parts) {
+          if (q.listen_parts.stem) warmAudio(q.listen_parts.stem);
+          if (Array.isArray(q.listen_parts.nums)) q.listen_parts.nums.forEach(u => warmAudio(u));
+          if (q.listen_parts.opts) Object.values(q.listen_parts.opts).forEach(u => warmAudio(u));
+        } else if (q.q_audio) {
+          warmAudio(q.q_audio);
+        }
+        if (q.exp_audio) warmAudio(q.exp_audio);
+      });
+    } catch (e) {}
+  }, 100);
+}
+
+function getTutorRenderSig() {
+  const vm = (typeof quizVoiceMode !== "undefined" && quizVoiceMode) ? quizVoiceMode : "";
+  const ps = curPointId && A.pts[curPointId];
+  return [
+    vm,
+    curPointId || "",
+    viewStage || "",
+    pickedVal == null ? "" : String(pickedVal),
+    A.step || 0,
+    ps ? `${ps.status}:${ps.wrongCount || 0}:${ps.passStreak || 0}:${ps.useVariant ? 1 : 0}` : "",
+    (currentChoices || []).join("|"),
+    expSpeed
+  ].join("\x1f");
+}
+
 function renderGreenBoard() {
   const m = computeDaily120Metrics();
   const bm = (window.ZB && typeof window.ZB.getSummary === "function")
@@ -14142,22 +14630,26 @@ function renderGreenBoard() {
   const trioEl = document.getElementById("enso-trio");
   if (trioEl) {
     const doneKey = `${m.quizDone ? 1 : 0}${m.radioDone ? 1 : 0}${m.ritual3Done ? 1 : 0}${bm.done ? 1 : 0}`;
-    const radioRingLbl = m.radioDone
-      ? `随身听 已完成`
-      : (m.radioAudioDone && !m.radioReviewDone
-        ? `随身听 已听完 · 待收尾复盘`
-        : `随身听 ${m.listenedMins}/${m.targetMins}分`);
-    const rings = [
-      { ratio: m.quizRatio, done: m.quizDone, label: `做题 ${m.greenCnt}/${m.totalCards}` },
-      { ratio: m.radioRatio, done: m.radioDone, label: radioRingLbl },
-      { ratio: m.ritual3Ratio, done: m.ritual3Done, label: r3Label },
-      { ratio: bm.ratio, done: bm.done, label: bm.label }
-    ];
-    trioEl.innerHTML = rings.map((r, idx) => {
-      const newlyDone = r.done && prevEnsoDoneKey && prevEnsoDoneKey[idx] === "0";
-      return `<button class="enso-btn${r.done ? " done" : ""}${newlyDone ? " is-done" : ""}" id="enso-${idx + 1}" onclick="onEnsoTap(${idx}, event)" aria-label="${escapeHtml(r.label)}" title="${escapeHtml(r.label)}">${renderEnsoRingSVG(idx, r.ratio, r.done)}</button>`;
-    }).join("");
-    prevEnsoDoneKey = doneKey;
+    const ensoSig = `${doneKey}|${Math.round(m.quizRatio * 100)}|${Math.round(m.radioRatio * 100)}|${Math.round(m.ritual3Ratio * 100)}|${Math.round(bm.ratio * 100)}|${m.greenCnt}|${m.listenedMins}|${m.flashSeen}|${bm.label}`;
+    if (ensoSig !== lastEnsoRenderSig || !trioEl.innerHTML) {
+      lastEnsoRenderSig = ensoSig;
+      const radioRingLbl = m.radioDone
+        ? `随身听 已完成`
+        : (m.radioAudioDone && !m.radioReviewDone
+          ? `随身听 已听完 · 待收尾复盘`
+          : `随身听 ${m.listenedMins}/${m.targetMins}分`);
+      const rings = [
+        { ratio: m.quizRatio, done: m.quizDone, label: `做题 ${m.greenCnt}/${m.totalCards}` },
+        { ratio: m.radioRatio, done: m.radioDone, label: radioRingLbl },
+        { ratio: m.ritual3Ratio, done: m.ritual3Done, label: r3Label },
+        { ratio: bm.ratio, done: bm.done, label: bm.label }
+      ];
+      trioEl.innerHTML = rings.map((r, idx) => {
+        const newlyDone = r.done && prevEnsoDoneKey && prevEnsoDoneKey[idx] === "0";
+        return `<button class="enso-btn${r.done ? " done" : ""}${newlyDone ? " is-done" : ""}" id="enso-${idx + 1}" onclick="onEnsoTap(${idx}, event)" aria-label="${escapeHtml(r.label)}" title="${escapeHtml(r.label)}">${renderEnsoRingSVG(idx, r.ratio, r.done)}</button>`;
+      }).join("");
+      prevEnsoDoneKey = doneKey;
+    }
   }
 
   const quizPart = m.quizDone ? `做题 ✓` : `做题 ${m.greenCnt}/${m.totalCards}`;
@@ -14166,24 +14658,32 @@ function renderGreenBoard() {
     : (m.radioAudioDone && !m.radioReviewDone ? `听完·待复盘` : `听 ${m.listenedMins}/${m.targetMins}分`);
   const flashPart = m.ritual3Done ? `记词 ✓` : r3Label;
   const bodyPart = bm.done ? `体律 ✓` : bm.label;
-  document.getElementById("gm-left-txt").textContent = `${quizPart} · ${radioPart} · ${flashPart} · ${bodyPart}`;
+  const leftTxt = `${quizPart} · ${radioPart} · ${flashPart} · ${bodyPart}`;
+  const leftEl = document.getElementById("gm-left-txt");
+  if (leftEl && leftEl.textContent !== leftTxt) leftEl.textContent = leftTxt;
 
   const rightEl = document.getElementById("gm-right-txt");
   if (rightEl) {
+    let rightHtml = "";
+    let rightActiveLedger = false;
     if (activeMode === "body" && window.ZB && typeof window.ZB.getHorizonHTML === "function") {
-      rightEl.classList.remove("active-ledger");
-      rightEl.innerHTML = window.ZB.getHorizonHTML();
+      rightHtml = window.ZB.getHorizonHTML();
     } else {
       const ledgerTxt = activeMode === "dash" ? "收起总表" : "总表";
-      rightEl.classList.toggle("active-ledger", activeMode === "dash");
-      if (m.projScore >= 120) {
-        rightEl.innerHTML = `预计 <b class="moss">${m.projScore}分</b><span class="ledger-sep"> · </span><span class="ledger-tag">${ledgerTxt}</span>`;
-      } else {
-        rightEl.innerHTML = `预计 <b>${m.projScore}分</b><span class="ledger-sep"> · </span><span class="ledger-tag">${ledgerTxt}</span>`;
-      }
+      rightActiveLedger = activeMode === "dash";
+      rightHtml = m.projScore >= 120
+        ? `预计 <b class="moss">${m.projScore}分</b><span class="ledger-sep"> · </span><span class="ledger-tag">${ledgerTxt}</span>`
+        : `预计 <b>${m.projScore}分</b><span class="ledger-sep"> · </span><span class="ledger-tag">${ledgerTxt}</span>`;
+    }
+    const rightSig = (rightActiveLedger ? "1:" : "0:") + rightHtml;
+    if (rightSig !== lastRightRenderSig || !rightEl.innerHTML) {
+      lastRightRenderSig = rightSig;
+      rightEl.classList.toggle("active-ledger", rightActiveLedger);
+      rightEl.innerHTML = rightHtml;
     }
   }
-  document.getElementById("gm-fill").style.width = `${m.dailyLockPct}%`;
+  const gmFill = document.getElementById("gm-fill");
+  if (gmFill) gmFill.style.width = `${m.dailyLockPct}%`;
 }
 
 function lexBoxHTML(id) {
@@ -14204,6 +14704,7 @@ function renderTutor() {
   renderGreenBoard();
   clearActiveWordToken();
   const box = document.getElementById("voice-card");
+  lastTutorRenderSig = getTutorRenderSig();
   if (typeof quizVoiceMode !== "undefined" && quizVoiceMode && typeof renderQuizVoiceStage === "function") {
     box.className = "stage-wrap stage-quiz";
     box.style.transform = "";
@@ -14374,6 +14875,7 @@ function renderTutor() {
       </div>
     `;
     syncAudioButtons();
+    scheduleWarmUpcomingQuiz();
     return;
   }
 
@@ -14506,6 +15008,7 @@ function renderTutor() {
     ${lexBoxHTML("tutor-inline-lex")}
   `;
   syncAudioButtons();
+  scheduleWarmUpcomingQuiz();
 }
 
 // ================= INSTANT INLINE WORD MEANING (ZERO MODAL, ZERO GOOGLE BAR) =================
@@ -14528,7 +15031,8 @@ function clearInlineLexicon(boxId) {
 function speakJapaneseFallback(text) {
   if (!("speechSynthesis" in window)) return;
   try {
-    window.speechSynthesis.cancel();
+    safeCancelSpeechSynthesis();
+    ttsEverSpoken = true;
     const u = new SpeechSynthesisUtterance(text);
     u.lang = "ja-JP";
     u.rate = 1.0;
@@ -14623,12 +15127,15 @@ function buildSubwordBreakdown(surface) {
   const seen = new Set();
   for (let i = 0; i < surface.length; ) {
     let hit = null;
-    for (let k = 0; k < DICT_KEYS.length; k++) {
-      const w = DICT_KEYS[k];
-      if (w.length < 2 || w === surface || PARTICLE_FALLBACK[w] || TRIVIAL_TAP_WORDS.has(w)) continue;
-      if (surface.startsWith(w, i) && DATA.words[w] && DATA.words[w].zh) {
-        hit = w;
-        break;
+    const bucket = DICT_BY_CH.get(surface[i]);
+    if (bucket) {
+      for (let k = 0; k < bucket.length; k++) {
+        const w = bucket[k];
+        if (w.length < 2 || w === surface || PARTICLE_FALLBACK[w] || TRIVIAL_TAP_WORDS.has(w)) continue;
+        if (surface.startsWith(w, i) && DATA.words[w] && DATA.words[w].zh) {
+          hit = w;
+          break;
+        }
       }
     }
     if (hit) {
@@ -14745,9 +15252,28 @@ window.addEventListener("wheel", e => {
 (function bindRightHandTouchErgonomics() {
   const tutorEl = document.getElementById("tutor-view");
   const dashEl = document.getElementById("dash-view");
-  let sx = 0, sy = 0, st = 0;
+  let sx = 0, sy = 0, st = 0, lastDx = 0, lastDy = 0, rafId = 0;
+  let cardEl = null, stR = null, stL = null;
   let axis = null; // null | "x" | "y"
   let tracking = false;
+
+  const paintTutorDrag = () => {
+    rafId = 0;
+    if (!tracking || axis !== "x") return;
+    if (cardEl) {
+      cardEl.style.transform = `translate3d(${lastDx.toFixed(1)}px, ${(lastDy * 0.14).toFixed(1)}px, 0) rotate(${(lastDx * 0.026).toFixed(2)}deg)`;
+    }
+    if (lastDx > 16) {
+      if (stR) stR.style.opacity = String(Math.min(1, (lastDx - 14) / 48));
+      if (stL) stL.style.opacity = "0";
+    } else if (lastDx < -16) {
+      if (stL) stL.style.opacity = String(Math.min(1, (-lastDx - 14) / 48));
+      if (stR) stR.style.opacity = "0";
+    } else {
+      if (stR) stR.style.opacity = "0";
+      if (stL) stL.style.opacity = "0";
+    }
+  };
 
   function resetTutorDrag() {
     const card = document.getElementById("voice-card");
@@ -14771,7 +15297,7 @@ window.addEventListener("wheel", e => {
     setTimeout(() => {
       tutorSwipeAnimating = false;
       onDone();
-    }, 180);
+    }, 190);
   }
 
   tutorEl.addEventListener("touchstart", e => {
@@ -14781,7 +15307,11 @@ window.addEventListener("wheel", e => {
     if (!e.touches || e.touches.length !== 1) return;
     sx = fpX(e.touches[0]);
     sy = fpY(e.touches[0]);
+    lastDx = 0; lastDy = 0;
     st = performance.now();
+    cardEl = document.getElementById("voice-card");
+    stR = document.getElementById("tutor-st-right");
+    stL = document.getElementById("tutor-st-left");
     axis = null;
     tracking = true;
   }, { passive: true });
@@ -14790,6 +15320,7 @@ window.addEventListener("wheel", e => {
     if (!tracking || !e.touches || e.touches.length !== 1) return;
     const dx = fpX(e.touches[0]) - sx;
     const dy = fpY(e.touches[0]) - sy;
+    lastDx = dx; lastDy = dy;
 
     if (!axis) {
       if (Math.abs(dy) > 10 && Math.abs(dy) >= Math.abs(dx)) {
@@ -14799,10 +15330,9 @@ window.addEventListener("wheel", e => {
       }
       if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) * 1.18) {
         axis = "x";
-        const card = document.getElementById("voice-card");
-        if (card) {
-          card.classList.remove("tutor-settling");
-          card.classList.add("tutor-dragging");
+        if (cardEl) {
+          cardEl.classList.remove("tutor-settling");
+          cardEl.classList.add("tutor-dragging");
         }
       } else {
         return;
@@ -14811,28 +15341,14 @@ window.addEventListener("wheel", e => {
 
     if (axis === "x") {
       if (e.cancelable) e.preventDefault();
-      const card = document.getElementById("voice-card");
-      if (card) {
-        card.style.transform = `translate3d(${dx.toFixed(1)}px, ${(dy * 0.14).toFixed(1)}px, 0) rotate(${(dx * 0.026).toFixed(2)}deg)`;
-      }
-      const stR = document.getElementById("tutor-st-right");
-      const stL = document.getElementById("tutor-st-left");
-      if (dx > 16) {
-        if (stR) stR.style.opacity = String(Math.min(1, (dx - 14) / 48));
-        if (stL) stL.style.opacity = "0";
-      } else if (dx < -16) {
-        if (stL) stL.style.opacity = String(Math.min(1, (-dx - 14) / 48));
-        if (stR) stR.style.opacity = "0";
-      } else {
-        if (stR) stR.style.opacity = "0";
-        if (stL) stL.style.opacity = "0";
-      }
+      if (!rafId) rafId = requestAnimationFrame(paintTutorDrag);
     }
   }, { passive: false });
 
   function endTutorTouch(e, cancelled) {
     if (!tracking) return;
     tracking = false;
+    if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
     if (cancelled || axis !== "x" || !e.changedTouches || !e.changedTouches.length) {
       if (axis === "x") resetTutorDrag();
       axis = null;
@@ -14976,27 +15492,60 @@ let dashMod = "grammar";
 let dashTier = "todo";
 let expandedPt = null;
 
+const MODE_ORDER = ["tutor", "radio", "vocab", "body", "dash"];
+let THUMB_BAR_CACHE = null;
+
 function positionMainThumbBar(immediate) {
   const wrap = document.getElementById("main-thumb-tabs");
   const bar = document.getElementById("main-thumb-bar");
-  const btn = document.getElementById("btab-" + activeMode);
-  if (!wrap || !bar || !btn || !wrap.offsetWidth) return;
-  const w = Math.max(18, (btn.offsetWidth || 50) - 24);
-  const left = (btn.offsetLeft || 0) + ((btn.offsetWidth || 50) - w) / 2;
-  if (immediate) bar.style.transition = "none";
-  bar.style.width = w + "px";
-  bar.style.transform = `translateX(${left}px)`;
-  if (immediate) { void bar.offsetWidth; bar.style.transition = ""; }
+  if (!wrap || !bar) return;
+  const apply = () => {
+    if (!THUMB_BAR_CACHE) {
+      if (!wrap.offsetWidth) return;
+      const map = {};
+      MODE_ORDER.forEach(k => {
+        const b = document.getElementById("btab-" + k);
+        if (b) {
+          const bw = b.offsetWidth || 50;
+          const w = Math.max(18, bw - 24);
+          map[k] = { w, left: (b.offsetLeft || 0) + (bw - w) / 2 };
+        }
+      });
+      THUMB_BAR_CACHE = map;
+    }
+    const met = THUMB_BAR_CACHE && THUMB_BAR_CACHE[activeMode];
+    if (!met) return;
+    if (immediate) bar.style.transition = "none";
+    bar.style.width = met.w + "px";
+    bar.style.transform = `translate3d(${met.left}px, 0, 0)`;
+    if (immediate) {
+      if (typeof requestAnimationFrame === "function") requestAnimationFrame(() => { bar.style.transition = ""; });
+      else bar.style.transition = "";
+    }
+  };
+  if (immediate || THUMB_BAR_CACHE) apply();
+  else if (typeof requestAnimationFrame === "function") requestAnimationFrame(apply);
+  else apply();
 }
-window.addEventListener("resize", () => positionMainThumbBar(true));
+window.addEventListener("resize", () => { THUMB_BAR_CACHE = null; positionMainThumbBar(true); });
 
 function switchMode(m, autoPlayRadio) {
   if (m === "radio" && activeMode === "radio" && radioReviewOpen) {
     closeRadioReview();
     return;
   }
+  const prevMode = activeMode;
+  const prevIdx = MODE_ORDER.indexOf(prevMode);
+  const nextIdx = MODE_ORDER.indexOf(m);
+  const dirCls = (prevMode !== m && prevIdx >= 0 && nextIdx >= 0)
+    ? (nextIdx > prevIdx ? "nav-from-right" : "nav-from-left")
+    : "";
+
   if (m !== "dash" && m !== "mock") prevNonDashMode = m;
   activeMode = m;
+  if (m === "dash" && prevMode !== "dash") pushNavLayer("dash");
+  else if (prevMode === "dash" && m !== "dash") popNavLayer("dash");
+
   clearActiveWordToken();
   JA_ASR.stop();
   if (m !== "tutor" && m !== "mock") {
@@ -15024,22 +15573,30 @@ function switchMode(m, autoPlayRadio) {
   document.getElementById("tab-vocab").classList.toggle("active", m === "vocab");
   const tabBody = document.getElementById("tab-body");
   if (tabBody) tabBody.classList.toggle("active", m === "body");
-  ["tutor", "radio", "vocab", "body", "dash"].forEach(k => {
+  MODE_ORDER.forEach(k => {
     const b = document.getElementById("btab-" + k);
     if (b) b.classList.toggle("active", m === k);
   });
-  positionMainThumbBar(false);
 
-  document.getElementById("tutor-view").classList.toggle("hidden", m !== "tutor");
-  document.getElementById("radio-view").classList.toggle("hidden", m !== "radio");
-  document.getElementById("vocab-view").classList.toggle("hidden", m !== "vocab");
-  const bodyView = document.getElementById("body-view");
-  if (bodyView) bodyView.classList.toggle("hidden", m !== "body");
-  document.getElementById("dash-view").classList.toggle("hidden", m !== "dash");
-  const mockView = document.getElementById("mock-view");
-  if (mockView) mockView.classList.toggle("hidden", m !== "mock");
+  const panelMap = {
+    tutor: document.getElementById("tutor-view"),
+    radio: document.getElementById("radio-view"),
+    vocab: document.getElementById("vocab-view"),
+    body: document.getElementById("body-view"),
+    dash: document.getElementById("dash-view"),
+    mock: document.getElementById("mock-view")
+  };
+  Object.keys(panelMap).forEach(k => {
+    const el = panelMap[k];
+    if (!el) return;
+    el.classList.remove("nav-from-right", "nav-from-left");
+    const hide = m !== k;
+    el.classList.toggle("hidden", hide);
+    if (!hide && dirCls) el.classList.add(dirCls);
+  });
   const gb = document.getElementById("green-board");
   if (gb) gb.classList.remove("hidden");
+  positionMainThumbBar(false);
 
   renderGreenBoard();
 
@@ -15060,7 +15617,12 @@ function switchMode(m, autoPlayRadio) {
   } else if (m === "mock") {
     if (typeof renderMockStage === "function") renderMockStage();
   } else {
-    renderTutor();
+    const vcBox = document.getElementById("voice-card");
+    if (vcBox && vcBox.innerHTML && lastTutorRenderSig === getTutorRenderSig()) {
+      syncAudioButtons();
+    } else {
+      renderTutor();
+    }
   }
   syncRadioMiniBar();
 }
@@ -15450,9 +16012,7 @@ function stopVocabAudioAndTimers() {
     wordPlayer.onerror = null;
     wordPlayer.pause();
   } catch (e) {}
-  try {
-    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
-  } catch (e) {}
+  safeCancelSpeechSynthesis();
 }
 
 function speakUtteranceLang(text, langCode, rateVal, cb) {
@@ -15470,7 +16030,8 @@ function speakUtteranceLang(text, langCode, rateVal, cb) {
   };
   const safety = setTimeout(finish, 4200);
   try {
-    window.speechSynthesis.cancel();
+    safeCancelSpeechSynthesis();
+    ttsEverSpoken = true;
     const u = new SpeechSynthesisUtterance(clean);
     u.lang = langCode;
     u.rate = rateVal || 1.0;
@@ -15592,18 +16153,27 @@ function playBilingualFallback(card, includePhrase, myToken, onDone) {
   }
 }
 
+let vcWarmTimer = null;
+function warmSingleVocabWord(sw) {
+  const c = getVocabCardSpec(sw);
+  if (c.ask_audio) warmAudio(c.ask_audio);
+  if (c.rev_audio) warmAudio(c.rev_audio);
+  if (c.phrase_audio) warmAudio(c.phrase_audio);
+  if (c.hook_audio) warmAudio(c.hook_audio);
+  if (c.word_audio) warmAudio(c.word_audio);
+  if (c.front_audio) warmAudio(c.front_audio);
+}
 function warmUpcomingVocabCards() {
   const sess = A.vocabSess;
-  if (!sess || !Array.isArray(sess.queue)) return;
-  sess.queue.slice(0, 5).forEach(sw => {
-    const c = getVocabCardSpec(sw);
-    if (c.ask_audio) warmAudio(c.ask_audio);
-    if (c.rev_audio) warmAudio(c.rev_audio);
-    if (c.phrase_audio) warmAudio(c.phrase_audio);
-    if (c.hook_audio) warmAudio(c.hook_audio);
-    if (c.word_audio) warmAudio(c.word_audio);
-    if (c.front_audio) warmAudio(c.front_audio);
-  });
+  if (!sess || !Array.isArray(sess.queue) || !sess.queue.length) return;
+  warmSingleVocabWord(sess.queue[0]);
+  const upcoming = sess.queue.slice(1, 5);
+  if (!upcoming.length) return;
+  if (vcWarmTimer) clearTimeout(vcWarmTimer);
+  vcWarmTimer = setTimeout(() => {
+    vcWarmTimer = null;
+    upcoming.forEach(warmSingleVocabWord);
+  }, 90);
 }
 
 function renderStreakDotsHTML(streak) {
@@ -16172,8 +16742,32 @@ function bindVocabCardGestures(cardEl) {
   let hasDragged = false;
   let activePid = null;
   let downTarget = null;
-  let sx = 0, sy = 0, st = 0;
+  let sx = 0, sy = 0, st = 0, lastDx = 0, lastDy = 0, rafId = 0;
+  let stR = null, stL = null, stU = null;
   const DRAG_DEADZONE = 12;
+
+  const paintVocabDrag = () => {
+    rafId = 0;
+    if (!tracking || !hasDragged) return;
+    cardEl.style.transform = `translate3d(${lastDx.toFixed(1)}px, ${(lastDy * 0.42).toFixed(1)}px, 0) rotate(${(lastDx * 0.036).toFixed(2)}deg)`;
+    if (!vcPendingLeft && lastDy < -26 && Math.abs(lastDy) > Math.abs(lastDx) * 1.25) {
+      if (stU) stU.style.opacity = String(Math.min(1, (-lastDy - 22) / 48));
+      if (stR) stR.style.opacity = "0";
+      if (stL) stL.style.opacity = "0";
+    } else if (lastDx > 18) {
+      if (stR) stR.style.opacity = String(Math.min(1, (lastDx - 16) / 50));
+      if (stL) stL.style.opacity = "0";
+      if (stU) stU.style.opacity = "0";
+    } else if (lastDx < -18) {
+      if (stL) stL.style.opacity = String(Math.min(1, (-lastDx - 16) / 50));
+      if (stR) stR.style.opacity = "0";
+      if (stU) stU.style.opacity = "0";
+    } else {
+      if (stR) stR.style.opacity = "0";
+      if (stL) stL.style.opacity = "0";
+      if (stU) stU.style.opacity = "0";
+    }
+  };
 
   cardEl.addEventListener("pointerdown", e => {
     if (vcAnimating) return;
@@ -16185,48 +16779,32 @@ function bindVocabCardGestures(cardEl) {
     downTarget = e.target || null;
     sx = fpX(e);
     sy = fpY(e);
+    lastDx = 0; lastDy = 0;
     st = performance.now();
+    stR = document.getElementById("vc-st-right");
+    stL = document.getElementById("vc-st-left");
+    stU = document.getElementById("vc-st-up");
     cardEl.classList.remove("settling");
     try { cardEl.setPointerCapture(e.pointerId); } catch (err) {}
   });
 
   cardEl.addEventListener("pointermove", e => {
     if (!tracking || e.pointerId !== activePid) return;
-    const dx = fpX(e) - sx;
-    const dy = fpY(e) - sy;
+    lastDx = fpX(e) - sx;
+    lastDy = fpY(e) - sy;
     if (!hasDragged) {
-      if (Math.hypot(dx, dy) < DRAG_DEADZONE) return;
+      if (Math.hypot(lastDx, lastDy) < DRAG_DEADZONE) return;
       hasDragged = true;
       cardEl.classList.add("dragging");
     }
-    cardEl.style.transform = `translate3d(${dx.toFixed(1)}px, ${(dy * 0.42).toFixed(1)}px, 0) rotate(${(dx * 0.036).toFixed(2)}deg)`;
-
-    const stR = document.getElementById("vc-st-right");
-    const stL = document.getElementById("vc-st-left");
-    const stU = document.getElementById("vc-st-up");
-    if (!vcPendingLeft && dy < -26 && Math.abs(dy) > Math.abs(dx) * 1.25) {
-      if (stU) stU.style.opacity = String(Math.min(1, (-dy - 22) / 48));
-      if (stR) stR.style.opacity = "0";
-      if (stL) stL.style.opacity = "0";
-    } else if (dx > 18) {
-      if (stR) stR.style.opacity = String(Math.min(1, (dx - 16) / 50));
-      if (stL) stL.style.opacity = "0";
-      if (stU) stU.style.opacity = "0";
-    } else if (dx < -18) {
-      if (stL) stL.style.opacity = String(Math.min(1, (-dx - 16) / 50));
-      if (stR) stR.style.opacity = "0";
-      if (stU) stU.style.opacity = "0";
-    } else {
-      if (stR) stR.style.opacity = "0";
-      if (stL) stL.style.opacity = "0";
-      if (stU) stU.style.opacity = "0";
-    }
+    if (!rafId) rafId = requestAnimationFrame(paintVocabDrag);
   });
 
   function finishGesture(e, isCancel) {
     if (!tracking || e.pointerId !== activePid) return;
     tracking = false;
     activePid = null;
+    if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
     const tapTarget = downTarget;
     downTarget = null;
     try { cardEl.releasePointerCapture(e.pointerId); } catch (err) {}
@@ -16639,7 +17217,7 @@ function stopVocabVoiceCoach(keepPracticeMode) {
     wordPlayer.onerror = null;
     wordPlayer.pause();
   } catch (e) {}
-  try { if ("speechSynthesis" in window) window.speechSynthesis.cancel(); } catch (e) {}
+  safeCancelSpeechSynthesis();
   releaseVoiceWakeLock();
   flushVoicePendingQueue();
   vcVoiceState.running = false;
@@ -17237,12 +17815,14 @@ function switchVocabPracticeMode(mode, ev, autoStart) {
     vcRevealed = false;
     vcPendingLeft = false;
     vcAnimating = false;
+    popNavLayer("vocab_voice");
     dealCurrentVocabCard(true);
     return;
   }
   stopVocabAudioAndTimers();
   JA_ASR.stop();
   vcPracticeMode = "voice";
+  pushNavLayer("vocab_voice");
   warmVoiceCoachClips();
   resetVocabVoiceState("idle");
   const shouldStart = typeof autoStart === "boolean" ? autoStart : true;
@@ -17596,7 +18176,7 @@ function openQuizVoiceSheet(ev) {
       <button type="button" class="ghost-btn" style="flex:1;" onclick="closeModal()">返回</button>
     </div>
   `;
-  mm.classList.add("open");
+  showAppModal();
 }
 
 function stopQuizVoiceCoach(keepMode) {
@@ -17611,7 +18191,7 @@ function stopQuizVoiceCoach(keepMode) {
     wordPlayer.onerror = null;
     wordPlayer.pause();
   } catch (e) {}
-  try { if ("speechSynthesis" in window) window.speechSynthesis.cancel(); } catch (e) {}
+  safeCancelSpeechSynthesis();
   qvState.running = false;
   if (!isAnyVoiceCoachRunning()) releaseVoiceWakeLock();
   if (qvState.phase !== "idle" && qvState.phase !== "done") {
@@ -17629,6 +18209,7 @@ function startQuizVoiceMode(mode, ev) {
   stopAllHandsFreeVoice();
   stopQuizAudio();
   quizVoiceMode = mode === "conj" ? "conj" : "listen";
+  pushNavLayer("quiz_voice");
   qvToken += 1;
   if (quizVoiceMode === "listen") {
     const allL = (DATA.points || []).filter(p => p && p.primary && p.primary.is_listening);
@@ -17696,6 +18277,7 @@ function startQuizVoiceMode(mode, ev) {
 function exitQuizVoiceMode(ev) {
   if (ev && ev.stopPropagation) ev.stopPropagation();
   stopQuizVoiceCoach(false);
+  popNavLayer("quiz_voice");
   setupCurrentTurn((A.cur && A.pts[A.cur] && A.pts[A.cur].status !== "green") ? A.cur : undefined);
   renderTutor();
 }
@@ -18499,7 +19081,7 @@ function stopRadioVoiceCoach(keepMode) {
     wordPlayer.onerror = null;
     wordPlayer.pause();
   } catch (e) {}
-  try { if ("speechSynthesis" in window) window.speechSynthesis.cancel(); } catch (e) {}
+  safeCancelSpeechSynthesis();
   rvvState.running = false;
   if (!isAnyVoiceCoachRunning()) releaseVoiceWakeLock();
   if (rvvState.phase !== "idle" && rvvState.phase !== "done") {
@@ -19703,13 +20285,21 @@ function setLedgerGrammarSpectrum(gid, code, ev) {
   renderDashboard();
 }
 
+const DAYS_SINCE_CACHE = Object.create(null);
+const TODAY_UTC_MS = (TODAY_TAG && TODAY_TAG.length === 8)
+  ? Date.UTC(Number(TODAY_TAG.slice(0, 4)), Number(TODAY_TAG.slice(4, 6)) - 1, Number(TODAY_TAG.slice(6, 8)))
+  : NaN;
+
 function daysSinceTag(tag8) {
-  const s = String(tag8 || "").replace(/[^0-9]/g, "").slice(0, 8);
-  if (s.length !== 8 || TODAY_TAG.length !== 8) return 0;
+  if (!tag8 || isNaN(TODAY_UTC_MS)) return 0;
+  const raw = String(tag8);
+  if (raw in DAYS_SINCE_CACHE) return DAYS_SINCE_CACHE[raw];
+  const s = raw.replace(/[^0-9]/g, "").slice(0, 8);
+  if (s.length !== 8) { DAYS_SINCE_CACHE[raw] = 0; return 0; }
   const t1 = Date.UTC(Number(s.slice(0, 4)), Number(s.slice(4, 6)) - 1, Number(s.slice(6, 8)));
-  const t2 = Date.UTC(Number(TODAY_TAG.slice(0, 4)), Number(TODAY_TAG.slice(4, 6)) - 1, Number(TODAY_TAG.slice(6, 8)));
-  if (isNaN(t1) || isNaN(t2)) return 0;
-  return Math.max(0, Math.round((t2 - t1) / 86400000));
+  const res = isNaN(t1) ? 0 : Math.max(0, Math.round((TODAY_UTC_MS - t1) / 86400000));
+  DAYS_SINCE_CACHE[raw] = res;
+  return res;
 }
 
 function getEffectiveItemLastDate(it) {
@@ -19788,8 +20378,7 @@ function openN3ScoreModal() {
       <button type="button" class="mock-btn primary" onclick="saveN3RealScore()">保存校准</button>
     </div>
   `;
-  const mm = document.getElementById("app-modal");
-  if (mm) mm.classList.add("open");
+  showAppModal();
 }
 
 function saveN3RealScore() {
@@ -19864,8 +20453,7 @@ function openRadioFeedbackModal() {
       }
     : { feel: "", good: [], fix: [], note: "", saved: false };
   renderRadioFeedbackSheet();
-  const mm = document.getElementById("app-modal");
-  if (mm) mm.classList.add("open");
+  showAppModal();
 }
 
 function renderRadioFeedbackSheet() {
@@ -20134,6 +20722,7 @@ function startMockSprint() {
     done: false,
     result: null
   };
+  pushNavLayer("mock");
   switchMode("mock");
   mockTimerId = setInterval(() => {
     if (!mockState || mockState.done || activeMode !== "mock") {
@@ -20284,6 +20873,7 @@ function exitMockSprint() {
   stopMockTimer();
   stopQuizAudio();
   mockState = null;
+  popNavLayer("mock");
   switchMode("dash");
 }
 
@@ -20443,14 +21033,20 @@ function renderDashboard() {
   const order = ["grammar", "henkei", "listening", "vocab"];
   const pillarMeta = order.map(k => {
     const m = DATA.mastery[k];
-    const c = recalcCounts(k);
-    const wip2 = m.items.filter(it => it.tier === "wip" && Number(it.streak || 0) >= 2).length;
-    const staleDone = m.items.filter(it => {
-      if (it.tier !== "done") return false;
-      const ld = getEffectiveItemLastDate(it);
-      return !!ld && daysSinceTag(ld) >= 10;
-    }).length;
-    const hesCnt = m.items.filter(it => isItemHesitant(it)).length;
+    const items = m.items || [];
+    const c = { todo: 0, wip: 0, done: 0, total: items.length };
+    let wip2 = 0, staleDone = 0, hesCnt = 0;
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i];
+      c[it.tier] = (c[it.tier] || 0) + 1;
+      if (it.tier === "wip" && Number(it.streak || 0) >= 2) wip2 += 1;
+      else if (it.tier === "done") {
+        const ld = getEffectiveItemLastDate(it);
+        if (ld && daysSinceTag(ld) >= 10) staleDone += 1;
+      }
+      if (isItemHesitant(it)) hesCnt += 1;
+    }
+    m.counts = c;
     return { k, m, c, wip2, staleDone, hesCnt, roi: wip2 * (m.exam_pts || 25) };
   });
 
@@ -20614,8 +21210,68 @@ function renderDashboard() {
   renderMasteryList();
 }
 
+let lastLedgerItems = [];
+let dashSearchTimer = null;
+
+function onDashSearchInput() {
+  if (dashSearchTimer) clearTimeout(dashSearchTimer);
+  dashSearchTimer = setTimeout(() => {
+    dashSearchTimer = null;
+    expandedPt = null;
+    renderMasteryList();
+  }, 70);
+}
+
+function buildLedgerExtraHTML(it) {
+  if (!it) return "";
+  const noteHTML = (it.note || it.family)
+    ? `<div class="li-note">${escapeHtml([it.family, it.note].filter(Boolean).join(" · "))}</div>`
+    : "";
+  let gaBarHTML = "";
+  if (dashMod === "grammar" && it.gid) {
+    const splitKids = Array.isArray(GA_SPLIT_MAP[it.gid]) ? GA_SPLIT_MAP[it.gid] : null;
+    const gaEff = splitKids ? getEffectiveParentGA(it.gid) : getEffectiveGA(it.gid);
+    if (splitKids && splitKids.length) {
+      gaBarHTML = `<div class="li-ga-sublist">${splitKids.map(cgid => {
+        const cit = GA_BY_GID[cgid];
+        if (!cit) return "";
+        const ceff = getEffectiveGA(cgid);
+        return `<div class="li-ga-subrow">
+          <span class="li-ga-subname">${escapeHtml(cit.name)}</span>
+          <span class="li-ga-subbtns">${[1, 2, 3, 4].map(c => {
+            const sp = GA_SPECTRUM[c];
+            return `<button type="button" class="li-ga-btn ${sp.cls}${ceff && ceff.code === c ? " on" : ""}" onclick="setLedgerGrammarSpectrum('${cgid}', ${c}, event)">${sp.label}</button>`;
+          }).join("")}</span>
+        </div>`;
+      }).join("")}</div>`;
+    } else {
+      gaBarHTML = `<div class="li-ga-bar">
+        <span class="li-ga-lbl">盘点</span>
+        ${[1, 2, 3, 4].map(c => {
+          const sp = GA_SPECTRUM[c];
+          return `<button type="button" class="li-ga-btn ${sp.cls}${gaEff && gaEff.code === c ? " on" : ""}" onclick="setLedgerGrammarSpectrum('${it.gid}', ${c}, event)">${sp.label}</button>`;
+        }).join("")}
+      </div>`;
+    }
+  }
+  return noteHTML + gaBarHTML;
+}
+
 function togglePtNote(i) {
+  const prev = expandedPt;
   expandedPt = (expandedPt === i) ? null : i;
+  const listEl = document.getElementById("point-list");
+  if (listEl && listEl.children && listEl.children.length === lastLedgerItems.length && lastLedgerItems.length > 0) {
+    if (prev !== null && prev >= 0 && prev < listEl.children.length) {
+      const prevSlot = listEl.children[prev].querySelector && listEl.children[prev].querySelector(".li-extra");
+      if (prevSlot) prevSlot.innerHTML = "";
+    }
+    if (expandedPt !== null && expandedPt >= 0 && expandedPt < listEl.children.length) {
+      const nextSlot = listEl.children[expandedPt].querySelector && listEl.children[expandedPt].querySelector(".li-extra");
+      if (nextSlot) nextSlot.innerHTML = buildLedgerExtraHTML(lastLedgerItems[expandedPt]);
+    }
+    return;
+  }
   renderMasteryList();
 }
 
@@ -20644,6 +21300,7 @@ function renderMasteryList() {
     }
     return it.tier === dashTier;
   });
+  lastLedgerItems = items;
 
   const listEl = document.getElementById("point-list");
   if (!items.length) {
@@ -20663,31 +21320,7 @@ function renderMasteryList() {
     const lastD = it.tier === "done" ? getEffectiveItemLastDate(it) : "";
     const dStale = lastD ? daysSinceTag(lastD) : 0;
     const staleHTML = (it.tier === "done" && dStale >= 10) ? `<span class="li-stale">${dStale}天前·抽查</span>` : "";
-    let gaBarHTML = "";
-    if (expandedPt === i && dashMod === "grammar" && it.gid) {
-      if (splitKids && splitKids.length) {
-        gaBarHTML = `<div class="li-ga-sublist">${splitKids.map(cgid => {
-          const cit = GA_BY_GID[cgid];
-          if (!cit) return "";
-          const ceff = getEffectiveGA(cgid);
-          return `<div class="li-ga-subrow">
-            <span class="li-ga-subname">${escapeHtml(cit.name)}</span>
-            <span class="li-ga-subbtns">${[1, 2, 3, 4].map(c => {
-              const sp = GA_SPECTRUM[c];
-              return `<button type="button" class="li-ga-btn ${sp.cls}${ceff && ceff.code === c ? " on" : ""}" onclick="setLedgerGrammarSpectrum('${cgid}', ${c}, event)">${sp.label}</button>`;
-            }).join("")}</span>
-          </div>`;
-        }).join("")}</div>`;
-      } else {
-        gaBarHTML = `<div class="li-ga-bar">
-          <span class="li-ga-lbl">盘点</span>
-          ${[1, 2, 3, 4].map(c => {
-            const sp = GA_SPECTRUM[c];
-            return `<button type="button" class="li-ga-btn ${sp.cls}${gaEff && gaEff.code === c ? " on" : ""}" onclick="setLedgerGrammarSpectrum('${it.gid}', ${c}, event)">${sp.label}</button>`;
-          }).join("")}
-        </div>`;
-      }
-    }
+    const extraHTML = expandedPt === i ? buildLedgerExtraHTML(it) : "";
     return `
     <div class="ledger-item" onclick="togglePtNote(${i})">
       <div class="li-row">
@@ -20709,21 +21342,31 @@ function renderMasteryList() {
           ${it.point_id ? `<button class="li-act" onclick="event.stopPropagation();jumpToPointById('${it.point_id}')">练习</button>` : ""}
         </div>
       </div>
-      ${expandedPt === i && (it.note || it.family) ? `<div class="li-note">${escapeHtml([it.family, it.note].filter(Boolean).join(" · "))}</div>` : ""}
-      ${gaBarHTML}
+      <div class="li-extra">${extraHTML}</div>
     </div>
   `;
   }).join("");
 }
 
-function closeModal() {
+function closeModal(fromPop) {
   if (radioFbCloseTimer) { clearTimeout(radioFbCloseTimer); radioFbCloseTimer = null; }
   try { stopRadioFbMic(); } catch (e) {}
   try {
     const mv = document.getElementById("story-modal-video");
     if (mv && typeof mv.pause === "function") mv.pause();
   } catch (e) {}
-  document.getElementById("app-modal").classList.remove("open");
+  const mm = document.getElementById("app-modal");
+  const mc = document.getElementById("modal-content");
+  if (mc) {
+    mc.classList.remove("sheet-dragging");
+    mc.style.transform = "";
+  }
+  if (mm) {
+    const wasOpen = mm.classList.contains("open");
+    mm.classList.remove("sheet-dragging", "open");
+    mm.style.opacity = "";
+    if (wasOpen && !fromPop) popNavLayer("modal");
+  }
 }
 
 function manualCloudSync(btnEl) {
@@ -20761,6 +21404,16 @@ function openSessionModal() {
   const gaRow = (ga && ga.showSubNav)
     ? `　 语法盘点　<strong id="modal-ga-cnt">${ga.remaining === 0 ? `全表 ${ga.total}/${ga.total} ✓` : `今日 ${ga.gaSeen} / ${ga.gaTarget} · 总 ${ga.audited}/${ga.total}`}</strong><br/>`
     : "";
+  const installRow = !isStandaloneApp()
+    ? `<div class="install-app-row" id="install-app-row">
+         <div class="install-app-copy">
+           <div class="install-app-title">安装到主屏幕</div>
+           <div class="install-app-sub">去掉浏览器地址栏，全屏更像原生 App</div>
+         </div>
+         <button type="button" class="install-app-btn" onclick="triggerPwaInstall()">安装</button>
+       </div>
+       <div class="install-app-hint" id="install-app-hint" style="display:none;"></div>`
+    : "";
   document.getElementById("modal-content").innerHTML = `
     <h3 class="modal-h">今日四修 · 日语与体律</h3>
     <p class="modal-body">
@@ -20778,6 +21431,7 @@ function openSessionModal() {
       <p class="sync-note" id="cloud-sync-status-line">正在对齐云端进度…</p>
       <button class="sync-btn" onclick="manualCloudSync(this)">立即对齐多端进度</button>
     </div>
+    ${installRow}
     <div class="dock-row">
       <button class="ghost-btn" onclick="resetTodayMission()">重做题</button>
       <button class="ghost-btn" onclick="closeModal();switchMode('body')">体律</button>
@@ -20785,7 +21439,7 @@ function openSessionModal() {
     </div>
   `;
   updateSyncModalBadge();
-  document.getElementById("app-modal").classList.add("open");
+  showAppModal();
 }
 
 window.addEventListener("hashchange", () => {
@@ -22203,16 +22857,35 @@ window.ZB = (function() {
     return { lbf, lwt, bbf, avgWt, avgBf, lWaist };
   }
 
+  let SUB_BAR_CACHE = null;
   function positionSubBar(immediate) {
     const wrap = ge("zb-subtabs"), bar = ge("zb-sub-bar");
-    if (!wrap || !bar || !wrap.offsetWidth) return;
-    const btn = wrap.querySelector ? wrap.querySelector(`.zb-subtab[data-zbt="${SUBTAB}"]`) : null;
-    if (!btn || !btn.offsetWidth) return;
-    if (immediate) bar.style.transition = "none";
-    bar.style.width = btn.offsetWidth + "px";
-    bar.style.transform = `translateX(${btn.offsetLeft || 0}px)`;
-    if (immediate) { void bar.offsetWidth; bar.style.transition = ""; }
+    if (!wrap || !bar) return;
+    const apply = () => {
+      if (!SUB_BAR_CACHE) {
+        if (!wrap.offsetWidth) return;
+        const map = {};
+        SUB_ORDER.forEach(k => {
+          const btn = wrap.querySelector ? wrap.querySelector(`.zb-subtab[data-zbt="${k}"]`) : null;
+          if (btn && btn.offsetWidth) map[k] = { w: btn.offsetWidth, left: btn.offsetLeft || 0 };
+        });
+        if (Object.keys(map).length) SUB_BAR_CACHE = map;
+      }
+      const met = SUB_BAR_CACHE && SUB_BAR_CACHE[SUBTAB];
+      if (!met) return;
+      if (immediate) bar.style.transition = "none";
+      bar.style.width = met.w + "px";
+      bar.style.transform = `translate3d(${met.left}px, 0, 0)`;
+      if (immediate) {
+        if (typeof requestAnimationFrame === "function") requestAnimationFrame(() => { bar.style.transition = ""; });
+        else bar.style.transition = "";
+      }
+    };
+    if (immediate || SUB_BAR_CACHE) apply();
+    else if (typeof requestAnimationFrame === "function") requestAnimationFrame(apply);
+    else apply();
   }
+  window.addEventListener("resize", () => { SUB_BAR_CACHE = null; });
 
   function applyBodyHead(today, wb, pt) {
     const bfEl = ge("zb-bf-big"), wtEl = ge("zb-wt-big"), ctxEl = ge("zb-bctx");
@@ -22623,8 +23296,24 @@ window.ZB = (function() {
     GESTURES_BOUND = true;
     const stage = ge("zb-stage"), ptr = ge("zb-ptr"), ptrArc = ge("zb-ptr-arc"), ptrLbl = ge("zb-ptr-lbl");
     if (stage && stage.addEventListener) {
-      let trk = false, mode = "", sx = 0, sy = 0, t0 = 0, ldx = 0, ldy = 0, busy = false;
+      let trk = false, mode = "", sx = 0, sy = 0, t0 = 0, ldx = 0, ldy = 0, busy = false, gRaf = 0;
       const toLocal = (dx, dy) => (typeof FP_ANGLE !== "undefined" && FP_ANGLE === 90) ? { dx: -dy, dy: dx } : ((typeof FP_ANGLE !== "undefined" && FP_ANGLE === 270) ? { dx: dy, dy: -dx } : { dx, dy });
+      const applyGestureFrame = () => {
+        gRaf = 0;
+        if (!trk) return;
+        if (mode === "h") {
+          const idx = SUB_ORDER.indexOf(SUBTAB);
+          const edge = (idx === 0 && ldx > 0) || (idx === SUB_ORDER.length - 1 && ldx < 0);
+          const dm = edge ? ldx * 0.16 : Math.max(-68, Math.min(68, ldx * 0.42));
+          const ap = ge("zb-p-" + SUBTAB);
+          if (ap) { ap.style.transition = "none"; ap.style.transform = `translate3d(${dm.toFixed(1)}px, 0, 0)`; }
+        } else if (mode === "ptr" && ldy > 0) {
+          const pull = Math.min(56, ldy * 0.48), pct = Math.min(100, Math.round((pull / 46) * 100));
+          if (ptr) { ptr.style.height = `${pull.toFixed(0)}px`; ptr.style.opacity = `${Math.min(1, pull / 30).toFixed(2)}`; }
+          if (ptrArc) ptrArc.setAttribute("stroke-dasharray", `${pct} 100`);
+          if (ptrLbl) ptrLbl.textContent = pull >= 46 ? "松手立即同步" : "下拉同步";
+        }
+      };
       stage.addEventListener("touchstart", e => {
         if (!e.touches || e.touches.length !== 1 || busy) return;
         if (e.target && e.target.closest && e.target.closest("[data-zb-noswipe], input, textarea")) return;
@@ -22640,24 +23329,16 @@ window.ZB = (function() {
           else if (ldy > 0 && stage.scrollTop <= 0) { mode = "ptr"; if (ptr) ptr.classList.add("dragging"); }
           else { mode = "v"; return; }
         }
-        if (mode === "h") {
-          e.preventDefault();
-          const idx = SUB_ORDER.indexOf(SUBTAB);
-          const edge = (idx === 0 && ldx > 0) || (idx === SUB_ORDER.length - 1 && ldx < 0);
-          const dm = edge ? ldx * 0.16 : Math.max(-68, Math.min(68, ldx * 0.42));
-          const ap = ge("zb-p-" + SUBTAB);
-          if (ap) { ap.style.transition = "none"; ap.style.transform = `translateX(${dm.toFixed(1)}px)`; }
-        } else if (mode === "ptr" && ldy > 0) {
-          e.preventDefault();
-          const pull = Math.min(56, ldy * 0.48), pct = Math.min(100, Math.round((pull / 46) * 100));
-          if (ptr) { ptr.style.height = `${pull.toFixed(0)}px`; ptr.style.opacity = `${Math.min(1, pull / 30).toFixed(2)}`; }
-          if (ptrArc) ptrArc.setAttribute("stroke-dasharray", `${pct} 100`);
-          if (ptrLbl) ptrLbl.textContent = pull >= 46 ? "松手立即同步" : "下拉同步";
+        if (mode === "h" || (mode === "ptr" && ldy > 0)) {
+          if (e.cancelable) e.preventDefault();
+          if (!gRaf && typeof requestAnimationFrame === "function") gRaf = requestAnimationFrame(applyGestureFrame);
+          else if (typeof requestAnimationFrame !== "function") applyGestureFrame();
         }
       }, { passive: false });
       const endG = async () => {
         if (!trk) return;
         trk = false;
+        if (gRaf && typeof cancelAnimationFrame === "function") { cancelAnimationFrame(gRaf); gRaf = 0; }
         if (mode === "h") {
           const dt = Date.now() - t0, idx = SUB_ORDER.indexOf(SUBTAB);
           const sr = ldx > 52 || (ldx > 26 && dt < 220), sl = ldx < -52 || (ldx < -26 && dt < 220);
@@ -22665,7 +23346,7 @@ window.ZB = (function() {
           else if (sr && idx > 0) window.ZB.setTab(SUB_ORDER[idx - 1], -1);
           else {
             const ap = ge("zb-p-" + SUBTAB);
-            if (ap) { ap.style.transition = "transform 0.22s cubic-bezier(0.22, 1, 0.36, 1)"; ap.style.transform = "translateX(0)"; setTimeout(() => { ap.style.transition = ""; ap.style.transform = ""; }, 230); }
+            if (ap) { ap.style.transition = "transform 0.22s cubic-bezier(0.22, 1, 0.36, 1)"; ap.style.transform = "translate3d(0, 0, 0)"; setTimeout(() => { ap.style.transition = ""; ap.style.transform = ""; }, 230); }
           }
         } else if (mode === "ptr") {
           if (ptr) ptr.classList.remove("dragging");
@@ -22913,7 +23594,7 @@ window.ZB = (function() {
       <div class="dock-row">
         <button type="button" class="sumi-btn" onclick="closeModal()">知道了</button>
       </div>`;
-    mm.classList.add("open");
+    if (typeof showAppModal === "function") showAppModal(); else mm.classList.add("open");
   }
 
   function openPeloGuide() {
@@ -22981,7 +23662,7 @@ window.ZB = (function() {
       <div class="dock-row">
         <button type="button" class="sumi-btn" onclick="closeModal()">返回</button>
       </div>`;
-    mm.classList.add("open");
+    if (typeof showAppModal === "function") showAppModal(); else mm.classList.add("open");
   }
 
   function openStateSheet() {
@@ -23066,7 +23747,7 @@ window.ZB = (function() {
       <div class="dock-row">
         <button type="button" class="sumi-btn" onclick="closeModal()">完成</button>
       </div>`;
-    mm.classList.add("open");
+    if (typeof showAppModal === "function") showAppModal(); else mm.classList.add("open");
   }
 
   function openBandGuide() {
@@ -23147,9 +23828,13 @@ window.ZB = (function() {
         el.classList.remove("zb-slide-r", "zb-slide-l");
         el.style.transform = ""; el.style.transition = "";
         el.classList.toggle("active", k === t);
-        if (k === t) { void el.offsetWidth; el.classList.add(dir > 0 ? "zb-slide-r" : "zb-slide-l"); }
+        if (k === t) el.classList.add(dir > 0 ? "zb-slide-r" : "zb-slide-l");
       });
-      const st = ge("zb-stage"); if (st) st.scrollTop = 0;
+      const st = ge("zb-stage");
+      if (st) {
+        if (typeof requestAnimationFrame === "function") requestAnimationFrame(() => { st.scrollTop = 0; });
+        else st.scrollTop = 0;
+      }
       if (t === "body") renderChart();
       positionSubBar(false);
     },
@@ -25216,11 +25901,60 @@ if (!vm.runInNewContext('!!(A.radioReview && A.radioReview.done)', sb)) {
 }
 sb.closeRadioReview();
 sb.switchMode('tutor');
+
+// Self-test 31 (v86): Native-App Fluidity Gate (O(1) tokenizer, zero-reflow directional nav, GPU sheet, Pixel back stack, 1-tap PWA install, zero vibration)
+if (!html.includes('height: 100dvh;') || !html.includes('content-visibility: auto;') || !html.includes('overscroll-behavior: contain;') || !html.includes('touch-action: manipulation;')) {
+  throw new Error('Self-test 31 failed: missing core native-app fluidity CSS rules (100dvh / content-visibility / overscroll / touch-action)');
+}
+if (html.includes('navigator.vibrate')) {
+  throw new Error('Self-test 31 failed: navigator.vibrate violated user zero-haptic-vibration preference');
+}
+const tok31 = sb.annotateJapanese('会議の書類を準備している最中に、電話がかかってきた。');
+if (!tok31.includes('data-w="会議"') || !tok31.includes('data-w="書類"') || !tok31.includes('data-w="最中に"')) {
+  throw new Error('Self-test 31 failed: O(1) first-char indexed tokenizer broke multi-char word matching: ' + tok31);
+}
+if (vm.runInNewContext('DICT_BY_CH.size < 100 || CONTENT_BY_CH.size < 50', sb)) {
+  throw new Error('Self-test 31 failed: DICT_BY_CH / CONTENT_BY_CH bucket maps under-populated');
+}
+// Back-gesture stack push/pop integrity (modal + dash + radio_review)
+vm.runInNewContext('NAV_LAYER_STACK.length = 0;', sb);
+sb.openSessionModal();
+const sessHtml31 = (els['modal-content'] && els['modal-content'].innerHTML) || '';
+if (!sessHtml31.includes('安装到主屏幕') || sessHtml31.includes('—')) {
+  throw new Error('Self-test 31 failed: browser-mode session modal missing quiet 1-tap PWA install row or contains em dash');
+}
+if (vm.runInNewContext('NAV_LAYER_STACK[NAV_LAYER_STACK.length - 1]', sb) !== 'modal') {
+  throw new Error('Self-test 31 failed: opening modal did not push modal onto NAV_LAYER_STACK');
+}
+sb.closeModal();
+if (vm.runInNewContext('NAV_LAYER_STACK.length', sb) !== 0) {
+  throw new Error('Self-test 31 failed: closing modal leaked NAV_LAYER_STACK');
+}
+// Standalone mode hides install row cleanly
+sb.matchMedia = (q) => ({ matches: String(q || '').includes('standalone'), addEventListener: () => {} });
+sb.openSessionModal();
+const standaloneSessHtml31 = (els['modal-content'] && els['modal-content'].innerHTML) || '';
+if (standaloneSessHtml31.includes('install-app-row')) {
+  throw new Error('Self-test 31 failed: standalone mode must hide install-app-row completely');
+}
+sb.closeModal();
+sb.matchMedia = () => ({ matches: false, addEventListener: () => {} });
+// Directional tab navigation classes
+sb.switchMode('tutor');
+sb.switchMode('vocab');
+if (!els['vocab-view'].classList.contains('nav-from-right')) {
+  throw new Error('Self-test 31 failed: moving right tutor->vocab must apply nav-from-right');
+}
+sb.switchMode('radio', false);
+if (!els['radio-view'].classList.contains('nav-from-left')) {
+  throw new Error('Self-test 31 failed: moving left vocab->radio must apply nav-from-left');
+}
+sb.switchMode('tutor');
 """
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
 
 sw_path = os.path.join(BASE_DIR, "sw.js")
-SW_CACHE_NAME = "n3-studio-tutor-v85"
+SW_CACHE_NAME = "n3-studio-tutor-v86"
 if not _IS_SIM_OUTPUT and os.path.exists(sw_path):
     with open(sw_path, encoding="utf-8") as sf:
         sw_src = sf.read()

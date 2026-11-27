@@ -1345,11 +1345,46 @@ def test_v85_whole_app_voice_studio_guard() -> None:
         "function renderQuizVoiceStage(",
         "function openRadioVoiceWrapUp(",
         "function renderRadioVoiceStage(",
-        'SW_CACHE_NAME = "n3-studio-tutor-v85"',
+        'SW_CACHE_NAME = "n3-studio-tutor-v',
     ):
         assert sym in bh_src, f"build_html.py missing v85 Voice Studio symbol: {sym}"
 
-    print(f"[PASS 21/21] v85 Whole-App Voice Studio ({len(CONJUGATION_DRILLS)} conj drills x 3 MP3s + {len(VOICE_COACH_LINES)} coach clips + {len(sps)} spk ask MP3s) verified")
+    print(f"[PASS 21/22] v85 Whole-App Voice Studio ({len(CONJUGATION_DRILLS)} conj drills x 3 MP3s + {len(VOICE_COACH_LINES)} coach clips + {len(sps)} spk ask MP3s) verified")
+
+
+def test_v86_native_pixel_fluidity_guard() -> None:
+    """Gate 22 (v86): Guard 120Hz browser + WebAPK native fluidity, zero-vibration preference, ETag SWR, and crisp icons."""
+    bh_src = (BASE_DIR / "build_html.py").read_text(encoding="utf-8")
+    sw_src = (BASE_DIR / "sw.js").read_text(encoding="utf-8")
+    man = json.loads((BASE_DIR / "manifest.json").read_text(encoding="utf-8"))
+
+    for sym in (
+        'SW_CACHE_NAME = "n3-studio-tutor-v86"',
+        "100dvh",
+        "touch-action: manipulation",
+        "overscroll-behavior: contain",
+        "content-visibility: auto",
+        "DICT_BY_CH",
+        "NAV_LAYER_STACK",
+        "function showAppModal(",
+        "function safeCancelSpeechSynthesis(",
+        "beforeinstallprompt",
+        "function isStandaloneApp(",
+        "function triggerPwaInstall(",
+        "function scheduleWarmUpcomingQuiz(",
+        "bindBottomSheetDragDismiss",
+        't.classList.add("is-pressed")',
+    ):
+        assert sym in bh_src, f"build_html.py missing v86 fluidity symbol: {sym}"
+
+    html_out = (BASE_DIR / "index.html").read_text(encoding="utf-8")
+    assert "navigator.vibrate" not in html_out, "FORBIDDEN navigator.vibrate found in index.html (violates 零触控震动)!"
+    assert 'CACHE_NAME = "n3-studio-tutor-v86"' in sw_src, "sw.js CACHE_NAME not bumped to v86!"
+    assert 'cache: "no-cache"' in sw_src, "sw.js should use ETag-conditional no-cache SWR revalidation!"
+    assert "launch_handler" in man and "display_override" in man, "manifest.json missing launch_handler/display_override!"
+    assert (BASE_DIR / "icon-192.png").stat().st_size > 2500, "icon-192.png looks low-res / broken!"
+    assert (BASE_DIR / "icon-512.png").stat().st_size > 8000, "icon-512.png looks low-res / broken!"
+    print("[PASS 22/22] v86 120Hz native-app fluidity, O(1) tokenizer, lazy TTS, bottom-sheet physics, Android back-stack & crisp Ensō icons verified")
 
 
 def main() -> int:
@@ -1374,7 +1409,8 @@ def main() -> int:
     test_v46_stereo_cognitive_n2_long_horizon_guard()
     test_v84_hands_free_voice_vocab_coach_guard()
     test_v85_whole_app_voice_studio_guard()
-    print("[ALL PASS] tests_ci_guard.py 21/21 gates green!")
+    test_v86_native_pixel_fluidity_guard()
+    print("[ALL PASS] tests_ci_guard.py 22/22 gates green!")
     return 0
 
 
