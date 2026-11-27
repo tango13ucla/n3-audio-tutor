@@ -1185,6 +1185,7 @@ elif active_phase in ("n2_climb", "n1_sprint") and _build_n2_qbank is not None a
         n2_status_map,
         _n3_bridge,
         is_travel_floor=is_travel_floor,
+        study_date_tag=plan_date_str,
     )
     DECK_CAP = len(raw_points)
 else:
@@ -2175,6 +2176,75 @@ for _sp_item in (radio_meta.get("speaking_prompts") or []):
     if isinstance(_sp_item, dict) and not _sp_item.get("ask_spoken"):
         _sp_item["ask_spoken"] = _build_spk_ask_spoken(_sp_item)
 
+# v86: SLA Linguistics Pack (18 Anti-Fossilization 3s Reflex Slips, 24 HVPT Minimal Pairs,
+# Weekend Real-Tutor 3-Phrase Mission, N2 250-Char Micro-Reading, & FSRS Leech Intervention)
+from sla_linguistics_pack import (
+    FOSSIL_SLIP_DRILLS as _FOSSIL_SLIPS_RAW,
+    MINIMAL_PAIR_DRILLS as _MINIMAL_PAIRS_RAW,
+    build_tutor_mission as _build_tutor_mission,
+)
+try:
+    from fsrs_engine import collect_leeches as _collect_leeches
+    _leeches_info = _collect_leeches(live_state, max_items=16)
+except Exception:
+    _leeches_info = {"vocab": [], "points": []}
+try:
+    from n2_prep.n2_micro_reading import get_micro_reading_for_day as _get_micro_reading
+    _micro_reading_day = n2_day_idx if n2_day_idx > 0 else max(1, (_dt_mod.date.fromisoformat(plan_date_str[:10]).toordinal() % 20) + 1)
+    micro_reading_payload = _get_micro_reading(_micro_reading_day)
+except Exception:
+    micro_reading_payload = None
+
+_slip_manifest = audio_manifest.get("fossil_slips", {})
+fossil_slips_payload = []
+for _sd in _FOSSIL_SLIPS_RAW:
+    _sid = _sd["id"]
+    _sa = _slip_manifest.get(_sid, {})
+    fossil_slips_payload.append({
+        "id": _sid,
+        "category": _sd["category"],
+        "cue_zh": _sd["cue_zh"],
+        "prompt_hint": _sd["prompt_hint"],
+        "target_ja": _sd["target_ja"],
+        "target_kana": _sd["target_kana"],
+        "accept_kana": list(_sd["accept_kana"]),
+        "traps": dict(_sd.get("traps") or {}),
+        "rule_zh": _sd["rule_zh"],
+        "ask_audio": _sa.get("ask", ""),
+        "teach_audio": _sa.get("teach", ""),
+        "model_audio": _sa.get("model", ""),
+    })
+    if _sd["target_ja"] and _sd["target_kana"]:
+        asr_kana_map.setdefault(_sd["target_ja"], _sd["target_kana"])
+
+_mp_manifest = audio_manifest.get("minimal_pairs", {})
+minimal_pairs_payload = []
+for _mp in _MINIMAL_PAIRS_RAW:
+    _mpid = _mp["id"]
+    _ma = _mp_manifest.get(_mpid, {})
+    minimal_pairs_payload.append({
+        "id": _mpid,
+        "axis": _mp["axis"],
+        "a": dict(_mp["a"]),
+        "b": dict(_mp["b"]),
+        "tip": _mp["tip"],
+        "focus_phoneme": _mp["focus_phoneme"],
+        "audio_a": _ma.get("a", ""),
+        "audio_b": _ma.get("b", ""),
+        "speaker_a": _ma.get("speaker_a", "东京女声"),
+        "speaker_b": _ma.get("speaker_b", "东京男声"),
+    })
+
+_night_sum_for_mission = {}
+try:
+    _ns_p = os.path.join(BASE_DIR, "night_summary.json")
+    if os.path.exists(_ns_p):
+        _night_sum_for_mission = json.loads(open(_ns_p, encoding="utf-8").read())
+except Exception:
+    _night_sum_for_mission = {}
+tutor_mission_payload = _build_tutor_mission(live_state, _night_sum_for_mission, phase=active_phase, max_items=3)
+leech_words_payload = [str(x.get("word") or "") for x in (_leeches_info.get("vocab") or []) if x.get("word")]
+
 payload = json.dumps({
     "plan_date": plan_date_str,
     "phase": active_phase,
@@ -2193,6 +2263,11 @@ payload = json.dumps({
     "vocab_twins": vocab_twins_map,
     "voice_coach": audio_manifest.get("voice_coach", {}),
     "conj_drills": conj_drills_payload,
+    "fossil_slips": fossil_slips_payload,
+    "minimal_pairs": minimal_pairs_payload,
+    "tutor_mission": tutor_mission_payload,
+    "micro_reading": micro_reading_payload,
+    "leech_words": leech_words_payload,
     "grammar_audit": {
         "active_from": "2026-11-23",
         "daily_target": ga_daily_target,
@@ -4543,6 +4618,171 @@ html = r"""<!DOCTYPE html>
     color: var(--moss);
     font-weight: 500;
   }
+  /* v86 SLA Kyoto Zen Extensions (100% semantic dark/light parity, zero box bloat) */
+  .jpv-shadow-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 0 4px;
+    border-top: 1px solid var(--hairline);
+    font-size: 12px;
+    color: var(--ink-3);
+  }
+  .jpv-shadow-note { flex: 1; min-width: 0; line-height: 1.45; }
+  .jpv-shadow-acts { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .jpv-shadow-link {
+    background: none; border: none; padding: 6px 2px;
+    font-family: var(--sans); font-size: 12.5px; color: var(--ink-2);
+    cursor: pointer; touch-action: manipulation; white-space: nowrap;
+  }
+  .jpv-shadow-link.is-on, .jpv-shadow-link.is-done { color: var(--moss); font-weight: 500; }
+  .jpv-sub-stage.shadow-blind .jpv-sub-ja,
+  .jpv-sub-stage.shadow-blind .jpv-sub-zh {
+    opacity: 0.08;
+    filter: blur(5px);
+    transition: opacity 0.22s ease, filter 0.22s ease;
+    cursor: pointer;
+  }
+  .jpv-sub-stage.shadow-blind.shadow-peek .jpv-sub-ja,
+  .jpv-sub-stage.shadow-blind.shadow-peek .jpv-sub-zh {
+    opacity: 1;
+    filter: none;
+  }
+  .mp-pair-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+    max-width: 340px;
+    margin: 14px auto 4px;
+  }
+  .mp-choice-btn {
+    background: var(--sheet);
+    border: 1px solid var(--hairline-strong);
+    border-radius: 12px;
+    padding: 13px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: background 0.16s ease, border-color 0.16s ease;
+  }
+  .mp-choice-btn:active { background: var(--tap-bg); }
+  .mp-choice-btn.is-right { background: var(--moss-soft); border-color: var(--moss-border); }
+  .mp-choice-btn.is-wrong { border-color: var(--bengara); }
+  .mp-choice-num { font-size: 11px; color: var(--ink-3); letter-spacing: 0.08em; }
+  .mp-choice-ja { font-family: var(--ja-sans); font-size: 20px; font-weight: 400; color: var(--sumi); line-height: 1.25; }
+  .mp-choice-kana { font-family: var(--ja-sans); font-size: 12px; color: var(--ink-3); }
+  .mp-choice-zh { font-size: 12px; color: var(--ink-2); }
+  .mp-pitch-svg { display: block; margin: 2px auto 0; height: 14px; color: var(--ink-2); }
+  .slip-cue-bal { max-width: 310px; margin-left: auto; margin-right: auto; text-wrap: balance; }
+  .slip-reflex-pill {
+    display: inline-block;
+    font-size: 12px;
+    color: var(--ink-3);
+    letter-spacing: 0.04em;
+    margin-top: 4px;
+  }
+  .slip-reflex-pill.fast { color: var(--moss); }
+  .slip-reflex-pill.slow { color: var(--ochre); }
+  .mr-passage {
+    font-family: var(--ja-sans);
+    font-size: 15.5px;
+    line-height: 1.88;
+    color: var(--sumi);
+    padding: 10px 0 12px;
+    border-bottom: 1px solid var(--hairline);
+    text-wrap: pretty;
+  }
+  .mr-q-title {
+    font-family: var(--ja-sans);
+    font-size: 14.5px;
+    font-weight: 500;
+    color: var(--sumi);
+    margin: 12px 0 10px;
+    line-height: 1.55;
+  }
+  .mr-opt-list { display: flex; flex-direction: column; gap: 8px; }
+  .mr-opt-btn {
+    width: 100%;
+    text-align: left;
+    background: var(--sheet);
+    border: 1px solid var(--hairline-strong);
+    border-radius: 12px;
+    padding: 11px 14px;
+    font-family: var(--ja-sans);
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--sumi);
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    height: auto;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .mr-opt-btn.is-right { background: var(--moss-soft); border-color: var(--moss-border); color: var(--moss); }
+  .mr-opt-btn.is-wrong { border-color: var(--bengara); color: var(--bengara); }
+  .mr-note {
+    margin-top: 12px;
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--ink-2);
+    padding-top: 10px;
+    border-top: 1px solid var(--hairline);
+  }
+  .mr-speed-note { font-size: 12px; color: var(--moss); margin-top: 6px; }
+  .tm-list { display: flex; flex-direction: column; gap: 0; margin-top: 8px; }
+  .tm-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .tm-row:last-child { border-bottom: none; }
+  .tm-main { flex: 1; min-width: 0; }
+  .tm-expr { font-family: var(--ja-sans); font-size: 16px; font-weight: 500; color: var(--sumi); }
+  .tm-starter { font-family: var(--ja-sans); font-size: 13.5px; color: var(--ink-2); margin-top: 4px; line-height: 1.55; }
+  .tm-why { font-size: 12px; color: var(--ink-3); margin-top: 3px; line-height: 1.45; }
+  .tm-check-btn {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 1.5px solid var(--hairline-strong);
+    background: transparent;
+    color: transparent;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0; cursor: pointer; touch-action: manipulation;
+    transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+  }
+  .tm-row.is-done .tm-check-btn {
+    background: var(--moss-soft);
+    border-color: var(--moss-border);
+    color: var(--moss);
+  }
+  .tm-row.is-done .tm-expr { color: var(--ink-3); }
+  .ret432-stage { text-align: center; padding: 14px 0 8px; }
+  .ret432-rounds { display: flex; justify-content: center; gap: 10px; margin-bottom: 14px; }
+  .ret432-step {
+    font-size: 12.5px; color: var(--ink-3); padding: 4px 10px;
+    border-radius: 999px; border: 1px solid var(--hairline);
+  }
+  .ret432-step.is-cur { color: var(--sumi); border-color: var(--sumi); font-weight: 500; }
+  .ret432-step.is-done { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-border); }
+  .ret432-timer {
+    font-family: var(--ja-sans);
+    font-size: 46px; font-weight: 300; letter-spacing: 0.04em;
+    color: var(--sumi); line-height: 1.1; margin: 10px 0 8px;
+  }
+  .ret432-topic { font-size: 14.5px; color: var(--ink-2); line-height: 1.6; text-wrap: pretty; }
+  .vc-leech-cue {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11.5px; color: var(--ochre); margin-left: 8px;
+  }
+  .vc-leech-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ochre); display: inline-block; }
   @keyframes rvAudioPulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.55; }
@@ -12934,6 +13174,13 @@ function syncJpVideoCue(curSec) {
   const timeEl = document.getElementById("jpv-time-lbl");
   if (timeEl) timeEl.textContent = `${formatMMSS(t)} / ${jpv.duration_label || formatMMSS(dur)}`;
 
+  if (jpvShadowMode && jpvShadowLoop && jpvLastCueIdx >= 0 && cues[jpvLastCueIdx] && jpvVideoEl && !jpvVideoEl.paused) {
+    const loopCue = cues[jpvLastCueIdx];
+    if (t >= Number(loopCue.e || 999) + 0.12) {
+      try { jpvVideoEl.currentTime = Math.max(0, Number(loopCue.s || 0)); } catch (e) {}
+      return;
+    }
+  }
   let idx = -1;
   for (let i = 0; i < cues.length; i++) {
     if (t >= Number(cues[i].s || 0) - 0.15 && t <= Number(cues[i].e || 999) + 0.55) {
@@ -13009,12 +13256,67 @@ function toggleJpVideoPlay(ev) {
   }
 }
 
+let jpvShadowMode = false;
+let jpvShadowLoop = false;
+let jpvShadowPeekTimer = null;
+let jpvShadowDoneToday = false;
+
+function isJpVideoShadowDoneToday() {
+  if (jpvShadowDoneToday) return true;
+  try { return localStorage.getItem("n3_jpv_shad_" + DATA.plan_date) === "1"; } catch (e) { return false; }
+}
+
 function toggleJpVideoSpeed(ev) {
   if (ev && ev.stopPropagation) ev.stopPropagation();
-  jpvSpeed = (jpvSpeed === 1.0) ? 0.85 : 1.0;
+  const order = [1.0, 0.85, 1.1];
+  const curIdx = order.indexOf(jpvSpeed);
+  jpvSpeed = order[(curIdx + 1) % order.length];
   if (jpvVideoEl) jpvVideoEl.playbackRate = jpvSpeed;
   const btn = document.getElementById("jpv-spd-btn");
   if (btn) btn.textContent = `${jpvSpeed}x`;
+}
+
+function toggleJpVideoShadowMode(ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  jpvShadowMode = !jpvShadowMode;
+  if (!jpvShadowMode) jpvShadowLoop = false;
+  const host = document.getElementById("radio-review-stage");
+  if (host && rvMode === "video") renderRadioJpVideoStage(host);
+}
+
+function toggleJpVideoShadowLoop(ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  jpvShadowLoop = !jpvShadowLoop;
+  const el = document.getElementById("jpv-loop-btn");
+  if (el) {
+    el.classList.toggle("is-on", jpvShadowLoop);
+    el.textContent = jpvShadowLoop ? "单句循环 · 开" : "单句循环";
+  }
+}
+
+function peekJpVideoShadowLine(ev) {
+  if (!jpvShadowMode) return;
+  const stEl = document.getElementById("jpv-sub-stage");
+  if (!stEl) return;
+  stEl.classList.add("shadow-peek");
+  if (jpvShadowPeekTimer) clearTimeout(jpvShadowPeekTimer);
+  jpvShadowPeekTimer = setTimeout(() => {
+    const el2 = document.getElementById("jpv-sub-stage");
+    if (el2) el2.classList.remove("shadow-peek");
+  }, 2600);
+}
+
+function markJpVideoShadowDone(ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  jpvShadowDoneToday = true;
+  try { localStorage.setItem("n3_jpv_shad_" + DATA.plan_date, "1"); } catch (e) {}
+  pushSlaRecord(`SHAD:${DATA.plan_date}`, `影子跟读:${jpvSpeed}x`, `影子跟读:${jpvSpeed}x`, true);
+  const btn = document.getElementById("jpv-shad-done-btn");
+  if (btn) {
+    btn.classList.add("is-done");
+    btn.textContent = "影子跟读 ✓";
+  }
+  showZenToast(`已记下今日影子跟读（${jpvSpeed}x）`);
 }
 
 function cycleJpVideoSubMode(ev) {
@@ -13098,10 +13400,20 @@ function renderRadioJpVideoStage(host) {
   }
   const st = ensureRadioReviewState(false);
   const cues = Array.isArray(jpv.cues) ? jpv.cues : [];
-  const initCue = cues[0] || { ja: jpv.title_ja || "", zh: jpv.title_zh || "", hits: [] };
+  const initCue = cues[Math.max(0, jpvLastCueIdx)] || cues[0] || { ja: jpv.title_ja || "", zh: jpv.title_zh || "", hits: [] };
   const words = Array.isArray(jpv.target_words) ? jpv.target_words : [];
   const subLabel = jpvSubMode === "bi" ? "日中字幕" : (jpvSubMode === "ja" ? "纯日字幕" : "无字幕");
-  const subStageCls = jpvSubMode === "ja" ? " ja-only" : (jpvSubMode === "off" ? " sub-hidden" : "");
+  const subStageCls = (jpvShadowMode ? " shadow-blind" : "") + (jpvSubMode === "ja" ? " ja-only" : (jpvSubMode === "off" ? " sub-hidden" : ""));
+  const shadDone = isJpVideoShadowDoneToday();
+  const shadowBarHTML = jpvShadowMode
+    ? `<div class="jpv-shadow-bar" id="jpv-shadow-bar">
+         <span class="jpv-shadow-note">盲听延迟半秒同步跟念 · 轻点字幕偷看</span>
+         <div class="jpv-shadow-acts">
+           <button type="button" class="jpv-shadow-link${jpvShadowLoop ? " is-on" : ""}" id="jpv-loop-btn" onclick="toggleJpVideoShadowLoop(event)">${jpvShadowLoop ? "单句循环 · 开" : "单句循环"}</button>
+           <button type="button" class="jpv-shadow-link${shadDone ? " is-done" : ""}" id="jpv-shad-done-btn" onclick="markJpVideoShadowDone(event)">${shadDone ? "影子跟读 ✓" : "完成一轮"}</button>
+         </div>
+       </div>`
+    : "";
   const chipsHTML = words.length
     ? `<div class="jpv-words-wrap">
          <div class="jpv-words-head">
@@ -13121,7 +13433,7 @@ function renderRadioJpVideoStage(host) {
 
   host.innerHTML = `
     <div class="meta-bar">
-      <span class="overline ok">今日日语短片 · 全日语</span>
+      <span class="overline ok">${jpvShadowMode ? `影子跟读 · ${jpvSpeed}x` : "今日日语短片 · 全日语"}</span>
       <span class="overline" id="jpv-time-lbl">00:00 / ${escapeHtml(jpv.duration_label || "01:30")}</span>
     </div>
 
@@ -13139,10 +13451,11 @@ function renderRadioJpVideoStage(host) {
         <div class="rv-cinema-rail"><div class="rv-cinema-fill" id="jpv-rail-fill"></div></div>
       </div>
 
-      <div class="jpv-sub-stage${subStageCls}" id="jpv-sub-stage" onclick="if(event.target && event.target.closest && event.target.closest('.w-tok') && jpvVideoEl && !jpvVideoEl.paused) jpvVideoEl.pause()">
+      <div class="jpv-sub-stage${subStageCls}" id="jpv-sub-stage" onclick="if(jpvShadowMode){peekJpVideoShadowLine(event);} if(event.target && event.target.closest && event.target.closest('.w-tok') && jpvVideoEl && !jpvVideoEl.paused) jpvVideoEl.pause()">
         <div class="jpv-sub-ja" lang="ja" id="jpv-sub-ja">${formatJpVideoLineHTML(initCue)}</div>
         <div class="jpv-sub-zh" id="jpv-sub-zh">${escapeHtml(initCue.zh || "")}</div>
       </div>
+      ${shadowBarHTML}
 
       ${lexBoxHTML("rv-inline-lex")}
       ${chipsHTML}
@@ -13151,6 +13464,7 @@ function renderRadioJpVideoStage(host) {
     <div class="vc-aux-row">
       ${(!st.done && Array.isArray(DATA.radio && DATA.radio.speaking_prompts) && DATA.radio.speaking_prompts.length) ? `<button type="button" class="vc-aux-btn seal" onclick="openRadioSpeaking(0)">开口2句</button>` : `<span></span>`}
       <div class="vc-aux-right">
+        <button type="button" class="vc-aux-btn${jpvShadowMode ? " is-on" : ""}" id="jpv-shad-btn" onclick="toggleJpVideoShadowMode(event)">影子跟读</button>
         <button type="button" class="vc-aux-btn" id="jpv-sub-btn" onclick="cycleJpVideoSubMode(event)">${subLabel}</button>
         <button type="button" class="vc-aux-btn replay" onclick="if(jpvVideoEl){jpvVideoEl.currentTime=0;jpvVideoEl.muted=false;jpvVideoEl.play().catch(()=>{});}">重播</button>
       </div>
@@ -14237,6 +14551,11 @@ function renderRadioReviewStage() {
           ${getTodayRadioFeedback()
             ? `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.2 8.4L6.6 11.6L12.8 4.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>已记下本期反馈，明早自动调优</span>`
             : `<span>花 20 秒评本期，明天更好听 ›</span>`}
+        </button>
+        <button type="button" class="rfb-done-link${isRetell432DoneToday() ? " is-saved" : ""}" id="rv-done-432-btn" onclick="openRetell432Modal()">
+          ${isRetell432DoneToday()
+            ? `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.2 8.4L6.6 11.6L12.8 4.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>今日 4/3/2 提速复述已完成</span>`
+            : `<span>4/3/2 提速复述（2 分钟练流利度）›</span>`}
         </button>
       </div>
       <div class="vc-dock">
@@ -17113,9 +17432,10 @@ function renderVocabStage() {
   const chunkLenCls = chunkLen >= 10 ? " len-long" : (chunkLen === 9 ? " len-9" : (chunkLen === 8 ? " len-8" : ""));
   const showVocabMic = JA_ASR.supported();
 
+  const isLeechWord = Array.isArray(DATA.leech_words) && DATA.leech_words.includes(card.word);
   box.innerHTML = `
     <div class="meta-bar">
-      <span class="overline${isRequeued ? " warm" : ""}">${escapeHtml(leftLabel)}</span>
+      <span class="overline${isRequeued ? " warm" : ""}">${escapeHtml(leftLabel)}${isLeechWord ? `<span class="vc-leech-cue"><span class="vc-leech-dot"></span>换角度记</span>` : ""}</span>
       <div class="vc-meta-right">
         <span id="vc-meta-dots" style="display:inline-flex;align-items:center;gap:6px;">${renderStreakDotsHTML(eff.streak)}</span>
       </div>
@@ -18320,6 +18640,8 @@ function openQuizVoiceSheet(ev) {
     : (allL.length ? `今日 ${allL.length} 道听力已过关，可免看屏再刷一遍` : "当前题库暂无听力题");
   const listenDisabled = allL.length === 0;
   const conjCount = Math.min(12, (DATA.conj_drills || []).length);
+  const slipCount = Math.min(10, (DATA.fossil_slips || []).length);
+  const mpCount = Math.min(12, (DATA.minimal_pairs || []).length);
   mc.innerHTML = `
     <h3 class="modal-h">语音练习</h3>
     <p class="zb-sheet-sub">开车或走路时免看屏练，只放适合用耳朵和嘴巴练的题。</p>
@@ -18349,6 +18671,32 @@ function openQuizVoiceSheet(ev) {
           <span class="zb-sheet-check" style="color:var(--ink-3);font-size:16px;">›</span>
         </button>
       </div>
+      ${slipCount ? `
+      <div class="zb-sheet-block">
+        <button type="button" class="zb-sheet-row" id="qv-sheet-slip" onclick="startQuizVoiceMode('slip')">
+          <div class="zb-sheet-main">
+            <span class="zb-sheet-dot"></span>
+            <div>
+              <div class="zb-sheet-title">老口误 3 秒快答</div>
+              <div class="zb-sheet-desc">${slipCount} 组个人高频口语顽疾，脱口而出破除石化</div>
+            </div>
+          </div>
+          <span class="zb-sheet-check" style="color:var(--ink-3);font-size:16px;">›</span>
+        </button>
+      </div>` : ""}
+      ${mpCount ? `
+      <div class="zb-sheet-block">
+        <button type="button" class="zb-sheet-row" id="qv-sheet-mp" onclick="startQuizVoiceMode('mp')">
+          <div class="zb-sheet-main">
+            <span class="zb-sheet-dot"></span>
+            <div>
+              <div class="zb-sheet-title">辨音盲听</div>
+              <div class="zb-sheet-desc">${mpCount} 组清浊、促音、长短音与声调，多声线对比辨音</div>
+            </div>
+          </div>
+          <span class="zb-sheet-check" style="color:var(--ink-3);font-size:16px;">›</span>
+        </button>
+      </div>` : ""}
     </div>
     <div class="dock-row" style="margin-top:14px;">
       <button type="button" class="ghost-btn" style="flex:1;" onclick="closeModal()">返回</button>
@@ -18363,7 +18711,7 @@ function stopQuizVoiceCoach(keepMode) {
     clearTimeout(qvTimer);
     qvTimer = null;
   }
-  if (JA_ASR.isActive("quiz_listen") || JA_ASR.isActive("quiz_conj")) JA_ASR.stop();
+  if (JA_ASR.isActive("quiz_listen") || JA_ASR.isActive("quiz_conj") || JA_ASR.isActive("quiz_slip") || JA_ASR.isActive("quiz_mp")) JA_ASR.stop();
   try {
     wordPlayer.onended = null;
     wordPlayer.onerror = null;
@@ -18381,73 +18729,104 @@ function stopQuizVoiceCoach(keepMode) {
   }
 }
 
+function buildFossilSlipSession(wantN) {
+  const all = Array.isArray(DATA.fossil_slips) ? DATA.fossil_slips.slice() : [];
+  if (!all.length) return [];
+  const seed = String(DATA.plan_date || "").split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+  const rotated = all.slice(seed % all.length).concat(all.slice(0, seed % all.length));
+  return rotated.slice(0, Math.min(wantN || 10, rotated.length));
+}
+
+function buildMinimalPairSession(wantN) {
+  const all = Array.isArray(DATA.minimal_pairs) ? DATA.minimal_pairs.slice() : [];
+  if (!all.length) return [];
+  // Interleave all 4 phonetic axes evenly (清浊音 / 促音 / 长短音 / 高低声调)
+  const axes = ["清浊音", "促音", "长短音", "高低声调"];
+  const buckets = axes.map(ax => all.filter(x => x.axis === ax));
+  const out = [];
+  const seed = String(DATA.plan_date || "").split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+  let round = 0;
+  while (out.length < (wantN || 12) && round < 8) {
+    for (let i = 0; i < buckets.length && out.length < (wantN || 12); i++) {
+      const b = buckets[i];
+      if (!b.length) continue;
+      const item = b[(round + seed) % b.length];
+      if (item && !out.some(x => x.id === item.id)) {
+        const pickSide = ((out.length + seed) % 2 === 0) ? "a" : "b";
+        out.push(Object.assign({}, item, { targetSide: pickSide }));
+      }
+    }
+    round += 1;
+  }
+  return out;
+}
+
 function startQuizVoiceMode(mode, ev) {
   if (ev && ev.stopPropagation) ev.stopPropagation();
   closeModal();
   stopAllHandsFreeVoice();
   stopQuizAudio();
-  quizVoiceMode = mode === "conj" ? "conj" : "listen";
+  quizVoiceMode = (mode === "conj" || mode === "slip" || mode === "mp") ? mode : "listen";
   pushNavLayer("quiz_voice");
   qvToken += 1;
+  const baseState = {
+    running: false,
+    phase: "idle",
+    audioOnly: !JA_ASR.supported(),
+    revealed: false,
+    statusText: "",
+    heardText: "",
+    verdictTone: "",
+    silentStreak: 0,
+    unclearTried: false,
+    everStarted: false,
+    replayMode: false,
+    listenQueue: [], listenTotal: 0, listenCleared: 0,
+    lastAnsIdx: 0, lastPickedIdx: 0, lastOk: false, lastUnsure: false,
+    conjQueue: [], conjTotal: 0, conjCleared: 0, conjRuleTip: "",
+    slipQueue: [], slipTotal: 0, slipCleared: 0, slipStartMs: 0, slipLatencySec: 0, slipRuleTip: "",
+    mpQueue: [], mpTotal: 0, mpCleared: 0, mpPickedSide: "", mpOk: false
+  };
   if (quizVoiceMode === "listen") {
     const allL = (DATA.points || []).filter(p => p && p.primary && p.primary.is_listening);
     const pendL = allL.filter(p => A.pts[p.id] && A.pts[p.id].status !== "green");
     const replay = pendL.length === 0;
     const queue = (replay ? allL : pendL).map(p => p.id);
-    qvState = {
-      running: false,
+    qvState = Object.assign(baseState, {
       phase: queue.length ? "idle" : "done",
-      audioOnly: !JA_ASR.supported(),
-      revealed: false,
       statusText: !JA_ASR.supported() ? "免看屏听题模式" : "听完直接说一、二、或三",
-      heardText: "",
-      verdictTone: "",
-      silentStreak: 0,
-      unclearTried: false,
-      everStarted: false,
       replayMode: replay,
       listenQueue: queue,
-      listenTotal: queue.length,
-      listenCleared: 0,
-      lastAnsIdx: 0,
-      lastPickedIdx: 0,
-      lastOk: false,
-      lastUnsure: false,
-      conjQueue: [],
-      conjTotal: 0,
-      conjCleared: 0,
-      conjRuleTip: ""
-    };
+      listenTotal: queue.length
+    });
     if (queue.length) {
       setupCurrentTurn(queue[0]);
       viewStage = "quiz";
     }
-  } else {
+  } else if (quizVoiceMode === "conj") {
     const drills = buildConjDrillSession(12);
-    qvState = {
-      running: false,
+    qvState = Object.assign(baseState, {
       phase: drills.length ? "idle" : "done",
-      audioOnly: !JA_ASR.supported(),
-      revealed: false,
       statusText: !JA_ASR.supported() ? "免看屏听答模式" : "听原形，直接用日语说出变形",
-      heardText: "",
-      verdictTone: "",
-      silentStreak: 0,
-      unclearTried: false,
-      everStarted: false,
-      replayMode: false,
-      listenQueue: [],
-      listenTotal: 0,
-      listenCleared: 0,
-      lastAnsIdx: 0,
-      lastPickedIdx: 0,
-      lastOk: false,
-      lastUnsure: false,
       conjQueue: drills,
-      conjTotal: drills.length,
-      conjCleared: 0,
-      conjRuleTip: ""
-    };
+      conjTotal: drills.length
+    });
+  } else if (quizVoiceMode === "slip") {
+    const slips = buildFossilSlipSession(10);
+    qvState = Object.assign(baseState, {
+      phase: slips.length ? "idle" : "done",
+      statusText: !JA_ASR.supported() ? "免看屏 3 秒默答模式" : "听中文情境，3 秒内脱口说出日语",
+      slipQueue: slips,
+      slipTotal: slips.length
+    });
+  } else {
+    const pairs = buildMinimalPairSession(12);
+    qvState = Object.assign(baseState, {
+      phase: pairs.length ? "idle" : "done",
+      statusText: "盲听多声线东京发音，选 1 或 2",
+      mpQueue: pairs,
+      mpTotal: pairs.length
+    });
   }
   renderTutor();
 }
@@ -19005,6 +19384,304 @@ function askCurrentQuizVoiceConj(runTok) {
   }, 1.0);
 }
 
+function pushSlaRecord(id, point, label, isOk) {
+  const tsSec = Math.max(TRUE_GREEN_EPOCH, nowUnixSec());
+  const ob = loadOutbox();
+  ob.push([String(id || ""), String(point || ""), String(label || ""), isOk ? 1 : 0, new Date(tsSec * 1000).toISOString()]);
+  saveOutbox(ob);
+  scheduleCloudPush(220);
+}
+
+// ---------- B2. ANTI-FOSSILIZATION 3-SECOND ORAL REFLEX ENGINE ("老口误 3 秒快答") ----------
+function renderPitchContourSVG(pitchStr) {
+  const s = String(pitchStr || "").toUpperCase().replace(/[^HL]/g, "");
+  if (s.length < 2) return "";
+  const w = (s.length - 1) * 14 + 12;
+  const pts = [];
+  for (let i = 0; i < s.length; i++) {
+    const x = 6 + i * 14;
+    const y = s[i] === "H" ? 3 : 11;
+    pts.push(`${x},${y}`);
+  }
+  return `<svg class="mp-pitch-svg" width="${w}" height="14" viewBox="0 0 ${w} 14" fill="none" aria-hidden="true"><polyline points="${pts.join(" ")}" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+
+function normSlipJa(raw) {
+  let s = String(raw || "").trim().replace(/[。、？！\s]/g, "");
+  // Katakana -> Hiragana
+  s = s.replace(/[\u30A1-\u30F6]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60));
+  const map = Object.assign({
+    "酸っぱい": "すっぱい", "酸っぱかった": "すっぱかった", "辛い": "からい", "辛かった": "からかった",
+    "大好き": "だいすき", "寝る": "ねる", "時": "とき", "読む": "よむ", "大丈夫": "だいじょうぶ",
+    "上手": "じょうず", "幸せ": "しあわせ", "休む": "やすむ", "休ませ": "やすませ", "休み": "やすみ",
+    "来週": "らいしゅう", "参加": "さんか", "運動": "うんどう", "毎日": "まいにち",
+    "知って": "しって", "知り": "しり", "食べて": "たべて", "食べ": "たべ",
+    "話させ": "はなさせ", "話さ": "はなさ", "仕事": "しごと", "終わらせ": "おわらせ", "終わる": "おわる",
+    "晴れ": "はれ", "明日": "あした", "美味しい": "おいしい", "美味しかった": "おいしかった",
+    "友達": "ともだち", "案内": "あんない"
+  }, (DATA && DATA.asr_kana) || {});
+  const keys = Object.keys(map).sort((a, b) => b.length - a.length);
+  for (let i = 0; i < keys.length; i++) {
+    const k = keys[i];
+    if (k && s.includes(k)) s = s.split(k).join(map[k]);
+  }
+  return s;
+}
+
+function analyzeFossilSlip(alts, drill) {
+  const arr = Array.isArray(alts) ? alts.filter(Boolean) : [];
+  if (!arr.length || !drill) return { ok: false, heard: "", tip: drill ? drill.rule_zh : "", hitTrap: false };
+  const targetK = normSlipJa(drill.target_kana || drill.target_ja || "");
+  const accepts = (drill.accept_kana || [targetK]).map(x => normSlipJa(x)).filter(Boolean);
+  const traps = drill.traps || {};
+  let bestHeard = arr[0];
+  for (let i = 0; i < arr.length; i++) {
+    const k = normSlipJa(arr[i]);
+    if (!k) continue;
+    for (let j = 0; j < accepts.length; j++) {
+      if (k === accepts[j] || k.includes(accepts[j])) {
+        return { ok: true, heard: arr[i], tip: "", hitTrap: false };
+      }
+    }
+    for (const tk of Object.keys(traps)) {
+      const nt = normSlipJa(tk);
+      if (nt && (k === nt || k.includes(nt))) {
+        return { ok: false, heard: arr[i], tip: traps[tk], hitTrap: true };
+      }
+    }
+  }
+  return { ok: false, heard: bestHeard, tip: drill.rule_zh, hitTrap: false };
+}
+
+function advanceQuizVoiceSlipNext(runTok) {
+  if (qvToken !== runTok || !qvState.running || quizVoiceMode !== "slip") return;
+  if (!qvState.slipQueue.length) {
+    qvState.running = false;
+    qvState.phase = "done";
+    qvState.statusText = "本轮老口误快答全部过关";
+    if (!isAnyVoiceCoachRunning()) releaseVoiceWakeLock();
+    renderTutor();
+    return;
+  }
+  askCurrentQuizVoiceSlip(runTok);
+}
+
+function handleQuizVoiceSlipOutcome(drill, res, isBlank, runTok) {
+  if (qvToken !== runTok || quizVoiceMode !== "slip") return;
+  const ok = !isBlank && !!(res && res.ok);
+  const latSec = qvState.slipStartMs ? Math.max(0.4, Math.min(9.9, (Date.now() - qvState.slipStartMs) / 1000)) : 0;
+  qvState.slipLatencySec = Number(latSec.toFixed(1));
+  const cur = qvState.slipQueue[0];
+  qvState.slipFeedbackItem = drill;
+  if (cur && cur.id === drill.id) {
+    qvState.slipQueue.shift();
+    if (ok) {
+      qvState.slipCleared = Math.min(qvState.slipTotal, (qvState.slipCleared || 0) + 1);
+    } else {
+      qvState.slipQueue.splice(Math.min(qvState.slipQueue.length, 3), 0, drill);
+    }
+  }
+  pushSlaRecord(`SLIP:${drill.id}`, drill.target_ja, ok ? `快答:${qvState.slipLatencySec}s` : (isBlank ? "快答:未开口" : "快答:触发老口误"), ok);
+  qvState.phase = "feedback";
+  qvState.revealed = true;
+  qvState.lastOk = ok;
+  qvState.verdictTone = ok ? "ok" : "ng";
+  qvState.slipRuleTip = (res && !ok && res.tip) ? res.tip : drill.rule_zh;
+  const fastTag = ok ? (qvState.slipLatencySec <= 3.5 ? `反应飞快（${qvState.slipLatencySec} 秒）` : `说对了 · 略慢（${qvState.slipLatencySec} 秒）`) : (isBlank ? `标准脱口：「${drill.target_ja}」` : (res && res.hitTrap ? "踩中老口误，马上改口" : `标准表达：「${drill.target_ja}」`));
+  qvState.statusText = fastTag;
+  qvState.heardText = (!isBlank && res && res.heard) ? (ok ? `✓ ${res.heard}` : `听到「${res.heard}」`) : "";
+  renderTutor();
+
+  if (ok) {
+    playZenVoiceChime("ok");
+    playGenericVoiceUrl(drill.model_audio, drill.target_kana, "ja-JP", () => qvToken, runTok, () => {
+      qvTimer = setTimeout(() => advanceQuizVoiceSlipNext(runTok), 750);
+    }, 1.0);
+  } else {
+    playZenVoiceChime("coach");
+    playGenericVoiceUrl(drill.teach_audio, drill.rule_zh, "zh-CN", () => qvToken, runTok, () => {
+      qvTimer = setTimeout(() => {
+        playGenericVoiceUrl(drill.model_audio, drill.target_kana, "ja-JP", () => qvToken, runTok, () => {
+          qvTimer = setTimeout(() => advanceQuizVoiceSlipNext(runTok), 900);
+        }, 1.0);
+      }, 140);
+    }, 1.0);
+  }
+}
+
+function askCurrentQuizVoiceSlip(runTok) {
+  if (qvToken !== runTok || !qvState.running || quizVoiceMode !== "slip") return;
+  const drill = qvState.slipQueue[0];
+  if (!drill) { advanceQuizVoiceSlipNext(runTok); return; }
+  qvState.phase = "asking";
+  qvState.revealed = false;
+  qvState.heardText = "";
+  qvState.verdictTone = "";
+  qvState.slipRuleTip = "";
+  qvState.slipLatencySec = 0;
+  qvState.statusText = "听情境，3 秒脱口而出…";
+  renderTutor();
+
+  playGenericVoiceUrl(drill.ask_audio, drill.cue_zh, "zh-CN", () => qvToken, runTok, () => {
+    if (qvToken !== runTok || !qvState.running) return;
+    qvState.slipStartMs = Date.now();
+    if (qvState.audioOnly || !JA_ASR.supported()) {
+      qvState.audioOnly = true;
+      qvState.phase = "listening";
+      qvState.statusText = "3 秒内心里或开口说出日语…";
+      renderTutor();
+      qvTimer = setTimeout(() => {
+        if (qvToken !== runTok || !qvState.running) return;
+        handleQuizVoiceSlipOutcome(drill, null, true, runTok);
+      }, 3600);
+      return;
+    }
+    qvState.phase = "listening";
+    qvState.statusText = "请立刻用日语脱口说出…";
+    renderTutor();
+    playZenVoiceChime("listen");
+    qvTimer = setTimeout(() => {
+      if (qvToken !== runTok || !qvState.running) return;
+      const started = JA_ASR.start("quiz_slip", {
+        sentenceMode: false,
+        skipStopVocab: true,
+        silenceMs: 950,
+        maxCapMs: 5500,
+        onInterim: (txt) => {
+          if (qvToken !== runTok) return;
+          const el = document.getElementById("qv-voice-heard");
+          if (el) { el.className = "vc-voice-heard"; el.textContent = `听到：${txt}`; }
+        },
+        onFinal: (alts) => {
+          if (qvToken !== runTok || !qvState.running) return;
+          qvState.silentStreak = 0;
+          const cmd = JA_ASR.detectVoiceCommand(alts, drill.target_kana);
+          if (cmd === "pause") { pauseQuizVoiceRun("已暂停"); return; }
+          if (cmd === "repeat") { askCurrentQuizVoiceSlip(runTok); return; }
+          if (cmd === "skip") { handleQuizVoiceSlipOutcome(drill, null, true, runTok); return; }
+          const res = analyzeFossilSlip(alts, drill);
+          handleQuizVoiceSlipOutcome(drill, res, false, runTok);
+        },
+        onEmpty: () => {
+          if (qvToken !== runTok || !qvState.running) return;
+          qvState.silentStreak = (qvState.silentStreak || 0) + 1;
+          if (qvState.silentStreak >= 2) { pauseQuizVoiceRun("连续两题无回应，已自动暂停"); return; }
+          handleQuizVoiceSlipOutcome(drill, null, true, runTok);
+        },
+        onError: () => {
+          if (qvToken !== runTok || !qvState.running) return;
+          qvState.audioOnly = true;
+          askCurrentQuizVoiceSlip(runTok);
+        }
+      });
+      if (!started && qvToken === runTok) {
+        qvState.audioOnly = true;
+        askCurrentQuizVoiceSlip(runTok);
+      }
+    }, 220);
+  }, 1.0);
+}
+
+// ---------- B3. CHINESE-L1 HVPT MINIMAL-PAIR BLIND EAR ENGINE ("辨音盲听") ----------
+function advanceQuizVoiceMpNext(runTok) {
+  if (qvToken !== runTok || !qvState.running || quizVoiceMode !== "mp") return;
+  if (!qvState.mpQueue.length) {
+    qvState.running = false;
+    qvState.phase = "done";
+    qvState.statusText = "本轮多声线盲听辨音完成";
+    if (!isAnyVoiceCoachRunning()) releaseVoiceWakeLock();
+    renderTutor();
+    return;
+  }
+  askCurrentQuizVoiceMp(runTok);
+}
+
+function pickQuizVoiceMpSide(side, ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  if (quizVoiceMode !== "mp" || qvState.revealed) return;
+  if (JA_ASR.isActive("quiz_mp")) JA_ASR.stop();
+  if (qvTimer) { clearTimeout(qvTimer); qvTimer = null; }
+  const runTok = ++qvToken;
+  qvState.running = true;
+  qvState.everStarted = true;
+  const pair = qvState.mpQueue[0];
+  if (!pair) return;
+  qvState.mpFeedbackPair = pair;
+  const ok = side === pair.targetSide;
+  qvState.mpQueue.shift();
+  if (ok) {
+    qvState.mpCleared = Math.min(qvState.mpTotal, (qvState.mpCleared || 0) + 1);
+  } else {
+    qvState.mpQueue.splice(Math.min(qvState.mpQueue.length, 3), 0, Object.assign({}, pair, { targetSide: pair.targetSide === "a" ? "b" : "a" }));
+  }
+  pushSlaRecord(`MP:${pair.id}`, `${pair.a.ja}/${pair.b.ja}`, ok ? `辨音:${pair.axis}:对` : `辨音:${pair.axis}:混`, ok);
+  qvState.phase = "feedback";
+  qvState.revealed = true;
+  qvState.mpPickedSide = side;
+  qvState.mpOk = ok;
+  qvState.verdictTone = ok ? "ok" : "ng";
+  qvState.statusText = ok ? `听准了 · ${pair.focus_phoneme}` : `听混了 · 对比听一遍 A 和 B`;
+  renderTutor();
+
+  // Instant back-to-back acoustic contrast playback (A -> B) across different Tokyo speakers!
+  playZenVoiceChime(ok ? "ok" : "coach");
+  qvTimer = setTimeout(() => {
+    playGenericVoiceUrl(pair.audio_a, pair.a.ja, "ja-JP", () => qvToken, runTok, () => {
+      qvTimer = setTimeout(() => {
+        playGenericVoiceUrl(pair.audio_b, pair.b.ja, "ja-JP", () => qvToken, runTok, () => {
+          qvTimer = setTimeout(() => advanceQuizVoiceMpNext(runTok), 950);
+        }, 1.0);
+      }, 360);
+    }, 1.0);
+  }, 180);
+}
+
+function askCurrentQuizVoiceMp(runTok) {
+  if (qvToken !== runTok || !qvState.running || quizVoiceMode !== "mp") return;
+  const pair = qvState.mpQueue[0];
+  if (!pair) { advanceQuizVoiceMpNext(runTok); return; }
+  qvState.phase = "asking";
+  qvState.revealed = false;
+  qvState.mpFeedbackPair = null;
+  qvState.mpPickedSide = "";
+  qvState.heardText = "";
+  qvState.verdictTone = "";
+  const spkLbl = pair.targetSide === "a" ? pair.speaker_a : pair.speaker_b;
+  qvState.statusText = `正在盲播（${spkLbl || "东京原声"}）…`;
+  renderTutor();
+
+  const url = pair.targetSide === "a" ? pair.audio_a : pair.audio_b;
+  const txt = pair.targetSide === "a" ? pair.a.ja : pair.b.ja;
+  playGenericVoiceUrl(url, txt, "ja-JP", () => qvToken, runTok, () => {
+    if (qvToken !== runTok || !qvState.running) return;
+    qvState.phase = "listening";
+    qvState.statusText = "点选或口答 1 / 2";
+    renderTutor();
+    if (!qvState.audioOnly && JA_ASR.supported()) {
+      qvTimer = setTimeout(() => {
+        if (qvToken !== runTok || !qvState.running || qvState.revealed) return;
+        JA_ASR.start("quiz_mp", {
+          sentenceMode: false,
+          skipStopVocab: true,
+          silenceMs: 900,
+          maxCapMs: 6500,
+          onFinal: (alts) => {
+            if (qvToken !== runTok || !qvState.running || qvState.revealed) return;
+            const cmd = JA_ASR.detectVoiceCommand(alts, "");
+            if (cmd === "pause") { pauseQuizVoiceRun("已暂停"); return; }
+            if (cmd === "repeat") { askCurrentQuizVoiceMp(runTok); return; }
+            const num = parseListeningChoice(alts);
+            if (num === 0) { pickQuizVoiceMpSide("a"); return; }
+            if (num === 1) { pickQuizVoiceMpSide("b"); return; }
+          },
+          onEmpty: () => {},
+          onError: () => {}
+        });
+      }, 180);
+    }
+  }, 1.0);
+}
+
 function startQuizVoiceRun(ev) {
   if (ev && ev.stopPropagation) ev.stopPropagation();
   unlockWordPlayerOnce();
@@ -19020,8 +19697,12 @@ function startQuizVoiceRun(ev) {
   acquireVoiceWakeLock();
   if (quizVoiceMode === "listen") {
     askCurrentQuizVoiceListen(runTok, 1.0);
-  } else {
+  } else if (quizVoiceMode === "conj") {
     askCurrentQuizVoiceConj(runTok);
+  } else if (quizVoiceMode === "slip") {
+    askCurrentQuizVoiceSlip(runTok);
+  } else {
+    askCurrentQuizVoiceMp(runTok);
   }
 }
 
@@ -19038,7 +19719,7 @@ function onQuizVoiceOrbTap(ev) {
     startQuizVoiceRun();
     return;
   }
-  if (JA_ASR.isActive("quiz_listen") || JA_ASR.isActive("quiz_conj")) {
+  if (JA_ASR.isActive("quiz_listen") || JA_ASR.isActive("quiz_conj") || JA_ASR.isActive("quiz_slip") || JA_ASR.isActive("quiz_mp")) {
     JA_ASR.finishNow();
     return;
   }
@@ -19047,7 +19728,7 @@ function onQuizVoiceOrbTap(ev) {
 
 function quizVoiceSkipOrNext(ev) {
   if (ev && ev.stopPropagation) ev.stopPropagation();
-  if (JA_ASR.isActive("quiz_listen") || JA_ASR.isActive("quiz_conj")) JA_ASR.stop();
+  if (JA_ASR.isActive("quiz_listen") || JA_ASR.isActive("quiz_conj") || JA_ASR.isActive("quiz_slip") || JA_ASR.isActive("quiz_mp")) JA_ASR.stop();
   if (qvTimer) { clearTimeout(qvTimer); qvTimer = null; }
   const runTok = ++qvToken;
   qvState.running = true;
@@ -19059,19 +19740,33 @@ function quizVoiceSkipOrNext(ev) {
     } else {
       finishQuizVoiceListeningTurn("__UNSURE__", true, "", runTok);
     }
-  } else {
+  } else if (quizVoiceMode === "conj") {
     if (qvState.phase === "feedback" || qvState.phase === "shadow") {
       advanceQuizVoiceConjNext(runTok);
     } else {
       const drill = qvState.conjQueue[0];
       if (drill) handleQuizVoiceConjOutcome(drill, null, true, runTok);
     }
+  } else if (quizVoiceMode === "slip") {
+    if (qvState.phase === "feedback") {
+      advanceQuizVoiceSlipNext(runTok);
+    } else {
+      const drill = qvState.slipQueue[0];
+      if (drill) handleQuizVoiceSlipOutcome(drill, null, true, runTok);
+    }
+  } else {
+    if (qvState.phase === "feedback") {
+      advanceQuizVoiceMpNext(runTok);
+    } else {
+      const pair = qvState.mpQueue[0];
+      if (pair) pickQuizVoiceMpSide(pair.targetSide === "a" ? "b" : "a");
+    }
   }
 }
 
 function quizVoiceRepeatCurrent(rateVal, ev) {
   if (ev && ev.stopPropagation) ev.stopPropagation();
-  if (JA_ASR.isActive("quiz_listen") || JA_ASR.isActive("quiz_conj")) JA_ASR.stop();
+  if (JA_ASR.isActive("quiz_listen") || JA_ASR.isActive("quiz_conj") || JA_ASR.isActive("quiz_slip") || JA_ASR.isActive("quiz_mp")) JA_ASR.stop();
   if (qvTimer) { clearTimeout(qvTimer); qvTimer = null; }
   const runTok = ++qvToken;
   qvState.running = true;
@@ -19079,32 +19774,54 @@ function quizVoiceRepeatCurrent(rateVal, ev) {
   qvState.silentStreak = 0;
   if (quizVoiceMode === "listen") {
     askCurrentQuizVoiceListen(runTok, rateVal || 1.0);
-  } else {
+  } else if (quizVoiceMode === "conj") {
     askCurrentQuizVoiceConj(runTok);
+  } else if (quizVoiceMode === "slip") {
+    askCurrentQuizVoiceSlip(runTok);
+  } else {
+    askCurrentQuizVoiceMp(runTok);
   }
 }
 
 function renderQuizVoiceStage(box) {
   const isListen = quizVoiceMode === "listen";
+  const isConj = quizVoiceMode === "conj";
+  const isSlip = quizVoiceMode === "slip";
+  const isMp = quizVoiceMode === "mp";
   const st = qvState;
-  const doneCnt = isListen ? st.listenCleared : st.conjCleared;
-  const totalCnt = isListen ? st.listenTotal : st.conjTotal;
-  const shownIdx = Math.min(totalCnt, doneCnt + 1);
+  const hasRevealedSlip = isSlip && st.revealed && !!st.slipFeedbackItem;
+  const hasRevealedMp = isMp && st.revealed && !!st.mpFeedbackPair;
+  const activeSlip = hasRevealedSlip ? st.slipFeedbackItem : st.slipQueue[0];
+  const activeMp = hasRevealedMp ? st.mpFeedbackPair : st.mpQueue[0];
+  const doneCnt = isListen ? st.listenCleared : (isConj ? st.conjCleared : (isSlip ? st.slipCleared : st.mpCleared));
+  const totalCnt = isListen ? st.listenTotal : (isConj ? st.conjTotal : (isSlip ? st.slipTotal : st.mpTotal));
+  const shownIdx = (hasRevealedSlip || hasRevealedMp)
+    ? Math.min(totalCnt, Math.max(1, doneCnt))
+    : Math.min(totalCnt, doneCnt + 1);
+  const queueEmpty = isListen ? !st.listenQueue.length
+    : (isConj ? !st.conjQueue.length
+    : (isSlip ? (!st.slipQueue.length && !hasRevealedSlip)
+    : (!st.mpQueue.length && !hasRevealedMp)));
 
-  if (st.phase === "done" || (isListen ? !st.listenQueue.length : !st.conjQueue.length)) {
-    const switchTarget = isListen ? "conj" : "listen";
-    const switchLbl = isListen ? "练动词变形" : "去刷听力";
+  if (st.phase === "done" || queueEmpty) {
+    const doneTitle = isListen ? `今日 ${totalCnt} 道听力已全部过关`
+      : (isConj ? `这组 ${totalCnt} 个动词变形已全部顺口`
+      : (isSlip ? `这组 ${totalCnt} 个老口误已成功改口` : `这组 ${totalCnt} 组多声线辨音已完成`));
+    const doneDesc = isListen ? "所有成绩已实时同步进今日做题进度，随时可切回看屏继续语法题。"
+      : (isConj ? "高频变形与敬语已经跑通一遍，开车或走路随时都能再来一轮。"
+      : (isSlip ? "把陈述规则压进 3 秒肌肉记忆，真实聊天时自然不再滑嘴。" : "多声线对比练出真清浊与拍长耳感，随时可再来一轮。"));
+    const doneBar = isListen ? "语音刷听力 · 圆满" : (isConj ? "动词变形快问 · 圆满" : (isSlip ? "老口误快答 · 圆满" : "辨音盲听 · 圆满"));
     box.innerHTML = `
       <div class="meta-bar">
-        <span class="overline ok">${isListen ? "语音刷听力 · 圆满" : "动词变形快问 · 圆满"}</span>
+        <span class="overline ok">${doneBar}</span>
       </div>
       <div class="focal-space">
-        <h2 class="point-heading">${isListen ? `今日 ${totalCnt} 道听力已全部过关` : `这组 ${totalCnt} 个动词变形已全部顺口`}</h2>
-        <p class="logic-line">${isListen ? "所有成绩已实时同步进今日做题进度，随时可切回看屏继续语法题。" : "高频变形与敬语已经跑通一遍，开车或走路随时都能再来一轮。"}</p>
+        <h2 class="point-heading">${doneTitle}</h2>
+        <p class="logic-line">${doneDesc}</p>
       </div>
       <div class="vc-dock">
         <button type="button" class="vc-btn mid" onclick="exitQuizVoiceMode(event)">回到做题</button>
-        <button type="button" class="vc-btn ok" onclick="startQuizVoiceMode('${switchTarget}', event)">${switchLbl}</button>
+        <button type="button" class="vc-btn ok" onclick="openQuizVoiceSheet(event)">换一项练</button>
       </div>
     `;
     return;
@@ -19147,7 +19864,7 @@ function renderQuizVoiceStage(box) {
         ${!st.audioOnly ? `<div class="vc-voice-hint">可说「もういちど」重听 · 「ゆっくり」慢听</div>` : ""}
       `;
     }
-  } else {
+  } else if (isConj) {
     const d = st.conjQueue[0];
     if (st.revealed && d) {
       centerHTML = `
@@ -19167,34 +19884,81 @@ function renderQuizVoiceStage(box) {
         ${!st.audioOnly ? `<div class="vc-voice-hint">可说「もういちど」重问 · 「わからない」听讲解</div>` : ""}
       `;
     }
+  } else if (isSlip) {
+    const d = activeSlip;
+    if (st.revealed && d) {
+      const latCls = st.slipLatencySec > 0 ? (st.slipLatencySec <= 3.5 ? "fast" : "slow") : "";
+      centerHTML = `
+        <div class="voice-model-ja" lang="ja">${escapeHtml(d.target_ja)}</div>
+        <div class="vc-voice-cue-zh sub">${escapeHtml(d.target_kana)}</div>
+        ${st.slipLatencySec > 0 ? `<div class="slip-reflex-pill ${latCls}">本次反应 ${st.slipLatencySec} 秒（目标 3.5 秒内）</div>` : ""}
+        <div class="voice-rule-line">${escapeHtml(st.slipRuleTip || d.rule_zh)}</div>
+        ${st.heardText ? `<div class="vc-voice-heard ${st.verdictTone}" id="qv-voice-heard">${escapeHtml(st.heardText)}</div>` : ""}
+      `;
+    } else if (d) {
+      const cueHtml = escapeHtml(d.cue_zh).replace(/：「/, "：<br>「");
+      centerHTML = `
+        <span class="voice-conj-tag">${escapeHtml(d.category)} · 3 秒快答</span>
+        <div class="vc-voice-cue-zh slip-cue-bal">${cueHtml}</div>
+        <div class="vc-voice-cue-zh sub" lang="ja">${escapeHtml(d.prompt_hint)}</div>
+        <div class="vc-voice-heard" id="qv-voice-heard">${escapeHtml(st.heardText || "")}</div>
+        ${!st.audioOnly ? `<div class="vc-voice-hint">听完立刻脱口说出日语 · 防老口误石化</div>` : ""}
+      `;
+    }
+  } else {
+    const pair = activeMp;
+    if (pair) {
+      const aCls = st.revealed ? (pair.targetSide === "a" ? " is-right" : (st.mpPickedSide === "a" ? " is-wrong" : "")) : "";
+      const bCls = st.revealed ? (pair.targetSide === "b" ? " is-right" : (st.mpPickedSide === "b" ? " is-wrong" : "")) : "";
+      centerHTML = `
+        ${!st.revealed ? `<span class="voice-conj-tag">${escapeHtml(pair.axis)} · ${escapeHtml(pair.focus_phoneme)}</span>` : ""}
+        <div class="mp-pair-row">
+          <button type="button" class="mp-choice-btn${aCls}" id="mp-btn-a" onclick="pickQuizVoiceMpSide('a', event)">
+            <span class="mp-choice-num">1</span>
+            <span class="mp-choice-ja" lang="ja">${escapeHtml(pair.a.ja)}</span>
+            ${st.revealed ? `<span class="mp-choice-kana">${escapeHtml(pair.a.kana)}</span>${renderPitchContourSVG(pair.a.pitch)}<span class="mp-choice-zh">${escapeHtml(pair.a.zh)}</span>` : `<span class="mp-choice-zh">${escapeHtml(pair.a.zh)}</span>`}
+          </button>
+          <button type="button" class="mp-choice-btn${bCls}" id="mp-btn-b" onclick="pickQuizVoiceMpSide('b', event)">
+            <span class="mp-choice-num">2</span>
+            <span class="mp-choice-ja" lang="ja">${escapeHtml(pair.b.ja)}</span>
+            ${st.revealed ? `<span class="mp-choice-kana">${escapeHtml(pair.b.kana)}</span>${renderPitchContourSVG(pair.b.pitch)}<span class="mp-choice-zh">${escapeHtml(pair.b.zh)}</span>` : `<span class="mp-choice-zh">${escapeHtml(pair.b.zh)}</span>`}
+          </button>
+        </div>
+        ${st.revealed ? `<div class="voice-rule-line">${escapeHtml(pair.tip)}</div>` : `<div class="vc-voice-hint">听清声带震动、促音停拍或音高转折，点选或口答 1 / 2</div>`}
+      `;
+    }
   }
 
   let dockHTML = "";
   if (st.running) {
     const rightLbl = (st.phase === "feedback" || st.phase === "shadow")
       ? (isListen ? "下一题" : "下一组")
-      : "不会 · 听讲解";
+      : (isMp ? "看答案" : "不会 · 听讲解");
     dockHTML = `
       <button type="button" class="vc-btn mid" id="qv-pause-btn" onclick="pauseQuizVoiceRun('已暂停', event)">暂停</button>
       <button type="button" class="vc-btn voice-exhale" id="qv-skip-btn" onclick="quizVoiceSkipOrNext(event)">${rightLbl}</button>
     `;
   } else {
-    const startLbl = isListen
-      ? (st.everStarted ? "继续语音听题" : "开始语音听题")
-      : (st.everStarted ? "继续动词变形" : "开始动词变形");
+    const startLbl = isListen ? (st.everStarted ? "继续语音听题" : "开始语音听题")
+      : (isConj ? (st.everStarted ? "继续动词变形" : "开始动词变形")
+      : (isSlip ? (st.everStarted ? "继续老口误快答" : "开始 3 秒快答")
+      : (st.everStarted ? "继续辨音盲听" : "开始多声线盲听")));
     dockHTML = `<button type="button" class="vc-btn ok" id="qv-start-btn" onclick="startQuizVoiceRun(event)">${startLbl}</button>`;
   }
 
-  const leftOverline = isListen
-    ? `语音听题 · ${shownIdx} / ${totalCnt}`
-    : `动词变形 · ${shownIdx} / ${totalCnt}`;
-  const switchOtherMode = isListen ? "conj" : "listen";
-  const switchOtherLbl = isListen ? "动词变形" : "刷听力";
+  const leftOverline = isListen ? `语音听题 · ${shownIdx} / ${totalCnt}`
+    : (isConj ? `动词变形 · ${shownIdx} / ${totalCnt}`
+    : (isSlip ? `老口误快答 · ${shownIdx} / ${totalCnt}`
+    : `辨音盲听 · ${shownIdx} / ${totalCnt}`));
+  const rightOverline = isListen ? (st.replayMode ? "重刷巩固" : "同步今日进度")
+    : (isConj ? (st.conjQueue[0] ? st.conjQueue[0].family_zh : "")
+    : (isSlip ? (activeSlip ? activeSlip.category : "")
+    : (activeMp ? activeMp.axis : "")));
 
   box.innerHTML = `
     <div class="meta-bar">
       <span class="overline">${escapeHtml(leftOverline)}</span>
-      <span class="overline">${escapeHtml(isListen ? (st.replayMode ? "重刷巩固" : "同步今日进度") : (st.conjQueue[0] ? st.conjQueue[0].family_zh : ""))}</span>
+      <span class="overline">${escapeHtml(rightOverline)}</span>
     </div>
 
     <div class="vc-voice-stage" id="qv-voice-stage">
@@ -19206,9 +19970,9 @@ function renderQuizVoiceStage(box) {
     <div class="vc-aux-row">
       <button type="button" class="vc-aux-btn seal" id="qv-back-btn" onclick="exitQuizVoiceMode(event)">切回做题</button>
       <div class="vc-aux-right">
-        <button type="button" class="vc-aux-btn" onclick="startQuizVoiceMode('${switchOtherMode}', event)">${switchOtherLbl}</button>
+        <button type="button" class="vc-aux-btn" onclick="openQuizVoiceSheet(event)">换项目</button>
         ${isListen ? `<button type="button" class="vc-aux-btn" onclick="quizVoiceRepeatCurrent(0.85, event)">0.85x</button>` : ""}
-        <button type="button" class="vc-aux-btn replay" onclick="quizVoiceRepeatCurrent(1.0, event)">${isListen ? "重听" : "重问"}</button>
+        <button type="button" class="vc-aux-btn replay" onclick="quizVoiceRepeatCurrent(1.0, event)">${isListen || isMp ? "重听" : "重问"}</button>
       </div>
     </div>
 
@@ -20541,6 +21305,222 @@ function getLocalN3RealScore() {
   return null;
 }
 
+// ---------- v86 SLA MODALS: 4/3/2 FLUENCY RETELL, N2 MICRO-READING, WEEKEND REAL-TUTOR 3-PHRASE MISSION ----------
+let ret432Timer = null;
+let ret432State = { step: 0, remSec: 60, running: false, done: false };
+const RET432_SECS = [60, 45, 30];
+
+function isRetell432DoneToday() {
+  try { return localStorage.getItem("n3_ret432_" + DATA.plan_date) === "1"; } catch (e) { return false; }
+}
+
+function stopRetell432Timer() {
+  if (ret432Timer) { clearInterval(ret432Timer); ret432Timer = null; }
+  ret432State.running = false;
+}
+
+function renderRetell432ModalBody() {
+  const mc = document.getElementById("modal-content");
+  if (!mc) return;
+  const chaps = (DATA.radio && Array.isArray(DATA.radio.chapters)) ? DATA.radio.chapters : [];
+  const topic = (chaps[1] && chaps[1].title) || (chaps[0] && chaps[0].title) || "今日播客里印象最深的一段故事";
+  const st = ret432State;
+  const stepsHTML = RET432_SECS.map((sec, i) => {
+    const cls = (st.done || i < st.step) ? " is-done" : (i === st.step ? " is-cur" : "");
+    return `<span class="ret432-step${cls}">第 ${i + 1} 轮 · ${sec}秒</span>`;
+  }).join("");
+  const mainBtn = st.done
+    ? `<button type="button" class="vc-btn voice-exhale" style="flex:1.6;" onclick="closeModal()">已完成 ✓</button>`
+    : (st.running
+      ? `<button type="button" class="vc-btn ok" style="flex:1.6;" onclick="nextRetell432Step()">提前进下一轮</button>`
+      : `<button type="button" class="vc-btn ok" style="flex:1.6;" onclick="startRetell432Step()">开始第 ${st.step + 1} 轮（${RET432_SECS[st.step]} 秒）</button>`);
+  mc.innerHTML = `
+    <h3 class="modal-h">4/3/2 提速复述</h3>
+    <p class="zb-sheet-sub">把同一段话用日语说三遍，时间越来越短，逼出不经翻译的流利度。</p>
+    <div class="ret432-stage">
+      <div class="ret432-rounds">${stepsHTML}</div>
+      <div class="ret432-timer" id="ret432-timer-lbl">${st.done ? "圆满" : `${st.remSec}s`}</div>
+      <div class="ret432-topic">今日复述题：<b>${escapeHtml(topic)}</b></div>
+    </div>
+    <div class="vc-dock" style="margin-top:16px;">
+      <button type="button" class="vc-btn mid" style="flex:0.85;" onclick="stopRetell432Timer();closeModal()">返回</button>
+      ${mainBtn}
+    </div>
+  `;
+}
+
+function openRetell432Modal() {
+  stopRetell432Timer();
+  const mm = document.getElementById("app-modal");
+  if (!mm) return;
+  ret432State = { step: 0, remSec: RET432_SECS[0], running: false, done: isRetell432DoneToday() };
+  renderRetell432ModalBody();
+  showAppModal();
+}
+
+function nextRetell432Step() {
+  stopRetell432Timer();
+  if (ret432State.step + 1 >= RET432_SECS.length) {
+    ret432State.done = true;
+    try { localStorage.setItem("n3_ret432_" + DATA.plan_date, "1"); } catch (e) {}
+    pushSlaRecord(`RET432:${DATA.plan_date}`, "4/3/2提速复述", "复述:60-45-30圆满", true);
+    renderRetell432ModalBody();
+    const btn = document.getElementById("rv-done-432-btn");
+    if (btn) btn.classList.add("is-saved");
+    showZenToast("今日 4/3/2 提速复述已完成");
+    return;
+  }
+  ret432State.step += 1;
+  ret432State.remSec = RET432_SECS[ret432State.step];
+  renderRetell432ModalBody();
+}
+
+function startRetell432Step() {
+  stopRetell432Timer();
+  ret432State.running = true;
+  ret432State.remSec = RET432_SECS[ret432State.step] || 30;
+  renderRetell432ModalBody();
+  ret432Timer = setInterval(() => {
+    ret432State.remSec -= 1;
+    const lbl = document.getElementById("ret432-timer-lbl");
+    if (lbl) lbl.textContent = `${Math.max(0, ret432State.remSec)}s`;
+    if (ret432State.remSec <= 0) {
+      playZenVoiceChime("ok");
+      nextRetell432Step();
+    }
+  }, 1000);
+}
+
+let mrOpenMs = 0;
+let mrPicked = "";
+function getMicroReadingDoneToday() {
+  try {
+    const raw = localStorage.getItem("n3_mr_done_" + DATA.plan_date);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+
+function openMicroReadingModal() {
+  const mr = DATA.micro_reading;
+  const mc = document.getElementById("modal-content");
+  const mm = document.getElementById("app-modal");
+  if (!mr || !mc || !mm) return;
+  mrOpenMs = Date.now();
+  const prev = getMicroReadingDoneToday();
+  mrPicked = prev ? prev.picked : "";
+  renderMicroReadingModalBody(prev);
+  showAppModal();
+}
+
+function renderMicroReadingModalBody(doneObj) {
+  const mr = DATA.micro_reading;
+  const mc = document.getElementById("modal-content");
+  if (!mr || !mc) return;
+  const answered = !!doneObj;
+  const optsHTML = (mr.choices || []).map((ch, idx) => {
+    let cls = "mr-opt-btn";
+    if (answered) {
+      if (ch === mr.answer) cls += " is-right";
+      else if (ch === doneObj.picked) cls += " is-wrong";
+    }
+    return `<button type="button" class="${cls}" lang="ja" onclick="pickMicroReadingChoice(${idx})">${escapeHtml(ch)}</button>`;
+  }).join("");
+  mc.innerHTML = `
+    <h3 class="modal-h">${escapeHtml(mr.title_ja || "今日短文精读")}</h3>
+    <p class="zb-sheet-sub">${escapeHtml(mr.topic || "")} · 约 ${mr.char_count || String(mr.body_ja || "").length} 字 · 点词可查读音</p>
+    <div class="mr-passage" lang="ja">${annotateJapanese(mr.body_ja || "")}</div>
+    ${lexBoxHTML("mr-inline-lex")}
+    <div class="mr-q-title" lang="ja">${escapeHtml(mr.question_ja || "")}</div>
+    <div class="mr-opt-list">${optsHTML}</div>
+    ${answered ? `
+      <div class="mr-note">
+        <div>${escapeHtml(mr.trap_note || "")}</div>
+        ${doneObj.cpm ? `<div class="mr-speed-note">本次读速约 ${doneObj.cpm} 字/分（N2 流畅参考线 220 字/分）</div>` : ""}
+      </div>` : ""}
+    <div class="dock-row" style="margin-top:14px;">
+      <button type="button" class="ghost-btn" style="flex:1;" onclick="closeModal()">返回总表</button>
+    </div>
+  `;
+}
+
+function pickMicroReadingChoice(idx) {
+  const mr = DATA.micro_reading;
+  if (!mr || getMicroReadingDoneToday()) return;
+  const ch = (mr.choices || [])[idx] || "";
+  if (!ch) return;
+  const ok = ch === mr.answer;
+  const sec = Math.max(8, Math.round((Date.now() - (mrOpenMs || Date.now())) / 1000));
+  const chars = Number(mr.char_count || String(mr.body_ja || "").length || 240);
+  const cpm = Math.min(600, Math.round((chars * 60) / sec));
+  const rec = { id: mr.id, ok, picked: ch, cpm, sec };
+  try { localStorage.setItem("n3_mr_done_" + DATA.plan_date, JSON.stringify(rec)); } catch (e) {}
+  pushSlaRecord(`READ:${mr.id}`, mr.topic || mr.id, `${ok ? "精读对" : "精读错"}:${cpm}字/分`, ok);
+  renderMicroReadingModalBody(rec);
+  renderDashboard();
+}
+
+function loadTutorMissionChecked() {
+  try {
+    const raw = localStorage.getItem("n3_tutor_mission_v1");
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) { return {}; }
+}
+
+function toggleTutorMissionItem(idx) {
+  const list = Array.isArray(DATA.tutor_mission) ? DATA.tutor_mission : [];
+  const item = list[idx];
+  if (!item) return;
+  const map = loadTutorMissionChecked();
+  const key = item.id || item.expr;
+  const nextVal = !map[key];
+  if (nextVal) {
+    map[key] = DATA.plan_date;
+    pushSlaRecord(`TUTOR_USE:${key}`, item.expr, "真人课实战已用出", true);
+  } else {
+    delete map[key];
+  }
+  try { localStorage.setItem("n3_tutor_mission_v1", JSON.stringify(map)); } catch (e) {}
+  renderTutorMissionModalBody();
+  renderDashboard();
+}
+
+function renderTutorMissionModalBody() {
+  const mc = document.getElementById("modal-content");
+  if (!mc) return;
+  const list = Array.isArray(DATA.tutor_mission) ? DATA.tutor_mission : [];
+  const checked = loadTutorMissionChecked();
+  const doneN = list.filter(x => !!checked[x.id || x.expr]).length;
+  const checkSvg = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.2 8.4L6.6 11.6L12.8 4.8" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const rowsHTML = list.map((it, idx) => {
+    const isDone = !!checked[it.id || it.expr];
+    return `
+      <div class="tm-row${isDone ? " is-done" : ""}">
+        <div class="tm-main">
+          <div class="tm-expr" lang="ja">${escapeHtml(it.expr)}</div>
+          <div class="tm-starter" lang="ja">${escapeHtml(it.starter_ja)}</div>
+          <div class="tm-why">${escapeHtml(it.why)} · ${escapeHtml(it.cue)}</div>
+        </div>
+        <button type="button" class="tm-check-btn" id="tm-chk-${idx}" onclick="toggleTutorMissionItem(${idx})" aria-label="标记已在真人课用出">${checkSvg}</button>
+      </div>
+    `;
+  }).join("");
+  mc.innerHTML = `
+    <h3 class="modal-h">真人课 3 词任务 · ${doneN}/${list.length}</h3>
+    <p class="zb-sheet-sub">从本周最容易混的点里挑了 3 个，周末和日本老师聊天时刻意用掉，用完轻点右侧圆圈。</p>
+    <div class="tm-list">${rowsHTML}</div>
+    <div class="dock-row" style="margin-top:14px;">
+      <button type="button" class="ghost-btn" style="flex:1;" onclick="closeModal()">返回总表</button>
+    </div>
+  `;
+}
+
+function openTutorMissionModal() {
+  const mm = document.getElementById("app-modal");
+  if (!mm) return;
+  renderTutorMissionModalBody();
+  showAppModal();
+}
+
 function openN3ScoreModal() {
   const cur = getLocalN3RealScore();
   const valStr = cur ? String(cur.total) : "";
@@ -21306,7 +22286,29 @@ function renderDashboard(forceRefresh) {
         </div>`;
 
     let n3CalRowHTML = "";
+    let mrRowHTML = "";
     if (DATA.phase === "n2_climb" || DATA.phase === "n1_sprint") {
+      const mr = DATA.micro_reading;
+      if (mr) {
+        const mrDone = getMicroReadingDoneToday();
+        mrRowHTML = mrDone
+          ? `
+            <div class="dash-quiet-row is-done">
+              <div class="dash-quiet-txt">
+                <div>短文精读 · 今日已读 ✓${mrDone.cpm ? ` · 约 <b>${mrDone.cpm} 字/分</b>` : ""}</div>
+                <div class="dash-quiet-sub">${escapeHtml(mr.title_ja)} · ${mrDone.ok ? "态度抓准" : "已复盘陷阱"}</div>
+              </div>
+              <button type="button" class="dash-quiet-btn moss" onclick="openMicroReadingModal()">重看 ›</button>
+            </div>`
+          : `
+            <div class="dash-quiet-row">
+              <div class="dash-quiet-txt">
+                <div><b>今日短文精读</b> · 约 ${mr.char_count || 250} 字</div>
+                <div class="dash-quiet-sub">2 分钟防汉字假懂，练转折态度与读速</div>
+              </div>
+              <button type="button" class="dash-quiet-btn" onclick="openMicroReadingModal()">去读 ›</button>
+            </div>`;
+      }
       const sc = getLocalN3RealScore();
       n3CalRowHTML = sc
         ? `
@@ -21325,7 +22327,23 @@ function renderDashboard(forceRefresh) {
             <button type="button" class="dash-quiet-btn moss" onclick="openN3ScoreModal()">记分 ›</button>
           </div>`;
     }
-    mockEntryEl.innerHTML = mockRowHTML + n3CalRowHTML;
+    let tmRowHTML = "";
+    const tmList = Array.isArray(DATA.tutor_mission) ? DATA.tutor_mission : [];
+    if (tmList.length) {
+      const tmChk = loadTutorMissionChecked();
+      const tmDoneN = tmList.filter(x => !!tmChk[x.id || x.expr]).length;
+      const tmAllDone = tmDoneN >= tmList.length;
+      const tmNames = tmList.map(x => x.expr).join(" · ");
+      tmRowHTML = `
+        <div class="dash-quiet-row${tmAllDone ? " is-done" : ""}">
+          <div class="dash-quiet-txt">
+            <div>${tmAllDone ? `真人课 3 词任务 · 已用完 ${tmDoneN}/${tmList.length} ✓` : `<b>真人课 3 词任务</b> · ${tmDoneN}/${tmList.length}`}</div>
+            <div class="dash-quiet-sub" lang="ja">${escapeHtml(tmNames)}</div>
+          </div>
+          <button type="button" class="dash-quiet-btn${tmAllDone ? " moss" : ""}" onclick="openTutorMissionModal()">${tmAllDone ? "查看 ›" : "去用 ›"}</button>
+        </div>`;
+    }
+    mockEntryEl.innerHTML = mockRowHTML + mrRowHTML + tmRowHTML + n3CalRowHTML;
   }
 
   document.getElementById("dash-summary").innerHTML = pillarMeta.map(({ k, m, c }) => {
@@ -26200,6 +27218,114 @@ sb.switchMode('radio', false);
 if (!els['radio-view'].classList.contains('nav-from-left')) {
   throw new Error('Self-test 31 failed: moving left vocab->radio must apply nav-from-left');
 }
+
+// Self-test 32 (v87 SLA): Kadota Shadowing (0.85x/1.0x/1.1x + blind veil + single-line loop + SHAD telemetry) & 4/3/2 Fluency Retell
+sb.switchMode('radio', false);
+sb.openRadioJpVideo();
+const spds32 = [];
+for (let k = 0; k < 3; k++) { sb.toggleJpVideoSpeed(); spds32.push(vm.runInNewContext('jpvSpeed', sb)); }
+if (!spds32.includes(1.1) || !spds32.includes(0.85) || !spds32.includes(1.0)) {
+  throw new Error('Self-test 32 failed: JP video speed must cycle through 1.0/0.85/1.1x, got ' + JSON.stringify(spds32));
+}
+sb.toggleJpVideoShadowMode();
+const shadHtml32 = (els['radio-review-stage'] && els['radio-review-stage'].innerHTML) || '';
+if (!shadHtml32.includes('shadow-blind') || !shadHtml32.includes('jpv-shadow-bar') || !shadHtml32.includes('单句循环') || shadHtml32.includes('—')) {
+  throw new Error('Self-test 32 failed: Shadowing mode UI missing blind veil or loop controls');
+}
+sb.toggleJpVideoShadowLoop();
+if (!vm.runInNewContext('jpvShadowLoop === true', sb)) {
+  throw new Error('Self-test 32 failed: toggleJpVideoShadowLoop did not activate');
+}
+sb.markJpVideoShadowDone();
+if (!vm.runInNewContext('isJpVideoShadowDoneToday()', sb)) {
+  throw new Error('Self-test 32 failed: markJpVideoShadowDone did not persist');
+}
+sb.toggleJpVideoShadowMode();
+sb.openRetell432Modal();
+const retHtml32 = (els['modal-content'] && els['modal-content'].innerHTML) || '';
+if (!retHtml32.includes('4/3/2 提速复述') || !retHtml32.includes('60秒') || !retHtml32.includes('45秒') || !retHtml32.includes('30秒') || retHtml32.includes('—')) {
+  throw new Error('Self-test 32 failed: 4/3/2 Fluency Retell modal broken');
+}
+sb.nextRetell432Step();
+sb.nextRetell432Step();
+sb.nextRetell432Step();
+if (!vm.runInNewContext('isRetell432DoneToday()', sb)) {
+  throw new Error('Self-test 32 failed: 4/3/2 Retell completion did not persist');
+}
+sb.closeModal();
+sb.closeRadioReview();
+
+// Self-test 33 (v87 SLA): 18 Anti-Fossilization 3s Reflex Slips & 24 Multi-Speaker HVPT Minimal Pairs
+sb.switchMode('tutor');
+sb.openQuizVoiceSheet();
+const qvSheet33 = (els['modal-content'] && els['modal-content'].innerHTML) || '';
+if (!qvSheet33.includes('老口误 3 秒快答') || !qvSheet33.includes('辨音盲听') || qvSheet33.includes('—')) {
+  throw new Error('Self-test 33 failed: Quiz voice sheet missing 老口误 3 秒快答 or 辨音盲听');
+}
+sb.closeModal();
+const slips33 = vm.runInNewContext('DATA.fossil_slips || []', sb);
+const mps33 = vm.runInNewContext('DATA.minimal_pairs || []', sb);
+if (slips33.length !== 18 || mps33.length !== 24) {
+  throw new Error('Self-test 33 failed: expected 18 fossil slips and 24 minimal pairs, got ' + slips33.length + '/' + mps33.length);
+}
+const sl01 = slips33.find(x => x.id === 'SL01');
+if (!sb.analyzeFossilSlip(['酸っぱかったです'], sl01).ok || !sb.analyzeFossilSlip(['酸っぱいでした'], sl01).hitTrap) {
+  throw new Error('Self-test 33 failed: SL01 trap/pass detection mismatch');
+}
+sb.startQuizVoiceMode('slip');
+const slipStageHtml33 = (els['voice-card'] && els['voice-card'].innerHTML) || '';
+if (!slipStageHtml33.includes('老口误快答') || !slipStageHtml33.includes('id="qv-voice-orb"') || slipStageHtml33.includes('—')) {
+  throw new Error('Self-test 33 failed: Fossil slip stage broken');
+}
+sb.startQuizVoiceMode('mp');
+const mpStageHtml33 = (els['voice-card'] && els['voice-card'].innerHTML) || '';
+if (!mpStageHtml33.includes('辨音盲听') || !mpStageHtml33.includes('mp-btn-a') || !mpStageHtml33.includes('mp-btn-b') || mpStageHtml33.includes('—')) {
+  throw new Error('Self-test 33 failed: Minimal-pair HVPT stage broken');
+}
+sb.pickQuizVoiceMpSide('a');
+const mpRevHtml33 = (els['voice-card'] && els['voice-card'].innerHTML) || '';
+if (!mpRevHtml33.includes('mp-pitch-svg') || !mpRevHtml33.includes('1 / 12')) {
+  throw new Error('Self-test 33 failed: Minimal-pair reveal missing Zen SVG pitch contour or locked 1/12 header');
+}
+sb.exitQuizVoiceMode();
+
+// Self-test 34 (v87 SLA): N2/N1 250-Char Micro-Reading (phase-gated) & Weekend Real-Tutor 3-Phrase Mission
+sb.switchMode('dash');
+const dashEntry34 = (els['dash-mock-entry'] && els['dash-mock-entry'].innerHTML) || '';
+const isPostN3_34 = vm.runInNewContext('DATA.phase === "n2_climb" || DATA.phase === "n1_sprint"', sb);
+if (!dashEntry34.includes('真人课 3 词任务') || dashEntry34.includes('—')) {
+  throw new Error('Self-test 34 failed: Summary missing Weekend Real-Tutor 3-Phrase Mission row');
+}
+if (isPostN3_34 && !dashEntry34.includes('今日短文精读')) {
+  throw new Error('Self-test 34 failed: N2/N1 Summary missing 今日短文精读 row');
+}
+if (!isPostN3_34 && dashEntry34.includes('今日短文精读')) {
+  throw new Error('Self-test 34 failed: Pre-exam N3 Summary must keep N2 micro-reading hidden');
+}
+sb.openMicroReadingModal();
+const mrModalHtml34 = (els['modal-content'] && els['modal-content'].innerHTML) || '';
+if (!mrModalHtml34.includes('mr-passage') || !mrModalHtml34.includes('mr-opt-btn') || mrModalHtml34.includes('—')) {
+  throw new Error('Self-test 34 failed: Micro-Reading modal broken');
+}
+sb.pickMicroReadingChoice(0);
+const mrDoneHtml34 = (els['modal-content'] && els['modal-content'].innerHTML) || '';
+if (!mrDoneHtml34.includes('mr-note') || !mrDoneHtml34.includes('字/分')) {
+  throw new Error('Self-test 34 failed: Micro-Reading answer did not show trap breakdown & reading speed');
+}
+sb.closeModal();
+sb.openTutorMissionModal();
+const tmModalHtml34 = (els['modal-content'] && els['modal-content'].innerHTML) || '';
+if (!tmModalHtml34.includes('tm-check-btn') || !tmModalHtml34.includes('真人课 3 词任务') || tmModalHtml34.includes('—')) {
+  throw new Error('Self-test 34 failed: Tutor Mission modal broken');
+}
+sb.toggleTutorMissionItem(0);
+sb.toggleTutorMissionItem(1);
+sb.toggleTutorMissionItem(2);
+const tmDoneHtml34 = (els['modal-content'] && els['modal-content'].innerHTML) || '';
+if (!tmDoneHtml34.includes('3/3')) {
+  throw new Error('Self-test 34 failed: Tutor Mission 3/3 checkoff did not update');
+}
+sb.closeModal();
 sb.switchMode('tutor');
 // Self-test 32: Zero-spoiler question audio fallback guard (star-order, blank, kanji-reading NEVER speak answer)
 const fbStar32 = sb.getSafeQuestionFallbackJa({
@@ -26241,7 +27367,7 @@ if (!vm.runInNewContext('radioScrubActive === false', sb)) {
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
 
 sw_path = os.path.join(BASE_DIR, "sw.js")
-SW_CACHE_NAME = "n3-studio-tutor-v88"
+SW_CACHE_NAME = "n3-studio-tutor-v89"
 if not _IS_SIM_OUTPUT and os.path.exists(sw_path):
     with open(sw_path, encoding="utf-8") as sf:
         sw_src = sf.read()

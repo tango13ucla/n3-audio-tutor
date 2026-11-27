@@ -69,16 +69,26 @@ def _cur_streak(item: dict) -> int:
     return 0
 
 
+def _update_item_fsrs_safe(item: dict, day_tag: str, ok: bool, again: bool, instant_done: bool = False) -> None:
+    try:
+        from fsrs_engine import update_fsrs_on_review
+        update_fsrs_on_review(item, day_tag, ok=ok, again=again, instant_done=instant_done)
+    except Exception:
+        pass
+
+
 def _apply_cross_day_step(item: dict, day_tag: str, ok: bool, again: bool, instant_done: bool = False) -> None:
     if instant_done:
         item["streak"] = 3
         item["last_ok_date"] = day_tag
         item["status"] = "green"
+        _update_item_fsrs_safe(item, day_tag, ok=True, again=False, instant_done=True)
         return
     if not ok or again:
         item["streak"] = 0
         item["last_ng_date"] = day_tag
         item["status"] = "orange" if (ok and again) else "red"
+        _update_item_fsrs_safe(item, day_tag, ok=False, again=again, instant_done=False)
         return
 
     # Correct answer / Right-Swipe
@@ -99,6 +109,7 @@ def _apply_cross_day_step(item: dict, day_tag: str, ok: bool, again: bool, insta
     item["streak"] = new_s
     item["last_ok_date"] = day_tag
     item["status"] = "green" if new_s >= 3 else "yellow"
+    _update_item_fsrs_safe(item, day_tag, ok=True, again=False, instant_done=False)
 
 
 def _apply_tier_override(item: dict, tier_raw: str) -> bool:
@@ -361,6 +372,60 @@ def apply_practice_logs(state: dict, fallback_day_tag: str = "") -> int:
                         prev_d = str((slips.get(pt) or {}).get("last_date") or "")
                         if not prev_d or day_tag_s >= prev_d:
                             slips.pop(pt, None)
+                    continue
+
+                # SLA v86 Telemetry: Anti-Fossilization Slips (SLIP:), Minimal Pairs (MP:),
+                # Shadowing (SHAD:), 4/3/2 Fluency Retell (RET432:), N2 Micro-Reading (READ:),
+                # and Weekend Real-Tutor Mission checkoff (TUTOR_USE:).
+                if rec_id.startswith(("SLIP:", "MP:", "SHAD:", "RET432:", "READ:", "TUTOR_USE:")):
+                    day_tag_sla = _iso_to_day_tag(ts, fallback_day_tag)
+                    sla_st = state.setdefault("sla_telemetry", {
+                        "fossil_slips": {},
+                        "minimal_pairs": {},
+                        "shadowing_days": [],
+                        "retell_432_days": [],
+                        "micro_readings": {},
+                        "tutor_used": {},
+                    })
+                    if rec_id.startswith("SLIP:"):
+                        sid = rec_id.split(":", 1)[1]
+                        fs = sla_st.setdefault("fossil_slips", {})
+                        cur = fs.get(sid) or {"reps": 0, "ok": 0, "last_date": ""}
+                        cur["reps"] = int(cur.get("reps") or 0) + 1
+                        if is_correct:
+                            cur["ok"] = int(cur.get("ok") or 0) + 1
+                        cur["last_date"] = max(str(cur.get("last_date") or ""), day_tag_sla)
+                        fs[sid] = cur
+                    elif rec_id.startswith("MP:"):
+                        mpid = rec_id.split(":", 1)[1]
+                        mps = sla_st.setdefault("minimal_pairs", {})
+                        cur = mps.get(mpid) or {"reps": 0, "ok": 0, "last_date": ""}
+                        cur["reps"] = int(cur.get("reps") or 0) + 1
+                        if is_correct:
+                            cur["ok"] = int(cur.get("ok") or 0) + 1
+                        cur["last_date"] = max(str(cur.get("last_date") or ""), day_tag_sla)
+                        mps[mpid] = cur
+                    elif rec_id.startswith("SHAD:"):
+                        sdays = sla_st.setdefault("shadowing_days", [])
+                        if day_tag_sla not in sdays:
+                            sdays.append(day_tag_sla)
+                            sdays[:] = sorted(sdays)[-60:]
+                    elif rec_id.startswith("RET432:"):
+                        rdays = sla_st.setdefault("retell_432_days", [])
+                        if day_tag_sla not in rdays:
+                            rdays.append(day_tag_sla)
+                            rdays[:] = sorted(rdays)[-60:]
+                    elif rec_id.startswith("READ:"):
+                        rid = rec_id.split(":", 1)[1]
+                        mrs = sla_st.setdefault("micro_readings", {})
+                        mrs[rid] = {"ok": bool(is_correct), "note": choice[:48], "last_date": day_tag_sla}
+                    elif rec_id.startswith("TUTOR_USE:"):
+                        expr = pt or rec_id.split(":", 1)[1]
+                        tu = sla_st.setdefault("tutor_used", {})
+                        tu[expr] = day_tag_sla
+                        # Using an expression in real human conversation clears any pending speaking slip!
+                        spk_slips = (state.get("speaking_practice") or {}).get("slips") or {}
+                        spk_slips.pop(expr, None)
                     continue
 
                 # Post-Listening 5-Min Contextual Review ("RV:<id>"):
@@ -826,6 +891,11 @@ def reconcile_adaptive_telemetry(state: dict, fallback_day_tag: str = "") -> Non
 
 
 def recompute_summary(state: dict) -> None:
+    try:
+        from fsrs_engine import backfill_all_fsrs
+        backfill_all_fsrs(state, str(state.get("study_date") or "").replace("-", "")[:8])
+    except Exception:
+        pass
     if "vocab_tracked" in state:
         state["vocab_tracked"] = [
             x for x in state["vocab_tracked"]

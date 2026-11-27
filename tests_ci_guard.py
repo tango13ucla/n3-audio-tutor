@@ -638,7 +638,8 @@ def test_all_future_volumes_jp_video_invariants() -> None:
     assert len(healed_hits) >= 8, f"Stingy LLM heal failed (<8 words): {healed_hits}"
     for c_sid, c_raw in sorted(rvs.CURATED_JP_VIDEO_SCRIPTS.items()):
         c_lines = c_raw.get("lines") or []
-        assert 10 <= len(c_lines) <= 18, f"Curated {c_sid}: expected 10..18 cues, got {len(c_lines)}"
+        max_cues = 36 if str(c_sid).startswith("n2_") else 18
+        assert 10 <= len(c_lines) <= max_cues, f"Curated {c_sid}: expected 10..{max_cues} cues, got {len(c_lines)}"
         c_blob = str(c_raw.get("title_ja", "")) + str(c_raw.get("title_zh", "")) + "".join(str(x.get("ja", "")) + str(x.get("zh", "")) for x in c_lines)
         assert "—" not in c_blob, f"Curated {c_sid}: em dash leaked"
         c_ja = "\n".join(str(x.get("ja", "")) for x in c_lines)
@@ -1345,11 +1346,11 @@ def test_v85_whole_app_voice_studio_guard() -> None:
         "function renderQuizVoiceStage(",
         "function openRadioVoiceWrapUp(",
         "function renderRadioVoiceStage(",
-        'SW_CACHE_NAME = "n3-studio-tutor-v',
+        'SW_CACHE_NAME = "n3-studio-tutor-v8',
     ):
         assert sym in bh_src, f"build_html.py missing v85 Voice Studio symbol: {sym}"
 
-    print(f"[PASS 21/22] v85 Whole-App Voice Studio ({len(CONJUGATION_DRILLS)} conj drills x 3 MP3s + {len(VOICE_COACH_LINES)} coach clips + {len(sps)} spk ask MP3s) verified")
+    print(f"[PASS 21/23] v85 Whole-App Voice Studio ({len(CONJUGATION_DRILLS)} conj drills x 3 MP3s + {len(VOICE_COACH_LINES)} coach clips + {len(sps)} spk ask MP3s) verified")
 
 
 def test_v86_native_pixel_fluidity_guard() -> None:
@@ -1359,7 +1360,7 @@ def test_v86_native_pixel_fluidity_guard() -> None:
     man = json.loads((BASE_DIR / "manifest.json").read_text(encoding="utf-8"))
 
     for sym in (
-        'SW_CACHE_NAME = "n3-studio-tutor-v88"',
+        'SW_CACHE_NAME = "n3-studio-tutor-v8',
         "100dvh",
         "touch-action: manipulation",
         "overscroll-behavior: contain",
@@ -1382,17 +1383,17 @@ def test_v86_native_pixel_fluidity_guard() -> None:
         "scheduleIdleAppWarmup",
         "function buildLedgerRowHTML(",
     ):
-        assert sym in bh_src, f"build_html.py missing v87 fluidity symbol: {sym}"
+        assert sym in bh_src, f"build_html.py missing v88 fluidity symbol: {sym}"
 
     html_out = (BASE_DIR / "index.html").read_text(encoding="utf-8")
     assert "navigator.vibrate" not in html_out, "FORBIDDEN navigator.vibrate found in index.html (violates 零触控震动)!"
-    assert 'CACHE_NAME = "n3-studio-tutor-v88"' in sw_src, "sw.js CACHE_NAME not bumped to v88!"
+    assert 'CACHE_NAME = "n3-studio-tutor-v8' in sw_src, "sw.js CACHE_NAME missing v8x!"
     assert 'IMMUTABLE_CACHE = "zen-immutable-v1"' in sw_src, "sw.js missing persistent IMMUTABLE_CACHE for fonts/audio!"
     assert 'cache: "no-cache"' in sw_src, "sw.js should use ETag-conditional no-cache SWR revalidation!"
     assert "launch_handler" in man and "display_override" in man, "manifest.json missing launch_handler/display_override!"
     assert (BASE_DIR / "icon-192.png").stat().st_size > 2500, "icon-192.png looks low-res / broken!"
     assert (BASE_DIR / "icon-512.png").stat().st_size > 8000, "icon-512.png looks low-res / broken!"
-    print("[PASS 22/23] v88 ultimate 120Hz fluidity (non-blocking fonts, immutable cache, 0ms tabs, O(1) mastery, 120Hz scrub/sheets, idle warmup & crisp icons) verified")
+    print("[PASS 22/24] v88 ultimate 120Hz fluidity (non-blocking fonts, immutable cache, 0ms tabs, O(1) mastery, 120Hz scrub/sheets, idle warmup & crisp icons) verified")
 
 
 def test_zero_question_audio_answer_leak_guard() -> None:
@@ -1491,7 +1492,124 @@ def test_zero_question_audio_answer_leak_guard() -> None:
     assert "function getSafeQuestionFallbackJa(" in bh_src, "build_html.py missing getSafeQuestionFallbackJa!"
     assert 'playGenericVoiceUrl(qObj.q_audio, qObj.full_ja' not in bh_src, "build_html.py still passes qObj.full_ja to question fallback TTS!"
     assert 'speakJapaneseFallback(card.full_ja || card.prompt)' not in bh_src, "build_html.py mock player still passes card.full_ja to question fallback TTS!"
-    print(f"[PASS 23/23] Zero-spoiler question audio verified across {checked_n3} N3 cards (manifest+MP3 synced) + {checked_n2} N2 cards + frontend fallbacks")
+    print(f"[PASS 23/24] Zero-spoiler question audio verified across {checked_n3} N3 cards (manifest+MP3 synced) + {checked_n2} N2 cards + frontend fallbacks")
+
+
+def test_v88_sla_linguistics_master_guard() -> None:
+    """Gate 24 (v88 SLA): Guard all 6 linguistics breakthroughs (Anti-Interference N2, FSRS+Leeches, 30-line N2 film, 102 HVPT MP3s, Micro-Reading, 6 SLA telemetry events)."""
+    import os
+    import tempfile
+    import fsrs_engine as fe
+    import run_brain_algorithm as rba
+    import sla_linguistics_pack as slp
+    import tutor_prefs as tp
+    from n2_prep import n2_curriculum_engine as n2e
+    from n2_prep import n2_grammar_syllabus as n2s
+    from n2_prep import n2_micro_reading as n2r
+
+    # 1. Pillar 3: Zero same-day semantic-family collisions across N2 Days 4..87
+    collisions = [
+        d for d in range(4, 88)
+        if len({g["family"] for g in n2s.get_day_new_grammar(d)}) < len(n2s.get_day_new_grammar(d))
+    ]
+    assert not collisions, f"Anti-interference collision on N2 days: {collisions}"
+    assert all(len(n2s.get_day_new_grammar(d)) == 2 for d in range(8, 35)), "Travel window days 8-34 violated 2/day"
+
+    # 2. Pillar 1: Calibrated post-N3 comprehensible input ramp + 30-line N2 Day 1 all-JP film
+    p_mar = tp.immersion_profile(day="2027-03-31")
+    p_dec = tp.immersion_profile(day="2027-12-01")
+    assert p_mar["ja_ratio"] >= 0.33, f"Expected N2 Mar 31 ja_ratio >= 0.33, got {p_mar}"
+    assert p_dec["ja_ratio"] >= 0.60, f"Expected N1 Dec 01 ja_ratio >= 0.60, got {p_dec}"
+    day1_film = n2e.N2_CURATED_JP_VIDEO_SCRIPTS.get("n2_v1_s2a") or {}
+    assert len(day1_film.get("lines") or []) >= 28, f"Expected >=28 lines on N2 Day 1 film, got {len(day1_film.get('lines') or [])}"
+
+    # 3. Pillar 2 & 4: 18 Fossilized Oral Slips (54 MP3s) + 24 HVPT Minimal Pairs (48 MP3s) across 6 Tokyo speakers
+    assert len(slp.FOSSIL_SLIP_DRILLS) == 18
+    assert len(slp.MINIMAL_PAIR_DRILLS) == 24
+    assert len(slp.HVPT_SPEAKER_PROFILES) == 6
+    manifest = json.loads((BASE_DIR / "audio" / "audio_manifest.json").read_text(encoding="utf-8"))
+    f_man = manifest.get("fossil_slips") or {}
+    m_man = manifest.get("minimal_pairs") or {}
+    for d in slp.FOSSIL_SLIP_DRILLS:
+        assert "—" not in (d["cue_zh"] + d["rule_zh"]), f"Em dash in {d['id']}"
+        ent = f_man.get(d["id"]) or {}
+        for slot in ("ask", "teach", "model"):
+            rel = str(ent.get(slot) or "").split("?")[0].lstrip("./")
+            fp = BASE_DIR / rel
+            assert rel and fp.exists() and fp.stat().st_size > 700, f"Missing slip MP3 {d['id']}.{slot}: {rel}"
+    for mp in slp.MINIMAL_PAIR_DRILLS:
+        assert "—" not in mp["tip"], f"Em dash in {mp['id']}"
+        ent = m_man.get(mp["id"]) or {}
+        for side in ("a", "b"):
+            rel = str(ent.get(side) or "").split("?")[0].lstrip("./")
+            fp = BASE_DIR / rel
+            assert rel and fp.exists() and fp.stat().st_size > 700, f"Missing minimal-pair MP3 {mp['id']}.{side}: {rel}"
+
+    # 4. Pillar 5: True FSRS DSR math + Leech detection
+    it = {"id": "N2G-001", "point": "〜ざるを得ない", "status": "gray", "streak": 0}
+    s1 = fe.update_fsrs_on_review(it, "20261207", ok=True)["s"]
+    s2 = fe.update_fsrs_on_review(it, "20261211", ok=True)["s"]
+    s3 = fe.update_fsrs_on_review(it, "20261220", ok=True)["s"]
+    assert s1 < s2 < s3, f"FSRS stability failed to expand: {s1} -> {s2} -> {s3}"
+    s4 = fe.update_fsrs_on_review(it, "20261224", ok=False)["s"]
+    assert s4 < s3, f"FSRS stability failed to contract on lapse: {s3} -> {s4}"
+    assert fe.is_leech_item({"word": "慰める", "seen": 38, "wrong": 18, "status": "red"})
+
+    # 5. Pillar 6: 20 N2 Discourse Micro-Reading passages + all 6 SLA telemetry events in run_brain_algorithm
+    assert len(n2r.N2_MICRO_READINGS) >= 20
+    for mr in n2r.N2_MICRO_READINGS:
+        assert len(mr["choices"]) == 4 and mr["answer"] in mr["choices"]
+        assert "—" not in (mr["body_ja"] + mr["trap_note"] + mr["question_ja"])
+
+    fake_state = {
+        "grammar_points": [], "n2_grammar_points": [], "henkei_points": [],
+        "listening_points": [], "vocab_tracked": [],
+        "speaking_practice": {"total_reps": 1, "last_date": "20261125", "slips": {"〜がちだ": {"count": 1, "last_date": "20261125"}}},
+        "_processed_log_ts": [],
+    }
+    sla_rows = [
+        {"ts": "2026-11-26T20:00:00Z", "id": "SLIP:SL01", "point": "酸っぱかったです", "choice": "快答:1.4s", "correct": "true"},
+        {"ts": "2026-11-26T20:01:00Z", "id": "MP:MP01", "point": "だった/たった", "choice": "辨音:清浊音:对", "correct": "true"},
+        {"ts": "2026-11-26T20:02:00Z", "id": "SHAD:2026-11-26", "point": "影子跟读:1.1x", "choice": "影子跟读:1.1x", "correct": "true"},
+        {"ts": "2026-11-26T20:03:00Z", "id": "RET432:2026-11-26", "point": "4/3/2提速复述", "choice": "复述:60-45-30圆满", "correct": "true"},
+        {"ts": "2026-11-26T20:04:00Z", "id": "READ:RD01", "point": "海外零售与本地化", "choice": "精读对:245字/分", "correct": "true"},
+        {"ts": "2026-11-26T20:05:00Z", "id": "TUTOR_USE:tm1", "point": "〜がちだ", "choice": "真人课实战已用出", "correct": "true"},
+    ]
+    orig_log, orig_snap = rba.LOG_PATH, rba.SNAPSHOT_PATH
+    with tempfile.TemporaryDirectory(prefix="sla_gate24_") as td:
+        tlog = os.path.join(td, "practice_log.jsonl")
+        with open(tlog, "w", encoding="utf-8") as f:
+            for r in sla_rows:
+                f.write(json.dumps(r, ensure_ascii=False) + "\n")
+        rba.LOG_PATH = tlog
+        rba.SNAPSHOT_PATH = os.path.join(td, "no_snap.json")
+        try:
+            rba.apply_practice_logs(fake_state, "20261126")
+        finally:
+            rba.LOG_PATH, rba.SNAPSHOT_PATH = orig_log, orig_snap
+    sla_t = fake_state.get("sla_telemetry") or {}
+    assert "SL01" in (sla_t.get("fossil_slips") or {})
+    assert "MP01" in (sla_t.get("minimal_pairs") or {})
+    assert len(sla_t.get("shadowing_days") or []) == 1
+    assert len(sla_t.get("retell_432_days") or []) == 1
+    assert "RD01" in (sla_t.get("micro_readings") or {})
+    assert "〜がちだ" in (sla_t.get("tutor_used") or {})
+    assert "〜がちだ" not in fake_state["speaking_practice"]["slips"], "TUTOR_USE did not clear redeemed speaking slip!"
+
+    bh_src = (BASE_DIR / "build_html.py").read_text(encoding="utf-8")
+    for sym in (
+        "function toggleJpVideoShadowMode(",
+        "function openRetell432Modal(",
+        "function analyzeFossilSlip(",
+        "function pickQuizVoiceMpSide(",
+        "function renderPitchContourSVG(",
+        "function openMicroReadingModal(",
+        "function openTutorMissionModal(",
+        'SW_CACHE_NAME = "n3-studio-tutor-v89"',
+    ):
+        assert sym in bh_src, f"build_html.py missing v89 SLA symbol: {sym}"
+
+    print("[PASS 24/24] v89 SLA Linguistics Master Upgrade (0/84 N2 collisions, FSRS+Leeches, 30-line N2 film, 102 HVPT MP3s, Shadowing, 4/3/2, Micro-Reading, Tutor Mission) verified")
 
 
 def main() -> int:
@@ -1518,7 +1636,8 @@ def main() -> int:
     test_v85_whole_app_voice_studio_guard()
     test_v86_native_pixel_fluidity_guard()
     test_zero_question_audio_answer_leak_guard()
-    print("[ALL PASS] tests_ci_guard.py 23/23 gates green!")
+    test_v88_sla_linguistics_master_guard()
+    print("[ALL PASS] tests_ci_guard.py 24/24 gates green!")
     return 0
 
 

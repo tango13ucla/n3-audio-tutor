@@ -1047,20 +1047,35 @@ N2_CURATED_JP_VIDEO_SCRIPTS: dict[str, dict[str, Any]] = {
         "title_zh": "成都伊藤、秘鲁日系料理与南鸟岛深海稀土",
         "lines": [
             {"ch": 0, "v": "M", "ja": "日本の経済が変化するなか、老舗のスーパーも厳しい市場と向き合っています。", "zh": "在日本经济变革之中，老牌超市也正直面严峻的市场。"},
-            {"ch": 0, "v": "F", "ja": "赤字が続く店舗については、経営を見直し、閉めざるを得ない状況です。", "zh": "对于持续亏损的门店，不得不重新审视经营并忍痛关闭。"},
-            {"ch": 1, "v": "M", "ja": "一方で、中国の成都に進出した店舗は、地元の家族に深く愛されてきました。", "zh": "而另一方面，进驻中国成都的门店却深受当地家庭喜爱。"},
-            {"ch": 1, "v": "F", "ja": "日本のやり方を押し付けるわけにはいかないと、ひたすら暮らしを研究したのです。", "zh": "他们明白绝不能生搬硬套日本做法，于是一门心思研究当地生活。"},
-            {"ch": 2, "v": "M", "ja": "同じ会社でも、北京では時代の流れと激しい競争の中で別の現実を迎えました。", "zh": "即便是同一家公司，在北京也因时代大潮与激烈竞争迎来了不同现实。"},
-            {"ch": 2, "v": "F", "ja": "どんな名門でも、過去の成功に油断すると、すぐに取り残されてしまいます。", "zh": "无论多响亮的名门，一旦沉迷过往成功掉以轻心，很快就会掉队。"},
-            {"ch": 3, "v": "M", "ja": "海を隔てたペルーでは、百年以上前に渡った日系人が新しい歴史を築きました。", "zh": "在隔海相望的秘鲁，一百多年前渡海的日裔筑起了崭新的历史。"},
-            {"ch": 3, "v": "F", "ja": "厳しい差別のなかでも、家族を守るために仕事を投げ出すわけにはいきませんでした。", "zh": "即便身处严酷歧视之中，为了守护家人也绝不能半途撂挑子。"},
-            {"ch": 4, "v": "M", "ja": "故郷の食材が手に入らず、現地の魚や果物を取り入れざるを得なかったのです。", "zh": "买不到故乡食材，他们只能就地取材用上当地鲜鱼与蔬果。"},
-            {"ch": 4, "v": "F", "ja": "その工夫が、かえって世界から高く評価される日系料理を生む象徴となりました。", "zh": "那份巧思反而化作受世界高度赞誉的日系料理的象征。"},
-            {"ch": 4, "v": "M", "ja": "文化は閉じこもるより、異なる風土と出会うことで新しい構造へ広がります。", "zh": "与其固步自封，文化在邂逅异域风土时反而能生长出全新格局。"},
-            {"ch": 5, "v": "F", "ja": "そして今、日本は太平洋の南鳥島で、深海六千メートルの資源開発に挑んでいます。", "zh": "而如今，日本正在太平洋南鸟岛挑战六千米深海的资源开发。"},
-            {"ch": 5, "v": "M", "ja": "輸入だけに頼り続けるわけにはいかず、高い予算と技術の壁を越えようとしています。", "zh": "绝不能一味依赖进口，正试图跨越高昂预算与技术的重重高墙。"},
-            {"ch": 5, "v": "F", "ja": "自然への影響と世界の供給網を見極めながら、慎重に設計を進めることが大切です。", "zh": "一边权衡自然生态与全球供应链，一边审慎推进设计至关重要。"},
-            {"ch": 5, "v": "M", "ja": "商業も料理も科学も、現実を受け止めて見直す姿勢が未来をひらきます。", "zh": "无论是商业、料理还是科学，直面现实并重新审视的姿态才能打开未来。"},
+            {"ch": 0, "v": "F", "ja": "かつては駅前のにぎわいを象徴していた大型店舗も、消費の形が変わり、苦戦が続いています。", "zh": "曾经象征车站繁华的大型门店，随着消费形态变化也苦战连连。"},
+            {"ch": 0, "v": "M", "ja": "赤字が続く店舗については、経営を見直し、閉めざるを得ない状況です。", "zh": "对于持续亏损的门店，不得不重新审视经营并忍痛关闭。"},
+            {"ch": 0, "v": "F", "ja": "国内では縮小が相次ぐ一方で、海外のある街ではまったく違う景色が広がっていました。", "zh": "在国内接连收缩的同时，海外的一座城市里却呈现出截然不同的景象。"},
+            {"ch": 1, "v": "M", "ja": "中国の成都に進出した店舗は、四半世紀にわたり地元の家族に深く愛されてきました。", "zh": "进驻中国成都的门店，在四分之一个世纪里深受当地家庭喜爱。"},
+            {"ch": 1, "v": "F", "ja": "週末になると三世代で買い物を楽しみ、暮らしの一部のように定着していたのですね。", "zh": "一到周末三代同堂来逛街购物，简直融入了日常生活之中。"},
+            {"ch": 1, "v": "M", "ja": "日本のやり方を押し付けるわけにはいかないと、現地の食卓や季節行事をひたすら研究したのです。", "zh": "他们明白绝不能生搬硬套日本做法，于是一门心思研究当地餐桌与节令。"},
+            {"ch": 1, "v": "F", "ja": "清潔な売り場と丁寧な接客を守りつつ、地元の市場に近い活気を取り入れた点が支持されました。", "zh": "守住整洁卖场与细致服务的同时，融入了近似本地菜市场的烟火气，因而赢得认可。"},
+            {"ch": 1, "v": "M", "ja": "現場の声をすくい上げる地道な工夫が、長い信頼につながっていったのです。", "zh": "倾听一线声音的踏实巧思，最终化作了长久的信任。"},
+            {"ch": 2, "v": "F", "ja": "ところが同じ会社でも、北京では時代の流れと激しい競争の中で別の現実を迎えました。", "zh": "然而即便是同一家公司，在北京也因时代大潮与激烈竞争迎来了不同现实。"},
+            {"ch": 2, "v": "M", "ja": "ネット通販や即配サービスが一気に普及し、従来の大型店の強みが薄れていったのです。", "zh": "网购与即时配送迅速普及，传统大型商场的优势随之淡化。"},
+            {"ch": 2, "v": "F", "ja": "過去の成功に油断すると、どれほど名門の企業であっても、すぐに取り残されてしまいます。", "zh": "一旦沉迷过往成功而掉以轻心，哪怕再响亮的名门企业也会很快掉队。"},
+            {"ch": 2, "v": "M", "ja": "時代の変化には逆らえず、苦渋の決断として段階的に撤退せざるを得ませんでした。", "zh": "无法逆转时代潮流，最终作为艰难抉择不得不分阶段撤退。"},
+            {"ch": 2, "v": "F", "ja": "守るべき軸と変えるべき仕組みを見極める難しさが、この二つの都市の対比に表れています。", "zh": "该守住什么轴心、该改掉什么机制，这份拿捏之难在两座城市的对比里一览无遗。"},
+            {"ch": 3, "v": "M", "ja": "視点を太平洋の向こう側へ移すと、ペルーでもまた別の適応の物語が見つかります。", "zh": "把目光移向太平洋彼岸，在秘鲁也能看到另一段适应与扎根的故事。"},
+            {"ch": 3, "v": "F", "ja": "百年以上前に契約移民として海を渡った日系人たちは、言葉も習慣も違う土地でゼロから出発しました。", "zh": "一百多年前作为契约移民渡海的日裔，在语言习俗迥异的土地上从零起步。"},
+            {"ch": 3, "v": "M", "ja": "厳しい差別や苦しい暮らしのなかでも、家族を守るために仕事を投げ出すわけにはいきませんでした。", "zh": "即便身处严酷歧视与清苦生活之中，为了守护家人也绝不能半途撂挑子。"},
+            {"ch": 3, "v": "F", "ja": "信用を第一に地道に働き続けた結果、やがて地域社会に確かな居場所を築いたのですね。", "zh": "把信用放在首位默默打拼，最终在当地社会站稳了脚跟。"},
+            {"ch": 4, "v": "M", "ja": "その歴史がもっとも鮮やかに花開いた分野の一つが、今や世界中で注目される日系料理です。", "zh": "那段历史绽放得最绚丽的领域之一，正是如今享誉全球的日系秘鲁料理。"},
+            {"ch": 4, "v": "F", "ja": "故郷の食材が手に入らず、現地の魚やライム、唐辛子を取り入れざるを得なかったのです。", "zh": "买不到故乡食材，他们只能就地取材用上当地海鱼、青柠和辣椒。"},
+            {"ch": 4, "v": "M", "ja": "新鮮な魚のうま味を損なうわけにはいかないと、漬け込む時間を極端に短くする工夫が生まれました。", "zh": "秉持绝不能糟蹋鲜鱼本味的匠心，诞生了大幅缩短腌制时间的妙招。"},
+            {"ch": 4, "v": "F", "ja": "その制約から生まれた発想が、かえって世界から高く評価される料理の象徴となったのです。", "zh": "因受限而生的巧思，反而化作深受世界高度赞誉的料理象征。"},
+            {"ch": 4, "v": "M", "ja": "文化は閉じこもるより、異なる風土と出会うことで新しい構造へ広がっていきます。", "zh": "与其固步自封，文化在邂逅异域风土时反而能生长出全新格局。"},
+            {"ch": 5, "v": "F", "ja": "そして今、日本は太平洋の南鳥島で、深海六千メートルの資源開発という難題に挑んでいます。", "zh": "而如今，日本正在太平洋南鸟岛挑战六千米深海资源开发的硬仗。"},
+            {"ch": 5, "v": "M", "ja": "ハイテク産業に欠かせない希少金属が、この海域の海底泥に豊富に含まれていると分かったのです。", "zh": "研究发现，高科技产业不可或缺的稀有金属正丰富地蕴藏在这片海域的深海泥中。"},
+            {"ch": 5, "v": "F", "ja": "輸入だけに頼り続けるわけにはいかず、高い予算と技術の壁を越えようとしています。", "zh": "绝不能一味依赖进口，正试图跨越高昂预算与技术的重重高墙。"},
+            {"ch": 5, "v": "M", "ja": "とはいえ、実験で泥を引き上げることと、商業ベースで採算を取ることはまったく別の話です。", "zh": "虽说如此，实验性抽泥与商业化实现盈利完全是两码事。"},
+            {"ch": 5, "v": "F", "ja": "深海の生態系への影響と世界の供給網を見極めながら、慎重に設計を進めることが大切です。", "zh": "一边权衡深海生态影响与全球供应链，一边审慎推进设计至关重要。"},
+            {"ch": 5, "v": "M", "ja": "成都の商業も、ペルーの食卓も、南鳥島の科学も、同じ一つの問いに行き着きます。", "zh": "成都的商业、秘鲁的餐桌与南鸟岛的科学，最终都指向同一个问题。"},
+            {"ch": 5, "v": "F", "ja": "避けられない現実を受け止め、自らのやり方を見直す姿勢こそが、次の時代をひらくのです。", "zh": "直面无法回避的现实并主动审视自身做法，正是打开下一个时代的关键。"},
         ],
     },
     **N2_VOL2_3_JP_VIDEO_SCRIPTS,
@@ -1106,23 +1121,42 @@ def select_n2_daily_quiz_deck(
     n2_status_map: dict[str, dict[str, Any]],
     n3_bridge_candidates: list[dict[str, Any]],
     is_travel_floor: bool = False,
+    study_date_tag: str = "",
 ) -> list[dict[str, Any]]:
     """
-    Build the daily N2 quiz deck ("先教后练" + "+1/+5/+14" spaced callbacks + N3 listening/henkei bridge).
+    Build the daily N2 quiz deck ("先教后练" + "+1/+5/+14" spaced callbacks + FSRS DSR
+    long-horizon retention scheduler + leech context-variant rotation + N3 listening/henkei bridge).
     Travel floor Days 8-34 gently caps at 26 cards; Home sprint runs 50 cards.
     """
+    try:
+        from fsrs_engine import is_leech_item, item_retrievability_on_day
+    except Exception:
+        item_retrievability_on_day = None
+        is_leech_item = None
+
     cap = 26 if is_travel_floor else 50
     clamped_day = max(1, min(90, int(n2_day or 1)))
+    day_tag = str(study_date_tag or "").replace("-", "")[:8] or (N2_START_DATE + datetime.timedelta(days=max(0, clamped_day - 1))).strftime("%Y%m%d")
     by_id = {p["id"]: p for p in n2_bank}
     chosen: list[dict[str, Any]] = []
     chosen_ids: set[str] = set()
 
+    def _prepare_card(p: dict[str, Any]) -> dict[str, Any]:
+        st_obj = n2_status_map.get(p["point_key"]) or {}
+        if is_leech_item is not None and st_obj and is_leech_item(st_obj) and p.get("variant"):
+            # Context Variability (Encoding Variability): rotate leech cards to unseen variant sentence!
+            c = dict(p)
+            c["primary"], c["variant"] = p["variant"], p["primary"]
+            c["is_leech_rotated"] = True
+            return c
+        return p
+
     def _add(p: dict[str, Any]) -> None:
         if p and p["id"] not in chosen_ids and len(chosen) < cap:
-            chosen.append(p)
+            chosen.append(_prepare_card(p))
             chosen_ids.add(p["id"])
 
-    # 1. Brand-new N2 grammar points scheduled for today (Teach-First!)
+    # 1. Brand-new N2 grammar points scheduled for today (Teach-First, anti-interference staggered!)
     for g in get_day_new_grammar(clamped_day):
         if g["id"] in by_id:
             _add(by_id[g["id"]])
@@ -1132,24 +1166,40 @@ def select_n2_daily_quiz_deck(
         if g["id"] in by_id:
             _add(by_id[g["id"]])
 
-    # 3. Unmastered / red / yellow previously unlocked N2 grammar points (days <= n2_day)
+    # 3. FSRS DSR Long-Horizon Scheduling across ALL unlocked N2 grammar points (days <= n2_day)
+    # Prevents graduated 3/3 green items from silently decaying over 115+ days while prioritizing
+    # overdue red/yellow items and low-retrievability (R <= 0.88) graduated items!
     unlocked = [p for p in n2_bank if p["day"] <= clamped_day and p["id"] not in chosen_ids]
-    unlocked.sort(
-        key=lambda p: (
-            0 if (n2_status_map.get(p["point_key"], {}).get("status") in ("red", "orange")) else (
-                1 if n2_status_map.get(p["point_key"], {}).get("status") != "green" else 2
-            ),
-            -p["day"],
-            p["id"],
-        )
-    )
+
+    def _fsrs_sort_key(p: dict[str, Any]) -> tuple:
+        st_obj = n2_status_map.get(p["point_key"]) or {}
+        st = str(st_obj.get("status") or "gray")
+        if item_retrievability_on_day is not None and st_obj:
+            r_now, overdue, _s = item_retrievability_on_day(st_obj, day_tag)
+            is_fsrs_due = (overdue >= 0) or (r_now <= 0.88)
+        else:
+            r_now, overdue, is_fsrs_due = 0.5, 0, (st != "green")
+        if st in ("red", "orange"):
+            tier = 0
+        elif st != "green" and is_fsrs_due:
+            tier = 1
+        elif st == "green" and is_fsrs_due:
+            # FSRS graduated item actually reached forgetting threshold (R <= 0.88) -> timely review!
+            tier = 2
+        elif st != "green":
+            tier = 3
+        else:
+            tier = 4
+        return (tier, r_now, -overdue, -p["day"], p["id"])
+
+    unlocked.sort(key=_fsrs_sort_key)
     n2_gram_budget = 14 if is_travel_floor else 26
     for p in unlocked:
         if len(chosen) >= n2_gram_budget:
             break
         _add(p)
 
-    # 4. Preview upcoming 2 days of N2 grammar if early week 1 needs rich deck fill
+    # 4. Preview upcoming days of N2 grammar if early week 1 needs rich deck fill
     if len(chosen) < min(10, n2_gram_budget):
         upcoming = [p for p in n2_bank if clamped_day < p["day"] <= clamped_day + 5 and p["id"] not in chosen_ids]
         for p in upcoming:

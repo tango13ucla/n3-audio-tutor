@@ -1186,8 +1186,9 @@ def _author_jp_video_script_llm(
     story_blocks: list[dict[str, Any]],
     target_words: list[dict[str, str]],
     target_grammar: list[str],
+    long_n2_mode: bool = False,
 ) -> dict[str, Any] | None:
-    """In GitHub Actions (when LLM token is present), script a fresh 14-16 line ALL-JAPANESE NHK documentary video."""
+    """In GitHub Actions (when LLM token is present), script a fresh ALL-JAPANESE NHK documentary video (90s N3 / 3-4m N2+N1)."""
     try:
         from daily_news_salon_gen import _call_chat_llm, _strip_json_fence
     except Exception:
@@ -1202,15 +1203,19 @@ def _author_jp_video_script_llm(
         }
         for i, b in enumerate(story_blocks)
     ]
-    must_words = [f"{w['word']}({w['kana']}: {w['zh']})" for w in target_words[:12]]
-    must_gram = [g for g in target_grammar[:6] if g]
+    must_words = [f"{w['word']}({w['kana']}: {w['zh']})" for w in target_words[:14]]
+    must_gram = [g for g in target_grammar[:8] if g]
+
+    dur_spec = "3分〜4分の充実した全日本語ドキュメンタリー（全26〜34行）" if long_n2_mode else "75〜90秒の自然な全日本語ショート動画（全14〜16行）"
+    min_lines = 18 if long_n2_mode else 10
+    max_lines = 40 if long_n2_mode else 20
 
     sys_p = (
         "あなたはNHKの文化・科学ドキュメンタリー脚本家です。"
-        "JLPT N3〜N2学習者向けに、今日のポッドキャストで聴いた日本の物語と世界の科学・歴史を75〜90秒の"
-        "自然な全日本語ショート動画（男性ナレーターMと女性聞き手Fの掛け合い、全14〜16行）に仕立ててください。"
+        f"JLPT N3〜N2学習者向けに、今日のポッドキャストで聴いた日本の物語と世界の科学・歴史を{dur_spec}"
+        "（男性ナレーターMと女性聞き手Fの掛け合い）に仕立ててください。"
         "厳守事項："
-        "1) 音声台本 `ja` は100%自然な日本語（漢字かな交じり、N3〜N2レベル、1行18〜38文字、中国語を一切混ぜない）。"
+        "1) 音声台本 `ja` は100%自然な日本語（漢字かな交じり、N3〜N2レベル、1行18〜42文字、中国語を一切混ぜない）。"
         "2) 抽象的なまとめや説教を避け、具体的な年号・地名・人物・歴史や科学の鮮やかな対比（光と影、制度と人間）を簡潔に織り込む。"
         "3) 指定された『重要語彙』のうち最低9語を自然に織り込み、特に上位4語は動画内で2回ずつ反復する。"
         "4) 指定された『文法表現』のうち最低4つをストーリーの中で自然に使う（文法解説は絶対しない）。"
@@ -1231,7 +1236,7 @@ def _author_jp_video_script_llm(
     try:
         obj = json.loads(_strip_json_fence(raw))
         lines = obj.get("lines") or []
-        if not isinstance(lines, list) or not (10 <= len(lines) <= 20):
+        if not isinstance(lines, list) or not (min_lines <= len(lines) <= max_lines):
             return None
         max_ch = max(0, len(story_blocks) - 1)
         clean_lines: list[dict[str, Any]] = []
@@ -1246,7 +1251,7 @@ def _author_jp_video_script_llm(
             if len(ja) < 8 or len(re.findall(r"[ぁ-んァ-ヶー]", ja)) < 4:
                 return None
             clean_lines.append({"ch": ch, "v": v, "ja": ja, "zh": zh})
-        if len(clean_lines) < 10:
+        if len(clean_lines) < min_lines:
             return None
         return {
             "title_ja": str(obj.get("title_ja") or "今日の日本ストーリー").replace("—", "").strip(),
@@ -1478,16 +1483,18 @@ def _resolve_jp_video_script(
     story_blocks: list[dict[str, Any]],
     target_words: list[dict[str, str]],
     review_items: list[dict[str, Any]],
+    today_str: str = "",
 ) -> dict[str, Any]:
+    long_n2 = bool(today_str and str(today_str)[:10] >= "2026-12-07")
     # 1) Check curated NHK-grade gold scripts first
     for blk in story_blocks:
         sid = str(blk.get("id") or "").strip()
         if sid in CURATED_JP_VIDEO_SCRIPTS:
             raw_curated = json.loads(json.dumps(CURATED_JP_VIDEO_SCRIPTS[sid], ensure_ascii=False))
             return _ensure_script_meets_word_and_cue_floor(raw_curated, story_blocks, target_words)
-    # 2) In CI with LLM key, author a fresh tailored ALL-JAPANESE documentary script
+    # 2) In CI with LLM key, author a fresh tailored ALL-JAPANESE documentary script (3-4m in N2/N1!)
     gram_pts = [str(it.get("title") or "") for it in (review_items or []) if it.get("kind") == "grammar"]
-    llm_script = _author_jp_video_script_llm(story_blocks, target_words, gram_pts)
+    llm_script = _author_jp_video_script_llm(story_blocks, target_words, gram_pts, long_n2_mode=long_n2)
     if llm_script:
         return _ensure_script_meets_word_and_cue_floor(llm_script, story_blocks, target_words)
     # 3) Guaranteed offline ALL-JAPANESE fallback
@@ -1495,15 +1502,16 @@ def _resolve_jp_video_script(
     return _ensure_script_meets_word_and_cue_floor(det_script, story_blocks, target_words)
 
 
-async def _edge_tts_to_mp3(text: str, voice: str, rate: str, dest_mp3: str) -> bool:
+async def _edge_tts_to_mp3(text: str, voice: str, rate: str, dest_mp3: str, pitch: str = "+0Hz") -> bool:
     import edge_tts  # type: ignore
     proxy_url = os.environ.get("HTTPS_PROXY") or os.environ.get("HTTP_PROXY") or None
     kwargs = {"proxy": proxy_url} if proxy_url else {}
     alt_voice = "ja-JP-KeitaNeural" if voice == "ja-JP-NanamiNeural" else "ja-JP-NanamiNeural"
     for attempt in range(5):
         use_voice = voice if attempt < 3 else alt_voice
+        use_pitch = pitch if attempt < 3 else "+0Hz"
         try:
-            comm = edge_tts.Communicate(text, voice=use_voice, rate=rate, **kwargs)
+            comm = edge_tts.Communicate(text, voice=use_voice, rate=rate, pitch=use_pitch, **kwargs)
             await comm.save(dest_mp3)
             if os.path.exists(dest_mp3) and os.path.getsize(dest_mp3) > 800:
                 return True
@@ -1685,12 +1693,31 @@ async def _build_jp_documentary_video(
         return None
 
     # 1. Synthesize every Japanese line cleanly via Edge Neural Japanese voices
+    # Post-N3 (2026-12-07+): rotate across 6 native Tokyo HVPT personas (Logan & Pisoni) for speaker generalization!
+    hvpt_profiles_f: list[dict[str, str]] = []
+    hvpt_profiles_m: list[dict[str, str]] = []
+    use_hvpt = bool(today_str and str(today_str)[:10] >= "2026-12-07")
+    if use_hvpt:
+        try:
+            from sla_linguistics_pack import HVPT_SPEAKER_PROFILES
+            hvpt_profiles_f = [p for p in HVPT_SPEAKER_PROFILES if p.get("gender") == "F"]
+            hvpt_profiles_m = [p for p in HVPT_SPEAKER_PROFILES if p.get("gender") == "M"]
+        except Exception:
+            use_hvpt = False
+
     line_mp3s: list[str] = []
     for i, ln in enumerate(lines):
-        voice = "ja-JP-NanamiNeural" if ln.get("v") == "F" else "ja-JP-KeitaNeural"
-        rate = "-6%" if ln.get("v") == "F" else "-7%"
+        is_f = ln.get("v") == "F"
+        if use_hvpt and (hvpt_profiles_f if is_f else hvpt_profiles_m):
+            pool = hvpt_profiles_f if is_f else hvpt_profiles_m
+            prof = pool[(int(ln.get("ch", 0)) + i) % len(pool)]
+            voice, rate, pitch = prof["voice"], prof["rate"], prof["pitch"]
+        else:
+            voice = "ja-JP-NanamiNeural" if is_f else "ja-JP-KeitaNeural"
+            rate = "-6%" if is_f else "-7%"
+            pitch = "+0Hz"
         dest = os.path.join(tmpdir, f"jp_ln_{i:02d}.mp3")
-        ok = await _edge_tts_to_mp3(str(ln["ja"]), voice, rate, dest)
+        ok = await _edge_tts_to_mp3(str(ln["ja"]), voice, rate, dest, pitch=pitch)
         if not ok:
             print(f"[visual-studio] Japanese neural TTS synthesis failed on line {i}, skipping jp_video")
             return None
@@ -2060,7 +2087,7 @@ async def build_episode_visuals_async(
 
         # 4. Build today's cohesive ALL-JAPANESE Documentary Short Video (`video/daily_jp_story.mp4`)
         target_words = _collect_daily_target_words(imm_vocab_report, review_items)
-        jp_script = _resolve_jp_video_script(story_blocks, target_words, review_items)
+        jp_script = _resolve_jp_video_script(story_blocks, target_words, review_items, today_str=today_str)
         jp_video = await _build_jp_documentary_video(
             script=jp_script,
             chapter_shots=chapter_shots,

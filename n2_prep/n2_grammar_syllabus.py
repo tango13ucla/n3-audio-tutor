@@ -686,6 +686,77 @@ _RAW_SYLLABUS = [
      "課題は残っているとはいえ、全体の方向性は確実に前へ進んでいる。", "虽说课题尚存，但整体方向正稳步向前推进。"),
 ]
 
+def _apply_anti_interference_stagger(items: list[dict]) -> None:
+    """
+    Tinkham (1997) / Waring (1997) / Nation (2000) Anti-Interference Staggered Scheduler:
+    - Keeps Days 1..3 aligned with curated cinema-grade N2 Vol.1-3 launch arcs, and
+      Days 88..90 intact as final capstone contrast synthesis.
+    - Across Days 4..87 (178 points), preserves exact per-day slot counts (including
+      Days 8..34 Europe travel floor = 2/day) while guaranteeing ZERO same-day
+      semantic-family collisions and separating twin-family siblings across days so
+      Item A anchors cleanly before Item B arrives for interleaved discrimination.
+    """
+    mid_items = [g for g in items if 4 <= g["day"] <= 87]
+    slot_caps: dict[int, int] = {}
+    for g in mid_items:
+        slot_caps[g["day"]] = slot_caps.get(g["day"], 0) + 1
+
+    # Group by family preserving original syllabus priority order
+    fam_order: list[str] = []
+    fam_queues: dict[str, list[dict]] = {}
+    for g in mid_items:
+        fam = g["family"]
+        if fam not in fam_queues:
+            fam_order.append(fam)
+            fam_queues[fam] = []
+        fam_queues[fam].append(g)
+
+    fam_last_day: dict[str, int] = {}
+    day_used_fams: dict[int, set[str]] = {d: set() for d in range(4, 88)}
+    day_assigned: dict[int, list[dict]] = {d: [] for d in range(4, 88)}
+
+    # Greedy max-separation assignment: prioritize families with highest remaining count
+    # and largest distance since last appearance, strictly forbidding same-day collisions.
+    for d in range(4, 88):
+        cap = slot_caps.get(d, 0)
+        for _ in range(cap):
+            cands = []
+            for idx, fam in enumerate(fam_order):
+                q = fam_queues[fam]
+                if not q:
+                    continue
+                if fam in day_used_fams[d]:
+                    continue
+                last_d = fam_last_day.get(fam, -99)
+                gap = d - last_d
+                # Strongly prefer gap >= 4 days; balance remaining urgency & original phase order
+                orig_d = q[0]["day"]
+                gap_ok = 1 if gap >= 4 else 0
+                urgency = len(q)
+                # Keep items roughly near their intended phase while avoiding collisions
+                drift = abs(d - orig_d)
+                score = (
+                    gap_ok * 1000
+                    + min(gap, 12) * 35
+                    + urgency * 40
+                    - drift * 4
+                    - idx * 0.1
+                )
+                cands.append((score, fam))
+            if not cands:
+                # Fallback only if mathematically impossible (should never trigger with 35+ families)
+                cands = [(len(fam_queues[f]), f) for f in fam_order if fam_queues[f]]
+            cands.sort(key=lambda x: -x[0])
+            best_fam = cands[0][1]
+            chosen = fam_queues[best_fam].pop(0)
+            chosen["orig_family_day"] = chosen["day"]
+            chosen["day"] = d
+            chosen["callbacks"] = [cd for cd in (d + 1, d + 5, d + 14) if cd <= 115]
+            day_used_fams[d].add(best_fam)
+            fam_last_day[best_fam] = d
+            day_assigned[d].append(chosen)
+
+
 for row in _RAW_SYLLABUS:
     gid, day, fam, pt, kana, conn, soul, twin, ex_ja, ex_zh = row
     N2_GRAMMAR_SYLLABUS.append({
@@ -701,6 +772,8 @@ for row in _RAW_SYLLABUS:
         "example_zh": ex_zh,
         "callbacks": [d for d in (day + 1, day + 5, day + 14) if d <= 115],
     })
+
+_apply_anti_interference_stagger(N2_GRAMMAR_SYLLABUS)
 
 
 def get_day_new_grammar(day: int) -> list[dict]:
@@ -727,6 +800,9 @@ if __name__ == "__main__":
     fams = set(g["family"] for g in N2_GRAMMAR_SYLLABUS)
     travel_counts = [len(get_day_new_grammar(d)) for d in range(8, 35)]
     assert all(c == 2 for c in travel_counts), f"Travel window days 8-34 should be 2/day: {travel_counts}"
-    print(f"N2 Grammar Syllabus OK: {len(N2_GRAMMAR_SYLLABUS)} points across {len(fams)} semantic families over 90 intake days.")
-    print(f"Day 1 new: {[g['point'] for g in get_day_new_grammar(1)]}")
-    print(f"Day 15 callbacks: {[(g['point'], g['callback_delta']) for g in get_day_callback_grammar(15)]}")
+    collisions = [d for d in range(4, 88) if len({g["family"] for g in get_day_new_grammar(d)}) < len(get_day_new_grammar(d))]
+    assert not collisions, f"Anti-interference collision on days: {collisions}"
+    print(f"N2 Grammar Syllabus OK: {len(N2_GRAMMAR_SYLLABUS)} points across {len(fams)} families, 0/84 same-day twin collisions on Days 4..87!")
+    for d in (1, 4, 5, 6):
+        print(f"  Day {d} new: {[(g['point'], g['family']) for g in get_day_new_grammar(d)]}")
+    print(f"  Day 15 callbacks: {[(g['point'], g['callback_delta']) for g in get_day_callback_grammar(15)]}")

@@ -310,6 +310,12 @@ def run_night_summary(target_closed_day: str | None = None) -> int:
         if isinstance(h, dict) and not contains_pii(json.dumps(h, ensure_ascii=False))
     ][-7:]
 
+    try:
+        from fsrs_engine import collect_leeches as _collect_leeches
+        _leeches = _collect_leeches(st_live, max_items=10)
+    except Exception:
+        _leeches = {"vocab": [], "points": []}
+
     summary_obj = {
         "closed_study_day": closed_study_day,
         "summarized_at_pt": now_pt.isoformat(timespec="seconds"),
@@ -317,6 +323,8 @@ def run_night_summary(target_closed_day: str | None = None) -> int:
         "missed_or_unsure_points": missed_today[:30],
         "missed_vocab_words": missed_vocab_today[:20],
         "top_confusion_pairs": top_conf,
+        "leech_words": _leeches.get("vocab", []),
+        "leech_points": _leeches.get("points", []),
         "looked_up_expressions": looked_up_today[:25],
         "looked_up_words_count": len(sorted_lookups),
         "top_looked_up_words": [
@@ -332,7 +340,7 @@ def run_night_summary(target_closed_day: str | None = None) -> int:
     print(
         f"[night-summary] Closed {closed_study_day} at {now_pt.strftime('%H:%M PT')}: "
         f"events={len(day_events)}, missed_quiz={len(missed_today)}, "
-        f"missed_vocab={len(missed_vocab_today)}, lookups={len(looked_up_today)}, confusions={len(top_conf)}, radio_fb={len(fb_hist)}"
+        f"missed_vocab={len(missed_vocab_today)}, leeches={len(_leeches.get('vocab', []))}, lookups={len(looked_up_today)}, confusions={len(top_conf)}, radio_fb={len(fb_hist)}"
     )
     return 0
 

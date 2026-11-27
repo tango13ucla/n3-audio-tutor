@@ -147,11 +147,15 @@ def immersion_profile(prefs: dict | None = None, day: str | None = None) -> dict
         ja_rate_pct = -12
     else:
         days_after_n3 = (cur_dt - gate_dt).days
+        # SLA v86 calibrated comprehensible-input ramp (Krashen i+1 / Nation Four Strands):
+        # Smooth concave progression so continuous Japanese reaches meaningful syntactic-parsing mass
+        # by N2 milestone (~36% by Day 115 / 2027-03-31, ~50% by Jul 2027, ~70% by Dec 2027, 92% by Day 700)
         prog = min(1.0, days_after_n3 / float(ramp_days))
-        ja_ratio = round(post_start + prog * (target_ratio - post_start), 4)
-        # Gently lift Japanese sentence speed from -12% (Dec 7) to +0% native speed over ~450 post-N3 days
-        ja_rate_pct = min(0, int(round(-12 + min(1.0, days_after_n3 / 450.0) * 12)))
-        phase = "n2_climb" if ja_ratio < 0.42 else ("n1_immersion" if ja_ratio < 0.72 else "native_podcast")
+        curved = prog ** 0.72
+        ja_ratio = round(post_start + curved * (target_ratio - post_start), 4)
+        # Gently lift Japanese sentence speed from -10% (Dec 7) to +0% native speed over ~300 post-N3 days
+        ja_rate_pct = min(0, int(round(-10 + min(1.0, days_after_n3 / 300.0) * 10)))
+        phase = "n2_climb" if ja_ratio < 0.45 else ("n1_immersion" if ja_ratio < 0.74 else "native_podcast")
 
     if imm.get("hold_ja_ratio") is not None:
         try:

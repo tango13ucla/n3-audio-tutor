@@ -456,20 +456,20 @@ def bilingual_ramp_guidance(imm_profile: dict) -> str:
     ramp_days = int(imm_profile.get("ramp_days", 700))
     day_num = int(imm_profile.get("day_of_365", 1))
     phase = str(imm_profile.get("phase", "n3_sprint"))
-    if ja_ratio < 0.22:
+    if ja_ratio < 0.20:
         return (
-            f"当前处于 {ramp_days} 天双语计划第 {day_num} 天（阶段：{phase}，目标日语占比约 {max(ja_pct, 10)}%）："
+            f"当前处于 {ramp_days} 天双语计划第 {day_num} 天（阶段：{phase}，目标日语占比约 {max(ja_pct, 14)}%）："
             "保持中文茶桌主骨架，每章在情绪最饱满处自然抛出一句完整日语示范句并用一两句大白话点透，顺手穿插已学高频词。"
         )
-    if ja_ratio < 0.38:
+    if ja_ratio < 0.44:
         return (
-            f"当前处于 {ramp_days} 天双语计划第 {day_num} 天（阶段：{phase}，目标日语占比约 {ja_pct}% · 冲刺 N2 听觉跃升期）："
-            "保持中文深度剖析骨架，但在引述日本媒体原话或三人短反应交锋处，每章自然穿插 2 到 3 组连续 2 轮的纯日语微对话（如共鸣、追问、轻反驳），说完无缝滑回中文纵深聊透。"
+            f"当前处于 {ramp_days} 天双语计划第 {day_num} 天（阶段：{phase}，目标日语占比约 {ja_pct}% · N2 连续日语微对话期）："
+            "保持中文深度剖析骨架，但绝不仅仅在中文里散嵌单个词，每章必须安排 1 到 2 段连续 4 到 6 轮不切回中文的纯日语微对话（如引述日本新闻现场、当事人争论或三人用自然东京口语交锋，刻意包含日语动词在句尾的完整长句），说完再自然滑回中文纵深点评。"
         )
-    if ja_ratio < 0.65:
+    if ja_ratio < 0.72:
         return (
             f"当前处于 {ramp_days} 天双语计划第 {day_num} 天（阶段：{phase}，目标日语占比约 {ja_pct}% · N1 双轨沉浸期）："
-            "采用中日双轨交替叙事，约一半对话段落直接以自然东京语速纯日语推进讨论，中文保留给精妙典故类比、冷幽默吐槽与高阶微妙语感点拨。"
+            "采用中日双轨交替叙事，约一半以上对话段落直接以自然东京语速连续纯日语推进讨论（每段连续 8 到 12 轮不中断，练透真实语速下的 SOV 句法与委婉语气），中文仅保留给精妙典故类比、冷幽默吐槽与高阶微妙语感点拨。"
         )
     return (
         f"当前处于 {ramp_days} 天双语计划第 {day_num} 天（阶段：{phase}，目标日语占比约 {ja_pct}% · 准母语沙龙期）："
