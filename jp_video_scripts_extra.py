@@ -113,6 +113,55 @@ EXTRA_CURATED_VISUAL_TOPICS: dict[str, dict[str, list[str]]] = {
             "Microbiology bacteria laboratory microscope",
         ],
     },
+    # ---- Vol.26 (Shunryu Suzuki / Kobun Otogawa / Kawase Hasui & Saiho-ji / Issey Miyake & Tsubame-Sanjo / 20W Brain) ----
+    "uchi26_s1_news_fallback": {
+        "ja_wiki": ["鈴木俊隆", "禅", "曹洞宗"],
+        "wm_queries": [
+            "San Francisco Zen Center meditation hall",
+            "Japanese Zen temple garden stone quiet",
+            "Sokoji San Francisco Japantown",
+        ],
+    },
+    "uchi26_s2a_otogawa_zen_part1": {
+        "ja_wiki": ["永平寺", "坐禅", "曹洞宗"],
+        "wm_queries": [
+            "Eihei-ji temple Fukui Japan",
+            "Japanese zen monastery wooden corridor",
+            "Zazen meditation zen hall Japan",
+        ],
+    },
+    "uchi26_s2b_otogawa_next_part2": {
+        "ja_wiki": ["永平寺", "ヨセミテ国立公園", "禅画"],
+        "wm_queries": [
+            "Yosemite Valley winter snow California",
+            "Enso zen ink calligraphy circle",
+            "Eihei-ji temple cedar forest",
+        ],
+    },
+    "uchi26_s3a_hasui_kyoto_part1": {
+        "ja_wiki": ["川瀬巴水", "西芳寺", "新版画"],
+        "wm_queries": [
+            "Kawase Hasui Zojoji snow shin-hanga woodblock",
+            "Saiho-ji moss temple Kyoto garden",
+            "Traditional Japanese ryokan wooden room Kyoto",
+        ],
+    },
+    "uchi26_s3b_miyake_craft_part2": {
+        "ja_wiki": ["三宅一生", "燕市", "金属加工"],
+        "wm_queries": [
+            "Tsubame Sanjo metalwork polishing Japan",
+            "Issey Miyake minimalist fashion design",
+            "Japanese craftsman mirror polishing stainless steel",
+        ],
+    },
+    "uchi26_s4_world_attention_neuro": {
+        "ja_wiki": ["ニューロモルフィック", "核磁気共鳴画像法", "前頭前野"],
+        "wm_queries": [
+            "confocal fluorescence brain neuron",
+            "DTI Brain Tractographic",
+            "Ryoan-ji zen garden Kyoto",
+        ],
+    },
 }
 
 
@@ -1375,6 +1424,103 @@ EXTRA_CURATED_JP_VIDEO_SCRIPTS: dict[str, dict[str, Any]] = {
                 "v": "M",
                 "ja": "地下の治水も職場の知恵も腸内の小さな生態系も、見えない基盤を整える力が暮らしを支えます。",
                 "zh": "无论地底防洪、职场默契还是肠道微生态，把看不见的根基理顺的力量，才托起了日常安稳。",
+            },
+        ],
+    },
+    # ---- Vol.26: 铃木俊隆与乙川弘文 + 川濑巴水与京都苔寺 + 三宅一生与燕三条 + 二十瓦人脑与神经形态芯片 ----
+    "uchi26_s2a_otogawa_zen_part1": {
+        "title_ja": "ジョブズを導いた日本の師匠たちと、引き算の美学",
+        "title_zh": "影响乔布斯的日本大师与跨越太平洋的减法美学",
+        "lines": [
+            {
+                "ch": 0,
+                "v": "M",
+                "ja": "一九五九年、曹洞宗の僧侶である鈴木俊隆さんは五十五歳でサンフランシスコへ渡りました。",
+                "zh": "1959年，五十五岁的曹洞宗僧人铃木俊隆远渡重洋来到旧金山。",
+            },
+            {
+                "ch": 0,
+                "v": "F",
+                "ja": "毎朝の坐禅から生まれた『禅マインド・ビギナーズ・マインド』は、シリコンバレーの若い世代に強い印象を残したのですね。",
+                "zh": "从每日清晨坐禅诞生的《禅者的初心》，给硅谷年轻一代留下了极深印象。",
+            },
+            {
+                "ch": 1,
+                "v": "M",
+                "ja": "その後、永平寺で修行を積んだ乙川弘文さんが来米し、若き日のジョブズの近くで静かな禅堂を開きました。",
+                "zh": "此后在永平寺苦修的乙川弘文赴美，在年轻乔布斯家附近建起一座静谧禅堂。",
+            },
+            {
+                "ch": 1,
+                "v": "F",
+                "ja": "出家を望んだ十九歳のジョブズに対し、師匠は俗世のものづくりこそ修行だとしっかり諭したそうです。",
+                "zh": "面对十九岁执意出家的乔布斯，禅师清晰点拨他：在俗世造出好东西本身就是修行。",
+            },
+            {
+                "ch": 2,
+                "v": "M",
+                "ja": "後に新会社の精神顧問となり、ヨセミテでの結婚式も導いた姿は、珍しい師弟の象徴として記憶されています。",
+                "zh": "后来担任新公司精神顾问并在优胜美地证婚，这段罕见师徒情成为时代象征与记忆。",
+            },
+            {
+                "ch": 2,
+                "v": "F",
+                "ja": "余計な飾りを削り落とす感覚が、だんだん彼の製品設計の核になっていったわけですね。",
+                "zh": "削去多余装饰的直觉，就这样渐渐长成了他产品设计最深处的内核。",
+            },
+            {
+                "ch": 3,
+                "v": "M",
+                "ja": "視覚の面で彼を魅了したのが、新版画を代表する川瀬巴水の雪夜と京都・西芳寺の静かな庭でした。",
+                "zh": "在视觉审美上彻底打动他的，是新版画代表大师川濑巴水的雪夜与京都西芳寺苔庭。",
+            },
+            {
+                "ch": 3,
+                "v": "F",
+                "ja": "妥協した家具を置かず、八年も空の部屋で暮らした逸話は、美意識の厳しいルールをはっきり物語りますね。",
+                "zh": "宁可八年不买将就的家具也守着空屋，这桩轶事清清楚楚道出他严苛的审美准则。",
+            },
+            {
+                "ch": 4,
+                "v": "M",
+                "ja": "さらにソニーの盛田昭夫さんとの縁から、三宅一生さんに自分だけの黒のセーターを百着作ってもらいました。",
+                "zh": "借着拜访索尼盛田昭夫的机缘，他又请三宅一生专为自己定制了一百件黑色高领衫。",
+            },
+            {
+                "ch": 4,
+                "v": "F",
+                "ja": "初代携帯音楽プレーヤーの裏面も、新潟・燕三条の町工場の職人が鏡のようにすっきり磨ききったのですね。",
+                "zh": "连初代随身听的不锈钢背壳，也是新潟燕三条町工厂匠人亲手抛光得如镜面般通透。",
+            },
+            {
+                "ch": 4,
+                "v": "M",
+                "ja": "日本の手仕事とシリコンバレーの設計が出会い、世界市場の常識を書き換えたのです。",
+                "zh": "日本百年手艺与硅谷设计相遇，联手改写了全球科技市场的审美常识。",
+            },
+            {
+                "ch": 5,
+                "v": "F",
+                "ja": "最後に現代の科学へ目を向けると、人工知能の電力が急増する一方、人間の脳はわずか二十ワットで動いています。",
+                "zh": "最后把目光投向当代科学：人工智能耗电狂飙之际，人脑却仅靠二十瓦功率运转。",
+            },
+            {
+                "ch": 5,
+                "v": "M",
+                "ja": "必要な時だけ働く脳の構造に学ぶ次世代チップの研究が、日本と世界の研究機関で進んでいます。",
+                "zh": "向人脑「仅在必要时工作」的省电结构偷师的新一代类脑芯片，正成为全球研究焦点。",
+            },
+            {
+                "ch": 5,
+                "v": "F",
+                "ja": "通知の刺激が減るほど集中力が戻るという脳科学の知見も、禅の引き算とぴたり重なりますね。",
+                "zh": "弹窗刺激越少、专注力越容易回来的脑科学发现，也与禅意减法不谋而合。",
+            },
+            {
+                "ch": 5,
+                "v": "M",
+                "ja": "古い禅堂の静けさも最新半導体の構造も、余計なものを減らす勇気こそが本質を守る象徴です。",
+                "zh": "无论古朴禅堂的清静还是前沿芯片结构，敢于减去多余杂音的勇气，正是守护本质的象征。",
             },
         ],
     },

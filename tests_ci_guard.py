@@ -994,12 +994,24 @@ def test_v44_anti_tourist_kanazawa_and_feedback_guard() -> None:
 
     # 3. Zero banned tourist/Japan-101 cliches across ALL upcoming pre-exam, reserve, and N2 preview volumes
     pat = dnsg.BANNED_TOURIST_CLICHE_RE
-    for vnum in (12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 24, 25):
+    for vnum in (12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 24, 25, 26):
         mod = importlib.import_module(f"radio_salon_uchi_vol{vnum}")
         for st in getattr(mod, f"SALON_STORIES_UCHI_VOL{vnum}"):
             txt = st.get("title", "") + "\n" + "\n".join(t[1] for t in st.get("turns", []))
             m = pat.search(txt)
             assert not m, f"Vol.{vnum} {st['id']} contains banned tourist cliche: {m.group(0)}"
+    # 3b. 2026-11-28 dry-test MUST select Vol.26 (Japanese Masters Who Shaped Steve Jobs) & satisfy v46 storycraft floor
+    rad_28 = subprocess.run(
+        [sys.executable, str(BASE_DIR / "generate_daily_radio.py"), "--dry-test", "--dry-date", "2026-11-28"],
+        cwd=str(BASE_DIR), check=True, capture_output=True, text=True,
+    ).stdout
+    for exp26 in ("uchi26_s2a_otogawa_zen_part1", "uchi26_s2b_otogawa_next_part2", "uchi26_s3a_hasui_kyoto_part1", "uchi26_s3b_miyake_craft_part2"):
+        assert exp26 in rad_28, f"2026-11-28 dry-test missing Vol.26 chapter {exp26}: {rad_28}"
+    v26 = importlib.import_module("radio_salon_uchi_vol26")
+    stories26 = v26.SALON_STORIES_UCHI_VOL26
+    tot_chars26 = sum(len(t[1]) for s in stories26 for t in s["turns"])
+    tot_pts26 = sum(len(s.get("point_ids") or []) for s in stories26)
+    assert tot_pts26 <= 20 and tot_chars26 / max(1, tot_pts26) >= 580, f"Vol.26 pacing violation: {tot_chars26} chars / {tot_pts26} pts"
     n2_prev_txt = (BASE_DIR / "n2_prep" / "n2_radio_vol1_preview.py").read_text(encoding="utf-8")
     assert not pat.search(n2_prev_txt), "n2_radio_vol1_preview.py contains banned tourist cliche!"
 
@@ -1113,8 +1125,8 @@ def test_v45_broadcast_authenticity_guard() -> None:
     evs = gdr.split_mandarin_natural("W", "《锵锵三人行》！前些年我坐北陆新干线去石川。", "W_MID")
     assert len(evs) >= 3 and evs[0] == ("W_JAB", "《锵锵三人行》。") and evs[1] == ("PAUSE", 0.34), f"Missing Dou Wentao 0.34s opening beat: {evs}"
 
-    # 5. Upcoming episodes (Vol.18, 12, 13, 24, 25) MUST end with >=10 pure-Chinese banter turns (>=250 chars) for 12s smooth fade-out
-    for vnum in (18, 12, 13, 24, 25):
+    # 5. Upcoming episodes (Vol.18, 12, 13, 24, 25, 26) MUST end with >=10 pure-Chinese banter turns (>=250 chars) for 12s smooth fade-out
+    for vnum in (18, 12, 13, 24, 25, 26):
         mod = importlib.import_module(f"radio_salon_uchi_vol{vnum}")
         last_st = getattr(mod, f"SALON_STORIES_UCHI_VOL{vnum}")[-1]
         tail10 = last_st["turns"][-10:]
@@ -1187,9 +1199,9 @@ def test_v46_stereo_cognitive_n2_long_horizon_guard() -> None:
     import radio_review_builder as rrb
     from n2_prep import n2_curriculum_engine as n2ce
 
-    # 1. ALL remaining unplayed N3 volumes (12..22, 24, 25) + N2 Vol.1..3 have >=10 pure-Chinese fade-out turns & zero TTS landmines
+    # 1. ALL remaining unplayed N3 volumes (12..22, 24, 25, 26) + N2 Vol.1..3 have >=10 pure-Chinese fade-out turns & zero TTS landmines
     bad_tts_re = re.compile(r"[A-Za-z0-9—]|哈哈|噗")
-    for vnum in (12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 25):
+    for vnum in (12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 25, 26):
         mod = importlib.import_module(f"radio_salon_uchi_vol{vnum}")
         last_st = getattr(mod, f"SALON_STORIES_UCHI_VOL{vnum}")[-1]
         tail10 = last_st["turns"][-10:]

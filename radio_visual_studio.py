@@ -374,6 +374,23 @@ CURATED_ARCHIVAL_FOOTAGE: dict[str, list[dict[str, Any]]] = {
     "uchi25_s3b_shinise_part2": [
         {"src": "wm", "id": "File:Un pont à Kyoto (1897).webm", "ss": 22, "label": "1897 Kyoto Heritage"},
     ],
+    # ---- Vol.26 (Japanese Masters Who Shaped Steve Jobs + 20W Brain & Neuromorphic Science) ----
+    "uchi26_s1_news_fallback": [
+        {"src": "wm", "id": "File:Drone flyover video of Mount Hiei.webm", "ss": 40, "label": "Kyoto Zen Mountain Silence"},
+    ],
+    "uchi26_s2a_otogawa_zen_part1": [
+        {"src": "wm", "id": "File:Drone flyover video of Mount Hiei.webm", "ss": 40, "label": "Eihei-ji & Mountain Zen"},
+    ],
+    "uchi26_s3a_hasui_kyoto_part1": [
+        {"src": "wm", "id": "File:Yukigesho, le maquillage de neige.webm", "ss": 45, "label": "Kyoto Snow Temple Silence"},
+        {"src": "wm", "id": "File:Un pont à Kyoto (1897).webm", "ss": 22, "label": "1897 Historical Kyoto"},
+    ],
+    "uchi26_s3b_miyake_craft_part2": [
+        {"src": "ia", "id": "gov.archives.arc.642010", "ss": 980, "label": "1960 Japan Precision Craft"},
+    ],
+    "uchi26_s4_world_attention_neuro": [
+        {"src": "wm", "id": "File:7 Tesla MRI of the ex vivo human brain at 100 micron resolution (100 micron MRI acquired FA25 coronal).webm", "ss": 35, "label": "7-Tesla Brain MRI"},
+    ],
 }
 
 # Theme-matched visually-audited HD footage fallback pool for future live-authored news / N2 episodes
