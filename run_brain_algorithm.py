@@ -485,6 +485,16 @@ def apply_practice_logs(state: dict, fallback_day_tag: str = "") -> int:
                         rv_fast[pt] = max(str(rv_fast.get(pt) or ""), day_tag_rv)
                     continue
 
+                # Grammar Mini-Podcast Completion ("GPOD:<gid>", choice="语法微课:听完")
+                if rec_id.startswith("GPOD:") or choice.startswith("语法微课:"):
+                    applied += 1
+                    gid_gp = rec_id[5:].strip() if rec_id.startswith("GPOD:") else pt
+                    day_tag_gp = _iso_to_day_tag(ts, fallback_day_tag)
+                    if gid_gp:
+                        gp_heard = state.setdefault("gpod_heard", {})
+                        gp_heard[gid_gp] = max(str(gp_heard.get(gid_gp) or ""), day_tag_gp)
+                    continue
+
                 # Never auto-promote passive timer events
                 if choice == "闪卡:顺过":
                     continue
@@ -832,7 +842,7 @@ def reconcile_adaptive_telemetry(state: dict, fallback_day_tag: str = "") -> Non
     # 4) Rebuild active `confusion_pairs` (real wrong option selections, never "不确定", retired once green)
     conf_counts: dict[str, dict[str, int]] = {}
     conf_last_day: dict[str, str] = {}
-    skip_choice_prefixes = ("记词:", "闪卡:", "盘点:", "听后复盘:", "开口:", "试读:", "Grok:", "N3实考:")
+    skip_choice_prefixes = ("记词:", "闪卡:", "盘点:", "听后复盘:", "语法微课:", "开口:", "试读:", "Grok:", "N3实考:")
     if os.path.exists(LOG_PATH):
         try:
             with open(LOG_PATH, encoding="utf-8") as lf:
@@ -845,7 +855,7 @@ def reconcile_adaptive_telemetry(state: dict, fallback_day_tag: str = "") -> Non
                     except Exception:
                         continue
                     rec_id = str(rec.get("id") or rec.get("question_id") or "").strip()
-                    if not rec_id or rec_id.startswith(("LK:", "HES:", "SPK:", "RV:", "RADIO_FB:", "N3_SCORE:", "GA-", "VC-", "FLASH-", "GROK-", "N3L-", "N3-L", "L-")):
+                    if not rec_id or rec_id.startswith(("LK:", "HES:", "SPK:", "RV:", "GPOD:", "RADIO_FB:", "N3_SCORE:", "GA-", "VC-", "FLASH-", "GROK-", "N3L-", "N3-L", "L-")):
                         continue
                     if rec_id.startswith("MOCK:"):
                         inner_id = rec_id[5:].strip()
@@ -1174,9 +1184,13 @@ def main():
         subprocess.run([sys.executable, os.path.join(BASE_DIR, "generate_neural_audio.py")], check=True)
     elif radio_only:
         subprocess.run([sys.executable, os.path.join(BASE_DIR, "generate_daily_radio.py")], check=True)
+        if os.path.exists(os.path.join(BASE_DIR, "generate_grammar_pods.py")):
+            subprocess.run([sys.executable, os.path.join(BASE_DIR, "generate_grammar_pods.py"), "--daily-batch", "4"], check=False)
     elif not sync_only:
         subprocess.run([sys.executable, os.path.join(BASE_DIR, "generate_neural_audio.py")], check=True)
         subprocess.run([sys.executable, os.path.join(BASE_DIR, "generate_daily_radio.py")], check=True)
+        if os.path.exists(os.path.join(BASE_DIR, "generate_grammar_pods.py")):
+            subprocess.run([sys.executable, os.path.join(BASE_DIR, "generate_grammar_pods.py"), "--daily-batch", "4"], check=False)
 
     if not sync_only:
         subprocess.run([sys.executable, os.path.join(BASE_DIR, "build_html.py")], check=True)

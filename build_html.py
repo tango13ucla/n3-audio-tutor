@@ -2264,6 +2264,30 @@ leech_words_payload = [str(x.get("word") or "") for x in (_leeches_info.get("voc
 from dialogue_blackboard_clinic import build_clinics_payload as _build_clinics_payload
 dialogue_clinics_payload = _build_clinics_payload(audio_manifest, plan_date_str)
 
+grammar_pods_payload = {"hosts": "文涛 · 文道 · 子东", "episodes": [], "heard": dict(live_state.get("gpod_heard") or {})}
+_gpod_mf_path = os.path.join(BASE_DIR, "audio", "grammar_pods", "manifest.json")
+if os.path.exists(_gpod_mf_path):
+    try:
+        _gmf = json.loads(open(_gpod_mf_path, encoding="utf-8").read())
+        if isinstance(_gmf, dict) and isinstance(_gmf.get("episodes"), list):
+            _cur_eps = []
+            for _ep in _gmf["episodes"]:
+                if not isinstance(_ep, dict) or not _ep.get("gid") or not _ep.get("audio_url"):
+                    continue
+                _ep_copy = dict(_ep)
+                # Map to today's quiz point_id if present in ordered_points
+                _matched_pid = ""
+                for _pk in (_ep_copy.get("point_keys") or [_ep_copy.get("point", "")]):
+                    if _pk in point_id_by_key:
+                        _matched_pid = point_id_by_key[_pk]
+                        break
+                _ep_copy["today_point_id"] = _matched_pid
+                _cur_eps.append(_ep_copy)
+            grammar_pods_payload["episodes"] = _cur_eps
+            grammar_pods_payload["updated_at"] = _gmf.get("updated_at", "")
+    except Exception:
+        pass
+
 payload = json.dumps({
     "plan_date": plan_date_str,
     "phase": active_phase,
@@ -2275,6 +2299,7 @@ payload = json.dumps({
     "days_to_exam": _days_to_exam,
     "done_audio": "./audio/done.mp3",
     "radio": radio_meta,
+    "grammar_pods": grammar_pods_payload,
     "points": ordered_points,
     "words": rich_words,
     "asr_kana": asr_kana_map,
@@ -3621,7 +3646,8 @@ html = r"""<!DOCTYPE html>
   .inline-lex:active {
     background: var(--soft-bg);
   }
-  #radio-inline-lex {
+  #radio-inline-lex,
+  #gpod-inline-lex {
     bottom: 0;
     box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.14);
   }
@@ -4238,15 +4264,379 @@ html = r"""<!DOCTYPE html>
   }
 
   #radio-player-stage.hidden,
-  #radio-review-stage.hidden { display: none !important; }
+  #radio-review-stage.hidden,
+  #radio-gpod-stage.hidden { display: none !important; }
   #radio-player-stage,
-  #radio-review-stage {
+  #radio-review-stage,
+  #radio-gpod-stage {
     flex: 1;
     min-height: 0;
     overflow: hidden;
     display: flex;
     flex-direction: column;
   }
+
+  /* 4A-2. 《锵锵语法微课》 Zen Channel Switcher & Car-Ready Mini-Podcast Sanctuary (v92) */
+  .radio-subnav {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 0 6px;
+    border-bottom: 1px solid var(--hairline);
+    margin-bottom: 4px;
+  }
+  .radio-subtabs {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+  .radio-subtab {
+    min-height: 36px;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--ink-3);
+    padding: 6px 2px;
+    letter-spacing: 0.05em;
+    position: relative;
+    transition: color 0.18s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    touch-action: manipulation;
+  }
+  .radio-subtab.active {
+    color: var(--sumi);
+    font-weight: 600;
+  }
+  .radio-subtab.active::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -7px;
+    height: 1.5px;
+    background: var(--sumi);
+  }
+  .radio-subtab-cnt {
+    font-size: 11.5px;
+    font-weight: 400;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .radio-submeta {
+    font-size: 12px;
+    color: var(--ink-3);
+    letter-spacing: 0.03em;
+    font-variant-numeric: tabular-nums;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .gpod-sheet-trigger {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--ink-2);
+    padding: 5px 8px;
+    margin-right: -8px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    touch-action: manipulation;
+  }
+  .gpod-sheet-trigger:active { background: var(--tap-bg); }
+  .gpod-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ochre);
+    flex-shrink: 0;
+    display: inline-block;
+  }
+  .gpod-dot.heard { background: var(--moss); }
+  .gpod-center {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 8px 0 6px;
+    gap: 10px;
+    overflow: hidden;
+  }
+  .gpod-point {
+    margin: 0;
+    font-family: var(--sans-jp);
+    font-size: clamp(27px, 7.6vw, 37px);
+    font-weight: 300;
+    line-height: 1.24;
+    letter-spacing: 0.02em;
+    color: var(--sumi);
+    text-wrap: balance;
+  }
+  .gpod-meaning {
+    margin: 0;
+    font-size: clamp(16px, 4.2vw, 18.5px);
+    font-weight: 400;
+    line-height: 1.45;
+    color: var(--ink-2);
+    text-wrap: pretty;
+  }
+  .gpod-hook {
+    margin: 0;
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--ink-3);
+    text-wrap: pretty;
+  }
+  .gpod-twin {
+    margin: -4px 0 0;
+    font-size: 12.5px;
+    line-height: 1.48;
+    color: var(--ink-3);
+    opacity: 0.85;
+    text-wrap: pretty;
+  }
+  .gpod-ex-wrap {
+    margin-top: 6px;
+    padding-top: 14px;
+    border-top: 1px solid var(--hairline);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .gpod-ex {
+    margin: 0;
+    font-family: var(--sans-jp);
+    font-size: clamp(15.5px, 4vw, 17.5px);
+    font-weight: 400;
+    line-height: 1.66;
+    color: var(--sumi);
+    word-break: auto-phrase;
+    overflow-wrap: break-word;
+  }
+  .gpod-ex-zh {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--ink-3);
+    text-wrap: pretty;
+  }
+  .chap-link.gpod-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--sans-jp);
+  }
+  .chap-link.gpod-chip .gpod-chip-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--moss);
+    flex-shrink: 0;
+  }
+  @media (max-height: 700px) {
+    .radio-subnav { padding: 0 0 4px; margin-bottom: 2px; }
+    .radio-subtab { min-height: 32px; font-size: 13px; padding: 4px 2px; }
+    .radio-subtab.active::after { bottom: -5px; }
+    .gpod-center { padding: 4px 0 4px; gap: 6px; }
+    .gpod-point { font-size: 25px; }
+    .gpod-meaning { font-size: 15px; }
+    .gpod-hook { font-size: 12.5px; line-height: 1.42; }
+    .gpod-twin { font-size: 11.8px; line-height: 1.38; margin-top: -2px; }
+    .gpod-ex-wrap { margin-top: 4px; padding-top: 10px; gap: 4px; }
+    .gpod-ex { font-size: 14.5px; line-height: 1.48; }
+    .gpod-ex-zh { font-size: 12px; }
+    .point-heading { font-size: 24px !important; margin-bottom: 2px !important; }
+    .point-sub { font-size: 13px !important; margin-bottom: 8px !important; }
+    .zen-pair { margin: 6px 0 !important; }
+    .zen-pair-row { padding: 7px 0 !important; }
+    .zp-ja { font-size: 15.5px !important; }
+    .zp-sub { font-size: 12px !important; }
+    .example-line { font-size: 15px !important; line-height: 1.45 !important; margin-top: 6px !important; }
+    .example-zh { font-size: 12px !important; margin-top: 2px !important; }
+  }
+
+  /* Inline 2-Min Qiang-Qiang Grammar Micro-Pod Strip inside Preparation ("考点梳理") */
+  .teach-gpod-strip {
+    position: relative;
+    margin-top: 14px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px 10px 14px;
+    border-radius: 12px;
+    background: var(--sheet);
+    border: 1px solid var(--hairline);
+    color: var(--sumi);
+    text-align: left;
+    overflow: hidden;
+    transition: background-color 0.18s ease, border-color 0.18s ease;
+    touch-action: manipulation;
+  }
+  .teach-gpod-strip.is-playing,
+  .teach-gpod-strip.is-heard {
+    background: var(--moss-soft);
+    border-color: var(--moss-border);
+  }
+  .teach-gpod-strip:active { opacity: 0.82; }
+  .teach-gpod-rail {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    background: transparent;
+  }
+  .teach-gpod-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--moss);
+    transition: width 0.25s linear;
+  }
+  .teach-gpod-left {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .teach-gpod-top {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--sumi);
+    line-height: 1.3;
+  }
+  .teach-gpod-sub {
+    font-size: 12px;
+    color: var(--ink-3);
+    line-height: 1.35;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .teach-gpod-circle {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid var(--hairline-strong);
+    background: var(--washi);
+    color: var(--sumi);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .teach-gpod-strip.is-playing .teach-gpod-circle,
+  .teach-gpod-strip.is-heard .teach-gpod-circle {
+    border-color: var(--moss-border);
+    color: var(--moss);
+  }
+  @media (max-height: 700px) {
+    .teach-gpod-strip { margin-top: 10px; padding: 8px 10px 8px 12px; }
+  }
+
+  /* Calm Bottom Sheet Episode Picker ("语法微课选集") */
+  .gpod-sheet-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .gpod-sheet-title {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--sumi);
+  }
+  .gpod-sheet-stat {
+    font-size: 12.5px;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .gpod-sheet-list {
+    display: flex;
+    flex-direction: column;
+    max-height: 56vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -4px;
+    padding: 0 4px;
+  }
+  .gpod-sheet-row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 11px 6px;
+    border-bottom: 1px solid var(--hairline);
+    text-align: left;
+    touch-action: manipulation;
+  }
+  .gpod-sheet-row:last-child { border-bottom: none; }
+  .gpod-sheet-row:active { background: var(--tap-bg); border-radius: 8px; }
+  .gpod-sheet-row.active .gpod-sr-pt { color: var(--moss); font-weight: 500; }
+  .gpod-sr-left {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .gpod-sr-pt {
+    font-family: var(--sans-jp);
+    font-size: 15.5px;
+    font-weight: 400;
+    color: var(--sumi);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .gpod-sr-sub {
+    font-size: 12.5px;
+    color: var(--ink-3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .gpod-sr-right {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .gpod-sr-done {
+    color: var(--moss);
+    font-weight: 500;
+  }
+
+  /* Quiet Ledger Micro-Pod Link inside Expanded Grammar Row */
+  .li-gpod-btn {
+    margin-left: auto;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--sumi);
+    padding: 4px 8px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    touch-action: manipulation;
+  }
+  .li-gpod-btn.heard {
+    color: var(--moss);
+  }
+  .li-gpod-btn:active { background: var(--tap-bg); }
 
   /* Zen Cinema Frame + Live Synchronized Subtitles (Post-Listening 5-Minute Visual Review) */
   .rv-cinema {
@@ -8290,8 +8680,15 @@ html = r"""<!DOCTYPE html>
     <div class="stage-wrap" id="voice-card"></div>
   </main>
 
-  <!-- 3B. THREE-HOST CULTURAL SALON SANCTUARY ("随身听") -->
+  <!-- 3B. THREE-HOST CULTURAL SALON SANCTUARY ("随身听" · 今日夜话 / 语法微课) -->
   <section class="zen-panel hidden" id="radio-view">
+    <div class="radio-subnav" id="radio-subnav" style="display:none;">
+      <div class="radio-subtabs">
+        <button type="button" class="radio-subtab active" id="rsub-daily" onclick="switchRadioChannel('daily')">今日夜话</button>
+        <button type="button" class="radio-subtab" id="rsub-gpod" onclick="switchRadioChannel('gpod')">语法微课<span class="radio-subtab-cnt" id="rsub-gpod-cnt"></span></button>
+      </div>
+      <div class="radio-submeta" id="radio-submeta"></div>
+    </div>
     <div class="stage-wrap">
       <div id="radio-player-stage">
         <div class="meta-bar">
@@ -8339,6 +8736,54 @@ html = r"""<!DOCTYPE html>
             <button class="play-toggle-btn" id="radio-play-btn" onclick="toggleRadioPlay()">播放</button>
             <button class="step-time-btn" onclick="seekRadioBy(15)">+15s</button>
             <button class="radio-spd-pill radio-pin-pill" id="radio-pin-btn" onclick="pinCurrentRadioMoment()">记一句</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="radio-gpod-stage" class="hidden">
+        <div class="meta-bar">
+          <span class="overline" id="gpod-overline">锵锵语法微课 · 文涛 · 文道 · 子东</span>
+          <span class="overline ok" id="gpod-status-pill" style="flex-shrink:0;"></span>
+        </div>
+
+        <div class="radio-body-wrap">
+          <div class="gpod-center" id="gpod-center">
+            <h2 class="gpod-point" id="gpod-point" lang="ja"></h2>
+            <p class="gpod-meaning" id="gpod-meaning"></p>
+            <p class="gpod-hook" id="gpod-hook"></p>
+            <p class="gpod-twin" id="gpod-twin"></p>
+            <div class="gpod-ex-wrap">
+              <p class="gpod-ex" id="gpod-ex" lang="ja"></p>
+              <p class="gpod-ex-zh" id="gpod-ex-zh"></p>
+            </div>
+          </div>
+          <div class="inline-lex empty" id="gpod-inline-lex" data-surface="">
+            <div class="ilex-top">
+              <div class="ilex-head"><span class="ilex-surf" lang="ja"></span><span class="ilex-kana"></span></div>
+              <button class="ilex-speak" type="button">发音</button>
+            </div>
+            <div class="ilex-zh"></div>
+            <div class="ilex-meta"></div>
+          </div>
+        </div>
+
+        <div class="radio-dock">
+          <div class="chapter-strip" id="gpod-ep-pills"></div>
+
+          <div class="scrub-wrap">
+            <input type="range" class="zen-range" id="gpod-seek" min="0" max="160" value="0" step="1" oninput="onGpodScrubPreview(this.value)" onchange="onGpodScrubCommit(this.value)" />
+            <div class="time-pair">
+              <span id="gpod-cur-time">00:00</span>
+              <span id="gpod-tot-time">02:30</span>
+            </div>
+          </div>
+
+          <div class="transport-row">
+            <button class="radio-spd-pill" id="gpod-spd-btn" onclick="cycleGpodSpeed()">1.0x</button>
+            <button class="step-time-btn" onclick="stepGpodEpisode(-1)">上一集</button>
+            <button class="play-toggle-btn" id="gpod-play-btn" onclick="toggleGpodPlay()">连播</button>
+            <button class="step-time-btn" onclick="stepGpodEpisode(1)">下一集</button>
+            <button class="radio-spd-pill radio-pin-pill" id="gpod-act-btn" onclick="onGpodRightAction()">选集</button>
           </div>
         </div>
       </div>
@@ -10821,6 +11266,56 @@ function prepareChoices(qObj, salt, pState) {
   return arr;
 }
 
+const GPOD_STORE_KEY = "n3_gpod_heard_v1";
+const GPOD_LIST = (DATA.grammar_pods && Array.isArray(DATA.grammar_pods.episodes)) ? DATA.grammar_pods.episodes : [];
+const GPOD_BY_GID = {};
+const GPOD_BY_KEY = {};
+GPOD_LIST.forEach((ep, idx) => {
+  ep._idx = idx;
+  if (ep.gid) GPOD_BY_GID[ep.gid] = ep;
+  if (ep.point) GPOD_BY_KEY[ep.point] = ep;
+  (ep.point_keys || []).forEach(pk => { if (pk) GPOD_BY_KEY[pk] = ep; });
+});
+
+function loadGpodHeardMap() {
+  const out = {};
+  const seeded = (DATA.grammar_pods && DATA.grammar_pods.heard && typeof DATA.grammar_pods.heard === "object") ? DATA.grammar_pods.heard : {};
+  Object.keys(seeded).forEach(gid => { if (seeded[gid]) out[gid] = seeded[gid]; });
+  try {
+    const raw = localStorage.getItem(GPOD_STORE_KEY);
+    if (raw) {
+      const obj = JSON.parse(raw);
+      if (obj && typeof obj === "object") {
+        Object.keys(obj).forEach(gid => { if (obj[gid]) out[gid] = obj[gid]; });
+      }
+    }
+  } catch (e) {}
+  return out;
+}
+
+const GPOD_HEARD = loadGpodHeardMap();
+
+function isGpodHeard(gid) {
+  return !!(gid && GPOD_HEARD[gid]);
+}
+
+function getGpodForPoint(ref) {
+  if (!ref || !GPOD_LIST.length) return null;
+  if (typeof ref === "string") {
+    return GPOD_BY_GID[ref] || GPOD_BY_KEY[ref] || null;
+  }
+  if (ref.gid && GPOD_BY_GID[ref.gid]) return GPOD_BY_GID[ref.gid];
+  if (ref.point_key && GPOD_BY_KEY[ref.point_key]) return GPOD_BY_KEY[ref.point_key];
+  if (ref.point && GPOD_BY_KEY[ref.point]) return GPOD_BY_KEY[ref.point];
+  if (ref.name && GPOD_BY_KEY[ref.name]) return GPOD_BY_KEY[ref.name];
+  // Match parent group (e.g. G-116 -> G-116f) or clean point prefix without parentheses
+  const rawPt = String(ref.point_key || ref.point || ref.name || "").trim();
+  const bare = rawPt.replace(/[（(][^）)]*[）)]/g, "").trim();
+  if (bare && GPOD_BY_KEY[bare]) return GPOD_BY_KEY[bare];
+  if (ref.gid === "G-116" && GPOD_BY_GID["G-116f"]) return GPOD_BY_GID["G-116f"];
+  return null;
+}
+
 function setupCurrentTurn(forcedId) {
   clearQuizRecallTimer();
   quizChoicesRevealed = true;
@@ -10834,6 +11329,10 @@ function setupCurrentTurn(forcedId) {
   }
   const p = getPointById(curPointId);
   const ps = A.pts[curPointId];
+  const _gpMatch = getGpodForPoint(p);
+  if (_gpMatch && isGpodHeard(_gpMatch.gid) && ps && !ps.audioPrimed) {
+    ps.audioPrimed = true;
+  }
   viewStage = (p && p.teach_first && ps && ps.status === "unseen" && !ps.audioPrimed && p.teach) ? "teach" : "quiz";
   activeQuizObj = getQuizForPoint(p, ps);
   const attemptSalt = (ps.wrongCount || 0) * 7 + (ps.passStreak || 0) * 3 + 1;
@@ -12068,16 +12567,20 @@ function openStoryArtModal(idx, overrideMedia) {
   showAppModal();
 }
 
+let activeAudioChannel = "daily";
+
 function setupMediaSession(segTitle) {
   if (!("mediaSession" in navigator)) return;
-  const title = segTitle || getCurrentRadioSegTitle();
+  const isGpod = activeAudioChannel === "gpod";
+  const curGp = (isGpod && typeof getCurrentGpodEpisode === "function") ? getCurrentGpodEpisode() : null;
+  const title = segTitle || (curGp ? `${curGp.point} · 锵锵语法微课 (${curGp._idx + 1}/${GPOD_LIST.length})` : getCurrentRadioSegTitle());
   try {
     if (!navigator.mediaSession.metadata || lastMediaTitle !== title) {
       let artwork = [];
       try {
-        const segArt = getCurrentRadioArtworkUrl();
+        const segArt = isGpod ? "./icon-512.png" : getCurrentRadioArtworkUrl();
         artwork = [
-          { src: new URL(segArt, location.href).href, sizes: "1280x720", type: "image/jpeg" },
+          { src: new URL(segArt, location.href).href, sizes: isGpod ? "512x512" : "1280x720", type: isGpod ? "image/png" : "image/jpeg" },
           { src: new URL("./icon-192.png", location.href).href, sizes: "192x192", type: "image/png" },
           { src: new URL("./icon-512.png", location.href).href, sizes: "512x512", type: "image/png" }
         ];
@@ -12085,22 +12588,32 @@ function setupMediaSession(segTitle) {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: title,
         artist: (DATA.radio && DATA.radio.hosts) || "文涛 · 文道 · 子东",
-        album: "JLPT N3",
+        album: isGpod ? "锵锵语法微课" : "JLPT N3",
         artwork: artwork
       });
       lastMediaTitle = title;
     }
     if (!mediaSessionHandlersBound) {
       const bind = (act, fn) => { try { navigator.mediaSession.setActionHandler(act, fn); } catch (e) {} };
-      bind("play", () => toggleRadioPlay(true));
-      bind("pause", () => toggleRadioPlay(false));
-      bind("stop", () => toggleRadioPlay(false));
-      bind("seekbackward", details => seekRadioBy(-(details && details.seekOffset > 0 ? details.seekOffset : 15)));
-      bind("seekforward", details => seekRadioBy(details && details.seekOffset > 0 ? details.seekOffset : 15));
-      bind("previoustrack", () => seekRadioBy(-15));
-      bind("nexttrack", () => seekRadioBy(15));
+      bind("play", () => activeAudioChannel === "gpod" ? toggleGpodPlay(true) : toggleRadioPlay(true));
+      bind("pause", () => activeAudioChannel === "gpod" ? toggleGpodPlay(false) : toggleRadioPlay(false));
+      bind("stop", () => activeAudioChannel === "gpod" ? toggleGpodPlay(false) : toggleRadioPlay(false));
+      bind("seekbackward", details => {
+        const off = -(details && details.seekOffset > 0 ? details.seekOffset : 15);
+        if (activeAudioChannel === "gpod") seekGpodBy(off); else seekRadioBy(off);
+      });
+      bind("seekforward", details => {
+        const off = details && details.seekOffset > 0 ? details.seekOffset : 15;
+        if (activeAudioChannel === "gpod") seekGpodBy(off); else seekRadioBy(off);
+      });
+      bind("previoustrack", () => activeAudioChannel === "gpod" ? stepGpodEpisode(-1, true) : seekRadioBy(-15));
+      bind("nexttrack", () => activeAudioChannel === "gpod" ? stepGpodEpisode(1, true) : seekRadioBy(15));
       bind("seekto", details => {
         if (!details || typeof details.seekTime !== "number" || !isFinite(details.seekTime)) return;
+        if (activeAudioChannel === "gpod") {
+          seekGpodTo(details.seekTime);
+          return;
+        }
         ensureRadioReady();
         applyRadioSeek(details.seekTime);
         markRadioPosByUser(details.seekTime);
@@ -12126,6 +12639,8 @@ function toggleRadioPlay(forcePlay) {
     syncRadioUI(false);
     return;
   }
+  activeAudioChannel = "daily";
+  if (typeof pauseGpodSilently === "function") pauseGpodSilently();
   if (typeof stopAllHandsFreeVoice === "function") stopAllHandsFreeVoice();
   else if (typeof stopVocabVoiceCoach === "function") stopVocabVoiceCoach(true);
   if (activeKind !== null || (typeof player !== "undefined" && !player.paused) || (typeof wordPlayer !== "undefined" && !wordPlayer.paused)) {
@@ -12406,6 +12921,9 @@ function updateRadioLiveDisplay(t) {
 
 function onMiniBarTap(e) {
   if (e && e.target && e.target.closest && e.target.closest(".rmb-play-btn")) return;
+  if (activeAudioChannel === "gpod" && GPOD_LIST.length) {
+    radioChannel = "gpod";
+  }
   switchMode("radio", false);
 }
 
@@ -12414,13 +12932,20 @@ function onMiniBarPlayToggle(e) {
     if (e.stopPropagation) e.stopPropagation();
     if (e.preventDefault) e.preventDefault();
   }
-  toggleRadioPlay();
+  if (activeAudioChannel === "gpod" && typeof toggleGpodPlay === "function") {
+    toggleGpodPlay();
+  } else {
+    toggleRadioPlay();
+  }
 }
 
 function onMiniBarJump(e) {
   if (e) {
     if (e.stopPropagation) e.stopPropagation();
     if (e.preventDefault) e.preventDefault();
+  }
+  if (activeAudioChannel === "gpod" && GPOD_LIST.length) {
+    radioChannel = "gpod";
   }
   switchMode("radio", false);
 }
@@ -12435,8 +12960,10 @@ function syncRadioMiniBar() {
     const shell = document.getElementById("app-shell");
     if (!bar) return;
     const isRadioTab = (activeMode === "radio");
-    const hasRadioSession = (typeof radioHasPlayedOnce !== "undefined" && radioHasPlayedOnce) || (typeof radioPlayer !== "undefined" && !radioPlayer.paused);
-    if (isRadioTab || !hasRadioSession) {
+    const isGpodChan = (activeAudioChannel === "gpod") && typeof gpodPlayer !== "undefined" && (gpodHasPlayedOnce || !gpodPlayer.paused);
+    const isTeachInlineGpod = isGpodChan && activeMode === "tutor" && viewStage === "teach" && gpodInlineMode;
+    const hasDailySession = (typeof radioHasPlayedOnce !== "undefined" && radioHasPlayedOnce) || (typeof radioPlayer !== "undefined" && !radioPlayer.paused);
+    if (isRadioTab || isTeachInlineGpod || (!hasDailySession && !isGpodChan)) {
       bar.classList.add("hidden");
       if (shell) shell.classList.remove("has-mini-bar");
       if (window.ZB && typeof window.ZB.syncMiniVisibility === "function") window.ZB.syncMiniVisibility();
@@ -12445,17 +12972,26 @@ function syncRadioMiniBar() {
     bar.classList.remove("hidden");
     if (shell) shell.classList.add("has-mini-bar");
     if (window.ZB && typeof window.ZB.syncMiniVisibility === "function") window.ZB.syncMiniVisibility();
-    const isPlaying = typeof radioPlayer !== "undefined" && !radioPlayer.paused;
+    const isPlaying = isGpodChan ? !gpodPlayer.paused : (typeof radioPlayer !== "undefined" && !radioPlayer.paused);
+    const isBuf = isGpodChan ? false : radioBuffering;
     const playBtn = document.getElementById("rmb-play-btn");
     if (playBtn) {
-      playBtn.innerHTML = isPlaying ? (radioBuffering ? RMB_LOAD_SVG : RMB_PAUSE_SVG) : RMB_PLAY_SVG;
-      playBtn.setAttribute("aria-label", isPlaying ? (radioBuffering ? "缓冲中" : "暂停") : "播放");
+      playBtn.innerHTML = isPlaying ? (isBuf ? RMB_LOAD_SVG : RMB_PAUSE_SVG) : RMB_PLAY_SVG;
+      playBtn.setAttribute("aria-label", isPlaying ? (isBuf ? "缓冲中" : "暂停") : "播放");
     }
     const wave = document.getElementById("rmb-wave-icon");
     if (wave) wave.classList.toggle("is-playing", isPlaying);
-    const dur = getEffectiveRadioDuration();
-    const curT = (pendingRadioSeekSec !== null) ? pendingRadioSeekSec : ((typeof radioPlayer !== "undefined" && radioPlayer.currentTime) || 0);
-    const curTitle = getCurrentRadioSegTitle();
+    let dur, curT, curTitle;
+    if (isGpodChan) {
+      const ep = getCurrentGpodEpisode();
+      dur = Math.max(1, (gpodPlayer.duration && isFinite(gpodPlayer.duration)) ? gpodPlayer.duration : ((ep && ep.duration_sec) || 150));
+      curT = gpodPlayer.currentTime || 0;
+      curTitle = ep ? `${ep.point} · 语法微课` : "锵锵语法微课";
+    } else {
+      dur = getEffectiveRadioDuration();
+      curT = (pendingRadioSeekSec !== null) ? pendingRadioSeekSec : ((typeof radioPlayer !== "undefined" && radioPlayer.currentTime) || 0);
+      curTitle = getCurrentRadioSegTitle();
+    }
     const titleEl = document.getElementById("rmb-title");
     if (titleEl) titleEl.textContent = curTitle;
     const timeEl = document.getElementById("rmb-time");
@@ -12470,12 +13006,14 @@ function syncRadioMiniBar() {
 
 function syncRadioUI(optimisticPlaying) {
   const playing = typeof optimisticPlaying === "boolean" ? optimisticPlaying : !radioPlayer.paused;
+  const gpodPlaying = typeof gpodPlayer !== "undefined" && !gpodPlayer.paused;
+  const anyPlaying = playing || gpodPlaying;
   const btn = document.getElementById("radio-play-btn");
   if (btn) btn.textContent = playing ? (radioBuffering ? "缓冲中…" : "暂停") : "播放";
   const tabBtn = document.getElementById("tab-radio");
-  if (tabBtn) tabBtn.classList.toggle("is-playing", playing);
+  if (tabBtn) tabBtn.classList.toggle("is-playing", anyPlaying);
   const bTabBtn = document.getElementById("btab-radio");
-  if (bTabBtn) bTabBtn.classList.toggle("is-playing", playing);
+  if (bTabBtn) bTabBtn.classList.toggle("is-playing", anyPlaying);
   syncRadioMiniBar();
 }
 
@@ -12632,6 +13170,553 @@ radioPlayer.addEventListener("timeupdate", () => {
       lastRadioCloudPushMs = Date.now();
       scheduleCloudPush(400);
     }
+  }
+});
+
+// ================= 《锵锵语法微课》 CAR-READY MINI-PODCAST ENGINE (v92) =================
+const gpodPlayer = new Audio();
+gpodPlayer.id = "gpod-audio";
+gpodPlayer.preload = "none";
+gpodPlayer.setAttribute("playsinline", "");
+gpodPlayer.style.position = "fixed";
+gpodPlayer.style.bottom = "-9999px";
+gpodPlayer.style.left = "-9999px";
+gpodPlayer.style.width = "1px";
+gpodPlayer.style.height = "1px";
+gpodPlayer.style.opacity = "0.001";
+gpodPlayer.style.pointerEvents = "none";
+try { if (document.body) document.body.appendChild(gpodPlayer); } catch (e) {}
+
+let radioChannel = "daily"; // "daily" | "gpod"
+let curGpodIdx = 0;
+let gpodLoadedGid = "";
+let gpodHasPlayedOnce = false;
+let gpodInlineMode = false;
+let gpodScrubActive = false;
+let gpodAutoNextTimer = null;
+
+function initDefaultGpodIdx() {
+  if (!GPOD_LIST.length) return 0;
+  const firstUnheard = GPOD_LIST.findIndex(ep => !isGpodHeard(ep.gid));
+  return firstUnheard >= 0 ? firstUnheard : 0;
+}
+curGpodIdx = initDefaultGpodIdx();
+
+function getCurrentGpodEpisode() {
+  if (!GPOD_LIST.length) return null;
+  const idx = Math.max(0, Math.min(GPOD_LIST.length - 1, curGpodIdx));
+  return GPOD_LIST[idx] || GPOD_LIST[0];
+}
+
+function getGpodHeardCount() {
+  let c = 0;
+  for (let i = 0; i < GPOD_LIST.length; i++) {
+    if (isGpodHeard(GPOD_LIST[i].gid)) c += 1;
+  }
+  return c;
+}
+
+function saveGpodHeardMap() {
+  try { localStorage.setItem(GPOD_STORE_KEY, JSON.stringify(GPOD_HEARD)); } catch (e) {}
+}
+
+function markGpodHeard(ep) {
+  if (!ep || !ep.gid) return;
+  const already = isGpodHeard(ep.gid);
+  const stamp = nowUnixSec();
+  if (!already) {
+    GPOD_HEARD[ep.gid] = stamp;
+    saveGpodHeardMap();
+    // Auto-prime any matching quiz point so Preparation ("考点梳理") is skipped when quizzing!
+    let primedAny = false;
+    (DATA.points || []).forEach(pt => {
+      const m = getGpodForPoint(pt);
+      if (m && m.gid === ep.gid && A.pts[pt.id] && !A.pts[pt.id].audioPrimed) {
+        A.pts[pt.id].audioPrimed = true;
+        primedAny = true;
+      }
+    });
+    if (primedAny) saveAdaptiveState();
+    const isoTs = new Date(stamp * 1000).toISOString();
+    const ob = loadOutbox();
+    ob.push([`GPOD:${ep.gid}`, ep.point || ep.gid, "语法微课:听完", 1, isoTs]);
+    saveOutbox(ob);
+    scheduleCloudPush(300);
+    renderRadioSubnav();
+    renderGpodPills();
+    updateGpodStatusUI();
+    syncTeachGpodStrip();
+  }
+}
+
+function pauseGpodSilently() {
+  if (gpodAutoNextTimer) { clearTimeout(gpodAutoNextTimer); gpodAutoNextTimer = null; }
+  try {
+    gpodPlayer.muted = false;
+    if (!gpodPlayer.paused) gpodPlayer.pause();
+  } catch (e) {}
+  syncGpodPlayUI(false);
+  syncTeachGpodStrip();
+}
+
+function renderRadioSubnav() {
+  const nav = document.getElementById("radio-subnav");
+  if (!nav) return;
+  if (!GPOD_LIST.length) {
+    nav.style.display = "none";
+    return;
+  }
+  nav.style.display = "flex";
+  const dBtn = document.getElementById("rsub-daily");
+  const gBtn = document.getElementById("rsub-gpod");
+  const cntEl = document.getElementById("rsub-gpod-cnt");
+  const metaEl = document.getElementById("radio-submeta");
+  if (dBtn) dBtn.classList.toggle("active", radioChannel === "daily");
+  if (gBtn) gBtn.classList.toggle("active", radioChannel === "gpod");
+  const heardCnt = getGpodHeardCount();
+  if (cntEl) cntEl.textContent = heardCnt > 0 ? `${heardCnt}/${GPOD_LIST.length}` : `${GPOD_LIST.length}集`;
+  if (metaEl) {
+    if (radioChannel === "gpod") {
+      const ep = getCurrentGpodEpisode();
+      const heard = ep && isGpodHeard(ep.gid);
+      metaEl.innerHTML = `<button type="button" class="gpod-sheet-trigger" onclick="openGpodQueueSheet()"><span class="gpod-dot${heard ? " heard" : ""}"></span><span>选集 ▾</span></button>`;
+    } else {
+      metaEl.innerHTML = "";
+    }
+  }
+}
+
+function renderGpodPills() {
+  const strip = document.getElementById("gpod-ep-pills");
+  if (!strip || !GPOD_LIST.length) return;
+  strip.innerHTML = GPOD_LIST.map((ep, idx) => {
+    const isAct = idx === curGpodIdx;
+    const isH = isGpodHeard(ep.gid);
+    const shortNm = String(ep.point || "").replace(/^[〜～]+/, "").replace(/[（(][^）)]*[）)]/g, "").trim() || ep.point;
+    return `<button type="button" class="chap-link gpod-chip${isAct ? " active" : ""}" onclick="selectGpodEpisode(${idx}, true, false)">${isH ? '<span class="gpod-chip-dot" aria-hidden="true"></span>' : ""}<span>${escapeHtml(shortNm)}</span></button>`;
+  }).join("");
+  if (!strip._fadeBound) {
+    strip._fadeBound = true;
+    strip.addEventListener("scroll", () => updateChapterStripFade(strip), { passive: true });
+  }
+  const syncScroll = () => {
+    const activeBtn = strip.querySelector ? strip.querySelector(".chap-link.active") : null;
+    if (activeBtn && typeof activeBtn.scrollIntoView === "function") {
+      try { activeBtn.scrollIntoView({ behavior: "auto", inline: "center", block: "nearest" }); } catch (e) {}
+    }
+    updateChapterStripFade(strip);
+  };
+  if (typeof requestAnimationFrame === "function") requestAnimationFrame(syncScroll);
+  else syncScroll();
+}
+
+function updateGpodStatusUI() {
+  const ep = getCurrentGpodEpisode();
+  if (!ep) return;
+  const ovEl = document.getElementById("gpod-overline");
+  if (ovEl) ovEl.textContent = `锵锵语法微课 · ${curGpodIdx + 1}/${GPOD_LIST.length}`;
+  const stEl = document.getElementById("gpod-status-pill");
+  if (stEl) {
+    const h = isGpodHeard(ep.gid);
+    stEl.textContent = h ? "已听完 ✓" : "";
+    stEl.classList.toggle("ok", h);
+  }
+  const actBtn = document.getElementById("gpod-act-btn");
+  if (actBtn) {
+    actBtn.textContent = ep.today_point_id ? "去练题" : "选集";
+  }
+}
+
+function renderGpodStage() {
+  const ep = getCurrentGpodEpisode();
+  if (!ep) return;
+  updateGpodStatusUI();
+  const ptEl = document.getElementById("gpod-point");
+  if (ptEl) ptEl.textContent = ep.point || "";
+  const mnEl = document.getElementById("gpod-meaning");
+  if (mnEl) mnEl.textContent = ep.meaning || "";
+  const hkEl = document.getElementById("gpod-hook");
+  if (hkEl) hkEl.textContent = ep.hook || "";
+  const twEl = document.getElementById("gpod-twin");
+  if (twEl) {
+    twEl.textContent = ep.twin || "";
+    twEl.style.display = ep.twin ? "" : "none";
+  }
+  const exEl = document.getElementById("gpod-ex");
+  if (exEl) exEl.innerHTML = ep.example_ja ? annotateJapanese(ep.example_ja) : "";
+  const exZhEl = document.getElementById("gpod-ex-zh");
+  if (exZhEl) exZhEl.textContent = ep.example_zh || "";
+  clearInlineLexicon("gpod-inline-lex");
+  const spdEl = document.getElementById("gpod-spd-btn");
+  if (spdEl) spdEl.textContent = `${radioSpeed}x`;
+  const dur = Math.max(1, (gpodLoadedGid === ep.gid && gpodPlayer.duration && isFinite(gpodPlayer.duration)) ? gpodPlayer.duration : (ep.duration_sec || 150));
+  const curT = (gpodLoadedGid === ep.gid) ? (gpodPlayer.currentTime || 0) : 0;
+  paintGpodSeek(curT, dur);
+  renderGpodPills();
+  renderRadioSubnav();
+  syncGpodPlayUI(!gpodPlayer.paused && gpodLoadedGid === ep.gid);
+}
+
+function paintGpodSeek(t, durOpt) {
+  const ep = getCurrentGpodEpisode();
+  const dur = Math.max(1, durOpt || (gpodPlayer.duration && isFinite(gpodPlayer.duration) ? gpodPlayer.duration : ((ep && ep.duration_sec) || 150)));
+  const seekEl = document.getElementById("gpod-seek");
+  if (seekEl) {
+    seekEl.max = Math.ceil(dur);
+    if (!gpodScrubActive) seekEl.value = Math.floor(t || 0);
+    const pct = Math.max(0, Math.min(100, ((t || 0) / dur) * 100));
+    seekEl.style.backgroundImage = `linear-gradient(to right, var(--moss) 0%, var(--moss) ${pct.toFixed(1)}%, var(--track) ${pct.toFixed(1)}%, var(--track) 100%)`;
+  }
+  const curEl = document.getElementById("gpod-cur-time");
+  if (curEl && !gpodScrubActive) curEl.textContent = formatMMSS(t || 0);
+  const totEl = document.getElementById("gpod-tot-time");
+  if (totEl) totEl.textContent = formatMMSS(dur);
+}
+
+function syncGpodPlayUI(optimisticPlaying) {
+  const playing = typeof optimisticPlaying === "boolean" ? optimisticPlaying : !gpodPlayer.paused;
+  const btn = document.getElementById("gpod-play-btn");
+  if (btn) btn.textContent = playing ? "暂停" : "连播";
+  const tabBtn = document.getElementById("tab-radio");
+  const anyPlaying = playing || (typeof radioPlayer !== "undefined" && !radioPlayer.paused);
+  if (tabBtn) tabBtn.classList.toggle("is-playing", anyPlaying);
+  const bTabBtn = document.getElementById("btab-radio");
+  if (bTabBtn) bTabBtn.classList.toggle("is-playing", anyPlaying);
+  syncRadioMiniBar();
+}
+
+function updateGpodMediaSessionPosition() {
+  if (activeAudioChannel !== "gpod") return;
+  if (!("mediaSession" in navigator) || typeof navigator.mediaSession.setPositionState !== "function") return;
+  try {
+    const ep = getCurrentGpodEpisode();
+    const dur = (gpodPlayer.duration && isFinite(gpodPlayer.duration) && gpodPlayer.duration > 0)
+      ? gpodPlayer.duration
+      : ((ep && ep.duration_sec) || 0);
+    if (!dur) return;
+    const pos = Math.max(0, Math.min(dur, gpodPlayer.currentTime || 0));
+    navigator.mediaSession.setPositionState({
+      duration: dur,
+      playbackRate: gpodPlayer.playbackRate || radioSpeed || 1,
+      position: pos
+    });
+  } catch (e) {}
+}
+
+function ensureGpodLoaded(ep) {
+  if (!ep) return;
+  if (gpodLoadedGid !== ep.gid) {
+    gpodLoadedGid = ep.gid;
+    gpodPlayer.src = ep.audio_url;
+    try { gpodPlayer.load(); } catch (e) {}
+  }
+  gpodPlayer.defaultPlaybackRate = radioSpeed;
+  gpodPlayer.playbackRate = radioSpeed;
+  if ("preservesPitch" in gpodPlayer) gpodPlayer.preservesPitch = true;
+}
+
+function selectGpodEpisode(idx, autoPlay, isInline) {
+  if (!GPOD_LIST.length) return;
+  if (gpodAutoNextTimer) { clearTimeout(gpodAutoNextTimer); gpodAutoNextTimer = null; }
+  curGpodIdx = ((idx % GPOD_LIST.length) + GPOD_LIST.length) % GPOD_LIST.length;
+  gpodInlineMode = !!isInline;
+  const ep = getCurrentGpodEpisode();
+  ensureGpodLoaded(ep);
+  if (!isInline) renderGpodStage();
+  if (autoPlay) toggleGpodPlay(true);
+}
+
+function toggleGpodPlay(forcePlay) {
+  if (!GPOD_LIST.length) return;
+  if (gpodAutoNextTimer) { clearTimeout(gpodAutoNextTimer); gpodAutoNextTimer = null; }
+  const ep = getCurrentGpodEpisode();
+  if (!ep) return;
+  const wantPlay = typeof forcePlay === "boolean" ? forcePlay : gpodPlayer.paused;
+  if (!wantPlay) {
+    gpodPlayer.muted = false;
+    gpodPlayer.pause();
+    if (activeAudioChannel === "gpod") {
+      setupMediaSession();
+      setMediaSessionPlaybackState("paused");
+      updateGpodMediaSessionPosition();
+    }
+    syncGpodPlayUI(false);
+    syncTeachGpodStrip();
+    return;
+  }
+  activeAudioChannel = "gpod";
+  if (typeof stopClinicAudio === "function") stopClinicAudio();
+  if (typeof stopAllHandsFreeVoice === "function") stopAllHandsFreeVoice();
+  else if (typeof stopVocabVoiceCoach === "function") stopVocabVoiceCoach(true);
+  if (activeKind !== null || (typeof player !== "undefined" && !player.paused) || (typeof wordPlayer !== "undefined" && !wordPlayer.paused)) {
+    stopQuizAudio();
+  }
+  if (radioInitialized && !radioPlayer.paused) {
+    radioPlayer.muted = false;
+    radioPlayer.pause();
+    syncRadioUI(false);
+  }
+  ensureGpodLoaded(ep);
+  gpodPlayer.muted = false;
+  gpodPlayer.volume = 1;
+  gpodPlayer.playbackRate = radioSpeed;
+  setupMediaSession();
+  setMediaSessionPlaybackState("playing");
+  syncGpodPlayUI(true);
+  syncTeachGpodStrip();
+  const pr = gpodPlayer.play();
+  if (pr && typeof pr.then === "function") {
+    pr.then(() => {
+      gpodHasPlayedOnce = true;
+      setMediaSessionPlaybackState("playing");
+      updateGpodMediaSessionPosition();
+      syncGpodPlayUI(true);
+      syncTeachGpodStrip();
+    }).catch(() => {
+      setMediaSessionPlaybackState("paused");
+      syncGpodPlayUI(false);
+      syncTeachGpodStrip();
+    });
+  } else {
+    gpodHasPlayedOnce = true;
+    updateGpodMediaSessionPosition();
+  }
+}
+
+function stepGpodEpisode(delta, forcePlay) {
+  if (!GPOD_LIST.length) return;
+  const shouldPlay = typeof forcePlay === "boolean" ? forcePlay : !gpodPlayer.paused;
+  selectGpodEpisode(curGpodIdx + delta, shouldPlay, false);
+}
+
+function seekGpodTo(sec) {
+  const ep = getCurrentGpodEpisode();
+  if (!ep) return;
+  ensureGpodLoaded(ep);
+  const dur = Math.max(1, (gpodPlayer.duration && isFinite(gpodPlayer.duration)) ? gpodPlayer.duration : (ep.duration_sec || 150));
+  const nextT = Math.max(0, Math.min(dur - 0.5, sec || 0));
+  try { gpodPlayer.currentTime = nextT; } catch (e) {}
+  paintGpodSeek(nextT, dur);
+  updateGpodMediaSessionPosition();
+  syncRadioMiniBar();
+}
+
+function seekGpodBy(delta) {
+  seekGpodTo((gpodPlayer.currentTime || 0) + delta);
+}
+
+function onGpodScrubPreview(val) {
+  gpodScrubActive = true;
+  const t = parseFloat(val) || 0;
+  const curEl = document.getElementById("gpod-cur-time");
+  if (curEl) curEl.textContent = formatMMSS(t);
+  paintGpodSeek(t);
+}
+
+function onGpodScrubCommit(val) {
+  gpodScrubActive = false;
+  seekGpodTo(parseFloat(val) || 0);
+}
+
+function cycleGpodSpeed() {
+  cycleRadioSpeed();
+  gpodPlayer.defaultPlaybackRate = radioSpeed;
+  gpodPlayer.playbackRate = radioSpeed;
+  const el = document.getElementById("gpod-spd-btn");
+  if (el) el.textContent = `${radioSpeed}x`;
+  if (activeAudioChannel === "gpod") updateGpodMediaSessionPosition();
+}
+
+function onGpodRightAction() {
+  const ep = getCurrentGpodEpisode();
+  if (ep && ep.today_point_id) {
+    pauseGpodSilently();
+    jumpToPointById(ep.today_point_id);
+    return;
+  }
+  openGpodQueueSheet();
+}
+
+function switchRadioChannel(ch, opts) {
+  if (ch !== "daily" && ch !== "gpod") return;
+  if (ch === "gpod" && !GPOD_LIST.length) return;
+  radioChannel = ch;
+  if (radioReviewOpen) {
+    radioReviewOpen = false;
+    stopRadioReviewAudio();
+    const rvStage = document.getElementById("radio-review-stage");
+    if (rvStage) rvStage.classList.add("hidden");
+  }
+  const pStage = document.getElementById("radio-player-stage");
+  const gStage = document.getElementById("radio-gpod-stage");
+  if (pStage) pStage.classList.toggle("hidden", ch !== "daily");
+  if (gStage) gStage.classList.toggle("hidden", ch !== "gpod");
+  renderRadioSubnav();
+  if (ch === "gpod") {
+    gpodInlineMode = false;
+    if (opts && typeof opts.gid === "string") {
+      const idx = GPOD_LIST.findIndex(e => e.gid === opts.gid);
+      if (idx >= 0) curGpodIdx = idx;
+    }
+    renderGpodStage();
+    if (opts && opts.autoPlay) {
+      selectGpodEpisode(curGpodIdx, true, false);
+    }
+  } else {
+    ensureRadioReady();
+    syncRadioUI();
+  }
+}
+
+function openGpodQueueSheet() {
+  if (!GPOD_LIST.length) return;
+  const modal = document.getElementById("app-modal");
+  const content = document.getElementById("modal-content");
+  if (!modal || !content) return;
+  const heardCnt = getGpodHeardCount();
+  const rowsHTML = GPOD_LIST.map((ep, idx) => {
+    const h = isGpodHeard(ep.gid);
+    const act = idx === curGpodIdx;
+    return `
+      <button type="button" class="gpod-sheet-row${act ? " active" : ""}" onclick="closeModal();selectGpodEpisode(${idx}, true, false);">
+        <span class="gpod-sr-left">
+          <span class="gpod-sr-pt" lang="ja"><span class="gpod-dot${h ? " heard" : ""}"></span><span>${escapeHtml(ep.point)}</span></span>
+          <span class="gpod-sr-sub">${escapeHtml(ep.meaning || "")}</span>
+        </span>
+        <span class="gpod-sr-right">
+          ${h ? '<span class="gpod-sr-done">已听</span>' : ""}
+          <span>${escapeHtml(ep.duration_label || "2:30")}</span>
+        </span>
+      </button>
+    `;
+  }).join("");
+  content.innerHTML = `
+    <div class="gpod-sheet-head">
+      <h3 class="gpod-sheet-title">锵锵语法微课</h3>
+      <span class="gpod-sheet-stat">已听 ${heardCnt} / ${GPOD_LIST.length}</span>
+    </div>
+    <div class="gpod-sheet-list">${rowsHTML}</div>
+  `;
+  showAppModal();
+}
+
+function openGpodFromLedger(gid, ev) {
+  if (ev) {
+    if (ev.stopPropagation) ev.stopPropagation();
+    if (ev.preventDefault) ev.preventDefault();
+  }
+  radioChannel = "gpod";
+  switchMode("radio", false);
+  switchRadioChannel("gpod", { gid: gid, autoPlay: true });
+}
+
+function toggleTeachGpod(gid, ev) {
+  if (ev) {
+    if (ev.stopPropagation) ev.stopPropagation();
+    if (ev.preventDefault) ev.preventDefault();
+  }
+  const idx = GPOD_LIST.findIndex(e => e.gid === gid);
+  if (idx < 0) return;
+  const isSamePlaying = (gpodLoadedGid === gid && !gpodPlayer.paused);
+  if (isSamePlaying) {
+    toggleGpodPlay(false);
+    return;
+  }
+  stopQuizAudio();
+  selectGpodEpisode(idx, true, true);
+}
+
+function syncTeachGpodStrip() {
+  const strip = document.getElementById("teach-gpod-strip");
+  if (!strip) return;
+  const gid = strip.getAttribute("data-gid") || "";
+  const ep = GPOD_BY_GID[gid];
+  if (!ep) return;
+  const isThis = gpodLoadedGid === gid;
+  const isPlaying = isThis && !gpodPlayer.paused;
+  const isHeard = isGpodHeard(gid);
+  strip.classList.toggle("is-playing", isPlaying);
+  strip.classList.toggle("is-heard", isHeard && !isPlaying);
+  const subEl = document.getElementById("teach-gpod-sub");
+  const dur = Math.max(1, (isThis && gpodPlayer.duration && isFinite(gpodPlayer.duration)) ? gpodPlayer.duration : (ep.duration_sec || 150));
+  const curT = isThis ? (gpodPlayer.currentTime || 0) : 0;
+  if (subEl) {
+    if (isPlaying) subEl.textContent = `文涛 · 文道 · 子东 正在聊 · ${formatMMSS(curT)} / ${formatMMSS(dur)}`;
+    else if (isHeard) subEl.textContent = `已听完 · 随时可重听或直接开始做题`;
+    else subEl.textContent = `文涛 · 文道 · 子东 ${ep.duration_label || "2:30"} 聊透语感与易混`;
+  }
+  const iconEl = document.getElementById("teach-gpod-circle");
+  if (iconEl) {
+    iconEl.innerHTML = isPlaying ? RMB_PAUSE_SVG : RMB_PLAY_SVG;
+  }
+  const fillEl = document.getElementById("teach-gpod-fill");
+  if (fillEl) {
+    const pct = isThis ? Math.max(0, Math.min(100, (curT / dur) * 100)) : (isHeard ? 100 : 0);
+    fillEl.style.width = pct.toFixed(1) + "%";
+  }
+}
+
+gpodPlayer.addEventListener("timeupdate", () => {
+  const ep = getCurrentGpodEpisode();
+  if (!ep) return;
+  const t = gpodPlayer.currentTime || 0;
+  const dur = Math.max(1, (gpodPlayer.duration && isFinite(gpodPlayer.duration)) ? gpodPlayer.duration : (ep.duration_sec || 150));
+  paintGpodSeek(t, dur);
+  syncRadioMiniBar();
+  syncTeachGpodStrip();
+  if (t / dur >= 0.70) {
+    markGpodHeard(ep);
+  }
+});
+
+gpodPlayer.addEventListener("loadedmetadata", () => {
+  const ep = getCurrentGpodEpisode();
+  if (!ep) return;
+  paintGpodSeek(gpodPlayer.currentTime || 0, gpodPlayer.duration || ep.duration_sec || 150);
+  if (activeAudioChannel === "gpod") updateGpodMediaSessionPosition();
+});
+
+gpodPlayer.addEventListener("play", () => {
+  gpodHasPlayedOnce = true;
+  activeAudioChannel = "gpod";
+  gpodPlayer.muted = false;
+  setupMediaSession();
+  setMediaSessionPlaybackState("playing");
+  updateGpodMediaSessionPosition();
+  syncGpodPlayUI(true);
+  syncTeachGpodStrip();
+});
+
+gpodPlayer.addEventListener("pause", () => {
+  gpodPlayer.muted = false;
+  if (activeAudioChannel === "gpod") {
+    setMediaSessionPlaybackState("paused");
+    updateGpodMediaSessionPosition();
+  }
+  syncGpodPlayUI(false);
+  syncTeachGpodStrip();
+});
+
+gpodPlayer.addEventListener("ended", () => {
+  const ep = getCurrentGpodEpisode();
+  if (ep) markGpodHeard(ep);
+  syncGpodPlayUI(false);
+  syncTeachGpodStrip();
+  // In car / standalone 语法微课 mode, smoothly auto-advance to the next episode!
+  if (!gpodInlineMode && GPOD_LIST.length > 1) {
+    let nextIdx = -1;
+    for (let step = 1; step < GPOD_LIST.length; step++) {
+      const cand = (curGpodIdx + step) % GPOD_LIST.length;
+      if (!isGpodHeard(GPOD_LIST[cand].gid)) {
+        nextIdx = cand;
+        break;
+      }
+    }
+    if (nextIdx < 0) nextIdx = (curGpodIdx + 1) % GPOD_LIST.length;
+    gpodAutoNextTimer = setTimeout(() => {
+      gpodAutoNextTimer = null;
+      selectGpodEpisode(nextIdx, true, false);
+    }, 1200);
   }
 });
 
@@ -15287,6 +16372,7 @@ function syncBackendRecord(p, qid, choice, isCorrect, askAgain, newTier, stampSe
 
 function completeTeachCard() {
   stopQuizAudio();
+  if (gpodInlineMode && typeof pauseGpodSilently === "function") pauseGpodSilently();
   clearActiveWordToken();
   const p = getPointById(curPointId);
   if (p) {
@@ -15818,6 +16904,17 @@ function renderTutor() {
     const _ptM = _ptRaw.match(/^(.+?)\s*[（(]([^）)]+)[）)]$/);
     const _ptMain = _ptM ? _ptM[1].trim() : _ptRaw;
     const _ptSub = _ptM ? _ptM[2].trim() : "";
+    const _teachPod = getGpodForPoint(p);
+    const _teachPodHTML = _teachPod
+      ? `<button type="button" class="teach-gpod-strip" id="teach-gpod-strip" data-gid="${escapeHtml(_teachPod.gid)}" onclick="toggleTeachGpod('${escapeHtml(_teachPod.gid)}', event)">
+          <span class="teach-gpod-left">
+            <span class="teach-gpod-top"><span class="gpod-dot${isGpodHeard(_teachPod.gid) ? " heard" : ""}"></span><span>锵锵语法微课</span></span>
+            <span class="teach-gpod-sub" id="teach-gpod-sub">文涛 · 文道 · 子东 ${escapeHtml(_teachPod.duration_label || "2:30")} 聊透语感与易混</span>
+          </span>
+          <span class="teach-gpod-circle" id="teach-gpod-circle" aria-hidden="true">${RMB_PLAY_SVG}</span>
+          <span class="teach-gpod-rail"><span class="teach-gpod-fill" id="teach-gpod-fill"></span></span>
+        </button>`
+      : "";
     box.innerHTML = `
       <div class="tutor-stamp right" id="tutor-st-right">开始做题</div>
       <div class="tutor-stamp left moss-tone" id="tutor-st-left">开始做题</div>
@@ -15841,7 +16938,8 @@ function renderTutor() {
         </div>
         <div class="example-line vc-tap-zone vc-live" lang="ja" onclick="if(!event.target.closest('.w-tok'))playMainClip('${p.teach.audio}','teach',true)">${annotateJapanese(p.teach.example_ja)}</div>
         ${p.teach.zh_meaning ? `<p class="example-zh vc-tap-zone vc-live" onclick="playMainClip('${p.teach.audio}','teach',true)">${escapeHtml(p.teach.zh_meaning)}</p>` : ""}
-        ${(p.story_echo && p.story_echo.tab && p.story_echo.hook) ? `<div class="res-cue res-echo" style="margin-top:12px;"><span class="cue-tag">锵锵</span><span class="cue-txt">「${escapeHtml(p.story_echo.tab)}」${escapeHtml(p.story_echo.hook)}</span></div>` : ""}
+        ${_teachPodHTML}
+        ${(!_teachPodHTML && p.story_echo && p.story_echo.tab && p.story_echo.hook) ? `<div class="res-cue res-echo" style="margin-top:12px;"><span class="cue-tag">锵锵</span><span class="cue-txt">「${escapeHtml(p.story_echo.tab)}」${escapeHtml(p.story_echo.hook)}</span></div>` : ""}
       </div>
 
       <div class="action-dock">
@@ -15856,6 +16954,7 @@ function renderTutor() {
       ${lexBoxHTML("tutor-inline-lex")}
     `;
     syncAudioButtons();
+    syncTeachGpodStrip();
     return;
   }
 
@@ -15871,12 +16970,13 @@ function renderTutor() {
     const useRecallVeil = !activeQuizObj.is_listening && (ps.wrongCount || 0) === 0 && (effQ.streak || 0) === 2;
     quizChoicesRevealed = !useRecallVeil;
 
+    const _qPod = getGpodForPoint(p);
     let label = p.subject;
     if (isRetrySame) label += " · 乱序重考";
     else if (isVariant) label += " · 换题复考";
     else if (DATA.phase === "exam_day") label += " · 考前轻热身";
     else if (useRecallVeil) label += " · 终审盲考";
-    else if (ps.audioPrimed) label += " · 随身听已聊";
+    else if (ps.audioPrimed) label += (_qPod && isGpodHeard(_qPod.gid)) ? " · 微课已聊" : " · 随身听已聊";
 
     const _is4Choices = !activeQuizObj.is_listening && currentChoices.length >= 4;
     const _choiceGridCls = _is4Choices ? " stack-4" : "";
@@ -16243,7 +17343,7 @@ function showInlineWordMeaning(surface, tokEl) {
   if (!info) return;
 
   const targetBoxId = activeMode === "radio"
-    ? (radioReviewOpen ? "rv-inline-lex" : "radio-inline-lex")
+    ? (radioReviewOpen ? "rv-inline-lex" : (radioChannel === "gpod" ? "gpod-inline-lex" : "radio-inline-lex"))
     : "tutor-inline-lex";
   const box = document.getElementById(targetBoxId);
   if (!box) return;
@@ -16279,7 +17379,8 @@ function showInlineWordMeaning(surface, tokEl) {
   box.classList.remove("empty");
 
   const rvClipSilent = !rvClipPlayer || rvClipPlayer.paused;
-  if (player.paused && radioPlayer.paused && rvClipSilent) {
+  const gpodSilent = typeof gpodPlayer === "undefined" || gpodPlayer.paused;
+  if (player.paused && radioPlayer.paused && rvClipSilent && gpodSilent) {
     playWordAudio(surface, false);
   }
 }
@@ -16302,10 +17403,10 @@ document.addEventListener("click", e => {
   }
   if (!lexCard) {
     const targetBoxId = activeMode === "radio"
-      ? (radioReviewOpen ? "rv-inline-lex" : "radio-inline-lex")
+      ? (radioReviewOpen ? "rv-inline-lex" : (radioChannel === "gpod" ? "gpod-inline-lex" : "radio-inline-lex"))
       : "tutor-inline-lex";
     const box = document.getElementById(targetBoxId);
-    if (box && !box.classList.contains("empty") && (e.target.closest(".focal-space") || e.target.closest(".radio-center") || e.target.closest(".rv-focal"))) {
+    if (box && !box.classList.contains("empty") && (e.target.closest(".focal-space") || e.target.closest(".radio-center") || e.target.closest(".gpod-center") || e.target.closest(".rv-focal"))) {
       clearActiveWordToken();
       clearInlineLexicon(targetBoxId);
     }
@@ -16692,10 +17793,25 @@ function switchMode(m, autoPlayRadio) {
   if (m === "radio") {
     ensureRadioReady();
     updateRadioReviewEntryBadge();
-    if (!radioReviewOpen && autoPlayRadio && radioPlayer.paused) {
-      toggleRadioPlay(true);
+    renderRadioSubnav();
+    if (radioChannel === "gpod" && GPOD_LIST.length && !radioReviewOpen) {
+      const pStage = document.getElementById("radio-player-stage");
+      const gStage = document.getElementById("radio-gpod-stage");
+      if (pStage) pStage.classList.add("hidden");
+      if (gStage) gStage.classList.remove("hidden");
+      renderGpodStage();
     } else {
-      syncRadioUI();
+      if (!radioReviewOpen) {
+        const pStage = document.getElementById("radio-player-stage");
+        const gStage = document.getElementById("radio-gpod-stage");
+        if (pStage) pStage.classList.remove("hidden");
+        if (gStage) gStage.classList.add("hidden");
+      }
+      if (!radioReviewOpen && autoPlayRadio && radioPlayer.paused && (!gpodPlayer || gpodPlayer.paused)) {
+        toggleRadioPlay(true);
+      } else {
+        syncRadioUI();
+      }
     }
   } else if (m === "vocab") {
     enterVocabMode();
@@ -22398,6 +23514,7 @@ function openBlackboardClinic(clinicId, opts) {
     const ra = document.getElementById("radio-audio");
     if (ra && !ra.paused) ra.pause();
   } catch (e) {}
+  try { if (typeof pauseGpodSilently === "function") pauseGpodSilently(); } catch (e) {}
   activeClinicId = clinic.id;
   clinicCurStep = 0;
   clinicCurCueIdx = 0;
@@ -23556,12 +24673,14 @@ function buildLedgerExtraHTML(it) {
         const cit = GA_BY_GID[cgid];
         if (!cit) return "";
         const ceff = getEffectiveGA(cgid);
+        const cpod = GPOD_BY_GID[cgid];
+        const cpodBtn = cpod ? `<button type="button" class="li-gpod-btn${isGpodHeard(cpod.gid) ? " heard" : ""}" onclick="openGpodFromLedger('${escapeHtml(cpod.gid)}', event)">${isGpodHeard(cpod.gid) ? "微课已听 ✓" : `锵锵微课 ${escapeHtml(cpod.duration_label || "2:30")} ›`}</button>` : "";
         return `<div class="li-ga-subrow">
           <button type="button" class="li-ga-subplay" lang="ja" onclick="playLedgerSub(event, '${cgid}', 'pat', this)">${LEDGER_SPK_SVG}<span>${escapeHtml(cit.name)}</span></button>
           <span class="li-ga-subbtns">${[1, 2, 3, 4].map(c => {
             const sp = GA_SPECTRUM[c];
             return `<button type="button" class="li-ga-btn ${sp.cls}${ceff && ceff.code === c ? " on" : ""}" onclick="setLedgerGrammarSpectrum('${cgid}', ${c}, event)">${sp.label}</button>`;
-          }).join("")}</span>
+          }).join("")}${cpodBtn}</span>
           ${cit.ex_ja ? `<button type="button" class="li-ga-subex" lang="ja" onclick="playLedgerSub(event, '${cgid}', 'ex', this)">${escapeHtml(cit.ex_ja)}</button>` : ""}
         </div>`;
       }).join("")}</div>`;
@@ -23575,12 +24694,17 @@ function buildLedgerExtraHTML(it) {
           </span>
         </button>`;
       }
+      const rowPod = getGpodForPoint(it);
+      const rowPodBtn = rowPod
+        ? `<button type="button" class="li-gpod-btn${isGpodHeard(rowPod.gid) ? " heard" : ""}" onclick="openGpodFromLedger('${escapeHtml(rowPod.gid)}', event)">${isGpodHeard(rowPod.gid) ? "微课已听 ✓" : `锵锵微课 ${escapeHtml(rowPod.duration_label || "2:30")} ›`}</button>`
+        : "";
       gaBarHTML = `<div class="li-ga-bar">
         <span class="li-ga-lbl">盘点</span>
         ${[1, 2, 3, 4].map(c => {
           const sp = GA_SPECTRUM[c];
           return `<button type="button" class="li-ga-btn ${sp.cls}${gaEff && gaEff.code === c ? " on" : ""}" onclick="setLedgerGrammarSpectrum('${it.gid}', ${c}, event)">${sp.label}</button>`;
         }).join("")}
+        ${rowPodBtn}
       </div>`;
     }
   } else if (dashMod === "vocab") {
@@ -28661,11 +29785,67 @@ if (!isPostN3_35) {
     }
   }
 }
+
+// Self-test 37 (v93): 《锵锵语法微课》 car-ready channel, Preparation inline strip, auto-priming skip, ledger trigger & zero daily-radio interference
+const gpods37 = vm.runInNewContext('GPOD_LIST || []', sb);
+if (gpods37.length > 0) {
+  if (!html.includes('radio-gpod-stage') || !html.includes('teach-gpod-strip') || !html.includes('openGpodQueueSheet')) {
+    throw new Error('Self-test 37 failed: missing grammar mini-podcast UI containers or queue sheet');
+  }
+  // 1. Switching to 语法微课 channel renders focal grammar & episode pills without mutating radioPlayer
+  const prevDailySrc37 = vm.runInNewContext('String(radioPlayer.src || "")', sb);
+  sb.switchMode('radio', false);
+  sb.switchRadioChannel('gpod');
+  const gPoint37 = (els['gpod-point'] && els['gpod-point'].textContent) || '';
+  const gPills37 = (els['gpod-ep-pills'] && els['gpod-ep-pills'].innerHTML) || '';
+  if (!gPoint37 || !gPills37.includes('selectGpodEpisode')) {
+    throw new Error('Self-test 37 failed: 语法微课 stage did not render active grammar point or episode strip');
+  }
+  const afterDailySrc37 = vm.runInNewContext('String(radioPlayer.src || "")', sb);
+  if (prevDailySrc37 && afterDailySrc37 !== prevDailySrc37) {
+    throw new Error('Self-test 37 failed: switching to 语法微课 mutated daily radioPlayer.src');
+  }
+  // 2. Playing an episode activates gpod channel cleanly & marks heard at >=70% progress -> auto-primes quiz Preparation
+  sb.selectGpodEpisode(0, true, false);
+  const activeCh37 = vm.runInNewContext('activeAudioChannel', sb);
+  if (activeCh37 !== 'gpod') {
+    throw new Error('Self-test 37 failed: playing grammar pod did not set activeAudioChannel="gpod"');
+  }
+  const firstPod37 = gpods37[0];
+  // Check Preparation card renders inline micro-pod strip BEFORE hearing
+  if (firstPod37.today_point_id) {
+    sb.switchMode('tutor');
+    vm.runInNewContext(`curPointId = ${JSON.stringify(firstPod37.today_point_id)}; A.pts[curPointId].audioPrimed = false; A.pts[curPointId].status = "unseen"; viewStage = "teach"; renderTutor();`, sb);
+    const teachHtml37 = (els['voice-card'] && els['voice-card'].innerHTML) || '';
+    if (!teachHtml37.includes('teach-gpod-strip') || !teachHtml37.includes('toggleTeachGpod')) {
+      throw new Error('Self-test 37 failed: Preparation (考点梳理) missing inline 锵锵语法微课 strip');
+    }
+    // Now mark heard -> setupCurrentTurn must auto-prime and skip Preparation directly into quiz!
+    vm.runInNewContext(`markGpodHeard(GPOD_LIST[0]); setupCurrentTurn(${JSON.stringify(firstPod37.today_point_id)});`, sb);
+    const stageAfter37 = vm.runInNewContext('viewStage', sb);
+    if (stageAfter37 !== 'quiz') {
+      throw new Error('Self-test 37 failed: heard grammar pod did not auto-skip Preparation into quiz: got ' + stageAfter37);
+    }
+  }
+  // 3. Ledger expanded row shows 锵锵微课 trigger for matching grammar gid
+  const ledgerItem37 = vm.runInNewContext(`(DATA.mastery.grammar.items || []).find(x => x.gid === ${JSON.stringify(firstPod37.gid)})`, sb);
+  if (ledgerItem37) {
+    sb.switchMode('dash');
+    sb.selectDashMod('grammar');
+    const lextra37 = sb.buildLedgerExtraHTML(ledgerItem37);
+    if (!lextra37.includes('openGpodFromLedger')) {
+      throw new Error('Self-test 37 failed: expanded ledger grammar row missing openGpodFromLedger trigger');
+    }
+  }
+  // Restore clean state
+  sb.switchRadioChannel('daily');
+  sb.switchMode('tutor');
+}
 """
     subprocess.run(["node", "-", HTML_PATH], input=smoke_js, text=True, check=True)
 
 sw_path = os.path.join(BASE_DIR, "sw.js")
-SW_CACHE_NAME = "n3-studio-tutor-v92"
+SW_CACHE_NAME = "n3-studio-tutor-v93"
 if not _IS_SIM_OUTPUT and os.path.exists(sw_path):
     with open(sw_path, encoding="utf-8") as sf:
         sw_src = sf.read()

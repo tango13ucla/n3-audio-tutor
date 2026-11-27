@@ -1,0 +1,389 @@
+{
+  "version": "gpod_v1_qq_stereo",
+  "updated_at": "2026-11-27 10:08 PT",
+  "hosts": "文涛 · 文道 · 子东",
+  "count": 19,
+  "episodes": [
+    {
+      "gid": "G-026",
+      "point": "〜ながらも",
+      "point_keys": [
+        "〜ながらも"
+      ],
+      "meaning": "虽然……却依然",
+      "twin": "vs 〜のに（抱怨）／〜けど（普通转折）",
+      "hook": "同一人同一物的两面并存，带一点佩服或无奈的书面温度",
+      "example_ja": "この店は小さいながらも、味が良いのでいつも行列ができている。",
+      "example_zh": "这家店虽然不大，但味道好，总是排着长队。",
+      "phase": "n3_sprint",
+      "priority": 1,
+      "duration_sec": 157.6,
+      "duration_label": "2:38",
+      "audio_url": "./audio/grammar_pods/gpod_G-026.mp3?v=d735e696",
+      "sig": "d735e6968b8e",
+      "hosts": "文涛 · 文道 · 子东",
+      "created_date": "2026-11-27"
+    },
+    {
+      "gid": "G-044",
+      "point": "〜きり",
+      "point_keys": [
+        "〜きり"
+      ],
+      "meaning": "自从那次之后再没／只剩……",
+      "twin": "vs 〜まま（状态保持）／〜だけ（普通限定）",
+      "hook": "时间像被按了暂停键，那一次竟成了最后一面",
+      "example_ja": "分厚い歴史小説を最初の章だけ読んだきり、半年以上も本棚に置いたままだ。",
+      "example_zh": "那本厚厚的历史小说只读完第一章，就再没翻过，在书架上放了半年多。",
+      "phase": "n3_sprint",
+      "priority": 2,
+      "duration_sec": 139.9,
+      "duration_label": "2:20",
+      "audio_url": "./audio/grammar_pods/gpod_G-044.mp3?v=388b7250",
+      "sig": "388b725042df",
+      "hosts": "文涛 · 文道 · 子东",
+      "created_date": "2026-11-27"
+    },
+    {
+      "gid": "G-003",
+      "point": "〜しかない",
+      "point_keys": [
+        "〜しかない"
+      ],
+      "meaning": "别无选择、只好……",
+      "twin": "vs 〜なければならない（义务必须）／〜べきだ（道义应该）",
+      "hook": "退路全被封死，耸耸肩认命走唯一剩下的那条路",
+      "example_ja": "終電もバスも終わってしまったから、家まで歩いて帰るしかない。",
+      "example_zh": "末班电车和公交都没了，只好走着回家了。",
+      "phase": "n3_sprint",
+      "priority": 3,
+      "duration_sec": 124.5,
+      "duration_label": "2:05",
+      "audio_url": "./audio/grammar_pods/gpod_G-003.mp3?v=28d52feb",
+      "sig": "28d52febdc43",
+      "hosts": "文涛 · 文道 · 子东",
+      "created_date": "2026-11-27"
+    },
+    {
+      "gid": "G-060",
+      "point": "〜だけしか〜ない",
+      "point_keys": [
+        "〜だけしか〜ない"
+      ],
+      "meaning": "仅仅只剩这么丁点儿",
+      "twin": "vs 〜だけ（中性客观）／〜しか〜ない（一般嫌少）",
+      "hook": "把「だけ」和「しか〜ない」叠在一起，嫌少嫌得肉疼",
+      "example_ja": "財布を見たら、小銭が百円だけしか入っていなかった。",
+      "example_zh": "打开钱包一看，里头就仅仅只剩一百日元硬币了。",
+      "phase": "n3_sprint",
+      "priority": 4,
+      "duration_sec": 122.7,
+      "duration_label": "2:03",
+      "audio_url": "./audio/grammar_pods/gpod_G-060.mp3?v=00032d4c",
+      "sig": "00032d4ccd9a",
+      "hosts": "文涛 · 文道 · 子东",
+      "created_date": "2026-11-27"
+    },
+    {
+      "gid": "G-049",
+      "point": "〜しだい",
+      "point_keys": [
+        "〜しだい"
+      ],
+      "meaning": "一……就立即／全看……决定",
+      "twin": "vs 〜とたん（突发意外）／〜たら（普通条件）",
+      "hook": "职场承诺「一有消息立刻办」，以及「全看你怎么选」",
+      "example_ja": "日程が決まりしだい、すぐメールでご連絡します。",
+      "example_zh": "日程一确定，我立刻发邮件联系您。",
+      "phase": "n3_sprint",
+      "priority": 5,
+      "duration_sec": 126.1,
+      "duration_label": "2:06",
+      "audio_url": "./audio/grammar_pods/gpod_G-049.mp3?v=2f06c22f",
+      "sig": "2f06c22f4950",
+      "hosts": "文涛 · 文道 · 子东",
+      "created_date": "2026-11-27"
+    },
+    {
+      "gid": "G-077",
+      "point": "〜によっては",
+      "point_keys": [
+        "〜によっては"
+      ],
+      "meaning": "视情况而异／有的……",
+      "twin": "vs 〜によって（通过手段／因为原因）／〜によると（据消息）",
+      "hook": "加上一个「は」，立刻从单一原因变成「因人而异、不能一概而论」",
+      "example_ja": "同じ言葉でも、使う場面によっては失礼に聞こえることがある。",
+      "example_zh": "同样一句话，视使用场合不同，有时听起来会很失礼。",
+      "phase": "n3_sprint",
+      "priority": 6,
+      "duration_sec": 124.4,
+      "duration_label": "2:04",
+      "audio_url": "./audio/grammar_pods/gpod_G-077.mp3?v=f86d472c",
+      "sig": "f86d472c04df",
+      "hosts": "文涛 · 文道 · 子东",
+      "created_date": "2026-11-27"
+    },
+    {
+      "gid": "G-025",
+      "point": "〜てたまらない",
+      "point_keys": [
+        "〜てたまらない"
+      ],
+      "meaning": "……得受不了、简直按捺不住",
+      "twin": "vs 〜てしかたがない（同族）／〜すぎる（客观过度）",
+      "hook": "情绪或身体感觉涨满到胸口，实在憋不住、忍不了了",
+      "example_ja": "一人暮らしを始めてから、実家の犬に会いたくてたまらない。",
+      "example_zh": "开始一个人住之后，想见老家的狗想得受不了。",
+      "phase": "n3_sprint",
+      "priority": 7,
+      "duration_sec": 123.8,
+      "duration_label": "2:04",
+      "audio_url": "./audio/grammar_pods/gpod_G-025.mp3?v=80b9c4bd",
+      "sig": "80b9c4bd0b71",
+      "hosts": "文涛 · 文道 · 子东",
+      "created_date": "2026-11-27"
+    },
+    {
+      "gid": "G-099",
+      "point": "〜ような気がする",
+      "point_keys": [
+        "〜ような気がする"
+      ],
+      "meaning": "隐约总觉得……、仿佛",
+      "twin": "vs 〜と思う（明确想法）／〜にちがいない（强烈确信）",
+      "hook": "说不出硬证据，但第六感隐隐约约飘过一丝直觉",
+      "example_ja": "さっきすれ違った人、どこかで会ったような気がする。",
+      "example_zh": "刚才擦肩而过的那个人，总觉得好像在哪儿见过。",
+      "phase": "n3_sprint",
+      "priority": 8,
+      "duration_sec": 115.2,
+      "duration_label": "1:55",
+      "audio_url": "./audio/grammar_pods/gpod_G-099.mp3?v=aa83248c",
+      "sig": "aa83248c6d50",
+      "hosts": "文涛 · 文道 · 子东",
+      "created_date": "2026-11-27"
+    },
+    {
+      "gid": "G-042",
+      "point": "〜か何か",
+      "point_keys": [
+        "〜か何か"
+      ],
+      "meaning": "……什么的（留白举一例）",
+      "twin": "vs 〜とか（列举好几个）／〜でも（随便举个建议）",
+      "hook": "随口抛一个温和选项，后面留出开放空间，不给对方压迫感",
+      "example_ja": "少し喉が渇いたから、冷たいお茶か何か飲まない？",
+      "example_zh": "有点口渴了，要不要喝点冰茶什么的？",
+      "phase": "n3_sprint",
+      "priority": 9,
+      "duration_sec": 111.1,
+      "duration_label": "1:51",
+      "audio_url": "./audio/grammar_pods/gpod_G-042.mp3?v=4fd967d3",
+      "sig": "4fd967d3fecb",
+      "hosts": "文涛 · 文道 · 子东",
+      "created_date": "2026-11-27"
+    },
+    {
+      "gid": "G-107",
+      "point": "〜一度に",
+      "point_keys": [
+        "〜一度に"
+      ],
+      "meaning": "一口气、一次性同时",
+      "twin": "vs 〜一度（仅仅一次）／〜一気に（一鼓作气不停歇）",
+      "hook": "多了一个「に」，意思从「去过一回」变成「一堆事儿挤在同一回全干完」",
+      "example_ja": "そんなにたくさんの単語を一度に覚えようとしても、すぐ忘れてしまうよ。",
+      "example_zh": "想一口气背下那么多单词，很快就会忘光的。",
+      "phase": "n3_sprint",
+      "priority": 10,
+      "duration_sec": 120.9,
+      "duration_label": "2:01",
+      "audio_url": "./audio/grammar_pods/gpod_G-107.mp3?v=8311c276",
+      "sig": "8311c276760a",
+      "hosts": "文涛 · 文道 · 子东",
+      "created_date": "2026-11-27"
+    },
+    {
+      "gid": "G-116f",
+      "point": "ご存じだ",
+      "point_keys": [
+        "ご存じだ",
+        "尊敬語特殊動詞组"
+      ],
+      "meaning": "知道・认识（尊敬语）",
+      "twin": "vs 存じております（谦让：我知道）／知っている（普通）",
+      "hook": "问对方「您知道吗」用 ご存じですか，说自己知道绝不能加 ご！",
+      "example_ja": "こちらの鈴木様をご存じですか。",
+      "example_zh": "请问您认识这位铃木先生吗？",
+      "phase": "n3_sprint",
+      "priority": 11,
+      "duration_sec": 129.5,
+      "duration_label": "2:09",
+      "audio_url": "./audio/grammar_pods/gpod_G-116f.mp3?v=c1397833",
+      "sig": "c13978335c39",
+      "hosts": "文涛 · 文道 · 子东",
+      "created_date": "2026-11-27"
+    },
+    {
+      "gid": "G-040",
+      "point": "〜いちいち",
+      "point_keys": [
+        "〜いちいち"
+      ],
+      "meaning": "动不动逐个、事无巨细（带烦躁）",
+      "twin": "vs 〜ひとつひとつ（认真细致、正面褒义）／〜わざわざ（特意）",
+      "hook": "不是夸你细心，而是嫌弃「这点破事儿也要一件件计较/汇报，烦不烦啊」",
+      "example_ja": "そんな小さなミスをいちいち気にしていたら、仕事が進まないよ。",
+      "example_zh": "那么小的失误要是动不动件件都往心里去，工作可推进不下去了。",
+      "phase": "n3_sprint",
+      "priority": 12,
+      "duration_sec": 103.5,
+      "duration_label": "1:44",
+      "audio_url": "./audio/grammar_pods/gpod_G-040.mp3?v=d0eb15db",
+      "sig": "d0eb15db9adb",
+      "hosts": "文涛 · 文道 · 子东",
+      "created_date": "2026-11-27"
+    },
+    {
+      "gid": "G-005",
+      "point": "〜てもかまわない",
+      "point_keys": [
+        "〜てもかまわない"
+      ],
+      "meaning": "就算……也没关系、无所谓",
+      "twin": "vs 〜てもいい（礼貌许可）／〜なくてもいい（不必做）",
+      "hook": "比 てもいい 多一分「我都行、我不介意」的爽快大度",
+      "example_ja": "今日の定例会議は、移動中ならカメラをオフにしてもかまわないよ。",
+      "example_zh": "今天的例会，如果在路上，把摄像头关掉也没关系哦。",
+      "phase": "n3_sprint",
+      "priority": 13,
+      "duration_sec": 108.7,
+      "duration_label": "1:49",
+      "audio_url": "./audio/grammar_pods/gpod_G-005.mp3?v=216be8f1",
+      "sig": "216be8f1f8eb",
+      "hosts": "文涛 · 文道 · 子东",
+      "created_date": "2026-11-27"
+    },
+    {
+      "gid": "G-010",
+      "point": "〜あいだ（に）",
+      "point_keys": [
+        "〜あいだ（に）"
+      ],
+      "meaning": "整个期间持续 vs 期间某瞬间",
+      "twin": "vs 〜あいだ（从头到尾一直）vs 〜あいだに（趁这空当干完）",
+      "hook": "有无一个「に」决定是「拉通一条线」还是「趁机扎一个点」",
+      "example_ja": "赤ちゃんが昼寝をしているあいだに、晩ご飯の準備を終わらせてしまった。",
+      "example_zh": "趁着宝宝午睡的工夫，把晚饭的准备全弄完了。",
+      "phase": "n3_sprint",
+      "priority": 14,
+      "duration_sec": 118.9,
+      "duration_label": "1:59",
+      "audio_url": "./audio/grammar_pods/gpod_G-010.mp3?v=11482515",
+      "sig": "114825150b28",
+      "hosts": "文涛 · 文道 · 子东",
+      "created_date": "2026-11-27"
+    },
+    {
+      "gid": "G-013",
+      "point": "〜からこそ",
+      "point_keys": [
+        "〜からこそ"
+      ],
+      "meaning": "正因为……才",
+      "twin": "vs 〜ばかりに（偏偏因为导致坏结果）／〜から（普通因为）",
+      "hook": "把真正唯一的深层原因打上聚光灯，绝不敷衍",
+      "example_ja": "最初の試作で手痛い失敗を経験したからこそ、現場の本当の課題に気づけたのだと思う。",
+      "example_zh": "正因为第一次试做经历了惨痛的失败，才发现了现场真正的问题。",
+      "phase": "n3_sprint",
+      "priority": 15,
+      "duration_sec": 114.7,
+      "duration_label": "1:55",
+      "audio_url": "./audio/grammar_pods/gpod_G-013.mp3?v=072886c1",
+      "sig": "072886c11e15",
+      "hosts": "文涛 · 文道 · 子东",
+      "created_date": "2026-11-27"
+    },
+    {
+      "gid": "G-015",
+      "point": "〜くせに",
+      "point_keys": [
+        "〜くせに"
+      ],
+      "meaning": "明明……却（带白眼吐槽）",
+      "twin": "vs 〜のに（单纯遗憾惊讶）／〜ながらも（温和敬佩）",
+      "hook": "火力全开的吐槽句型，专治口是心非和光说不练",
+      "example_ja": "自分では何もしないくせに、人のやり方にばかり文句を言う。",
+      "example_zh": "自己明明什么都不干，却光挑别人做法的毛病。",
+      "phase": "n3_sprint",
+      "priority": 16,
+      "duration_sec": 108.7,
+      "duration_label": "1:49",
+      "audio_url": "./audio/grammar_pods/gpod_G-015.mp3?v=842b048c",
+      "sig": "842b048c9297",
+      "hosts": "文涛 · 文道 · 子东",
+      "created_date": "2026-11-27"
+    },
+    {
+      "gid": "G-028",
+      "point": "〜にちがいない",
+      "point_keys": [
+        "〜にちがいない"
+      ],
+      "meaning": "一定、准是（强烈主观确信）",
+      "twin": "vs 〜はずだ（按计划/常识逻辑推算）／〜かもしれない（可能）",
+      "hook": "虽然没亲眼看见，但按眼前的迹象，我拍胸脯敢打赌十有八九错不了",
+      "example_ja": "あんなに毎晩遅くまで勉強していたんだから、今度の試験は合格するにちがいない。",
+      "example_zh": "他每晚都学到那么晚，这次考试一定能通过。",
+      "phase": "n3_sprint",
+      "priority": 17,
+      "duration_sec": 112.6,
+      "duration_label": "1:53",
+      "audio_url": "./audio/grammar_pods/gpod_G-028.mp3?v=5001eb1d",
+      "sig": "5001eb1dadf0",
+      "hosts": "文涛 · 文道 · 子东",
+      "created_date": "2026-11-27"
+    },
+    {
+      "gid": "G-065",
+      "point": "〜てばかりいる",
+      "point_keys": [
+        "〜てばかりいる"
+      ],
+      "meaning": "老是光顾着……（满屏嫌弃）",
+      "twin": "vs 〜てばかり（名词限定）／〜てばかりはいられない（不能老这样）",
+      "hook": "眼睛里全是同一个让人叹气的动作，别的正事全晾在一边",
+      "example_ja": "試験が近いのに、弟は部屋でゲームをしてばかりいて、ちっとも勉強しない。",
+      "example_zh": "考试都快到了，弟弟却老在屋里光顾着打游戏，一点儿也不学习。",
+      "phase": "n3_sprint",
+      "priority": 18,
+      "duration_sec": 105.4,
+      "duration_label": "1:45",
+      "audio_url": "./audio/grammar_pods/gpod_G-065.mp3?v=eccefd30",
+      "sig": "eccefd303df4",
+      "hosts": "文涛 · 文道 · 子东",
+      "created_date": "2026-11-27"
+    },
+    {
+      "gid": "GX-08",
+      "point": "せっかく〜のに",
+      "point_keys": [
+        "せっかく〜のに"
+      ],
+      "meaning": "好不容易／特意……却白费了",
+      "twin": "vs わざわざ〜のに（特意费劲跑一趟）／せっかく〜から（难得机会别浪费）",
+      "hook": "满怀心意和期待折腾半天，最后落空那种让人直拍大腿的心疼劲儿",
+      "example_ja": "せっかく早起きして弁当を作ったのに、家に忘れてきてしまった。",
+      "example_zh": "好不容易早起做好了便当，却偏偏忘在家里了。",
+      "phase": "n3_sprint",
+      "priority": 19,
+      "duration_sec": 113.8,
+      "duration_label": "1:54",
+      "audio_url": "./audio/grammar_pods/gpod_GX-08.mp3?v=e3a955ea",
+      "sig": "e3a955eac39e",
+      "hosts": "文涛 · 文道 · 子东",
+      "created_date": "2026-11-27"
+    }
+  ]
+}

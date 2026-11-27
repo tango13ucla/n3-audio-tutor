@@ -1753,7 +1753,7 @@ def test_v91_wysiwyg_ledger_and_word_audio_guard():
                 and (not x.get("ex_ja") or not x.get("ex_audio"))
             ]
             assert not non_split_no_ex, f"Ledger grammar rows missing expanded ex_ja/ex_audio: {non_split_no_ex[:8]}"
-    print("[PASS 26/27] v91 100% WYSIWYG ledger audio, clean audio_alias, slash-pair pats & kana-forced single-Kanji verified!")
+    print("[PASS 26/28] v91 100% WYSIWYG ledger audio, clean audio_alias, slash-pair pats & kana-forced single-Kanji verified!")
 
 
 def test_v92_sprint_dialogue_blackboard_clinic_guard() -> None:
@@ -1832,7 +1832,66 @@ def test_v92_sprint_dialogue_blackboard_clinic_guard() -> None:
     bh_src = (BASE_DIR / "build_html.py").read_text(encoding="utf-8")
     for sym in ("openBlackboardClinic", "findClinicForQuiz", "stopClinicAudio", "openClinicCatalogModal", "kb-slate"):
         assert sym in bh_src, f"build_html.py missing v92 symbol: {sym}"
-    print("[PASS 27/27] v92 Sprint Dialogue & Living Kyoto Blackboard Clinic (24 studio MP3s, 8-day radio banter & CLINIC telemetry) verified!")
+    print("[PASS 27/28] v92 Sprint Dialogue & Living Kyoto Blackboard Clinic (24 studio MP3s, 8-day radio banter & CLINIC telemetry) verified!")
+
+
+def test_v93_grammar_mini_podcasts_guard() -> None:
+    """Gate 28 (v93): Guard 《锵锵语法微课》 2-3 min three-host grammar mini-podcasts, atomic Kanji+Kana protection, MP3 assets, GPOD telemetry, and Preparation/Radio/Ledger UI hooks."""
+    import generate_grammar_pods as ggp
+
+    # 1. All 19 curated unfamiliar ("陌生") N3 grammar pods must have clean, em-dash-free scripts with >=2 native JA sentences
+    assert len(ggp.CURATED_GRAMMAR_PODS) >= 19, f"Expected >=19 curated grammar pods, got {len(ggp.CURATED_GRAMMAR_PODS)}"
+    seen_gids: set[str] = set()
+    for pod in ggp.CURATED_GRAMMAR_PODS:
+        gid = pod["gid"]
+        assert gid not in seen_gids, f"Duplicate grammar pod gid: {gid}"
+        seen_gids.add(gid)
+        ja_turns = [t for s, t in pod["turns"] if s.endswith("_JA")]
+        assert len(ja_turns) >= 2, f"Grammar pod {gid} ({pod['point']}) has fewer than 2 native Japanese turns"
+        for spk, txt in pod["turns"]:
+            s_txt = str(txt)
+            assert "—" not in s_txt and "——" not in s_txt, f"Em dash found in grammar pod {gid}: {s_txt[:60]}"
+            if spk in ("W", "D", "X"):
+                for qm in re.finditer(r"「([^「」]+)」", s_txt):
+                    q_inner = qm.group(1)
+                    if re.search(r"[\u3040-\u30ff]", q_inner):
+                        assert not any(c in "这那我你他她它么把被给让跟说就都还很太挺真啥嘛呢吧啊哦呀咱词加" for c in q_inner), (
+                            f"Mixed Chinese+Japanese quote in {gid}: 「{q_inner}」"
+                        )
+        for field in ("meaning", "twin", "hook"):
+            fv = str(pod.get(field) or "")
+            assert "—" not in fv and "——" not in fv, f"Em dash found in {gid}.{field}: {fv}"
+
+    # 2. Atomic Kanji+Kana inline quote protection must keep full Japanese terms unbroken
+    prot = ggp._protect_quoted_ja_terms("它用了一个「小さいながらも」，还有「鈴木様をご存じですか」和「も」。")
+    assert "{{这个说法|小さいながらも}}" in prot, f"Kanji+Kana quote was not protected atomically: {prot}"
+    assert "{{这个说法|鈴木様をご存じですか}}" in prot, f"Long Kanji+Kana quote was not protected: {prot}"
+    assert "{{字|も}}" in prot, f"Single-kana particle was not given 1-char carrier: {prot}"
+
+    # 3. Manifest and on-disk MP3s for all 19 pods must exist and stay within 1.5-3.5 min target window
+    mf_path = BASE_DIR / "audio" / "grammar_pods" / "manifest.json"
+    assert mf_path.exists(), f"Missing grammar pods manifest: {mf_path}"
+    mf = json.loads(mf_path.read_text(encoding="utf-8"))
+    eps = mf.get("episodes") or []
+    assert len(eps) >= 19, f"Manifest has fewer than 19 episodes: {len(eps)}"
+    by_gid = {e["gid"]: e for e in eps}
+    for pod in ggp.CURATED_GRAMMAR_PODS:
+        ep = by_gid.get(pod["gid"])
+        assert ep is not None, f"Curated pod {pod['gid']} missing from manifest.json"
+        dur = float(ep.get("duration_sec") or 0)
+        assert 95.0 <= dur <= 220.0, f"Pod {pod['gid']} duration {dur}s outside 95-220s target"
+        mp3_rel = str(ep.get("audio_url") or "").split("?", 1)[0].lstrip("./")
+        mp3_abs = BASE_DIR / mp3_rel
+        assert mp3_abs.exists() and mp3_abs.stat().st_size > 400_000, f"Missing or tiny MP3 for {pod['gid']}: {mp3_abs}"
+
+    # 4. Backend GPOD telemetry + morning batch hook + Frontend Preparation/Radio/Ledger hooks
+    rba_src = (BASE_DIR / "run_brain_algorithm.py").read_text(encoding="utf-8")
+    assert 'rec_id.startswith("GPOD:")' in rba_src and '"GPOD:"' in rba_src, "run_brain_algorithm.py missing GPOD: telemetry handler or filter"
+    assert "generate_grammar_pods.py" in rba_src, "run_brain_algorithm.py missing daily grammar pods batch hook"
+    bh_src = (BASE_DIR / "build_html.py").read_text(encoding="utf-8")
+    for sym in ("radio-gpod-stage", "teach-gpod-strip", "openGpodFromLedger", "switchRadioChannel", "markGpodHeard", "Self-test 37"):
+        assert sym in bh_src, f"build_html.py missing v93 grammar mini-podcast symbol: {sym}"
+    print(f"[PASS 28/28] v93 《锵锵语法微课》 ({len(eps)} studio episodes, atomic Kanji+Kana, Car/Preparation/Ledger hooks) verified!")
 
 
 def main() -> int:
@@ -1863,7 +1922,8 @@ def main() -> int:
     test_v90_nhk_cinema_hd_visual_studio_guard()
     test_v91_wysiwyg_ledger_and_word_audio_guard()
     test_v92_sprint_dialogue_blackboard_clinic_guard()
-    print("[ALL PASS] tests_ci_guard.py 27/27 gates green!")
+    test_v93_grammar_mini_podcasts_guard()
+    print("[ALL PASS] tests_ci_guard.py 28/28 gates green!")
     return 0
 
 
