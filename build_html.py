@@ -2234,7 +2234,8 @@ html = r"""<!DOCTYPE html>
 <link rel="apple-touch-icon" href="./icon-192.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+<noscript><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" rel="stylesheet" /></noscript>
 <title>__TRACK_LABEL__</title>
 <style>
   :root {
@@ -3518,6 +3519,9 @@ html = r"""<!DOCTYPE html>
     gap: 3px;
     overflow: hidden;
     cursor: pointer;
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    transition: opacity 0.16s cubic-bezier(0.22, 1, 0.36, 1), transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 0s;
   }
   .inline-lex:active {
     background: var(--soft-bg);
@@ -3536,7 +3540,9 @@ html = r"""<!DOCTYPE html>
   .inline-lex.empty {
     visibility: hidden;
     opacity: 0;
+    transform: translate3d(0, 6px, 0);
     pointer-events: none;
+    transition: opacity 0.12s ease, transform 0.12s ease, visibility 0s linear 0.12s;
   }
   .ilex-top {
     height: 26px;
@@ -3922,20 +3928,30 @@ html = r"""<!DOCTYPE html>
     -webkit-appearance: none;
     appearance: none;
     width: 100%;
-    height: 2.5px;
-    background: var(--track);
+    height: 32px;
+    background-color: transparent;
+    background-image: linear-gradient(var(--track), var(--track));
+    background-size: 100% 3px;
+    background-position: center;
+    background-repeat: no-repeat;
     border-radius: 2px;
     outline: none;
-    margin: 8px 0 7px;
+    margin: -6px 0 -7px;
     cursor: pointer;
+    touch-action: pan-x;
   }
   .zen-range::-webkit-slider-thumb {
     -webkit-appearance: none;
-    width: 14px;
-    height: 14px;
+    width: 15px;
+    height: 15px;
     border-radius: 50%;
     background: var(--sumi);
     cursor: pointer;
+    transition: transform 0.14s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .zen-range:active::-webkit-slider-thumb,
+  .zen-range.is-scrubbing::-webkit-slider-thumb {
+    transform: scale(1.28);
   }
   .time-pair {
     display: flex;
@@ -6915,7 +6931,12 @@ html = r"""<!DOCTYPE html>
     overflow: hidden;
     cursor: pointer;
     z-index: 80;
+    animation: rmbSlideIn 0.22s cubic-bezier(0.22, 1, 0.36, 1);
     transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  @keyframes rmbSlideIn {
+    from { opacity: 0; transform: translate3d(0, 10px, 0); }
+    to { opacity: 1; transform: translate3d(0, 0, 0); }
   }
   .radio-mini-bar.hidden {
     display: none !important;
@@ -7506,7 +7527,7 @@ html = r"""<!DOCTYPE html>
           <div class="chapter-strip" id="radio-chap-pills"></div>
 
           <div class="scrub-wrap">
-            <input type="range" class="zen-range" id="radio-seek" min="0" max="2100" value="0" step="1" oninput="onRadioScrub(this.value)" />
+            <input type="range" class="zen-range" id="radio-seek" min="0" max="2100" value="0" step="1" oninput="onRadioScrubPreview(this.value)" onchange="onRadioScrubCommit(this.value)" />
             <div class="time-pair">
               <span id="radio-cur-time">00:00</span>
               <span id="radio-tot-time">35:00</span>
@@ -8126,8 +8147,9 @@ function showAppModal() {
   const applyDragFrame = () => {
     rafId = 0;
     if (!dragging) return;
-    mc.style.transform = `translate3d(0, ${dy.toFixed(1)}px, 0)`;
-    const fade = Math.max(0.08, 1 - dy / 340);
+    const visualY = dy < 0 ? (-Math.pow(-dy, 0.72) * 0.34) : dy;
+    mc.style.transform = `translate3d(0, ${visualY.toFixed(1)}px, 0)`;
+    const fade = dy > 0 ? Math.max(0.08, 1 - dy / 340) : 1;
     mm.style.opacity = fade.toFixed(3);
   };
   mc.addEventListener("touchstart", e => {
@@ -8153,7 +8175,7 @@ function showAppModal() {
     }
     if (dragging) {
       if (e.cancelable) e.preventDefault();
-      dy = Math.max(0, curDy);
+      dy = curDy;
       if (!rafId) rafId = requestAnimationFrame(applyDragFrame);
     }
   }, { passive: false });
@@ -8161,14 +8183,17 @@ function showAppModal() {
     if (!dragging) return;
     dragging = false;
     if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
-    mc.classList.remove("sheet-dragging");
-    mm.classList.remove("sheet-dragging");
     const dt = Math.max(1, performance.now() - st);
     const vy = dy / dt;
+    mc.classList.remove("sheet-dragging");
+    mm.classList.remove("sheet-dragging");
     mm.style.opacity = "";
     if (dy > 84 || (dy > 34 && vy > 0.45)) {
+      const dur = Math.max(145, Math.min(240, Math.round(230 - vy * 55)));
+      mc.style.transitionDuration = `${dur}ms`;
       mc.style.transform = "";
       if (typeof closeModal === "function") closeModal();
+      setTimeout(() => { mc.style.transitionDuration = ""; }, dur + 30);
     } else {
       mc.style.transform = "";
     }
@@ -8176,6 +8201,51 @@ function showAppModal() {
   };
   mc.addEventListener("touchend", endSheetDrag, { passive: true });
   mc.addEventListener("touchcancel", endSheetDrag, { passive: true });
+})();
+
+let lastThumbPointerSwitchAt = 0;
+let lastThumbPointerMode = "";
+function smoothScrollActiveViewToTop(mode) {
+  try {
+    let sc = null;
+    if (mode === "dash") sc = document.querySelector("#dash-view .ledger-scroll");
+    else if (mode === "body") sc = document.getElementById("zb-stage");
+    else if (mode === "tutor") sc = document.querySelector("#tutor-view .focal-space");
+    else if (mode === "radio") sc = document.querySelector("#radio-view .focal-space");
+    if (sc && (sc.scrollTop || 0) > 4) {
+      if (typeof sc.scrollTo === "function") sc.scrollTo({ top: 0, behavior: "smooth" });
+      else sc.scrollTop = 0;
+    }
+  } catch (e) {}
+}
+(function bindInstantThumbTabs() {
+  const wrap = document.getElementById("main-thumb-tabs");
+  if (!wrap || !wrap.addEventListener) return;
+  const specs = [
+    { id: "btab-tutor", mode: "tutor", autoPlay: false },
+    { id: "btab-radio", mode: "radio", autoPlay: true },
+    { id: "btab-vocab", mode: "vocab", autoPlay: false },
+    { id: "btab-body", mode: "body", autoPlay: false },
+    { id: "btab-dash", mode: "dash", autoPlay: false }
+  ];
+  specs.forEach(sp => {
+    const el = document.getElementById(sp.id);
+    if (!el || !el.addEventListener) return;
+    el.addEventListener("pointerdown", e => {
+      if (e.button && e.button !== 0) return;
+      lastThumbPointerSwitchAt = performance.now();
+      lastThumbPointerMode = sp.mode;
+      if (activeMode === sp.mode) {
+        if (sp.mode === "radio" && typeof radioReviewOpen !== "undefined" && radioReviewOpen && typeof closeRadioReview === "function") {
+          closeRadioReview();
+        } else {
+          smoothScrollActiveViewToTop(sp.mode);
+        }
+        return;
+      }
+      if (typeof switchMode === "function") switchMode(sp.mode, sp.autoPlay);
+    }, { passive: true });
+  });
 })();
 
 // ================= MASTER ALGORITHM + REAL-TIME CLOUD CRDT SYNC =================
@@ -8768,11 +8838,27 @@ const SKIP_ENROLL_WORDS = new Set([
   "私", "僕", "彼", "彼女", "人", "今日", "明日", "昨日", "今", "もう", "また", "もっと", "だけ", "だから"
 ]);
 const KNOWN_MASTERY_KEYS = new Set();
+const MASTERY_ITEMS_BY_KEY = new Map();
+let masteryDirty = false;
+let masteryVer = 0;
+function indexMasteryItem(mod, it) {
+  if (!it) return;
+  const entry = { mod, it };
+  if (it.key) {
+    KNOWN_MASTERY_KEYS.add(it.key);
+    let arr = MASTERY_ITEMS_BY_KEY.get(it.key);
+    if (!arr) { arr = []; MASTERY_ITEMS_BY_KEY.set(it.key, arr); }
+    arr.push(entry);
+  }
+  if (it.name && it.name !== it.key) {
+    KNOWN_MASTERY_KEYS.add(it.name);
+    let arr = MASTERY_ITEMS_BY_KEY.get(it.name);
+    if (!arr) { arr = []; MASTERY_ITEMS_BY_KEY.set(it.name, arr); }
+    arr.push(entry);
+  }
+}
 Object.keys(DATA.mastery || {}).forEach(mod => {
-  (DATA.mastery[mod].items || []).forEach(it => {
-    if (it.key) KNOWN_MASTERY_KEYS.add(it.key);
-    if (it.name) KNOWN_MASTERY_KEYS.add(it.name);
-  });
+  (DATA.mastery[mod].items || []).forEach(it => indexMasteryItem(mod, it));
 });
 
 function enrollDynamicVocabItem(w, defaultState) {
@@ -8787,7 +8873,7 @@ function enrollDynamicVocabItem(w, defaultState) {
     const tipParts = [];
     if (info.head && info.head !== w) tipParts.push(`原形 ${info.head}`);
     if (info.tip) tipParts.push(info.tip);
-    DATA.mastery.vocab.items.unshift({
+    const newIt = {
       key: w,
       name: w,
       sub: info.zh,
@@ -8798,8 +8884,38 @@ function enrollDynamicVocabItem(w, defaultState) {
       point_id: "",
       audio: info.audio || "",
       note: tipParts.join(" · ")
-    });
+    };
+    DATA.mastery.vocab.items.unshift(newIt);
+    indexMasteryItem("vocab", newIt);
+    masteryDirty = true;
+    masteryVer += 1;
   }
+}
+
+function applySingleMasteryUpdate(k1, k2) {
+  const seen = new Set();
+  const keys = [k1, k2].filter(Boolean);
+  for (let i = 0; i < keys.length; i++) {
+    const arr = MASTERY_ITEMS_BY_KEY.get(keys[i]);
+    if (!arr) continue;
+    for (let j = 0; j < arr.length; j++) {
+      const { mod, it } = arr[j];
+      if (seen.has(it)) continue;
+      seen.add(it);
+      const oldTier = it.tier;
+      const eff = getEffectiveMastery(it.key, it.name);
+      it.mstate = eff.mstate;
+      it.tier = eff.tier;
+      it.streak = eff.streak;
+      const c = DATA.mastery[mod] && DATA.mastery[mod].counts;
+      if (c && oldTier !== it.tier) {
+        if (oldTier && c[oldTier] > 0) c[oldTier] -= 1;
+        c[it.tier] = (c[it.tier] || 0) + 1;
+      }
+    }
+  }
+  masteryDirty = true;
+  masteryVer += 1;
 }
 
 function applyMasteryOverrides() {
@@ -8825,6 +8941,8 @@ function applyMasteryOverrides() {
     });
     DATA.mastery[mod].counts = c;
   });
+  masteryDirty = false;
+  masteryVer += 1;
 }
 
 // Legacy URL #sync fallback kept compatible alongside automatic real-time cloud sync
@@ -10955,7 +11073,7 @@ function paintRadioSeekProgress(t) {
   if (seekEl) {
     const curPct = Math.max(0, Math.min(100, ((t || 0) / dur) * 100));
     const maxPct = rm.radioAudioDone ? 100 : Math.max(curPct, Math.min(100, ((A.radioMaxSec || 0) / dur) * 100));
-    seekEl.style.background = `linear-gradient(to right, var(--moss) 0%, var(--moss) ${curPct.toFixed(1)}%, var(--moss-border) ${curPct.toFixed(1)}%, var(--moss-border) ${maxPct.toFixed(1)}%, var(--track) ${maxPct.toFixed(1)}%, var(--track) 100%)`;
+    seekEl.style.backgroundImage = `linear-gradient(to right, var(--moss) 0%, var(--moss) ${curPct.toFixed(1)}%, var(--moss-border) ${curPct.toFixed(1)}%, var(--moss-border) ${maxPct.toFixed(1)}%, var(--track) ${maxPct.toFixed(1)}%, var(--track) 100%)`;
   }
 }
 
@@ -11299,11 +11417,42 @@ function jumpRadioChapter(startSec) {
   if (radioPlayer.paused) toggleRadioPlay(true);
 }
 
-function onRadioScrub(val) {
+let radioScrubActive = false;
+let radioScrubRaf = 0;
+let radioScrubVal = 0;
+
+function onRadioScrubPreview(val) {
+  const nextT = parseFloat(val) || 0;
+  radioScrubActive = true;
+  radioScrubVal = nextT;
+  const seekEl = document.getElementById("radio-seek");
+  if (seekEl) seekEl.classList.add("is-scrubbing");
+  const paintPreview = () => {
+    radioScrubRaf = 0;
+    const curTimeEl = document.getElementById("radio-cur-time");
+    if (curTimeEl) curTimeEl.textContent = formatMMSS(radioScrubVal);
+    paintRadioSeekProgress(radioScrubVal);
+  };
+  if (!radioScrubRaf && typeof requestAnimationFrame === "function") radioScrubRaf = requestAnimationFrame(paintPreview);
+  else if (typeof requestAnimationFrame !== "function") paintPreview();
+}
+
+function onRadioScrubCommit(val) {
+  radioScrubActive = false;
+  if (radioScrubRaf && typeof cancelAnimationFrame === "function") {
+    cancelAnimationFrame(radioScrubRaf);
+    radioScrubRaf = 0;
+  }
+  const seekEl = document.getElementById("radio-seek");
+  if (seekEl) seekEl.classList.remove("is-scrubbing");
   ensureRadioReady();
   const nextT = parseFloat(val) || 0;
   applyRadioSeek(nextT);
   markRadioPosByUser(nextT);
+}
+
+function onRadioScrub(val) {
+  onRadioScrubCommit(val);
 }
 
 function cycleRadioSpeed() {
@@ -11374,9 +11523,9 @@ function renderRadioChapters(activeChapIdx) {
 function updateRadioLiveDisplay(t) {
   try {
     const seekEl = document.getElementById("radio-seek");
-    if (seekEl) seekEl.value = Math.floor(t);
+    if (seekEl && !radioScrubActive) seekEl.value = Math.floor(t);
     const curTimeEl = document.getElementById("radio-cur-time");
-    if (curTimeEl) curTimeEl.textContent = formatMMSS(t);
+    if (curTimeEl && !radioScrubActive) curTimeEl.textContent = formatMMSS(t);
     if (seekEl && radioPlayer.duration && isFinite(radioPlayer.duration)) {
       seekEl.max = Math.ceil(radioPlayer.duration);
     }
@@ -14193,7 +14342,7 @@ function syncBackendRecord(p, qid, choice, isCorrect, askAgain, newTier, stampSe
   const tsSec = Math.max(TRUE_GREEN_EPOCH, Math.floor(stampSec || nowUnixSec()));
   setMasteryTier(p.point_key, newTier, tsSec);
   setMasteryTier(p.point, newTier, tsSec);
-  applyMasteryOverrides();
+  applySingleMasteryUpdate(p.point_key, p.point);
 
   const rec = {
     id: qid,
@@ -15544,6 +15693,9 @@ function positionMainThumbBar(immediate) {
 window.addEventListener("resize", () => { THUMB_BAR_CACHE = null; positionMainThumbBar(true); });
 
 function switchMode(m, autoPlayRadio) {
+  if (m === activeMode && m === lastThumbPointerMode && (performance.now() - lastThumbPointerSwitchAt) < 420) {
+    return;
+  }
   if (m === "radio" && activeMode === "radio" && radioReviewOpen) {
     closeRadioReview();
     return;
@@ -16270,6 +16422,12 @@ function openGrammarAuditFromAnywhere() {
   }
 }
 
+let lastVocabRenderedSig = "";
+function getVocabRenderSig(sess) {
+  const top = (sess && Array.isArray(sess.queue) && sess.queue.length) ? sess.queue[0] : "";
+  return `${vocabSubMode}|${vcPracticeMode}|${top}|${sess ? sess.cleared : 0}|${sess ? sess.total : 0}|${vcRevealed ? 1 : 0}`;
+}
+
 function enterVocabMode() {
   const m = computeDaily120Metrics();
   if (m.ga && m.ga.requiredToday && m.flashDone && !m.ga.gaDone) {
@@ -16282,7 +16440,11 @@ function enterVocabMode() {
     enterGrammarAuditSubMode();
     return;
   }
-  ensureVocabSession(false);
+  const sess = ensureVocabSession(false);
+  const box = document.getElementById("vocab-stage-box");
+  if (vcPracticeMode !== "voice" && box && box.innerHTML && !vcAnimating && !vcPendingLeft && lastVocabRenderedSig === getVocabRenderSig(sess)) {
+    return;
+  }
   vcRevealed = false;
   vcPendingLeft = false;
   vcAnimating = false;
@@ -16874,10 +17036,12 @@ function renderVocabStage() {
   const box = document.getElementById("vocab-stage-box");
   if (!box) return;
   if (vocabSubMode === "ga") {
+    lastVocabRenderedSig = "";
     renderGrammarAuditStage();
     return;
   }
   const sess = ensureVocabSession(false);
+  lastVocabRenderedSig = getVocabRenderSig(sess);
 
   if (!sess.queue.length) {
     const remPool = countRemainingVocabPool();
@@ -21043,8 +21207,18 @@ function renderMockStage() {
   }
 }
 
-function renderDashboard() {
-  applyMasteryOverrides();
+let lastDashRenderSig = "";
+function renderDashboard(forceRefresh) {
+  if (masteryDirty) applyMasteryOverrides();
+  const qVal = (document.getElementById("pt-search") && document.getElementById("pt-search").value) || "";
+  const gaLen = (A.grammarAudit && Object.keys(A.grammarAudit).length) || 0;
+  const mockSig = (loadMockHist()[DATA.plan_date] || {}).scaled || 0;
+  const dashSig = `${masteryVer}|${dashMod}|${dashTier}|${A.step}|${gaLen}|${mockSig}|${qVal}|${expandedPt}`;
+  const sumEl = document.getElementById("dash-summary");
+  if (!forceRefresh && sumEl && sumEl.innerHTML && lastDashRenderSig === dashSig) {
+    return;
+  }
+  lastDashRenderSig = dashSig;
   const order = ["grammar", "henkei", "listening", "vocab"];
   const pillarMeta = order.map(k => {
     const m = DATA.mastery[k];
@@ -21302,41 +21476,22 @@ function speakLedgerItem(name, audioUrl) {
   }
 }
 
-function renderMasteryList() {
-  const q = (document.getElementById("pt-search").value || "").trim().toLowerCase();
-  const items = DATA.mastery[dashMod].items.filter(it => {
-    if (q) {
-      if (q === "略生" || q === "犹豫") return isItemHesitant(it);
-      if (q === "抽查" || q === "保鲜") {
-        const ld = getEffectiveItemLastDate(it);
-        return it.tier === "done" && !!ld && daysSinceTag(ld) >= 10;
-      }
-      return it.name.toLowerCase().includes(q) || displayPointName(it.name).toLowerCase().includes(q) || (it.sub || "").toLowerCase().includes(q) || (it.family || "").toLowerCase().includes(q);
-    }
-    return it.tier === dashTier;
-  });
-  lastLedgerItems = items;
+let ledgerRenderSeq = 0;
 
-  const listEl = document.getElementById("point-list");
-  if (!items.length) {
-    listEl.innerHTML = `<div style="padding:36px 0;color:var(--ink-3);font-size:15px;">此处已清空</div>`;
-    return;
-  }
-
-  listEl.innerHTML = items.map((it, i) => {
-    const canSpeak = !!(it.audio || dashMod === "vocab" || DATA.words[it.name]);
-    const stNum = Math.max(0, Math.min(3, Number(it.streak || (it.tier === "done" ? 3 : (it.tier === "wip" ? 1 : 0)))));
-    const stCls = it.tier === "done" ? "s-done" : (it.tier === "wip" ? "s-wip" : "");
-    const splitKids = (dashMod === "grammar" && it.gid && Array.isArray(GA_SPLIT_MAP[it.gid])) ? GA_SPLIT_MAP[it.gid] : null;
-    const gaEff = (dashMod === "grammar" && it.gid) ? (splitKids ? getEffectiveParentGA(it.gid) : getEffectiveGA(it.gid)) : null;
-    const gaSpec = (gaEff && gaEff.code >= 1 && gaEff.code <= 4) ? GA_SPECTRUM[gaEff.code] : null;
-    const gaTagHTML = gaSpec ? `<span class="li-ga-tag ${gaSpec.cls}">${gaSpec.label}</span>` : "";
-    const hesHTML = isItemHesitant(it) ? `<span class="li-hes">略生</span>` : "";
-    const lastD = it.tier === "done" ? getEffectiveItemLastDate(it) : "";
-    const dStale = lastD ? daysSinceTag(lastD) : 0;
-    const staleHTML = (it.tier === "done" && dStale >= 10) ? `<span class="li-stale">${dStale}天前·抽查</span>` : "";
-    const extraHTML = expandedPt === i ? buildLedgerExtraHTML(it) : "";
-    return `
+function buildLedgerRowHTML(it, i) {
+  const canSpeak = !!(it.audio || dashMod === "vocab" || DATA.words[it.name]);
+  const stNum = Math.max(0, Math.min(3, Number(it.streak || (it.tier === "done" ? 3 : (it.tier === "wip" ? 1 : 0)))));
+  const stCls = it.tier === "done" ? "s-done" : (it.tier === "wip" ? "s-wip" : "");
+  const splitKids = (dashMod === "grammar" && it.gid && Array.isArray(GA_SPLIT_MAP[it.gid])) ? GA_SPLIT_MAP[it.gid] : null;
+  const gaEff = (dashMod === "grammar" && it.gid) ? (splitKids ? getEffectiveParentGA(it.gid) : getEffectiveGA(it.gid)) : null;
+  const gaSpec = (gaEff && gaEff.code >= 1 && gaEff.code <= 4) ? GA_SPECTRUM[gaEff.code] : null;
+  const gaTagHTML = gaSpec ? `<span class="li-ga-tag ${gaSpec.cls}">${gaSpec.label}</span>` : "";
+  const hesHTML = isItemHesitant(it) ? `<span class="li-hes">略生</span>` : "";
+  const lastD = it.tier === "done" ? getEffectiveItemLastDate(it) : "";
+  const dStale = lastD ? daysSinceTag(lastD) : 0;
+  const staleHTML = (it.tier === "done" && dStale >= 10) ? `<span class="li-stale">${dStale}天前·抽查</span>` : "";
+  const extraHTML = expandedPt === i ? buildLedgerExtraHTML(it) : "";
+  return `
     <div class="ledger-item" onclick="togglePtNote(${i})">
       <div class="li-row">
         <div class="li-left">
@@ -21360,7 +21515,48 @@ function renderMasteryList() {
       <div class="li-extra">${extraHTML}</div>
     </div>
   `;
-  }).join("");
+}
+
+function renderMasteryList() {
+  const seq = ++ledgerRenderSeq;
+  const q = (document.getElementById("pt-search").value || "").trim().toLowerCase();
+  const items = DATA.mastery[dashMod].items.filter(it => {
+    if (q) {
+      if (q === "略生" || q === "犹豫") return isItemHesitant(it);
+      if (q === "抽查" || q === "保鲜") {
+        const ld = getEffectiveItemLastDate(it);
+        return it.tier === "done" && !!ld && daysSinceTag(ld) >= 10;
+      }
+      return it.name.toLowerCase().includes(q) || displayPointName(it.name).toLowerCase().includes(q) || (it.sub || "").toLowerCase().includes(q) || (it.family || "").toLowerCase().includes(q);
+    }
+    return it.tier === dashTier;
+  });
+  lastLedgerItems = items;
+
+  const listEl = document.getElementById("point-list");
+  if (!items.length) {
+    listEl.innerHTML = `<div style="padding:36px 0;color:var(--ink-3);font-size:15px;">此处已清空</div>`;
+    return;
+  }
+
+  const FIRST_BATCH = 24;
+  if (items.length <= FIRST_BATCH || typeof listEl.insertAdjacentHTML !== "function" || typeof requestAnimationFrame !== "function") {
+    listEl.innerHTML = items.map((it, i) => buildLedgerRowHTML(it, i)).join("");
+    return;
+  }
+  listEl.innerHTML = items.slice(0, FIRST_BATCH).map((it, i) => buildLedgerRowHTML(it, i)).join("");
+  let cursor = FIRST_BATCH;
+  const CHUNK = 40;
+  const appendMore = () => {
+    if (seq !== ledgerRenderSeq) return;
+    const end = Math.min(items.length, cursor + CHUNK);
+    let html = "";
+    for (let i = cursor; i < end; i++) html += buildLedgerRowHTML(items[i], i);
+    listEl.insertAdjacentHTML("beforeend", html);
+    cursor = end;
+    if (cursor < items.length) requestAnimationFrame(appendMore);
+  };
+  requestAnimationFrame(appendMore);
 }
 
 function closeModal(fromPop) {
@@ -21593,6 +21789,25 @@ window.addEventListener("pagehide", () => {
 window.addEventListener("beforeunload", () => {
   persistRadioPositionNow(false);
 });
+
+(function scheduleIdleAppWarmup() {
+  const runWarm = () => {
+    try {
+      if (typeof ensureVocabSession === "function") ensureVocabSession(false);
+      if (typeof warmUpcomingVocabCards === "function") warmUpcomingVocabCards();
+      if (typeof scheduleWarmUpcomingQuiz === "function") scheduleWarmUpcomingQuiz();
+      if (!radioInitialized && typeof renderRadioChapters === "function") {
+        const strip = document.getElementById("radio-chap-pills");
+        if (strip && !strip.innerHTML) renderRadioChapters(0);
+      }
+    } catch (e) {}
+  };
+  if (typeof requestIdleCallback === "function") {
+    setTimeout(() => requestIdleCallback(runWarm, { timeout: 1400 }), 420);
+  } else if (typeof setTimeout === "function") {
+    setTimeout(runWarm, 650);
+  }
+})();
 
 // ================= NATIVE ZEN BODY ENGINE ("体律" · v2 Native-App Polish · 零明文隐私) =================
 window.ZB = (function() {
@@ -23380,18 +23595,17 @@ window.ZB = (function() {
       stage.addEventListener("touchcancel", endG, { passive: true });
     }
 
-    // Interactive Body Chart Scrubbing
+    // Interactive Body Chart Scrubbing (120Hz rAF + zero-layout cached SVG rect)
     const cw = ge("zb-chart");
     if (cw && cw.addEventListener) {
-      let scOn = false;
-      const scrub = (cx, cy) => {
+      let scOn = false, scRect = null, scWb = null, scRaf = 0, scX = 0, scY = 0;
+      const runScrubFrame = () => {
+        scRaf = 0;
         if (!CHART_PTS.length) return;
-        const svg = ge("zb-chart-svg");
-        if (!svg || !svg.getBoundingClientRect) return;
-        const rect = svg.getBoundingClientRect();
-        if (!rect.width) return;
+        const rect = scRect || (() => { const s = ge("zb-chart-svg"); return (s && s.getBoundingClientRect) ? s.getBoundingClientRect() : null; })();
+        if (!rect || !rect.width) return;
         const ang = typeof FP_ANGLE !== "undefined" ? FP_ANGLE : 0;
-        const ratio = ang === 90 ? (rect.bottom - cy) / rect.height : (ang === 270 ? (cy - rect.top) / rect.height : (cx - rect.left) / rect.width);
+        const ratio = ang === 90 ? (rect.bottom - scY) / rect.height : (ang === 270 ? (scY - rect.top) / rect.height : (scX - rect.left) / rect.width);
         const sx = Math.max(0, Math.min(360, ratio * 360));
         let bi = 0, bd = Infinity;
         for (let i = 0; i < CHART_PTS.length; i++) { const dd = Math.abs(CHART_PTS[i].x - sx); if (dd < bd) { bd = dd; bi = i; } }
@@ -23404,16 +23618,31 @@ window.ZB = (function() {
           halo.setAttribute("cx", pt.x); halo.setAttribute("cy", pt.y); halo.style.display = "";
           foc.setAttribute("cx", pt.x); foc.setAttribute("cy", pt.y); foc.style.display = "";
         }
-        applyBodyHead(todayYmd(), latestWB(), pt);
+        applyBodyHead(todayYmd(), scWb || latestWB(), pt);
+      };
+      const scheduleScrub = (cx, cy) => {
+        scX = cx; scY = cy;
+        if (!scRaf && typeof requestAnimationFrame === "function") scRaf = requestAnimationFrame(runScrubFrame);
+        else if (typeof requestAnimationFrame !== "function") runScrubFrame();
       };
       const endS = () => {
+        if (scRaf && typeof cancelAnimationFrame === "function") { cancelAnimationFrame(scRaf); scRaf = 0; }
+        scRect = null; scWb = null;
         if (!scOn && SCRUB_IDX === -1) return;
         scOn = false; SCRUB_IDX = -1;
         ["zb-c-cur", "zb-c-halo", "zb-c-foc"].forEach(id => { const el = ge(id); if (el) el.style.display = "none"; });
         applyBodyHead(todayYmd(), latestWB(), null);
       };
-      cw.addEventListener("pointerdown", e => { if (!CHART_PTS.length) return; scOn = true; try { cw.setPointerCapture(e.pointerId); } catch (err) {} scrub(e.clientX, e.clientY); });
-      cw.addEventListener("pointermove", e => { if (!scOn && (e.pointerType !== "mouse" || e.buttons === 0)) return; scrub(e.clientX, e.clientY); });
+      cw.addEventListener("pointerdown", e => {
+        if (!CHART_PTS.length) return;
+        scOn = true;
+        const svg = ge("zb-chart-svg");
+        scRect = (svg && svg.getBoundingClientRect) ? svg.getBoundingClientRect() : null;
+        scWb = latestWB();
+        try { cw.setPointerCapture(e.pointerId); } catch (err) {}
+        scheduleScrub(e.clientX, e.clientY);
+      });
+      cw.addEventListener("pointermove", e => { if (!scOn && (e.pointerType !== "mouse" || e.buttons === 0)) return; scheduleScrub(e.clientX, e.clientY); });
       cw.addEventListener("pointerup", endS);
       cw.addEventListener("pointercancel", endS);
       cw.addEventListener("pointerleave", () => { if (!scOn) endS(); });
@@ -25989,11 +26218,30 @@ const fbKanji32 = sb.getSafeQuestionFallbackJa({
 if (fbKanji32.includes('疑問') || !fbKanji32.includes('が浮かんだ')) {
   throw new Error('Self-test 32 failed: kanji-reading fallback leaked target kanji: ' + fbKanji32);
 }
+
+// Self-test 33 (v88): Ultimate 120Hz fluidity invariants (non-blocking fonts, O(1) mastery update, 120Hz radio scrub preview/commit, instant pointerdown tabs, idle prewarm & chunked ledger)
+if (!html.includes('rel="preload" as="style"') || !html.includes('fonts.googleapis.com')) {
+  throw new Error('Self-test 33 failed: Google Fonts stylesheet must load non-render-blocking via preload+onload');
+}
+if (typeof sb.applySingleMasteryUpdate !== 'function' || typeof sb.onRadioScrubPreview !== 'function' || typeof sb.onRadioScrubCommit !== 'function') {
+  throw new Error('Self-test 33 failed: missing v88 O(1) mastery or 120Hz radio scrub preview/commit helpers');
+}
+if (!html.includes('bindInstantThumbTabs') || !html.includes('scheduleIdleAppWarmup') || !html.includes('buildLedgerRowHTML')) {
+  throw new Error('Self-test 33 failed: missing instant thumb tabs, idle warmup, or chunked ledger helper');
+}
+sb.onRadioScrubPreview(125);
+if (!vm.runInNewContext('radioScrubActive === true', sb)) {
+  throw new Error('Self-test 33 failed: onRadioScrubPreview did not enter scrub preview state');
+}
+sb.onRadioScrubCommit(125);
+if (!vm.runInNewContext('radioScrubActive === false', sb)) {
+  throw new Error('Self-test 33 failed: onRadioScrubCommit did not cleanly exit scrub state');
+}
 """
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
 
 sw_path = os.path.join(BASE_DIR, "sw.js")
-SW_CACHE_NAME = "n3-studio-tutor-v87"
+SW_CACHE_NAME = "n3-studio-tutor-v88"
 if not _IS_SIM_OUTPUT and os.path.exists(sw_path):
     with open(sw_path, encoding="utf-8") as sf:
         sw_src = sf.read()

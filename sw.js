@@ -1,5 +1,6 @@
-const CACHE_NAME = "n3-studio-tutor-v87";
-const BUILD_STAMP = "2026-11-26_4c5591b0337150_d4886d30_a570ae_f8149851";
+const CACHE_NAME = "n3-studio-tutor-v88";
+const IMMUTABLE_CACHE = "zen-immutable-v1";
+const BUILD_STAMP = "2026-11-26_4c5591b0337150_d4886d30_a570ae_791d6ea0";
 const CORE_SHELL = [
   "./",
   "./index.html",
@@ -42,19 +43,20 @@ self.addEventListener("fetch", event => {
   if (req.method !== "GET" || req.headers.has("range")) return;
   const url = new URL(req.url);
 
-  // Cache-First for Google Fonts (Noto Sans JP / Noto Sans SC) -> 0ms crisp JP typography offline
+  // Permanent Cache-First for Google Fonts (survives daily app updates -> 0ms offline typography!)
   if (url.origin === "https://fonts.googleapis.com" || url.origin === "https://fonts.gstatic.com") {
     event.respondWith(
-      caches.match(req).then(cached => {
-        if (cached) return cached;
-        return fetch(req).then(res => {
-          if (res && (res.status === 200 || res.type === "opaque")) {
-            const copy = res.clone();
-            caches.open(CACHE_NAME).then(c => c.put(req, copy)).catch(() => {});
-          }
-          return res;
-        }).catch(() => cached);
-      })
+      caches.open(IMMUTABLE_CACHE).then(cache =>
+        cache.match(req).then(cached => {
+          if (cached) return cached;
+          return fetch(req).then(res => {
+            if (res && (res.status === 200 || res.type === "opaque")) {
+              cache.put(req, res.clone()).catch(() => {});
+            }
+            return res;
+          }).catch(() => cached);
+        })
+      )
     );
     return;
   }
@@ -76,15 +78,16 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  // Cache-First keyed by ?v=<hash> for short studio MP3s, icons, story posters, and WebVTT subtitles
-  if (url.pathname.endsWith(".mp3") || url.pathname.endsWith(".png") || url.pathname.endsWith(".jpg") || url.pathname.endsWith(".vtt")) {
+  // Persistent Cache-First keyed by ?v=<hash> for short studio MP3s, icons, story posters, and WebVTT subtitles
+  if (url.pathname.endsWith(".mp3") || url.pathname.endsWith(".png") || url.pathname.endsWith(".jpg") || url.pathname.endsWith(".webp") || url.pathname.endsWith(".vtt")) {
+    const targetCache = (url.searchParams.has("v") || url.pathname.endsWith(".mp3") || url.pathname.endsWith(".vtt")) ? IMMUTABLE_CACHE : CACHE_NAME;
     event.respondWith(
       caches.match(req).then(cached => {
         if (cached) return cached;
         return fetch(req, { cache: "no-store" }).then(res => {
           if (res && res.status === 200) {
             const copy = res.clone();
-            caches.open(CACHE_NAME).then(c => c.put(req, copy)).catch(() => {});
+            caches.open(targetCache).then(c => c.put(req, copy)).catch(() => {});
           }
           return res;
         });

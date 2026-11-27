@@ -1353,13 +1353,13 @@ def test_v85_whole_app_voice_studio_guard() -> None:
 
 
 def test_v86_native_pixel_fluidity_guard() -> None:
-    """Gate 22 (v86): Guard 120Hz browser + WebAPK native fluidity, zero-vibration preference, ETag SWR, and crisp icons."""
+    """Gate 22 (v86-v87): Guard 120Hz browser + WebAPK native fluidity, zero-vibration preference, persistent immutable cache, and crisp icons."""
     bh_src = (BASE_DIR / "build_html.py").read_text(encoding="utf-8")
     sw_src = (BASE_DIR / "sw.js").read_text(encoding="utf-8")
     man = json.loads((BASE_DIR / "manifest.json").read_text(encoding="utf-8"))
 
     for sym in (
-        'SW_CACHE_NAME = "n3-studio-tutor-v87"',
+        'SW_CACHE_NAME = "n3-studio-tutor-v88"',
         "100dvh",
         "touch-action: manipulation",
         "overscroll-behavior: contain",
@@ -1374,17 +1374,25 @@ def test_v86_native_pixel_fluidity_guard() -> None:
         "function scheduleWarmUpcomingQuiz(",
         "bindBottomSheetDragDismiss",
         't.classList.add("is-pressed")',
+        'rel="preload" as="style"',
+        "bindInstantThumbTabs",
+        "function applySingleMasteryUpdate(",
+        "function onRadioScrubPreview(",
+        "function onRadioScrubCommit(",
+        "scheduleIdleAppWarmup",
+        "function buildLedgerRowHTML(",
     ):
-        assert sym in bh_src, f"build_html.py missing v86 fluidity symbol: {sym}"
+        assert sym in bh_src, f"build_html.py missing v87 fluidity symbol: {sym}"
 
     html_out = (BASE_DIR / "index.html").read_text(encoding="utf-8")
     assert "navigator.vibrate" not in html_out, "FORBIDDEN navigator.vibrate found in index.html (violates 零触控震动)!"
-    assert 'CACHE_NAME = "n3-studio-tutor-v87"' in sw_src, "sw.js CACHE_NAME not bumped to v87!"
+    assert 'CACHE_NAME = "n3-studio-tutor-v88"' in sw_src, "sw.js CACHE_NAME not bumped to v88!"
+    assert 'IMMUTABLE_CACHE = "zen-immutable-v1"' in sw_src, "sw.js missing persistent IMMUTABLE_CACHE for fonts/audio!"
     assert 'cache: "no-cache"' in sw_src, "sw.js should use ETag-conditional no-cache SWR revalidation!"
     assert "launch_handler" in man and "display_override" in man, "manifest.json missing launch_handler/display_override!"
     assert (BASE_DIR / "icon-192.png").stat().st_size > 2500, "icon-192.png looks low-res / broken!"
     assert (BASE_DIR / "icon-512.png").stat().st_size > 8000, "icon-512.png looks low-res / broken!"
-    print("[PASS 22/23] v86/v87 120Hz native-app fluidity, O(1) tokenizer, lazy TTS, bottom-sheet physics, Android back-stack & crisp Ensō icons verified")
+    print("[PASS 22/23] v88 ultimate 120Hz fluidity (non-blocking fonts, immutable cache, 0ms tabs, O(1) mastery, 120Hz scrub/sheets, idle warmup & crisp icons) verified")
 
 
 def test_zero_question_audio_answer_leak_guard() -> None:
