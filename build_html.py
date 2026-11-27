@@ -4377,6 +4377,24 @@ html = r"""<!DOCTYPE html>
     background: var(--moss);
     transition: width 0.14s linear;
   }
+  .rv-cinema-rail.jpv-scrub-rail {
+    height: 3px;
+    background: rgba(255, 255, 255, 0.22);
+    cursor: pointer;
+    transition: height 0.16s ease;
+  }
+  .rv-cinema-rail.jpv-scrub-rail::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 26px;
+    background: transparent;
+  }
+  .rv-cinema-rail.jpv-scrub-rail:hover {
+    height: 4.5px;
+  }
 
   /* Quiet frameless vignette fallback (used on silent speaking cards) */
   .rv-art-vignette {
@@ -4477,12 +4495,16 @@ html = r"""<!DOCTYPE html>
     width: 100%;
     overflow-y: auto;
     overscroll-behavior: contain;
+    scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
     padding: 4px 0 12px;
+  }
+  .jpv-stage::-webkit-scrollbar {
+    display: none;
   }
   .jpv-title-ja {
     font-family: var(--sans-jp);
@@ -4495,12 +4517,13 @@ html = r"""<!DOCTYPE html>
     text-wrap: balance;
     word-break: auto-phrase;
     margin: 0 0 10px;
+    flex-shrink: 0;
   }
   .jpv-frame {
     position: relative;
-    width: min(100%, calc(min(33vh, 240px) * 16 / 9));
-    width: min(100%, calc(min(33dvh, 240px) * 16 / 9));
-    max-width: 520px;
+    width: min(100%, calc(min(32vh, 232px) * 16 / 9));
+    width: min(100%, calc(min(32dvh, 232px) * 16 / 9));
+    max-width: 540px;
     aspect-ratio: 16 / 9;
     border-radius: 12px;
     overflow: hidden;
@@ -4523,10 +4546,11 @@ html = r"""<!DOCTYPE html>
   .jpv-sub-stage {
     width: 100%;
     max-width: 520px;
-    min-height: 68px;
+    min-height: 62px;
     margin: 12px auto 0;
     padding: 0 4px;
     text-align: center;
+    flex-shrink: 0;
     transition: opacity 0.2s ease;
   }
   .jpv-sub-stage.sub-hidden {
@@ -4566,6 +4590,14 @@ html = r"""<!DOCTYPE html>
     margin: 10px auto 0;
     padding-top: 10px;
     border-top: 1px solid var(--hairline);
+    flex-shrink: 0;
+  }
+  @media (max-height: 700px) {
+    .jpv-title-ja { font-size: 15px; line-height: 1.38; margin-bottom: 6px; }
+    .jpv-frame { width: min(100%, calc(min(26dvh, 168px) * 16 / 9)); }
+    .jpv-sub-stage { margin-top: 8px; min-height: 50px; }
+    .jpv-sub-ja { font-size: 15.5px; line-height: 1.5; min-height: 24px; }
+    .jpv-sub-zh { font-size: 12.5px; margin-top: 3px; }
   }
   .jpv-words-head {
     font-size: 11.5px;
@@ -13197,12 +13229,38 @@ function syncJpVideoCue(curSec) {
     const zhEl = document.getElementById("jpv-sub-zh");
     if (jaEl) jaEl.innerHTML = formatJpVideoLineHTML(cue);
     if (zhEl) zhEl.textContent = cue.zh || "";
+    const ovEl = document.getElementById("jpv-ch-overline");
+    if (ovEl && !jpvShadowMode) {
+      const chIdx = Number(cue.ch);
+      const chObj = (DATA.radio && Array.isArray(DATA.radio.chapters)) ? DATA.radio.chapters[chIdx] : null;
+      const chTitle = chObj && chObj.title ? String(chObj.title).trim() : "";
+      ovEl.textContent = chTitle ? `今日日语短片 · ${chTitle}` : "今日日语短片 · 全日语";
+    }
     const activeHits = new Set(Array.isArray(cue.hits) ? cue.hits : []);
     document.querySelectorAll(".jpv-chip").forEach(chEl => {
       const w = chEl.getAttribute("data-word") || "";
       chEl.classList.toggle("is-now", activeHits.has(w));
     });
   }
+}
+
+function scrubJpVideoRail(ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  const rail = ev && ev.currentTarget ? ev.currentTarget : document.getElementById("jpv-scrub-rail");
+  const jpv = getRadioJpVideo();
+  if (!rail || !jpv) return;
+  const rect = rail.getBoundingClientRect ? rail.getBoundingClientRect() : null;
+  if (!rect || !rect.width) return;
+  const clientX = (ev && ev.touches && ev.touches[0]) ? ev.touches[0].clientX : Number((ev && ev.clientX) || 0);
+  const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+  const v = ensureJpVideoEl();
+  const dur = Math.max(1, Number((v && v.duration && isFinite(v.duration)) ? v.duration : (jpv.duration_sec || 80)));
+  const targetSec = pct * dur;
+  if (v) {
+    try { v.currentTime = targetSec; } catch (e) {}
+  }
+  jpvLastCueIdx = -2;
+  syncJpVideoCue(targetSec);
 }
 
 function ensureJpVideoEl() {
@@ -13236,7 +13294,7 @@ function ensureJpVideoEl() {
 }
 
 function toggleJpVideoPlay(ev) {
-  if (ev && ev.target && ev.target.closest && ev.target.closest("button")) return;
+  if (ev && ev.target && ev.target.closest && ev.target.closest("button, .jpv-scrub-rail")) return;
   const v = ensureJpVideoEl();
   if (!v) return;
   if (!v.paused && v.muted) {
@@ -13433,7 +13491,7 @@ function renderRadioJpVideoStage(host) {
 
   host.innerHTML = `
     <div class="meta-bar">
-      <span class="overline ok">${jpvShadowMode ? `影子跟读 · ${jpvSpeed}x` : "今日日语短片 · 全日语"}</span>
+      <span class="overline ok" id="jpv-ch-overline">${jpvShadowMode ? `影子跟读 · ${jpvSpeed}x` : "今日日语短片 · 全日语"}</span>
       <span class="overline" id="jpv-time-lbl">00:00 / ${escapeHtml(jpv.duration_label || "01:30")}</span>
     </div>
 
@@ -13448,7 +13506,7 @@ function renderRadioJpVideoStage(host) {
           <button type="button" class="rv-cinema-pill" onclick="openJpVideoFullscreen(event)" aria-label="全屏播放">⤢</button>
         </div>
         <div class="rv-cinema-pause-badge" aria-hidden="true">▶</div>
-        <div class="rv-cinema-rail"><div class="rv-cinema-fill" id="jpv-rail-fill"></div></div>
+        <div class="rv-cinema-rail jpv-scrub-rail" id="jpv-scrub-rail" onclick="scrubJpVideoRail(event)" role="slider" aria-label="短片进度"><div class="rv-cinema-fill" id="jpv-rail-fill"></div></div>
       </div>
 
       <div class="jpv-sub-stage${subStageCls}" id="jpv-sub-stage" onclick="if(jpvShadowMode){peekJpVideoShadowLine(event);} if(event.target && event.target.closest && event.target.closest('.w-tok') && jpvVideoEl && !jpvVideoEl.paused) jpvVideoEl.pause()">
@@ -27367,7 +27425,7 @@ if (!vm.runInNewContext('radioScrubActive === false', sb)) {
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
 
 sw_path = os.path.join(BASE_DIR, "sw.js")
-SW_CACHE_NAME = "n3-studio-tutor-v89"
+SW_CACHE_NAME = "n3-studio-tutor-v90"
 if not _IS_SIM_OUTPUT and os.path.exists(sw_path):
     with open(sw_path, encoding="utf-8") as sf:
         sw_src = sf.read()

@@ -1,6 +1,6 @@
-const CACHE_NAME = "n3-studio-tutor-v89";
+const CACHE_NAME = "n3-studio-tutor-v90";
 const IMMUTABLE_CACHE = "zen-immutable-v1";
-const BUILD_STAMP = "2026-11-26_4c5591b0337150_6409ba98_79b4bd_bc50635b";
+const BUILD_STAMP = "2026-11-26_4c5591b0337150_6409ba98_79b4bd_c08b86ac";
 const CORE_SHELL = [
   "./",
   "./index.html",

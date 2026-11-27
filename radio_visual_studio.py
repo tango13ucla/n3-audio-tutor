@@ -1,22 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Daily All-Japanese Documentary Short Video & Studio Audio Pipeline (radio_visual_studio.py).
+Daily All-Japanese Documentary Short Video & Studio Audio Pipeline (`radio_visual_studio.py` v4.0).
 
-Decouples post-listening visual immersion from grammar flashcards and turns every daily
-《锵锵三人行》 episode into a genuinely meaningful ~80-second ALL-JAPANESE mini-documentary:
-1. Fetches 15-18 authentic, open-licensed Japanese documentary photographs per episode from
-   Japanese Wikipedia & Wikimedia Commons (zero API keys, zero copyright risk, 100% pure cloud).
-2. Authors a vivid 14-16 line ALL-JAPANESE NHK-style feature dialogue retelling today's exact
-   Japanese stories while deliberately weaving in (2x repeated!) today's podcast focus words,
-   yesterday's rumination/relearn words, active vocab cards, and today's core N3/N2 grammar.
-3. Synthesizes dual native Japanese neural voices (`ja-JP-KeitaNeural` + `ja-JP-NanamiNeural`)
-   with exact millisecond per-line timestamps (zero subtitle drift!) over a subtle original
-   warm pentatonic documentary music bed, and cuts a crisp 854x480 24fps H.264/AAC MP4
-   (`video/daily_jp_story.mp4`) + bilingual WebVTT (`video/daily_jp_story.vtt`).
-4. Renders crisp native Japanese studio model MP3s (`audio/spk_0.mp3`, `audio/spk_1.mp3`)
-   for post-listening speaking practice (replacing robotic browser speechSynthesis).
-5. Automatically deletes legacy fragmented `rv_*.mp4` clips so the repo stays lean.
+Turns every daily 《锵锵三人行》 episode into a broadcast-grade 720p HD (1280x720 24fps)
+ALL-JAPANESE NHK-style mini-documentary with 48kHz stereo chamber score:
+1. Beat-by-beat visual storytelling (14-16 purposeful cuts synced to every spoken sentence):
+   uses visually-audited curated storyboards when available, or automatic era-aware multi-archive
+   sourcing (ja/en Wikipedia + Wikimedia Commons HD 720p/1080p video derivatives + featured stills
+   + Art Institute of Chicago IIIF) with perceptual dHash deduplication and glitch/letterbox audit.
+2. Authors a vivid 14-16 line ALL-JAPANESE documentary narration retelling today's exact stories
+   while weaving in today's podcast focus words, rumination words, vocab cards, and core grammar.
+3. Synthesizes studio-mastered stereo dual Japanese voices (`ja-JP-KeitaNeural` + `ja-JP-NanamiNeural`)
+   over an original 48kHz stereo minimalist Japanese chamber score (warm felt piano + cello pad +
+   Karplus-Strong plucked Kyoto koto) with exact millisecond WebVTT subtitle cues.
+4. Masters cohesive editorial film color grades + restrained Kyoto Zen / NHK documentary title card
+   and discreet scene micro-stamps into `video/daily_jp_story.mp4` (`1280x720`, H.264 High, 160k AAC).
 """
 from __future__ import annotations
 
@@ -40,12 +39,26 @@ IMG_DIR = os.path.join(BASE_DIR, "img")
 VIDEO_DIR = os.path.join(BASE_DIR, "video")
 AUDIO_DIR = os.path.join(BASE_DIR, "audio")
 STATE_PATH = os.path.join(BASE_DIR, "n3_live_state.json")
-UA_HEADER = {"User-Agent": "N3AudioTutorVisualStudio/3.0 (https://github.com/tango13ucla/n3-audio-tutor)"}
-SR = 24000
+UA_HEADER = {
+    "User-Agent": "N3AudioTutorVisualStudio/4.0 (https://github.com/tango13ucla/n3-audio-tutor; contact: github.com/tango13ucla)"
+}
+SR = 48000
+VID_W = 1280
+VID_H = 720
+VID_FPS = 24
+CINEMA_VER = "v4_nhk_hd_cinema"
 
-# Boost genuine historical/period archival photography (Meiji/Taisho/Showa/1900s-1990s) over modern stock snapshots
+# Era-aware visual classifier: only boost vintage/monochrome photography on genuinely historical chapters!
 ARCHIVAL_PHOTO_RE = re.compile(
-    r"(?:18[6-9]\d|19\d\d|showa|meiji|taisho|昭和|明治|大正|戦後|建設|当時|旧|古写真|historic|archive|vintage|monochrome|black_and_white)",
+    r"(?:18[6-9]\d|19[0-8]\d|showa|meiji|taisho|昭和|明治|大正|戦後|建設|当時|旧|古写真|historic|archive|vintage|monochrome|black_and_white)",
+    re.I,
+)
+MODERN_SCIENCE_ERA_RE = re.compile(
+    r"(?:脳|睡眠|AI|人工知能|人工智能|量子|核融合|ワクチン|mRNA|免疫|電池|半導体|宇宙|月面|ロボット|MRI|医学|医療|科学|神経|マイクロバイオーム|腸内|加速器|美術館|21世紀|新幹線|防衛|欧州|EU|現代|NISA|投資)",
+    re.I,
+)
+HISTORICAL_ERA_RE = re.compile(
+    r"(?:18\d\d|19[0-8]\d|明治|大正|昭和|江戸|戦後|幕府|百万石|震災|国鉄|万博|高度成長|バブル|オイルショック|切腹|武士|三島|北斎|浮世絵|出島|蘭学|炭鉱|よど号|青函|宅急便|ファミコン|東京タワー|歌舞伎)",
     re.I,
 )
 
@@ -55,7 +68,8 @@ BAD_MEDIA_RE = re.compile(
     r"commons-logo|wikisource|wikinews|symbol|emblem|crest|seal|stamp|diagram|chart|"
     r"graph|reorganization|markets_of_|内閣印|紋章|市章|県章|社章|地図|路線図|系譜|"
     r"question_book|edit-clear|ambox|padlock|locator|blank|signature|autograph|"
-    r"screenshot|cover_art|wordmark|in-game_logo|controller.*isolated|"
+    r"screenshot|cover_art|wordmark|in-game_logo|controller.*isolated|location_map|"
+    r"relief_map|topographic_map|manhole|説明板|看板|"
     r"anatomy|basal_ganglia|coronal|sagittal|schematic|illustration|drawings?|cartoon|ventricle|thalamus|hippocampus_)",
     re.I,
 )
@@ -203,12 +217,12 @@ CURATED_VISUAL_TOPICS: dict[str, dict[str, list[str]]] = {
     "uchi22_s3b_naoshima_part2": {"ja_wiki": ["地中美術館", "直島"], "wm_queries": ["Chichu Art Museum Naoshima", "Benesse House Naoshima"]},
     "uchi22_s4_world_humanoid_robots": {"ja_wiki": ["ヒューマノイド", "産業用ロボット"], "wm_queries": ["Humanoid robot Japan ASIMO", "Industrial robot factory Japan"]},
     # ---- Vol.23 (Editorial Taste Edition) ----
-    "uchi23_s1_news_fallback": {"ja_wiki": ["祇園", "道頓堀", "兼六園"], "wm_queries": ["Kyoto Gion historical 1960s", "Dotonbori Osaka historical", "Kenrokuen Kanazawa garden"]},
-    "uchi23_s2a_kabuki_drama_part1": {"ja_wiki": ["歌舞伎座", "歌舞伎"], "wm_queries": ["Kabuki-za Tokyo historical", "Kabuki actor ukiyo-e stage"]},
-    "uchi23_s2b_quartet_drama_part2": {"ja_wiki": ["軽井沢町", "弦楽四重奏"], "wm_queries": ["Karuizawa winter forest Nagano", "Japanese izakaya street Showa"]},
-    "uchi23_s3a_kobayashi_part1": {"ja_wiki": ["彦根城", "武士", "小林正樹"], "wm_queries": ["Hikone Castle Japan", "Samurai armor Japan", "Traditional tatami hall Kyoto"]},
-    "uchi23_s3b_mishima_contrast_part2": {"ja_wiki": ["鹿苑寺", "三島由紀夫"], "wm_queries": ["Kinkaku-ji Kyoto", "Kinkaku-ji historical", "Kyoto Zen rock garden"]},
-    "uchi23_s4_world_brain_ai": {"ja_wiki": ["東京大学", "理化学研究所"], "wm_queries": ["Tokyo night skyline quiet", "Neuroscience laboratory microscope Japan", "Brain MRI scan medical"]},
+    "uchi23_s1_news_fallback": {"ja_wiki": ["祇園", "先斗町", "兼六園"], "wm_queries": ["Pontocho Alley Kyoto evening", "Kyoto Gion dusk", "Kenrokuen Kanazawa garden"]},
+    "uchi23_s2a_kabuki_drama_part1": {"ja_wiki": ["歌舞伎座", "歌舞伎"], "wm_queries": ["Kabuki-za Tokyo", "Kabuki stage ukiyo-e triptych"]},
+    "uchi23_s2b_quartet_drama_part2": {"ja_wiki": ["軽井沢町", "弦楽四重奏"], "wm_queries": ["Hard rime covered trees Kitayoko", "Karuizawa winter Nagano"]},
+    "uchi23_s3a_kobayashi_part1": {"ja_wiki": ["彦根城", "日本刀", "姫路城"], "wm_queries": ["Hikone Castle Japan", "Japanese Samurai Sword Katana museum"]},
+    "uchi23_s3b_mishima_contrast_part2": {"ja_wiki": ["鹿苑寺", "龍安寺"], "wm_queries": ["Kinkaku-ji Kyoto", "Ryoan-ji rock garden Kyoto"]},
+    "uchi23_s4_world_brain_ai": {"ja_wiki": ["核磁気共鳴画像法", "ニューロン", "龍安寺"], "wm_queries": ["confocal fluorescence brain neuron", "DTI Brain Tractographic", "Ryoan-ji zen garden Kyoto"]},
     # ---- Vol.24 (Mingei / Hokusai / Katsura Villa / Immunology) ----
     "uchi24_s1_news_fallback": {"ja_wiki": ["日本民藝館", "柳宗悦"], "wm_queries": ["Japan Folk Crafts Museum Mingei", "Japanese traditional pottery craft"]},
     "uchi24_s2a_hokusai_part1": {"ja_wiki": ["葛飾北斎", "富嶽三十六景"], "wm_queries": ["Great Wave off Kanagawa Hokusai", "Ukiyo-e Edo woodblock print"]},
@@ -233,66 +247,59 @@ CURATED_VISUAL_TOPICS: dict[str, dict[str, list[str]]] = {
 CURATED_ARCHIVAL_FOOTAGE: dict[str, list[dict[str, Any]]] = {
     # ---- Vol.23 (2026-11-26): Kyoto/Osaka, Kabuki, Classic JP Cinema, Mishima Kinkaku-ji, Brain/Sleep ----
     "uchi23_s1_news_fallback": [
-        {"src": "wm", "id": "File:Un pont à Kyoto (1897).webm", "ss": 8, "label": "1897 Lumière Kyoto"},
-        {"src": "ia", "id": "USAF-11059", "ss": 55, "label": "1946 Kyoto City Life (NARA)"},
+        {"src": "wm", "id": "File:Un pont à Kyoto (1897).webm", "ss": 22, "label": "1897 Lumière Kyoto"},
     ],
     "uchi23_s2a_kabuki_drama_part1": [
-        {"src": "wm", "id": "File:Kabukiza - Tokyo - 2025-06-02.webm", "ss": 3, "label": "Tokyo Kabuki-za"},
-        {"src": "ia", "id": "0576_Human_Face_of_Japan_The_18_01_03_00", "ss": 420, "label": "1982 Japan Traditional Performers"},
+        {"src": "wm", "id": "File:Momijigari (1899) Best Quality.webm", "ss": 95, "label": "1899 Momijigari Kabuki Masters"},
     ],
     "uchi23_s2b_quartet_drama_part2": [
-        {"src": "wm", "id": "File:Sisters of the Gion (1936) by Kenji Mizoguchi.webm", "ss": 120, "label": "1936 Mizoguchi Gion Cinema"},
-        {"src": "ia", "id": "0576_Human_Face_of_Japan_The_18_01_03_00", "ss": 680, "label": "1982 Japanese Home Life"},
+        {"src": "wm", "id": "File:The Danish String Quartet - Haydn's String Quartet No. 42 in C major, Op. 54, No. 2, Hob.III-57 (video).webm", "ss": 75, "label": "Live String Quartet"},
     ],
     "uchi23_s3a_kobayashi_part1": [
-        {"src": "ia", "id": "0576_Human_Face_of_Japan_The_18_01_03_00", "ss": 420, "label": "1982 Japan Samurai Pageant"},
-        {"src": "ia", "id": "0974HMPart4Kyoto", "ss": 45, "label": "Vintage 16mm Kyoto"},
+        {"src": "wm", "id": "File:Drone flyover video of Mount Hiei.webm", "ss": 40, "label": "Kyoto Mountain Silence"},
     ],
     "uchi23_s3b_mishima_contrast_part2": [
         {"src": "wm", "id": "File:L'éclat d'été au pavillon d'Or.webm", "ss": 35, "label": "Kinkaku-ji Golden Pavilion"},
-        {"src": "ia", "id": "0576_Human_Face_of_Japan_The_18_01_03_00", "ss": 110, "label": "1982 Japan Shrine Archive"},
+        {"src": "wm", "id": "File:Yukigesho, le maquillage de neige.webm", "ss": 45, "label": "Kinkaku-ji Snow"},
     ],
     "uchi23_s4_world_brain_ai": [
-        {"src": "ia", "id": "0433_Human_Brain_The_01_05_28_00", "ss": 95, "label": "1955 The Human Brain (Prelinger)"},
-        {"src": "ia", "id": "0242_Sleep_for_Health_E01299_13_00_43_00", "ss": 80, "label": "1950 Sleep for Health"},
+        {"src": "wm", "id": "File:7 Tesla MRI of the ex vivo human brain at 100 micron resolution (100 micron MRI acquired FA25 coronal).webm", "ss": 35, "label": "7-Tesla Brain MRI"},
     ],
     # ---- Vol.11 (Oil Shock / Tokyo Tower / Global Health) ----
     "uchi11_s1_news_fallback": [
-        {"src": "ia", "id": "0576_Human_Face_of_Japan_The_18_01_03_00", "ss": 110, "label": "1982 Japan Archive"},
+        {"src": "wm", "id": "File:Tokyo station - fromabove-2017-12-12.webm", "ss": 6, "label": "Tokyo Marunouchi"},
     ],
     "uchi11_s2b_oilshock_part2": [
         {"src": "ia", "id": "gov.archives.arc.642010", "ss": 980, "label": "1960 Japan Industry (NARA)"},
     ],
     "uchi11_s3a_tokyotower_part1": [
-        {"src": "wm", "id": "File:Sights and Sounds- Tokyo Tower (951524).webm", "ss": 12, "label": "Tokyo Tower"},
-        {"src": "ia", "id": "gov.archives.arc.642010", "ss": 720, "label": "1960 Japan Construction (NARA)"},
+        {"src": "wm", "id": "File:Japan, Tokyo - Rainbow bridge 2014.webm", "ss": 25, "label": "Tokyo Bay & Tower Dusk"},
     ],
     "uchi11_s4_world_global_health": [
-        {"src": "ia", "id": "0433_Human_Brain_The_01_05_28_00", "ss": 95, "label": "1955 Human Brain Science Film"},
+        {"src": "wm", "id": "File:7 Tesla MRI of the ex vivo human brain at 100 micron resolution (100 micron MRI acquired FA25 coronal).webm", "ss": 35, "label": "7-Tesla Brain MRI"},
     ],
     # ---- Vol.12 (Ice Age / Seikan Tunnel / JAL / Moon) ----
     "uchi12_s1_news_fallback": [
-        {"src": "ia", "id": "0576_Human_Face_of_Japan_The_18_01_03_00", "ss": 220, "label": "1982 Japan Society"},
+        {"src": "wm", "id": "File:Tokyo station - fromabove-2017-12-12.webm", "ss": 6, "label": "Tokyo Marunouchi"},
     ],
     "uchi12_s2a_seikan_part1": [
         {"src": "ia", "id": "gov.archives.arc.642010", "ss": 420, "label": "1960 Japan Railways (NARA)"},
     ],
     "uchi12_s2b_seikan_part2": [
-        {"src": "ia", "id": "gov.archives.arc.642010", "ss": 720, "label": "1960 Heavy Engineering (NARA)"},
-        {"src": "wm", "id": "File:Shinkansen N700 Series Bullet Train Tokyo Station by Don Ramey Logan.webm", "ss": 3, "label": "Shinkansen"},
+        {"src": "wm", "id": "File:Shinkansen N700 Series Bullet Train Tokyo Station by Don Ramey Logan.webm", "ss": 4, "label": "Shinkansen"},
     ],
     "uchi12_s3a_jal_part1": [
-        {"src": "wm", "id": "File:20 MINUTES IN TAKEOFFS & LANDINGS at Haneda Airport (HND-RJTT).webm", "ss": 45, "label": "Haneda Aviation"},
+        {"src": "wm", "id": "File:Fuji aerial stabilized video.webm", "ss": 12, "label": "Mount Fuji Aerial"},
     ],
     "uchi12_s4_world_nuclear_space": [
-        {"src": "ia", "id": "Apollo15And1616mmOnboardFilm", "ss": 90, "label": "1971 NASA 16mm Lunar Film"},
+        {"src": "wm", "id": "File:Apollo 16 Rover Traverse to Station 13.webm", "ss": 30, "label": "1972 NASA Apollo 16 Lunar Rover"},
     ],
     # ---- Vol.13 (Heisei 1989 / Bubble / Toyota Kanban / Fusion) ----
     "uchi13_s2a_heisei_1989_part1": [
-        {"src": "ia", "id": "0576_Human_Face_of_Japan_The_18_01_03_00", "ss": 110, "label": "1980s Japan Archive"},
+        {"src": "wm", "id": "File:Japan, Tokyo - Rainbow bridge 2014.webm", "ss": 25, "label": "Tokyo Bay Dusk"},
     ],
     "uchi13_s2b_heisei_1989_part2": [
-        {"src": "wm", "id": "File:Shibuya Crossing, Tokyo, Japan (video).webm", "ss": 10, "label": "Tokyo Shibuya"},
+        {"src": "wm", "id": "File:Shibuya Crossing, Tokyo, Japan (video).webm", "ss": 6, "label": "Tokyo Shibuya"},
     ],
     "uchi13_s3a_toyota_kanban_part1": [
         {"src": "ia", "id": "gov.archives.arc.642010", "ss": 980, "label": "1960 Japan Factory (NARA)"},
@@ -302,18 +309,18 @@ CURATED_ARCHIVAL_FOOTAGE: dict[str, list[dict[str, Any]]] = {
         {"src": "ia", "id": "gov.archives.arc.642010", "ss": 720, "label": "Japan Reconstruction Archive"},
     ],
     "uchi14_s3a_kaiten_sushi_part1": [
-        {"src": "wm", "id": "File:Making Sushi.webmhd.webm", "ss": 15, "label": "Japanese Sushi Craft"},
+        {"src": "wm", "id": "File:Tsukiji Fish Market - Pacific Passport (1012426).webm", "ss": 24, "label": "Japanese Sushi & Market"},
     ],
     # ---- Vol.15 (Super Cub / Muji / Medicine) ----
     "uchi15_s2a_super_cub_1958_part1": [
         {"src": "ia", "id": "gov.archives.arc.642010", "ss": 980, "label": "1960 Showa Manufacturing"},
     ],
     "uchi15_s3a_muji_1980_part1": [
-        {"src": "ia", "id": "0576_Human_Face_of_Japan_The_18_01_03_00", "ss": 680, "label": "1980s Japanese Daily Craft"},
+        {"src": "wm", "id": "File:Shibuya Crossing, Tokyo, Japan (video).webm", "ss": 6, "label": "Tokyo Everyday Life"},
     ],
     # ---- Vol.16-22 & Vol.24-25 ----
     "uchi16_s1_news_fallback": [
-        {"src": "ia", "id": "0576_Human_Face_of_Japan_The_18_01_03_00", "ss": 210, "label": "1982 Japan Regional Town"},
+        {"src": "wm", "id": "File:Drone flyover video of Mount Hiei.webm", "ss": 40, "label": "Regional Japan Aerial"},
     ],
     "uchi17_s2a_jnr_part1": [
         {"src": "ia", "id": "gov.archives.arc.642010", "ss": 420, "label": "1960 JNR Railways"},
@@ -322,22 +329,22 @@ CURATED_ARCHIVAL_FOOTAGE: dict[str, list[dict[str, Any]]] = {
         {"src": "wm", "id": "File:Shinkansen N700 Series Bullet Train Tokyo Station by Don Ramey Logan.webm", "ss": 4, "label": "Tokyo Rail"},
     ],
     "uchi18_s1_news_fallback": [
-        {"src": "ia", "id": "gov.archives.arc.642010", "ss": 420, "label": "1960 Japan Regional Railways"},
+        {"src": "wm", "id": "File:⁴ᴷ 高崎駅 北陸・上越新幹線 E7系 2024年6月7日.webm", "ss": 20, "label": "Hokuriku Shinkansen E7"},
     ],
     "uchi18_s2a_yodogo_part1": [
-        {"src": "wm", "id": "File:20 MINUTES IN TAKEOFFS & LANDINGS at Haneda Airport (HND-RJTT).webm", "ss": 120, "label": "Haneda Runway"},
+        {"src": "wm", "id": "File:Fuji aerial stabilized video.webm", "ss": 12, "label": "Mount Fuji Aerial"},
     ],
     "uchi18_s3a_kanazawa_part1": [
-        {"src": "ia", "id": "USAF-11059", "ss": 55, "label": "1946 Japanese Traditional Craft Archive"},
+        {"src": "wm", "id": "File:Heavy snow in the Hokuriku region (filmed near Kanazawa).webm", "ss": 1, "label": "Kanazawa Winter Snow"},
     ],
     "uchi18_s3b_kanazawa_part2": [
-        {"src": "ia", "id": "0576_Human_Face_of_Japan_The_18_01_03_00", "ss": 110, "label": "1982 Japan Traditional Streetscape"},
+        {"src": "wm", "id": "File:Heavy snow in the Hokuriku region (filmed near Kanazawa).webm", "ss": 1, "label": "Kanazawa Winter Snow"},
     ],
     "uchi19_s2a_sukiyaki_part1": [
         {"src": "ia", "id": "1964-10-15_US_Dominates_Tokyo_Games", "ss": 18, "label": "1964 Tokyo Newsreel"},
     ],
     "uchi19_s3a_tsukiji_part1": [
-        {"src": "wm", "id": "File:Stalls inside the Tsukiji fish market, Tokyo, Japan.webm", "ss": 1, "label": "Tsukiji Fish Market"},
+        {"src": "wm", "id": "File:Tsukiji Fish Market - Pacific Passport (1012426).webm", "ss": 24, "label": "Tsukiji Market"},
     ],
     "uchi20_s4_world_undersea_cables": [
         {"src": "ia", "id": "underground_cable", "ss": 90, "label": "Archival Cable Engineering"},
@@ -346,38 +353,40 @@ CURATED_ARCHIVAL_FOOTAGE: dict[str, list[dict[str, Any]]] = {
         {"src": "ia", "id": "1964-10-15_US_Dominates_Tokyo_Games", "ss": 20, "label": "1964 Japan Sports Newsreel"},
     ],
     "uchi22_s2a_ise_sengu_part1": [
-        {"src": "ia", "id": "0576_Human_Face_of_Japan_The_18_01_03_00", "ss": 110, "label": "1982 Japan Shrine"},
+        {"src": "wm", "id": "File:Drone flyover video of Mount Hiei.webm", "ss": 40, "label": "Sacred Japanese Forest Aerial"},
     ],
     "uchi24_s1_news_fallback": [
-        {"src": "ia", "id": "USAF-11059", "ss": 55, "label": "1946 Kyoto Craft Archive"},
+        {"src": "wm", "id": "File:Un pont à Kyoto (1897).webm", "ss": 22, "label": "1897 Historical Japan"},
     ],
     "uchi24_s2a_hokusai_part1": [
-        {"src": "wm", "id": "File:Un pont à Kyoto (1897).webm", "ss": 8, "label": "1897 Historical Japan"},
+        {"src": "wm", "id": "File:Un pont à Kyoto (1897).webm", "ss": 22, "label": "1897 Historical Japan"},
     ],
     "uchi24_s3a_taut_katsura_part1": [
-        {"src": "ia", "id": "0974HMPart4Kyoto", "ss": 45, "label": "Vintage 16mm Kyoto"},
         {"src": "wm", "id": "File:L'éclat d'été au pavillon d'Or.webm", "ss": 35, "label": "Kyoto Architecture"},
+        {"src": "wm", "id": "File:Yukigesho, le maquillage de neige.webm", "ss": 45, "label": "Kyoto Snow Architecture"},
     ],
     "uchi25_s1_news_fallback": [
-        {"src": "ia", "id": "gov.archives.arc.642010", "ss": 720, "label": "1960 Japan Civil Engineering"},
+        {"src": "wm", "id": "File:Tokyo station - fromabove-2017-12-12.webm", "ss": 6, "label": "Tokyo Marunouchi"},
     ],
     "uchi25_s3a_hidden_champions_part1": [
         {"src": "ia", "id": "gov.archives.arc.642010", "ss": 980, "label": "1960 Japan Precision Factory"},
     ],
     "uchi25_s3b_shinise_part2": [
-        {"src": "ia", "id": "USAF-11059", "ss": 55, "label": "1946 Kyoto Machiya Craft"},
+        {"src": "wm", "id": "File:Un pont à Kyoto (1897).webm", "ss": 22, "label": "1897 Kyoto Heritage"},
     ],
 }
 
-# Theme-matched archival fallback pool for future live-authored news / N2 episodes
+# Theme-matched visually-audited HD footage fallback pool for future live-authored news / N2 episodes
 THEME_ARCHIVAL_FALLBACKS: list[tuple[str, dict[str, Any]]] = [
-    (r"京都|祇園|伝統|歌舞伎|桂|金閣|寺|神社|茶|能|芸", {"src": "wm", "id": "File:Un pont à Kyoto (1897).webm", "ss": 8, "label": "1897 Lumière Kyoto"}),
-    (r"鉄道|新幹線|駅|トンネル|国鉄|電車", {"src": "ia", "id": "gov.archives.arc.642010", "ss": 420, "label": "1960 Japan Railways"}),
-    (r"工場|製造|トヨタ|ホンダ|技術|建築|土木|塔|地下", {"src": "ia", "id": "gov.archives.arc.642010", "ss": 980, "label": "1960 Japan Industry"}),
-    (r"築地|寿司|食|市場|魚", {"src": "wm", "id": "File:Stalls inside the Tsukiji fish market, Tokyo, Japan.webm", "ss": 1, "label": "Tsukiji Market"}),
-    (r"脳|睡眠|医学|医療|科学|記憶|神経", {"src": "ia", "id": "0433_Human_Brain_The_01_05_28_00", "ss": 95, "label": "1955 Human Brain Archive"}),
-    (r"宇宙|月|ロケット|衛星", {"src": "ia", "id": "Apollo15And1616mmOnboardFilm", "ss": 90, "label": "1971 NASA Lunar Film"}),
-    (r"東京|銀座|渋谷|戦後|昭和|平成|日本", {"src": "ia", "id": "0576_Human_Face_of_Japan_The_18_01_03_00", "ss": 110, "label": "1982 Japan Archive"}),
+    (r"金沢|北陸|雪吊|兼六園|加賀", {"src": "wm", "id": "File:Heavy snow in the Hokuriku region (filmed near Kanazawa).webm", "ss": 1, "label": "Kanazawa Winter Snow"}),
+    (r"京都|祇園|伝統|歌舞伎|桂|金閣|寺|神社|茶|能|芸", {"src": "wm", "id": "File:Un pont à Kyoto (1897).webm", "ss": 22, "label": "1897 Lumière Kyoto"}),
+    (r"鉄道|新幹線|駅|トンネル|国鉄|電車", {"src": "wm", "id": "File:Shinkansen N700 Series Bullet Train Tokyo Station by Don Ramey Logan.webm", "ss": 4, "label": "Shinkansen Tokyo Station"}),
+    (r"築地|寿司|食|市場|魚", {"src": "wm", "id": "File:Tsukiji Fish Market - Pacific Passport (1012426).webm", "ss": 24, "label": "Tsukiji Market"}),
+    (r"脳|睡眠|医学|医療|科学|記憶|神経|MRI", {"src": "wm", "id": "File:7 Tesla MRI of the ex vivo human brain at 100 micron resolution (100 micron MRI acquired FA25 coronal).webm", "ss": 35, "label": "7-Tesla Brain MRI"}),
+    (r"免疫|細胞|がん|ワクチン|バイオ", {"src": "wm", "id": "File:Targeting-Tumor-Cells-with-Anti-CD44-Antibody-Triggers-Macrophage-Mediated-Immune-Modulatory-pone.0159716.s018.ogv", "ss": 2, "label": "Live Cell Microscopy"}),
+    (r"宇宙|月|ロケット|衛星", {"src": "wm", "id": "File:Apollo 16 Rover Traverse to Station 13.webm", "ss": 30, "label": "1972 NASA Apollo 16 Lunar Rover"}),
+    (r"欧州|ヨーロッパ|ドイツ|ブリュッセル|防衛|EU", {"src": "wm", "id": "File:European Quarter - Brussels (aerial view).webm", "ss": 16, "label": "European Quarter Brussels"}),
+    (r"東京|銀座|渋谷|丸の内|金融|経済|日本", {"src": "wm", "id": "File:Tokyo station - fromabove-2017-12-12.webm", "ss": 6, "label": "Tokyo Station Aerial"}),
 ]
 
 
@@ -689,6 +698,20 @@ try:
 except Exception:
     pass
 
+CURATED_BEAT_STORYBOARDS: dict[str, list[dict[str, Any]]] = {}
+CURATED_CHAPTER_POSTERS: dict[str, dict[int, str]] = {}
+try:
+    from visual_storyboards_vault import (
+        CURATED_BEAT_STORYBOARDS as _BEAT_BOARDS,
+        CURATED_CHAPTER_POSTERS as _CH_POSTERS,
+        VERIFIED_ARCHIVAL_FOOTAGE_V4 as _V4_FOOTAGE,
+    )
+    CURATED_BEAT_STORYBOARDS.update(_BEAT_BOARDS)
+    CURATED_CHAPTER_POSTERS.update(_CH_POSTERS)
+    CURATED_ARCHIVAL_FOOTAGE.update(_V4_FOOTAGE)
+except ImportError:
+    pass
+
 
 def _find_ffmpeg() -> str:
     exe = shutil.which("ffmpeg")
@@ -701,33 +724,53 @@ def _find_ffmpeg() -> str:
         return ""
 
 
+_WM_LAST_MEDIA_TS = 0.0
+
+
+def _pace_wikimedia_media(min_gap_sec: float = 1.6) -> None:
+    """Polite pacing for upload.wikimedia.org streaming to avoid HTTP 429 bursts."""
+    global _WM_LAST_MEDIA_TS
+    now = time.monotonic()
+    wait = min_gap_sec - (now - _WM_LAST_MEDIA_TS)
+    if wait > 0:
+        time.sleep(wait)
+    _WM_LAST_MEDIA_TS = time.monotonic()
+
+
 def _http_get_json(url: str, timeout: int = 10) -> Any:
     req = urllib.request.Request(url, headers=UA_HEADER)
     with urllib.request.urlopen(req, timeout=timeout) as resp:
         return json.loads(resp.read().decode("utf-8"))
 
 
-def _http_download(url: str, dest: str, timeout: int = 15) -> bool:
+def _http_download(url: str, dest: str, timeout: int = 16) -> bool:
     if url.startswith("//"):
         url = "https:" + url
-    req = urllib.request.Request(url, headers=UA_HEADER)
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            ctype = str(resp.headers.get("Content-Type") or "").lower()
-            if "image/" not in ctype and "octet-stream" not in ctype:
-                return False
-            data = resp.read()
-            if len(data) < 8000:
-                return False
-            with open(dest, "wb") as f:
-                f.write(data)
-            return True
-    except Exception:
-        return False
+    for attempt in range(2):
+        if "upload.wikimedia.org" in url:
+            _pace_wikimedia_media(0.35 if attempt == 0 else 2.5)
+        req = urllib.request.Request(url, headers=UA_HEADER)
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                ctype = str(resp.headers.get("Content-Type") or "").lower()
+                if "image/" not in ctype and "octet-stream" not in ctype:
+                    return False
+                data = resp.read()
+                if len(data) < 8000:
+                    return False
+                with open(dest, "wb") as f:
+                    f.write(data)
+                return True
+        except Exception as exc:
+            if "429" in str(exc) and attempt == 0:
+                time.sleep(3.0)
+                continue
+            return False
+    return False
 
 
 def _probe_image_dims(path: str, ffmpeg_bin: str = "ffmpeg") -> tuple[int, int]:
-    """Verify a downloaded image is decodable and return (width, height) using ffmpeg -i (zero ffprobe dependency)."""
+    """Verify a downloaded image/video is decodable and return (width, height)."""
     try:
         proc = subprocess.run(
             [ffmpeg_bin, "-hide_banner", "-i", path],
@@ -745,6 +788,79 @@ def _probe_image_dims(path: str, ffmpeg_bin: str = "ffmpeg") -> tuple[int, int]:
     return 0, 0
 
 
+def _probe_media_duration(path: str, ffmpeg_bin: str = "ffmpeg") -> float:
+    """Return decoded media duration in seconds via ffmpeg -i (zero ffprobe dependency)."""
+    try:
+        proc = subprocess.run(
+            [ffmpeg_bin, "-hide_banner", "-i", path],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=6,
+            check=False,
+        )
+        err = proc.stderr.decode("utf-8", errors="ignore")
+        m = re.search(r"Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)", err)
+        if m:
+            return int(m.group(1)) * 3600 + int(m.group(2)) * 60 + float(m.group(3))
+    except Exception:
+        pass
+    return 0.0
+
+
+def _image_dhash(path: str) -> int | None:
+    """Compute a 64-bit perceptual difference hash (dHash) so near-duplicate stills are never shown back-to-back."""
+    try:
+        from PIL import Image  # type: ignore
+        with Image.open(path) as im:
+            g = im.convert("L").resize((9, 8), Image.Resampling.BILINEAR)
+            px = list(g.getdata())
+        bits = 0
+        for row in range(8):
+            off = row * 9
+            for col in range(8):
+                bits = (bits << 1) | (1 if px[off + col] > px[off + col + 1] else 0)
+        return bits
+    except Exception:
+        return None
+
+
+def _is_near_duplicate_dhash(h: int | None, seen: list[int], max_hamming: int = 10) -> bool:
+    if h is None:
+        return False
+    for prev in seen:
+        if (h ^ prev).bit_count() <= max_hamming:
+            return True
+    return False
+
+
+def _image_passes_quality_check(path: str) -> bool:
+    """Reject washed-out blank diagrams, text slides, or ultra-low-contrast images."""
+    try:
+        import numpy as np  # type: ignore
+        from PIL import Image  # type: ignore
+        with Image.open(path) as im:
+            arr = np.asarray(im.convert("L").resize((160, 90), Image.Resampling.BILINEAR), dtype=np.float32)
+        mean_luma = float(arr.mean())
+        std_luma = float(arr.std())
+        white_frac = float((arr > 246).mean())
+        # Reject mostly-white textbook diagrams or flat solid fills
+        if white_frac > 0.62 or std_luma < 14.0 or mean_luma > 242.0 or mean_luma < 8.0:
+            return False
+        return True
+    except Exception:
+        return True
+
+
+def _infer_chapter_era(story_block: dict[str, Any]) -> str:
+    """Classify chapter visual era ('science', 'archival', or 'modern') to stop Meiji photos leaking into science."""
+    blob = " ".join(str(story_block.get(k) or "") for k in ("id", "short_tab", "title", "ja_focus"))
+    if MODERN_SCIENCE_ERA_RE.search(blob) and not HISTORICAL_ERA_RE.search(blob):
+        return "science"
+    if HISTORICAL_ERA_RE.search(blob):
+        return "archival"
+    return "modern"
+
+
 def _search_ja_wiki_titles(query: str, limit: int = 3) -> list[str]:
     url = "https://ja.wikipedia.org/w/api.php?" + urllib.parse.urlencode({
         "action": "query", "list": "search", "srsearch": query,
@@ -757,9 +873,9 @@ def _search_ja_wiki_titles(query: str, limit: int = 3) -> list[str]:
         return []
 
 
-def _fetch_ja_wiki_media_candidates(page_title: str) -> list[tuple[str, str]]:
-    """Return [(filename, url)] of photographic images from a Japanese Wikipedia page."""
-    url = "https://ja.wikipedia.org/api/rest_v1/page/media-list/" + urllib.parse.quote(page_title, safe="")
+def _fetch_wiki_media_candidates(page_title: str, lang: str = "ja") -> list[tuple[str, str]]:
+    """Return [(filename, url)] of photographic images from a Japanese or English Wikipedia page."""
+    url = f"https://{lang}.wikipedia.org/api/rest_v1/page/media-list/" + urllib.parse.quote(page_title, safe="")
     out: list[tuple[str, str]] = []
     try:
         data = _http_get_json(url, timeout=8)
@@ -787,8 +903,42 @@ def _fetch_ja_wiki_media_candidates(page_title: str) -> list[tuple[str, str]]:
     return out
 
 
-def _fetch_commons_candidates(query: str, limit: int = 8) -> list[tuple[str, str]]:
-    """Search Wikimedia Commons bitmaps and return [(title, thumb_url)]."""
+def _fetch_ja_wiki_media_candidates(page_title: str) -> list[tuple[str, str]]:
+    return _fetch_wiki_media_candidates(page_title, lang="ja")
+
+
+_WM_IMAGE_URL_CACHE: dict[str, str] = {}
+
+
+def _resolve_wm_image_url(file_title: str, width: int = 1600) -> str:
+    """Resolve a high-res Wikimedia Commons bitmap URL for an exact `File:...` title."""
+    key = f"{file_title}@{width}"
+    if key in _WM_IMAGE_URL_CACHE:
+        return _WM_IMAGE_URL_CACHE[key]
+    try:
+        u = "https://commons.wikimedia.org/w/api.php?" + urllib.parse.urlencode({
+            "action": "query",
+            "titles": file_title,
+            "prop": "imageinfo",
+            "iiprop": "url|size|mime",
+            "iiurlwidth": width,
+            "format": "json",
+        })
+        data = _http_get_json(u, timeout=10)
+        for p in ((data.get("query") or {}).get("pages") or {}).values():
+            infos = p.get("imageinfo") or []
+            if infos:
+                dl = str(infos[0].get("thumburl") or infos[0].get("url") or "")
+                if dl:
+                    _WM_IMAGE_URL_CACHE[key] = dl
+                    return dl
+    except Exception:
+        pass
+    return ""
+
+
+def _fetch_commons_candidates(query: str, limit: int = 8) -> list[tuple[str, str, int, int]]:
+    """Search Wikimedia Commons bitmaps and return [(title, thumb_url, width, height)]."""
     url = "https://commons.wikimedia.org/w/api.php?" + urllib.parse.urlencode({
         "action": "query",
         "generator": "search",
@@ -797,10 +947,10 @@ def _fetch_commons_candidates(query: str, limit: int = 8) -> list[tuple[str, str
         "gsrlimit": limit,
         "prop": "imageinfo",
         "iiprop": "url|size|mime",
-        "iiurlwidth": 1280,
+        "iiurlwidth": 1600,
         "format": "json",
     })
-    out: list[tuple[str, str]] = []
+    out: list[tuple[str, str, int, int]] = []
     try:
         data = _http_get_json(url, timeout=9)
         pages = (data.get("query") or {}).get("pages") or {}
@@ -817,14 +967,14 @@ def _fetch_commons_candidates(query: str, limit: int = 8) -> list[tuple[str, str
                 continue
             w = int(info.get("width") or 0)
             h = int(info.get("height") or 0)
-            if w < 560 or h < 320:
+            if w < 720 or h < 420:
                 continue
             ratio = w / max(1, h)
-            if ratio < 0.72 or ratio > 2.55:
+            if ratio < 0.85 or ratio > 2.45:
                 continue
             dl = str(info.get("thumburl") or info.get("url") or "")
             if dl:
-                out.append((title, dl))
+                out.append((title, dl, w, h))
     except Exception:
         pass
     return out
@@ -859,6 +1009,9 @@ def _resolve_topic_queries(story_block: dict[str, Any]) -> dict[str, list[str]]:
     return {"ja_wiki": ja_wiki[:3], "wm_queries": wm_queries, "prefer": []}
 
 
+_ACTIVE_DHASHES: list[int] = []
+
+
 def _download_chapter_shots(
     story_block: dict[str, Any],
     work_dir: str,
@@ -866,46 +1019,52 @@ def _download_chapter_shots(
     ffmpeg_bin: str,
     want: int = 3,
 ) -> list[str]:
-    """Download `want` distinct verified photographic shots for a chapter."""
+    """Download `want` distinct, era-appropriate, perceptually deduplicated HD photographs for a chapter."""
     spec = _resolve_topic_queries(story_block)
     prefer = [p.lower() for p in (spec.get("prefer") or [])]
+    era = _infer_chapter_era(story_block)
+    dhashes = _ACTIVE_DHASHES
 
     candidates: list[tuple[int, str, str]] = []
     seen_urls: set[str] = set()
+
+    def _score_cand(base: int, fname: str, url: str, w: int = 0, h: int = 0) -> int:
+        fn_low = fname.lower()
+        sc = base
+        for idx, pref in enumerate(prefer):
+            if pref in fn_low or pref in url.lower():
+                sc += 120 - idx * 15
+                break
+        if fn_low.endswith((".jpg", ".jpeg")):
+            sc += 10
+        if w >= 1600:
+            sc += 22
+        elif w >= 1200:
+            sc += 12
+        if w > 0 and h > 0 and 1.3 <= (w / h) <= 1.95:
+            sc += 16
+        is_arch = bool(ARCHIVAL_PHOTO_RE.search(fname) or ARCHIVAL_PHOTO_RE.search(url))
+        if era == "archival" and is_arch:
+            sc += 45
+        elif era == "science" and is_arch:
+            sc -= 65
+        elif era == "modern" and re.search(r"(?:18[6-9]\d|meiji|明治|古写真|monochrome)", fname, re.I):
+            sc -= 45
+        return sc
 
     for page in spec.get("ja_wiki") or []:
         for fname, url in _fetch_ja_wiki_media_candidates(page):
             if url in seen_urls:
                 continue
             seen_urls.add(url)
-            fn_low = fname.lower()
-            score = 50
-            for idx, pref in enumerate(prefer):
-                if pref in fn_low or pref in url.lower():
-                    score += 120 - idx * 15
-                    break
-            if fn_low.endswith((".jpg", ".jpeg")):
-                score += 10
-            if ARCHIVAL_PHOTO_RE.search(fname) or ARCHIVAL_PHOTO_RE.search(url):
-                score += 45
-            candidates.append((score, fname, url))
+            candidates.append((_score_cand(50, fname, url), fname, url))
 
     for q in spec.get("wm_queries") or []:
-        for fname, url in _fetch_commons_candidates(q, limit=6):
+        for fname, url, w, h in _fetch_commons_candidates(q, limit=7):
             if url in seen_urls:
                 continue
             seen_urls.add(url)
-            fn_low = fname.lower()
-            score = 40
-            for idx, pref in enumerate(prefer):
-                if pref in fn_low or pref in url.lower():
-                    score += 120 - idx * 15
-                    break
-            if fn_low.endswith((".jpg", ".jpeg")):
-                score += 10
-            if ARCHIVAL_PHOTO_RE.search(fname) or ARCHIVAL_PHOTO_RE.search(url):
-                score += 45
-            candidates.append((score, fname, url))
+            candidates.append((_score_cand(45, fname, url, w=w, h=h), fname, url))
 
     candidates.sort(key=lambda x: -x[0])
 
@@ -919,23 +1078,30 @@ def _download_chapter_shots(
         if not _http_download(url, raw_path):
             continue
         w, h = _probe_image_dims(raw_path, ffmpeg_bin=ffmpeg_bin)
-        if w < 480 or h < 270:
+        if w < 640 or h < 360:
             continue
         ratio = w / max(1, h)
-        if ratio < 0.72 or ratio > 2.6:
+        if ratio < 0.80 or ratio > 2.55:
+            continue
+        if not _image_passes_quality_check(raw_path):
             continue
         with open(raw_path, "rb") as f:
             hsh = hashlib.md5(f.read()).hexdigest()[:12]
         if hsh in used_hashes:
             continue
+        dh = _image_dhash(raw_path)
+        if _is_near_duplicate_dhash(dh, dhashes, max_hamming=10):
+            continue
         used_hashes.add(hsh)
+        if dh is not None:
+            dhashes.append(dh)
         saved.append(raw_path)
 
     return saved
 
 
 _IA_URL_CACHE: dict[str, str] = {}
-_WM_VIDEO_URL_CACHE: dict[str, str] = {}
+_WM_VIDEO_INFO_CACHE: dict[str, tuple[str, float]] = {}
 
 
 def _resolve_ia_mp4_url(ident: str) -> str:
@@ -964,33 +1130,260 @@ def _resolve_ia_mp4_url(ident: str) -> str:
         return ""
 
 
-def _resolve_wm_video_url(file_title: str) -> str:
-    """Resolve a direct Wikimedia Commons public-domain/CC historical video URL."""
-    if file_title in _WM_VIDEO_URL_CACHE:
-        return _WM_VIDEO_URL_CACHE[file_title]
+def _resolve_wm_video_info(file_title: str) -> tuple[str, float]:
+    """
+    Resolve the optimal Wikimedia Commons HD video stream (720p-1080p VP9 WebM derivative
+    preferred over massive raw 4K files for 10x faster, rate-limit-safe streaming) + duration.
+    """
+    if file_title in _WM_VIDEO_INFO_CACHE:
+        return _WM_VIDEO_INFO_CACHE[file_title]
     try:
         u = "https://commons.wikimedia.org/w/api.php?" + urllib.parse.urlencode({
             "action": "query",
             "titles": file_title,
-            "prop": "imageinfo",
-            "iiprop": "url|mime",
+            "prop": "videoinfo",
+            "viprop": "url|derivatives|size|duration|mime",
             "format": "json",
         })
-        data = _http_get_json(u, timeout=10)
+        data = _http_get_json(u, timeout=12)
         pages = (data.get("query") or {}).get("pages") or {}
         for p in pages.values():
-            infos = p.get("imageinfo") or []
-            if infos and infos[0].get("url"):
-                url = str(infos[0]["url"])
-                _WM_VIDEO_URL_CACHE[file_title] = url
-                return url
+            vi_list = p.get("videoinfo") or []
+            if not vi_list:
+                continue
+            vi = vi_list[0]
+            dur = float(vi.get("duration") or 0.0)
+            derivs = [
+                d for d in (vi.get("derivatives") or [])
+                if "webm" in str(d.get("type") or "").lower() and int(d.get("height") or 0) >= 480 and d.get("src")
+            ]
+            # Prefer crisp 720p-1080p VP9 derivatives first, fallback to 480p derivative, then original
+            hd = [d for d in derivs if 700 <= int(d.get("height") or 0) <= 1120]
+            pick = None
+            if hd:
+                hd.sort(key=lambda d: int(d.get("height") or 0))
+                pick = hd[0]
+            elif derivs:
+                derivs.sort(key=lambda d: -int(d.get("height") or 0))
+                pick = derivs[0]
+            url = str(pick["src"]) if pick else str(vi.get("url") or "")
+            if url:
+                _WM_VIDEO_INFO_CACHE[file_title] = (url, dur)
+                return url, dur
     except Exception:
         pass
-    return ""
+    return "", 0.0
+
+
+def _resolve_wm_video_url(file_title: str) -> str:
+    """Resolve a direct Wikimedia Commons public-domain/CC HD video URL."""
+    url, _dur = _resolve_wm_video_info(file_title)
+    return url
+
+
+def _detect_video_active_crop(clip_path: str, ffmpeg_bin: str) -> tuple[bool, tuple[int, int, int, int] | None]:
+    """
+    Sample 4 evenly-spaced frames from an extracted clip to:
+      1. Reject blackout frames, white film tears, or corrupt decodes.
+      2. Compute the active non-black bounding box (w, h, x, y) to trim 4:3 pillarboxes cleanly!
+    Returns (is_clean, crop_box_or_None).
+    """
+    try:
+        import numpy as np  # type: ignore
+        from PIL import Image  # type: ignore
+    except Exception:
+        return True, None
+
+    dur = _probe_media_duration(clip_path, ffmpeg_bin=ffmpeg_bin)
+    if dur < 1.5:
+        return False, None
+
+    tmpdir = tempfile.mkdtemp(prefix="n3_audit_")
+    try:
+        stamps = [max(0.15, dur * frac) for frac in (0.12, 0.38, 0.64, 0.88)]
+        frames_rgb: list[Any] = []
+        orig_w, orig_h = 0, 0
+        for idx, st in enumerate(stamps):
+            fp = os.path.join(tmpdir, f"f{idx}.jpg")
+            subprocess.run(
+                [ffmpeg_bin, "-y", "-v", "error", "-ss", f"{st:.2f}", "-i", clip_path, "-frames:v", "1", "-q:v", "4", fp],
+                timeout=8,
+                check=False,
+            )
+            if os.path.exists(fp) and os.path.getsize(fp) > 1200:
+                with Image.open(fp) as im:
+                    orig_w, orig_h = im.size
+                    frames_rgb.append(np.asarray(im.convert("L"), dtype=np.float32))
+        if len(frames_rgb) < 2 or orig_w < 320 or orig_h < 180:
+            return False, None
+
+        # Check for white film-tear flashes or total blackout
+        means = [float(f.mean()) for f in frames_rgb]
+        if any(m > 240.0 or m < 6.0 for m in means):
+            return False, None
+        # Compute median luminance frame to detect static pillarboxes / letterboxes cleanly
+        med = np.median(np.stack(frames_rgb, axis=0), axis=0)
+        col_prof = med.mean(axis=0)
+        row_prof = med.mean(axis=1)
+        active_cols = np.where(col_prof > 14.0)[0]
+        active_rows = np.where(row_prof > 14.0)[0]
+        crop_box = None
+        if active_cols.size > orig_w * 0.45 and active_rows.size > orig_h * 0.45:
+            x0, x1 = int(active_cols[0]), int(active_cols[-1]) + 1
+            y0, y1 = int(active_rows[0]), int(active_rows[-1]) + 1
+            # Add tiny 2% inner trim if pillarboxes/film borders were detected
+            has_bar = (x0 > orig_w * 0.03) or (orig_w - x1 > orig_w * 0.03) or (y0 > orig_h * 0.03) or (orig_h - y1 > orig_h * 0.03)
+            if has_bar:
+                mx = int((x1 - x0) * 0.02)
+                my = int((y1 - y0) * 0.02)
+                cw = max(240, (x1 - x0) - 2 * mx)
+                ch = max(160, (y1 - y0) - 2 * my)
+                # Ensure even dimensions
+                cw -= cw % 2
+                ch -= ch % 2
+                crop_box = (cw, ch, x0 + mx, y0 + my)
+        return True, crop_box
+    except Exception:
+        return True, None
+    finally:
+        shutil.rmtree(tmpdir, ignore_errors=True)
+
+
+def _extract_verified_video_clip(
+    src: str,
+    ident: str,
+    ss: int,
+    clip_dur: float,
+    out_mp4: str,
+    ffmpeg_bin: str,
+) -> bool:
+    """
+    Download & verify a crisp 1280x720 24fps H.264 clip from Wikimedia Commons (720p/1080p VP9
+    derivative) or Internet Archive with polite rate-limit pacing, 429 retry, and automatic
+    pillarbox/film-border cropping + glitch audit.
+    """
+    if not ffmpeg_bin or os.path.basename(ffmpeg_bin) == "true":
+        return False
+
+    dur_avail = 0.0
+    if src == "wm":
+        media_url, dur_avail = _resolve_wm_video_info(ident)
+    elif src == "ia":
+        media_url = _resolve_ia_mp4_url(ident)
+    else:
+        return False
+    if not media_url:
+        return False
+
+    # Clamp `ss` cleanly so we never seek past EOF or force an awkward mid-shot loop
+    eff_ss = max(0, int(ss))
+    if dur_avail > 0 and eff_ss + clip_dur + 0.5 > dur_avail:
+        eff_ss = max(0, int(dur_avail - clip_dur - 0.8))
+
+    raw_mp4 = out_mp4 + ".raw.mp4"
+    dl_tmp = out_mp4 + ".src.webm"
+    ok_dl = False
+    for attempt in range(3):
+        if src == "wm":
+            _pace_wikimedia_media(2.2 if attempt == 0 else (5.5 if attempt == 1 else 9.0))
+        elif src == "ia" and attempt > 0:
+            time.sleep(2.5 * attempt)
+
+        in_target = media_url
+        use_remote_flags = True
+        # If Wikimedia Range-seek streaming hit Varnish 429 twice, fetch via a single clean GET (<= 40 MB)
+        if attempt == 2 and src == "wm":
+            try:
+                req_h = urllib.request.Request(media_url, headers=UA_HEADER, method="HEAD")
+                with urllib.request.urlopen(req_h, timeout=10) as rh:
+                    clen = int(rh.headers.get("Content-Length") or 0)
+                if 0 < clen <= 40 * 1024 * 1024 and _http_download(media_url, dl_tmp, timeout=28):
+                    in_target = dl_tmp
+                    use_remote_flags = False
+            except Exception:
+                pass
+
+        cmd = [ffmpeg_bin, "-y", "-v", "error"]
+        if use_remote_flags:
+            cmd.extend([
+                "-user_agent", UA_HEADER["User-Agent"],
+                "-multiple_requests", "1",
+                "-reconnect", "1", "-reconnect_streamed", "1", "-reconnect_delay_max", "2",
+                "-rw_timeout", "12000000",
+            ])
+        cmd.extend([
+            "-ss", str(eff_ss),
+            "-i", in_target,
+            "-t", f"{clip_dur + 0.6:.2f}",
+            "-an",
+            "-vf", f"fps={VID_FPS},setsar=1,format=yuv420p",
+            "-c:v", "libx264", "-preset", "veryfast", "-crf", "20",
+            "-pix_fmt", "yuv420p",
+            raw_mp4,
+        ])
+        try:
+            res = subprocess.run(cmd, timeout=28, check=False)
+            if res.returncode == 0 and os.path.exists(raw_mp4) and os.path.getsize(raw_mp4) > 35000:
+                w, h = _probe_image_dims(raw_mp4, ffmpeg_bin=ffmpeg_bin)
+                if w >= 480 and h >= 300:
+                    ok_dl = True
+                    break
+        except Exception:
+            pass
+    try:
+        if os.path.exists(dl_tmp):
+            os.remove(dl_tmp)
+    except OSError:
+        pass
+    if not ok_dl:
+        try:
+            if os.path.exists(raw_mp4):
+                os.remove(raw_mp4)
+        except OSError:
+            pass
+        return False
+
+    is_clean, crop_box = _detect_video_active_crop(raw_mp4, ffmpeg_bin=ffmpeg_bin)
+    if not is_clean:
+        try:
+            os.remove(raw_mp4)
+        except OSError:
+            pass
+        return False
+
+    # Normalize cleanly to 1280x720 24fps, applying auto-detected pillarbox crop when present!
+    vf_steps: list[str] = []
+    if crop_box:
+        cw, ch, cx, cy = crop_box
+        vf_steps.append(f"crop={cw}:{ch}:{cx}:{cy}")
+    elif "pavillon" in ident.lower():
+        vf_steps.append("scale=1520:856:force_original_aspect_ratio=increase,crop=1280:720:(iw-1280)/2:(ih-720)/2")
+    vf_steps.append(
+        f"scale={VID_W}:{VID_H}:force_original_aspect_ratio=increase:flags=lanczos,"
+        f"crop={VID_W}:{VID_H}:(iw-{VID_W})/2:(ih-{VID_H})/2,"
+        f"fps={VID_FPS},setsar=1,format=yuv420p"
+    )
+    res2 = subprocess.run(
+        [
+            ffmpeg_bin, "-y", "-v", "error",
+            "-i", raw_mp4,
+            "-vf", ",".join(vf_steps),
+            "-c:v", "libx264", "-preset", "veryfast", "-crf", "19",
+            "-pix_fmt", "yuv420p",
+            out_mp4,
+        ],
+        timeout=25,
+        check=False,
+    )
+    try:
+        os.remove(raw_mp4)
+    except OSError:
+        pass
+    return res2.returncode == 0 and os.path.exists(out_mp4) and os.path.getsize(out_mp4) > 35000
 
 
 def _resolve_archival_footage_candidates(story_block: dict[str, Any]) -> list[dict[str, Any]]:
-    """Return ordered historical footage candidates for a chapter (exact curated match first, then theme match)."""
+    """Return ordered HD historical/editorial footage candidates for a chapter."""
     sid = str(story_block.get("id") or "").strip()
     if sid in CURATED_ARCHIVAL_FOOTAGE:
         return list(CURATED_ARCHIVAL_FOOTAGE[sid])
@@ -1012,11 +1405,11 @@ def _download_chapter_archival_clips(
     used_clip_keys: set[str],
     ffmpeg_bin: str,
     want: int = 1,
-    clip_dur: float = 11.0,
+    clip_dur: float = 9.5,
 ) -> list[dict[str, str]]:
     """
-    Extract up to `want` crisp, real historical moving video clips (854x480 24fps, zero audio,
-    overscan-cropped to remove vintage 4:3 pillarboxes) via ffmpeg HTTP range streaming.
+    Extract up to `want` crisp, verified HD moving video clips (1280x720 24fps, zero audio,
+    auto-cropped and glitch-audited) via ffmpeg HTTP streaming.
     100% fault-tolerant: gracefully returns [] if offline, mocked, or remote host throttles.
     """
     if not ffmpeg_bin or os.path.basename(ffmpeg_bin) == "true":
@@ -1027,7 +1420,6 @@ def _download_chapter_archival_clips(
 
     ch_idx = int(story_block.get("chapter", 0))
     saved: list[dict[str, str]] = []
-    ia_calls = 0
 
     for idx, cand in enumerate(cands):
         if len(saved) >= want:
@@ -1040,87 +1432,170 @@ def _download_chapter_archival_clips(
         if not ident or clip_key in used_clip_keys:
             continue
 
-        if src == "ia":
-            if ia_calls > 0:
-                time.sleep(0.8)
-            ia_calls += 1
-            media_url = _resolve_ia_mp4_url(ident)
-        elif src == "wm":
-            media_url = _resolve_wm_video_url(ident)
-        else:
-            continue
-
-        if not media_url:
-            continue
-
         out_mp4 = os.path.join(work_dir, f"ch{ch_idx}_archival_{idx}.mp4")
-        # Overscan-crop cleanly removes embedded black pillarboxes/film borders on 4:3 archival reels
-        scale_w, scale_h = (1140, 642) if "pavillon" in ident.lower() else (940, 529)
-        vf = (
-            f"scale={scale_w}:{scale_h}:force_original_aspect_ratio=increase,"
-            "crop=854:480:(iw-854)/2:(ih-480)/2,"
-            "fps=24,setsar=1,format=yuv420p"
-        )
-        cmd = [
-            ffmpeg_bin, "-y", "-v", "error",
-            "-user_agent", UA_HEADER["User-Agent"],
-            "-reconnect", "1", "-reconnect_streamed", "1", "-reconnect_delay_max", "2",
-            "-rw_timeout", "12000000",
-            "-ss", str(ss),
-            "-i", media_url,
-            "-t", f"{clip_dur:.2f}",
-            "-an",
-            "-vf", vf,
-            "-c:v", "libx264", "-preset", "veryfast", "-crf", "23",
-            "-pix_fmt", "yuv420p",
-            out_mp4,
-        ]
-        try:
-            res = subprocess.run(cmd, timeout=22, check=False)
-            if res.returncode == 0 and os.path.exists(out_mp4) and os.path.getsize(out_mp4) > 35000:
-                w, h = _probe_image_dims(out_mp4, ffmpeg_bin=ffmpeg_bin)
-                if w >= 640 and h >= 360:
-                    used_clip_keys.add(clip_key)
-                    saved.append({"path": out_mp4, "label": label, "source": src})
-                    if src == "ia":
-                        time.sleep(0.7)
-        except Exception:
-            continue
+        if _extract_verified_video_clip(src, ident, ss, clip_dur, out_mp4, ffmpeg_bin=ffmpeg_bin):
+            used_clip_keys.add(clip_key)
+            saved.append({"path": out_mp4, "label": label, "source": src})
 
     return saved
 
 
 def _render_fallback_zen_still(dest_jpg: str, ffmpeg_bin: str = "ffmpeg") -> None:
-    """Offline safety net: render a warm subtle Kyoto paper/ink gradient 16:9 frame via ffmpeg."""
+    """Offline safety net: render a warm subtle Kyoto paper/ink gradient 16:9 HD frame via ffmpeg."""
     subprocess.run(
         [
             ffmpeg_bin, "-y", "-v", "error",
-            "-f", "lavfi", "-i", "color=c=0x1d1c19:s=960x540:d=1",
+            "-f", "lavfi", "-i", f"color=c=0x1d1c19:s={VID_W}x{VID_H}:d=1",
             "-vf", "geq=r='min(255,29+14*sin(X/240)+8*cos(Y/180))':g='min(255,28+16*sin(X/260)+7*cos(Y/180))':b='min(255,25+12*sin(X/280)+6*cos(Y/200))'",
-            "-frames:v", "1", "-q:v", "4", dest_jpg,
+            "-frames:v", "1", "-q:v", "3", dest_jpg,
         ],
         check=False,
     )
 
 
 def _render_chapter_poster(src_img: str, dest_jpg: str, ffmpeg_bin: str = "ffmpeg") -> bool:
-    """Create a crisp 960x540 16:9 warm editorial documentary poster JPEG."""
+    """Create a crisp 1280x720 16:9 warm editorial documentary poster JPEG."""
     vf = (
-        "scale=960:540:force_original_aspect_ratio=increase,"
-        "crop=960:540:(iw-960)/2:(ih-540)/2,"
-        "eq=saturation=0.95:contrast=1.04:brightness=-0.02,"
-        "vignette=angle=PI/5"
+        f"scale={VID_W}:{VID_H}:force_original_aspect_ratio=increase:flags=lanczos,"
+        f"crop={VID_W}:{VID_H}:(iw-{VID_W})/2:(ih-{VID_H})*0.42,"
+        "eq=saturation=0.96:contrast=1.05:brightness=-0.015,"
+        "vignette=angle=PI/5.2"
     )
     res = subprocess.run(
         [
             ffmpeg_bin, "-y", "-v", "error",
             "-i", src_img,
             "-vf", vf,
-            "-frames:v", "1", "-q:v", "4", dest_jpg,
+            "-frames:v", "1", "-q:v", "3", dest_jpg,
         ],
         check=False,
     )
     return res.returncode == 0 and os.path.exists(dest_jpg) and os.path.getsize(dest_jpg) > 4000
+
+
+def _find_cjk_fonts() -> tuple[str, str]:
+    """Locate crisp Japanese Serif (opening title) and Sans (scene micro-stamp) fonts on Linux/CI."""
+    serif_cands = [
+        "/usr/share/fonts/opentype/noto/NotoSerifCJK-Regular.ttc",
+        "/usr/share/fonts/noto-cjk/NotoSerifCJK-Regular.ttc",
+        "/usr/share/fonts/opentype/ipafont-mincho/ipam.ttf",
+        "/usr/share/fonts/truetype/fonts-japanese-mincho.ttf",
+    ]
+    sans_cands = [
+        "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+        "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc",
+        "/usr/share/fonts/opentype/ipafont-gothic/ipag.ttf",
+        "/usr/share/fonts/truetype/fonts-japanese-gothic.ttf",
+    ]
+    serif = next((p for p in serif_cands if os.path.exists(p)), "")
+    sans = next((p for p in sans_cands if os.path.exists(p)), "")
+    if not serif:
+        serif = sans
+    if not sans:
+        sans = serif
+    return serif, sans
+
+
+def _render_opening_title_png(title_ja: str, dest_png: str) -> bool:
+    """
+    Render a museum-restrained Kyoto Zen × NHK opening title RGBA PNG (1280x720)
+    designed to float gently over live Frame 0 footage and dissolve smoothly out.
+    """
+    serif_f, sans_f = _find_cjk_fonts()
+    if not serif_f:
+        return False
+    try:
+        from PIL import Image, ImageDraw, ImageFilter, ImageFont  # type: ignore
+
+        img = Image.new("RGBA", (VID_W, VID_H), (0, 0, 0, 0))
+        dr = ImageDraw.Draw(img)
+
+        # Gentle lower-third sumi scrim so title breathes legibly without darkening upper footage
+        scrim_top = int(VID_H * 0.56)
+        for y in range(scrim_top, VID_H):
+            frac = (y - scrim_top) / max(1, VID_H - scrim_top)
+            a = int(162 * (frac ** 1.45))
+            dr.line([(0, y), (VID_W, y)], fill=(12, 11, 10, a))
+
+        t_clean = str(title_ja or "").replace("——", " ").replace("—", "").strip()
+        f_size = 36 if len(t_clean) <= 22 else (31 if len(t_clean) <= 28 else 27)
+        title_font = ImageFont.truetype(serif_f, f_size)
+        sub_font = ImageFont.truetype(sans_f, 15)
+
+        overline = "日 本 語 シ ョ ー ト ・ ド キ ュ メ ン タ リ ー"
+        ob = dr.textbbox((0, 0), overline, font=sub_font)
+        ow = ob[2] - ob[0]
+        tb = dr.textbbox((0, 0), t_clean, font=title_font)
+        tw = tb[2] - tb[0]
+
+        ox = (VID_W - ow) // 2
+        oy = VID_H - 122
+        tx = (VID_W - tw) // 2
+        ty = VID_H - 86
+
+        # Soft diffused shadow layer for broadcast legibility on any background
+        sh = Image.new("RGBA", (VID_W, VID_H), (0, 0, 0, 0))
+        sdr = ImageDraw.Draw(sh)
+        sdr.text((ox, oy + 2), overline, font=sub_font, fill=(0, 0, 0, 170))
+        sdr.text((tx, ty + 3), t_clean, font=title_font, fill=(0, 0, 0, 200))
+        sh = sh.filter(ImageFilter.GaussianBlur(radius=4))
+        img = Image.alpha_composite(img, sh)
+        dr = ImageDraw.Draw(img)
+
+        # Crisp warm Kyoto gold hairline + overline + refined washi-white Japanese serif title
+        dr.text((ox, oy), overline, font=sub_font, fill=(224, 196, 142, 232))
+        line_w = 48
+        dr.rectangle([(VID_W - line_w) // 2, oy + 26, (VID_W + line_w) // 2, oy + 27], fill=(201, 166, 107, 215))
+        dr.text((tx, ty), t_clean, font=title_font, fill=(248, 245, 238, 248))
+
+        img.save(dest_png, "PNG")
+        return os.path.exists(dest_png)
+    except Exception:
+        return False
+
+
+def _render_scene_stamp_png(stamp_text: str, dest_png: str) -> bool:
+    """
+    Render a compact, ultra-clean NHK/Kyoto Zen top-left location/era micro-stamp RGBA PNG
+    (600x56): subtle feathered sumi backdrop + 2px Kyoto gold vertical rule + crisp washi text.
+    """
+    _serif_f, sans_f = _find_cjk_fonts()
+    t_clean = str(stamp_text or "").replace("——", " ").replace("—", "").strip()
+    if not sans_f or not t_clean:
+        return False
+    try:
+        from PIL import Image, ImageDraw, ImageFilter, ImageFont  # type: ignore
+
+        W, H = 600, 56
+        font = ImageFont.truetype(sans_f, 19)
+        tmp_dr = ImageDraw.Draw(Image.new("RGBA", (10, 10)))
+        tb = tmp_dr.textbbox((0, 0), t_clean, font=font)
+        tw = tb[2] - tb[0]
+        th = tb[3] - tb[1]
+        pill_w = min(W - 8, tw + 40)
+
+        # Whisper-soft feathered backdrop (zero hard box borders -> pure Kyoto Zen!)
+        bg = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        bdr = ImageDraw.Draw(bg)
+        bdr.rounded_rectangle([4, 8, 4 + pill_w, 46], radius=6, fill=(14, 13, 12, 154))
+        bg = bg.filter(ImageFilter.GaussianBlur(radius=3))
+
+        # Soft text shadow
+        sh = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        sdr = ImageDraw.Draw(sh)
+        ty = max(8, (H - th) // 2 - 3)
+        sdr.text((28, ty + 1), t_clean, font=font, fill=(0, 0, 0, 190))
+        sh = sh.filter(ImageFilter.GaussianBlur(radius=2))
+
+        out = Image.alpha_composite(bg, sh)
+        dr = ImageDraw.Draw(out)
+        # 2px Kyoto gold vertical hairline accent
+        dr.rectangle([16, 17, 18, 37], fill=(209, 176, 118, 235))
+        dr.text((28, ty), t_clean, font=font, fill=(247, 244, 236, 240))
+        out.save(dest_png, "PNG")
+        return os.path.exists(dest_png)
+    except Exception:
+        return False
 
 
 def _collect_daily_target_words(
@@ -1523,95 +1998,238 @@ async def _edge_tts_to_mp3(text: str, voice: str, rate: str, dest_mp3: str, pitc
 def _decode_mp3_to_pcm_f32(mp3_path: str, ffmpeg_bin: str) -> Any:
     import numpy as np
     raw = subprocess.check_output(
-        [ffmpeg_bin, "-v", "error", "-i", mp3_path, "-ac", "1", "-ar", str(SR), "-f", "f32le", "pipe:1"],
+        [
+            ffmpeg_bin, "-v", "error", "-i", mp3_path,
+            "-af", "highpass=f=75,equalizer=f=2800:t=q:w=1.2:g=1.4",
+            "-ac", "1", "-ar", str(SR), "-f", "f32le", "pipe:1",
+        ],
         stderr=subprocess.DEVNULL,
         timeout=15,
     )
     arr = np.frombuffer(raw, dtype=np.float32).copy()
-    if arr.size < 400:
+    if arr.size < 800:
         return arr
-    # Trim leading/trailing near-silence cleanly while keeping 45ms breath cushion
+    # Trim leading/trailing near-silence cleanly while keeping 50ms breath cushion
     abs_a = np.abs(arr)
     peak = float(abs_a.max()) or 1.0
-    nz = np.where(abs_a > peak * 0.025)[0]
-    if nz.size > 100:
-        pad = int(0.045 * SR)
+    nz = np.where(abs_a > peak * 0.022)[0]
+    if nz.size > 160:
+        pad = int(0.050 * SR)
         lo = max(0, int(nz[0]) - pad)
         hi = min(arr.size, int(nz[-1]) + pad)
         arr = arr[lo:hi]
-    # Normalize speech RMS to crisp broadcast target (-17.5 dBFS)
+    # Normalize speech RMS to crisp broadcast target (-17 dBFS) with soft warm limiting
     rms = float(np.sqrt(np.mean(arr * arr) + 1e-12))
     if rms > 1e-5:
-        gain = min(3.2, 0.135 / rms)
-        arr = np.tanh(arr * gain * 1.1) / 1.1
+        gain = min(3.2, 0.140 / rms)
+        arr = np.tanh(arr * gain * 1.08) / 1.08
     return arr
 
 
-def _generate_zen_ambient_bed(total_samples: int, voice_env: Any) -> Any:
+def _karplus_strong_pluck(freq_hz: float, dur_s: float, seed: int = 1) -> Any:
+    """Physical-modeling plucked Kyoto koto/harp string using damped Karplus-Strong synthesis."""
+    import numpy as np
+    n_out = max(1, int(dur_s * SR))
+    delay = max(24, int(round(SR / max(80.0, freq_hz))))
+    rng = np.random.default_rng(seed)
+    # Warm low-passed wooden pluck excitation burst
+    burst = rng.uniform(-1.0, 1.0, delay).astype(np.float32)
+    for _ in range(3):
+        burst = 0.25 * np.roll(burst, 1) + 0.5 * burst + 0.25 * np.roll(burst, -1)
+    burst -= float(burst.mean())
+    out = np.zeros(n_out, dtype=np.float32)
+    out[: min(delay, n_out)] = burst[: min(delay, n_out)]
+    # Vectorized block recurrence (fast even at 48kHz!)
+    decay = 0.9968 if freq_hz < 500 else 0.9952
+    pos = delay
+    while pos < n_out:
+        end = min(n_out, pos + delay)
+        chunk_len = end - pos
+        prev_a = out[pos - delay : pos - delay + chunk_len]
+        prev_b = out[pos - delay - 1 : pos - delay - 1 + chunk_len] if pos > delay else prev_a
+        out[pos:end] = decay * 0.5 * (prev_a + prev_b)
+        pos = end
+    # Smooth natural envelope + tiny attack cushion
+    t = np.arange(n_out, dtype=np.float32) / float(SR)
+    env = np.minimum(1.0, t / 0.008) * np.exp(-t * 1.35)
+    pk = float(np.max(np.abs(out))) or 1.0
+    return (out / pk) * env
+
+
+def _generate_zen_ambient_bed_stereo(
+    total_samples: int,
+    voice_mono: Any,
+    chapter_breaks_s: list[float] | None = None,
+) -> tuple[Any, Any]:
     """
-    Generate an original, warm, minimalist Japanese pentatonic ambient documentary score
-    (D minor pentatonic warm electric piano / koto harmonic pad, gently ducked -25 dB under speech).
-    Zero external assets, zero copyright risk.
+    Generate an original, 48kHz stereo minimalist Japanese chamber documentary score:
+      - Warm felt piano (multi-harmonic natural hammer decay, stereo bass-to-treble spread)
+      - Warm low cello / bowed sustain pad with subtle expressive vibrato
+      - Karplus-Strong physical-modeling Kyoto koto plucks on act breaths & downbeats
+      - 3-act emotional harmonic arc (contemplative Dm9 -> warm Gm9/F -> serene Dmaj9 resolution)
+      - Smooth sidechain ducking under Japanese narration.
+    100% pure numpy synthesis, zero copyright risk.
     """
     import numpy as np
-    t = np.arange(total_samples, dtype=np.float32) / float(SR)
-    # Slow, contemplative 4-chord cycle (every 5.5s): Dm9 -> Bbmaj7 -> Csus2 -> Am7
-    chords = [
-        (146.83, 220.00, 293.66, 329.63),  # D3 A3 D4 E4
-        (116.54, 174.61, 261.63, 349.23),  # Bb2 F3 C4 F4
-        (130.81, 196.00, 293.66, 392.00),  # C3 G3 D4 G4
-        (110.00, 164.81, 261.63, 329.63),  # A2 E3 C4 E4
+
+    bed_l = np.zeros(total_samples, dtype=np.float32)
+    bed_r = np.zeros(total_samples, dtype=np.float32)
+
+    # 3-act evolving Kyoto documentary chord progression (6.0s per measure)
+    act1_chords = [
+        (146.83, 220.00, 293.66, 329.63, 440.00),  # Dm9
+        (116.54, 174.61, 261.63, 349.23, 440.00),  # Bbmaj7
+        (130.81, 196.00, 293.66, 392.00, 440.00),  # Csus2
+        (110.00, 164.81, 261.63, 329.63, 392.00),  # Am7
     ]
-    bed = np.zeros(total_samples, dtype=np.float32)
-    chord_sec = 5.5
+    act2_chords = [
+        (196.00, 293.66, 349.23, 440.00, 523.25),  # Gm9
+        (146.83, 220.00, 293.66, 349.23, 440.00),  # Dm7
+        (116.54, 174.61, 261.63, 329.63, 440.00),  # Bbmaj9
+        (110.00, 164.81, 220.00, 293.66, 329.63),  # Asus4
+    ]
+    act3_chords = [
+        (130.81, 196.00, 293.66, 329.63, 440.00),  # Cadd9
+        (146.83, 220.00, 293.66, 369.99, 440.00),  # Dmaj9 (luminous resolve!)
+    ]
+
+    chord_sec = 6.0
     chord_len = int(chord_sec * SR)
-    n_chords = int(math.ceil(total_samples / chord_len))
+    n_chords = int(math.ceil(total_samples / float(chord_len)))
+
     for ci in range(n_chords):
         s0 = ci * chord_len
         s1 = min(total_samples, s0 + chord_len)
         seg_n = s1 - s0
         if seg_n <= 0:
             break
+        progress = s0 / float(max(1, total_samples))
+        if ci == n_chords - 1:
+            freqs = act3_chords[-1]
+        elif progress < 0.45:
+            freqs = act1_chords[ci % len(act1_chords)]
+        elif progress < 0.80:
+            freqs = act2_chords[ci % len(act2_chords)]
+        else:
+            freqs = act3_chords[ci % len(act3_chords)]
+
         lt = np.arange(seg_n, dtype=np.float32) / float(SR)
-        # Soft piano-pad envelope (smooth swell + gentle decay)
-        env = np.minimum(1.0, lt / 0.65) * np.exp(-lt * 0.18)
-        fade_tail = np.minimum(1.0, (seg_n - np.arange(seg_n, dtype=np.float32)) / (0.6 * SR))
-        env = env * fade_tail
-        freqs = chords[ci % len(chords)]
-        sig = np.zeros(seg_n, dtype=np.float32)
+        tail_fade = np.minimum(1.0, (seg_n - np.arange(seg_n, dtype=np.float32)) / (0.85 * SR))
+
+        # 1. Warm felt piano voicing (gentle rolled arpeggio offsets + damped upper harmonics)
+        sig_l = np.zeros(seg_n, dtype=np.float32)
+        sig_r = np.zeros(seg_n, dtype=np.float32)
         for fi, f in enumerate(freqs):
-            w = 0.34 if fi == 0 else (0.24 if fi < 3 else 0.16)
-            # Pure fundamental + tiny warm 2nd harmonic
-            sig += w * (np.sin(2.0 * math.pi * f * lt) + 0.14 * np.sin(4.0 * math.pi * f * lt) * np.exp(-lt * 0.9))
-        bed[s0:s1] += sig * env
+            delay_s = fi * 0.055
+            nt = np.maximum(0.0, lt - delay_s)
+            mask = (lt >= delay_s).astype(np.float32)
+            atk = np.minimum(1.0, nt / 0.032)
+            # Natural felt-piano damping: higher harmonics fade faster than fundamental
+            h1 = np.sin(2.0 * math.pi * f * nt) * np.exp(-nt * 0.34)
+            h2 = 0.22 * np.sin(4.0 * math.pi * f * nt) * np.exp(-nt * 0.85)
+            h3 = 0.07 * np.sin(6.0 * math.pi * f * nt) * np.exp(-nt * 1.65)
+            note = (h1 + h2 + h3) * atk * mask * tail_fade
+            w = 0.32 if fi == 0 else (0.22 if fi < 3 else 0.14)
+            # Stereo keyboard spread: bass gently left, treble gently right
+            pan = -0.28 + 0.56 * (fi / max(1, len(freqs) - 1))
+            gl = math.cos((pan + 1.0) * math.pi / 4.0)
+            gr = math.sin((pan + 1.0) * math.pi / 4.0)
+            sig_l += w * gl * note
+            sig_r += w * gr * note
 
-    # Subtle gentle high-register plucked koto/bell sparkle on chord downbeats
-    sparkle_notes = [587.33, 659.25, 523.25, 440.00, 698.46, 587.33]
-    for ci in range(n_chords):
-        s0 = ci * chord_len + int(0.15 * SR)
-        if s0 >= total_samples:
-            break
-        s1 = min(total_samples, s0 + int(2.6 * SR))
-        lt = np.arange(s1 - s0, dtype=np.float32) / float(SR)
-        f = sparkle_notes[ci % len(sparkle_notes)]
-        plk = np.sin(2.0 * math.pi * f * lt) * np.exp(-lt * 2.1) * np.minimum(1.0, lt / 0.012)
-        bed[s0:s1] += 0.14 * plk
+        # 2. Expressive low cello / bowed sustain drone (root + fifth with soft vibrato)
+        cello_f = freqs[0] * 0.5
+        vib = 1.0 + 0.0022 * np.sin(2.0 * math.pi * 4.6 * lt)
+        phase = 2.0 * math.pi * np.cumsum(cello_f * vib) / float(SR)
+        cello_env = np.minimum(1.0, lt / 1.15) * np.exp(-lt * 0.10) * tail_fade
+        cello = (0.65 * np.sin(phase) + 0.24 * np.sin(2.0 * phase) + 0.08 * np.sin(3.0 * phase)) * cello_env
+        sig_l += 0.26 * cello
+        sig_r += 0.22 * cello
 
-    # Normalize bed and apply smooth sidechain ducking under Japanese voices
-    b_peak = float(np.max(np.abs(bed))) or 1.0
-    bed = bed / b_peak
-    # Smooth voice envelope (moving avg ~250ms) -> duck to 0.036 under voice, 0.115 in open intro/outro
-    win = int(0.28 * SR)
+        bed_l[s0:s1] += sig_l
+        bed_r[s0:s1] += sig_r
+
+    # 3. Authentic Karplus-Strong Kyoto koto plucks on downbeats & chapter transitions
+    koto_scale = [587.33, 659.25, 523.25, 440.00, 698.46, 587.33, 440.00, 587.33]
+    pluck_times: list[float] = [0.25] + [ci * chord_sec + 0.18 for ci in range(1, n_chords)]
+    for cb in (chapter_breaks_s or []):
+        if cb > 1.5 and all(abs(cb - pt) > 1.8 for pt in pluck_times):
+            pluck_times.append(cb)
+    pluck_times.sort()
+
+    for pi, p_sec in enumerate(pluck_times):
+        s0 = int(p_sec * SR)
+        if s0 >= total_samples - int(0.4 * SR):
+            continue
+        f_koto = koto_scale[pi % len(koto_scale)]
+        plk = _karplus_strong_pluck(f_koto, 2.4, seed=101 + pi)
+        s1 = min(total_samples, s0 + plk.size)
+        seg = plk[: s1 - s0]
+        pan = -0.35 if (pi % 2 == 0) else 0.35
+        bed_l[s0:s1] += 0.16 * math.cos((pan + 1.0) * math.pi / 4.0) * seg
+        bed_r[s0:s1] += 0.16 * math.sin((pan + 1.0) * math.pi / 4.0) * seg
+
+    # Normalize bed and apply smooth musical sidechain ducking under Japanese narration
+    b_peak = max(float(np.max(np.abs(bed_l))), float(np.max(np.abs(bed_r))), 1e-6)
+    bed_l = bed_l / b_peak
+    bed_r = bed_r / b_peak
+
+    win = int(0.32 * SR)
     kernel = np.ones(win, dtype=np.float32) / float(win)
-    sm_env = np.convolve(np.abs(voice_env), kernel, mode="same")
-    speech_mask = np.clip(sm_env / 0.028, 0.0, 1.0)
-    gain_curve = 0.115 * (1.0 - speech_mask) + 0.036 * speech_mask
-    # Clean fade-in (0.7s) & fade-out (1.5s)
-    fi_n = min(total_samples, int(0.7 * SR))
-    fo_n = min(total_samples, int(1.5 * SR))
+    sm_env = np.convolve(np.abs(voice_mono), kernel, mode="same")
+    speech_mask = np.clip(sm_env / 0.025, 0.0, 1.0)
+    # Breathe softly at -20dB under narration, swell warmly to -11dB on chapter pauses/intro/outro
+    gain_curve = 0.145 * (1.0 - speech_mask) + 0.044 * speech_mask
+    fi_n = min(total_samples, int(0.65 * SR))
+    fo_n = min(total_samples, int(1.85 * SR))
     gain_curve[:fi_n] *= np.linspace(0.0, 1.0, fi_n, dtype=np.float32)
     gain_curve[total_samples - fo_n :] *= np.linspace(1.0, 0.0, fo_n, dtype=np.float32)
-    return bed * gain_curve
+    return bed_l * gain_curve, bed_r * gain_curve
+
+
+def _generate_zen_ambient_bed(total_samples: int, voice_env: Any) -> Any:
+    """Backwards-compatible mono wrapper over the v4.0 stereo chamber score."""
+    bl, br = _generate_zen_ambient_bed_stereo(total_samples, voice_env)
+    return 0.5 * (bl + br)
+
+
+def _master_stereo_narration(
+    total_samples: int,
+    pcm_segments: list[tuple[int, Any, str]],
+) -> tuple[Any, Any, Any]:
+    """
+    Place dual Japanese narrators in subtle stereo space (Keita -7% left, Nanami +7% right)
+    with whisper-soft Tokyo studio early reflections (18ms & 31ms cross-channel at -23dB).
+    Returns (voice_l, voice_r, voice_mono_env).
+    """
+    import numpy as np
+    vl = np.zeros(total_samples, dtype=np.float32)
+    vr = np.zeros(total_samples, dtype=np.float32)
+    v_mono = np.zeros(total_samples, dtype=np.float32)
+
+    for start_samp, pcm, v_code in pcm_segments:
+        end_samp = min(total_samples, start_samp + pcm.size)
+        seg = pcm[: end_samp - start_samp]
+        pan = 0.07 if v_code == "F" else -0.07
+        gl = math.cos((pan + 1.0) * math.pi / 4.0) * 1.32
+        gr = math.sin((pan + 1.0) * math.pi / 4.0) * 1.32
+        vl[start_samp:end_samp] += gl * seg
+        vr[start_samp:end_samp] += gr * seg
+        v_mono[start_samp:end_samp] += seg
+
+    # Subtle studio room warmth (cross-channel early reflections, completely transparent on mono)
+    d1 = int(0.018 * SR)
+    d2 = int(0.031 * SR)
+    if total_samples > d2 + 100:
+        vl_room = vl.copy()
+        vr_room = vr.copy()
+        vl_room[d1:] += 0.055 * vr[:-d1]
+        vr_room[d1:] += 0.055 * vl[:-d1]
+        vl_room[d2:] += 0.035 * vl[:-d2]
+        vr_room[d2:] += 0.035 * vr[:-d2]
+        vl, vr = vl_room, vr_room
+
+    return vl, vr, v_mono
 
 
 def _fmt_vtt_ts(sec: float) -> str:
@@ -1669,6 +2287,183 @@ async def _synth_speaking_prompt_audios(
                 sp["ask_spoken"] = ask_txt
 
 
+def _cinema_grade_filter(grade: str) -> str:
+    """Cohesive NHK / Criterion editorial color palette per scene mood."""
+    g = str(grade or "editorial").strip().lower()
+    if g == "mono_noir":
+        return "hue=s=0.06,eq=contrast=1.16:brightness=-0.025,vignette=angle=PI/4.6"
+    if g == "warm_archive":
+        return "eq=saturation=0.88:contrast=1.10:brightness=-0.01,colorbalance=rs=0.032:gs=0.014:bs=-0.028,vignette=angle=PI/4.6"
+    if g == "dark_science":
+        return "eq=saturation=1.08:contrast=1.10:brightness=-0.008,vignette=angle=PI/6.2"
+    if g == "crisp_modern":
+        return "eq=saturation=0.97:contrast=1.05:brightness=-0.005,vignette=angle=PI/6.0"
+    return "eq=saturation=0.94:contrast=1.06:brightness=-0.01,colorbalance=rs=0.018:gs=0.004:bs=-0.022,vignette=angle=PI/5.4"
+
+
+def _still_motion_filter(motion: str, frames: int) -> str:
+    """
+    1.5x supersampled 1920x1080 -> 1280x720 anti-jitter cinema Ken Burns choreography.
+    Moves gently across sub-pixel resolution for smooth dolly/slider motion at 3.5x speed.
+    """
+    f = max(36, int(frames))
+    m = str(motion or "push_in").strip().lower()
+    if m == "pull_out":
+        zp = f"zoompan=z='max(1.0,1.085-0.085*on/{f})':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={f}:s={VID_W}x{VID_H}:fps={VID_FPS}"
+    elif m == "pan_right":
+        zp = f"zoompan=z='1.08':x='(iw-iw/zoom)*min(1,on/{f})':y='ih/2-(ih/zoom/2)':d={f}:s={VID_W}x{VID_H}:fps={VID_FPS}"
+    elif m == "pan_left":
+        zp = f"zoompan=z='1.08':x='(iw-iw/zoom)*(1-min(1,on/{f}))':y='ih/2-(ih/zoom/2)':d={f}:s={VID_W}x{VID_H}:fps={VID_FPS}"
+    elif m == "blade_pan":
+        zp = f"zoompan=z='1.13':x='(iw-iw/zoom)*min(1,on/{f})':y='ih/2-(ih/zoom/2)':d={f}:s={VID_W}x{VID_H}:fps={VID_FPS}"
+    elif m == "drift_up":
+        zp = f"zoompan=z='1.08':x='iw/2-(iw/zoom/2)':y='(ih-ih/zoom)*(1-min(1,on/{f}))':d={f}:s={VID_W}x{VID_H}:fps={VID_FPS}"
+    else:
+        zp = f"zoompan=z='min(1.085,1+0.085*on/{f})':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={f}:s={VID_W}x{VID_H}:fps={VID_FPS}"
+    return (
+        f"scale=1920:1080:force_original_aspect_ratio=increase:flags=lanczos,"
+        f"crop=1920:1080:(iw-1920)/2:(ih-1080)*0.38,setsar=1,"
+        f"{zp}"
+    )
+
+
+def _prerender_cinema_shot(
+    shot_idx: int,
+    kind: str,
+    media_path: str,
+    dur_sec: float,
+    grade: str,
+    motion: str,
+    out_mp4: str,
+    ffmpeg_bin: str,
+    title_png: str = "",
+    stamp_png: str = "",
+) -> bool:
+    """
+    Stage A of v4.0 Two-Stage Cinema Mastering:
+    Pre-renders ONE shot at 1280x720 24fps (low RAM, smooth sub-pixel motion, mood film grade,
+    gentle slow-mo stretch if a video clip is slightly shorter than `dur_sec` so zero ugly loop jumps,
+    plus crisp Pillow NHK opening title or discreet top-left scene micro-stamp!).
+    """
+    d = max(1.8, float(dur_sec))
+    grade_vf = _cinema_grade_filter(grade)
+    cmd = [ffmpeg_bin, "-y", "-v", "error"]
+    fc_parts: list[str] = []
+
+    if kind == "video":
+        c_dur = _probe_media_duration(media_path, ffmpeg_bin=ffmpeg_bin)
+        if c_dur > 0 and c_dur < d * 0.80:
+            cmd.extend(["-stream_loop", "-1", "-i", media_path])
+            pts_expr = "PTS-STARTPTS"
+        elif c_dur > 0 and c_dur < d:
+            # Gentle cinema slow-motion stretch (<=1.25x) avoids jarring loop jumps completely!
+            stretch = min(1.26, (d + 0.12) / max(0.5, c_dur))
+            cmd.extend(["-i", media_path])
+            pts_expr = f"{stretch:.4f}*(PTS-STARTPTS)"
+        else:
+            cmd.extend(["-i", media_path])
+            pts_expr = "PTS-STARTPTS"
+        fc_parts.append(
+            f"[0:v]scale={VID_W}:{VID_H}:force_original_aspect_ratio=increase:flags=lanczos,"
+            f"crop={VID_W}:{VID_H}:(iw-{VID_W})/2:(ih-{VID_H})/2,"
+            f"setpts={pts_expr},fps={VID_FPS},setsar=1,"
+            f"trim=duration={d:.3f},setpts=PTS-STARTPTS,{grade_vf},format=yuv420p[base]"
+        )
+    else:
+        frames = max(36, int(math.ceil(d * VID_FPS)) + 4)
+        mot_vf = _still_motion_filter(motion, frames)
+        cmd.extend(["-i", media_path])
+        fc_parts.append(
+            f"[0:v]{mot_vf},trim=duration={d:.3f},setpts=PTS-STARTPTS,{grade_vf},format=yuv420p[base]"
+        )
+
+    cur_lbl = "base"
+    inp_idx = 1
+
+    if title_png and os.path.exists(title_png):
+        cmd.extend(["-loop", "1", "-t", f"{d:.3f}", "-i", title_png])
+        fade_st = min(2.25, max(1.1, d - 1.0))
+        fc_parts.append(
+            f"[{inp_idx}:v]format=rgba,fade=t=out:st={fade_st:.2f}:d=0.65:alpha=1[ovt]"
+        )
+        fc_parts.append(f"[{cur_lbl}][ovt]overlay=0:0:shortest=1,format=yuv420p[wt]")
+        cur_lbl = "wt"
+        inp_idx += 1
+
+    if stamp_png and os.path.exists(stamp_png) and d >= 2.6:
+        cmd.extend(["-loop", "1", "-t", f"{d:.3f}", "-i", stamp_png])
+        in_st = 0.28
+        out_st = min(max(1.8, d - 0.85), 3.25)
+        fc_parts.append(
+            f"[{inp_idx}:v]format=rgba,fade=t=in:st={in_st:.2f}:d=0.35:alpha=1,"
+            f"fade=t=out:st={out_st:.2f}:d=0.45:alpha=1[ovs]"
+        )
+        fc_parts.append(f"[{cur_lbl}][ovs]overlay=32:26:shortest=1,format=yuv420p[ws]")
+        cur_lbl = "ws"
+        inp_idx += 1
+
+    cmd.extend([
+        "-filter_complex", ";".join(fc_parts),
+        "-map", f"[{cur_lbl}]",
+        "-t", f"{d:.3f}",
+        "-r", str(VID_FPS),
+        "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
+        "-pix_fmt", "yuv420p",
+        out_mp4,
+    ])
+    res = subprocess.run(cmd, timeout=45, check=False)
+    return res.returncode == 0 and os.path.exists(out_mp4) and os.path.getsize(out_mp4) > 15000
+
+
+def _resolve_storyboard_beat_media(
+    beat_idx: int,
+    beat_spec: dict[str, Any],
+    need_dur: float,
+    work_dir: str,
+    media_cache: dict[str, tuple[str, str]],
+    ffmpeg_bin: str,
+) -> tuple[str, str, str]:
+    """
+    Resolve one curated storyboard beat (`wm_video` | `ia_video` | `wm_image`) into
+    (kind: 'video'|'image', local_path, source_label) with automatic still fallback.
+    """
+    b_kind = str(beat_spec.get("kind") or "wm_image")
+    ident = str(beat_spec.get("id") or "").strip()
+    ss = max(0, int(beat_spec.get("ss") or 0))
+    label = str(beat_spec.get("label") or ident)
+    cache_key = f"{b_kind}:{ident}:{ss}"
+
+    if cache_key in media_cache:
+        k_c, p_c = media_cache[cache_key]
+        if os.path.exists(p_c):
+            return k_c, p_c, label
+
+    if b_kind in ("wm_video", "ia_video") and ident:
+        src = "wm" if b_kind == "wm_video" else "ia"
+        out_mp4 = os.path.join(work_dir, f"beat_{beat_idx:02d}_vid.mp4")
+        if _extract_verified_video_clip(src, ident, ss, max(6.5, need_dur + 0.9), out_mp4, ffmpeg_bin=ffmpeg_bin):
+            media_cache[cache_key] = ("video", out_mp4)
+            return "video", out_mp4, label
+        # Graceful fallback to verified exact still if remote video host hiccups
+        fb_img = str(beat_spec.get("fallback_img") or "").strip()
+        if fb_img:
+            ident = fb_img
+            b_kind = "wm_image"
+
+    if b_kind == "wm_image" and ident:
+        img_url = _resolve_wm_image_url(ident, width=1600)
+        if img_url:
+            ext = ".png" if ident.lower().endswith(".png") else ".jpg"
+            out_img = os.path.join(work_dir, f"beat_{beat_idx:02d}_img{ext}")
+            if _http_download(img_url, out_img):
+                w, h = _probe_image_dims(out_img, ffmpeg_bin=ffmpeg_bin)
+                if w >= 640 and h >= 360:
+                    media_cache[cache_key] = ("image", out_img)
+                    return "image", out_img, label
+
+    return "", "", ""
+
+
 async def _build_jp_documentary_video(
     script: dict[str, Any],
     chapter_shots: dict[int, list[str]],
@@ -1680,11 +2475,15 @@ async def _build_jp_documentary_video(
     tmpdir: str,
     ffmpeg_bin: str,
     chapter_clips: dict[int, list[dict[str, str]]] | None = None,
+    storyboard_id: str = "",
+    chapters_meta: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any] | None:
     """
-    Synthesizes dual-voice ALL-JAPANESE audio + warm documentary music bed, builds exact
-    millisecond subtitle cues & word-jump anchors, and renders `video/daily_jp_story.mp4`
-    intercutting REAL historical archival video clips with period archival photography!
+    v4.0 NHK Cinema Studio Pipeline:
+      - Dual studio-mastered stereo Japanese voices (`48kHz`) + original felt-piano/cello/koto score
+      - Beat-by-beat 14-16 shot visual storytelling (1 shot per spoken sentence, zero 13s dead holds!)
+      - Two-stage 720p HD (1280x720 24fps) mastering with mood film color grades & Kyoto Zen typography
+      - Dynamic rhythmic transitions (0.24s same-chapter / 0.55s cross-chapter) + graceful closing fade.
     """
     import numpy as np
 
@@ -1705,6 +2504,14 @@ async def _build_jp_documentary_video(
         except Exception:
             use_hvpt = False
 
+    # Historical Japanese proper-noun reading overrides for TTS ONLY (on-screen kanji subtitles stay intact)
+    _JP_TTS_READINGS = (
+        ("山村新治郎", "やまむらしんじろう"),
+        ("前田家", "まえだけ"),
+        ("辰巳用水", "たつみようすい"),
+        ("鈴木大拙", "すずきだいせつ"),
+    )
+
     line_mp3s: list[str] = []
     for i, ln in enumerate(lines):
         is_f = ln.get("v") == "F"
@@ -1717,18 +2524,22 @@ async def _build_jp_documentary_video(
             rate = "-6%" if is_f else "-7%"
             pitch = "+0Hz"
         dest = os.path.join(tmpdir, f"jp_ln_{i:02d}.mp3")
-        ok = await _edge_tts_to_mp3(str(ln["ja"]), voice, rate, dest, pitch=pitch)
+        tts_ja = str(ln["ja"])
+        for _k, _v in _JP_TTS_READINGS:
+            tts_ja = tts_ja.replace(_k, _v)
+        ok = await _edge_tts_to_mp3(tts_ja, voice, rate, dest, pitch=pitch)
         if not ok:
             print(f"[visual-studio] Japanese neural TTS synthesis failed on line {i}, skipping jp_video")
             return None
         line_mp3s.append(dest)
 
-    # 2. Decode PCM & build exact millisecond timeline
-    intro_pad = 0.85
-    outro_pad = 1.55
+    # 2. Decode PCM & build exact millisecond timeline (48kHz broadcast stereo)
+    intro_pad = 1.05
+    outro_pad = 1.85
     cursor_s = intro_pad
-    pcm_segments: list[tuple[int, Any]] = []
+    pcm_segments: list[tuple[int, Any, str]] = []
     cues: list[dict[str, Any]] = []
+    chapter_breaks_s: list[float] = []
 
     # Prepare lookup dictionary of known words to tag & highlight inside each Japanese line
     word_entries: list[dict[str, str]] = _build_video_word_entries(target_words)
@@ -1759,18 +2570,22 @@ async def _build_jp_documentary_video(
     except Exception:
         pass
 
-    # Track word appearances & timestamps across the video!
     word_hits_map: dict[str, dict[str, Any]] = {}
     prev_ch = -1
     for i, (ln, mp3_p) in enumerate(zip(lines, line_mp3s)):
         pcm = _decode_mp3_to_pcm_f32(mp3_p, ffmpeg_bin)
         dur_s = pcm.size / float(SR)
         ch_idx = int(ln.get("ch", 0))
+        v_code = str(ln.get("v") or "M")
         if i > 0:
-            cursor_s += 0.68 if ch_idx != prev_ch else 0.36
+            if ch_idx != prev_ch:
+                chapter_breaks_s.append(cursor_s + 0.25)
+                cursor_s += 0.74
+            else:
+                cursor_s += 0.36
         s_ts = round(cursor_s, 2)
         e_ts = round(cursor_s + dur_s, 2)
-        pcm_segments.append((int(round(cursor_s * SR)), pcm))
+        pcm_segments.append((int(round(cursor_s * SR)), pcm, v_code))
         cursor_s += dur_s
         prev_ch = ch_idx
 
@@ -1797,7 +2612,7 @@ async def _build_jp_documentary_video(
         cues.append({
             "s": s_ts,
             "e": e_ts,
-            "v": str(ln.get("v") or "M"),
+            "v": v_code,
             "ch": ch_idx,
             "ja": ja_txt,
             "zh": str(ln.get("zh") or ""),
@@ -1807,120 +2622,172 @@ async def _build_jp_documentary_video(
     total_dur = round(cursor_s + outro_pad, 2)
     total_samples = int(math.ceil(total_dur * SR))
 
-    # Mix voice timeline + original warm documentary pentatonic music bed
-    voice_mix = np.zeros(total_samples, dtype=np.float32)
-    for start_samp, pcm in pcm_segments:
-        end_samp = min(total_samples, start_samp + pcm.size)
-        voice_mix[start_samp:end_samp] += pcm[: end_samp - start_samp]
-
-    music_bed = _generate_zen_ambient_bed(total_samples, voice_mix)
-    final_mix = np.clip(voice_mix * 0.92 + music_bed, -0.96, 0.96)
-    pcm_i16 = (final_mix * 32767.0).astype(np.int16)
+    # Master 48kHz stereo narration + organic felt-piano/cello/koto chamber score
+    vl, vr, v_mono = _master_stereo_narration(total_samples, pcm_segments)
+    bed_l, bed_r = _generate_zen_ambient_bed_stereo(total_samples, v_mono, chapter_breaks_s=chapter_breaks_s)
+    mix_l = np.clip(vl * 0.88 + bed_l, -0.96, 0.96)
+    mix_r = np.clip(vr * 0.88 + bed_r, -0.96, 0.96)
+    stereo_i16 = np.empty(total_samples * 2, dtype=np.int16)
+    stereo_i16[0::2] = (mix_l * 32767.0).astype(np.int16)
+    stereo_i16[1::2] = (mix_r * 32767.0).astype(np.int16)
 
     wav_path = os.path.join(tmpdir, "daily_jp_story.wav")
     with wave.open(wav_path, "wb") as wf:
-        wf.setnchannels(1)
+        wf.setnchannels(2)
         wf.setsampwidth(2)
         wf.setframerate(SR)
-        wf.writeframes(pcm_i16.tobytes())
+        wf.writeframes(stereo_i16.tobytes())
 
-    # 3. Group consecutive cues into visual shots (~6-9s each), leading each chapter with
-    #    REAL historical archival moving footage (when available) intercut with period archival stills!
+    # 3. Build 1-shot-per-line beat storyboard (curated storyboard first, or automatic per-line planner)
+    curated_board = CURATED_BEAT_STORYBOARDS.get(storyboard_id) if storyboard_id else None
     clips_map = chapter_clips or {}
-    shot_plan: list[tuple[str, str, float]] = []  # (kind: "video"|"image", path, raw_dur)
-    ch_rot: dict[int, int] = {}
-    used_ch_video: set[int] = set()
-    used_archival_labels: list[str] = []
+    ch_title_map = {int(c.get("idx", i)): str(c.get("title") or "").strip() for i, c in enumerate(chapters_meta or [])}
     all_fallback_shots = [p for lst in chapter_shots.values() for p in lst]
 
-    def _pick_shot_for_ch(ch_i: int) -> tuple[str, str]:
+    shot_plan: list[dict[str, Any]] = []
+    ch_rot: dict[int, int] = {}
+    used_ch_vid_idx: dict[int, int] = {}
+    used_archival_labels: list[str] = []
+    used_stamps: list[str] = []
+    media_cache: dict[str, tuple[str, str]] = {}
+    default_motions = ["push_in", "pan_right", "pull_out", "pan_left", "drift_up"]
+
+    def _pick_auto_shot(ch_i: int, beat_i: int) -> tuple[str, str, str]:
         ch_vids = clips_map.get(ch_i) or []
-        if ch_vids and ch_i not in used_ch_video:
-            used_ch_video.add(ch_i)
-            v_item = ch_vids[0]
-            lbl = str(v_item.get("label") or "")
-            if lbl and lbl not in used_archival_labels:
-                used_archival_labels.append(lbl)
-            return ("video", str(v_item["path"]))
+        v_used = used_ch_vid_idx.get(ch_i, 0)
+        # Prefer leading each chapter with a verified HD moving clip, then alternating with high-res stills
+        if ch_vids and v_used < len(ch_vids) and (v_used == 0 or beat_i % 2 == 0):
+            used_ch_vid_idx[ch_i] = v_used + 1
+            v_item = ch_vids[v_used]
+            return "video", str(v_item["path"]), str(v_item.get("label") or "")
         pool = chapter_shots.get(ch_i) or all_fallback_shots
         idx = ch_rot.get(ch_i, 0)
         ch_rot[ch_i] = idx + 1
-        return ("image", pool[idx % len(pool)])
+        return "image", pool[idx % len(pool)], ""
 
-    # Build shot spans aligned cleanly to cue boundaries (target 10-14 distinct cinematic shots across ~80s!)
     span_start = 0.0
-    cur_ch = cues[0]["ch"]
+    prev_stamp = ""
     for i, c in enumerate(cues):
-        next_ch = cues[i + 1]["ch"] if i + 1 < len(cues) else -999
-        span_end = (cues[i + 1]["s"] - 0.18) if i + 1 < len(cues) else total_dur
-        span_dur = span_end - span_start
-        # Cut on chapter change OR when current shot has lasted >= 6.5s (keeps visual rhythm fresh!)
-        if next_ch != cur_ch or span_dur >= 6.8 or i == len(cues) - 1:
-            if span_dur >= 2.2 or i == len(cues) - 1:
-                kind, media_p = _pick_shot_for_ch(cur_ch)
-                shot_plan.append((kind, media_p, max(2.4, span_dur)))
-                span_start = span_end
-                cur_ch = next_ch if next_ch >= 0 else cur_ch
+        cur_ch = int(c["ch"])
+        next_ch = int(cues[i + 1]["ch"]) if i + 1 < len(cues) else -999
+        span_end = (cues[i + 1]["s"] - 0.16) if i + 1 < len(cues) else total_dur
+        span_dur = max(2.2, span_end - span_start)
+        is_ch_change = (next_ch != cur_ch and next_ch >= 0)
 
-    # 4. Render smooth 24fps 854x480 H.264/AAC MP4 seamlessly blending real moving archival footage
-    #    + period archival stills with gentle Ken Burns motion & 0.45s cross-dissolves!
-    fps = 24
-    fade = 0.45
+        kind, media_p, lbl = "", "", ""
+        grade = "editorial"
+        motion = default_motions[i % len(default_motions)]
+        stamp = ""
+
+        if curated_board and i < len(curated_board):
+            bspec = curated_board[i]
+            grade = str(bspec.get("grade") or "editorial")
+            motion = str(bspec.get("motion") or motion)
+            stamp = str(bspec.get("stamp") or "").strip()
+            kind, media_p, lbl = _resolve_storyboard_beat_media(
+                beat_idx=i,
+                beat_spec=bspec,
+                need_dur=span_dur,
+                work_dir=tmpdir,
+                media_cache=media_cache,
+                ffmpeg_bin=ffmpeg_bin,
+            )
+
+        if not media_p:
+            kind, media_p, lbl = _pick_auto_shot(cur_ch, i)
+            if not stamp and (i == 0 or cur_ch != int(cues[i - 1]["ch"])):
+                stamp = ch_title_map.get(cur_ch, "")
+
+        if lbl and kind == "video" and lbl not in used_archival_labels:
+            used_archival_labels.append(lbl)
+
+        # Avoid flashing identical stamps back-to-back, and let Shot 0 breathe cleanly with the opening title card
+        eff_stamp = ""
+        if i > 0 and stamp and stamp != prev_stamp:
+            eff_stamp = stamp
+            used_stamps.append(stamp)
+        if stamp:
+            prev_stamp = stamp
+
+        shot_plan.append({
+            "kind": kind,
+            "path": media_p,
+            "raw_dur": span_dur,
+            "ch": cur_ch,
+            "grade": grade,
+            "motion": motion,
+            "stamp": eff_stamp,
+            "fade_next": 0.54 if is_ch_change else 0.24,
+        })
+        span_start = span_end
+
+    # 4. Stage A: Pre-render every shot at 1280x720 24fps with mood grade, smooth motion & Kyoto Zen overlays
+    title_png = os.path.join(tmpdir, "opening_title.png")
+    has_title = _render_opening_title_png(str(script.get("title_ja") or "今日の日本ストーリー"), title_png)
+
     n_shots = len(shot_plan)
-    archival_clip_count = sum(1 for k, _, _ in shot_plan if k == "video")
+    archival_clip_count = sum(1 for sp in shot_plan if sp["kind"] == "video")
+    shot_files: list[str] = []
+    shot_durs: list[float] = []
+    shot_fades: list[float] = []
+
+    for i, sp in enumerate(shot_plan):
+        f_next = float(sp["fade_next"]) if i < n_shots - 1 else 0.0
+        d = float(sp["raw_dur"]) + f_next
+        shot_durs.append(d)
+        shot_fades.append(f_next)
+
+        stamp_png = ""
+        if sp["stamp"]:
+            cand_png = os.path.join(tmpdir, f"stamp_{i:02d}.png")
+            if _render_scene_stamp_png(sp["stamp"], cand_png):
+                stamp_png = cand_png
+
+        out_shot = os.path.join(tmpdir, f"shot_{i:02d}.mp4")
+        ok_shot = _prerender_cinema_shot(
+            shot_idx=i,
+            kind=str(sp["kind"]),
+            media_path=str(sp["path"]),
+            dur_sec=d,
+            grade=str(sp["grade"]),
+            motion=str(sp["motion"]),
+            out_mp4=out_shot,
+            ffmpeg_bin=ffmpeg_bin,
+            title_png=(title_png if (i == 0 and has_title) else ""),
+            stamp_png=stamp_png,
+        )
+        if not ok_shot:
+            print(f"[visual-studio] Stage-A shot {i} pre-render failed ({sp['path']})")
+            return None
+        shot_files.append(out_shot)
+
+    # 5. Stage B: Assemble crisp 1280x720 HD cinema master with dynamic rhythmic xfade + 48kHz stereo AAC!
     inputs: list[str] = []
-    for kind, media_p, _dur in shot_plan:
-        if kind == "video":
-            inputs.extend(["-stream_loop", "-1", "-i", media_p])
-        else:
-            inputs.extend(["-i", media_p])
+    for sf in shot_files:
+        inputs.extend(["-i", sf])
     inputs.extend(["-i", wav_path])
     audio_idx = n_shots
 
-    motions = [
-        lambda f: f"zoompan=z='min(1.11,1+0.00048*on)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={f}:s=854x480:fps={fps}",
-        lambda f: f"zoompan=z='1.10':x='(iw-iw/zoom)*min(1,on/{f})':y='ih/2-(ih/zoom/2)':d={f}:s=854x480:fps={fps}",
-        lambda f: f"zoompan=z='max(1.0,1.11-0.00048*on)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={f}:s=854x480:fps={fps}",
-        lambda f: f"zoompan=z='1.10':x='(iw-iw/zoom)*(1-min(1,on/{f}))':y='ih/2-(ih/zoom/2)':d={f}:s=854x480:fps={fps}",
-    ]
-
     fc_parts: list[str] = []
-    # Compensate each non-last shot's duration by +fade so after xfade overlaps total duration matches total_dur
-    shot_durs: list[float] = []
-    for i, (kind, _media_p, raw_d) in enumerate(shot_plan):
-        d = raw_d + (fade if i < n_shots - 1 else 0.0)
-        shot_durs.append(d)
-        if kind == "video":
-            fc_parts.append(
-                f"[{i}:v]scale=854:480:force_original_aspect_ratio=increase,"
-                f"crop=854:480:(iw-854)/2:(ih-480)/2,fps={fps},setsar=1,"
-                f"trim=duration={d:.3f},setpts=PTS-STARTPTS,settb=1/{fps},"
-                f"eq=saturation=0.92:contrast=1.05:brightness=-0.015,vignette=angle=PI/5,format=yuv420p[v{i}]"
-            )
-        else:
-            frames = max(36, int(math.ceil(d * fps)) + 4)
-            mot = motions[i % len(motions)](frames)
-            fc_parts.append(
-                f"[{i}:v]scale=1280:720:force_original_aspect_ratio=increase,"
-                f"crop=1280:720:(iw-1280)/2:(ih-720)*0.28,setsar=1,"
-                f"{mot},trim=duration={d:.3f},setpts=PTS-STARTPTS,settb=1/{fps},"
-                f"eq=saturation=0.92:contrast=1.05:brightness=-0.015,vignette=angle=PI/5,format=yuv420p[v{i}]"
-            )
+    for i in range(n_shots):
+        fc_parts.append(f"[{i}:v]setpts=PTS-STARTPTS,settb=1/{VID_FPS},fps={VID_FPS},format=yuv420p[v{i}]")
 
     if n_shots == 1:
         v_out = "[v0]"
     else:
         prev = "v0"
-        offset = shot_durs[0] - fade
+        offset = shot_durs[0] - shot_fades[0]
         for i in range(1, n_shots):
             nxt = f"vx{i}"
-            fc_parts.append(f"[{prev}][v{i}]xfade=transition=fade:duration={fade:.2f}:offset={offset:.3f}[{nxt}]")
+            fd = shot_fades[i - 1]
+            fc_parts.append(f"[{prev}][v{i}]xfade=transition=fade:duration={fd:.2f}:offset={offset:.3f}[{nxt}]")
             prev = nxt
-            offset += shot_durs[i] - fade
+            if i < n_shots - 1:
+                offset += shot_durs[i] - shot_fades[i]
         v_out = f"[{prev}]"
 
-    fade_out_st = max(1.0, total_dur - 0.75)
-    fc_parts.append(f"{v_out}fade=t=out:st={fade_out_st:.2f}:d=0.75[vfinal]")
+    fade_out_st = max(1.0, total_dur - 1.10)
+    fc_parts.append(f"{v_out}fade=t=out:st={fade_out_st:.2f}:d=1.10:color=0x11100E[vfinal]")
 
     dest_mp4 = os.path.join(VIDEO_DIR, "daily_jp_story.mp4")
     dest_vtt = os.path.join(VIDEO_DIR, "daily_jp_story.vtt")
@@ -1930,27 +2797,26 @@ async def _build_jp_documentary_video(
         "-filter_complex", ";".join(fc_parts),
         "-map", "[vfinal]",
         "-map", f"{audio_idx}:a:0",
-        "-c:v", "libx264", "-preset", "fast", "-crf", "25",
-        "-profile:v", "main", "-level", "3.1", "-pix_fmt", "yuv420p",
-        "-c:a", "aac", "-b:a", "112k", "-ac", "1",
+        "-c:v", "libx264", "-preset", "veryfast", "-crf", "23",
+        "-maxrate", "1300k", "-bufsize", "2600k",
+        "-profile:v", "high", "-level", "4.0", "-pix_fmt", "yuv420p",
+        "-c:a", "aac", "-b:a", "128k", "-ac", "2", "-ar", str(SR),
         "-t", f"{total_dur:.2f}",
         "-movflags", "+faststart",
         dest_mp4,
     ]
-    res = subprocess.run(cmd, check=False)
-    if res.returncode != 0 or not os.path.exists(dest_mp4) or os.path.getsize(dest_mp4) < 40000:
-        print("[visual-studio] ffmpeg daily_jp_story.mp4 render failed")
+    res = subprocess.run(cmd, timeout=360, check=False)
+    if res.returncode != 0 or not os.path.exists(dest_mp4) or os.path.getsize(dest_mp4) < 60000:
+        print("[visual-studio] ffmpeg daily_jp_story.mp4 Stage-B assembly failed")
         return None
 
     _write_bilingual_vtt(cues, dest_vtt)
 
-    # Sort interactive target words by hit count desc then first_sec asc
     ranked_words = sorted(
         word_hits_map.values(),
         key=lambda x: (-int(x["hits"]), float(x["first_sec"])),
     )[:12]
 
-    # Detect which grammar patterns from today's review appeared in the Japanese video
     all_ja_blob = " ".join(c["ja"] for c in cues)
     gram_hits: list[str] = []
     for it in (review_items or []):
@@ -1968,7 +2834,7 @@ async def _build_jp_documentary_video(
         mm += 1
         ss = 0
     dur_label = f"{mm:02d}:{ss:02d}"
-    poster_url = chapter_posters.get(1) or chapter_posters.get(0) or ""
+    poster_url = chapter_posters.get(0) or chapter_posters.get(1) or ""
 
     return {
         "title_ja": str(script.get("title_ja") or "今日の日本ストーリー"),
@@ -1978,9 +2844,13 @@ async def _build_jp_documentary_video(
         "poster_url": poster_url,
         "duration_sec": total_dur,
         "duration_label": dur_label,
+        "resolution": f"{VID_W}x{VID_H}",
+        "audio_channels": 2,
+        "cinema_ver": CINEMA_VER,
         "shot_count": n_shots,
         "archival_clip_count": archival_clip_count,
         "archival_sources": used_archival_labels,
+        "stamps": used_stamps,
         "target_words": ranked_words,
         "target_grammar": gram_hits[:6],
         "cues": cues,
@@ -1998,13 +2868,11 @@ async def build_episode_visuals_async(
     imm_vocab_report: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """
-    Native-async pipeline (safe to `await` directly inside `generate_daily_radio.py`'s event loop!):
-      1. Chapter documentary posters (`img/ch_0.jpg` .. `img/ch_5.jpg`) preferring historical archival stills
-      2. Real historical archival moving video clips (Wikimedia Commons / Internet Archive Prelinger/NARA/NASA)
-      3. ONE cohesive ~80s ALL-JAPANESE daily documentary video (`video/daily_jp_story.mp4` + `.vtt`)
-         intercutting real historical moving footage + archival stills while weaving focus/rumination words & grammar!
+    Native-async v4.0 NHK Cinema Studio pipeline:
+      1. Chapter documentary posters (`img/ch_0.jpg` .. `img/ch_5.jpg`) at 1280x720 HD
+      2. Beat-matched HD moving video clips + museum/editorial stills (perceptually deduplicated & audited)
+      3. ONE cohesive ~95s 720p HD stereo ALL-JAPANESE documentary (`video/daily_jp_story.mp4` + `.vtt`)
       4. Native Japanese studio model MP3s (`audio/spk_0.mp3`, `audio/spk_1.mp3`) for speaking cards.
-    Decouples video cleanly from grammar flashcards (removes legacy Chinese `rv_*.mp4` clips).
     """
     ffmpeg_bin = _find_ffmpeg()
     if not ffmpeg_bin:
@@ -2014,7 +2882,6 @@ async def build_episode_visuals_async(
     os.makedirs(IMG_DIR, exist_ok=True)
     os.makedirs(VIDEO_DIR, exist_ok=True)
 
-    # Clean stale legacy `rv_*.mp4`/`.vtt` and previous `daily_jp_story.*` so repo stays ultra-lean!
     for fn in os.listdir(VIDEO_DIR):
         if re.match(r"^(rv_\d+|daily_jp_story)\.(mp4|vtt)$", fn):
             try:
@@ -2028,33 +2895,65 @@ async def build_episode_visuals_async(
             except OSError:
                 pass
 
-    ver_tag = f"{today_str}_{str(script_sig or 'v3')[:6]}_jp"
+    ver_tag = f"{today_str}_{str(script_sig or 'v4')[:6]}_jp4"
     tmpdir = tempfile.mkdtemp(prefix="n3_vis_")
     used_hashes: set[str] = set()
+    _ACTIVE_DHASHES.clear()
     used_clip_keys: set[str] = set()
     chapter_shots: dict[int, list[str]] = {}
     chapter_clips: dict[int, list[dict[str, str]]] = {}
     chapter_posters: dict[int, str] = {}
     story_arts: list[dict[str, Any]] = []
 
+    is_mock_ffmpeg = os.path.basename(ffmpeg_bin) == "true"
+    storyboard_id = ""
+    if not is_mock_ffmpeg:
+        for blk in story_blocks:
+            sid = str(blk.get("id") or "").strip()
+            if sid in CURATED_BEAT_STORYBOARDS:
+                storyboard_id = sid
+                break
+    curated_posters = CURATED_CHAPTER_POSTERS.get(storyboard_id) or {}
+
     try:
-        # 1. Fetch period documentary stills + real historical moving footage clips per chapter
+        # 1. Fetch chapter posters + backup stills (+ HD video clips when not driven by a curated storyboard)
         for blk in story_blocks:
             ch_idx = int(blk.get("chapter", 0))
-            shots = _download_chapter_shots(blk, tmpdir, used_hashes, ffmpeg_bin=ffmpeg_bin, want=3)
-            clips = _download_chapter_archival_clips(
-                blk, tmpdir, used_clip_keys, ffmpeg_bin=ffmpeg_bin, want=1, clip_dur=11.0
-            )
-            if clips:
-                chapter_clips[ch_idx] = clips
-            if not shots and clips:
-                clip_still = os.path.join(tmpdir, f"ch{ch_idx}_from_archival.jpg")
-                subprocess.run(
-                    [ffmpeg_bin, "-y", "-v", "error", "-ss", "2.0", "-i", clips[0]["path"], "-frames:v", "1", "-q:v", "4", clip_still],
-                    timeout=8, check=False,
+            shots: list[str] = []
+
+            if curated_posters.get(ch_idx) and not is_mock_ffmpeg:
+                p_title = curated_posters[ch_idx]
+                p_url = _resolve_wm_image_url(p_title, width=1600)
+                if p_url:
+                    ext = ".png" if p_title.lower().endswith(".png") else ".jpg"
+                    p_raw = os.path.join(tmpdir, f"ch{ch_idx}_curated_poster{ext}")
+                    if _http_download(p_url, p_raw):
+                        w, h = _probe_image_dims(p_raw, ffmpeg_bin=ffmpeg_bin)
+                        if w >= 640 and h >= 360:
+                            shots.append(p_raw)
+
+            if len(shots) < (1 if storyboard_id else 4):
+                extra = _download_chapter_shots(
+                    blk, tmpdir, used_hashes, ffmpeg_bin=ffmpeg_bin,
+                    want=(2 if storyboard_id else 4),
                 )
-                if os.path.exists(clip_still) and os.path.getsize(clip_still) > 4000:
-                    shots = [clip_still]
+                shots.extend(extra)
+
+            if not storyboard_id:
+                clips = _download_chapter_archival_clips(
+                    blk, tmpdir, used_clip_keys, ffmpeg_bin=ffmpeg_bin, want=2, clip_dur=9.5
+                )
+                if clips:
+                    chapter_clips[ch_idx] = clips
+                if not shots and clips:
+                    clip_still = os.path.join(tmpdir, f"ch{ch_idx}_from_archival.jpg")
+                    subprocess.run(
+                        [ffmpeg_bin, "-y", "-v", "error", "-ss", "2.0", "-i", clips[0]["path"], "-frames:v", "1", "-q:v", "3", clip_still],
+                        timeout=8, check=False,
+                    )
+                    if os.path.exists(clip_still) and os.path.getsize(clip_still) > 4000:
+                        shots = [clip_still]
+
             if not shots:
                 fb_jpg = os.path.join(tmpdir, f"ch{ch_idx}_fallback.jpg")
                 _render_fallback_zen_still(fb_jpg, ffmpeg_bin=ffmpeg_bin)
@@ -2069,7 +2968,7 @@ async def build_episode_visuals_async(
                     if int(ch_m.get("idx", -1)) == ch_idx:
                         ch_m["img"] = rel_poster
 
-        # 2. Keep grammar/vocab review flashcards clean & decoupled (thumbnail only, no Chinese video clutter!)
+        # 2. Keep grammar/vocab review flashcards clean & decoupled (thumbnail only)
         for item in review_items:
             ch_idx = int(item.get("chapter_idx", 0))
             if chapter_posters.get(ch_idx):
@@ -2085,7 +2984,7 @@ async def build_episode_visuals_async(
                 sp["img"] = chapter_posters[ch_idx]
         await _synth_speaking_prompt_audios(speaking_prompts, ver_tag)
 
-        # 4. Build today's cohesive ALL-JAPANESE Documentary Short Video (`video/daily_jp_story.mp4`)
+        # 4. Build today's cohesive 720p HD stereo ALL-JAPANESE Documentary Short Video
         target_words = _collect_daily_target_words(imm_vocab_report, review_items)
         jp_script = _resolve_jp_video_script(story_blocks, target_words, review_items, today_str=today_str)
         jp_video = await _build_jp_documentary_video(
@@ -2099,6 +2998,8 @@ async def build_episode_visuals_async(
             tmpdir=tmpdir,
             ffmpeg_bin=ffmpeg_bin,
             chapter_clips=chapter_clips,
+            storyboard_id=storyboard_id,
+            chapters_meta=chapters_meta,
         )
 
         # 5. Build `story_arts` gallery for main player cover & chapter posters
@@ -2119,8 +3020,8 @@ async def build_episode_visuals_async(
         artwork_url = chapter_posters.get(0) or (story_arts[0]["img"] if story_arts else "")
         arch_n = int((jp_video or {}).get("archival_clip_count") or 0)
         jp_info = (
-            f"jp_video={jp_video['duration_label']} ({len(jp_video['target_words'])} words, "
-            f"{jp_video['shot_count']} shots, {arch_n} archival clips)"
+            f"jp_video={jp_video['duration_label']} {jp_video.get('resolution','720p')} "
+            f"({len(jp_video['target_words'])} words, {jp_video['shot_count']} shots, {arch_n} moving clips)"
             if jp_video else "jp_video=none"
         )
         spk_aud = sum(1 for sp in speaking_prompts if sp.get("model_audio"))

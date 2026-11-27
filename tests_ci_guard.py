@@ -1347,21 +1347,21 @@ def test_v85_whole_app_voice_studio_guard() -> None:
         "function renderQuizVoiceStage(",
         "function openRadioVoiceWrapUp(",
         "function renderRadioVoiceStage(",
-        'SW_CACHE_NAME = "n3-studio-tutor-v8',
+        'SW_CACHE_NAME = "n3-studio-tutor-v',
     ):
         assert sym in bh_src, f"build_html.py missing v85 Voice Studio symbol: {sym}"
 
-    print(f"[PASS 21/23] v85 Whole-App Voice Studio ({len(CONJUGATION_DRILLS)} conj drills x 3 MP3s + {len(VOICE_COACH_LINES)} coach clips + {len(sps)} spk ask MP3s) verified")
+    print(f"[PASS 21/25] v85 Whole-App Voice Studio ({len(CONJUGATION_DRILLS)} conj drills x 3 MP3s + {len(VOICE_COACH_LINES)} coach clips + {len(sps)} spk ask MP3s) verified")
 
 
 def test_v86_native_pixel_fluidity_guard() -> None:
-    """Gate 22 (v86-v87): Guard 120Hz browser + WebAPK native fluidity, zero-vibration preference, persistent immutable cache, and crisp icons."""
+    """Gate 22 (v86-v88): Guard 120Hz browser + WebAPK native fluidity, zero-vibration preference, persistent immutable cache, and crisp icons."""
     bh_src = (BASE_DIR / "build_html.py").read_text(encoding="utf-8")
     sw_src = (BASE_DIR / "sw.js").read_text(encoding="utf-8")
     man = json.loads((BASE_DIR / "manifest.json").read_text(encoding="utf-8"))
 
     for sym in (
-        'SW_CACHE_NAME = "n3-studio-tutor-v8',
+        'SW_CACHE_NAME = "n3-studio-tutor-v',
         "100dvh",
         "touch-action: manipulation",
         "overscroll-behavior: contain",
@@ -1388,13 +1388,13 @@ def test_v86_native_pixel_fluidity_guard() -> None:
 
     html_out = (BASE_DIR / "index.html").read_text(encoding="utf-8")
     assert "navigator.vibrate" not in html_out, "FORBIDDEN navigator.vibrate found in index.html (violates 零触控震动)!"
-    assert 'CACHE_NAME = "n3-studio-tutor-v8' in sw_src, "sw.js CACHE_NAME missing v8x!"
+    assert 'CACHE_NAME = "n3-studio-tutor-v' in sw_src, "sw.js CACHE_NAME missing!"
     assert 'IMMUTABLE_CACHE = "zen-immutable-v1"' in sw_src, "sw.js missing persistent IMMUTABLE_CACHE for fonts/audio!"
     assert 'cache: "no-cache"' in sw_src, "sw.js should use ETag-conditional no-cache SWR revalidation!"
     assert "launch_handler" in man and "display_override" in man, "manifest.json missing launch_handler/display_override!"
     assert (BASE_DIR / "icon-192.png").stat().st_size > 2500, "icon-192.png looks low-res / broken!"
     assert (BASE_DIR / "icon-512.png").stat().st_size > 8000, "icon-512.png looks low-res / broken!"
-    print("[PASS 22/24] v88 ultimate 120Hz fluidity (non-blocking fonts, immutable cache, 0ms tabs, O(1) mastery, 120Hz scrub/sheets, idle warmup & crisp icons) verified")
+    print("[PASS 22/25] v88 ultimate 120Hz fluidity (non-blocking fonts, immutable cache, 0ms tabs, O(1) mastery, 120Hz scrub/sheets, idle warmup & crisp icons) verified")
 
 
 def test_zero_question_audio_answer_leak_guard() -> None:
@@ -1606,11 +1606,81 @@ def test_v88_sla_linguistics_master_guard() -> None:
         "function renderPitchContourSVG(",
         "function openMicroReadingModal(",
         "function openTutorMissionModal(",
-        'SW_CACHE_NAME = "n3-studio-tutor-v89"',
+        'SW_CACHE_NAME = "n3-studio-tutor-v',
     ):
         assert sym in bh_src, f"build_html.py missing v89 SLA symbol: {sym}"
 
-    print("[PASS 24/24] v89 SLA Linguistics Master Upgrade (0/84 N2 collisions, FSRS+Leeches, 30-line N2 film, 102 HVPT MP3s, Shadowing, 4/3/2, Micro-Reading, Tutor Mission) verified")
+    print("[PASS 24/25] v89 SLA Linguistics Master Upgrade (0/84 N2 collisions, FSRS+Leeches, 30-line N2 film, 102 HVPT MP3s, Shadowing, 4/3/2, Micro-Reading, Tutor Mission) verified")
+
+
+def test_v90_nhk_cinema_hd_visual_studio_guard() -> None:
+    """Gate 25 (v90): Guard v4.0 NHK HD Cinema Studio (1280x720 24fps, 48kHz stereo chamber score, 15-beat Vol.23/18 storyboards, era classifier, purged clips, Pillow overlays, proper-noun TTS readings, scrubbable rail & CI deps)."""
+    import os
+    import tempfile
+    import radio_visual_studio as rvs
+    import visual_storyboards_vault as vsv
+
+    # 1. HD Cinema spec constants
+    assert rvs.VID_W == 1280 and rvs.VID_H == 720, f"Expected 1280x720 HD video, got {rvs.VID_W}x{rvs.VID_H}"
+    assert rvs.VID_FPS == 24 and rvs.SR == 48000, f"Expected 24fps / 48kHz, got {rvs.VID_FPS}fps / {rvs.SR}Hz"
+    assert rvs.CINEMA_VER == "v4_nhk_hd_cinema", f"Unexpected CINEMA_VER: {rvs.CINEMA_VER}"
+
+    # 2. Curated 15-beat storyboards for Today (Vol.23) & Tomorrow (Vol.18 Deep Kanazawa)
+    for sid in ("uchi23_s2a_kabuki_drama_part1", "uchi18_s2a_yodogo_part1"):
+        board = vsv.CURATED_BEAT_STORYBOARDS.get(sid) or []
+        assert len(board) >= 15, f"Expected >=15 storyboard beats for {sid}, got {len(board)}"
+        vid_cnt = sum(1 for b in board if b.get("kind") == "wm_video")
+        assert vid_cnt >= 5, f"Expected >=5 HD video beats in {sid}, got {vid_cnt}"
+        for b in board:
+            stamp = str(b.get("stamp") or "")
+            assert "—" not in stamp and "——" not in stamp, f"Banned em dash in storyboard stamp ({sid}): {stamp!r}"
+
+    # 3. Era classifier must NEVER misclassify modern neuroscience / tech as Meiji archival
+    assert rvs._infer_chapter_era({"id": "uchi23_s4_world_brain_ai", "title": "脳科学とAI時代の深い睡眠"}) == "science"
+    assert rvs._infer_chapter_era({"id": "uchi18_s3a_kanazawa_part1", "title": "金沢の辰巳用水と加賀百万石"}) in ("archival", "modern")
+    assert rvs._infer_chapter_era({"id": "uchi18_s4_world_europe_defense", "title": "EUの防衛費と欧州経済"}) in ("science", "modern")
+
+    # 4. Off-topic / flawed archival clips permanently purged from all active catalogs
+    all_footage_blob = json.dumps(rvs.CURATED_ARCHIVAL_FOOTAGE, ensure_ascii=False) + "\n" + json.dumps(rvs.THEME_ARCHIVAL_FALLBACKS, ensure_ascii=False)
+    for banned_id in ("0433_Human_Brain_The_01_05_28_00", "0576_Human_Face_of_Japan", "ITT Tour- Katana Forge", "Building an IBM Quantum", "TOKYO Big Bird"):
+        assert banned_id not in all_footage_blob, f"Purged flawed clip {banned_id!r} leaked back into footage catalogs!"
+
+    # 5. Proper-noun TTS reading overrides & v89 HVPT + N2 long-mode coexistence
+    rvs_src = (BASE_DIR / "radio_visual_studio.py").read_text(encoding="utf-8")
+    for sym in ("やまむらしんじろう", "HVPT_SPEAKER_PROFILES", "long_n2_mode"):
+        assert sym in rvs_src, f"radio_visual_studio.py missing required symbol: {sym}"
+
+    # 6. Stereo organic chamber bed + Pillow Kyoto Zen overlay self-check (when numpy/PIL installed)
+    try:
+        import numpy as _np
+        n_samp = int(4.0 * rvs.SR)
+        bed_l, bed_r = rvs._generate_zen_ambient_bed_stereo(n_samp, _np.zeros(n_samp, dtype=_np.float32), [2.0])
+        assert len(bed_l) == n_samp and len(bed_r) == n_samp, f"Bad stereo bed lengths: {len(bed_l)}, {len(bed_r)}"
+        assert float(_np.max(_np.abs(bed_l))) > 0.005 and float(_np.max(_np.abs(bed_r))) > 0.005, "Stereo chamber bed rendered silent!"
+    except ImportError:
+        pass
+    try:
+        from PIL import Image as _PilCheck  # noqa: F401
+        with tempfile.TemporaryDirectory(prefix="v90_pil_") as td:
+            t_png = os.path.join(td, "title.png")
+            s_png = os.path.join(td, "stamp.png")
+            assert rvs._render_opening_title_png("金沢・辰巳用水と欧州のいま", t_png) and os.path.getsize(t_png) > 2000
+            assert rvs._render_scene_stamp_png("金沢・兼六園", s_png) and os.path.getsize(s_png) > 1000
+    except ImportError:
+        pass
+
+    # 7. UI theater scrubbable rail, scene overline & v90 cache bump + workflow deps
+    bh_src = (BASE_DIR / "build_html.py").read_text(encoding="utf-8")
+    sw_src = (BASE_DIR / "sw.js").read_text(encoding="utf-8")
+    for sym in ("function scrubJpVideoRail(", 'id="jpv-ch-overline"', "jpv-scrub-rail", 'SW_CACHE_NAME = "n3-studio-tutor-v90"'):
+        assert sym in bh_src, f"build_html.py missing v90 cinema theater symbol: {sym}"
+    assert 'CACHE_NAME = "n3-studio-tutor-v90"' in sw_src, "sw.js CACHE_NAME not bumped to v90!"
+
+    for wf_name in ("daily-n3-brain.yml", "morning-refresh-alarm.yml", "night-owl-relay.yml"):
+        wf_txt = (BASE_DIR / ".github" / "workflows" / wf_name).read_text(encoding="utf-8")
+        assert "fonts-noto-cjk" in wf_txt and "pillow" in wf_txt, f"{wf_name} missing fonts-noto-cjk or pillow for v4.0 HD cinema!"
+
+    print("[PASS 25/25] v90 NHK HD Cinema Studio (1280x720 stereo, 15-beat Vol.23/18 storyboards, era filter, overlays, proper-noun TTS, scrub rail & CI deps) verified")
 
 
 def main() -> int:
@@ -1638,7 +1708,8 @@ def main() -> int:
     test_v86_native_pixel_fluidity_guard()
     test_zero_question_audio_answer_leak_guard()
     test_v88_sla_linguistics_master_guard()
-    print("[ALL PASS] tests_ci_guard.py 24/24 gates green!")
+    test_v90_nhk_cinema_hd_visual_studio_guard()
+    print("[ALL PASS] tests_ci_guard.py 25/25 gates green!")
     return 0
 
 

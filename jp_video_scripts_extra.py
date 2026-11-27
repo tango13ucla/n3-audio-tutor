@@ -74,19 +74,19 @@ EXTRA_CURATED_VISUAL_TOPICS: dict[str, dict[str, list[str]]] = {
         ],
     },
     "uchi25_s2a_nemawashi_ringi_part1": {
-        "ja_wiki": ["丸の内", "会議", "大手町 (千代田区)"],
+        "ja_wiki": ["丸の内", "東京証券取引所", "日本銀行"],
         "wm_queries": [
-            "Tokyo Marunouchi office skyline",
-            "Tokyo Marunouchi business district",
-            "Japanese office meeting Tokyo",
+            "Marunouchi Tokyo financial district",
+            "Bank of Japan headquarters Tokyo",
+            "Tokyo Marunouchi skyline evening",
         ],
     },
     "uchi25_s2b_keigo_workplace_part2": {
-        "ja_wiki": ["東京駅", "敬語", "丸の内"],
+        "ja_wiki": ["東京証券取引所", "霞が関", "東京駅"],
         "wm_queries": [
-            "Tokyo business district architecture",
+            "Tokyo Stock Exchange Kabutocho",
+            "Kasumigaseki Tokyo government buildings",
             "Tokyo Station Marunouchi plaza",
-            "Tokyo commuters business street",
         ],
     },
     "uchi25_s3a_hidden_champions_part1": {

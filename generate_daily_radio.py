@@ -3246,8 +3246,10 @@ async def main():
         bc_pcm_pool: dict[str, list[np.ndarray]] = {}
         bc_ja_pcm_pool: dict[str, list[np.ndarray]] = {}
         if dry_test:
+            _dry_sids = [str(b.get("id") or "") for b in story_blocks]
             print(
                 f"[dry-test] Stories={[b['short_tab'] for b in story_blocks]}, "
+                f"phase={_phase_info.get('phase')}, ids={_dry_sids}, "
                 f"unique_clips={len(unique_turns)} (mixed_carrier_swap={len(mixed_keys)}), "
                 f"vocab_locked={imm_vocab_report.get('locked_total', 0)}, "
                 f"vocab_new={imm_vocab_report.get('today_new_count', 0)}, script_sig={script_sig}"

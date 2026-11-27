@@ -162,8 +162,8 @@ jobs:
             python auto_author_daily_content.py --mode night-summary
           elif [ "$ACTION_MODE" = "full" ]; then
             sudo apt-get update -qq
-            sudo apt-get install -y -qq --no-install-recommends ffmpeg
-            pip install --quiet -U numpy edge-tts certifi google-genai pykakasi jieba
+            sudo apt-get install -y -qq --no-install-recommends ffmpeg fonts-noto-cjk
+            pip install --quiet -U numpy pillow edge-tts certifi google-genai pykakasi jieba
             python auto_author_daily_content.py --mode morning-prepare
             for try_i in 1 2; do
               if python run_brain_algorithm.py; then
@@ -290,8 +290,8 @@ jobs:
             exit 0
           fi
           sudo apt-get update -qq
-          sudo apt-get install -y -qq --no-install-recommends ffmpeg
-          pip install --quiet -U numpy edge-tts certifi google-genai pykakasi jieba
+          sudo apt-get install -y -qq --no-install-recommends ffmpeg fonts-noto-cjk
+          pip install --quiet -U numpy pillow edge-tts certifi google-genai pykakasi jieba
           python auto_author_daily_content.py --mode morning-prepare
           for try_i in 1 2; do
             if python run_brain_algorithm.py; then
