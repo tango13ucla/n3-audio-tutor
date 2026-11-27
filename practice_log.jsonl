@@ -2025,3 +2025,15 @@
 {"id": "HES:VAR8-02", "point": "〜ばかりだ", "choice": "犹豫过关", "correct": "true", "ask_again": "false", "ts": "2026-11-27T07:37:45.000Z"}
 {"id": "VAR8-02", "point": "〜ばかりだ", "choice": "ばかりだ", "correct": "true", "ask_again": "false", "ts": "2026-11-27T07:37:45.000Z"}
 {"id": "N3-H45", "point": "K-025", "choice": "お着きになり", "correct": "true", "ask_again": "false", "ts": "2026-11-27T07:40:09.000Z"}
+{"id": "HES:N3-G85", "point": "〜たものだ", "choice": "犹豫过关", "correct": "true", "ask_again": "false", "ts": "2026-11-27T07:40:39.000Z"}
+{"id": "N3-G85", "point": "〜たものだ", "choice": "だものだ", "correct": "true", "ask_again": "false", "ts": "2026-11-27T07:40:39.000Z"}
+{"id": "N3-H37", "point": "K-010", "choice": "参ります", "correct": "true", "ask_again": "false", "ts": "2026-11-27T07:40:49.000Z"}
+{"id": "N3-L41", "point": "N3L-168", "choice": "土曜日の食事会には行けない", "correct": "true", "ask_again": "false", "ts": "2026-11-27T07:42:54.000Z"}
+{"id": "HES:N3-G130", "point": "〜というより", "choice": "犹豫过关", "correct": "true", "ask_again": "false", "ts": "2026-11-27T07:43:27.000Z"}
+{"id": "N3-G130", "point": "〜というより", "choice": "というより", "correct": "true", "ask_again": "false", "ts": "2026-11-27T07:43:27.000Z"}
+{"id": "N3-H41", "point": "K-017", "choice": "ご存じありません", "correct": "false", "ask_again": "false", "ts": "2026-11-27T07:44:10.000Z"}
+{"id": "N3-H42", "point": "K-019", "choice": "お会いになり", "correct": "false", "ask_again": "false", "ts": "2026-11-27T07:44:57.000Z"}
+{"id": "VAR9-03", "point": "〜しだい", "choice": "できるしだい", "correct": "false", "ask_again": "false", "ts": "2026-11-27T07:45:20.000Z"}
+{"id": "N3-H41", "point": "K-017", "choice": "存じ上げません", "correct": "true", "ask_again": "false", "ts": "2026-11-27T07:45:34.000Z"}
+{"id": "HES:VAR11-04", "point": "〜あいだ（に）", "choice": "犹豫过关", "correct": "true", "ask_again": "false", "ts": "2026-11-27T07:46:29.000Z"}
+{"id": "VAR11-04", "point": "〜あいだ（に）", "choice": "あいだに", "correct": "true", "ask_again": "false", "ts": "2026-11-27T07:46:29.000Z"}
