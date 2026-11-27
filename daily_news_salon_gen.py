@@ -449,12 +449,67 @@ def load_cloud_qq_style_exemplars(seed_key: str = "") -> dict:
         return {}
 
 
+def bilingual_ramp_guidance(imm_profile: dict) -> str:
+    """Four-stage 700-day ear-conditioning director for smooth 10% -> 92% Japanese progression."""
+    ja_ratio = float(imm_profile.get("ja_ratio", 0.14))
+    ja_pct = int(round(ja_ratio * 100))
+    ramp_days = int(imm_profile.get("ramp_days", 700))
+    day_num = int(imm_profile.get("day_of_365", 1))
+    phase = str(imm_profile.get("phase", "n3_sprint"))
+    if ja_ratio < 0.22:
+        return (
+            f"当前处于 {ramp_days} 天双语计划第 {day_num} 天（阶段：{phase}，目标日语占比约 {max(ja_pct, 10)}%）："
+            "保持中文茶桌主骨架，每章在情绪最饱满处自然抛出一句完整日语示范句并用一两句大白话点透，顺手穿插已学高频词。"
+        )
+    if ja_ratio < 0.38:
+        return (
+            f"当前处于 {ramp_days} 天双语计划第 {day_num} 天（阶段：{phase}，目标日语占比约 {ja_pct}% · 冲刺 N2 听觉跃升期）："
+            "保持中文深度剖析骨架，但在引述日本媒体原话或三人短反应交锋处，每章自然穿插 2 到 3 组连续 2 轮的纯日语微对话（如共鸣、追问、轻反驳），说完无缝滑回中文纵深聊透。"
+        )
+    if ja_ratio < 0.65:
+        return (
+            f"当前处于 {ramp_days} 天双语计划第 {day_num} 天（阶段：{phase}，目标日语占比约 {ja_pct}% · N1 双轨沉浸期）："
+            "采用中日双轨交替叙事，约一半对话段落直接以自然东京语速纯日语推进讨论，中文保留给精妙典故类比、冷幽默吐槽与高阶微妙语感点拨。"
+        )
+    return (
+        f"当前处于 {ramp_days} 天双语计划第 {day_num} 天（阶段：{phase}，目标日语占比约 {ja_pct}% · 准母语沙龙期）："
+        "全章以自然地道的东京原生日语知识分子圆桌为主体，保留文涛、文道、子东原味节奏与锋利洞察，仅在极少量中式典故处轻点中文。"
+    )
+
+
+def _format_n2_pedagogy_instruction(n2_pedagogy: dict | None, act_role: str = "story") -> str:
+    if not isinstance(n2_pedagogy, dict):
+        return ""
+    new_g = list(n2_pedagogy.get("primary_new_grammar") or [])
+    cbs = list(n2_pedagogy.get("spaced_callbacks") or [])
+    if not new_g and not cbs:
+        return ""
+    lines = ["【N2 零基础爬坡与间隔故事回声任务（严格融入故事，严禁课堂感！）】："]
+    if new_g:
+        g_desc = "；".join(
+            f"{g.get('point', '')}（接续：{g.get('connection', '')}；核心感：{g.get('soul_meaning', '')}；双胞胎对比：{g.get('vs_twin', '')}）"
+            for g in new_g[:2]
+        )
+        if act_role == "news":
+            lines.append(f"- 本期核心新 N2 语法（首出深教）：{g_desc}。请在本章情绪到位处用约 40 到 60 秒大白话把情绪差异、接续和双胞胎讲透并给出一句完整日语示范。")
+        else:
+            lines.append(f"- 本期核心新 N2 语法（自然复现）：{g_desc}。请顺着本幕真实人物处境自然复现 1 到 2 次，不再重复长篇讲接续。")
+    if cbs:
+        cb_desc = "；".join(
+            f"{c.get('point', '')}（{c.get('days_ago', 1)}天前学过：{c.get('delivery_rule', '')}）"
+            for c in cbs[:3]
+        )
+        lines.append(f"- 间隔回声老朋友（轻点 3 到 8 秒，绝不打断故事流）：{cb_desc}。")
+    return "\n".join(lines) + "\n"
+
+
 def maybe_generate_live_news_story(
     today_str: str,
     imm_profile: dict,
     focus_points: list[str],
     companion_titles: list[str],
     dry_test: bool = False,
+    n2_pedagogy: dict | None = None,
 ) -> dict | None:
     if dry_test:
         return None
@@ -471,11 +526,6 @@ def maybe_generate_live_news_story(
     headlines = rank_headlines_by_editorial_taste(raw_headlines, limit=6)
     if not headlines:
         return None
-
-    ja_pct = int(round(float(imm_profile.get("ja_ratio", 0.14)) * 100))
-    phase = imm_profile.get("phase", "n3_sprint")
-    ramp_days = int(imm_profile.get("ramp_days", 700))
-    day_num = imm_profile.get("day_of_365", 1)
 
     night_sig = load_last_night_signals()
     night_missed = (night_sig.get("missed_or_unsure_points") or [])[:4]
@@ -496,6 +546,8 @@ def maybe_generate_live_news_story(
         vocab_brief = {}
 
     recent_fb = (night_sig.get("recent_radio_feedback") or [])[:5]
+    n2_block = _format_n2_pedagogy_instruction(n2_pedagogy, act_role="news")
+    ramp_line = bilingual_ramp_guidance(imm_profile)
     sys_prompt = (
         "你是凤凰卫视《锵锵三人行》原班总撰稿（对标《山口百惠武道馆放下白色麦克风》《常盘庄四叠半拉面》的巅峰听感：故事抓人、有人性张力、三人真性情聊天）。\n"
         "三位老友（严格还原真实《锵锵三人行》2005-2017原版说话DNA）：\n"
@@ -507,13 +559,14 @@ def maybe_generate_live_news_story(
         "听众已系统学日语三年、深度游历过日本多地并常看日本电视原版节目。绝对禁止聊任何游客/入门老梗（京都茶泡饭逐客令、京都人夸手表钢琴阴阳怪气、京都公交挤行李/清水寺/岚山/艺伎观光公害、大阪阿姨炫耀砍价/指枪喊砰、敬语内外科普或报联相=菠菜或鞠躬章、平安夜吃肯德基、红白跨年荞麦面一百零八下钟声、忠犬八公基础科普、便利店拉面樱花鞠躬常识）。\n"
         "欢迎深挖真正有历史纵深与权力/产业肌理的非京阪东地方史（如北陆金泽加贺百万石、长崎出岛、北海道东北铁道与过疏、九州冲绳地方史）及日本真实政经、法制、公司治理、土木防灾、医疗免疫、建筑艺术与科技暗流。\n"
         "如果输入里带有 `recent_listener_feedback`（听众近期 30 秒听后反馈），必须认真照办：放大他夸过的方向，彻底避开他点出的毛病，并优先呼应他留言点名想听的话题！\n"
+        + n2_block +
         "核心铁律（死守故事感与聊天人味）：\n"
         "1. 【写活人，严禁百科流水账与鸡汤感叹】：绝不报菜名、绝不堆干巴巴的数据年表、绝不喊『血脉偾张』『拼出底色』这类播音腔口号！多用句号和问号，每两三轮最多出现一个感叹号；三人要有互相打趣、轻微拌嘴和人情冷暖的留白。\n"
         "2. 【100% 真实新闻，严禁编造人物】：只能聊输入里的真实新闻与真实日本历史社会脉络，绝对不允许虚构任何假朋友、假同事、假邻居故事！\n"
         "3. 【开篇与收束自然衔接】：开篇第一轮 W 直接以『《锵锵三人行》！』短钩子切入今日最热日本新闻，第二轮立即由 X 或 D 调侃接茬；最后两轮由 D/W 自然预告待会儿回来要深聊的今日两段日本真实公共记忆大故事（参考 companion_titles），以『待会儿回来，……』收住悬念即可，不要自己抢说『先进广告』，把原版进广告口播留给系统由文涛统一喊出。\n"
-        "4. 【呼吸感黄金文法节奏（本章严格只放 3 个 N3 语法点，每 600 字以上才自然带出 1 个！）】：严禁每说三两句就急刹车讲语法课！先让故事连贯推进两三分钟、情绪铺足了，再由 D/X 顺着人物处境自然抛出一句完整日文示范并一两句大白话点透，绝不打断叙事流！\n"
-        "5. 【零洋泾浜碎词 · 只留有味道的词】：严禁在中文句里像撒胡椒面一样乱塞 `いえ / くるま / じかん / おかね / せかい / くに / みせ` 这类入门小词把句子切碎！只保留真正带日式文化质感的新闻专词（如 `ふるさとのうぜい`、`しゅうしょくひょうがき`），以及参考 `immersion_vocab_ledger` 挑 1 到 2 个真正值钱的 N3/N2 难读词顺手带出。\n"
-        f"6. 当前处于 {ramp_days} 天双语计划第 {day_num} 天（阶段：{phase}），日语假名占比保持轻爽自然（约 {max(ja_pct, 10)}%）。\n"
+        "4. 【呼吸感黄金文法节奏（本章严格只放 2 到 3 个核心语法点，每 600 字以上才自然带出 1 个！）】：严禁每说三两句就急刹车讲语法课！先让故事连贯推进两三分钟、情绪铺足了，再由 D/X 顺着人物处境自然抛出一句完整日文示范并一两句大白话点透，绝不打断叙事流！\n"
+        "5. 【零洋泾浜碎词 · 自然带出高价值词账】：严禁在中文句里像撒胡椒面一样乱塞 `いえ / くるま / じかん / おかね / せかい / くに / みせ` 这类入门小词把句子切碎！只保留真正带日式文化质感的新闻专词，并优先从 `immersion_vocab_ledger` 的 `priority_to_introduce` 与 `learning_in_progress` 中自然织入 1 到 2 个贴合语境的实词（中文语境自然提到即可，系统会自动无缝衔接日语）。\n"
+        f"6. {ramp_line}\n"
         "7. 【语音合成硬铁律】：对白文本中凡出现日文词句，必须 100% 写成纯平假名或纯片假名（前后留空格或中文标点），严禁汉字紧贴假名，严禁夹杂单字中文孤岛，严禁破折号（—/——），严禁任何英文字母或阿拉伯数字（数字全写中文），严禁『哈哈』『噗』或考试倒计时。\n"
         "输出严格为 JSON：{\"short_tab\": \"今日时局\", \"title\": \"...\", \"ja_focus\": \"...(此处可正常写日文汉字假名供屏幕显示)\", "
         "\"turns\": [[\"W\", \"...\"], [\"X\", \"...\"], [\"D\", \"...\"], ...]}"
@@ -521,6 +574,7 @@ def maybe_generate_live_news_story(
     usr_prompt = json.dumps({
         "nhk_live_headlines": headlines,
         "last_night_priority_targets": combined_targets[:4],
+        "n2_episode_pedagogy": n2_pedagogy or {},
         "recent_listener_feedback": recent_fb,
         "immersion_vocab_ledger": vocab_brief,
         "later_chapters_for_callbacks": companion_titles[:4],
@@ -533,14 +587,21 @@ def maybe_generate_live_news_story(
         return None
     try:
         parsed = json.loads(raw)
+        n2_pids = []
+        if isinstance(n2_pedagogy, dict):
+            n2_pids = [
+                str(x.get("id"))
+                for x in (list(n2_pedagogy.get("primary_new_grammar") or []) + list(n2_pedagogy.get("spaced_callbacks") or []))
+                if isinstance(x, dict) and x.get("id")
+            ][:4]
         story = {
             "id": f"live_nhk_news_{today_str}",
             "tier": "live_news",
             "is_news_slot": True,
             "short_tab": str(parsed.get("short_tab") or "今日时局")[:6],
-            "tags": ["今日日本时局", "真实日本公共记忆", "润物细无声N3"],
+            "tags": ["今日日本时局", "N2新语法首秀" if n2_pids else "真实日本公共记忆", "润物细无声N3"],
             "title": str(parsed.get("title") or "今日日本时局观察"),
-            "point_ids": ["N3-G13", "N3-G55", "N3-G67"],
+            "point_ids": n2_pids or ["N3-G13", "N3-G55", "N3-G67"],
             "ja_focus": str(parsed.get("ja_focus") or ""),
             "turns": _sanitize_generated_turns(parsed.get("turns") or []),
         }
@@ -562,12 +623,13 @@ def maybe_generate_live_world_finale_story(
     focus_points: list[str],
     companion_titles: list[str],
     dry_test: bool = False,
+    n2_pedagogy: dict | None = None,
 ) -> dict | None:
     """
     Generates the mandatory final-1/5 (~8 min of 40m episode) 'World From Japan's Perspective' finale segment:
     covers non-Japan global news across science, AI, medicine, space, energy, global economy,
     climate, tech & geopolitics through Japanese media/society's eyes, with Vol.6/7 golden storycraft
-    (3 calm N3 points, zero Wikipedia lists, zero N5 clutter) and authentic 10-12 turn unfinished Phoenix TV fade-out banter.
+    (3 calm N3/N2 points, zero Wikipedia lists, zero N5 clutter) and authentic 10-12 turn unfinished Phoenix TV fade-out banter.
     """
     if dry_test:
         return None
@@ -585,11 +647,6 @@ def maybe_generate_live_world_finale_story(
     if not world_headlines:
         return None
 
-    ja_pct = int(round(float(imm_profile.get("ja_ratio", 0.14)) * 100))
-    phase = imm_profile.get("phase", "n3_sprint")
-    ramp_days = int(imm_profile.get("ramp_days", 700))
-    day_num = imm_profile.get("day_of_365", 1)
-
     night_sig = load_last_night_signals()
     night_missed = (night_sig.get("missed_or_unsure_points") or [])[:4]
     recent_fb = (night_sig.get("recent_radio_feedback") or [])[:5]
@@ -605,6 +662,8 @@ def maybe_generate_live_world_finale_story(
     except Exception:
         vocab_brief = {}
 
+    n2_block = _format_n2_pedagogy_instruction(n2_pedagogy, act_role="world")
+    ramp_line = bilingual_ramp_guidance(imm_profile)
     sys_prompt = (
         "你是凤凰卫视《锵锵三人行》原班总撰稿，现在负责每天 40 分钟节目压轴的【最后五分之一板块：从日本的角度看世界】（约 8 分钟，26 到 34 轮，约 2,300 到 2,600 字）。\n"
         "核心定位：绝对不要锁死在日本本土，也绝对不要局限于文史哲！优先挑选【科学、前沿科技、人工智能、数学物理、国际医学、新能源材料、太空探索、全球财经、气候环境、国际地缘】等非文史哲广谱真新闻！\n"
@@ -612,19 +671,21 @@ def maybe_generate_live_world_finale_story(
         "听众底线（学日语三年的内行听众）：严禁游客观光类肤浅话题与入门常识科普；优先吸收 `recent_listener_feedback` 里听众近期反馈的口味偏好与改进建议。\n"
         "编辑品味（知己与拓界并重）：不仅聊热门科技财经，也主动破界去聊生命科学/免疫演化、艺术与建筑史、微观制造供应链、防灾工程与底层制度细节；文风冷静锋利克制有余味，绝不喊口号、绝不灌鸡汤、多用句号少用感叹号。\n"
         "三位老友（严格还原原版说话DNA）：窦文涛(W，真性情好奇、爱自嘲、多4到15字短反应把前沿科学拉回普通人尴尬)、梁文道(D，港台温厚书卷腔、善用『其实你想想看啊』『某种程度上讲』『挺吊诡的』织出好故事)、许子东(X，犀利冷幽默、敢用『不不不，我的问题是』『对不对？』抬杠拆台)。\n"
+        + n2_block +
         "硬性铁律：\n"
         "1. 【100% 真实国际/科学新闻，严禁编造人物】：只聊输入里的真实世界/科学/科技/医疗/经济新闻，把具体人物与戏剧性反差讲透。\n"
-        "2. 【凤凰卫视原版《锵锵》真实收尾制式·聊天不停+12秒渐弱淡出】：开篇第一轮由 W 自然承接前面日本往事把镜头拉出日本看世界（不出现『《锵锵三人行》』开场）；所有 N3 语法点拨必须在倒数第 11 轮之前全部讲完；【最后 10 到 12 轮】必须是总计 270 到 330 字的纯中文活络闲聊（严禁含任何日文假名，以免被片尾音乐与凤凰卫视张妙阳播音盖住）！三人完全不搞总结回顾、绝不出现『今天学了什么』『一壶茶喝完』『咱们明天见』，而是顺着话题幽默细节没完没了地继续打趣拌嘴、你一言我一语（每轮 20 到 35 字），聊到最后一句依然完全没聊完、意犹未尽留半截『……』，让系统把原版 25 秒片尾曲、12 秒渐弱淡出推子与凤凰卫视导视播音无缝叠进这十余轮永不散场的谈笑声里！\n"
-        "3. 【呼吸感黄金文法节奏（本章严格只放 3 到 4 个 N3 语法点，每 600 字左右才顺嘴带出 1 个！）】：严禁每隔三两句就急刹车上课！先让三人把世界大事和各国心态聊出火花，再由 D/X 顺嘴抛出一句地道日文示范并用一两句大白话点透，保持老友茶桌谈笑的丝滑节奏。\n"
-        "4. 【零洋泾浜碎词 · 只留有价值的 N3/N2 词】：严禁把 `いえ / くるま / じかん / せかい / くに / おかね` 这类幼儿园小词撒胡椒面一样切进中文句子！参考 `immersion_vocab_ledger` 挑 1 到 2 个真正值钱的 N3/N2 难读词顺手带出即可。\n"
-        f"5. 当前处于 {ramp_days} 天双语计划第 {day_num} 天（阶段：{phase}），日语假名占比保持轻爽自然（约 {max(ja_pct, 10)}%）。\n"
+        "2. 【凤凰卫视原版《锵锵》真实收尾制式·聊天不停+12秒渐弱淡出】：开篇第一轮由 W 自然承接前面日本往事把镜头拉出日本看世界（不出现『《锵锵三人行》』开场）；所有日语语法点拨必须在倒数第 11 轮之前全部讲完；【最后 10 到 12 轮】必须是总计 270 到 330 字的纯中文活络闲聊（严禁含任何日文假名，以免被片尾音乐与凤凰卫视张妙阳播音盖住）！三人完全不搞总结回顾、绝不出现『今天学了什么』『一壶茶喝完』『咱们明天见』，而是顺着话题幽默细节没完没了地继续打趣拌嘴、你一言我一语（每轮 20 到 35 字），聊到最后一句依然完全没聊完、意犹未尽留半截『……』，让系统把原版 25 秒片尾曲、12 秒渐弱淡出推子与凤凰卫视导视播音无缝叠进这十余轮永不散场的谈笑声里！\n"
+        "3. 【呼吸感黄金文法节奏（本章严格只放 3 个核心语法点，每 600 字左右才顺嘴带出 1 个！）】：严禁每隔三两句就急刹车上课！先让三人把世界大事和各国心态聊出火花，再由 D/X 顺嘴抛出一句地道日文示范并用一两句大白话点透，保持老友茶桌谈笑的丝滑节奏。\n"
+        "4. 【零洋泾浜碎词 · 自然带出高价值词账】：严禁把 `いえ / くるま / じかん / せかい / くに / おかね` 这类幼儿园小词撒胡椒面一样切进中文句子！参考 `immersion_vocab_ledger` 的 `priority_to_introduce` 与 `learning_in_progress` 自然提到 1 到 2 个高价值 N3/N2 实词即可。\n"
+        f"5. {ramp_line}\n"
         "6. 【语音合成硬铁律】：对白文本中所有日文必须 100% 纯平假名或纯片假名（前后空格或标点隔开），严禁汉字紧贴假名，严禁单字中文孤岛，严禁破折号（—/——），严禁英文字母与阿拉伯数字（全写中文，如『人工智能』『量子』『百分之三十八』），严禁『哈哈』『噗』或考试倒计时。\n"
         "输出严格为 JSON：{\"short_tab\": \"日本看世界\", \"title\": \"...\", \"ja_focus\": \"...(此处可正常写日文汉字假名供屏幕显示)\", "
         "\"turns\": [[\"W\", \"...\"], [\"D\", \"...\"], [\"X\", \"...\"], ...]}"
     )
     usr_prompt = json.dumps({
         "japan_reported_world_and_science_headlines": world_headlines,
-        "priority_n3_grammar_targets": combined_targets[:6],
+        "priority_grammar_targets": combined_targets[:6],
+        "n2_episode_pedagogy": n2_pedagogy or {},
         "recent_listener_feedback": recent_fb,
         "immersion_vocab_ledger": vocab_brief,
         "earlier_japan_stories_today": companion_titles[:4],
@@ -637,14 +698,21 @@ def maybe_generate_live_world_finale_story(
         return None
     try:
         parsed = json.loads(raw)
+        n2_pids = []
+        if isinstance(n2_pedagogy, dict):
+            n2_pids = [
+                str(x.get("id"))
+                for x in (list(n2_pedagogy.get("primary_new_grammar") or []) + list(n2_pedagogy.get("spaced_callbacks") or []))
+                if isinstance(x, dict) and x.get("id")
+            ][:4]
         story = {
             "id": f"live_world_finale_{today_str}",
             "tier": "world_from_japan",
             "is_world_finale": True,
             "short_tab": str(parsed.get("short_tab") or "日本看世界")[:6],
-            "tags": ["日本看世界", "科学科技国际", "润物细无声N3"],
+            "tags": ["日本看世界", "科学科技国际", "N2复现" if n2_pids else "润物细无声N3"],
             "title": str(parsed.get("title") or "从日本看今天的世界科学和国际大事"),
-            "point_ids": ["N3-G69", "N3-G65", "N3-G19", "N3-G67", "N3-G71", "N3-G127"],
+            "point_ids": n2_pids or ["N3-G69", "N3-G65", "N3-G19", "N3-G67", "N3-G71", "N3-G127"],
             "ja_focus": str(parsed.get("ja_focus") or ""),
             "turns": _sanitize_generated_turns(parsed.get("turns") or []),
         }

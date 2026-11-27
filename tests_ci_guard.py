@@ -1174,7 +1174,74 @@ def test_v82_jobs_zen_and_telemetry_hygiene_guard() -> None:
 
     bh_src = (BASE_DIR / "build_html.py").read_text(encoding="utf-8")
     assert "displayPointName(" in bh_src, "build_html.py missing displayPointName() helper!"
-    print("[PASS 18/18] N2 telemetry decay, clean mock confusion-pair stripping & Jobs-Zen hygiene verified")
+    print("[PASS 18/19] N2 telemetry decay, clean mock confusion-pair stripping & Jobs-Zen hygiene verified")
+
+
+def test_v46_stereo_cognitive_n2_long_horizon_guard() -> None:
+    """Gate 19: Guard v46 studio stereo soundstage, cognitive ear-pin/story-echo bridge, 10+ turn endings across ALL unplayed + N2 Vol.1-3, N2 audio answer-leak fix, and 2027 N1 continuity."""
+    import importlib
+    import generate_daily_radio as gdr
+    import generate_neural_audio as gna
+    import radio_review_builder as rrb
+    from n2_prep import n2_curriculum_engine as n2ce
+
+    # 1. ALL remaining unplayed N3 volumes (12..22, 24, 25) + N2 Vol.1..3 have >=10 pure-Chinese fade-out turns & zero TTS landmines
+    bad_tts_re = re.compile(r"[A-Za-z0-9—]|哈哈|噗")
+    for vnum in (12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 25):
+        mod = importlib.import_module(f"radio_salon_uchi_vol{vnum}")
+        last_st = getattr(mod, f"SALON_STORIES_UCHI_VOL{vnum}")[-1]
+        tail10 = last_st["turns"][-10:]
+        tail10_txt = "".join(t[1] for t in tail10)
+        assert not re.search(r"[ぁ-んァ-ヶー]", tail10_txt), f"Vol.{vnum} final 10 turns must be 100% pure Chinese!"
+        assert len(tail10_txt) >= 250, f"Vol.{vnum} final 10 turns too short for 12s fade-out ({len(tail10_txt)} < 250)!"
+
+    for n2_day in (1, 2, 3):
+        bundle = n2ce.get_n2_radio_stories_for_day(n2_day)
+        stories = bundle.get("stories") or []
+        assert len(stories) == 6, f"N2 Day {n2_day} must provide 6 curated stories, got {len(stories)}"
+        for st in stories:
+            for spk, txt in st["turns"]:
+                if spk in ("W", "D", "X"):
+                    m_bad = bad_tts_re.search(str(txt))
+                    assert not m_bad, f"N2 Day {n2_day} {st['id']} has TTS landmine {m_bad.group(0)!r} in: {str(txt)[:80]}"
+        tail10 = stories[-1]["turns"][-10:]
+        tail10_txt = "".join(t[1] for t in tail10)
+        assert not re.search(r"[ぁ-んァ-ヶー]", tail10_txt), f"N2 Day {n2_day} final 10 turns must be 100% pure Chinese!"
+        assert len(tail10_txt) >= 250, f"N2 Day {n2_day} final 10 turns too short ({len(tail10_txt)} < 250)!"
+
+    # 2. v46 stereo spatializer, room glue, 0.24s pre-JA breath, live feedback auto-tuning, zero bilingual roll-call regression & episodic bridge
+    gdr_src = (BASE_DIR / "generate_daily_radio.py").read_text(encoding="utf-8")
+    for sym in (
+        "def pan_stereo(",
+        "def build_studio_room_reflections_stereo(",
+        "STUDIO_JA_BACKCHANNEL_POOL",
+        "recent_radio_feedback",
+        "def update_story_memory_index(",
+        "v46_qq_40m_stereo_zmy_brain_bridge",
+        "n2_auto_",
+    ):
+        assert sym in gdr_src, f"generate_daily_radio.py missing v46 symbol {sym}"
+    assert "opening_turns = POST_N3_BILINGUAL_OPENING" not in gdr_src, "Regression: templated POST_N3_BILINGUAL_OPENING roll-call re-enabled!"
+    evs_ja = gdr.expand_turn_events("W", "你看这句：けいざいがゆたかになるにしたがって、こころのくうきょさをかんじるひとがふえた。")
+    assert any(k == "PAUSE" and float(v) >= 0.24 for k, v in evs_ja), f"Missing 0.24s pre-JA cognitive breath: {evs_ja}"
+
+    # 3. N2 question audio MUST NOT leak answer (`_build_n2_q_turns` splits on blank instead of reading full_ja)
+    n2_q = gna._build_n2_q_turns("雨の予報だった（　　）、傘を持たずに出かけてしまった。", "にもかかわらず")
+    assert all("にもかかわらず" not in str(v) for _, v in n2_q), f"N2 question audio leaked answer! {n2_q}"
+    assert any(k == "PAUSE" and float(v) >= 0.5 for k, v in n2_q), f"N2 question audio missing blank pause: {n2_q}"
+
+    # 4. Expanded adult N2 speaking templates & episodic index on disk
+    assert len(rrb._SPEAKING_TEMPLATES) >= 85, f"Expected >=85 speaking templates (including N2), got {len(rrb._SPEAKING_TEMPLATES)}"
+    smi_path = BASE_DIR / "audio" / "story_memory_index.json"
+    assert smi_path.exists(), "Missing backfilled audio/story_memory_index.json!"
+    smi_data = json.loads(smi_path.read_text(encoding="utf-8"))
+    assert len(smi_data.get("entries") or {}) >= 100, "story_memory_index.json unexpectedly small!"
+
+    # 5. 2027-04-01 N1 Sprint continuity (never reverting build_html / run_brain_algorithm / generate_neural_audio back to N3)
+    for fname in ("build_html.py", "generate_daily_radio.py", "generate_neural_audio.py"):
+        fsrc = (BASE_DIR / fname).read_text(encoding="utf-8")
+        assert '"n1_sprint"' in fsrc, f"{fname} missing n1_sprint continuity handling!"
+    print(f"[PASS 19/19] v46 studio stereo, cognitive ear-pin/story-echo ({len(smi_data['entries'])} hooks), N2 Vol.1-3 & 2027 N1 continuity verified")
 
 
 def main() -> int:
@@ -1196,7 +1263,8 @@ def main() -> int:
     test_v44_anti_tourist_kanazawa_and_feedback_guard()
     test_v45_broadcast_authenticity_guard()
     test_v82_jobs_zen_and_telemetry_hygiene_guard()
-    print("[ALL PASS] tests_ci_guard.py 18/18 gates green!")
+    test_v46_stereo_cognitive_n2_long_horizon_guard()
+    print("[ALL PASS] tests_ci_guard.py 19/19 gates green!")
     return 0
 
 

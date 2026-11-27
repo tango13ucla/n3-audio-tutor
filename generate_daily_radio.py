@@ -81,6 +81,7 @@ AUDIO_DIR = os.path.join(BASE_DIR, "audio")
 RADIO_MP3_PATH = os.path.join(AUDIO_DIR, "daily_radio.mp3")
 RADIO_META_PATH = os.path.join(AUDIO_DIR, "daily_radio_meta.json")
 RADIO_HISTORY_PATH = os.path.join(AUDIO_DIR, "radio_history.json")
+STORY_MEMORY_INDEX_PATH = os.path.join(AUDIO_DIR, "story_memory_index.json")
 
 SR = 24000
 PT_TZ = ZoneInfo("America/Los_Angeles")
@@ -597,11 +598,28 @@ AD_BREAK_2_POOL = [
     ),
 ]
 
+# Mono-safe stereo round-table seat panning (0% center Wen Tao, -22% warm left Wen Dao, +22% crisp right Zi Dong)
+HOST_PAN_MAP: dict[str, float] = {
+    "W": 0.0,
+    "M": 0.0,
+    "D": -0.22,
+    "X": 0.22,
+    "F": 0.22,
+    "ANN": 0.0,
+}
+
 # Natural off-axis studio backchannel murmurs (2-char natural Chinese listening cues, safe on all native voices)
 STUDIO_BACKCHANNEL_POOL: dict[str, tuple[str, ...]] = {
-    "W": ("没错。", "对对。", "是啊。"),
-    "D": ("对啊。", "没错。"),
-    "X": ("对对。", "没错。"),
+    "W": ("没错。", "对对。", "是啊。", "嗯嗯。"),
+    "D": ("对啊。", "没错。", "确实。"),
+    "X": ("对对。", "没错。", "就是。"),
+}
+
+# Native Japanese studio backchannel murmurs for N2/N1 progressive immersion (`ja_ratio >= 0.25`)
+STUDIO_JA_BACKCHANNEL_POOL: dict[str, tuple[str, ...]] = {
+    "W": ("そうですね。", "なるほど。"),
+    "D": ("たしかに。", "そうですね。"),
+    "X": ("なるほど。", "たしかに。"),
 }
 
 CLOSING_POOL = [
@@ -787,6 +805,136 @@ def save_today_stories(today_str: str, story_ids: list) -> None:
     hist["recent_days"] = {k: hist["recent_days"][k] for k in keep_dates}
     with open(RADIO_HISTORY_PATH, "w", encoding="utf-8") as f:
         json.dump(hist, f, ensure_ascii=False, indent=2)
+
+
+def _clean_story_hook(title: str, short_tab: str) -> str:
+    """Build a crisp, zero-em-dash episodic hook (<= 22 chars) for the '锵锵回声' Quiz card cue."""
+    raw = str(title or "").strip()
+    raw = re.sub(r"^[第\d一二三四五六七八九十]+[幕章集话][：:\s·]+", "", raw)
+    raw = re.sub(r"[（(][上下中][）)]\s*$", "", raw)
+    raw = re.sub(r"[—–\-]+", " ", raw)
+    raw = re.sub(r"\s+", " ", raw).strip(" ·：:，,。！？")
+    if short_tab and raw.startswith(short_tab):
+        rest = raw[len(short_tab):].lstrip(" ·：:，,")
+        if len(rest) >= 4:
+            raw = rest
+    if "：" in raw:
+        left, right = raw.split("：", 1)
+        raw = right.strip() if len(right.strip()) >= 6 else left.strip()
+    if len(raw) > 22:
+        # Prefer natural Chinese clause boundary (`，`, `、`, `与`, `和`) before falling back to hard trim
+        parts = [p.strip() for p in re.split(r"[，、]", raw) if p.strip()]
+        if parts and 6 <= len(parts[0]) <= 22:
+            raw = parts[0]
+        elif len(raw) > 22:
+            raw = raw[:21].rstrip(" ·，,的与和在") + "…"
+    return raw or str(short_tab or "锵锵故事")
+
+
+def update_story_memory_index(
+    today_str: str,
+    story_blocks: list[dict],
+    imm_vocab_report: dict | None = None,
+    index_path: str = STORY_MEMORY_INDEX_PATH,
+) -> dict:
+    """
+    Maintains a rolling 45-day episodic-to-semantic bridge (`audio/story_memory_index.json`)
+    mapping N3/N2 grammar point keys and vocabulary words to the exact 《锵锵三人行》 story
+    where Yangfan last heard them — ZERO PII, compact JSON for calm 1-line Quiz recall cues.
+    """
+    idx_data: dict = {"schema": "story-memory-index/1", "updated": today_str, "entries": {}}
+    if os.path.exists(index_path):
+        try:
+            loaded = json.load(open(index_path, encoding="utf-8"))
+            if isinstance(loaded, dict) and isinstance(loaded.get("entries"), dict):
+                idx_data["entries"] = dict(loaded["entries"])
+        except Exception:
+            pass
+
+    entries: dict[str, dict] = idx_data["entries"]
+    try:
+        cutoff = (datetime.date.fromisoformat(today_str) - datetime.timedelta(days=45)).isoformat()
+    except Exception:
+        cutoff = "2026-10-01"
+
+    def _put(key: str, tab: str, hook: str, ja: str) -> None:
+        k = str(key or "").strip()
+        if not k or len(k) > 40:
+            return
+        prev = entries.get(k)
+        if prev and str(prev.get("date") or "") > today_str:
+            return
+        entries[k] = {
+            "date": today_str,
+            "tab": str(tab or "")[:12],
+            "hook": str(hook or "")[:28],
+            "ja": str(ja or "")[:44],
+        }
+
+    # Resolve N2 grammar IDs -> `〜...` point names when available
+    n2_id_to_pt: dict[str, str] = {}
+    try:
+        from n2_prep.n2_curriculum_engine import load_n2_grammar_bank
+        for _g in load_n2_grammar_bank():
+            if _g.get("id") and _g.get("point"):
+                n2_id_to_pt[str(_g["id"])] = str(_g["point"])
+    except Exception:
+        pass
+
+    for b in story_blocks:
+        tab = str(b.get("short_tab") or "").strip()
+        hook = _clean_story_hook(str(b.get("title") or ""), tab)
+        ja_f = str(b.get("ja_focus") or "").strip()
+        ja_short = re.split(r"[／/|｜]", ja_f)[0].strip() if ja_f else ""
+        pids = list(b.get("point_ids") or [])
+        if b.get("point_id") and b["point_id"] not in pids:
+            pids.insert(0, b["point_id"])
+        for pid in pids:
+            pid_s = str(pid or "").strip()
+            if not pid_s:
+                continue
+            pkey = n2_id_to_pt.get(pid_s) or resolve_point_key(pid_s)
+            _put(pid_s, tab, hook, ja_short)
+            if pkey and pkey != pid_s:
+                _put(pkey, tab, hook, ja_short)
+            if pkey.startswith("〜"):
+                _put(pkey[1:], tab, hook, ja_short)
+        # Also catch explicit `〜...` grammar patterns or inline swap words inside turns
+        joined_turns = "\n".join(str(t) for _, t in (b.get("raw_turns") or b.get("turns") or []))
+        for m in SWAP_TOKEN_RE.finditer(joined_turns):
+            zh_c, ja_k = m.group(1).strip(), m.group(2).strip()
+            ent = ive.VOCAB_BY_KANA.get(ja_k)
+            if ent:
+                kj = str(ent.get("kanji") or "").strip()
+                if kj:
+                    _put(kj, tab, hook, f"{kj}（{ja_k}）")
+                _put(ja_k, tab, hook, f"{kj or zh_c}（{ja_k}）")
+
+    # Also index today's focused/new/graduated immersion words cleanly if not already placed
+    if isinstance(imm_vocab_report, dict) and story_blocks:
+        default_tab = str(story_blocks[0].get("short_tab") or "锵锵")
+        default_hook = _clean_story_hook(str(story_blocks[0].get("title") or ""), default_tab)
+        for bucket in ("today_new", "today_graduated", "rumination_words"):
+            for item in (imm_vocab_report.get(bucket) or []):
+                if not isinstance(item, dict):
+                    continue
+                kj = str(item.get("kanji") or "").strip()
+                ka = str(item.get("kana") or "").strip()
+                if kj and kj not in entries:
+                    _put(kj, default_tab, default_hook, f"{kj}（{ka}）" if ka else kj)
+                if ka and ka not in entries:
+                    _put(ka, default_tab, default_hook, f"{kj}（{ka}）" if kj else ka)
+
+    # Prune entries older than 45 days to keep the index crisp and lean
+    idx_data["entries"] = {
+        k: v for k, v in entries.items()
+        if isinstance(v, dict) and str(v.get("date") or "") >= cutoff
+    }
+    idx_data["updated"] = today_str
+    os.makedirs(os.path.dirname(index_path), exist_ok=True)
+    with open(index_path, "w", encoding="utf-8") as f:
+        json.dump(idx_data, f, ensure_ascii=False, indent=2)
+    return idx_data
 
 
 def estimate_story_seconds(st: dict) -> float:
@@ -1132,9 +1280,10 @@ def expand_turn_events(spk: str, val) -> list:
     for s_idx, (kind, seg_txt) in enumerate(segments):
         if kind == "JA_FULL":
             if out:
-                out.append(("PAUSE", round(max(pending_pause, 0.13), 3)))
+                # 0.24s cognitive mode-switch priming breath before standalone full Japanese sentence
+                out.append(("PAUSE", round(max(pending_pause, 0.24), 3)))
             out.append((ja_full_spk, seg_txt))
-            pending_pause = 0.18 if seg_txt.endswith(("。", "！", "？")) else 0.12
+            pending_pause = 0.22 if seg_txt.endswith(("。", "！", "？")) else 0.14
         else:
             lead_m = re.match(r"^[\s』」）“”]*([。！？；，、：…]+)[\s『「（“”]*", seg_txt)
             if lead_m:
@@ -1937,12 +2086,64 @@ async def fallback_tight_stitch_mixed(
     return tight_trim_pcm(compress_internal_silences(out), thresh_db=-44.0, pad_head_ms=10.0, pad_tail_ms=15.0)
 
 
-class StudioTimelineMixer:
-    """Sample-accurate 24kHz float32 PCM timeline builder with TV ducking & warm studio room tone."""
+def host_pan_for(spk_key: str) -> float:
+    base = str(spk_key or "").split("_")[0]
+    return float(HOST_PAN_MAP.get(base, 0.0))
 
-    def __init__(self, est_minutes: float = 42.0):
+
+def pan_stereo(arr: np.ndarray, pan: float = 0.0) -> np.ndarray:
+    """
+    Mono-safe equal-power stereo panning (ZERO phase delay -> ZERO comb-filtering on mono phone speakers!).
+    At pan=0.0, L=1.0 and R=1.0 (exact unity mono-sum); at pan=±0.22 (~3.1dB table spread),
+    stereo power is exact unity (1.000) and mono-sum loudness stays within -0.13 dB!
+    """
+    if arr.ndim == 2:
+        return arr.astype(np.float32, copy=False)
+    p = float(np.clip(pan, -1.0, 1.0))
+    theta = (p + 1.0) * (np.pi / 4.0)
+    g_l = float(np.cos(theta) * np.sqrt(2.0))
+    g_r = float(np.sin(theta) * np.sqrt(2.0))
+    out = np.empty((len(arr), 2), dtype=np.float32)
+    out[:, 0] = arr * g_l
+    out[:, 1] = arr * g_r
+    return out
+
+
+def build_studio_room_reflections_stereo(arr_mono: np.ndarray, pan: float = 0.0) -> np.ndarray:
+    """
+    Ultra-subtle Phoenix TV Hong Kong broadcast studio near-field early reflections (~RT60 < 0.06s):
+    3 low-passed (~2.8kHz) non-periodic taps (5.5ms / 11.8ms / 19.2ms, -27 to -33.5 dB) with tiny L/R
+    decorrelation so all 3 Mandarin hosts + Keita Japanese clips acoustically breathe inside ONE shared
+    physical round-table studio room, even seamlessly across Carrier-Swap seams!
+    Returns a (len(arr_mono) + tail_n, 2) float32 array containing ONLY the early-reflection aura.
+    """
+    n = len(arr_mono)
+    tail_n = 512  # ~21.3ms tail so reflections never clip off
+    refl = np.zeros((n + tail_n, 2), dtype=np.float32)
+    if n < 64:
+        return refl
+    # Fast O(N) warm ~2.8kHz low-pass kernel (simulates carpeted broadcast booth wall absorption)
+    lp = np.convolve(arr_mono, np.array([0.12, 0.22, 0.32, 0.22, 0.12], dtype=np.float32), mode="same")
+    # Opposite-side first reflection creates realistic table spatial depth in headphones
+    l_bias = 1.0 - 0.18 * float(np.clip(pan, -1.0, 1.0))
+    r_bias = 1.0 + 0.18 * float(np.clip(pan, -1.0, 1.0))
+    # L taps: 5.5ms (132), 11.8ms (283), 19.2ms (461) | R taps: 6.2ms (149), 11.1ms (267), 20.3ms (487)
+    refl[132 : 132 + n, 0] += lp * (0.042 * r_bias)
+    refl[283 : 283 + n, 0] += lp * (0.029 * l_bias)
+    refl[461 : 461 + n, 0] += lp * 0.019
+    refl[149 : 149 + n, 1] += lp * (0.042 * l_bias)
+    refl[267 : 267 + n, 1] += lp * (0.029 * r_bias)
+    refl[487 : 487 + n, 1] += lp * 0.019
+    return refl
+
+
+class StudioTimelineMixer:
+    """Sample-accurate 24kHz float32 PCM stereo/mono timeline builder with TV ducking, round-table soundstage & warm room tone."""
+
+    def __init__(self, est_minutes: float = 42.0, stereo: bool = False):
         init_samples = int(SR * est_minutes * 60)
-        self.buf = np.zeros(init_samples, dtype=np.float32)
+        self.stereo = bool(stereo)
+        self.buf = np.zeros((init_samples, 2), dtype=np.float32) if self.stereo else np.zeros(init_samples, dtype=np.float32)
         self.cursor = 0  # in samples
         self.max_written = 0
 
@@ -1950,7 +2151,10 @@ class StudioTimelineMixer:
         if needed_end <= len(self.buf):
             return
         grow = max(needed_end - len(self.buf), int(SR * 300))
-        self.buf = np.pad(self.buf, (0, grow), mode="constant")
+        if self.stereo:
+            self.buf = np.pad(self.buf, ((0, grow), (0, 0)), mode="constant")
+        else:
+            self.buf = np.pad(self.buf, (0, grow), mode="constant")
 
     @property
     def sec(self) -> float:
@@ -1962,28 +2166,75 @@ class StudioTimelineMixer:
             self._ensure_cap(self.cursor)
             self.max_written = self.cursor
 
-    def place_at(self, start_sec: float, clip: np.ndarray, gain: float | np.ndarray = 1.0) -> float:
+    def place_at(
+        self,
+        start_sec: float,
+        clip: np.ndarray,
+        gain: float | np.ndarray = 1.0,
+        pan: float = 0.0,
+        room_glue: bool = False,
+    ) -> float:
         if len(clip) == 0:
             return start_sec
         idx = max(0, int(round(start_sec * SR)))
         end = idx + len(clip)
-        self._ensure_cap(end)
-        self.buf[idx:end] += clip * gain
+        if self.stereo:
+            sig = pan_stereo(clip, pan=pan)
+            if isinstance(gain, np.ndarray):
+                g_arr = gain[:, None] if gain.ndim == 1 else gain
+                sig = sig * g_arr
+            else:
+                sig = sig * float(gain)
+            self._ensure_cap(end)
+            self.buf[idx:end] += sig
+            if room_glue and clip.ndim == 1 and not isinstance(gain, np.ndarray):
+                refl = build_studio_room_reflections_stereo(clip * float(gain), pan=pan)
+                r_end = idx + len(refl)
+                self._ensure_cap(r_end)
+                self.buf[idx:r_end] += refl
+                if r_end > self.max_written:
+                    self.max_written = r_end
+        else:
+            self._ensure_cap(end)
+            self.buf[idx:end] += clip * gain
         if end > self.max_written:
             self.max_written = end
         return end / float(SR)
 
-    def append_clip(self, clip: np.ndarray, gain: float = 1.0, crossfade_sec: float = 0.0) -> None:
+    def append_clip(
+        self,
+        clip: np.ndarray,
+        gain: float = 1.0,
+        crossfade_sec: float = 0.0,
+        pan: float = 0.0,
+        room_glue: bool = False,
+    ) -> None:
         if len(clip) == 0:
             return
         ov = int(round(crossfade_sec * SR)) if crossfade_sec > 0 else 0
         if ov > 0 and self.cursor >= ov:
             duck_curve = np.linspace(1.0, 0.42, ov, dtype=np.float32)
-            self.buf[self.cursor - ov : self.cursor] *= duck_curve
+            if self.stereo:
+                self.buf[self.cursor - ov : self.cursor] *= duck_curve[:, None]
+            else:
+                self.buf[self.cursor - ov : self.cursor] *= duck_curve
             self.cursor -= ov
-        end = self.cursor + len(clip)
-        self._ensure_cap(end)
-        self.buf[self.cursor:end] += clip * gain
+        start_idx = self.cursor
+        end = start_idx + len(clip)
+        if self.stereo:
+            sig = pan_stereo(clip, pan=pan) * float(gain)
+            self._ensure_cap(end)
+            self.buf[start_idx:end] += sig
+            if room_glue and clip.ndim == 1:
+                refl = build_studio_room_reflections_stereo(clip * float(gain), pan=pan)
+                r_end = start_idx + len(refl)
+                self._ensure_cap(r_end)
+                self.buf[start_idx:r_end] += refl
+                if r_end > self.max_written:
+                    self.max_written = r_end
+        else:
+            self._ensure_cap(end)
+            self.buf[start_idx:end] += clip * gain
         self.cursor = end
         if end > self.max_written:
             self.max_written = end
@@ -1994,15 +2245,29 @@ class StudioTimelineMixer:
 
         # Add ultra-subtle -58 dBFS warm studio room tone so speaker pauses never feel like dead digital vacuum
         rng = np.random.default_rng(20261115)
-        white = rng.standard_normal(total_n).astype(np.float32)
-        # Simple 2-tap warm low-pass air filter
-        room = (white + np.roll(white, 1) + np.roll(white, 2)) * (0.00042)
-        # Fade room air softly at very start and very end
         edge_n = min(int(SR * 1.2), total_n // 4)
-        if edge_n > 10:
-            room[:edge_n] *= np.linspace(0.0, 1.0, edge_n, dtype=np.float32)
-            room[-edge_n:] *= np.linspace(1.0, 0.0, edge_n, dtype=np.float32)
-        audio += room
+        if self.stereo:
+            w_l = rng.standard_normal(total_n).astype(np.float32)
+            w_r = rng.standard_normal(total_n).astype(np.float32)
+            r_l = (w_l + np.roll(w_l, 1) + np.roll(w_l, 2)) * 0.00038
+            r_r = (w_r + np.roll(w_r, 1) + np.roll(w_r, 2)) * 0.00038
+            # Mix 75% correlated + 25% decorrelated room air for lush headphone realism
+            room = np.empty((total_n, 2), dtype=np.float32)
+            room[:, 0] = 0.78 * r_l + 0.22 * r_r
+            room[:, 1] = 0.78 * r_r + 0.22 * r_l
+            if edge_n > 10:
+                fade_in = np.linspace(0.0, 1.0, edge_n, dtype=np.float32)[:, None]
+                fade_out = np.linspace(1.0, 0.0, edge_n, dtype=np.float32)[:, None]
+                room[:edge_n] *= fade_in
+                room[-edge_n:] *= fade_out
+            audio += room
+        else:
+            white = rng.standard_normal(total_n).astype(np.float32)
+            room = (white + np.roll(white, 1) + np.roll(white, 2)) * (0.00042)
+            if edge_n > 10:
+                room[:edge_n] *= np.linspace(0.0, 1.0, edge_n, dtype=np.float32)
+                room[-edge_n:] *= np.linspace(1.0, 0.0, edge_n, dtype=np.float32)
+            audio += room
 
         # Soft peak safety ceiling at -1.0 dBFS (0.891) without pumping speech dynamics
         audio = np.where(np.abs(audio) > 0.85, np.tanh(audio * 1.05) * 0.89, audio)
@@ -2012,15 +2277,17 @@ class StudioTimelineMixer:
             wav_p = tf.name
         try:
             with wave.open(wav_p, "wb") as wf:
-                wf.setnchannels(1)
+                wf.setnchannels(2 if self.stereo else 1)
                 wf.setsampwidth(2)
                 wf.setframerate(SR)
                 wf.writeframes(pcm16.tobytes())
+            ffmpeg_ac = "2" if self.stereo else "1"
+            ffmpeg_br = "96k" if self.stereo else "64k"
             subprocess.run(
                 [
                     "ffmpeg", "-y", "-loglevel", "error",
                     "-i", wav_p,
-                    "-vn", "-ar", str(SR), "-ac", "1", "-b:a", "64k", "-c:a", "libmp3lame",
+                    "-vn", "-ar", str(SR), "-ac", ffmpeg_ac, "-b:a", ffmpeg_br, "-c:a", "libmp3lame",
                     out_mp3,
                 ],
                 check=True,
@@ -2072,13 +2339,13 @@ def mix_authentic_qq_ending(
     ann_gain: float = 1.12,
 ) -> dict[str, float]:
     """
-    v45 Frame-for-Frame Authentic Phoenix TV 《锵锵三人行》 Unfinished-Banter Fade-Out Ending:
+    v45/v46 Frame-for-Frame Authentic Phoenix TV 《锵锵三人行》 Unfinished-Banter Fade-Out Ending:
     - Real 25.16s 《锵锵三人行》 closing theme + 4.05s Phoenix TV chime (`audio/qq_real_outro.wav`)
       glides in underneath 10-12 turns of unstoppable ongoing pure-Chinese banter (strictly clamped
       AFTER `last_ja_end_sec + 0.40s` so zero Japanese items are ever touched!).
     - Just like real 2005-2017 Phoenix TV broadcasts, the three hosts NEVER stop talking or go silent
       before the announcer: instead, a smooth ~12-second studio master fader continuously glides their
-      lively voices down (`1.00 -> 0.68 -> 0.34 -> 0.17 -> 0.08 -> 0.00`) right underneath and slightly
+      lively voices down (`1.00 -> 0.58 -> 0.28 -> 0.14 -> 0.06 -> 0.00`) right underneath and slightly
       past 张妙阳's Phoenix TV next-program announcement, melting invisibly into the blooming 4.05s chime!
     """
     n_out = len(pcm_outro)
@@ -2125,7 +2392,10 @@ def mix_authentic_qq_ending(
             fk_t = [k0, k1, k2, max(k2 + 0.05, talk_end_sec + 0.30)]
             fk_g = [1.00, 0.45, 0.00, 0.00]
         host_fader = np.interp(t_abs, fk_t, fk_g).astype(np.float32)
-        mixer.buf[f0_i:t_end_i] *= host_fader
+        if mixer.stereo:
+            mixer.buf[f0_i:t_end_i] *= host_fader[:, None]
+        else:
+            mixer.buf[f0_i:t_end_i] *= host_fader
 
     # 2) Dynamic broadcast envelope for `pcm_outro`
     t_rel = np.arange(n_out, dtype=np.float32) / float(SR)
@@ -2148,11 +2418,11 @@ def mix_authentic_qq_ending(
         knots_g = [0.0, 0.34, 0.48, 0.98, 0.98]
 
     outro_env = np.interp(t_rel, knots_t, knots_g).astype(np.float32)
-    mixer.place_at(outro_start, pcm_outro, gain=outro_env)
+    mixer.place_at(outro_start, pcm_outro, gain=outro_env, pan=0.0)
 
-    # 3) Place Phoenix TV continuity announcer (real 2012 张妙阳 or calibrated Yunyang) cleanly on top!
+    # 3) Place Phoenix TV continuity announcer (real 2012 张妙阳 or calibrated Yunyang) cleanly on top, center booth!
     if has_ann:
-        mixer.place_at(ann_start_abs, pcm_announcer, gain=ann_gain)
+        mixer.place_at(ann_start_abs, pcm_announcer, gain=ann_gain, pan=0.0)
 
     final_end = max(mixer.sec, outro_end_abs)
     mixer.cursor = int(round(final_end * SR))
@@ -2223,7 +2493,7 @@ async def main():
     days_left = int(_phase_info.get("days_to_exam", max(0, (EXAM_DATE - study_dt).days)))
     day_ord = study_dt.toordinal()
     _n2_radio_bundle = None
-    if _phase_info.get("phase") == "n2_climb" and _get_n2_radio is not None:
+    if _phase_info.get("phase") in ("n2_climb", "n1_sprint") and _get_n2_radio is not None:
         _n2_radio_bundle = _get_n2_radio(
             int(_phase_info.get("n2_day") or 1),
             recent_wrong_ids=[str(x) for x in (state.get("radio_relearn_queue") or {}).keys()],
@@ -2234,7 +2504,34 @@ async def main():
 
     _rp = tutor_prefs.radio_prefs()
     _focus = tutor_prefs.focus_set()
-    imm_profile = tutor_prefs.immersion_profile(day=today_str)
+    imm_profile = dict(tutor_prefs.immersion_profile(day=today_str))
+
+    night_sig = load_night_summary_signals()
+    # v46 Live 30-Second Listener Feedback Auto-Tuning (ja_sentence_rate ±2% + topic preference boost)
+    _fb_entries = [x for x in (night_sig.get("recent_radio_feedback") or []) if isinstance(x, dict)][-5:]
+    _fb_topic_keywords: list[str] = []
+    if today_str >= "2026-11-27" and _fb_entries:
+        _fb_recent3 = _fb_entries[-3:]
+        _slow_votes = sum(1 for x in _fb_recent3 if "日语太快" in (x.get("tags") or []))
+        _fast_votes = sum(1 for x in _fb_recent3 if "日语太慢" in (x.get("tags") or []))
+        if _slow_votes != _fast_votes:
+            try:
+                _cur_ja_pct = int(str(imm_profile.get("ja_sentence_rate", "-12%")).replace("%", "").strip())
+            except Exception:
+                _cur_ja_pct = -12
+            _delta_pct = -2 if _slow_votes > _fast_votes else 2
+            _tuned_pct = max(-16, min(0, _cur_ja_pct + _delta_pct))
+            imm_profile["ja_sentence_rate"] = f"{_tuned_pct:+d}%"
+            imm_profile["feedback_rate_delta"] = _delta_pct
+        _fb_stop = {
+            "今天", "节目", "播客", "故事", "不错", "很好", "希望", "可以", "多聊", "一点",
+            "一下", "觉得", "非常", "喜欢", "继续", "保持", "日语", "太快", "太慢", "刚刚", "合适",
+        }
+        for _fbe in _fb_entries:
+            _note = str(_fbe.get("note") or "")
+            for _kw in re.findall(r"[\u4e00-\u9fff]{2,4}", _note):
+                if _kw not in _fb_stop and _kw not in _fb_topic_keywords:
+                    _fb_topic_keywords.append(_kw)
 
     voice_map = await detect_voice_map(ja_sentence_rate=imm_profile["ja_sentence_rate"]) if not dry_test else {
         **{
@@ -2255,7 +2552,6 @@ async def main():
         )
     )
 
-    night_sig = load_night_summary_signals()
     night_items = set(
         str(x).strip()
         for x in (
@@ -2274,7 +2570,7 @@ async def main():
     pool_order = {st["id"]: idx for idx, st in enumerate(SALON_STORIES)}
 
     def _uchi_vol_prefix(sid: str) -> str:
-        if sid.startswith(("uchi_night_focus_", "uchi_auto_", "world_auto_")):
+        if sid.startswith(("uchi_night_focus_", "uchi_auto_", "world_auto_", "n2_auto_", "n2_world_auto_")):
             return ""
         m = re.match(r"^(uchi\d*_)", sid)
         return m.group(1) if m else ""
@@ -2307,9 +2603,11 @@ async def main():
             memory_bonus += 1.15
         if _focus and any((pid in _focus or pk in _focus) for pid, pk in zip(pids, pkeys)):
             memory_bonus += 0.8
-        blob = f'{st.get("title", "")} {" ".join(st.get("tags", []) or [])}'
+        blob = f'{st.get("title", "")} {st.get("short_tab", "")} {" ".join(st.get("tags", []) or [])}'
         if any(tag and tag in blob for tag in _rp["prefer_tags"]):
             memory_bonus += 0.3
+        if _fb_topic_keywords and any(kw in blob for kw in _fb_topic_keywords):
+            memory_bonus += 1.8
         jitter = rng.uniform(-0.12, 0.12)
         return -(top_avg - repeat_penalty + memory_bonus + jitter)
 
@@ -2345,6 +2643,7 @@ async def main():
             _preview_groups[_pvp].append(_pst)
     _next_vp = next((vp for vp in _preview_order if len(_preview_groups[vp]) >= 5), "")
     uchi_companion_titles = [st["title"] for st in (_preview_groups.get(_next_vp) or SALON_STORIES)[:6]]
+    _active_n2_ped = (_n2_radio_bundle or {}).get("pedagogy") if isinstance(_n2_radio_bundle, dict) else None
     live_news_story = (
         None
         if has_today_dated_news
@@ -2353,6 +2652,7 @@ async def main():
             imm_profile=imm_profile,
             focus_points=top_focus_labels,
             companion_titles=uchi_companion_titles,
+            n2_pedagogy=_active_n2_ped,
             dry_test=dry_test,
         )
     )
@@ -2362,6 +2662,7 @@ async def main():
             imm_profile=imm_profile,
             focus_points=top_focus_labels,
             companion_titles=uchi_companion_titles,
+            n2_pedagogy=_active_n2_ped,
             dry_test=dry_test,
         )
         if today_str >= "2026-11-22"
@@ -2383,7 +2684,7 @@ async def main():
 
     def _is_world_finale_story(st: dict) -> bool:
         sid = str(st.get("id") or "")
-        return bool(st.get("is_world_finale")) or st.get("tier") == "world_from_japan" or "_world_" in sid or sid.startswith(("live_world_finale_", "world_auto_"))
+        return bool(st.get("is_world_finale")) or st.get("tier") == "world_from_japan" or "_world_" in sid or sid.startswith(("live_world_finale_", "world_auto_", "n2_world_auto_"))
 
     def _is_epilogue_story(st: dict) -> bool:
         if _is_world_finale_story(st):
@@ -2423,11 +2724,30 @@ async def main():
         except Exception:
             pinned_today_ids = []
 
+    _day_compact = today_str.replace("-", "")
+    _n2_auto_acts = [
+        st for st in candidate_pool
+        if str(st.get("id") or "").startswith(f"n2_auto_{_day_compact}_")
+        and not _is_world_finale_story(st)
+    ]
+    _n2_auto_worlds = [
+        st for st in candidate_pool
+        if str(st.get("id") or "").startswith(f"n2_world_auto_{_day_compact}")
+    ]
+
     if _n2_radio_bundle and _n2_radio_bundle.get("stories") and not pinned_today_ids:
         _n2_acts = list(_n2_radio_bundle["stories"])
         if live_news_story and any(st.get("is_news_slot") for st in _n2_acts):
             _n2_acts = [live_news_story] + [st for st in _n2_acts if not st.get("is_news_slot")]
         selected_stories = _n2_acts
+    elif _phase_info.get("phase") in ("n2_climb", "n1_sprint") and len(_n2_auto_acts) >= 3 and not pinned_today_ids:
+        # Day 4+ automated N2/N1 pedagogy-anchored episode (`n2_auto_{YYYYMMDD}_1..4` + live news & world finale)
+        _picked_n2 = ([live_news_story] if live_news_story else []) + _n2_auto_acts
+        if live_world_finale_story:
+            _picked_n2.append(live_world_finale_story)
+        elif _n2_auto_worlds:
+            _picked_n2.append(_n2_auto_worlds[0])
+        selected_stories = _picked_n2
     elif pinned_today_ids and all(sid in story_by_id for sid in pinned_today_ids):
         selected_stories = [story_by_id[sid] for sid in pinned_today_ids]
     else:
@@ -2515,7 +2835,7 @@ async def main():
         ad2_out_turns, ad2_in_turns = POST_N3_NATIVE_AD2
         closing_turns = POST_N3_NATIVE_CLOSING
     elif imm_profile["bilingual_framing"]:
-        opening_turns = POST_N3_BILINGUAL_OPENING
+        opening_turns = []  # v46: preserve authentic Dou Wentao cold-open ("《锵锵三人行》，...") with zero templated roll-call!
         ad1_out_turns, ad1_in_turns = AD_BREAK_1_POOL[day_ord % len(AD_BREAK_1_POOL)]
         ad2_out_turns, ad2_in_turns = AD_BREAK_2_POOL[(day_ord + 1) % len(AD_BREAK_2_POOL)]
         closing_turns = []  # Authentic Qiangqiang: zero artificial sign-off, ends naturally on final story turn!
@@ -2850,7 +3170,7 @@ async def main():
         ann_evs = []
 
     if use_v45_broadcast:
-        radio_ver_tag = "v45_qq_40m_native_zmy_authentic_fade"
+        radio_ver_tag = "v46_qq_40m_stereo_zmy_brain_bridge"
     elif today_str >= "2026-11-26":
         radio_ver_tag = "v43_qq_40m_storycraft_archival_real_outro"
     elif use_v42_ending:
@@ -2881,7 +3201,7 @@ async def main():
     if not dry_test and os.path.exists(RADIO_MP3_PATH) and os.path.exists(RADIO_META_PATH):
         try:
             old_meta = json.load(open(RADIO_META_PATH, encoding="utf-8"))
-            # Never overwrite already-published <= 2026-11-26 episodes mid-day; v45 starts fresh on 2026-11-27!
+            # Never overwrite already-published <= 2026-11-26 episodes mid-day; v46 starts fresh on 2026-11-27!
             if old_meta.get("date") == today_str and (
                 old_meta.get("script_sig") == script_sig or today_str <= "2026-11-26"
             ) and os.path.getsize(RADIO_MP3_PATH) > 1_000_000:
@@ -2908,7 +3228,7 @@ async def main():
         *(b["events"] for b in story_blocks),
     ]
 
-    tmpdir = tempfile.mkdtemp(prefix="n3_radio_v45_")
+    tmpdir = tempfile.mkdtemp(prefix="n3_radio_v46_")
     try:
         unique_turns: dict[tuple[str, str], str] = {}
         mixed_keys: set[tuple[str, str]] = set()
@@ -2924,6 +3244,7 @@ async def main():
                             mixed_keys.add(key)
 
         bc_pcm_pool: dict[str, list[np.ndarray]] = {}
+        bc_ja_pcm_pool: dict[str, list[np.ndarray]] = {}
         if dry_test:
             print(
                 f"[dry-test] Stories={[b['short_tab'] for b in story_blocks]}, "
@@ -2963,7 +3284,7 @@ async def main():
                         for (k, ja_w), jp in unique_inline_ja.items()
                     )
                 )
-                print(f"[v45-stage1] Synthesized {sum(1 for x in ja_ok if x)} / {len(unique_inline_ja)} unique inline Japanese word clips.")
+                print(f"[v46-stage1] Synthesized {sum(1 for x in ja_ok if x)} / {len(unique_inline_ja)} unique inline Japanese word clips.")
 
                 def _decode_ja_inline(item):
                     jkey, jp = item
@@ -2977,12 +3298,16 @@ async def main():
                         if arr is not None and len(arr) > 0:
                             ja_pcm_map[jkey] = arr
 
-            # Stage 1b (v45): Pre-synthesize tiny natural off-axis studio backchannel cues once per episode
-            bc_specs: list[tuple[str, str, str]] = []
+            # Stage 1b (v46): Pre-synthesize natural seat-panned off-axis studio backchannel cues (ZH + N2/N1 JA)
+            bc_specs: list[tuple[str, str, str, str]] = []  # (lang, bc_spk, bc_txt, out_path)
             if use_v45_broadcast and imm_profile["ja_ratio"] < 0.55:
                 for bc_spk, bc_texts in STUDIO_BACKCHANNEL_POOL.items():
                     for bc_i, bc_txt in enumerate(bc_texts):
-                        bc_specs.append((bc_spk, bc_txt, os.path.join(tmpdir, f"bc_{bc_spk}_{bc_i}.mp3")))
+                        bc_specs.append(("zh", bc_spk, bc_txt, os.path.join(tmpdir, f"bc_zh_{bc_spk}_{bc_i}.mp3")))
+            if use_v45_broadcast and imm_profile["ja_ratio"] >= 0.25:
+                for bc_spk, bc_texts in STUDIO_JA_BACKCHANNEL_POOL.items():
+                    for bc_i, bc_txt in enumerate(bc_texts):
+                        bc_specs.append(("ja", bc_spk, bc_txt, os.path.join(tmpdir, f"bc_ja_{bc_spk}_{bc_i}.mp3")))
 
             # Stage 2: Synthesize plain sentences, Carrier-Swap mixed sentences & studio backchannels in parallel!
             plain_items = [(key, raw_p) for key, raw_p in unique_turns.items() if key not in mixed_keys]
@@ -3003,8 +3328,14 @@ async def main():
                 for (k, txt), raw_p in mixed_items
             ]
             bc_tasks = [
-                synth_turn(f"{bc_spk}_MID", voice_map[f"{bc_spk}_MID"], bc_txt, bc_p, sem)
-                for bc_spk, bc_txt, bc_p in bc_specs
+                synth_turn(
+                    f"{bc_spk}_JA_INLINE" if bc_lang == "ja" else f"{bc_spk}_MID",
+                    voice_map[f"{bc_spk}_JA_INLINE" if bc_lang == "ja" else f"{bc_spk}_MID"],
+                    bc_txt,
+                    bc_p,
+                    sem,
+                )
+                for bc_lang, bc_spk, bc_txt, bc_p in bc_specs
             ]
             plain_results, mixed_res_list, _bc_res = await asyncio.gather(
                 asyncio.gather(*plain_tasks),
@@ -3014,23 +3345,24 @@ async def main():
             plain_ok = sum(1 for x in plain_results if x)
             mixed_ok = sum(1 for r in mixed_res_list if r is not None)
             print(
-                f"[v45-stage2] Synthesized {plain_ok}/{len(plain_items)} plain clips + "
+                f"[v46-stage2] Synthesized {plain_ok}/{len(plain_items)} plain clips + "
                 f"{mixed_ok}/{len(mixed_items)} seamless Carrier-Swap bilingual sentences."
             )
             print(
-                f"[v45-wordguard] Audited {_WORDGUARD_STATS['checked_turns']} Mandarin turns | "
+                f"[v46-wordguard] Audited {_WORDGUARD_STATS['checked_turns']} Mandarin turns | "
                 f"Auto-healed {_WORDGUARD_STATS['healed_turns']} turns ({_WORDGUARD_STATS['healed_seams']} seams) | "
                 f"Samples: {'; '.join(_WORDGUARD_STATS['samples'][:15])}"
             )
 
-            for bc_spk, _bc_txt, bc_p in bc_specs:
+            for bc_lang, bc_spk, _bc_txt, bc_p in bc_specs:
                 if os.path.exists(bc_p) and os.path.getsize(bc_p) > 0:
                     try:
                         bc_arr = apply_backchannel_room_filter(
                             decode_to_pcm_f32(bc_p, trim_speech=True, spk_key=bc_spk)
                         )
                         if len(bc_arr) >= int(SR * 0.14):
-                            bc_pcm_pool.setdefault(bc_spk, []).append(bc_arr)
+                            target_pool = bc_ja_pcm_pool if bc_lang == "ja" else bc_pcm_pool
+                            target_pool.setdefault(bc_spk, []).append(bc_arr)
                     except Exception:
                         pass
 
@@ -3065,7 +3397,7 @@ async def main():
                         mixed_fallbacks.append(key)
 
             if mixed_fallbacks:
-                print(f"[v45-fallback] Tight zero-gap stitching {len(mixed_fallbacks)} edge-case bilingual sentences...")
+                print(f"[v46-fallback] Tight zero-gap stitching {len(mixed_fallbacks)} edge-case bilingual sentences...")
                 fb_arrs = await asyncio.gather(
                     *(fallback_tight_stitch_mixed(k, voice_map[k], txt, tmpdir, sem, ja_pcm_map) for k, txt in mixed_fallbacks)
                 )
@@ -3074,7 +3406,7 @@ async def main():
                         clip_pcm[key] = arr
 
             ok_count = len(clip_pcm)
-            print(f"Ready {ok_count} / {len(unique_turns)} total Qiang-Qiang v45 studio PCM clips (fallback={len(mixed_fallbacks)}, bc_hosts={len(bc_pcm_pool)}).")
+            print(f"Ready {ok_count} / {len(unique_turns)} total Qiang-Qiang v46 studio PCM clips (fallback={len(mixed_fallbacks)}, bc_zh={len(bc_pcm_pool)}, bc_ja={len(bc_ja_pcm_pool)}).")
             min_required = max(1, int(len(unique_turns) * 0.98))
             if ok_count < min_required:
                 raise RuntimeError(
@@ -3086,7 +3418,7 @@ async def main():
         pcm_bumper = decode_to_pcm_f32(music_paths["bumper"], trim_speech=False)
         pcm_outro = decode_to_pcm_f32(music_paths["outro"], trim_speech=False)
 
-        mixer = StudioTimelineMixer(est_minutes=48.0)
+        mixer = StudioTimelineMixer(est_minutes=48.0, stereo=use_v45_broadcast)
 
         def _append_events(ev_list: list[tuple[str, object]]) -> None:
             pending_latch = 0.0
@@ -3100,7 +3432,14 @@ async def main():
                     key = (k, str(val))
                     arr = clip_pcm.get(key)
                     if arr is not None:
-                        mixer.append_clip(arr, gain=gear_gain_linear(k), crossfade_sec=pending_latch)
+                        base_s = k.split("_")[0]
+                        mixer.append_clip(
+                            arr,
+                            gain=gear_gain_linear(k),
+                            crossfade_sec=pending_latch,
+                            pan=host_pan_for(k),
+                            room_glue=(mixer.stereo and base_s in ("W", "M", "D", "X", "F")),
+                        )
                     pending_latch = 0.0
 
         # 1) 00:00.0 — Authentic 《锵锵三人行》 Opening Theme -> Let closing guitar chord ring out cleanly, then Wen Tao enters!
@@ -3108,12 +3447,12 @@ async def main():
         if use_v45_broadcast:
             entry_sec = max(6.8, intro_dur_sec - 0.18)
             intro_env = make_intro_duck_envelope(len(pcm_intro), duck_start_sec=max(6.5, intro_dur_sec - 0.42))
-            mixer.place_at(0.0, pcm_intro, gain=intro_env)
+            mixer.place_at(0.0, pcm_intro, gain=intro_env, pan=0.0)
             mixer.advance(entry_sec + 0.22)
         else:
             entry_sec = max(6.8, intro_dur_sec - 0.85)
             intro_env = make_intro_duck_envelope(len(pcm_intro), duck_start_sec=entry_sec - 0.15)
-            mixer.place_at(0.0, pcm_intro, gain=intro_env)
+            mixer.place_at(0.0, pcm_intro, gain=intro_env, pan=0.0)
             mixer.advance(entry_sec)
 
         chapter_starts: dict[int, float] = {0: 0.0}
@@ -3132,7 +3471,7 @@ async def main():
             t0: float,
             t1: float,
         ) -> None:
-            if not bc_pcm_pool or spk not in ("W", "D", "X"):
+            if (not bc_pcm_pool and not bc_ja_pcm_pool) or spk not in ("W", "D", "X"):
                 return
             dur = t1 - t0
             if dur < 6.2 or (t0 - bc_state["last_sec"]) < 22.0:
@@ -3141,16 +3480,29 @@ async def main():
                 return
             if is_last_ch and rel_i >= max(0, n_turns_sub - 12):
                 return
-            if JA_SPAN_RE.search(raw_txt) or SWAP_TOKEN_RE.search(raw_txt):
+            has_ja = bool(JA_SPAN_RE.search(raw_txt) or SWAP_TOKEN_RE.search(raw_txt))
+            has_zh = bool(re.search(r"[\u4e00-\u9fff]", raw_txt))
+            if has_ja and has_zh:
+                # Never interrupt mixed bilingual turns so inline Japanese stays 100% crisp
                 return
-            # Locate the deepest natural interior comma/breath energy dip inside [32%..68%] of this pure-Chinese turn
+            if has_ja and not has_zh:
+                active_pool = bc_ja_pcm_pool
+                bc_gain = 0.26
+            else:
+                active_pool = bc_pcm_pool
+                bc_gain = 0.31
+            if not active_pool:
+                return
+            # Locate the deepest natural interior comma/breath energy dip inside [32%..68%] of this turn
             lo_i = max(0, int(round((t0 + dur * 0.32) * SR)))
             hi_i = min(len(mixer.buf), int(round((t0 + dur * 0.68) * SR)))
             fl = 480  # 20ms frame
             nf = (hi_i - lo_i) // fl
             if nf < 8:
                 return
-            seg = mixer.buf[lo_i : lo_i + nf * fl].reshape(nf, fl)
+            raw_slice = mixer.buf[lo_i : lo_i + nf * fl]
+            mono_slice = 0.5 * (raw_slice[:, 0] + raw_slice[:, 1]) if raw_slice.ndim == 2 else raw_slice
+            seg = mono_slice.reshape(nf, fl)
             frms = np.sqrt(np.mean(seg * seg, axis=1) + 1e-12)
             # 3-frame (60ms) smoothed minimum finds natural breath valleys cleanly
             sm = np.convolve(frms, np.ones(3, dtype=np.float32) / 3.0, mode="valid")
@@ -3158,13 +3510,19 @@ async def main():
             if float(sm[best_f]) > 0.038:
                 return
             dip_sec = (lo_i + (best_f + 1) * fl) / float(SR)
-            listeners = [h for h in ("W", "D", "X") if h != spk and bc_pcm_pool.get(h)]
+            listeners = [h for h in ("W", "D", "X") if h != spk and active_pool.get(h)]
             if not listeners:
                 return
             l_spk = listeners[bc_state["count"] % len(listeners)]
-            cues = bc_pcm_pool[l_spk]
+            cues = active_pool[l_spk]
             cue_arr = cues[(bc_state["count"] // max(1, len(listeners))) % len(cues)]
-            mixer.place_at(max(t0 + 1.5, dip_sec - 0.03), cue_arr, gain=0.31)
+            mixer.place_at(
+                max(t0 + 1.5, dip_sec - 0.03),
+                cue_arr,
+                gain=bc_gain,
+                pan=host_pan_for(l_spk),
+                room_glue=mixer.stereo,
+            )
             bc_state["last_sec"] = dip_sec
             bc_state["count"] += 1
 
@@ -3491,6 +3849,11 @@ async def main():
         with open(RADIO_META_PATH, "w", encoding="utf-8") as f:
             json.dump(meta_obj, f, ensure_ascii=False, indent=2)
         save_today_stories(today_str, [st["id"] for st in selected_stories])
+        try:
+            _smi = update_story_memory_index(today_str, story_blocks, imm_vocab_report)
+            print(f"[v46-bridge] Updated episodic story memory index ({len(_smi.get('entries') or {})} active recall hooks).")
+        except Exception as _smi_exc:
+            print(f"[warn] story_memory_index update skipped: {_smi_exc}")
         if imm_vocab_report.get("_today_counts"):
             ive.commit_episode_counts(today_str, imm_vocab_report["_today_counts"], salon_stories=SALON_STORIES)
         print(

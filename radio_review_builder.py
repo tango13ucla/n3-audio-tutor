@@ -427,6 +427,26 @@ def build_episode_review_items(
     except Exception:
         pass
 
+    # Load crisp curated human meanings from grammar_audit_cards (prevents connection formulas or truncated quiz rationales leaking into zh!)
+    ga_zh_by_key: dict[str, str] = {}
+    try:
+        import grammar_audit_cards as _gac
+        _cur_map = getattr(_gac, "GA_CARD_CURATION", {}) or {}
+        if os.path.exists(STATE_PATH):
+            _st_ga = json.load(open(STATE_PATH, encoding="utf-8"))
+            for _gp in (_st_ga.get("grammar_points") or []):
+                _gid = str(_gp.get("id") or "")
+                _gnm = str(_gp.get("name") or "").strip()
+                if _gid in _cur_map and _gnm:
+                    _czh = str(_cur_map[_gid][0] or "").strip()
+                    if _czh:
+                        ga_zh_by_key[_gnm] = _czh
+                        _gnm_bare = re.sub(r"[（(][^）)]*[）)]", "", _gnm).strip()
+                        if _gnm_bare:
+                            ga_zh_by_key.setdefault(_gnm_bare, _czh)
+    except Exception:
+        pass
+
     # -------- PART A: Grammar & Expression items taught in today's chapters --------
     grammar_candidates: list[tuple[float, dict]] = []
     seen_keys: set[str] = set()
@@ -462,7 +482,19 @@ def build_episode_review_items(
                 raw_disp = str(c.get("point_display") or key).strip()
                 title = re.sub(r"[（(][^）)]*[）)]", "", raw_disp).strip() or key
                 m_paren = re.search(r"[（(]([^）)]+)[）)]", raw_disp)
-                zh = _short_zh(m_paren.group(1) if m_paren else str(c.get("zh_meaning") or c.get("core_rule") or ""))
+                ga_zh = ga_zh_by_key.get(key) or ga_zh_by_key.get(title) or ""
+                if ga_zh:
+                    zh = _short_zh(ga_zh)
+                elif m_paren and not re.search(r"^[ぁ-んァ-ヶー]+$", m_paren.group(1)):
+                    zh = _short_zh(m_paren.group(1))
+                else:
+                    raw_z = str(c.get("zh_meaning") or "")
+                    raw_r = str(c.get("core_rule") or "")
+                    # Avoid leaking connection formulas (`ます形词干＋`) or specific-sentence rationales (`根据他...`)
+                    if raw_r and not re.search(r"(?:ます形|ない形|辞書形|辞书形|普通形|词干|＋|\+|根据他|说话人)", raw_r):
+                        zh = _short_zh(raw_r)
+                    else:
+                        zh = _short_zh(raw_z or raw_r)
                 nuance = _clean_text(str(c.get("core_rule") or c.get("why_line") or ""))
                 tl = c.get("teach_left") or {}
                 tr = c.get("teach_right") or {}
@@ -1285,6 +1317,259 @@ _SPEAKING_TEMPLATES: dict[str, dict[str, Any]] = {
         "model_ja": "今日はまるで春のように暖かいですね。",
         "model_zh": "今天暖和得简直像春天一样呢。",
         "coaching_tip": "「まるで＋Nのように」表夸张比喻，别混成「のために」",
+    },
+    # --- N2 Zero-to-120 High-Payoff Adult Spoken Templates (2026-12-07 -> 2027-07) ---
+    "ほかない": {
+        "prompt_short": "没赶上末班车只好走回家",
+        "prompt_ja": "終電を逃したので歩いて帰る",
+        "prompt_zh": "错过末班车别无他法，只好走着回去",
+        "target_stems": ["ほかない", "ほかはない", "ほかにない", "ほかありません"],
+        "model_ja": "終電を逃したので歩いて帰るほかない。",
+        "model_zh": "错过末班车只好走着回去。",
+        "coaching_tip": "V辞书形＋ほかない，表退路全断「只好」",
+    },
+    "ないわけにはいかない": {
+        "prompt_short": "恩师请客再忙也不能不去",
+        "prompt_ja": "恩師の集まりなので出席する",
+        "prompt_zh": "是恩师的聚会，于情于理不能不出席",
+        "target_stems": ["ないわけにはいかない", "ないわけにはいきません"],
+        "model_ja": "恩師の集まりなので行かないわけにはいかない。",
+        "model_zh": "是恩师聚会，于情于理不能不去。",
+        "coaching_tip": "双重否定 Vない形＋わけにはいかない，表道义「不能不」",
+    },
+    "に伴って": {
+        "prompt_short": "伴随老龄化医疗费上升",
+        "prompt_ja": "高齢化が進んで医療費が増えた",
+        "prompt_zh": "伴随着老龄化，医疗费连年增加",
+        "target_stems": ["に伴って", "にともなって", "に伴い", "にともない", "に伴う"],
+        "model_ja": "高齢化に伴って医療費が増えています。",
+        "model_zh": "伴随着老龄化，医疗费不断增加。",
+        "coaching_tip": "宏观变化引发连锁反应，用「Nに伴って」",
+    },
+    "にしたがって": {
+        "prompt_short": "请遵照负责人指示行动",
+        "prompt_ja": "担当者の指示どおりに動く",
+        "prompt_zh": "请遵照现场负责人的指示行动",
+        "target_stems": ["にしたがって", "に従って", "にしたがい", "に従い"],
+        "model_ja": "担当者の指示にしたがって行動してください。",
+        "model_zh": "请遵照负责人的指示行动。",
+        "coaching_tip": "兼有「随着」与独门义「遵照指示/规则」",
+    },
+    "かねない": {
+        "prompt_short": "这么大意弄不好会出事故",
+        "prompt_ja": "油断すると大きな事故になる",
+        "prompt_zh": "大意下去弄不好会酿成大事故",
+        "target_stems": ["かねない", "かねません"],
+        "model_ja": "このまま油断すると事故を起こしかねない。",
+        "model_zh": "这样大意下去弄不好会出事故。",
+        "coaching_tip": "Vます干＋かねない，专指担心坏事发生",
+    },
+    "かねる": {
+        "prompt_short": "凭我个人实在不便答复",
+        "prompt_ja": "私の一存では答えられない",
+        "prompt_zh": "凭我个人立场实在不便答复",
+        "target_stems": ["かねます", "かねる", "かねて"],
+        "model_ja": "私の一存ではお答えしかねます。",
+        "model_zh": "凭我个人实在不便答复。",
+        "coaching_tip": "日本职场礼貌婉拒天花板「お答えしかねます」",
+    },
+    "がたい": {
+        "prompt_short": "他竟然撒谎实在难以置信",
+        "prompt_ja": "あの人が嘘をついたとは信じられない",
+        "prompt_zh": "那样诚实的人撒谎实在令人难以置信",
+        "target_stems": ["がたい", "難い"],
+        "model_ja": "あの人が嘘をついたとは信じがたいです。",
+        "model_zh": "他竟然撒谎实在难以置信。",
+        "coaching_tip": "信じ・許し・理解し＋がたい，专表心理情感「很难」",
+    },
+    "恐れがある": {
+        "prompt_short": "受台风影响今晚恐有暴雨",
+        "prompt_ja": "台風で今夜は大雨になりそうだ",
+        "prompt_zh": "受台风影响，今晚有下暴雨的风险",
+        "target_stems": ["恐れがある", "おそれがある", "恐れがあります", "おそれがあります"],
+        "model_ja": "台風の影響で大雨が降る恐れがあります。",
+        "model_zh": "受台风影响，有下暴雨的风险。",
+        "coaching_tip": "V辞书形／Nの＋恐れがある，新闻官方风险预警",
+    },
+    "をもとに": {
+        "prompt_short": "以用户反馈为素材改版",
+        "prompt_ja": "利用者の声を参考に改善した",
+        "prompt_zh": "以用户反馈为素材重新打磨了应用",
+        "target_stems": ["をもとに", "をもとにして", "を基に"],
+        "model_ja": "利用者の声をもとにアプリを改善しました。",
+        "model_zh": "以用户声音为素材改进了应用。",
+        "coaching_tip": "素材・実話・声＋をもとに，表「以…为蓝本」",
+    },
+    "を中心に": {
+        "prompt_short": "以年轻一代为核心流行起来",
+        "prompt_ja": "若い世代の間で人気が広がった",
+        "prompt_zh": "以年轻一代为核心，老咖啡馆再度走红",
+        "target_stems": ["を中心に", "を中心にして", "を中心とした"],
+        "model_ja": "若い世代を中心に喫茶店が人気です。",
+        "model_zh": "以年轻群体为核心，老咖啡馆很受欢迎。",
+        "coaching_tip": "人群/地域/议题＋を中心に，表「以…为核心」",
+    },
+    "をめぐって": {
+        "prompt_short": "围绕新税制展开激烈争论",
+        "prompt_ja": "新しい税金について激しく議論している",
+        "prompt_zh": "围绕新税制，各方正展开激烈争论",
+        "target_stems": ["をめぐって", "をめぐる", "を巡って", "を巡る"],
+        "model_ja": "新しい税制をめぐって議論が続いています。",
+        "model_zh": "围绕新税制，争论仍在继续。",
+        "coaching_tip": "争议焦点＋をめぐって，后项常配議論・対立",
+    },
+    "つつある": {
+        "prompt_short": "地方城市的人口正在减少",
+        "prompt_ja": "地方の人口が少しずつ減っている",
+        "prompt_zh": "地方城市的人口正在逐步减少",
+        "target_stems": ["つつある", "つつあります"],
+        "model_ja": "地方の人口は少しずつ減りつつあります。",
+        "model_zh": "地方人口正在逐步减少。",
+        "coaching_tip": "Vます干＋つつある，书面新闻表「正在逐渐变化」",
+    },
+    "一方だ": {
+        "prompt_short": "物价只涨不跌越来越高",
+        "prompt_ja": "物価がどんどん上がり続けている",
+        "prompt_zh": "物价一路单向上涨停不下来",
+        "target_stems": ["一方だ", "一方です", "いっぽうだ", "いっぽうです"],
+        "model_ja": "最近は物価が上がる一方です。",
+        "model_zh": "最近物价一路走高。",
+        "coaching_tip": "V辞书形＋一方だ，表朝单一方向加剧",
+    },
+    "どころか": {
+        "prompt_short": "别说降价反倒还涨价了",
+        "prompt_ja": "安くなると思っていたのに高くなった",
+        "prompt_zh": "非但没降价，反而涨得更高了",
+        "target_stems": ["どころか"],
+        "model_ja": "安くなるどころか、かえって高くなりました。",
+        "model_zh": "别说便宜了，反而更贵了。",
+        "coaching_tip": "AどころかB，表「何止A／别说A，反而B」",
+    },
+    "どころではない": {
+        "prompt_short": "忙得连吃午饭都顾不上",
+        "prompt_ja": "忙しすぎて昼ご飯を食べる暇がない",
+        "prompt_zh": "手头忙翻了，根本顾不上吃午饭",
+        "target_stems": ["どころではない", "どころじゃない", "どころではありません"],
+        "model_ja": "忙しくて昼ご飯どころではありません。",
+        "model_zh": "忙得根本顾不上吃午饭。",
+        "coaching_tip": "N／V辞书形＋どころではない，表「哪顾得上…」",
+    },
+    "に限らず": {
+        "prompt_short": "不仅限东京全国都在缺人",
+        "prompt_ja": "東京だけでなく全国で人手が足りない",
+        "prompt_zh": "不限于东京，全日本都面临人手不足",
+        "target_stems": ["に限らず", "にかぎらず"],
+        "model_ja": "東京に限らず、全国で人手が足りません。",
+        "model_zh": "不仅限东京，全国都缺人手。",
+        "coaching_tip": "N＋に限らず，书面表达「不限于…其他也一样」",
+    },
+    "を問わず": {
+        "prompt_short": "不论年龄经验谁都能报名",
+        "prompt_ja": "年齢や経験に関係なく応募できる",
+        "prompt_zh": "不论年龄和经验，都可以报名",
+        "target_stems": ["を問わず", "をとわず"],
+        "model_ja": "年齢や経験を問わず、誰でも応募できます。",
+        "model_zh": "不论年龄经验，谁都可以报名。",
+        "coaching_tip": "N＋を問わず，常配年齢・性別・昼夜・天候",
+    },
+    "を除いて": {
+        "prompt_short": "除了周日以外每天都营业",
+        "prompt_ja": "日曜日以外は毎日開いている",
+        "prompt_zh": "除了周日以外每天都照常营业",
+        "target_stems": ["を除いて", "をのぞいて", "を除き", "を除く"],
+        "model_ja": "日曜日を除いて毎日営業しています。",
+        "model_zh": "除周日外每天都营业。",
+        "coaching_tip": "N＋を除いて，清晰划出唯一例外项",
+    },
+    "ものの": {
+        "prompt_short": "虽买了新书却一直没时间读",
+        "prompt_ja": "本を買ったけれど読む時間がない",
+        "prompt_zh": "虽然买了那本书，却实在没空翻开",
+        "target_stems": ["ものの"],
+        "model_ja": "本を買ったものの、読む時間がありません。",
+        "model_zh": "虽买了书，却没时间看。",
+        "coaching_tip": "普通形＋ものの，比けど更书面克制的「虽然…但」",
+    },
+    "からには": {
+        "prompt_short": "既然决定去考就全力以赴",
+        "prompt_ja": "受けると決めたので全力で頑張る",
+        "prompt_zh": "既然决定报考，就要全力以赴冲过去",
+        "target_stems": ["からには"],
+        "model_ja": "受けると決めたからには、全力で頑張ります。",
+        "model_zh": "既然决定去考，就全力以赴。",
+        "coaching_tip": "普通形＋からには，后项必接决心、意志或当然要求",
+    },
+    "以上は": {
+        "prompt_short": "既然答应了就必须守约",
+        "prompt_ja": "約束したので最後まで守る",
+        "prompt_zh": "既然定下约定，就必须信守到底",
+        "target_stems": ["以上は", "いじょうは", "以上"],
+        "model_ja": "約束した以上は、最後まで守ります。",
+        "model_zh": "既然约定了，就会守约到底。",
+        "coaching_tip": "Vた／Vる＋以上は，强调既成前提下的硬责任",
+    },
+    "次第だ": {
+        "prompt_short": "成败全看你自己的努力",
+        "prompt_ja": "うまくいくかどうかは努力で決まる",
+        "prompt_zh": "结果如何全取决于自身的努力",
+        "target_stems": ["次第だ", "次第です", "しだいだ", "しだいです"],
+        "model_ja": "結果は自分自身の努力次第です。",
+        "model_zh": "结果全看自己的努力。",
+        "coaching_tip": "N＋次第だ（全看…），区别于 Vます＋次第（一…就）",
+    },
+    "抜く": {
+        "prompt_short": "再难也要把计划坚持到底",
+        "prompt_ja": "難しくても最後までやり切る",
+        "prompt_zh": "就算再难也要咬牙坚持到底",
+        "target_stems": ["抜く", "抜いた", "抜きます", "ぬく", "ぬいた"],
+        "model_ja": "どんなに難しくても最後までやり抜きます。",
+        "model_zh": "无论多难都要坚持到底。",
+        "coaching_tip": "Vます干＋抜く，表扛住阻力死磕到底",
+    },
+    "きる": {
+        "prompt_short": "这么厚的小说一口气读完了",
+        "prompt_ja": "長い小説を全部読み終わった",
+        "prompt_zh": "把那本厚小说彻底读完了",
+        "target_stems": ["きった", "きる", "きりました", "切った", "切る"],
+        "model_ja": "長い小説を最後まで読みきりました。",
+        "model_zh": "把长篇小说彻底读完了。",
+        "coaching_tip": "Vます干＋きる，表彻底做完不留尾巴",
+    },
+    "直す": {
+        "prompt_short": "从头重新审视这个方案",
+        "prompt_ja": "計画を最初から考え直す",
+        "prompt_zh": "静下心重新审视一遍这个方案",
+        "target_stems": ["見直す", "見直し", "考え直す", "やり直す", "なおす", "なおし"],
+        "model_ja": "もう一度最初から計画を見直しましょう。",
+        "model_zh": "我们从头再重新审视一遍计划吧。",
+        "coaching_tip": "Vます干＋直す，表「推倒重来/重新审视」",
+    },
+    "込む": {
+        "prompt_short": "仔细钻研把这个机制吃透",
+        "prompt_ja": "仕組みを深く理解したい",
+        "prompt_zh": "想坐下来仔细琢磨把思路理深",
+        "target_stems": ["込む", "込んで", "込んだ", "こむ", "こんで"],
+        "model_ja": "新しい仕組みをじっくり考え込みました。",
+        "model_zh": "仔细钻研了一番这个新机制。",
+        "coaching_tip": "Vます干＋込む，表往深处扎进去或完全进入状态",
+    },
+    "を契機に": {
+        "prompt_short": "以那场旅行作为人生转折",
+        "prompt_ja": "その旅をきっかけに考えが変わった",
+        "prompt_zh": "以那次旅行为重大契机，人生观变了",
+        "target_stems": ["を契機に", "をけいきに", "をきっかけに"],
+        "model_ja": "その旅を契機に、生き方が大きく変わりました。",
+        "model_zh": "以那次旅行为契机，生活方式大变。",
+        "coaching_tip": "N＋を契機に，比きっかけに更书面郑重的分水岭",
+    },
+    "かえって": {
+        "prompt_short": "过于急躁反而更容易出错",
+        "prompt_ja": "急ぎすぎると逆にミスが増える",
+        "prompt_zh": "太着急反而更容易犯错",
+        "target_stems": ["かえって", "却って"],
+        "model_ja": "急ぎすぎると、かえってミスが増えます。",
+        "model_zh": "太着急反而会增加失误。",
+        "coaching_tip": "副词「かえって」专门点出适得其反的「反而」",
     },
 }
 

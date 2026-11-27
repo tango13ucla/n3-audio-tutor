@@ -69,6 +69,8 @@ DUAL_VERB_NOUN_KANAS = {
     "こうかい", "よやく", "やくそく", "へんか", "せいこう", "しっぱい", "けいかく", "とうけい",
     "なっとく", "じまん", "きたい", "かんしゃ", "そうぞう", "ひょうか", "かくにん", "れんらく",
     "そうだん", "せつめい", "あんない", "しゅちょう",
+    "はあく", "けんとう", "いじ", "かくほ", "ふきゅう", "けいげん", "さくげん", "じつげん",
+    "がまん", "てってい", "だきょう", "ぎせい", "こうけん", "てんかん", "せいやく",
 }
 VERB_USE_AFTER_RE = re.compile(r"^[了着过出到完起下开掉把去来地给进回住成上得一这那各两三四五六七八九十百千万]")
 VERB_USE_BEFORE_RE = re.compile(r"[在正要会能敢肯想愿爱总老刚已曾没别该应必须试图努力早就才更越最]")
@@ -342,6 +344,36 @@ IMMERSION_VOCAB_BANK: list[dict] = [
     _e("きちょう", "貴重", ["珍贵", "宝贵"], "n3_core", "珍贵", forbid_after=r"[品]"),
     _e("しゅちょう", "主張", ["主张"], "n3_core", "主张"),
     _e("しゅるい", "種類", ["种类"], "n3_core", "种类"),
+
+    # --- Tier 1f: N2 Climb High-Payoff Adult Lexicon & False Friends (2026-12-07 -> 2027-07 Synergy) ---
+    _e("こんきょ", "根拠", ["依据", "根据"], "n2_core", "依据", forbid_after=r"[地]"),
+    _e("ぜんてい", "前提", ["前提"], "n2_core", "前提", forbid_after=r"[条件]"),
+    _e("ほうしん", "方針", ["方针"], "n2_core", "方针"),
+    _e("けいこう", "傾向", ["倾向", "趋势"], "n2_core", "趋势"),
+    _e("かだい", "課題", ["课题", "难题"], "n2_core", "课题"),
+    _e("せいか", "成果", ["成果"], "n2_core", "成果"),
+    _e("やくわり", "役割", ["角色", "作用"], "n2_core", "角色", forbid_before=r"[副反作]"),
+    _e("かんてん", "観点", ["观点", "视角"], "n2_core", "视角"),
+    _e("はあく", "把握", ["掌握"], "n2_core", "掌握"),
+    _e("けんとう", "検討", ["研讨", "商讨"], "n2_core", "商讨", forbid_after=r"[会]"),
+    _e("いじ", "維持", ["维持"], "n2_core", "维持"),
+    _e("かくほ", "確保", ["确保"], "n2_core", "确保"),
+    _e("ふきゅう", "普及", ["普及"], "n2_core", "普及", forbid_after=r"[率]"),
+    _e("けいげん", "軽減", ["减轻"], "n2_core", "减轻"),
+    _e("さくげん", "削減", ["削减"], "n2_core", "削减"),
+    _e("じつげん", "実現", ["实现"], "n2_core", "实现"),
+    _e("しんちょう", "慎重", ["慎重", "谨慎"], "n2_core", "慎重"),
+    _e("えんりょ", "遠慮", ["顾虑", "客气"], "n2_core", "客气", forbid_before=r"[不别太]"),
+    _e("がまん", "我慢", ["忍耐"], "n2_core", "忍耐"),
+    _e("てってい", "徹底", ["彻底"], "n2_core", "彻底"),
+    _e("だきょう", "妥協", ["妥协"], "n2_core", "妥协"),
+    _e("ぎせい", "犠牲", ["牺牲"], "n2_core", "牺牲", forbid_after=r"[品者]"),
+    _e("こうけん", "貢献", ["贡献"], "n2_core", "贡献"),
+    _e("てんかん", "転換", ["转型", "转变"], "n2_core", "转型", forbid_after=r"[期]"),
+    _e("しくみ", "仕組み", ["机制"], "n2_core", "机制"),
+    _e("わりあい", "割合", ["比例"], "n2_core", "比例"),
+    _e("すいじゅん", "水準", ["水准", "水平"], "n2_core", "水准"),
+    _e("せいやく", "制約", ["制约", "限制"], "n2_core", "制约"),
 
     # --- Tier 2: Pre-existing N4/N5 Inline Words (tracked for ledger & carrier-swap, NOT consuming new-word budget) ---
     _e("せかい", "世界", ["世界"], "n4_existing", "世界", forbid_before=r"[全第一二三]"),
@@ -1158,20 +1190,21 @@ def commit_episode_counts(today_str: str, today_counts: dict[str, int], salon_st
 
 def get_prompt_vocab_brief(today_str: str = "") -> dict:
     """
-    Returns a compact prompt-ready brief of Yangfan's locked_ja words, learning words (1-4 hits),
-    and explicit priority words (e.g. 辞書/じしょ) for `daily_news_salon_gen.py` & `n2_prep/`.
+    Returns a compact prompt-ready brief of Yangfan's locked_ja words, learning words (1..threshold-1 hits),
+    and explicit priority words (e.g. 辞書/じしょ, 図書館/としょかん) for `daily_news_salon_gen.py` & `n2_prep/`.
     """
     ledger = load_ledger(today_str=today_str)
+    threshold = max(GRADUATION_THRESHOLD, int(ledger.get("graduation_threshold") or GRADUATION_THRESHOLD))
     words = ledger.get("words") or _rebuild_words_summary(ledger)
     locked = [f"{v.get('kanji', k)}({k})" for k, v in sorted(words.items(), key=lambda x: -x[1].get("exposures", 0)) if v.get("status") == "locked_ja"][:30]
-    learning = [f"{v.get('kanji', k)}({k}:{v.get('exposures', 0)}/5)" for k, v in sorted(words.items(), key=lambda x: -x[1].get("exposures", 0)) if v.get("status") == "learning"][:20]
+    learning = [f"{v.get('kanji', k)}({k}:{v.get('exposures', 0)}/{threshold})" for k, v in sorted(words.items(), key=lambda x: -x[1].get("exposures", 0)) if v.get("status") == "learning"][:20]
     priority = [
         f"{VOCAB_BY_KANA[k]['kanji']}({k})"
         for k in (ledger.get("user_priority_words") or ["じしょ"])
         if k in VOCAB_BY_KANA and (words.get(k) or {}).get("status") != "locked_ja"
     ]
     return {
-        "graduation_threshold": int(ledger.get("graduation_threshold") or GRADUATION_THRESHOLD),
+        "graduation_threshold": threshold,
         "locked_ja_words": locked,
         "learning_in_progress": learning,
         "priority_to_introduce": priority,

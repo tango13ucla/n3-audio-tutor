@@ -31,6 +31,14 @@ if _ROOT_DIR not in sys.path:
 from n2_grammar_syllabus import N2_GRAMMAR_SYLLABUS, get_day_callback_grammar, get_day_new_grammar
 from n2_radio_spaced_callback_engine import plan_n2_episode_pedagogy
 from n2_radio_vol1_preview import N2_VOL1_METADATA, SALON_STORIES_N2_VOL1
+from n2_radio_vol2_3 import (
+    N2_VOL2_3_JP_VIDEO_SCRIPTS,
+    N2_VOL2_3_VISUAL_TOPICS,
+    N2_VOL2_METADATA,
+    N2_VOL3_METADATA,
+    SALON_STORIES_N2_VOL2,
+    SALON_STORIES_N2_VOL3,
+)
 from n2_vocab_architecture import (
     N2_COMPOUND_VERB_FAMILIES,
     N2_FALSE_FRIENDS_AND_TRAPS,
@@ -992,6 +1000,7 @@ N2_CURATED_VISUAL_TOPICS: dict[str, dict[str, list[str]]] = {
             "Oceanographic research ship Pacific",
         ],
     },
+    **N2_VOL2_3_VISUAL_TOPICS,
 }
 
 N2_CURATED_JP_VIDEO_SCRIPTS: dict[str, dict[str, Any]] = {
@@ -1016,6 +1025,13 @@ N2_CURATED_JP_VIDEO_SCRIPTS: dict[str, dict[str, Any]] = {
             {"ch": 5, "v": "M", "ja": "商業も料理も科学も、現実を受け止めて見直す姿勢が未来をひらきます。", "zh": "无论是商业、料理还是科学，直面现实并重新审视的姿态才能打开未来。"},
         ],
     },
+    **N2_VOL2_3_JP_VIDEO_SCRIPTS,
+}
+
+_CURATED_N2_VOLUMES: dict[int, tuple[dict[str, Any], list[dict[str, Any]]]] = {
+    1: (N2_VOL1_METADATA, SALON_STORIES_N2_VOL1),
+    2: (N2_VOL2_METADATA, SALON_STORIES_N2_VOL2),
+    3: (N2_VOL3_METADATA, SALON_STORIES_N2_VOL3),
 }
 
 
@@ -1026,8 +1042,9 @@ def get_n2_radio_stories_for_day(
     speaking_slip_points: list[str] | None = None,
     confusion_pairs: dict | None = None,
 ) -> dict[str, Any]:
-    """Return N2 radio stories (Day 1 complete premiere + pedagogy callback brief for Day 2+)."""
-    clamped_day = max(1, min(90, int(n2_day or 1)))
+    """Return N2 radio stories (Days 1-3 curated launch arc + full pedagogy callback brief for Day 4+)."""
+    day_i = int(n2_day or 1)
+    clamped_day = max(1, min(90, day_i))
     pedagogy = plan_n2_episode_pedagogy(
         day=clamped_day,
         recent_wrong_ids=recent_wrong_ids,
@@ -1035,11 +1052,11 @@ def get_n2_radio_stories_for_day(
         speaking_slip_points=speaking_slip_points,
         confusion_pairs=confusion_pairs,
     )
-    stories = list(SALON_STORIES_N2_VOL1) if int(n2_day or 1) == 1 else []
+    meta_c, stories_c = _CURATED_N2_VOLUMES.get(day_i, ({"day_index": day_i}, []))
     return {
-        "n2_day": int(n2_day or 1),
-        "metadata": N2_VOL1_METADATA if int(n2_day or 1) == 1 else {"day_index": int(n2_day or 1)},
-        "stories": stories,
+        "n2_day": day_i,
+        "metadata": meta_c,
+        "stories": list(stories_c),
         "pedagogy": pedagogy,
         "vocab_plan": build_n2_daily_vocab_plan(clamped_day),
     }

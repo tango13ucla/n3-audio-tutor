@@ -31,6 +31,9 @@ if str(BASE_DIR) not in sys.path:
 
 from daily_news_salon_gen import (
     _call_chat_llm,
+    _format_n2_pedagogy_instruction,
+    _sanitize_generated_turns,
+    bilingual_ramp_guidance,
     fetch_live_nhk_news,
     load_cloud_qq_style_exemplars,
     load_qq_corpus_exemplars,
@@ -217,8 +220,15 @@ def run_night_summary(target_closed_day: str | None = None) -> int:
     old_prefs = json.loads(PREFS_PATH.read_text(encoding="utf-8")) if PREFS_PATH.exists() else {}
     prefs = json.loads(json.dumps(old_prefs, ensure_ascii=False))
     prefs["schema"] = prefs.get("schema") or "n3-tutor-prefs/3"
-    prefs["exam_date"] = "2026-12-06"
-    prefs["daily_load"] = {"2026-12-06": {"load": "off", "why": "exam_day"}}
+    if closed_study_day <= "2026-12-06":
+        prefs["exam_date"] = "2026-12-06"
+    else:
+        try:
+            from n2_prep.n2_curriculum_engine import get_phase_info as _get_pi_sum
+            prefs["exam_date"] = str(_get_pi_sum(closed_study_day).get("exam_date") or "2027-07-04")
+        except Exception:
+            prefs["exam_date"] = "2027-07-04"
+    prefs["daily_load"] = {prefs["exam_date"]: {"load": "off", "why": "exam_day"}}
     prefs.setdefault("load_caps", {"normal": 60, "light": 25, "off": 10})
     prefs.setdefault("grammar_audit_daily_count", 39)
     grammar_names = {str(p.get("name") or "") for p in (st_live.get("grammar_points") or []) if p.get("name")}
@@ -355,6 +365,9 @@ def _author_trio_chapter(
     exemplars: list[dict],
     seed_key: str = "",
     pair_part: int = 0,
+    imm_profile: dict | None = None,
+    n2_pedagogy: dict | None = None,
+    explicit_point_ids: list[str] | None = None,
 ) -> dict | None:
     recent_fb = []
     if NIGHT_SUMMARY_PATH.exists():
@@ -362,21 +375,31 @@ def _author_trio_chapter(
             recent_fb = (json.loads(NIGHT_SUMMARY_PATH.read_text(encoding="utf-8")).get("recent_radio_feedback") or [])[:5]
         except Exception:
             recent_fb = []
+    vocab_brief = {}
+    try:
+        import immersion_vocab_engine as _ive
+        vocab_brief = _ive.get_prompt_vocab_brief()
+    except Exception:
+        vocab_brief = {}
+    n2_block = _format_n2_pedagogy_instruction(n2_pedagogy, act_role="news" if pair_part == 1 and cid.endswith("_1") else "story")
+    ramp_line = bilingual_ramp_guidance(imm_profile or {"ja_ratio": max(0.12, ja_pct / 100.0), "ramp_days": 700, "day_of_365": 1, "phase": "n3_sprint"})
     sys_p = (
         "你是凤凰卫视《锵锵三人行》原班总撰稿（深谙 3,182 期实录里的『人味』与『把一个真实历史事件剥洋葱讲透』的叙事功力）。\n"
-        "三位老友：窦文涛(W，俗人真性情、好奇心重爱追问荒唐细节、绝不当报幕员)、"
-        "梁文道(D，温厚会讲真实历史故事、用真实年份地点人物原话和命运反转层层推进，绝不堆砌白皮书统计数字)、"
-        "许子东(X，冷幽默学者、一句话拆穿时代体面背后的人性与社会结构)。\n"
-        f"请围绕主题「{theme_desc}」【只讲透这一个 100% 真实发生过的日本历史事件或国民公共记忆】（适配 40 分钟节目单场：约 6.3 分钟，18 到 24 轮，约 1,850 到 2,100 字，日语假名占比约 {max(ja_pct, 12)}%），严禁泛泛议论、严禁虚构不存在的虚构人物或编造故事，故事性要让人听完牢牢记住！\n"
+        "三位老友（严格还原真实《锵锵三人行》2005-2017原版说话DNA）：窦文涛(W，俗人真性情、好奇心重爱追问荒唐细节、多4到15字短反应绝不当报幕员)、"
+        "梁文道(D，港台温厚书卷腔、善用『其实你想想看啊』『某种程度上讲』『说起来挺吊诡的』层层推进，绝不堆砌白皮书统计数字)、"
+        "许子东(X，冷幽默学者、敢用『不不不，我的问题是』『对不对？』一句拆穿时代体面背后的人性与社会结构)。\n"
+        f"请围绕主题「{theme_desc}」【只讲透这一个 100% 真实发生过的日本或跨国镜像历史事件与国民公共记忆】（适配 40 分钟节目单场：约 6.3 分钟，18 到 24 轮，约 1,850 到 2,100 字），严禁泛泛议论、严禁虚构不存在的假人物或编造故事，故事性要让人听完牢牢记住！\n"
         "【听众底线：学过三年日语的内行听众，严禁一切游客科普与入门老梗！】：\n"
         "绝对禁止京都茶泡饭逐客令、京都人夸手表钢琴、京都观光公害/清水寺/岚山/艺伎、大阪阿姨砍价/指枪喊砰、敬语内外科普/报联相菠菜/鞠躬章、平安夜吃肯德基、红白跨年荞麦面一百零八下钟声、忠犬八公基础科普。\n"
-        "欢迎深挖北陆金泽加贺百万石、长崎、北海道、东北、九州等非京阪东深度地方史，以及战后政经、法律、公司治理、科学工程与人性深水区；认真呼应 `recent_listener_feedback` 里听众近期 30 秒听后反馈。\n"
+        "欢迎深挖北陆金泽加贺百万石、长崎出岛、北海道、东北、九州等非京阪东深度地方史，跨国日本商业/文化镜像，以及战后政经、法律、公司治理、科学工程与人性深水区；认真呼应 `recent_listener_feedback` 里听众近期 30 秒听后反馈。\n"
+        + n2_block +
         "硬性铁律：\n"
-        "1. 【100% 真实公共记忆、绝对不要编】：所有人物、年份、地名、事件、公司与名言必须是真实日本公共记忆。\n"
-        "2. 【呼吸感黄金文法节奏（每章严格只放 3 个 N3/N2 语法点，每 600 字以上自然带出 1 个）】：先让故事推进两三分钟再由 D/X 顺嘴带出一句地道日文示范并用一两句大白话点透，绝不每两轮就急刹车讲课。\n"
-        "3. 【零洋泾浜碎词】：严禁在中文句里乱塞 `いえ / くるま / じかん / おかね / せかい / くに / みせ` 这类入门小词切碎句子；只保留真正有味道的文化专词与高价值 N3/N2 难读词。\n"
-        "4. 对白内所有日文词句必须 100% 用纯平假名或纯片假名书写，前后用空格或中文标点与汉字隔开，严禁汉字紧贴假名！多用句号问号，克制少用感叹号！\n"
-        "5. 严禁任何英文字母、阿拉伯数字（数字全写中文）、破折号、『哈哈』『噗』、日期或考试倒计时。\n"
+        "1. 【100% 真实公共记忆、绝对不要编】：所有人物、年份、地名、事件、公司与名言必须是真实历史与公共记忆。\n"
+        "2. 【呼吸感黄金文法节奏（每章严格只放 2 到 3 个核心语法点，每 600 字以上自然带出 1 个）】：先让故事推进两三分钟再由 D/X 顺嘴带出一句地道日文示范并用一两句大白话点透，绝不每两轮就急刹车讲课。\n"
+        "3. 【零洋泾浜碎词 · 自然带出词账实词】：严禁在中文句里乱塞 `いえ / くるま / じかん / おかね / せかい / くに / みせ` 这类入门小词切碎句子；可顺着语境自然提到 1 到 2 个 `immersion_vocab_ledger` 里的优先实词。\n"
+        f"4. {ramp_line}\n"
+        "5. 对白内所有日文词句必须 100% 用纯平假名或纯片假名书写，前后用空格或中文标点与汉字隔开，严禁汉字紧贴假名！多用句号问号，克制少用感叹号！\n"
+        "6. 严禁任何英文字母、阿拉伯数字（数字全写中文）、破折号、『哈哈』『噗』、日期或考试倒计时。\n"
         "输出 JSON：{\"short_tab\": \"四字标签\", \"title\": \"章节标题\", \"ja_focus\": \"日文原句(此处可写汉字假名供屏幕显示)\", "
         "\"turns\": [[\"W\", \"...\"], [\"X\", \"...\"], [\"D\", \"...\"], ...]}"
     )
@@ -384,6 +407,8 @@ def _author_trio_chapter(
         {
             "theme": theme_desc,
             "must_weave_targets": target_items,
+            "n2_episode_pedagogy": n2_pedagogy or {},
+            "immersion_vocab_ledger": vocab_brief,
             "recent_listener_feedback": recent_fb,
             "nhk_context": headlines[:3],
             "authentic_qqsrx_style_reference": load_cloud_qq_style_exemplars(seed_key or cid),
@@ -396,15 +421,16 @@ def _author_trio_chapter(
         return None
     try:
         parsed = json.loads(raw)
+        is_n2 = bool(explicit_point_ids and any(str(x).startswith("N2G-") for x in explicit_point_ids))
         st_obj = {
             "id": cid,
-            "tier": "uchi_intellectual",
+            "tier": "n2_cross_border_world" if is_n2 else "uchi_intellectual",
             "short_tab": str(parsed.get("short_tab") or tab_label)[:5],
-            "tags": ["真实日本公共记忆", "少而透深故事", "润物细无声N3"],
+            "tags": ["跨国镜像", "N2深教", "少而透深故事"] if is_n2 else ["真实日本公共记忆", "少而透深故事", "润物细无声N3"],
             "title": str(parsed.get("title") or theme_desc),
-            "point_ids": ["N3-G13", "G-20261114-10", "N3-G55"],
+            "point_ids": list(explicit_point_ids) if explicit_point_ids else ["N3-G13", "G-20261114-10", "N3-G55"],
             "ja_focus": str(parsed.get("ja_focus") or ""),
-            "turns": [[str(s).strip(), str(t).strip()] for s, t in (parsed.get("turns") or [])],
+            "turns": _sanitize_generated_turns(parsed.get("turns") or []),
         }
         if pair_part in (1, 2):
             st_obj["pair_part"] = pair_part
@@ -522,6 +548,9 @@ def _author_world_finale_chapter(
     ja_pct: int,
     exemplars: list[dict],
     seed_key: str = "",
+    imm_profile: dict | None = None,
+    n2_pedagogy: dict | None = None,
+    explicit_point_ids: list[str] | None = None,
 ) -> dict | None:
     recent_fb = []
     if NIGHT_SUMMARY_PATH.exists():
@@ -529,23 +558,35 @@ def _author_world_finale_chapter(
             recent_fb = (json.loads(NIGHT_SUMMARY_PATH.read_text(encoding="utf-8")).get("recent_radio_feedback") or [])[:5]
         except Exception:
             recent_fb = []
+    vocab_brief = {}
+    try:
+        import immersion_vocab_engine as _ive
+        vocab_brief = _ive.get_prompt_vocab_brief()
+    except Exception:
+        vocab_brief = {}
+    n2_block = _format_n2_pedagogy_instruction(n2_pedagogy, act_role="world")
+    ramp_line = bilingual_ramp_guidance(imm_profile or {"ja_ratio": max(0.12, ja_pct / 100.0), "ramp_days": 700, "day_of_365": 1, "phase": "n3_sprint"})
     sys_p = (
         "你是凤凰卫视《锵锵三人行》原班总撰稿，负责每天 40 分钟节目压轴的最后五分之一板块【日本看世界】（约 8 分钟，26 到 34 轮，约 2,300 到 2,600 字，不局限文史哲，主打科学/科技/医学/能源/全球财经/太空/国际新闻）。\n"
-        f"请围绕主题「{theme_desc}」从日本媒体与日本社会的视角，把这件世界大事剥洋葱讲透、故事性拉满（日语假名占比约 {max(ja_pct, 12)}%）。\n"
+        f"请围绕主题「{theme_desc}」从日本媒体与日本社会的视角，把这件世界大事剥洋葱讲透、故事性拉满。\n"
         "三位老友（严格还原原版说话DNA）：窦文涛(W，真性情爱追问、多4到15字短反应)、梁文道(D，港台温厚书卷腔、善用『其实你想想看啊』『某种程度上讲』『挺吊诡的』)、许子东(X，犀利冷幽默、敢用『不不不，我的问题是』『对不对？』抬杠拆台)。\n"
         "听众底线（学过三年日语的内行听众）：严禁游客观光类肤浅话题与入门常识科普；优先吸收 `recent_listener_feedback` 里听众近期反馈的口味偏好与改进建议。\n"
         "编辑审美品味（知己与拓界并重）：既重底层科学原理、制度反差与人类心理，也敢拆解容易被宏大叙事忽略的微观工艺、生命机制与反直觉细节，文风冷静锋利有余味，绝不喊口号不灌鸡汤、多用句号少用感叹号。\n"
+        + n2_block +
         "硬性铁律：\n"
-        "1. 【呼吸感黄金文法节奏】：自然融入 3 到 4 个 N3/N2 语法表达（每 600 字左右顺嘴带出 1 个，绝不频繁刹车讲课）。\n"
-        "2. 【零洋泾浜碎词】：严禁把 `いえ / くるま / じかん / おかね / せかい` 等入门小词撒进中文句子切碎语流；只留有味道的专词与高价值 N3/N2 词。\n"
+        "1. 【呼吸感黄金文法节奏】：自然融入 2 到 3 个核心语法表达（每 600 字左右顺嘴带出 1 个，绝不频繁刹车讲课）。\n"
+        "2. 【零洋泾浜碎词 · 自然带出词账实词】：严禁把 `いえ / くるま / じかん / おかね / せかい` 等入门小词撒进中文句子切碎语流；可顺着语境自然提到 1 到 2 个 `immersion_vocab_ledger` 里的优先实词。\n"
         "3. 【凤凰卫视原版《锵锵》真实收尾制式·聊天不停+12秒渐弱淡出】：所有日语点拨必须在倒数第 11 轮之前全部讲完；【最后 10 到 12 轮】必须是总计 270 到 330 字的纯中文活络闲聊（严禁含任何日文假名）！严禁整期回顾、严禁『一壶茶喝完』『咱们明天见』，三人顺着话题幽默细节没完没了地互相打趣抬杠，聊到最后一句依然没聊完留半截『……』！\n"
-        "4. 对白内所有日文纯假名、严禁汉字紧贴假名、严禁英文字母/阿拉伯数字/破折号/哈哈/噗/倒计时。\n"
+        f"4. {ramp_line}\n"
+        "5. 对白内所有日文纯假名、严禁汉字紧贴假名、严禁英文字母/阿拉伯数字/破折号/哈哈/噗/倒计时。\n"
         "输出 JSON：{\"short_tab\": \"五字标签\", \"title\": \"章节标题\", \"ja_focus\": \"日文原句\", \"turns\": [[\"W\", \"...\"], ...]}"
     )
     usr_p = json.dumps(
         {
             "theme": theme_desc,
             "must_weave_targets": target_items,
+            "n2_episode_pedagogy": n2_pedagogy or {},
+            "immersion_vocab_ledger": vocab_brief,
             "recent_listener_feedback": recent_fb,
             "authentic_qqsrx_style_reference": load_cloud_qq_style_exemplars(seed_key or cid),
             "authentic_qiangqiang_examples": exemplars,
@@ -557,16 +598,17 @@ def _author_world_finale_chapter(
         return None
     try:
         parsed = json.loads(raw)
+        is_n2 = bool(explicit_point_ids and any(str(x).startswith("N2G-") for x in explicit_point_ids))
         st_obj = {
             "id": cid,
             "tier": "world_from_japan",
             "is_world_finale": True,
             "short_tab": str(parsed.get("short_tab") or tab_label)[:5],
-            "tags": ["日本看世界", "科学科技国际", "润物细无声N3"],
+            "tags": ["日本看世界", "科学科技国际", "N2复现" if is_n2 else "润物细无声N3"],
             "title": str(parsed.get("title") or theme_desc),
-            "point_ids": ["N3-G69", "N3-G65", "N3-G19"],
+            "point_ids": list(explicit_point_ids) if explicit_point_ids else ["N3-G69", "N3-G65", "N3-G19"],
             "ja_focus": str(parsed.get("ja_focus") or ""),
-            "turns": [[str(s).strip(), str(t).strip()] for s, t in (parsed.get("turns") or [])],
+            "turns": _sanitize_generated_turns(parsed.get("turns") or []),
         }
         if validate_generated_story(st_obj, require_light_explain=(ja_pct < 45), min_chars=2000) and not contains_pii(json.dumps(st_obj, ensure_ascii=False)):
             return st_obj
@@ -600,10 +642,27 @@ def run_morning_prepare() -> int:
     if not combined_last_night:
         combined_last_night = tutor_prefs.load_prefs().get("focus_points", [])[:10]
 
-    # 1. Check unplayed Uchi real public-memory reserve (5 scenes = 1 full 40-min 3-Act Deep Salon)
+    # 1. Check unplayed Uchi real public-memory reserve & Post-N3 N2/N1 pedagogy!
     from radio_dialogue_bank import SALON_STORIES
     from adaptive_bank import EXTRA_PRIMARY_CARDS, VARIANT_CARDS
     from tutor_data import TUTOR_ITEMS
+
+    _phase_info = {"phase": "n3_sprint", "n2_day": 0}
+    _n2_bundle = None
+    try:
+        from n2_prep.n2_curriculum_engine import get_n2_radio_stories_for_day, get_phase_info
+        _phase_info = get_phase_info(study_today)
+        if _phase_info.get("phase") in ("n2_climb", "n1_sprint"):
+            _st_cur = json.loads((BASE_DIR / "n3_live_state.json").read_text(encoding="utf-8")) if (BASE_DIR / "n3_live_state.json").exists() else {}
+            _n2_bundle = get_n2_radio_stories_for_day(
+                int(_phase_info.get("n2_day") or 1),
+                recent_wrong_ids=[str(x) for x in (_st_cur.get("radio_relearn_queue") or {}).keys()],
+                recent_lookup_ids=[str(x) for x in (_st_cur.get("word_lookups") or {}).keys()],
+                speaking_slip_points=[str(x) for x in ((_st_cur.get("speaking_practice") or {}).get("slips") or {}).keys()],
+                confusion_pairs=_st_cur.get("confusion_pairs") or {},
+            )
+    except Exception:
+        _n2_bundle = None
 
     def _resolve_pk(pid: str) -> str:
         if pid in TUTOR_ITEMS:
@@ -639,7 +698,7 @@ def run_morning_prepare() -> int:
         if x not in covered_keys and x not in covered_ja_blob
     ]
     print(
-        f"[morning-prepare] {study_today}: unplayed_uchi={len(unplayed_uchi)}, "
+        f"[morning-prepare] {study_today} (phase={_phase_info.get('phase')}): unplayed_uchi={len(unplayed_uchi)}, "
         f"last_night_signals={combined_last_night[:10]}, uncovered={uncovered_last_night[:8]}"
     )
 
@@ -659,10 +718,85 @@ def run_morning_prepare() -> int:
     headlines = fetch_live_nhk_news(max_items=6)
     exemplars = load_qq_corpus_exemplars(study_today, count=2)
     added_chapters = 0
+    day_compact = study_today.replace("-", "")
 
-    # Only synthesize fallback 2-real-story (4-scene) blocks when curated Uchi volumes run low (< 5 scenes);
-    # live_news_salon_gen always supplies Act 1 (real daily news), so 4 scenes = 2 deeply told real public-memory stories!
-    if len(unplayed_uchi) < 5:
+    # Post-N3 (N2 Day 4+ -> 2027-12): Always guarantee a dedicated N2/N1 episode anchored to today's
+    # exact `plan_n2_episode_pedagogy(n2_day)` (+1/+5/+14 spaced callbacks) instead of falling back to N3!
+    is_post_n3 = _phase_info.get("phase") in ("n2_climb", "n1_sprint")
+    has_curated_n2_today = bool(_n2_bundle and _n2_bundle.get("stories"))
+    n2_ped = (_n2_bundle or {}).get("pedagogy") if isinstance(_n2_bundle, dict) else None
+    n2_pids_today: list[str] = []
+    n2_target_labels: list[str] = []
+    if isinstance(n2_ped, dict):
+        for _g in (list(n2_ped.get("primary_new_grammar") or []) + list(n2_ped.get("spaced_callbacks") or [])):
+            if isinstance(_g, dict):
+                if _g.get("id") and str(_g["id"]) not in n2_pids_today:
+                    n2_pids_today.append(str(_g["id"]))
+                if _g.get("point") and str(_g["point"]) not in n2_target_labels:
+                    n2_target_labels.append(str(_g["point"]))
+
+    if is_post_n3 and not has_curated_n2_today:
+        today_n2_auto_ids = [sid for sid in existing_ids if str(sid).startswith(f"n2_auto_{day_compact}_")]
+        if len(today_n2_auto_ids) < 4:
+            catalog_topics = _load_unused_public_memory_topics(existing_ids | recent_played, existing_titles)
+            # Prioritize Cross-Border Japan mirror topics first during N2/N1!
+            catalog_topics.sort(key=lambda x: 0 if x[0] == "跨国镜像" else 1)
+            topic_themes = catalog_topics[:2] if catalog_topics else [
+                ("跨国镜像", "日本百年制造业与全球供应链深度碰撞的真实历史与当代启示", n2_target_labels[:2]),
+                ("地方纵深", "非京阪东日本地方城市如何在时代巨变中走出独立格调的真实档案", n2_target_labels[:2]),
+            ]
+            newly_built = []
+            for idx_t in range(4):
+                base_label, base_desc, base_targets = topic_themes[(idx_t // 2) % len(topic_themes)]
+                part_no = (idx_t % 2) + 1
+                part_tag = "上半场真实历史铺陈与悬念" if part_no == 1 else "下半场关键转折与今天日本及世界的余波"
+                cid = f"n2_auto_{day_compact}_{idx_t + 1}"
+                if cid in existing_ids:
+                    continue
+                target_slice = (n2_target_labels + base_targets)[:4]
+                st_obj = _author_trio_chapter(
+                    cid=cid,
+                    tab_label=base_label,
+                    theme_desc=f"{base_desc}（{part_tag}）",
+                    target_items=target_slice,
+                    ja_pct=ja_pct,
+                    headlines=headlines,
+                    exemplars=exemplars,
+                    seed_key=f"n2:{study_today}:{idx_t}",
+                    pair_part=part_no,
+                    imm_profile=imm,
+                    n2_pedagogy=n2_ped,
+                    explicit_point_ids=n2_pids_today[:4] or None,
+                )
+                if st_obj:
+                    newly_built.append(st_obj)
+                    existing_ids.add(cid)
+                    added_chapters += 1
+            if newly_built:
+                existing_auto = newly_built + existing_auto
+        w_n2_cid = f"n2_world_auto_{day_compact}"
+        if w_n2_cid not in existing_ids:
+            w_topics = _load_unused_world_topics(existing_ids | recent_played, existing_titles)
+            if w_topics:
+                w_tab, w_desc, w_targets = w_topics[0]
+                w_obj = _author_world_finale_chapter(
+                    cid=w_n2_cid,
+                    tab_label=w_tab,
+                    theme_desc=w_desc,
+                    target_items=(n2_target_labels + w_targets)[:4],
+                    ja_pct=ja_pct,
+                    exemplars=exemplars,
+                    seed_key=f"n2_world:{study_today}",
+                    imm_profile=imm,
+                    n2_pedagogy=n2_ped,
+                    explicit_point_ids=n2_pids_today[:4] or None,
+                )
+                if w_obj:
+                    existing_auto = [w_obj] + existing_auto
+                    existing_ids.add(w_n2_cid)
+                    added_chapters += 1
+    elif len(unplayed_uchi) < 5:
+        # Pre-N3 sprint fallback if curated Uchi volumes ever run low (< 5 scenes)
         needed_n = max(0, 4 - len(unplayed_uchi))
         catalog_topics = _load_unused_public_memory_topics(existing_ids | recent_played, existing_titles)
         topic_themes = catalog_topics[:2] if catalog_topics else [
@@ -674,7 +808,7 @@ def run_morning_prepare() -> int:
             base_label, base_desc, base_targets = topic_themes[(idx_t // 2) % len(topic_themes)]
             part_no = (idx_t % 2) + 1
             part_tag = "上半场真实历史铺陈与悬念" if part_no == 1 else "下半场关键转折与今天日本社会的余波"
-            cid = f"uchi_auto_{study_today.replace('-', '')}_{idx_t + 1}"
+            cid = f"uchi_auto_{day_compact}_{idx_t + 1}"
             if cid in existing_ids:
                 continue
             target_slice = (base_targets + combined_last_night[idx_t * 2 : idx_t * 2 + 2])[:3] or combined_last_night[:3]
@@ -688,6 +822,7 @@ def run_morning_prepare() -> int:
                 exemplars=exemplars,
                 seed_key=f"{study_today}:{idx_t}",
                 pair_part=part_no,
+                imm_profile=imm,
             )
             if st_obj:
                 newly_built.append(st_obj)
@@ -701,11 +836,11 @@ def run_morning_prepare() -> int:
         if (st.get("is_world_finale") or st.get("tier") == "world_from_japan")
         and st["id"] not in recent_played
     ]
-    if len(unplayed_world) < 1:
+    if not is_post_n3 and len(unplayed_world) < 1:
         w_topics = _load_unused_world_topics(existing_ids | recent_played, existing_titles)
         if w_topics:
             w_tab, w_desc, w_targets = w_topics[0]
-            w_cid = f"world_auto_{study_today.replace('-', '')}"
+            w_cid = f"world_auto_{day_compact}"
             if w_cid not in existing_ids:
                 w_obj = _author_world_finale_chapter(
                     cid=w_cid,
@@ -715,6 +850,7 @@ def run_morning_prepare() -> int:
                     ja_pct=ja_pct,
                     exemplars=exemplars,
                     seed_key=f"world:{study_today}",
+                    imm_profile=imm,
                 )
                 if w_obj:
                     existing_auto = [w_obj] + existing_auto

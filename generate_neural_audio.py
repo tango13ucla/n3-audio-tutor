@@ -446,6 +446,51 @@ def stitch_turns(turns: list, clip_lookup: dict, silence_lookup: dict, out_path:
     return os.path.exists(out_path) and os.path.getsize(out_path) > 0
 
 
+def _build_n2_q_turns(prompt_str: str, full_ja_str: str) -> list[tuple[str, object]]:
+    """Mask the blank with a 0.55s pause so N2 question audio NEVER leaks the answer out loud!"""
+    m_bl = re.search(r"[（(]\s*　*\s*[）)]", prompt_str or "")
+    if m_bl:
+        pre = prompt_str[: m_bl.start()].strip(" 、，")
+        post = prompt_str[m_bl.end() :].strip()
+        turns_q: list[tuple[str, object]] = []
+        if pre:
+            turns_q.append(("JF", pre))
+        turns_q.append(("PAUSE", 0.55))
+        if post and re.search(r"[\u3040-\u30ff\u4e00-\u9fff]", post):
+            turns_q.append(("JF", post))
+        if turns_q:
+            return turns_q
+    return [("JF", full_ja_str)]
+
+
+def _clean_n2_spoken_zh(raw_s: str) -> str:
+    """Convert N2 grammar formula shorthand into smooth natural spoken Chinese + clean kana spaces."""
+    s = str(raw_s or "").strip()
+    for src, dst in (
+        ("Vない形去ない", "动词否定形去掉ない"),
+        ("Vない形", "动词否定形"),
+        ("Vます形去ます", "动词礼貌形词干"),
+        ("Vます形", "动词礼貌形词干"),
+        ("V辞书形", "动词原形"),
+        ("V辞書形", "动词原形"),
+        ("Vた形", "动词过去形"),
+        ("Nの", "名词加の"),
+        ("N1", "前项名词"),
+        ("N2", "后项名词"),
+        (" + ", " 接 "),
+        ("＋", " 接 "),
+        ("→", " 变成 "),
+        (" / ", " 或者 "),
+        ("/", "或者"),
+    ):
+        s = s.replace(src, dst)
+    s = re.sub(r"\bN\b", "名词", s)
+    s = re.sub(r"\bV\b", "动词", s)
+    s = re.sub(r"([\u4e00-\u9fff])([\u3040-\u30ff])", r"\1 \2", s)
+    s = re.sub(r"([\u3040-\u30ff])([\u4e00-\u9fff])", r"\1 \2", s)
+    return re.sub(r"\s{2,}", " ", s).strip()
+
+
 async def main():
     os.makedirs(AUDIO_DIR, exist_ok=True)
     os.makedirs(WORDS_AUDIO_DIR, exist_ok=True)
@@ -494,7 +539,7 @@ async def main():
         _now_pt_na = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=-8)))
         _study_d_na = os.environ.get("FORCE_STUDY_DATE", "").strip() or (_now_pt_na - datetime.timedelta(hours=4)).date().isoformat()
         _ph_na = get_phase_info(_study_d_na)
-        if _ph_na.get("phase") == "n2_climb":
+        if _ph_na.get("phase") in ("n2_climb", "n1_sprint"):
             _n2_win = int(_ph_na.get("n2_day") or 1) + 7
             for _np in build_n2_question_bank():
                 if int(_np.get("day") or 999) <= _n2_win:
@@ -537,16 +582,17 @@ async def main():
     _all_synth_cards = dict(CARDS_75)
     for _nid, _nmeta in card_meta_lookup.items():
         if str(_nid).startswith(("N2G-", "N2V-")) and _nid not in _all_synth_cards:
+            _prompt_ja = str(_nmeta.get("prompt_display") or "").strip()
             _full_ja = str(_nmeta.get("full_ja") or "").strip()
-            _why = str(_nmeta.get("why_line") or "").strip()
-            _form = str(_nmeta.get("form_line") or "").strip()
+            _why = _clean_n2_spoken_zh(str(_nmeta.get("why_line") or ""))
+            _form = _clean_n2_spoken_zh(str(_nmeta.get("form_line") or ""))
             _all_synth_cards[_nid] = {
                 "id": _nid,
                 "subject": "文法",
                 "point_key": _nmeta.get("point_key", ""),
                 "choices": _nmeta.get("choices") or [],
                 "answer": _nmeta.get("answer", ""),
-                "q_turns": [("JF", _full_ja)],
+                "q_turns": _build_n2_q_turns(_prompt_ja, _full_ja),
                 "exp_turns": [("T", f"{_why} {_form}".strip())],
             }
 

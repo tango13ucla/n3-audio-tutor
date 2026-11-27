@@ -373,7 +373,13 @@ def apply_practice_logs(state: dict, fallback_day_tag: str = "") -> int:
                         applied += 1
                         rq = state.setdefault("radio_relearn_queue", {})
                         rq[pt] = max(str(rq.get(pt) or ""), day_tag_rv)
-                        if pt in g_map:
+                        _rv_pid = rec_id.split("RVR-", 1)[1] if "RVR-" in rec_id else ""
+                        if _rv_pid in n2_g_id_map or pt in n2_g_map:
+                            _n2rp = n2_g_id_map.get(_rv_pid) or n2_g_map.get(pt)
+                            _n2rp["status"] = "orange"
+                            _n2rp["streak"] = min(1, _cur_streak(_n2rp))
+                            _n2rp["last_ng_date"] = day_tag_rv
+                        elif pt in g_map:
                             g_map[pt]["status"] = "orange"
                             g_map[pt]["streak"] = min(1, _cur_streak(g_map[pt]))
                             g_map[pt]["last_ng_date"] = day_tag_rv

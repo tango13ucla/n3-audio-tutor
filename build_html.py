@@ -1163,9 +1163,9 @@ if active_phase == "exam_day":
             _exam_seen.add(_p["id"])
     DECK_CAP = len(_exam_chosen)
     raw_points = _exam_chosen
-elif active_phase == "n2_climb" and _build_n2_qbank is not None and _select_n2_quiz_deck is not None:
-    # 2026-12-07..2027-03-31 JLPT N2 Zero-to-120 Climb:
-    # Teach-first 4-choice N2 grammar + (+1/+5/+14) spaced callbacks + N3 listening/henkei/vocab bridge.
+elif active_phase in ("n2_climb", "n1_sprint") and _build_n2_qbank is not None and _select_n2_quiz_deck is not None:
+    # 2026-12-07..2027-12-05 JLPT N2 Zero-to-120 Climb & N1 Sprint:
+    # Teach-first 4-choice N2+ grammar + (+1/+5/+14) spaced callbacks + N3 listening/henkei/vocab bridge.
     _n2_bank = _build_n2_qbank()
     for _nb in _n2_bank:
         _meta_p = audio_manifest.get(f"meta:{_nb['primary']['id']}", {})
@@ -1223,7 +1223,7 @@ for _p in raw_points:
 
 buckets = {"语法": [], "活用": [], "词汇": [], "听力": []}
 for p in raw_points:
-    if active_phase == "n2_climb" and p.get("is_new_n2"):
+    if active_phase in ("n2_climb", "n1_sprint") and p.get("is_new_n2"):
         _n2_st = (n2_status_map.get(p.get("point_key", "")) or {}).get("status", "gray")
         if _n2_st in ("gray", "red", "orange"):
             p["teach_first"] = True
@@ -1748,7 +1748,7 @@ def count_tiers(items):
     return c
 
 
-if active_phase == "n2_climb" and _N2_SYLLABUS and _build_n2_vcards is not None:
+if active_phase in ("n2_climb", "n1_sprint") and _N2_SYLLABUS and _build_n2_vcards is not None:
     grammar_items = []
     grammar_audit_items = []
     ga_split_map = {}
@@ -1862,7 +1862,7 @@ mastery_data = {
     "grammar": {"label": "语法", "detail": f"{len(grammar_items)} 核心考点", "exam_pts": 38, "counts": count_tiers(grammar_items), "items": grammar_items},
     "henkei": {"label": "活用与敬语", "detail": "变形与授受尊谦", "exam_pts": 28, "counts": count_tiers(henkei_items), "items": henkei_items},
     "listening": {"label": "听力口语", "detail": "卷面 60 分", "exam_pts": 60, "counts": count_tiers(listening_items), "items": listening_items},
-    "vocab": {"label": "核心词汇", "detail": "三轨记词与假名副词" if active_phase == "n2_climb" else "含常考假名副词", "exam_pts": 24, "counts": count_tiers(vocab_items), "items": vocab_items},
+    "vocab": {"label": "核心词汇", "detail": "三轨记词与假名副词" if active_phase in ("n2_climb", "n1_sprint") else "含常考假名副词", "exam_pts": 24, "counts": count_tiers(vocab_items), "items": vocab_items},
 }
 
 baked_epoch = int(live_state.get("_baked_epoch") or 0)
@@ -1931,11 +1931,11 @@ for _cp_k, _cp_v in _confusion_pairs_raw.items():
 vocab_base_done = sum(1 for it in vocab_items if it["tier"] == "done")
 if active_phase == "exam_day":
     vocab_daily_count = 12
-elif active_phase == "n2_climb":
+elif active_phase in ("n2_climb", "n1_sprint"):
     vocab_daily_count = 15 if is_travel_floor else 22
 else:
     vocab_daily_count = tutor_prefs.vocab_daily_count(MEMORY_PREFS, day=plan_date_str)
-ga_daily_target = 0 if active_phase == "n2_climb" else tutor_prefs.grammar_audit_daily_count(MEMORY_PREFS, day=plan_date_str)
+ga_daily_target = 0 if active_phase in ("n2_climb", "n1_sprint") else tutor_prefs.grammar_audit_daily_count(MEMORY_PREFS, day=plan_date_str)
 
 asr_kana_map = {
     "辞書": "じしょ", "自署": "じしょ", "地所": "じしょ", "事情": "じじょう", "事象": "じしょう",
@@ -1976,11 +1976,64 @@ try:
 except Exception:
     pass
 
+# v83 Episodic-to-Semantic Memory Bridge ("锵锵回声"): attach matched podcast story echoes to today's quiz points
+_story_mem_entries = {}
+_story_mem_path = os.path.join(BASE_DIR, "audio", "story_memory_index.json")
+if os.path.exists(_story_mem_path):
+    try:
+        _smi_raw = json.load(open(_story_mem_path, encoding="utf-8"))
+        if isinstance(_smi_raw, dict) and isinstance(_smi_raw.get("entries"), dict):
+            _story_mem_entries = _smi_raw["entries"]
+    except Exception:
+        _story_mem_entries = {}
+if _story_mem_entries:
+    for _pt in ordered_points:
+        _cands = [
+            str(_pt.get("id") or "").strip(),
+            str(_pt.get("point_key") or "").strip(),
+            str(_pt.get("point") or "").strip(),
+            str(_pt.get("point_key") or "").strip().lstrip("〜～"),
+            str((_pt.get("primary") or {}).get("answer") or "").strip(),
+        ]
+        _hit = None
+        for _ck in _cands:
+            if _ck and _ck in _story_mem_entries:
+                _hit = _story_mem_entries[_ck]
+                break
+        if isinstance(_hit, dict) and _hit.get("tab") and _hit.get("hook"):
+            _pt["story_echo"] = {
+                "tab": clean_zen_text(str(_hit["tab"])),
+                "hook": clean_zen_text(str(_hit["hook"])),
+                "date": str(_hit.get("date") or ""),
+            }
+
 # Enrich radio review cards with clean Jobs x Zen distilled text & studio 3-beat audio links (zero mutation to script_sig!)
+_ga_cur_by_gid = {}
+try:
+    from grammar_audit_cards import GA_CARD_CURATION as _GA_CUR_MAP
+    _ga_cur_by_gid = _GA_CUR_MAP
+except Exception:
+    _ga_cur_by_gid = {}
 _ga_by_name_enrich = {}
 for _git in grammar_audit_items:
     _ga_by_name_enrich.setdefault(_git["name"], _git)
     _ga_by_name_enrich.setdefault(_git["front_name"], _git)
+    _ga_by_name_enrich.setdefault("〜" + str(_git["front_name"]).lstrip("〜～"), _git)
+_n2_soul_enrich = {}
+if _N2_SYLLABUS:
+    for _ng in _N2_SYLLABUS:
+        _npt = str(_ng.get("point") or "").strip()
+        if _npt:
+            _n2_soul_enrich[_npt] = clean_zen_text(str(_ng.get("soul_meaning") or ""))
+            _n2_soul_enrich[_npt.lstrip("〜～")] = _n2_soul_enrich[_npt]
+_n3_meaning_enrich = {}
+for _sg in (live_state.get("grammar_points") or []):
+    _snm = str(_sg.get("name") or "").strip()
+    _sm = clean_zen_text(str(_sg.get("meaning") or "").split(",")[0].split("，")[0].strip())
+    if _snm and _sm:
+        _n3_meaning_enrich[_snm] = _sm
+        _n3_meaning_enrich[clean_grammar_front_name(_snm)] = _sm
+        _n3_meaning_enrich[_snm.lstrip("〜～")] = _sm
 for _rv in (radio_meta.get("review_items") or []):
     if not isinstance(_rv, dict):
         continue
@@ -2009,9 +2062,25 @@ for _rv in (radio_meta.get("review_items") or []):
             _rv["mnemonic_cue"] = _rv_cue
             _rv["mnemonic_scene"] = _rv_scene
     else:
-        _gref = _ga_by_name_enrich.get(_rtitle) or _ga_by_name_enrich.get(clean_grammar_front_name(_rtitle)) or {}
+        _rfront = clean_grammar_front_name(_rtitle)
+        _gref = (
+            _ga_by_name_enrich.get(_rtitle)
+            or _ga_by_name_enrich.get(_rfront)
+            or _ga_by_name_enrich.get("〜" + _rfront.lstrip("〜～"))
+            or {}
+        )
+        _rgid_id = str(_rv.get("id") or "").replace("RVR-", "").strip()
+        _rgid_pt = str(_rv.get("point_id") or "").strip()
+        _cur_tup = (
+            _ga_cur_by_gid.get(_rgid_id)
+            or _ga_cur_by_gid.get(_rgid_pt)
+            or (_ga_cur_by_gid.get(str(_gref.get("gid") or "")) if _gref else None)
+        )
+        _cur_m = clean_zen_text(str(_cur_tup[0])) if isinstance(_cur_tup, (tuple, list)) and _cur_tup else ""
+        _n2_m = _n2_soul_enrich.get(_rtitle) or _n2_soul_enrich.get(_rfront) or ""
+        _n3_m = _n3_meaning_enrich.get(_rtitle) or _n3_meaning_enrich.get(_rfront) or _n3_meaning_enrich.get(_rfront.lstrip("〜～")) or ""
         if _gref:
-            _rv["zh_card"] = _gref.get("meaning") or _rv.get("zh") or ""
+            _rv["zh_card"] = _cur_m or _gref.get("meaning") or _n2_m or _n3_m or _rv.get("zh") or ""
             _rv["rule_card"] = _gref.get("rule") or ""
             _rv["hl"] = _gref.get("hl") or []
             _rv["pat_audio"] = _gref.get("pat_audio") or ""
@@ -2019,7 +2088,7 @@ for _rv in (radio_meta.get("review_items") or []):
             _rv["hook_audio"] = _gref.get("hook_audio") or ""
             _rv["rev_audio"] = _gref.get("rev_audio") or ""
         else:
-            _rv["zh_card"] = str(_rv.get("zh") or "").replace("—", "，").strip()
+            _rv["zh_card"] = _cur_m or _n2_m or _n3_m or clean_zen_text(str(_rv.get("zh") or ""))
 
 payload = json.dumps({
     "plan_date": plan_date_str,
@@ -3145,6 +3214,19 @@ html = r"""<!DOCTYPE html>
     letter-spacing: 0.01em;
     text-wrap: pretty;
   }
+  .res-cue.res-echo {
+    margin-top: 2px;
+    margin-bottom: 10px;
+  }
+  .res-cue.res-echo .cue-tag {
+    color: var(--moss);
+    opacity: 0.85;
+  }
+  .res-cue.res-echo .cue-txt {
+    font-size: 13.5px;
+    color: var(--ink-3);
+    line-height: 1.52;
+  }
   .opt-breakdown {
     display: flex;
     flex-direction: column;
@@ -3714,37 +3796,46 @@ html = r"""<!DOCTYPE html>
     letter-spacing: 0.04em;
   }
 
-  /* Right-Hand Thumb Transport Cluster: [1.0x] [-15s] [ 播放 ] [+15s] */
+  /* Symmetrical 5-element Transport Cluster: [1.0x] [-15s] [ 播放 ] [+15s] [记一句] */
   .transport-row {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
     align-items: center;
-    gap: 10px;
-  }
-  @media (min-width: 860px) and (min-height: 521px) {
-    .transport-row { justify-content: space-between; }
+    gap: 8px;
   }
   .radio-spd-pill {
     height: 46px;
-    padding: 0 13px;
+    padding: 0 11px;
     border: 1px solid var(--hairline-strong);
     border-radius: 12px;
-    font-size: 14px;
+    font-size: 13.5px;
     font-weight: 400;
     color: var(--ink-2);
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
     flex-shrink: 0;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .radio-pin-pill {
+    transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+  }
+  .radio-pin-pill.is-pinned {
+    border-color: var(--moss);
+    color: var(--moss);
+    background: var(--moss-tint);
   }
   .step-time-btn {
     height: 46px;
-    padding: 0 15px;
+    padding: 0 12px;
     border: 1px solid var(--hairline-strong);
     border-radius: 12px;
     background: var(--sheet);
-    font-size: 14.5px;
+    font-size: 13.5px;
     font-weight: 400;
     color: var(--ink-2);
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
     flex-shrink: 0;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
@@ -3752,8 +3843,8 @@ html = r"""<!DOCTYPE html>
   .step-time-btn:active, .radio-spd-pill:active { background: var(--tap-bg); }
   .play-toggle-btn {
     flex: 1;
-    max-width: 168px;
-    min-width: 118px;
+    max-width: 160px;
+    min-width: 82px;
     height: 46px;
     border-radius: 12px;
     background: var(--cta-bg);
@@ -3762,9 +3853,15 @@ html = r"""<!DOCTYPE html>
     font-size: 15.5px;
     font-weight: 500;
     letter-spacing: 0.1em;
+    white-space: nowrap;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
     transition: opacity 0.15s ease, transform 0.12s ease;
+  }
+  @media (max-width: 390px) {
+    .transport-row { gap: 6px; }
+    .radio-spd-pill, .step-time-btn { padding: 0 9px; font-size: 13px; }
+    .play-toggle-btn { min-width: 78px; font-size: 15px; }
   }
   .play-toggle-btn:active { opacity: 0.84; transform: scale(0.985); }
 
@@ -6268,6 +6365,11 @@ html = r"""<!DOCTYPE html>
   .zen-shell.has-mini-bar .zb-toast {
     bottom: calc(146px + env(safe-area-inset-bottom));
   }
+  .zb-toast.in-radio {
+    bottom: calc(133px + env(safe-area-inset-bottom));
+    padding: 5px 14px;
+    font-size: 12px;
+  }
   .zb-toast.show { opacity: 0.94; transform: translateX(-50%) translateY(0); }
   @media (max-height: 700px) {
     .zb-ma { min-height: 8px; max-height: 30px; }
@@ -6901,6 +7003,7 @@ html = r"""<!DOCTYPE html>
             <button class="step-time-btn" onclick="seekRadioBy(-15)">-15s</button>
             <button class="play-toggle-btn" id="radio-play-btn" onclick="toggleRadioPlay()">播放</button>
             <button class="step-time-btn" onclick="seekRadioBy(15)">+15s</button>
+            <button class="radio-spd-pill radio-pin-pill" id="radio-pin-btn" onclick="pinCurrentRadioMoment()">记一句</button>
           </div>
         </div>
       </div>
@@ -7173,8 +7276,8 @@ html = r"""<!DOCTYPE html>
         </div>
       </div>
     </div>
-    <div class="zb-toast" id="zb-toast"></div>
   </section>
+  <div class="zb-toast" id="zb-toast"></div>
 
   <!-- 3F. GLOBAL FLOATING MINI RADIO BAR (跨 Tab 无缝随身听) -->
   <aside class="radio-mini-bar hidden" id="radio-mini-bar" onclick="onMiniBarTap(event)">
@@ -7371,6 +7474,7 @@ function createFreshAdaptiveState() {
     flashProg: [0, 0, 0, 0],
     vocabSess: null,
     radioReview: null,
+    radioPins: null,
     gaProg: [0, 0, 0, 0],
     gaMap: {},
     gaSess: null,
@@ -7586,6 +7690,17 @@ function loadAdaptiveState() {
           const curScore = base.radioReview ? ((base.radioReview.done ? 999 : 0) + (base.radioReview.triageIdx || 0) + ((base.radioReview.tailDoneIds || []).length)) : -1;
           const newScore = (saved.radioReview.done ? 999 : 0) + (saved.radioReview.triageIdx || 0) + ((saved.radioReview.tailDoneIds || []).length);
           if (newScore >= curScore) base.radioReview = saved.radioReview;
+        }
+        if (saved.radioPins && saved.radioPins.sig === RADIO_SIG && saved.radioPins.date === DATA.plan_date && Array.isArray(saved.radioPins.entries)) {
+          if (!base.radioPins || base.radioPins.sig !== RADIO_SIG || base.radioPins.date !== DATA.plan_date) {
+            base.radioPins = { sig: RADIO_SIG, date: DATA.plan_date, entries: [] };
+          }
+          saved.radioPins.entries.forEach(ep => {
+            if (!ep || typeof ep.sec !== "number") return;
+            if (!base.radioPins.entries.some(x => Math.abs(x.sec - ep.sec) < 10)) {
+              base.radioPins.entries.push(ep);
+            }
+          });
         }
         if (saved.gaSess && saved.gaSess.date === DATA.plan_date && Array.isArray(saved.gaSess.queue)) {
           if (!base.gaSess || (saved.gaSess.updatedAt || 0) >= (base.gaSess.updatedAt || 0)) {
@@ -8149,6 +8264,14 @@ function buildCompactPacket() {
       size += byteLen(JSON.stringify(pkt.rv)) + 7;
     }
   }
+  if (A.radioPins && A.radioPins.sig === RADIO_SIG && A.radioPins.date === DATA.plan_date && Array.isArray(A.radioPins.entries) && A.radioPins.entries.length) {
+    const rpnSlice = A.radioPins.entries.slice(-8).map(e => [Math.floor(e.sec || 0), Math.floor(e.ch || 0)]);
+    const rpnAdd = byteLen(JSON.stringify(rpnSlice)) + 8;
+    if (size + rpnAdd <= CLOUD_BYTE_LIMIT - 120) {
+      pkt.rpn = rpnSlice;
+      size += rpnAdd;
+    }
+  }
   if (Array.isArray(A.tappedWords) && A.tappedWords.length) {
     const twSlice = A.tappedWords.slice(-30);
     const twAdd = byteLen(JSON.stringify(twSlice)) + 7;
@@ -8208,6 +8331,7 @@ function packetFingerprint(pkt) {
     fp: Array.isArray(pkt.fp) ? [Math.floor(pkt.fp[0] || 0), Math.floor(pkt.fp[1] || 0), Math.floor(pkt.fp[2] || 0)] : [],
     gp: Array.isArray(pkt.gp) ? [Math.floor(pkt.gp[0] || 0), Math.floor(pkt.gp[1] || 0), Math.floor(pkt.gp[2] || 0)] : [],
     rv: Array.isArray(pkt.rv) ? [Math.floor(pkt.rv[0] || 0), Math.floor(pkt.rv[1] || 0)] : [],
+    rpn: Array.isArray(pkt.rpn) ? pkt.rpn : [],
     ga: sortedMap(pkt.ga || {}),
     z: String(pkt.z || "").split(";").filter(Boolean).sort().join(";"),
     c: pkt.c || [],
@@ -8313,6 +8437,18 @@ function mergeIncomingPacketData(pkt) {
         curRv.updatedAt = Math.max(curRv.updatedAt || 0, rvTsIn);
         changed = true;
       }
+    }
+    if (Array.isArray(pkt.rpn) && pkt.rpn.length && typeof ensureRadioPinsState === "function") {
+      const rpObj = ensureRadioPinsState();
+      pkt.rpn.forEach(pair => {
+        if (!Array.isArray(pair) || pair.length < 1) return;
+        const pSec = Math.max(0, Math.floor(pair[0] || 0));
+        const pCh = Math.max(0, Math.floor(pair[1] || 0));
+        if (!rpObj.entries.some(x => Math.abs(x.sec - pSec) < 10)) {
+          rpObj.entries.push({ sec: pSec, ch: pCh });
+          changed = true;
+        }
+      });
     }
 
     if (Array.isArray(pkt.rp) && pkt.rp.length === 2) {
@@ -11402,9 +11538,131 @@ function getRadioJpVideo() {
   return (DATA.radio && DATA.radio.jp_video && DATA.radio.jp_video.video_url) ? DATA.radio.jp_video : null;
 }
 
+let _zenToastTimer = null;
+let _pinBtnTimer = null;
+
+function hideZenToast() {
+  const el = document.getElementById("zb-toast");
+  if (el) el.classList.remove("show", "in-radio");
+  if (_zenToastTimer) { clearTimeout(_zenToastTimer); _zenToastTimer = null; }
+}
+
+function showZenToast(msg, opts) {
+  const el = document.getElementById("zb-toast");
+  if (!el) return;
+  el.textContent = String(msg || "");
+  el.classList.toggle("in-radio", !!(opts && opts.inRadio));
+  el.classList.add("show");
+  if (_zenToastTimer) clearTimeout(_zenToastTimer);
+  _zenToastTimer = setTimeout(() => el.classList.remove("show", "in-radio"), 2200);
+}
+
+function ensureRadioPinsState() {
+  if (!A.radioPins || A.radioPins.sig !== RADIO_SIG || A.radioPins.date !== DATA.plan_date || !Array.isArray(A.radioPins.entries)) {
+    A.radioPins = { sig: RADIO_SIG, date: DATA.plan_date, entries: [] };
+  }
+  return A.radioPins;
+}
+
+function buildRadioPinReviewCard(entry) {
+  const sec = Math.max(0, Math.floor((entry && entry.sec) || 0));
+  const dur = Math.max(60, Math.floor((DATA.radio && DATA.radio.duration_sec) || 2400));
+  const segs = (DATA.radio && Array.isArray(DATA.radio.segments)) ? DATA.radio.segments : [];
+  const chaps = (DATA.radio && Array.isArray(DATA.radio.chapters)) ? DATA.radio.chapters : [];
+  let chIdx = typeof entry.ch === "number" ? entry.ch : 0;
+  for (let i = 0; i < segs.length; i++) {
+    if (sec >= (segs[i].start || 0) && sec < (segs[i].end || dur + 1)) {
+      chIdx = i;
+      break;
+    }
+  }
+  const seg = segs[chIdx] || segs[0] || {};
+  const chap = chaps[chIdx] || chaps[0] || {};
+  const chTitle = String(chap.title || seg.title || "随身听").trim();
+  const timeLbl = formatMMSS(sec);
+  const jaFocus = String(seg.ja_focus || "").trim();
+  return {
+    id: `RVP-${sec}`,
+    kind: "pin",
+    is_pin: true,
+    title: `${timeLbl} 原声片段`,
+    kana: "",
+    zh: `听播客时随手标下的 14 秒原声`,
+    zh_card: `听播客时随手标下的 14 秒原声`,
+    ja_example: jaFocus,
+    chapter_idx: chIdx,
+    chapter_title: chTitle,
+    img: chap.img || "",
+    clip_start: Math.max(0, sec - 4),
+    clip_end: Math.min(dur, sec + 10),
+    pinned_at: sec
+  };
+}
+
+function pinCurrentRadioMoment() {
+  const curRaw = (radioInitialized && radioPlayer && typeof radioPlayer.currentTime === "number" && radioPlayer.currentTime > 0)
+    ? radioPlayer.currentTime
+    : ((A.radioPos && A.radioPos[0]) || 0);
+  const sec = Math.max(0, Math.floor(curRaw || 0));
+  const rp = ensureRadioPinsState();
+  const dup = rp.entries.find(e => Math.abs((e.sec || 0) - sec) < 10);
+  const timeLbl = formatMMSS(sec);
+  if (!dup) {
+    const segs = (DATA.radio && Array.isArray(DATA.radio.segments)) ? DATA.radio.segments : [];
+    let chIdx = Math.max(0, lastRenderedSegIdx || 0);
+    for (let i = 0; i < segs.length; i++) {
+      if (sec >= (segs[i].start || 0) && sec < (segs[i].end || 99999)) {
+        chIdx = i;
+        break;
+      }
+    }
+    rp.entries.unshift({ sec: sec, ch: chIdx });
+    if (rp.entries.length > 8) rp.entries = rp.entries.slice(0, 8);
+    if (A.radioReview && A.radioReview.sig === RADIO_SIG && A.radioReview.date === DATA.plan_date && A.radioReview.triageIdx > 0 && !A.radioReview.done) {
+      const pinId = `RVP-${sec}`;
+      if (!Array.isArray(A.radioReview.tailQueue)) A.radioReview.tailQueue = [];
+      if (!A.radioReview.tailQueue.includes(pinId)) A.radioReview.tailQueue.unshift(pinId);
+    }
+    saveAdaptiveState();
+    scheduleCloudPush(250);
+  }
+  const btn = document.getElementById("radio-pin-btn");
+  if (btn) {
+    btn.classList.add("is-pinned");
+    btn.textContent = "已记";
+    if (_pinBtnTimer) clearTimeout(_pinBtnTimer);
+    _pinBtnTimer = setTimeout(() => {
+      btn.classList.remove("is-pinned");
+      btn.textContent = "记一句";
+    }, 1500);
+  }
+  showZenToast(dup ? `已记 ${timeLbl} · 稍后复盘` : `已记 ${timeLbl} · 稍后复盘`, { inRadio: true });
+  updateRadioReviewEntryBadge();
+}
+
 function getRadioReviewItems() {
-  const arr = (DATA.radio && Array.isArray(DATA.radio.review_items)) ? DATA.radio.review_items : [];
-  return arr;
+  const baseArr = (DATA.radio && Array.isArray(DATA.radio.review_items)) ? DATA.radio.review_items : [];
+  const pins = (A && A.radioPins && A.radioPins.sig === RADIO_SIG && A.radioPins.date === DATA.plan_date && Array.isArray(A.radioPins.entries))
+    ? A.radioPins.entries
+    : [];
+  if (!pins.length) return baseArr;
+  const promotedIds = new Set();
+  const frontCards = [];
+  pins.forEach(entry => {
+    const pSec = Math.floor((entry && entry.sec) || 0);
+    const matched = baseArr.find(it =>
+      it && !promotedIds.has(it.id) &&
+      typeof it.clip_start === "number" && typeof it.clip_end === "number" &&
+      pSec >= (it.clip_start - 10) && pSec <= (it.clip_end + 10)
+    );
+    if (matched) {
+      promotedIds.add(matched.id);
+      frontCards.push(Object.assign({}, matched, { is_pin: true }));
+    } else {
+      frontCards.push(buildRadioPinReviewCard(entry));
+    }
+  });
+  return frontCards.concat(baseArr.filter(it => it && !promotedIds.has(it.id)));
 }
 
 function getRadioSpeakingPrompts() {
@@ -12052,6 +12310,7 @@ function advanceRadioReviewPointer() {
 }
 
 function openRadioReview(forceRestart) {
+  hideZenToast();
   const items = getRadioReviewItems();
   if (!items.length) return;
   if (radioInitialized && !radioPlayer.paused) {
@@ -12876,13 +13135,14 @@ function renderRadioReviewStage() {
   const headShow = rvRevealed ? item.title : stripGrammarSpoilerTitle(item.title);
   const headLen = String(headShow || "").length;
   const headLenCls = headLen >= 10 ? " len-long" : (headLen === 9 ? " len-9" : (headLen === 8 ? " len-8" : ""));
-  const cueTxt = isTail ? "再过一遍" : (item.kind === "vocab" ? "默念读音" : "默念意思");
+  const cueTxt = isTail ? "再过一遍" : (item.kind === "pin" ? "回听原声" : (item.kind === "vocab" ? "默念读音" : "默念意思"));
   const jpVid = getRadioJpVideo();
+  const rightMetaTag = item.is_pin ? " · 随手记" : (item.is_new_n2 ? " · N2" : "");
 
   host.innerHTML = `
     <div class="meta-bar">
       <span class="overline${isTail ? " warm" : ""}">${escapeHtml(leftLabel)}</span>
-      <span class="overline">${escapeHtml(item.chapter_title || "")}${item.is_new_n2 ? " · N2" : ""}</span>
+      <span class="overline">${escapeHtml(item.chapter_title || "")}${rightMetaTag}</span>
     </div>
 
     <div class="vc-deck-area">
@@ -13450,6 +13710,7 @@ function renderTutor() {
         </div>
         <div class="example-line vc-tap-zone vc-live" lang="ja" onclick="if(!event.target.closest('.w-tok'))playMainClip('${p.teach.audio}','teach',true)">${annotateJapanese(p.teach.example_ja)}</div>
         ${p.teach.zh_meaning ? `<p class="example-zh vc-tap-zone vc-live" onclick="playMainClip('${p.teach.audio}','teach',true)">${escapeHtml(p.teach.zh_meaning)}</p>` : ""}
+        ${(p.story_echo && p.story_echo.tab && p.story_echo.hook) ? `<div class="res-cue res-echo" style="margin-top:12px;"><span class="cue-tag">锵锵</span><span class="cue-txt">「${escapeHtml(p.story_echo.tab)}」${escapeHtml(p.story_echo.hook)}</span></div>` : ""}
       </div>
 
       <div class="action-dock">
@@ -13636,6 +13897,9 @@ function renderTutor() {
   const confHintHTML = (confWrong && confWrong !== _ansStr && (!_ansStr || (!_ansStr.includes(confWrong) && !confWrong.includes(_ansStr))) && !q.is_listening)
     ? `<div class="res-cue"><span class="cue-tag">常混</span><span class="cue-txt">历史易误选「${escapeHtml(confWrong)}」，注意和正解区分</span></div>`
     : "";
+  const storyEchoHTML = (p.story_echo && p.story_echo.tab && p.story_echo.hook)
+    ? `<div class="res-cue res-echo" id="res-story-echo"><span class="cue-tag">锵锵</span><span class="cue-txt">「${escapeHtml(p.story_echo.tab)}」${escapeHtml(p.story_echo.hook)}</span></div>`
+    : "";
 
   box.innerHTML = `
     <div class="tutor-stamp right" id="tutor-st-right">${rightStampLabel}</div>
@@ -13653,6 +13917,7 @@ function renderTutor() {
       ${resPointTitle ? `<div class="res-point-head"><span class="res-point-subj">${escapeHtml(p.subject || "")}</span><span>${escapeHtml(resPointTitle)}</span></div>` : ""}
       ${q.why_line ? `<div class="res-cue vc-tap-zone vc-live" id="res-why-cue" onclick="playMainClip(activeQuizObj.exp_audio, 'exp', true)"><span class="cue-tag">要点</span><span class="cue-txt">${escapeHtml(q.why_line)}</span></div>` : ""}
       ${confHintHTML}
+      ${storyEchoHTML}
       <div class="opt-breakdown${q.is_listening ? " is-listen" : ""}">${optRowsHTML}</div>
     </div>
 
@@ -16977,13 +17242,16 @@ function renderDashboard() {
     const totalStale = pillarMeta.reduce((s, x) => s + x.staleDone, 0);
     const totalHes = pillarMeta.reduce((s, x) => s + x.hesCnt, 0);
     const dLeft = DATA.days_to_exam != null ? Number(DATA.days_to_exam) : 14;
-    const isN2 = DATA.phase === "n2_climb";
+    const isN1 = DATA.phase === "n1_sprint";
+    const isN2 = DATA.phase === "n2_climb" || isN1;
     const isExamDay = DATA.phase === "exam_day" || dLeft === 0;
     const examLead = isExamDay
       ? "<b>今日开考</b>"
-      : (isN2
-        ? `距 N2 验收剩 <b>${dLeft} 天</b>${DATA.is_travel_floor ? " · 旅途保底" : ""}`
-        : `距考剩 <b>${dLeft} 天</b>`);
+      : (isN1
+        ? `距 N1 冲刺剩 <b>${dLeft} 天</b>${DATA.is_travel_floor ? " · 旅途保底" : ""}`
+        : (isN2
+          ? `距 N2 验收剩 <b>${dLeft} 天</b>${DATA.is_travel_floor ? " · 旅途保底" : ""}`
+          : `距考剩 <b>${dLeft} 天</b>`));
     const activeConfCnt = Object.keys(DATA.confusion_pairs || {}).length;
     const subParts = [];
     if (isExamDay) {
@@ -17033,7 +17301,7 @@ function renderDashboard() {
         </div>`;
 
     let n3CalRowHTML = "";
-    if (DATA.phase === "n2_climb") {
+    if (DATA.phase === "n2_climb" || DATA.phase === "n1_sprint") {
       const sc = getLocalN3RealScore();
       n3CalRowHTML = sc
         ? `
@@ -20074,7 +20342,7 @@ if (qLenBefore !== qLenAfter || !Array.isArray(lkRec) || lkRec[0] < 1) {
 const vcObj = vm.runInNewContext('DATA.vocab_cards || {}', sb);
 const vcKeys = Object.keys(vcObj);
 if (vcKeys.length < 120) throw new Error('Self-test failed: vocab_cards unexpectedly small: ' + vcKeys.length);
-const isN2VocabCheck = vm.runInNewContext('DATA.phase === "n2_climb"', sb);
+const isN2VocabCheck = vm.runInNewContext('DATA.phase === "n2_climb" || DATA.phase === "n1_sprint"', sb);
 const bannedLangRe = /(?:英文|中文|谐音)/;
 const bannedVulgarRe = /\b(?:cock|gay|shit|fuck|damn|ass|die|sin|cheat)\b/i;
 const cjkRe4 = /[\u4e00-\u9fff]/g;
@@ -20356,7 +20624,7 @@ if (!rvDoneHtml.includes('回炉 1 项') || (hasStoryArts && !rvDoneHtml.include
 sb.setTimeout = origSetTimeout;
 sb.closeRadioReview();
 // Verify Ear-First 2/3 Vocab Graduation veil activates ONLY on streak===2 kanji cards with audio
-const isN2Phase6 = vm.runInNewContext('DATA.phase === "n2_climb"', sb);
+const isN2Phase6 = vm.runInNewContext('DATA.phase === "n2_climb" || DATA.phase === "n1_sprint"', sb);
 const sampleKanji = isN2Phase6
   ? vm.runInNewContext('Object.keys(DATA.vocab_cards || {}).find(w => DATA.vocab_cards[w] && DATA.vocab_cards[w].mode === "kanji_read") || ""', sb)
   : '予算';
@@ -21203,10 +21471,11 @@ const mockEntryHtml22 = (els['dash-mock-entry'] && els['dash-mock-entry'].innerH
 if (!mockEntryHtml22.includes('模拟小测') || !mockEntryHtml22.includes('startMockSprint') || mockEntryHtml22.includes('—')) {
   throw new Error('Self-test 22 failed: dashboard missing quiet Mock Sprint 15 entry row or contains em dash');
 }
-if (phaseMeta22.phase === 'n2_climb' && !mockEntryHtml22.includes('openN3ScoreModal')) {
-  throw new Error('Self-test 22 failed: n2_climb dashboard must expose quiet N3 real-score calibration entry');
+const isPostN3_22 = phaseMeta22.phase === 'n2_climb' || phaseMeta22.phase === 'n1_sprint';
+if (isPostN3_22 && !mockEntryHtml22.includes('openN3ScoreModal')) {
+  throw new Error('Self-test 22 failed: post-N3 dashboard must expose quiet N3 real-score calibration entry');
 }
-if (phaseMeta22.phase !== 'n2_climb' && mockEntryHtml22.includes('openN3ScoreModal')) {
+if (!isPostN3_22 && mockEntryHtml22.includes('openN3ScoreModal')) {
   throw new Error('Self-test 22 failed: pre-exam dashboard must NOT show post-exam N3 score calibration row');
 }
 const mockRes22 = vm.runInNewContext(`(() => {
@@ -21302,12 +21571,13 @@ if (g38Pt23) {
 
 // Self-test 24 (v77): Whole-App Jobs x Kyoto Zen Unification (GA 3-Beat Auto-Play + Direct Tap Zones + Review/Speaking Cleanliness + Result/Teach 上看下点 + Ledger Grammar Audio)
 const phase24 = vm.runInNewContext('DATA.phase || "n3_sprint"', sb);
+const isPostN3_24 = phase24 === 'n2_climb' || phase24 === 'n1_sprint';
 const gaItems24 = (vm.runInNewContext('DATA.grammar_audit.items', sb)) || [];
-if (phase24 !== 'n2_climb' && gaItems24.length !== 173) {
+if (!isPostN3_24 && gaItems24.length !== 173) {
   throw new Error('Self-test 24 failed: expected 173 N3 grammar audit items, got ' + gaItems24.length);
 }
 for (const gi of gaItems24) {
-  if (phase24 !== 'n2_climb' && (!gi.rev_audio || !gi.ex_audio || !gi.pat_audio || !gi.hook_audio)) {
+  if (!isPostN3_24 && (!gi.rev_audio || !gi.ex_audio || !gi.pat_audio || !gi.hook_audio)) {
     throw new Error('Self-test 24 failed: GA item missing 3-beat studio audio tracks: ' + gi.gid);
   }
   if (String(gi.rule || '').includes('必背双胞胎') || String(gi.rule || '').includes('定生死') || String(gi.rule || '').includes('—') || String(gi.meaning || '').includes('—')) {
@@ -21379,7 +21649,7 @@ if (gPt24) {
     throw new Error('Self-test 24 failed: Teach screen top meta-bar has buttons or missing thumb-zone tutor-aux-row');
   }
 }
-if (phase24 !== 'n2_climb') {
+if (!isPostN3_24) {
   const ledgerGramNoAud24 = vm.runInNewContext('(DATA.mastery.grammar.items || []).filter(x => !x.audio).map(x => x.gid)', sb);
   if (ledgerGramNoAud24.length > 0) {
     throw new Error('Self-test 24 failed: ledger grammar rows missing studio audio: ' + JSON.stringify(ledgerGramNoAud24.slice(0, 8)));
@@ -21488,11 +21758,54 @@ if (vm.runInNewContext('radioReviewOpen', sb)) {
 if (html.includes('top: calc(124px + env(safe-area-inset-top))') || html.includes('2个×3轮') || html.includes('3个×3轮')) {
   throw new Error('Self-test 27 failed: overlapping 124px Body toast or contradictory ×3轮 short string regressed!');
 }
+
+// Self-test 28 (v83): One-Tap '记一句' Ear-Pin + Front-of-Deck Review Prepending + '锵锵回声' Episodic Bridge + Clean Review zh_card
+if (!html.includes('id="radio-pin-btn"') || !html.includes('pinCurrentRadioMoment()')) {
+  throw new Error('Self-test 28 failed: Radio player missing symmetrical 记一句 ear-pin control');
+}
+const rvBefore28 = sb.getRadioReviewItems();
+for (const rvi28 of rvBefore28) {
+  const zc28 = String(rvi28.zh_card || rvi28.zh || '');
+  if (zc28.includes('ます形词干') || zc28.includes('根据他每晚') || zc28.includes('—')) {
+    throw new Error('Self-test 28 failed: dirty/truncated zh_card leaked into review card: ' + rvi28.id + ' -> ' + zc28);
+  }
+}
+sb.switchMode('radio', false);
+vm.runInNewContext('radioPlayer.currentTime = 312; A.radioPos = [312, nowUnixSec()]; A.radioPins = null; A.radioReview = null;', sb);
+sb.pinCurrentRadioMoment();
+const rvAfter28 = sb.getRadioReviewItems();
+if (!rvAfter28.length || !rvAfter28[0].is_pin) {
+  throw new Error('Self-test 28 failed: pinned moment was not prepended to front of Post-Listening Review deck');
+}
+const toast28 = (els['zb-toast'] && els['zb-toast'].textContent) || '';
+if (!toast28.includes('05:12') || !toast28.includes('复盘')) {
+  throw new Error('Self-test 28 failed: pinning moment did not show quiet timestamp toast: ' + toast28);
+}
+sb.openRadioReview(true);
+const rvPinHtml28 = (els['radio-review-stage'] && els['radio-review-stage'].innerHTML) || '';
+if (!rvPinHtml28.includes('随手记')) {
+  throw new Error('Self-test 28 failed: prepended ear-pin card missing 随手记 overline tag');
+}
+sb.closeRadioReview();
+vm.runInNewContext('A.radioPins = null; A.radioReview = null;', sb);
+const echoPt28 = vm.runInNewContext('(DATA.points || []).find(p => p && p.story_echo && p.story_echo.tab && p.story_echo.hook && p.primary && !p.primary.is_listening)', sb);
+if (!echoPt28) {
+  throw new Error('Self-test 28 failed: expected at least one quiz point matched to a recent Qiang-Qiang story_echo');
+}
+sb.switchMode('tutor');
+sb.setupCurrentTurn(echoPt28.id);
+vm.runInNewContext('viewStage = "quiz";', sb);
+const wOpt28 = vm.runInNewContext('activeQuizObj.choices.find(c => c !== activeQuizObj.answer)', sb);
+sb.submitAnswer(wOpt28);
+const resEchoHtml28 = (els['voice-card'] && els['voice-card'].innerHTML) || '';
+if (!resEchoHtml28.includes('id="res-story-echo"') || !resEchoHtml28.includes(echoPt28.story_echo.tab) || resEchoHtml28.includes('—')) {
+  throw new Error('Self-test 28 failed: Quiz Answer screen did not render clean borderless 锵锵回声 story echo');
+}
 """
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
 
 sw_path = os.path.join(BASE_DIR, "sw.js")
-SW_CACHE_NAME = "n3-studio-tutor-v82"
+SW_CACHE_NAME = "n3-studio-tutor-v83"
 if not _IS_SIM_OUTPUT and os.path.exists(sw_path):
     with open(sw_path, encoding="utf-8") as sf:
         sw_src = sf.read()
