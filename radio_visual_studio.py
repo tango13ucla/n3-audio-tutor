@@ -1631,14 +1631,18 @@ async def _synth_speaking_prompt_audios(
     speaking_prompts: list[dict[str, Any]],
     ver_tag: str,
 ) -> None:
-    """Render real native Japanese studio MP3s (`audio/spk_0.mp3`, `audio/spk_1.mp3`) for speaking cards."""
+    """Render real native Japanese studio MP3s (`audio/spk_0.mp3`) + Mandarin voice asks (`audio/spk_0_ask.mp3`)."""
     os.makedirs(AUDIO_DIR, exist_ok=True)
     for fn in os.listdir(AUDIO_DIR):
-        if re.match(r"^spk_\d+\.mp3$", fn):
+        if re.match(r"^spk_\d+(?:_ask)?\.mp3$", fn):
             try:
                 os.remove(os.path.join(AUDIO_DIR, fn))
             except OSError:
                 pass
+    try:
+        from conjugation_drills import build_speaking_ask_spoken
+    except Exception:
+        build_speaking_ask_spoken = None
     voices = ["ja-JP-NanamiNeural", "ja-JP-KeitaNeural"]
     for idx, sp in enumerate(speaking_prompts):
         model_ja = str(sp.get("model_ja") or "").strip()
@@ -1648,6 +1652,13 @@ async def _synth_speaking_prompt_audios(
         ok = await _edge_tts_to_mp3(model_ja, voices[idx % len(voices)], "-6%", dest)
         if ok:
             sp["model_audio"] = f"./audio/spk_{idx}.mp3?v={ver_tag}"
+        ask_txt = build_speaking_ask_spoken(sp) if build_speaking_ask_spoken else ""
+        if ask_txt:
+            ask_dest = os.path.join(AUDIO_DIR, f"spk_{idx}_ask.mp3")
+            ok_ask = await _edge_tts_to_mp3(ask_txt, "en-US-BrianMultilingualNeural", "+5%", ask_dest)
+            if ok_ask:
+                sp["ask_audio"] = f"./audio/spk_{idx}_ask.mp3?v={ver_tag}"
+                sp["ask_spoken"] = ask_txt
 
 
 async def _build_jp_documentary_video(

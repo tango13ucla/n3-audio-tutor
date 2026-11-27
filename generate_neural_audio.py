@@ -66,6 +66,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 AUDIO_DIR = os.path.join(BASE_DIR, "audio")
 WORDS_AUDIO_DIR = os.path.join(AUDIO_DIR, "words")
 GA_AUDIO_DIR = os.path.join(AUDIO_DIR, "ga")
+CONJ_AUDIO_DIR = os.path.join(AUDIO_DIR, "conj")
 MANIFEST_PATH = os.path.join(AUDIO_DIR, "audio_manifest.json")
 PROXY_URL = os.environ.get("HTTPS_PROXY") or os.environ.get("HTTP_PROXY") or None
 COMM_KWARGS = {"proxy": PROXY_URL} if PROXY_URL else {}
@@ -495,6 +496,7 @@ async def main():
     os.makedirs(AUDIO_DIR, exist_ok=True)
     os.makedirs(WORDS_AUDIO_DIR, exist_ok=True)
     os.makedirs(GA_AUDIO_DIR, exist_ok=True)
+    os.makedirs(CONJ_AUDIO_DIR, exist_ok=True)
 
     old_manifest = {}
     if os.path.exists(MANIFEST_PATH):
@@ -513,6 +515,8 @@ async def main():
     old_ga_map = old_manifest.get("ga_cards", {})
     old_ga_hashes = old_manifest.get("ga_card_hashes", {})
     old_voice_coach = old_manifest.get("voice_coach", {})
+    old_conj_map = old_manifest.get("conj_drills", {})
+    old_conj_hashes = old_manifest.get("conj_drill_hashes", {})
     new_manifest = dict(old_manifest) if partial_only else {}
     new_manifest["words"] = dict(old_words)
     new_manifest["vocab_cards"] = dict(old_vc_map)
@@ -520,6 +524,8 @@ async def main():
     new_manifest["ga_cards"] = dict(old_ga_map)
     new_manifest["ga_card_hashes"] = dict(old_ga_hashes)
     new_manifest["voice_coach"] = dict(old_voice_coach)
+    new_manifest["conj_drills"] = dict(old_conj_map)
+    new_manifest["conj_drill_hashes"] = dict(old_conj_hashes)
     can_synth = (edge_tts is not None) and (shutil.which("ffmpeg") is not None)
 
     voice_map = await detect_voice_map()
@@ -1033,6 +1039,97 @@ async def main():
                 new_manifest["vocab_card_hashes"][cfn] = chash
             ver = new_manifest["vocab_card_hashes"].get(cfn, chash)[:8]
             new_manifest["voice_coach"][ck] = f"./audio/words/{cfn}?v={ver}"
+
+    # Studio Hands-Free Verb Conjugation & Keigo Voice Drills (v85: 48 drills x 3 studio clips)
+    if not ga_only:
+        from conjugation_drills import CONJUGATION_DRILLS, build_conj_audio_turns, conj_audio_basename
+        cj_jobs = {}
+        cj_specs = {}
+        cj_tag = "edge:Brian_Nanami_v85_conj"
+        for drill in CONJUGATION_DRILLS:
+            did = drill["id"]
+            raw_turns_map = build_conj_audio_turns(drill)
+            slot_spec = {}
+            for slot_key in ("ask", "teach", "model"):
+                expanded_t = []
+                for spk, val in raw_turns_map[slot_key]:
+                    if spk == "T_VC":
+                        expanded_t.extend(_to_bilingual_turns(str(val)))
+                    else:
+                        expanded_t.append((spk, val))
+                fn = conj_audio_basename(did, slot_key)
+                fh = hashlib.sha256((f"v85cj:{cj_tag}:" + json.dumps(expanded_t, ensure_ascii=False)).encode("utf-8")).hexdigest()[:10]
+                slot_spec[slot_key] = (fn, fh, expanded_t)
+                f_abs = os.path.join(CONJ_AUDIO_DIR, fn)
+                if old_conj_hashes.get(fn) != fh or not os.path.exists(f_abs):
+                    cj_jobs[fn] = (fh, expanded_t)
+            cj_specs[did] = slot_spec
+
+        cj_built_ok = set()
+        if can_synth and cj_jobs:
+            cj_tmp = tempfile.mkdtemp(prefix="n3_cj_v85_")
+            try:
+                cj_clips = {}
+                cj_pauses = set()
+                for _, (_, turns) in cj_jobs.items():
+                    for spk, val in turns:
+                        if spk == "PAUSE":
+                            cj_pauses.add(round(float(val), 2))
+                        else:
+                            key = (spk, str(val))
+                            if key not in cj_clips:
+                                ch = hashlib.sha256(f"{spk}:{val}".encode("utf-8")).hexdigest()[:12]
+                                cj_clips[key] = (os.path.join(cj_tmp, f"raw_{ch}.mp3"), os.path.join(cj_tmp, f"trim_{ch}.mp3"))
+
+                cj_sil = {}
+                for sec in sorted(cj_pauses):
+                    sf = os.path.join(cj_tmp, f"sil_{int(round(sec * 100)):03d}.mp3")
+                    make_silence_mp3(sec, sf)
+                    cj_sil[sec] = sf
+
+                await asyncio.gather(
+                    *(
+                        synth_raw_clip(spk, voice_map[spk][0], voice_map[spk][1], txt, raw_p, sem)
+                        for (spk, txt), (raw_p, _) in cj_clips.items()
+                    )
+                )
+
+                cj_lookup = {}
+
+                def _trim_cj(item):
+                    key, (raw_p, trim_p) = item
+                    if os.path.exists(raw_p) and os.path.getsize(raw_p) > 0:
+                        trim_clip_silence(raw_p, trim_p)
+                        return key, trim_p
+                    return key, None
+
+                with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
+                    for key, trim_p in pool.map(_trim_cj, cj_clips.items()):
+                        if trim_p:
+                            cj_lookup[key] = trim_p
+
+                for fn, (fh, turns) in cj_jobs.items():
+                    out_abs = os.path.join(CONJ_AUDIO_DIR, fn)
+                    if stitch_turns(turns, cj_lookup, cj_sil, out_abs, cj_tmp, fn.replace(".mp3", "")):
+                        cj_built_ok.add(fn)
+                        new_manifest["conj_drill_hashes"][fn] = fh
+                print(f"Synthesized {len(cj_built_ok)}/{len(cj_jobs)} studio conjugation drill MP3s (v85).")
+            finally:
+                shutil.rmtree(cj_tmp, ignore_errors=True)
+
+        for did, spec in cj_specs.items():
+            entry = {}
+            for slot_key in ("ask", "teach", "model"):
+                fn, fh, _ = spec[slot_key]
+                f_abs = os.path.join(CONJ_AUDIO_DIR, fn)
+                if os.path.exists(f_abs):
+                    if fn not in cj_jobs or fn in cj_built_ok:
+                        new_manifest["conj_drill_hashes"][fn] = fh
+                    ver = new_manifest["conj_drill_hashes"].get(fn, fh)[:8]
+                    entry[slot_key] = f"./audio/conj/{fn}?v={ver}"
+                else:
+                    entry[slot_key] = ""
+            new_manifest["conj_drills"][did] = entry
 
     # Studio 3-Beat Grammar Audit Cards (Zen v22: Core Cue FIRST -> Pattern SECOND -> Full Example LAST + direct-touch clips)
     if not vocab_only:

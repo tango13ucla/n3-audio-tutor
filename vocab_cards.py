@@ -2528,6 +2528,33 @@ VOICE_COACH_LINES = {
     "auto_pause": "好像暂时不方便说话，我先暂停，随时点一下继续。",
     "batch_done": "这组词全部对考过关了，辛苦。",
     "audio_reveal": "时间到，听标准读音和口诀：",
+    # v85: Hands-Free Listening Quiz cues
+    "listen_ok_1": "答对了，就是第 1 项。",
+    "listen_ok_2": "答对了，就是第 2 项。",
+    "listen_ok_3": "答对了，就是第 3 项。",
+    "listen_wrong_1": "差一点，这题应该选第 1 项。",
+    "listen_wrong_2": "差一点，这题应该选第 2 项。",
+    "listen_wrong_3": "差一点，这题应该选第 3 项。",
+    "listen_unsure_1": "没关系，这题选第 1 项，听一下原因。",
+    "listen_unsure_2": "没关系，这题选第 2 项，听一下原因。",
+    "listen_unsure_3": "没关系，这题选第 3 项，听一下原因。",
+    "listen_slow": "好，放慢一点再听一遍。",
+    "listen_unclear": "没听清你选第几项，直接说一、二、或者三。",
+    "listen_done": "今天的听力题已经全部过关了，干得漂亮。",
+    # v85: Hands-Free Verb Conjugation & Keigo cues
+    "conj_ranuki": "差一点，你省掉了中间的ら，考试一定要把ら补全。",
+    "conj_iku_te": "注意，行く是五段里唯一的例外，不走いて，要促音变。",
+    "conj_pass_caus": "被动和使役有点混了，注意听清词尾区别。",
+    "conj_keigo_dir": "尊他还是谦让方向反了，尊敬抬高对方，谦让放低自己。",
+    "conj_done": "这组动词变形全部练完了，嘴巴反应比刚才顺多了。",
+    # v85: Post-Podcast Voice Wrap-Up & Spoken Sentence Builder cues
+    "rv_intro": "节目听完了，咱们花三分钟，不用看屏幕，口头把今天最核心的词句收个尾。",
+    "rv_spk_intro": "下面来两个口头造短句。我给你中文意思，你直接用日语说一句。",
+    "rv_spk_ok": "说得很自然，句型用准了。来听一遍东京日常的地道说法。",
+    "rv_spk_near": "意思对了，差一点就能更地道。先听一遍母语示范，再跟着顺一遍。",
+    "rv_spk_miss": "没关系，先听一遍母语例句，然后跟着说一遍就顺了。",
+    "rv_done": "今天的随身听和语音收尾全部圆满了，放松休息吧。",
+    "rv_grammar_ask": "刚才节目里聊到的这个句型，先听一遍原句，跟着顺口读一遍。",
 }
 
 _VOICE_ASK_GLOSS_OVERRIDE = {

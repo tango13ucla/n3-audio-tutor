@@ -1297,11 +1297,59 @@ def test_v84_hands_free_voice_vocab_coach_guard() -> None:
         "function handleVocabVoiceResponse(",
         "function detectVoiceCommand(",
         "function acquireVoiceWakeLock(",
-        'SW_CACHE_NAME = "n3-studio-tutor-v84"',
+        'SW_CACHE_NAME = "n3-studio-tutor-v',
     ):
         assert sym in bh_src, f"build_html.py missing v84 Voice Coach symbol: {sym}"
 
     print(f"[PASS 20/20] v84 Hands-Free Voice Vocab Coach ({len(n3_words)} N3 ask MP3s + {len(n2_cards)} N2 prompts + {len(VOICE_COACH_LINES)} studio coach clips) verified")
+
+
+def test_v85_whole_app_voice_studio_guard() -> None:
+    """Gate 21 (v85): Guard Listening Voice, 48-Drill Conjugation Voice, and Post-Radio Voice Wrap-Up & Sentence Builder."""
+    from conjugation_drills import CONJUGATION_DRILLS, build_speaking_ask_spoken, conj_audio_basename
+    from vocab_cards import VOICE_COACH_LINES
+
+    assert len(VOICE_COACH_LINES) >= 42, f"Expected >=42 VOICE_COACH_LINES, got {len(VOICE_COACH_LINES)}"
+    assert len(CONJUGATION_DRILLS) == 48, f"Expected 48 conjugation drills, got {len(CONJUGATION_DRILLS)}"
+    manifest = json.loads((BASE_DIR / "audio" / "audio_manifest.json").read_text(encoding="utf-8"))
+    cj_map = manifest.get("conj_drills") or {}
+    for d in CONJUGATION_DRILLS:
+        did = d["id"]
+        assert d.get("rule_zh") and "—" not in d["rule_zh"], f"Bad rule_zh on {did}"
+        assert d.get("ask_zh") and "—" not in d["ask_zh"], f"Bad ask_zh on {did}"
+        entry = cj_map.get(did) or {}
+        for slot in ("ask", "teach", "model"):
+            rel = str(entry.get(slot) or "").split("?")[0].lstrip("./")
+            expected_fn = conj_audio_basename(did, slot)
+            assert rel.endswith(expected_fn), f"Manifest mismatch for {did}.{slot}: {rel!r}"
+            fp = BASE_DIR / rel
+            assert fp.exists() and fp.stat().st_size > 800, f"Missing/empty conj audio on disk: {fp}"
+
+    meta = json.loads((BASE_DIR / "audio" / "daily_radio_meta.json").read_text(encoding="utf-8"))
+    sps = meta.get("speaking_prompts") or []
+    assert len(sps) >= 1, "Expected >=1 speaking_prompt in daily_radio_meta.json"
+    for sp in sps:
+        ask_txt = build_speaking_ask_spoken(sp)
+        assert ask_txt and "—" not in ask_txt, f"Bad speaking ask_spoken: {ask_txt!r}"
+        ask_rel = str(sp.get("ask_audio") or "").split("?")[0].lstrip("./")
+        assert ask_rel and (BASE_DIR / ask_rel).exists() and (BASE_DIR / ask_rel).stat().st_size > 800, (
+            f"Missing studio spk ask_audio on disk for {sp.get('id')}: {ask_rel!r}"
+        )
+
+    bh_src = (BASE_DIR / "build_html.py").read_text(encoding="utf-8")
+    for sym in (
+        "function parseListeningChoice(",
+        "function analyzeConjugation(",
+        "function openQuizVoiceSheet(",
+        "function startQuizVoiceMode(",
+        "function renderQuizVoiceStage(",
+        "function openRadioVoiceWrapUp(",
+        "function renderRadioVoiceStage(",
+        'SW_CACHE_NAME = "n3-studio-tutor-v85"',
+    ):
+        assert sym in bh_src, f"build_html.py missing v85 Voice Studio symbol: {sym}"
+
+    print(f"[PASS 21/21] v85 Whole-App Voice Studio ({len(CONJUGATION_DRILLS)} conj drills x 3 MP3s + {len(VOICE_COACH_LINES)} coach clips + {len(sps)} spk ask MP3s) verified")
 
 
 def main() -> int:
@@ -1325,7 +1373,8 @@ def main() -> int:
     test_v82_jobs_zen_and_telemetry_hygiene_guard()
     test_v46_stereo_cognitive_n2_long_horizon_guard()
     test_v84_hands_free_voice_vocab_coach_guard()
-    print("[ALL PASS] tests_ci_guard.py 20/20 gates green!")
+    test_v85_whole_app_voice_studio_guard()
+    print("[ALL PASS] tests_ci_guard.py 21/21 gates green!")
     return 0
 
 

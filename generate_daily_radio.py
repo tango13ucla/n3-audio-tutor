@@ -3725,6 +3725,7 @@ async def main():
         prev_jp_video: dict = {}
         prev_chap_imgs: dict[int, str] = {}
         prev_spk_audios: dict[str, str] = {}
+        prev_spk_ask_audios: dict[str, str] = {}
         need_visual_render = True
         if os.path.exists(RADIO_META_PATH):
             try:
@@ -3748,6 +3749,15 @@ async def main():
                                     prev_spk_audios[str(psp["id"])] = ma_url
                                 if psp.get("model_ja"):
                                     prev_spk_audios[str(psp["model_ja"])] = ma_url
+                        if isinstance(psp, dict) and psp.get("ask_audio"):
+                            aa_url = str(psp["ask_audio"])
+                            aa_rel = aa_url.split("?")[0].lstrip("./")
+                            aa_abs = os.path.join(BASE_DIR, aa_rel)
+                            if os.path.exists(aa_abs) and os.path.getsize(aa_abs) > 800:
+                                if psp.get("id"):
+                                    prev_spk_ask_audios[str(psp["id"])] = aa_url
+                                if psp.get("model_ja"):
+                                    prev_spk_ask_audios[str(psp["model_ja"])] = aa_url
                     v_rel = str(prev_jp_video.get("video_url") or "").split("?")[0].lstrip("./")
                     v_abs = os.path.join(BASE_DIR, v_rel) if v_rel else ""
                     vtt_rel = str(prev_jp_video.get("vtt_url") or "").split("?")[0].lstrip("./")
@@ -3815,6 +3825,10 @@ async def main():
                     ma = prev_spk_audios.get(str(sp.get("id") or "")) or prev_spk_audios.get(str(sp.get("model_ja") or ""))
                     if ma:
                         sp["model_audio"] = ma
+                if not sp.get("ask_audio"):
+                    aa = prev_spk_ask_audios.get(str(sp.get("id") or "")) or prev_spk_ask_audios.get(str(sp.get("model_ja") or ""))
+                    if aa:
+                        sp["ask_audio"] = aa
 
         meta_obj = {
             "date": today_str,

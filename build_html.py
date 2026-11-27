@@ -2108,6 +2108,73 @@ for _rv in (radio_meta.get("review_items") or []):
         else:
             _rv["zh_card"] = _cur_m or _n2_m or _n3_m or clean_zen_text(str(_rv.get("zh") or ""))
 
+# v85: Build Hands-Free Conjugation & Keigo Drill Deck + Speaking Prompt ask_spoken
+from conjugation_drills import CONJUGATION_DRILLS as _CONJ_DRILLS_RAW, build_speaking_ask_spoken as _build_spk_ask_spoken
+_conj_manifest = audio_manifest.get("conj_drills", {})
+conj_drills_payload = []
+for _cd in _CONJ_DRILLS_RAW:
+    _cd_id = _cd["id"]
+    _cd_aud = _conj_manifest.get(_cd_id, {})
+    _item = {
+        "id": _cd_id,
+        "family": _cd["family"],
+        "family_zh": _cd["family_zh"],
+        "base_ja": _cd["base_ja"],
+        "base_kana": _cd["base_kana"],
+        "base_zh": _cd["base_zh"],
+        "ask_label": _cd["ask_label"],
+        "ask_zh": _cd["ask_zh"],
+        "target_ja": _cd["target_ja"],
+        "target_kana": _cd["target_kana"],
+        "accept_kana": list(_cd["accept_kana"]),
+        "traps": {k: [v[0], v[1]] for k, v in (_cd.get("traps") or {}).items()},
+        "rule_zh": _cd["rule_zh"],
+        "chunk_ja": _cd["chunk_ja"],
+        "chunk_zh": _cd["chunk_zh"],
+        "point_hints": list(_cd.get("point_hints") or []),
+        "ask_audio": _cd_aud.get("ask", ""),
+        "teach_audio": _cd_aud.get("teach", ""),
+        "model_audio": _cd_aud.get("model", ""),
+    }
+    conj_drills_payload.append(_item)
+    if _cd["target_ja"] and _cd["target_kana"]:
+        asr_kana_map.setdefault(_cd["target_ja"], _cd["target_kana"])
+    if _cd["base_ja"] and _cd["base_kana"]:
+        asr_kana_map.setdefault(_cd["base_ja"], _cd["base_kana"])
+
+# Common Kanji conjugation/keigo ASR transcripts so spoken answers resolve cleanly to kana
+for _cj_k, _cj_v in (
+    ("行って", "いって"), ("買って", "かって"), ("待って", "まって"), ("飲んで", "のんで"),
+    ("読んで", "よんで"), ("泳いで", "およいで"), ("書いて", "かいて"), ("話して", "はなして"),
+    ("食べられる", "たべられる"), ("食べられます", "たべられます"), ("食べれる", "たべれる"),
+    ("着られる", "きられる"), ("着られます", "きられます"), ("切れる", "きれる"),
+    ("見られる", "みられる"), ("見られます", "みられます"), ("見える", "みえる"),
+    ("来られる", "こられる"), ("来られます", "こられます"), ("来れる", "これる"),
+    ("行ける", "いける"), ("行けます", "いけます"), ("飲める", "のめる"), ("飲めます", "のめます"),
+    ("泳げる", "およげる"), ("泳げます", "およげます"),
+    ("叱られる", "しかられる"), ("叱られた", "しかられた"), ("踏まれる", "ふまれる"), ("踏まれた", "ふまれた"),
+    ("褒められる", "ほめられる"), ("褒められた", "ほめられた"), ("待たれる", "またれる"), ("降られる", "ふられる"),
+    ("行かせる", "いかせる"), ("食べさせる", "たべさせる"), ("待たせる", "またせる"), ("来させる", "こさせる"),
+    ("飲まされる", "のまされる"), ("飲まされた", "のまされた"), ("待たされる", "またされる"), ("待たされた", "またされた"),
+    ("書かされる", "かかされる"), ("書かされた", "かかされた"), ("食べさせられる", "たべさせられる"),
+    ("行こう", "いこう"), ("買おう", "かおう"), ("食べよう", "たべよう"), ("来よう", "こよう"),
+    ("行けば", "いけば"), ("安ければ", "やすければ"),
+    ("ご覧になる", "ごらんになる"), ("ご覧になります", "ごらんになります"), ("ご覧ください", "ごらんください"),
+    ("ご存じ", "ごぞんじ"), ("ご存じだ", "ごぞんじだ"), ("ご存じです", "ごぞんじです"), ("ご存知", "ごぞんじ"),
+    ("ご存知です", "ごぞんじです"), ("召し上がる", "めしあがる"), ("召し上がります", "めしあがります"),
+    ("参る", "まいる"), ("参ります", "まいります"), ("申す", "もうす"), ("申します", "もうします"),
+    ("拝見する", "はいけんする"), ("拝見します", "はいけんします"), ("拝見しました", "はいけんしました"),
+    ("伺う", "うかがう"), ("伺います", "うかがいます"), ("存じる", "ぞんじる"), ("存じます", "ぞんじます"),
+    ("存じ上げる", "ぞんじあげる"), ("存じ上げません", "ぞんじあげません"),
+    ("差し上げる", "さしあげる"), ("差し上げます", "さしあげます"), ("差し上げました", "さしあげました"),
+    ("頂く", "いただく"), ("頂きます", "いただきます"), ("致す", "いたす"), ("致します", "いたします"),
+):
+    asr_kana_map.setdefault(_cj_k, _cj_v)
+
+for _sp_item in (radio_meta.get("speaking_prompts") or []):
+    if isinstance(_sp_item, dict) and not _sp_item.get("ask_spoken"):
+        _sp_item["ask_spoken"] = _build_spk_ask_spoken(_sp_item)
+
 payload = json.dumps({
     "plan_date": plan_date_str,
     "phase": active_phase,
@@ -2125,6 +2192,7 @@ payload = json.dumps({
     "vocab_cards": vocab_cards_payload,
     "vocab_twins": vocab_twins_map,
     "voice_coach": audio_manifest.get("voice_coach", {}),
+    "conj_drills": conj_drills_payload,
     "grammar_audit": {
         "active_from": "2026-11-23",
         "daily_target": ga_daily_target,
@@ -3076,20 +3144,54 @@ html = r"""<!DOCTYPE html>
   .quiz-aux-row .unsure-btn {
     flex: 0 1 auto;
     justify-content: flex-start;
-    padding: 0 24px 0 2px;
+    padding: 0 10px 0 2px;
     color: var(--ink-3);
   }
-  .quiz-aux-row .aux-read-btn {
+  .quiz-aux-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
     flex-shrink: 0;
-    padding: 0 2px 0 28px;
+  }
+  .quiz-aux-row .aux-read-btn,
+  .quiz-aux-row .aux-voice-btn {
+    flex-shrink: 0;
+    height: 48px;
+    min-height: 48px;
+    border: none;
+    background: transparent;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: opacity 0.15s ease, color 0.2s ease;
+  }
+  .quiz-aux-row .aux-read-btn {
+    padding: 0 2px 0 6px;
     color: var(--ink-2);
+  }
+  .quiz-aux-row .aux-voice-btn {
+    padding: 0 2px;
+    color: var(--ink-2);
+  }
+  .quiz-aux-row .aux-voice-btn .v-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--moss);
+    opacity: 0.88;
   }
   .quiz-aux-row .aux-read-btn.playing { color: var(--moss); font-weight: 600; }
   .quiz-aux-row .unsure-btn:active,
-  .quiz-aux-row .aux-read-btn:active { background: transparent; opacity: 0.5; }
+  .quiz-aux-row .aux-read-btn:active,
+  .quiz-aux-row .aux-voice-btn:active { background: transparent; opacity: 0.5; }
   @media (min-width: 860px) and (min-height: 521px) {
     .quiz-aux-row .unsure-btn:hover,
-    .quiz-aux-row .aux-read-btn:hover { background: transparent; color: var(--sumi); }
+    .quiz-aux-row .aux-read-btn:hover,
+    .quiz-aux-row .aux-voice-btn:hover { background: transparent; color: var(--sumi); }
   }
 
   .desk-hint { display: none; }
@@ -5501,6 +5603,71 @@ html = r"""<!DOCTYPE html>
     letter-spacing: 0.03em;
     text-wrap: balance;
   }
+  .voice-num-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 18px;
+  }
+  .voice-num-pill {
+    width: 54px;
+    height: 54px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    border: 1px solid var(--hairline-strong);
+    background: transparent;
+    color: var(--sumi);
+    font-family: var(--sans);
+    font-size: 18px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease, transform 0.14s ease;
+  }
+  .voice-num-pill:active {
+    transform: scale(0.95);
+    border-color: var(--moss-border);
+    background: var(--moss-soft);
+    color: var(--moss);
+  }
+  .voice-conj-tag {
+    display: inline-block;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: var(--moss);
+    margin-bottom: 6px;
+  }
+  .voice-rule-line {
+    margin-top: 10px;
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--ink-2);
+    max-width: 316px;
+    text-wrap: pretty;
+  }
+  .voice-model-ja {
+    font-family: var(--sans-jp);
+    font-size: 21px;
+    font-weight: 400;
+    color: var(--sumi);
+    line-height: 1.5;
+    max-width: 320px;
+    margin-top: 6px;
+    text-wrap: balance;
+  }
+  .voice-model-zh {
+    font-size: 13.5px;
+    color: var(--ink-3);
+    margin-top: 4px;
+    max-width: 310px;
+    line-height: 1.5;
+    text-wrap: pretty;
+  }
   .vc-btn.voice-exhale {
     flex: 1.32;
     background: var(--moss-soft);
@@ -5515,16 +5682,22 @@ html = r"""<!DOCTYPE html>
     .vc-voice-orb { width: 42px; height: 42px; margin-bottom: 6px; }
     .vc-voice-orb svg { width: 18px; height: 18px; }
     .vc-voice-status { margin-bottom: 6px; font-size: 12px; min-height: 18px; }
-    .vc-voice-cue-kanji { font-size: 32px; margin-bottom: 4px; }
-    .vc-voice-cue-zh { font-size: 18px; }
-    .vc-voice-cue-zh.sub { font-size: 14.5px; }
+    .vc-voice-cue-kanji { font-size: 30px; margin-bottom: 4px; }
+    .vc-voice-cue-zh { font-size: 17px; }
+    .vc-voice-cue-zh.sub { font-size: 14px; }
     .vc-voice-heard { margin-top: 6px; min-height: 18px; font-size: 12px; }
-    .vc-voice-reveal .vc-chunk { font-size: 26px; }
-    .vc-voice-reveal .vc-chunk.len-long { font-size: 22px; }
-    .vc-voice-reveal .vc-kana { font-size: 18px; margin-top: 4px; margin-bottom: 3px; }
-    .vc-voice-reveal .vc-zh { font-size: 15px; }
+    .vc-voice-reveal .vc-chunk { font-size: 25px; }
+    .vc-voice-reveal .vc-chunk.len-long { font-size: 21px; }
+    .vc-voice-reveal .vc-kana { font-size: 17.5px; margin-top: 4px; margin-bottom: 3px; }
+    .vc-voice-reveal .vc-zh { font-size: 14.5px; }
     .vc-voice-reveal .vc-hook { margin-top: 8px; padding-top: 8px; }
-    .vc-voice-hint { margin-top: 8px; font-size: 11.5px; }
+    .vc-voice-hint { margin-top: 7px; font-size: 11.5px; }
+    .voice-num-row { margin-top: 10px; gap: 12px; }
+    .voice-num-pill { width: 44px; height: 44px; font-size: 16px; }
+    .voice-conj-tag { font-size: 12px; margin-bottom: 3px; }
+    .voice-rule-line { margin-top: 6px; font-size: 13px; line-height: 1.48; }
+    .voice-model-ja { font-size: 17.5px; margin-top: 4px; line-height: 1.42; }
+    .voice-model-zh { font-size: 12.5px; margin-top: 3px; }
   }
 
   /* Position #3 Zen Sub-Bar ("记词 · 语法盘点" — auto-retires once 156/156 complete) */
@@ -10174,7 +10347,11 @@ function primeDailyAudioBundle() {
     urls.push(s);
   };
   // Priority 1: Speaking prompts, review clips, story images & video captions
-  ((DATA.radio && DATA.radio.speaking_prompts) || []).forEach(sp => addU(sp && sp.model_audio));
+  ((DATA.radio && DATA.radio.speaking_prompts) || []).forEach(sp => {
+    if (!sp) return;
+    addU(sp.model_audio);
+    addU(sp.ask_audio);
+  });
   ((DATA.radio && DATA.radio.review_items) || []).forEach(rv => {
     if (!rv) return;
     addU(rv.rev_audio);
@@ -10206,9 +10383,15 @@ function primeDailyAudioBundle() {
       }
     });
   });
-  // Priority 3: Active vocab cards & Hands-Free Voice Coach clips (instant 0ms & offline driving!)
+  // Priority 3: Active vocab cards, conjugation drills & Hands-Free Voice Coach clips (instant 0ms & offline driving!)
   const vcCoachObj = DATA.voice_coach || {};
   Object.values(vcCoachObj).forEach(addU);
+  (DATA.conj_drills || []).forEach(cd => {
+    if (!cd) return;
+    addU(cd.ask_audio);
+    addU(cd.teach_audio);
+    addU(cd.model_audio);
+  });
   const vcObj = DATA.vocab_cards || {};
   Object.keys(vcObj).forEach(k => {
     const c = vcObj[k];
@@ -10606,7 +10789,8 @@ function toggleRadioPlay(forcePlay) {
     syncRadioUI(false);
     return;
   }
-  if (typeof stopVocabVoiceCoach === "function") stopVocabVoiceCoach(true);
+  if (typeof stopAllHandsFreeVoice === "function") stopAllHandsFreeVoice();
+  else if (typeof stopVocabVoiceCoach === "function") stopVocabVoiceCoach(true);
   if (activeKind !== null || (typeof player !== "undefined" && !player.paused) || (typeof wordPlayer !== "undefined" && !wordPlayer.paused)) {
     stopQuizAudio();
   }
@@ -11358,6 +11542,9 @@ const JA_ASR = (() => {
       if (/^(?:もういちど|もう1ど|もっかい|もういっかい|りぴーと|もう一度|もう一回)$/.test(h) || /^(?:もういちど|もっかい|もういっかい|りぴーと)$/.test(k)) {
         return "repeat";
       }
+      if (/^(?:ゆっくり|おそく|遅く|もうすこしゆっくり|もう少しゆっくり|すろー)$/.test(h) || /^(?:ゆっくり|おそく|もうすこしゆっくり|すろー)$/.test(k)) {
+        return "slow";
+      }
       if (/^(?:すとっぷ|ぽーず|おわり|終わり|やめる|とめて|止めて|いちじていし|一時停止)$/.test(h) || /^(?:すとっぷ|ぽーず|おわり|やめる|とめて|いちじていし)$/.test(k)) {
         return "pause";
       }
@@ -11366,6 +11553,107 @@ const JA_ASR = (() => {
       }
     }
     return "";
+  }
+
+  function parseListeningChoice(rawAlts, choices) {
+    const alts = (Array.isArray(rawAlts) ? rawAlts : [rawAlts])
+      .map(x => String(x || "").trim())
+      .filter(Boolean);
+    const list = Array.isArray(choices) ? choices : [];
+    const maxN = Math.min(3, list.length || 3);
+    for (let i = 0; i < alts.length; i++) {
+      const raw = alts[i];
+      const norm = raw.replace(/[\s。、？！.,!?「」『』]/g, "").toLowerCase();
+      const h = toHira(norm);
+      const k = resolveKana(norm);
+      if (/^(?:1|１|一|いち|いちばん|1ばん|１ばん|一番|1番|１番|ひとつ|1つ|一つ|さいしょ|最初|第1|第一|one|1ばんめ|一番目)(?:です|だ|かな|ね|よ)?$/.test(norm) || /^(?:いち|いちばん|ひとつ|さいしょ|いちばんめ)(?:です|だ|かな)?$/.test(h) || /^(?:いち|いちばん|ひとつ|さいしょ)$/.test(k)) {
+        if (maxN >= 1) return { idx: 0, heard: raw };
+      }
+      if (/^(?:2|２|二|に|にばん|2ばん|２ばん|二番|2番|２番|ふたつ|2つ|二つ|まんなか|真ん中|第2|第二|two|2ばんめ|二番目)(?:です|だ|かな|ね|よ)?$/.test(norm) || /^(?:に|にばん|ふたつ|まんなか|にばんめ)(?:です|だ|かな)?$/.test(h) || /^(?:に|にばん|ふたつ|まんなか)$/.test(k)) {
+        if (maxN >= 2) return { idx: 1, heard: raw };
+      }
+      if (/^(?:3|３|三|さん|さんばん|3ばん|３ばん|三番|3番|３番|みっつ|3つ|三つ|さいご|最後|第3|第三|three|3ばんめ|三番目)(?:です|だ|かな|ね|よ)?$/.test(norm) || /^(?:さん|さんばん|みっつ|さいご|さんばんめ)(?:です|だ|かな)?$/.test(h) || /^(?:さん|さんばん|みっつ|さいご)$/.test(k)) {
+        if (maxN >= 3) return { idx: 2, heard: raw };
+      }
+    }
+    // Fallback: if he repeated a distinctive Japanese option phrase directly
+    if (list.length >= 2) {
+      let bestIdx = -1;
+      let bestScore = 0;
+      for (let i = 0; i < alts.length; i++) {
+        const aK = resolveKana(alts[i]);
+        if (aK.length < 4) continue;
+        list.forEach((opt, idx) => {
+          const oK = resolveKana(opt);
+          if (!oK || oK.length < 4) return;
+          if (oK.includes(aK) || aK.includes(oK)) {
+            const sc = Math.min(aK.length, oK.length) / Math.max(aK.length, oK.length);
+            if (sc > bestScore && sc >= 0.45) {
+              bestScore = sc;
+              bestIdx = idx;
+            }
+          }
+        });
+      }
+      if (bestIdx >= 0) return { idx: bestIdx, heard: alts[0] };
+    }
+    return null;
+  }
+
+  function analyzeConjugation(rawAlts, drill) {
+    const alts = (Array.isArray(rawAlts) ? rawAlts : [rawAlts])
+      .map(x => String(x || "").trim())
+      .filter(Boolean);
+    if (!alts.length || !drill) {
+      return { ok: false, kind: "empty", subkind: "empty", heard: "", verdict: "没听清，再说一遍" };
+    }
+    const acceptList = Array.isArray(drill.accept_kana) && drill.accept_kana.length
+      ? drill.accept_kana.map(x => toHira(x))
+      : [toHira(drill.target_kana || "")];
+    const tgtJaH = toHira(drill.target_ja || "");
+    const tgtKanaH = toHira(drill.target_kana || "");
+    const traps = (drill.traps && typeof drill.traps === "object") ? drill.traps : {};
+
+    const cleanTail = s => String(s || "").replace(/[。、？！\s]/g, "").replace(/(?:よ|ね|かな)$/, "");
+
+    for (let i = 0; i < alts.length; i++) {
+      const a = alts[i];
+      const aH = cleanTail(toHira(a));
+      const aK = cleanTail(resolveKana(a));
+      if (
+        (tgtJaH && (aH === tgtJaH || aH.endsWith(tgtJaH))) ||
+        acceptList.some(acc => acc && (aH === acc || aK === acc || aK.endsWith(acc)))
+      ) {
+        return { ok: true, kind: "exact", subkind: "exact", heard: a, verdict: "变形准确" };
+      }
+    }
+
+    // Specific trap diagnostics (ら抜き / 行く exception / passive vs causative / keigo direction)
+    const trapKeys = Object.keys(traps);
+    for (let i = 0; i < alts.length; i++) {
+      const a = alts[i];
+      const aH = cleanTail(toHira(a));
+      const aK = cleanTail(resolveKana(a));
+      for (let t = 0; t < trapKeys.length; t++) {
+        const tk = trapKeys[t];
+        const tkH = toHira(tk);
+        if (aH === tkH || aK === tkH || (tkH.length >= 3 && (aH.includes(tkH) || aK.includes(tkH)))) {
+          const entry = traps[tk];
+          const cueKey = Array.isArray(entry) ? entry[0] : "miss";
+          const tipTxt = Array.isArray(entry) ? entry[1] : String(entry || "");
+          return {
+            ok: false,
+            kind: "trap",
+            subkind: cueKey || "miss",
+            heard: a,
+            verdict: tipTxt || `标准变形是「${drill.target_ja}」`
+          };
+        }
+      }
+    }
+
+    // Fall back to exact phonetic mirror diagnostics (sokuon / length / voicing / near / miss)
+    return analyzePronunciation(alts, drill.target_ja, tgtKanaH, drill.chunk_ja);
   }
 
   function analyzePronunciation(rawAlts, targetWord, targetKana, targetChunk) {
@@ -11739,6 +12027,8 @@ const JA_ASR = (() => {
     expandGrammarStems,
     detectSpokenTraps,
     detectVoiceCommand,
+    parseListeningChoice,
+    analyzeConjugation,
     analyzePronunciation,
     analyzeSpokenOutput
   };
@@ -12202,6 +12492,7 @@ function openJpVideoFullscreen(ev) {
 function openRadioJpVideo() {
   const jpv = getRadioJpVideo();
   if (!jpv) return;
+  if (typeof stopRadioVoiceCoach === "function") stopRadioVoiceCoach(false);
   if (radioInitialized && !radioPlayer.paused) {
     radioPlayer.pause();
     syncRadioUI(false);
@@ -12601,6 +12892,7 @@ function openRadioReview(forceRestart) {
 }
 
 function closeRadioReview() {
+  if (typeof stopRadioVoiceCoach === "function") stopRadioVoiceCoach(false);
   JA_ASR.stop();
   stopRadioReviewAudio();
   clearActiveWordToken();
@@ -13326,6 +13618,11 @@ function renderRadioReviewStage() {
     return;
   }
 
+  if (rvMode === "voice") {
+    if (typeof renderRadioVoiceStage === "function") renderRadioVoiceStage(host);
+    return;
+  }
+
   if (rvMode === "done" || !rvActiveItemId) {
     const rmDone = computeDaily120Metrics();
     const jpVid = getRadioJpVideo();
@@ -13431,6 +13728,7 @@ function renderRadioReviewStage() {
     <div class="vc-aux-row">
       <button type="button" class="vc-aux-btn seal" onclick="${jpVid ? "openRadioJpVideo()" : "closeRadioReview()"}">${jpVid ? "日语短片" : "随身听"}</button>
       <div class="vc-aux-right">
+        <button type="button" class="vc-aux-btn voice-entry" id="rv-voice-entry-btn" onclick="openRadioVoiceWrapUp(event)"><span class="vc-voice-dot" aria-hidden="true"></span>语音收尾</button>
         ${showMic ? `<button type="button" class="vc-aux-btn mic-btn" id="rv-mic-btn" onclick="toggleReviewMicCheck()">试读</button>` : ""}
         <button type="button" class="vc-aux-btn replay" data-rv-aud="clip_1" data-lbl-idle="原声" data-lbl-play="暂停" onclick="playReviewPodcastClip(getReviewItemById('${item.id}'), 1.0, 'clip_1')">原声</button>
       </div>
@@ -13906,6 +14204,13 @@ function renderTutor() {
   renderGreenBoard();
   clearActiveWordToken();
   const box = document.getElementById("voice-card");
+  if (typeof quizVoiceMode !== "undefined" && quizVoiceMode && typeof renderQuizVoiceStage === "function") {
+    box.className = "stage-wrap stage-quiz";
+    box.style.transform = "";
+    box.style.opacity = "";
+    renderQuizVoiceStage(box);
+    return;
+  }
   const effStage = (viewStage === "done" || !curPointId)
     ? "done"
     : ((viewStage === "quiz" && activeQuizObj) ? "quiz" : viewStage);
@@ -14061,7 +14366,10 @@ function renderTutor() {
             <span>不确定 · 直接看讲解</span>
             <span class="kbd-tag">0</span>
           </button>
-          ${!activeQuizObj.is_listening ? `<button class="dock-replay-btn aux-read-btn" id="q-play-btn" onclick="playQuizQuestionAudio(activeQuizObj, true)">读题</button>` : ""}
+          <div class="quiz-aux-right">
+            <button type="button" class="aux-voice-btn" id="quiz-voice-entry-btn" onclick="openQuizVoiceSheet(event)"><span class="v-dot" aria-hidden="true"></span>语音练</button>
+            ${!activeQuizObj.is_listening ? `<button class="dock-replay-btn aux-read-btn" id="q-play-btn" onclick="playQuizQuestionAudio(activeQuizObj, true)">读题</button>` : ""}
+          </div>
         </div>
       </div>
     `;
@@ -14691,12 +14999,18 @@ function switchMode(m, autoPlayRadio) {
   activeMode = m;
   clearActiveWordToken();
   JA_ASR.stop();
-  if (m !== "tutor" && m !== "mock") stopQuizAudio();
+  if (m !== "tutor" && m !== "mock") {
+    if (typeof stopQuizVoiceCoach === "function") stopQuizVoiceCoach(true);
+    stopQuizAudio();
+  }
   if (m !== "vocab") {
     if (typeof stopVocabVoiceCoach === "function") stopVocabVoiceCoach(true);
     stopVocabAudioAndTimers();
   }
-  if (m !== "radio") stopRadioReviewAudio();
+  if (m !== "radio") {
+    if (typeof stopRadioVoiceCoach === "function") stopRadioVoiceCoach(true);
+    stopRadioReviewAudio();
+  }
   if (m !== "mock" && typeof stopMockTimer === "function") stopMockTimer();
   if (m !== "body" && window.ZB && typeof window.ZB.stopPacer === "function") window.ZB.stopPacer(false);
 
@@ -16190,7 +16504,31 @@ const VC_COACH_FALLBACK_TEXT = {
   repeat: "好，再听一遍。",
   auto_pause: "好像暂时不方便说话，我先暂停，随时点一下继续。",
   batch_done: "这组词全部对考过关了，辛苦。",
-  audio_reveal: "时间到，听标准读音和口诀："
+  audio_reveal: "时间到，听标准读音和口诀：",
+  listen_ok_1: "答对了，就是第 1 项。",
+  listen_ok_2: "答对了，就是第 2 项。",
+  listen_ok_3: "答对了，就是第 3 项。",
+  listen_wrong_1: "差一点，这题应该选第 1 项。",
+  listen_wrong_2: "差一点，这题应该选第 2 项。",
+  listen_wrong_3: "差一点，这题应该选第 3 项。",
+  listen_unsure_1: "没关系，这题选第 1 项，听一下原因。",
+  listen_unsure_2: "没关系，这题选第 2 项，听一下原因。",
+  listen_unsure_3: "没关系，这题选第 3 项，听一下原因。",
+  listen_slow: "好，放慢一点再听一遍。",
+  listen_unclear: "没听清你选第几项，直接说一、二、或者三。",
+  listen_done: "今天的听力题已经全部过关了，干得漂亮。",
+  conj_ranuki: "差一点，你省掉了中间的ら，考试一定要把ら补全。",
+  conj_iku_te: "注意，行く是五段里唯一的例外，不走いて，要促音变。",
+  conj_pass_caus: "被动和使役有点混了，注意听清词尾区别。",
+  conj_keigo_dir: "尊他还是谦让方向反了，尊敬抬高对方，谦让放低自己。",
+  conj_done: "这组动词变形全部练完了，嘴巴反应比刚才顺多了。",
+  rv_intro: "节目听完了，咱们花三分钟，不用看屏幕，口头把今天最核心的词句收个尾。",
+  rv_spk_intro: "下面来两个口头造短句。我给你中文意思，你直接用日语说一句。",
+  rv_spk_ok: "说得很自然，句型用准了。来听一遍东京日常的地道说法。",
+  rv_spk_near: "意思对了，差一点就能更地道。先听一遍母语示范，再跟着顺一遍。",
+  rv_spk_miss: "没关系，先听一遍母语例句，然后跟着说一遍就顺了。",
+  rv_done: "今天的随身听和语音收尾全部圆满了，放松休息吧。",
+  rv_grammar_ask: "刚才节目里聊到的这个句型，先听一遍原句，跟着顺口读一遍。"
 };
 
 function resetVocabVoiceState(phaseName) {
@@ -16241,11 +16579,19 @@ function playZenVoiceChime(kind) {
   } catch (e) {}
 }
 
+function isAnyVoiceCoachRunning() {
+  return !!(
+    (typeof vcVoiceState !== "undefined" && vcVoiceState && vcVoiceState.running) ||
+    (typeof qvState !== "undefined" && qvState && qvState.running) ||
+    (typeof rvvState !== "undefined" && rvvState && rvvState.running)
+  );
+}
+
 function acquireVoiceWakeLock() {
   try {
     if (typeof navigator !== "undefined" && navigator.wakeLock && typeof navigator.wakeLock.request === "function") {
       navigator.wakeLock.request("screen").then(lock => {
-        if (!vcVoiceState.running) {
+        if (!isAnyVoiceCoachRunning()) {
           try { lock.release(); } catch (e) {}
           return;
         }
@@ -17011,6 +17357,1723 @@ function renderVocabVoiceStage(box, sess) {
     </div>
 
     <div class="vc-dock" id="vc-dock-row">${dockHTML}</div>
+  `;
+}
+
+// ================= v85 WHOLE-APP HANDS-FREE VOICE STUDIO (LISTENING · CONJUGATION · POST-RADIO WRAP-UP) =================
+let quizVoiceMode = ""; // "" | "listen" | "conj"
+let qvToken = 0;
+let qvTimer = null;
+let qvState = {
+  running: false,
+  phase: "idle", // idle | asking | listening | feedback | shadow | paused | done
+  audioOnly: false,
+  revealed: false,
+  statusText: "听完口答 1 / 2 / 3",
+  heardText: "",
+  verdictTone: "",
+  silentStreak: 0,
+  unclearTried: false,
+  everStarted: false,
+  replayMode: false,
+  listenQueue: [],
+  listenTotal: 0,
+  listenCleared: 0,
+  lastAnsIdx: 0,
+  lastPickedIdx: 0,
+  lastOk: false,
+  lastUnsure: false,
+  conjQueue: [],
+  conjTotal: 0,
+  conjCleared: 0,
+  conjRuleTip: ""
+};
+
+let rvvToken = 0;
+let rvvTimer = null;
+let rvvState = {
+  running: false,
+  phase: "idle", // idle | asking | listening | feedback | shadow | paused | done
+  audioOnly: false,
+  revealed: false,
+  statusText: "3 分钟免看屏口头收尾",
+  heardText: "",
+  verdictTone: "",
+  silentStreak: 0,
+  everStarted: false,
+  spkIntroPlayed: false,
+  queue: [],
+  idx: 0,
+  total: 0,
+  activeItem: null,
+  lastOk: false,
+  lastTip: ""
+};
+
+function voiceSharedOrbSVG(phase) {
+  if (phase === "ok") {
+    return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.6L9.6 17.2L19 7.5"/></svg>`;
+  }
+  if (phase === "asking" || phase === "feedback") {
+    return `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.8 5.8a9 9 0 0 1 0 12.4"/></svg>`;
+  }
+  return `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="21"/><line x1="8.5" y1="21" x2="15.5" y2="21"/></svg>`;
+}
+
+function playGenericVoiceUrl(url, fallbackTxt, fallbackLang, getCurTok, runTok, onDone, rateVal) {
+  if (getCurTok() !== runTok) return;
+  const finish = () => {
+    if (getCurTok() !== runTok) return;
+    if (onDone) onDone();
+  };
+  const runFallback = () => {
+    if (getCurTok() !== runTok) return;
+    if (fallbackTxt) {
+      speakUtteranceLang(fallbackTxt, fallbackLang || "zh-CN", fallbackLang === "ja-JP" ? (rateVal || 0.98) : 1.04, finish);
+    } else {
+      setTimeout(finish, 240);
+    }
+  };
+  if (!url) {
+    runFallback();
+    return;
+  }
+  if (typeof radioInitialized !== "undefined" && radioInitialized && radioPlayer && !radioPlayer.paused) {
+    radioPlayer.pause();
+    if (typeof syncRadioUI === "function") syncRadioUI(false);
+  }
+  let settled = false;
+  const safety = setTimeout(() => {
+    if (settled || getCurTok() !== runTok) return;
+    settled = true;
+    wordPlayer.onended = null;
+    wordPlayer.onerror = null;
+    finish();
+  }, 24000);
+  const doneOk = () => {
+    if (settled || getCurTok() !== runTok) return;
+    settled = true;
+    clearTimeout(safety);
+    wordPlayer.onended = null;
+    wordPlayer.onerror = null;
+    finish();
+  };
+  const doneErr = () => {
+    if (settled || getCurTok() !== runTok) return;
+    settled = true;
+    clearTimeout(safety);
+    wordPlayer.onended = null;
+    wordPlayer.onerror = null;
+    runFallback();
+  };
+  try {
+    const resolved = audioBlobMap.has(url) ? audioBlobMap.get(url) : url;
+    if (!audioBlobMap.has(url)) warmAudio(url);
+    wordPlayer.onended = doneOk;
+    wordPlayer.onerror = doneErr;
+    if (wordPlayer.src === resolved) {
+      try { wordPlayer.currentTime = 0; } catch (e) {}
+    } else {
+      wordPlayer.src = resolved;
+    }
+    wordPlayer.playbackRate = Number(rateVal || 1.0);
+    if ("preservesPitch" in wordPlayer) wordPlayer.preservesPitch = true;
+    const pr = wordPlayer.play();
+    if (pr && typeof pr.catch === "function") pr.catch(doneErr);
+  } catch (e) {
+    doneErr();
+  }
+}
+
+function playGenericCoachCue(cueKey, getCurTok, runTok, onDone) {
+  const vcMap = (DATA && DATA.voice_coach) || {};
+  const url = vcMap[cueKey] || "";
+  const fb = VC_COACH_FALLBACK_TEXT[cueKey] || "";
+  playGenericVoiceUrl(url, fb, "zh-CN", getCurTok, runTok, onDone, 1.0);
+}
+
+function stopAllHandsFreeVoice() {
+  if (typeof stopVocabVoiceCoach === "function") stopVocabVoiceCoach(true);
+  if (typeof stopQuizVoiceCoach === "function") stopQuizVoiceCoach(true);
+  if (typeof stopRadioVoiceCoach === "function") stopRadioVoiceCoach(true);
+}
+
+// ---------- A. QUIZ VOICE SHEET & ENGINE (HANDS-FREE LISTENING + CONJUGATION) ----------
+function getTodayListeningPointIds(includeCleared) {
+  const all = (DATA.points || []).filter(p => p && p.primary && p.primary.is_listening);
+  const pending = all.filter(p => A.pts[p.id] && A.pts[p.id].status !== "green");
+  if (!includeCleared && pending.length) return pending.map(p => p.id);
+  return all.map(p => p.id);
+}
+
+function buildConjDrillSession(limitN) {
+  const all = Array.isArray(DATA.conj_drills) ? DATA.conj_drills : [];
+  if (!all.length) return [];
+  const wantN = Math.max(4, Math.min(all.length, Number(limitN || 12)));
+  const activeHints = new Set();
+  (DATA.points || []).forEach(p => {
+    if (!p) return;
+    if (p.subject === "活用" || p.family) {
+      if (p.family) activeHints.add(String(p.family));
+      const pt = String(p.point || "");
+      if (pt.includes("可能")) activeHints.add("potential");
+      if (pt.includes("受身") || pt.includes("被动")) activeHints.add("passive");
+      if (pt.includes("使役")) activeHints.add("causative_passive");
+      if (pt.includes("意向")) activeHints.add("volitional");
+      if (pt.includes("尊敬")) activeHints.add("sonkeigo");
+      if (pt.includes("謙譲") || pt.includes("谦让")) activeHints.add("kenjougo");
+      if (pt.includes("て形")) activeHints.add("te_form");
+    }
+  });
+  const seed = Array.from(String(DATA.plan_date || "2026-11-26")).reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+  const scored = all.map((d, idx) => {
+    const hints = Array.isArray(d.point_hints) ? d.point_hints : [];
+    const hit = hints.some(h => activeHints.has(h)) ? 10 : 0;
+    const rot = ((idx * 7 + seed) % all.length) / all.length;
+    return { d, sc: hit + rot };
+  });
+  scored.sort((a, b) => b.sc - a.sc);
+  // Balance across families so a 12-drill set feels fresh and covers multiple forms
+  const picked = [];
+  const famCnt = {};
+  for (let i = 0; i < scored.length && picked.length < wantN; i++) {
+    const d = scored[i].d;
+    const fc = famCnt[d.family] || 0;
+    if (fc < 3) {
+      picked.push(d);
+      famCnt[d.family] = fc + 1;
+    }
+  }
+  for (let i = 0; i < scored.length && picked.length < wantN; i++) {
+    if (!picked.includes(scored[i].d)) picked.push(scored[i].d);
+  }
+  return picked;
+}
+
+function openQuizVoiceSheet(ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  const mc = document.getElementById("modal-content");
+  const mm = document.getElementById("app-modal");
+  if (!mc || !mm) return;
+  const allL = (DATA.points || []).filter(p => p && p.primary && p.primary.is_listening);
+  const pendL = allL.filter(p => A.pts[p.id] && A.pts[p.id].status !== "green");
+  const listenDesc = pendL.length
+    ? `剩 ${pendL.length} 题，听完口答 1、2、3，同步今日进度`
+    : (allL.length ? `今日 ${allL.length} 道听力已过关，可免看屏再刷一遍` : "当前题库暂无听力题");
+  const listenDisabled = allL.length === 0;
+  const conjCount = Math.min(12, (DATA.conj_drills || []).length);
+  mc.innerHTML = `
+    <h3 class="modal-h">语音练习</h3>
+    <p class="zb-sheet-sub">开车或走路时免看屏练，只放适合用耳朵和嘴巴练的题。</p>
+    <div class="zb-sheet-list">
+      ${!listenDisabled ? `
+      <div class="zb-sheet-block">
+        <button type="button" class="zb-sheet-row" id="qv-sheet-listen" onclick="startQuizVoiceMode('listen')">
+          <div class="zb-sheet-main">
+            <span class="zb-sheet-dot"></span>
+            <div>
+              <div class="zb-sheet-title">免看屏刷听力</div>
+              <div class="zb-sheet-desc">${escapeHtml(listenDesc)}</div>
+            </div>
+          </div>
+          <span class="zb-sheet-check" style="color:var(--ink-3);font-size:16px;">›</span>
+        </button>
+      </div>` : ""}
+      <div class="zb-sheet-block">
+        <button type="button" class="zb-sheet-row" id="qv-sheet-conj" onclick="startQuizVoiceMode('conj')">
+          <div class="zb-sheet-main">
+            <span class="zb-sheet-dot"></span>
+            <div>
+              <div class="zb-sheet-title">动词变形快问</div>
+              <div class="zb-sheet-desc">今日 ${conjCount} 组高频变形与敬语，报原形直接口答并纠偏</div>
+            </div>
+          </div>
+          <span class="zb-sheet-check" style="color:var(--ink-3);font-size:16px;">›</span>
+        </button>
+      </div>
+    </div>
+    <div class="dock-row" style="margin-top:14px;">
+      <button type="button" class="ghost-btn" style="flex:1;" onclick="closeModal()">返回</button>
+    </div>
+  `;
+  mm.classList.add("open");
+}
+
+function stopQuizVoiceCoach(keepMode) {
+  qvToken += 1;
+  if (qvTimer) {
+    clearTimeout(qvTimer);
+    qvTimer = null;
+  }
+  if (JA_ASR.isActive("quiz_listen") || JA_ASR.isActive("quiz_conj")) JA_ASR.stop();
+  try {
+    wordPlayer.onended = null;
+    wordPlayer.onerror = null;
+    wordPlayer.pause();
+  } catch (e) {}
+  try { if ("speechSynthesis" in window) window.speechSynthesis.cancel(); } catch (e) {}
+  qvState.running = false;
+  if (!isAnyVoiceCoachRunning()) releaseVoiceWakeLock();
+  if (qvState.phase !== "idle" && qvState.phase !== "done") {
+    qvState.phase = "paused";
+    qvState.statusText = "已暂停";
+  }
+  if (!keepMode) {
+    quizVoiceMode = "";
+  }
+}
+
+function startQuizVoiceMode(mode, ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  closeModal();
+  stopAllHandsFreeVoice();
+  stopQuizAudio();
+  quizVoiceMode = mode === "conj" ? "conj" : "listen";
+  qvToken += 1;
+  if (quizVoiceMode === "listen") {
+    const allL = (DATA.points || []).filter(p => p && p.primary && p.primary.is_listening);
+    const pendL = allL.filter(p => A.pts[p.id] && A.pts[p.id].status !== "green");
+    const replay = pendL.length === 0;
+    const queue = (replay ? allL : pendL).map(p => p.id);
+    qvState = {
+      running: false,
+      phase: queue.length ? "idle" : "done",
+      audioOnly: !JA_ASR.supported(),
+      revealed: false,
+      statusText: !JA_ASR.supported() ? "免看屏听题模式" : "听完直接说一、二、或三",
+      heardText: "",
+      verdictTone: "",
+      silentStreak: 0,
+      unclearTried: false,
+      everStarted: false,
+      replayMode: replay,
+      listenQueue: queue,
+      listenTotal: queue.length,
+      listenCleared: 0,
+      lastAnsIdx: 0,
+      lastPickedIdx: 0,
+      lastOk: false,
+      lastUnsure: false,
+      conjQueue: [],
+      conjTotal: 0,
+      conjCleared: 0,
+      conjRuleTip: ""
+    };
+    if (queue.length) {
+      setupCurrentTurn(queue[0]);
+      viewStage = "quiz";
+    }
+  } else {
+    const drills = buildConjDrillSession(12);
+    qvState = {
+      running: false,
+      phase: drills.length ? "idle" : "done",
+      audioOnly: !JA_ASR.supported(),
+      revealed: false,
+      statusText: !JA_ASR.supported() ? "免看屏听答模式" : "听原形，直接用日语说出变形",
+      heardText: "",
+      verdictTone: "",
+      silentStreak: 0,
+      unclearTried: false,
+      everStarted: false,
+      replayMode: false,
+      listenQueue: [],
+      listenTotal: 0,
+      listenCleared: 0,
+      lastAnsIdx: 0,
+      lastPickedIdx: 0,
+      lastOk: false,
+      lastUnsure: false,
+      conjQueue: drills,
+      conjTotal: drills.length,
+      conjCleared: 0,
+      conjRuleTip: ""
+    };
+  }
+  renderTutor();
+}
+
+function exitQuizVoiceMode(ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  stopQuizVoiceCoach(false);
+  setupCurrentTurn((A.cur && A.pts[A.cur] && A.pts[A.cur].status !== "green") ? A.cur : undefined);
+  renderTutor();
+}
+
+function playQuizVoiceListenSeq(qObj, rateVal, runTok, onDone) {
+  if (qvToken !== runTok || !qObj) return;
+  const spd = Number(rateVal || 1.0);
+  if (canShuffleListeningCard(qObj) && qObj.listen_parts && currentChoices.length === 3) {
+    const lp = qObj.listen_parts;
+    const steps = [
+      { url: lp.stem, waitMs: 0 },
+      { url: lp.nums[0], waitMs: 420 },
+      { url: lp.opts[currentChoices[0]], waitMs: 60 },
+      { url: lp.nums[1], waitMs: 360 },
+      { url: lp.opts[currentChoices[1]], waitMs: 60 },
+      { url: lp.nums[2], waitMs: 360 },
+      { url: lp.opts[currentChoices[2]], waitMs: 60 }
+    ];
+    steps.forEach(s => { if (s.url) warmAudio(s.url); });
+    const runIdx = i => {
+      if (qvToken !== runTok) return;
+      if (i >= steps.length) {
+        if (onDone) onDone();
+        return;
+      }
+      const st = steps[i];
+      const go = () => playGenericVoiceUrl(st.url, "", "ja-JP", () => qvToken, runTok, () => runIdx(i + 1), spd);
+      if (st.waitMs > 0) {
+        qvTimer = setTimeout(go, st.waitMs);
+      } else {
+        go();
+      }
+    };
+    runIdx(0);
+    return;
+  }
+  playGenericVoiceUrl(qObj.q_audio, qObj.full_ja || "", "ja-JP", () => qvToken, runTok, onDone, spd);
+}
+
+function commitQuizVoiceListeningAnswer(choiceVal, isUnsure) {
+  const p = getPointById(curPointId);
+  const q = activeQuizObj;
+  if (!p || !q) return { isCorrect: false, ansIdx: 1, pickedIdx: 0 };
+  const ps = A.pts[p.id];
+  const stamp = nowUnixSec();
+  const ansIdx = Math.max(1, currentChoices.indexOf(q.answer) + 1);
+  const pickedIdx = isUnsure ? 0 : Math.max(0, currentChoices.indexOf(choiceVal) + 1);
+  const isCorrect = !isUnsure && choiceVal === q.answer;
+  const hadWrongToday = (ps.wrongCount || 0) > 0 || ((ps.retestAt || 0) > (A.resetAt || 0));
+
+  if (!qvState.replayMode) {
+    if (isCorrect) {
+      sessionMissStreak = 0;
+      if (hadWrongToday) {
+        ps.passStreak = (ps.passStreak || 0) + 1;
+        const needed = ps.reqPasses || ((p.variants && p.variants.length > 0) ? 2 : 1);
+        if (ps.passStreak < needed) {
+          ps.retryCardId = "";
+          if (p.variants && p.variants.length > 0) {
+            if (ps.useVariant) ps.variantIdx = (ps.variantIdx || 0) + 1;
+            ps.useVariant = true;
+          }
+          ps.status = "learning";
+          ps.dueStep = A.step + 3;
+          A.step += 1;
+          A.lastPointId = p.id;
+          recomputeStatusesFromCRDT(A);
+          const nextMs = applyMasteryAction(p.point_key, p.point, "recover", stamp);
+          syncBackendRecord(p, q.id, choiceVal, true, false, nextMs, stamp);
+        } else {
+          ps.retryCardId = "";
+          ps.greenAt = Math.max(stamp, (ps.retestAt || 0) + 1, (A.resetAt || 0) + 1);
+          ps.status = "green";
+          A.step += 1;
+          A.lastPointId = p.id;
+          recomputeStatusesFromCRDT(A);
+          const nextMs = applyMasteryAction(p.point_key, p.point, "recover", ps.greenAt);
+          syncBackendRecord(p, q.id, choiceVal, true, false, nextMs, ps.greenAt);
+        }
+      } else {
+        ps.retryCardId = "";
+        ps.greenAt = Math.max(stamp, (ps.retestAt || 0), (A.resetAt || 0) + 1);
+        ps.status = "green";
+        A.step += 1;
+        A.lastPointId = p.id;
+        recomputeStatusesFromCRDT(A);
+        const nextMs = applyMasteryAction(p.point_key, p.point, "pass", ps.greenAt);
+        syncBackendRecord(p, q.id, choiceVal, true, false, nextMs, ps.greenAt);
+      }
+    } else {
+      ps.retestAt = Math.max(stamp, (ps.greenAt || 0) + 1);
+      ps.greenAt = 0;
+      ps.status = "learning";
+      ps.wrongCount = (ps.wrongCount || 0) + 1;
+      ps.passStreak = 0;
+      const hasVars = !!(p.variants && p.variants.length > 0);
+      ps.reqPasses = hasVars ? 2 : 1;
+      ps.retryCardId = q.id;
+      ps.dueStep = A.step + 3;
+      sessionMissStreak += 1;
+      A.step += 1;
+      A.lastPointId = p.id;
+      recomputeStatusesFromCRDT(A);
+      const nextMs = applyMasteryAction(p.point_key, p.point, "fail", ps.retestAt);
+      syncBackendRecord(p, q.id, isUnsure ? "不确定" : choiceVal, false, false, nextMs, ps.retestAt);
+    }
+    renderGreenBoard();
+  }
+
+  // Update listening voice queue: pop if green (or replay mode), else requeue 3 slots later
+  const curId = qvState.listenQueue[0];
+  if (curId === p.id) {
+    qvState.listenQueue.shift();
+    if (qvState.replayMode || (A.pts[p.id] && A.pts[p.id].status === "green")) {
+      qvState.listenCleared = Math.min(qvState.listenTotal, (qvState.listenCleared || 0) + 1);
+    } else {
+      const insertAt = Math.min(qvState.listenQueue.length, 3);
+      qvState.listenQueue.splice(insertAt, 0, p.id);
+    }
+  }
+  return { isCorrect, ansIdx, pickedIdx };
+}
+
+function advanceQuizVoiceListeningNext(runTok) {
+  if (qvToken !== runTok || quizVoiceMode !== "listen") return;
+  if (!qvState.listenQueue.length) {
+    qvState.running = false;
+    qvState.phase = "done";
+    qvState.revealed = false;
+    qvState.statusText = "今日听力已全部过关";
+    if (!isAnyVoiceCoachRunning()) releaseVoiceWakeLock();
+    renderTutor();
+    playGenericCoachCue("listen_done", () => qvToken, runTok, null);
+    return;
+  }
+  setupCurrentTurn(qvState.listenQueue[0]);
+  viewStage = "quiz";
+  askCurrentQuizVoiceListen(runTok, 1.0);
+}
+
+function finishQuizVoiceListeningTurn(choiceVal, isUnsure, heardLabel, runTok) {
+  if (qvToken !== runTok || quizVoiceMode !== "listen") return;
+  const q = activeQuizObj;
+  const { isCorrect, ansIdx, pickedIdx } = commitQuizVoiceListeningAnswer(choiceVal, isUnsure);
+  qvState.phase = "feedback";
+  qvState.revealed = true;
+  qvState.lastAnsIdx = ansIdx;
+  qvState.lastPickedIdx = pickedIdx;
+  qvState.lastOk = isCorrect;
+  qvState.lastUnsure = !!isUnsure;
+  qvState.verdictTone = isCorrect ? "ok" : "ng";
+  qvState.statusText = isCorrect
+    ? `选对了 · 正解 ${ansIdx}`
+    : (isUnsure ? `正解 ${ansIdx} · 3 题后重考` : `差一点 · 正解 ${ansIdx}`);
+  qvState.heardText = heardLabel ? (isCorrect ? `✓ 听到「${heardLabel}」` : `听到「${heardLabel}」`) : "";
+  renderTutor();
+
+  playZenVoiceChime(isCorrect ? "ok" : "coach");
+  const cueKey = isCorrect
+    ? `listen_ok_${ansIdx}`
+    : (isUnsure ? `listen_unsure_${ansIdx}` : `listen_wrong_${ansIdx}`);
+  playGenericCoachCue(cueKey, () => qvToken, runTok, () => {
+    if (qvToken !== runTok) return;
+    qvTimer = setTimeout(() => {
+      if (qvToken !== runTok) return;
+      playGenericVoiceUrl(q && q.exp_audio, (q && q.why_line) || "", "zh-CN", () => qvToken, runTok, () => {
+        if (qvToken !== runTok) return;
+        qvTimer = setTimeout(() => advanceQuizVoiceListeningNext(runTok), 900);
+      }, expSpeed || 1.0);
+    }, 180);
+  });
+}
+
+function openQuizVoiceListeningMic(runTok) {
+  if (qvToken !== runTok || !qvState.running || quizVoiceMode !== "listen") return;
+  if (qvState.audioOnly || !JA_ASR.supported()) {
+    qvState.audioOnly = true;
+    qvState.phase = "listening";
+    qvState.statusText = "默选 1 / 2 / 3（或轻点下方数字）";
+    qvState.heardText = "";
+    renderTutor();
+    qvTimer = setTimeout(() => {
+      if (qvToken !== runTok) return;
+      finishQuizVoiceListeningTurn("__UNSURE__", true, "", runTok);
+    }, 4600);
+    return;
+  }
+
+  qvState.phase = "listening";
+  qvState.statusText = "请说出 1、2 或 3";
+  qvState.heardText = "";
+  qvState.verdictTone = "";
+  renderTutor();
+
+  playZenVoiceChime("listen");
+  qvTimer = setTimeout(() => {
+    if (qvToken !== runTok || !qvState.running) return;
+    const started = JA_ASR.start("quiz_listen", {
+      sentenceMode: false,
+      skipStopVocab: true,
+      silenceMs: 950,
+      maxCapMs: 7000,
+      onInterim: (txt) => {
+        if (qvToken !== runTok) return;
+        qvState.heardText = `听到：${txt}`;
+        const el = document.getElementById("qv-voice-heard");
+        if (el) { el.className = "vc-voice-heard"; el.textContent = qvState.heardText; }
+      },
+      onFinal: (alts) => {
+        if (qvToken !== runTok || !qvState.running) return;
+        qvState.silentStreak = 0;
+        const cmd = JA_ASR.detectVoiceCommand(alts, "");
+        if (cmd === "pause") {
+          pauseQuizVoiceRun("已暂停");
+          return;
+        }
+        if (cmd === "repeat") {
+          qvState.phase = "asking";
+          qvState.statusText = "再听一遍原题";
+          renderTutor();
+          playGenericCoachCue("repeat", () => qvToken, runTok, () => askCurrentQuizVoiceListen(runTok, 1.0));
+          return;
+        }
+        if (cmd === "slow") {
+          qvState.phase = "asking";
+          qvState.statusText = "0.85x 慢听一遍";
+          renderTutor();
+          playGenericCoachCue("listen_slow", () => qvToken, runTok, () => askCurrentQuizVoiceListen(runTok, 0.85));
+          return;
+        }
+        if (cmd === "skip") {
+          finishQuizVoiceListeningTurn("__UNSURE__", true, "", runTok);
+          return;
+        }
+        const parsed = JA_ASR.parseListeningChoice(alts, currentChoices);
+        if (parsed && parsed.idx >= 0 && parsed.idx < currentChoices.length) {
+          finishQuizVoiceListeningTurn(currentChoices[parsed.idx], false, parsed.heard, runTok);
+          return;
+        }
+        if (!qvState.unclearTried) {
+          qvState.unclearTried = true;
+          qvState.phase = "asking";
+          qvState.statusText = "没听清，请直接说 1、2 或 3";
+          qvState.heardText = alts[0] ? `听到「${alts[0]}」` : "";
+          renderTutor();
+          playGenericCoachCue("listen_unclear", () => qvToken, runTok, () => openQuizVoiceListeningMic(runTok));
+          return;
+        }
+        finishQuizVoiceListeningTurn("__UNSURE__", true, alts[0] || "", runTok);
+      },
+      onEmpty: () => {
+        if (qvToken !== runTok || !qvState.running) return;
+        qvState.silentStreak = (qvState.silentStreak || 0) + 1;
+        if (qvState.silentStreak >= 2) {
+          pauseQuizVoiceRun("连续两题无回应，已自动暂停");
+          playGenericCoachCue("auto_pause", () => qvToken, ++qvToken, null);
+          return;
+        }
+        finishQuizVoiceListeningTurn("__UNSURE__", true, "", runTok);
+      },
+      onError: (msg, code) => {
+        if (qvToken !== runTok || !qvState.running) return;
+        if (code === "not-allowed" || code === "service-not-allowed" || code === "audio-capture") {
+          qvState.audioOnly = true;
+          openQuizVoiceListeningMic(runTok);
+          return;
+        }
+        qvState.silentStreak = (qvState.silentStreak || 0) + 1;
+        if (qvState.silentStreak >= 2) {
+          pauseQuizVoiceRun("语音识别暂不可用，已暂停");
+          return;
+        }
+        finishQuizVoiceListeningTurn("__UNSURE__", true, "", runTok);
+      }
+    });
+    if (!started && qvToken === runTok) {
+      qvState.audioOnly = true;
+      openQuizVoiceListeningMic(runTok);
+    }
+  }, 280);
+}
+
+function askCurrentQuizVoiceListen(runTok, rateVal) {
+  if (qvToken !== runTok || !qvState.running || quizVoiceMode !== "listen") return;
+  const q = activeQuizObj;
+  if (!q) {
+    advanceQuizVoiceListeningNext(runTok);
+    return;
+  }
+  const spd = Number(rateVal || 1.0);
+  qvState.phase = "asking";
+  qvState.revealed = false;
+  qvState.heardText = "";
+  qvState.verdictTone = "";
+  qvState.unclearTried = false;
+  qvState.statusText = spd < 0.95 ? "正在 0.85x 慢听播题…" : "正在播题，请仔细听…";
+  renderTutor();
+  playQuizVoiceListenSeq(q, spd, runTok, () => {
+    if (qvToken !== runTok || !qvState.running) return;
+    qvTimer = setTimeout(() => openQuizVoiceListeningMic(runTok), 260);
+  });
+}
+
+function pickQuizVoiceListeningNum(idx, ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  if (quizVoiceMode !== "listen" || !currentChoices[idx]) return;
+  if (JA_ASR.isActive("quiz_listen")) JA_ASR.stop();
+  if (qvTimer) { clearTimeout(qvTimer); qvTimer = null; }
+  const runTok = ++qvToken;
+  qvState.running = true;
+  qvState.everStarted = true;
+  qvState.silentStreak = 0;
+  finishQuizVoiceListeningTurn(currentChoices[idx], false, `第 ${idx + 1} 项`, runTok);
+}
+
+// ---------- B. CONJUGATION RAPID-FIRE VOICE ENGINE ----------
+function pushConjRecord(drill, label, isOk) {
+  const tsSec = Math.max(TRUE_GREEN_EPOCH, nowUnixSec());
+  const ob = loadOutbox();
+  ob.push([`CONJ:${drill.id}`, `${drill.base_ja}->${drill.target_ja}`, String(label || ""), isOk ? 1 : 0, new Date(tsSec * 1000).toISOString()]);
+  saveOutbox(ob);
+  scheduleCloudPush(220);
+}
+
+function advanceQuizVoiceConjNext(runTok) {
+  if (qvToken !== runTok || quizVoiceMode !== "conj") return;
+  if (!qvState.conjQueue.length) {
+    qvState.running = false;
+    qvState.phase = "done";
+    qvState.revealed = false;
+    qvState.statusText = "这组动词变形已练完";
+    if (!isAnyVoiceCoachRunning()) releaseVoiceWakeLock();
+    renderTutor();
+    playGenericCoachCue("conj_done", () => qvToken, runTok, null);
+    return;
+  }
+  askCurrentQuizVoiceConj(runTok);
+}
+
+function openConjShadowMic(drill, runTok) {
+  if (qvToken !== runTok || !qvState.running || quizVoiceMode !== "conj") return;
+  if (qvState.audioOnly || !JA_ASR.supported()) {
+    qvTimer = setTimeout(() => advanceQuizVoiceConjNext(runTok), 1100);
+    return;
+  }
+  qvState.phase = "shadow";
+  qvState.statusText = `跟读一遍「${drill.target_kana}」`;
+  qvState.heardText = "";
+  renderTutor();
+  playZenVoiceChime("listen");
+  qvTimer = setTimeout(() => {
+    if (qvToken !== runTok || !qvState.running) return;
+    JA_ASR.start("quiz_conj", {
+      sentenceMode: false,
+      skipStopVocab: true,
+      silenceMs: 900,
+      maxCapMs: 5500,
+      onInterim: (txt) => {
+        if (qvToken !== runTok) return;
+        const el = document.getElementById("qv-voice-heard");
+        if (el) { el.className = "vc-voice-heard"; el.textContent = `听到：${txt}`; }
+      },
+      onFinal: (alts) => {
+        if (qvToken !== runTok || !qvState.running) return;
+        const cmd = JA_ASR.detectVoiceCommand(alts, drill.target_kana);
+        if (cmd === "pause") { pauseQuizVoiceRun("已暂停"); return; }
+        const res = JA_ASR.analyzeConjugation(alts, drill);
+        qvState.phase = "feedback";
+        qvState.verdictTone = res.ok ? "ok" : "";
+        qvState.statusText = res.ok ? "这遍稳了，过几组再抽考" : "记在心里就行，过几组再考";
+        qvState.heardText = res.heard ? (res.ok ? `✓ ${res.heard}` : `听到「${res.heard}」`) : "";
+        renderTutor();
+        playGenericCoachCue(res.ok ? "shadow_ok" : "shadow_close", () => qvToken, runTok, () => {
+          qvTimer = setTimeout(() => advanceQuizVoiceConjNext(runTok), 650);
+        });
+      },
+      onEmpty: () => {
+        if (qvToken !== runTok || !qvState.running) return;
+        qvTimer = setTimeout(() => advanceQuizVoiceConjNext(runTok), 450);
+      },
+      onError: () => {
+        if (qvToken !== runTok || !qvState.running) return;
+        qvTimer = setTimeout(() => advanceQuizVoiceConjNext(runTok), 450);
+      }
+    });
+  }, 260);
+}
+
+function handleQuizVoiceConjOutcome(drill, res, isBlank, runTok) {
+  if (qvToken !== runTok || quizVoiceMode !== "conj") return;
+  const ok = !isBlank && !!(res && res.ok);
+  const cur = qvState.conjQueue[0];
+  if (cur && cur.id === drill.id) {
+    qvState.conjQueue.shift();
+    if (ok) {
+      qvState.conjCleared = Math.min(qvState.conjTotal, (qvState.conjCleared || 0) + 1);
+    } else {
+      const insertAt = Math.min(qvState.conjQueue.length, 3);
+      qvState.conjQueue.splice(insertAt, 0, drill);
+    }
+  }
+  pushConjRecord(drill, ok ? "变形:准确" : `变形:${(res && res.subkind) || "待巩固"}`, ok);
+
+  qvState.phase = "feedback";
+  qvState.revealed = true;
+  qvState.lastOk = ok;
+  qvState.verdictTone = ok ? "ok" : "ng";
+  qvState.conjRuleTip = (res && !ok && res.verdict) ? res.verdict : drill.rule_zh;
+  qvState.statusText = ok ? "变形准确" : (isBlank ? `标准变形「${drill.target_ja}」` : (res.verdict || `标准变形「${drill.target_ja}」`));
+  qvState.heardText = (!isBlank && res && res.heard) ? (ok ? `✓ ${res.heard}` : `听到「${res.heard}」`) : "";
+  renderTutor();
+
+  if (ok) {
+    playZenVoiceChime("ok");
+    const okKeys = ["ok_1", "ok_2", "ok_3"];
+    const okKey = okKeys[(vcVoicePraiseIdx++) % okKeys.length];
+    playGenericCoachCue(okKey, () => qvToken, runTok, () => {
+      qvTimer = setTimeout(() => {
+        playGenericVoiceUrl(drill.model_audio, drill.target_kana, "ja-JP", () => qvToken, runTok, () => {
+          qvTimer = setTimeout(() => advanceQuizVoiceConjNext(runTok), 750);
+        }, 1.0);
+      }, 140);
+    });
+  } else {
+    playZenVoiceChime("coach");
+    const cueMap = {
+      conj_ranuki: "conj_ranuki",
+      conj_iku_te: "conj_iku_te",
+      conj_pass_caus: "conj_pass_caus",
+      conj_keigo_dir: "conj_keigo_dir",
+      sokuon_miss: "sokuon_miss",
+      sokuon_extra: "sokuon_extra",
+      length_short: "length_short",
+      length_long: "length_long",
+      voicing: "voicing",
+      near: "near"
+    };
+    const cueKey = isBlank ? "blank" : (cueMap[res && res.subkind] || "miss");
+    playGenericCoachCue(cueKey, () => qvToken, runTok, () => {
+      qvTimer = setTimeout(() => {
+        playGenericVoiceUrl(drill.teach_audio, `你要这样想：${drill.rule_zh}`, "zh-CN", () => qvToken, runTok, () => {
+          if (qvState.audioOnly || !JA_ASR.supported()) {
+            qvTimer = setTimeout(() => advanceQuizVoiceConjNext(runTok), 950);
+            return;
+          }
+          qvTimer = setTimeout(() => {
+            playGenericCoachCue("shadow_ask", () => qvToken, runTok, () => openConjShadowMic(drill, runTok));
+          }, 220);
+        }, 1.0);
+      }, 150);
+    });
+  }
+}
+
+function askCurrentQuizVoiceConj(runTok) {
+  if (qvToken !== runTok || !qvState.running || quizVoiceMode !== "conj") return;
+  const drill = qvState.conjQueue[0];
+  if (!drill) {
+    advanceQuizVoiceConjNext(runTok);
+    return;
+  }
+  qvState.phase = "asking";
+  qvState.revealed = false;
+  qvState.heardText = "";
+  qvState.verdictTone = "";
+  qvState.conjRuleTip = "";
+  qvState.statusText = "正在提问…";
+  renderTutor();
+
+  const fbAsk = `${drill.base_ja}${drill.ask_zh}`;
+  playGenericVoiceUrl(drill.ask_audio, fbAsk, "zh-CN", () => qvToken, runTok, () => {
+    if (qvToken !== runTok || !qvState.running) return;
+    if (qvState.audioOnly || !JA_ASR.supported()) {
+      qvState.audioOnly = true;
+      qvState.phase = "listening";
+      qvState.statusText = "心里默念变形…";
+      renderTutor();
+      qvTimer = setTimeout(() => {
+        if (qvToken !== runTok) return;
+        handleQuizVoiceConjOutcome(drill, null, true, runTok);
+      }, 3600);
+      return;
+    }
+    qvState.phase = "listening";
+    qvState.statusText = "请用日语说出变形";
+    renderTutor();
+    playZenVoiceChime("listen");
+    qvTimer = setTimeout(() => {
+      if (qvToken !== runTok || !qvState.running) return;
+      const started = JA_ASR.start("quiz_conj", {
+        sentenceMode: false,
+        skipStopVocab: true,
+        silenceMs: 950,
+        maxCapMs: 6500,
+        onInterim: (txt) => {
+          if (qvToken !== runTok) return;
+          qvState.heardText = `听到：${txt}`;
+          const el = document.getElementById("qv-voice-heard");
+          if (el) { el.className = "vc-voice-heard"; el.textContent = qvState.heardText; }
+        },
+        onFinal: (alts) => {
+          if (qvToken !== runTok || !qvState.running) return;
+          qvState.silentStreak = 0;
+          const cmd = JA_ASR.detectVoiceCommand(alts, drill.target_kana);
+          if (cmd === "pause") { pauseQuizVoiceRun("已暂停"); return; }
+          if (cmd === "repeat") {
+            playGenericCoachCue("repeat", () => qvToken, runTok, () => askCurrentQuizVoiceConj(runTok));
+            return;
+          }
+          if (cmd === "skip") {
+            handleQuizVoiceConjOutcome(drill, null, true, runTok);
+            return;
+          }
+          const res = JA_ASR.analyzeConjugation(alts, drill);
+          handleQuizVoiceConjOutcome(drill, res, false, runTok);
+        },
+        onEmpty: () => {
+          if (qvToken !== runTok || !qvState.running) return;
+          qvState.silentStreak = (qvState.silentStreak || 0) + 1;
+          if (qvState.silentStreak >= 2) {
+            pauseQuizVoiceRun("连续两题无回应，已自动暂停");
+            playGenericCoachCue("auto_pause", () => qvToken, ++qvToken, null);
+            return;
+          }
+          handleQuizVoiceConjOutcome(drill, null, true, runTok);
+        },
+        onError: (msg, code) => {
+          if (qvToken !== runTok || !qvState.running) return;
+          if (code === "not-allowed" || code === "service-not-allowed" || code === "audio-capture") {
+            qvState.audioOnly = true;
+            askCurrentQuizVoiceConj(runTok);
+            return;
+          }
+          qvState.silentStreak = (qvState.silentStreak || 0) + 1;
+          if (qvState.silentStreak >= 2) {
+            pauseQuizVoiceRun("语音识别暂不可用，已暂停");
+            return;
+          }
+          handleQuizVoiceConjOutcome(drill, null, true, runTok);
+        }
+      });
+      if (!started && qvToken === runTok) {
+        qvState.audioOnly = true;
+        askCurrentQuizVoiceConj(runTok);
+      }
+    }, 280);
+  }, 1.0);
+}
+
+function startQuizVoiceRun(ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  unlockWordPlayerOnce();
+  stopQuizAudio();
+  if (typeof radioInitialized !== "undefined" && radioInitialized && radioPlayer && !radioPlayer.paused) {
+    radioPlayer.pause();
+    if (typeof syncRadioUI === "function") syncRadioUI(false);
+  }
+  const runTok = ++qvToken;
+  qvState.running = true;
+  qvState.everStarted = true;
+  qvState.silentStreak = 0;
+  acquireVoiceWakeLock();
+  if (quizVoiceMode === "listen") {
+    askCurrentQuizVoiceListen(runTok, 1.0);
+  } else {
+    askCurrentQuizVoiceConj(runTok);
+  }
+}
+
+function pauseQuizVoiceRun(msg, ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  stopQuizVoiceCoach(true);
+  if (msg) qvState.statusText = msg;
+  renderTutor();
+}
+
+function onQuizVoiceOrbTap(ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  if (!qvState.running) {
+    startQuizVoiceRun();
+    return;
+  }
+  if (JA_ASR.isActive("quiz_listen") || JA_ASR.isActive("quiz_conj")) {
+    JA_ASR.finishNow();
+    return;
+  }
+  pauseQuizVoiceRun("已暂停");
+}
+
+function quizVoiceSkipOrNext(ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  if (JA_ASR.isActive("quiz_listen") || JA_ASR.isActive("quiz_conj")) JA_ASR.stop();
+  if (qvTimer) { clearTimeout(qvTimer); qvTimer = null; }
+  const runTok = ++qvToken;
+  qvState.running = true;
+  qvState.everStarted = true;
+  qvState.silentStreak = 0;
+  if (quizVoiceMode === "listen") {
+    if (qvState.phase === "feedback") {
+      advanceQuizVoiceListeningNext(runTok);
+    } else {
+      finishQuizVoiceListeningTurn("__UNSURE__", true, "", runTok);
+    }
+  } else {
+    if (qvState.phase === "feedback" || qvState.phase === "shadow") {
+      advanceQuizVoiceConjNext(runTok);
+    } else {
+      const drill = qvState.conjQueue[0];
+      if (drill) handleQuizVoiceConjOutcome(drill, null, true, runTok);
+    }
+  }
+}
+
+function quizVoiceRepeatCurrent(rateVal, ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  if (JA_ASR.isActive("quiz_listen") || JA_ASR.isActive("quiz_conj")) JA_ASR.stop();
+  if (qvTimer) { clearTimeout(qvTimer); qvTimer = null; }
+  const runTok = ++qvToken;
+  qvState.running = true;
+  qvState.everStarted = true;
+  qvState.silentStreak = 0;
+  if (quizVoiceMode === "listen") {
+    askCurrentQuizVoiceListen(runTok, rateVal || 1.0);
+  } else {
+    askCurrentQuizVoiceConj(runTok);
+  }
+}
+
+function renderQuizVoiceStage(box) {
+  const isListen = quizVoiceMode === "listen";
+  const st = qvState;
+  const doneCnt = isListen ? st.listenCleared : st.conjCleared;
+  const totalCnt = isListen ? st.listenTotal : st.conjTotal;
+  const shownIdx = Math.min(totalCnt, doneCnt + 1);
+
+  if (st.phase === "done" || (isListen ? !st.listenQueue.length : !st.conjQueue.length)) {
+    const switchTarget = isListen ? "conj" : "listen";
+    const switchLbl = isListen ? "练动词变形" : "去刷听力";
+    box.innerHTML = `
+      <div class="meta-bar">
+        <span class="overline ok">${isListen ? "语音刷听力 · 圆满" : "动词变形快问 · 圆满"}</span>
+      </div>
+      <div class="focal-space">
+        <h2 class="point-heading">${isListen ? `今日 ${totalCnt} 道听力已全部过关` : `这组 ${totalCnt} 个动词变形已全部顺口`}</h2>
+        <p class="logic-line">${isListen ? "所有成绩已实时同步进今日做题进度，随时可切回看屏继续语法题。" : "高频变形与敬语已经跑通一遍，开车或走路随时都能再来一轮。"}</p>
+      </div>
+      <div class="vc-dock">
+        <button type="button" class="vc-btn mid" onclick="exitQuizVoiceMode(event)">回到做题</button>
+        <button type="button" class="vc-btn ok" onclick="startQuizVoiceMode('${switchTarget}', event)">${switchLbl}</button>
+      </div>
+    `;
+    return;
+  }
+
+  let orbCls = "vc-voice-orb";
+  let orbSvg = voiceSharedOrbSVG("idle");
+  if (st.phase === "listening" || st.phase === "shadow") {
+    orbCls += " is-listening";
+    orbSvg = voiceSharedOrbSVG("listening");
+  } else if (st.phase === "asking") {
+    orbCls += " is-speaking";
+    orbSvg = voiceSharedOrbSVG("asking");
+  } else if (st.phase === "feedback") {
+    orbCls += st.verdictTone === "ok" ? " is-ok" : " is-coach";
+    orbSvg = voiceSharedOrbSVG(st.verdictTone === "ok" ? "ok" : "feedback");
+  }
+  const statusCls = "vc-voice-status" + (st.verdictTone === "ok" ? " ok" : (st.verdictTone === "ng" ? " ng" : (st.running ? " live" : "")));
+
+  let centerHTML = "";
+  if (isListen) {
+    const q = activeQuizObj;
+    const ansChoice = q ? q.answer : "";
+    if (st.revealed && q) {
+      centerHTML = `
+        <div class="voice-model-ja" lang="ja">${escapeHtml(ansChoice)}</div>
+        ${q.why_line ? `<div class="voice-rule-line">${escapeHtml(q.why_line)}</div>` : ""}
+        ${st.heardText ? `<div class="vc-voice-heard ${st.verdictTone}" id="qv-voice-heard">${escapeHtml(st.heardText)}</div>` : ""}
+      `;
+    } else {
+      centerHTML = `
+        <div class="vc-voice-cue-zh">${st.running ? "专注听对话与 1、2、3 选项" : "开车或走路时免看屏刷听力"}</div>
+        ${st.phase === "listening" ? `
+        <div class="voice-num-row">
+          <button type="button" class="voice-num-pill" onclick="pickQuizVoiceListeningNum(0, event)">1</button>
+          <button type="button" class="voice-num-pill" onclick="pickQuizVoiceListeningNum(1, event)">2</button>
+          <button type="button" class="voice-num-pill" onclick="pickQuizVoiceListeningNum(2, event)">3</button>
+        </div>` : ""}
+        <div class="vc-voice-heard" id="qv-voice-heard">${escapeHtml(st.heardText || "")}</div>
+        ${!st.audioOnly ? `<div class="vc-voice-hint">可说「もういちど」重听 · 「ゆっくり」慢听</div>` : ""}
+      `;
+    }
+  } else {
+    const d = st.conjQueue[0];
+    if (st.revealed && d) {
+      centerHTML = `
+        <span class="voice-conj-tag">${escapeHtml(d.base_ja)} → ${escapeHtml(d.family_zh)}</span>
+        <div class="vc-voice-cue-kanji" lang="ja">${escapeHtml(d.target_ja)}</div>
+        <div class="vc-voice-cue-zh sub">${escapeHtml(d.target_kana)}</div>
+        <div class="voice-rule-line">${escapeHtml(d.rule_zh)}</div>
+        <div class="voice-model-zh" lang="ja">${escapeHtml(d.chunk_ja)} · ${escapeHtml(d.chunk_zh)}</div>
+        ${st.heardText ? `<div class="vc-voice-heard ${st.verdictTone}" id="qv-voice-heard">${escapeHtml(st.heardText)}</div>` : ""}
+      `;
+    } else if (d) {
+      centerHTML = `
+        <span class="voice-conj-tag">${escapeHtml(d.ask_label)}</span>
+        <div class="vc-voice-cue-kanji" lang="ja">${escapeHtml(d.base_ja)}</div>
+        <div class="vc-voice-cue-zh sub">${escapeHtml(d.base_zh)}</div>
+        <div class="vc-voice-heard" id="qv-voice-heard">${escapeHtml(st.heardText || "")}</div>
+        ${!st.audioOnly ? `<div class="vc-voice-hint">可说「もういちど」重问 · 「わからない」听讲解</div>` : ""}
+      `;
+    }
+  }
+
+  let dockHTML = "";
+  if (st.running) {
+    const rightLbl = (st.phase === "feedback" || st.phase === "shadow")
+      ? (isListen ? "下一题" : "下一组")
+      : "不会 · 听讲解";
+    dockHTML = `
+      <button type="button" class="vc-btn mid" id="qv-pause-btn" onclick="pauseQuizVoiceRun('已暂停', event)">暂停</button>
+      <button type="button" class="vc-btn voice-exhale" id="qv-skip-btn" onclick="quizVoiceSkipOrNext(event)">${rightLbl}</button>
+    `;
+  } else {
+    const startLbl = isListen
+      ? (st.everStarted ? "继续语音听题" : "开始语音听题")
+      : (st.everStarted ? "继续动词变形" : "开始动词变形");
+    dockHTML = `<button type="button" class="vc-btn ok" id="qv-start-btn" onclick="startQuizVoiceRun(event)">${startLbl}</button>`;
+  }
+
+  const leftOverline = isListen
+    ? `语音听题 · ${shownIdx} / ${totalCnt}`
+    : `动词变形 · ${shownIdx} / ${totalCnt}`;
+  const switchOtherMode = isListen ? "conj" : "listen";
+  const switchOtherLbl = isListen ? "动词变形" : "刷听力";
+
+  box.innerHTML = `
+    <div class="meta-bar">
+      <span class="overline">${escapeHtml(leftOverline)}</span>
+      <span class="overline">${escapeHtml(isListen ? (st.replayMode ? "重刷巩固" : "同步今日进度") : (st.conjQueue[0] ? st.conjQueue[0].family_zh : ""))}</span>
+    </div>
+
+    <div class="vc-voice-stage" id="qv-voice-stage">
+      <button type="button" class="${orbCls}" id="qv-voice-orb" onclick="onQuizVoiceOrbTap(event)" aria-label="${st.running ? "暂停或结束回答" : "开始语音练习"}">${orbSvg}</button>
+      <div class="${statusCls}" id="qv-voice-status">${escapeHtml(st.statusText || "")}</div>
+      ${centerHTML}
+    </div>
+
+    <div class="vc-aux-row">
+      <button type="button" class="vc-aux-btn seal" id="qv-back-btn" onclick="exitQuizVoiceMode(event)">切回做题</button>
+      <div class="vc-aux-right">
+        <button type="button" class="vc-aux-btn" onclick="startQuizVoiceMode('${switchOtherMode}', event)">${switchOtherLbl}</button>
+        ${isListen ? `<button type="button" class="vc-aux-btn" onclick="quizVoiceRepeatCurrent(0.85, event)">0.85x</button>` : ""}
+        <button type="button" class="vc-aux-btn replay" onclick="quizVoiceRepeatCurrent(1.0, event)">${isListen ? "重听" : "重问"}</button>
+      </div>
+    </div>
+
+    <div class="vc-dock">${dockHTML}</div>
+  `;
+}
+
+// ---------- C. POST-PODCAST VOICE WRAP-UP & SPOKEN SENTENCE BUILDER ("随身听 · 语音收尾") ----------
+function buildRadioVoiceQueue() {
+  const items = getRadioReviewItems();
+  const st = ensureRadioReviewState(false);
+  const doneSet = new Set(st.passedIds || []);
+  const core = [];
+  const addUnique = (it, stepType) => {
+    if (!it || core.some(x => x.id === it.id)) return;
+    core.push({ id: it.id, stepType, item: it });
+  };
+  // 1) Any user-pinned moments first
+  items.filter(x => x && x.is_pin && !doneSet.has(x.id)).slice(0, 2).forEach(x => addUnique(x, "grammar"));
+  // 2) Episode vocab items
+  items.filter(x => x && x.kind === "vocab" && !doneSet.has(x.id)).slice(0, 2).forEach(x => addUnique(x, "vocab"));
+  // 3) Episode grammar items (cap Part 1 at 4 crisp items so wrap-up stays ~3 minutes!)
+  items.filter(x => x && x.kind === "grammar" && !doneSet.has(x.id)).forEach(x => {
+    if (core.length < 4) addUnique(x, "grammar");
+  });
+  // Fallback if all review items were already passed earlier today: pick 2 vocab + 2 grammar highlights
+  if (!core.length) {
+    items.filter(x => x && x.kind === "vocab").slice(0, 2).forEach(x => addUnique(x, "vocab"));
+    items.filter(x => x && x.kind === "grammar").slice(0, 2).forEach(x => addUnique(x, "grammar"));
+  }
+  // Part 2: Spoken Sentence-Building prompts ("听中文口头造短句", N3 & N2!)
+  const prompts = getRadioSpeakingPrompts();
+  prompts.forEach(sp => {
+    if (sp && sp.id) core.push({ id: sp.id, stepType: "speak", prompt: sp });
+  });
+  return core;
+}
+
+function stopRadioVoiceCoach(keepMode) {
+  rvvToken += 1;
+  if (rvvTimer) {
+    clearTimeout(rvvTimer);
+    rvvTimer = null;
+  }
+  if (JA_ASR.isActive("rv_voice")) JA_ASR.stop();
+  try {
+    wordPlayer.onended = null;
+    wordPlayer.onerror = null;
+    wordPlayer.pause();
+  } catch (e) {}
+  try { if ("speechSynthesis" in window) window.speechSynthesis.cancel(); } catch (e) {}
+  rvvState.running = false;
+  if (!isAnyVoiceCoachRunning()) releaseVoiceWakeLock();
+  if (rvvState.phase !== "idle" && rvvState.phase !== "done") {
+    rvvState.phase = "paused";
+    rvvState.statusText = "已暂停";
+  }
+  if (!keepMode && rvMode === "voice") {
+    rvMode = "triage";
+  }
+}
+
+function openRadioVoiceWrapUp(ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  stopAllHandsFreeVoice();
+  if (radioInitialized && !radioPlayer.paused) {
+    radioPlayer.pause();
+    syncRadioUI(false);
+  }
+  stopRadioReviewAudio();
+  ensureRadioReviewState(false);
+  radioReviewOpen = true;
+  const pStage = document.getElementById("radio-player-stage");
+  const rStage = document.getElementById("radio-review-stage");
+  if (pStage) pStage.classList.add("hidden");
+  if (rStage) rStage.classList.remove("hidden");
+
+  const queue = buildRadioVoiceQueue();
+  rvMode = "voice";
+  rvvToken += 1;
+  rvvState = {
+    running: false,
+    phase: queue.length ? "idle" : "done",
+    audioOnly: !JA_ASR.supported(),
+    revealed: false,
+    statusText: !JA_ASR.supported() ? "免看屏跟听收尾模式" : "3 分钟免看屏口头收尾",
+    heardText: "",
+    verdictTone: "",
+    silentStreak: 0,
+    everStarted: false,
+    spkIntroPlayed: false,
+    queue,
+    idx: 0,
+    total: queue.length,
+    activeItem: queue[0] || null,
+    lastOk: false,
+    lastTip: ""
+  };
+  renderRadioReviewStage();
+}
+
+function exitRadioVoiceToCards(ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  stopRadioVoiceCoach(false);
+  advanceRadioReviewPointer();
+  renderRadioReviewStage();
+}
+
+function commitRadioVoiceStepOutcome(entry, isOk, label) {
+  const st = ensureRadioReviewState(false);
+  const stamp = nowUnixSec();
+  if (entry.stepType === "speak" && entry.prompt) {
+    if (!Array.isArray(st.spokenIds)) st.spokenIds = [];
+    if (!st.spokenIds.includes(entry.prompt.id)) st.spokenIds.push(entry.prompt.id);
+    pushSpokenRecord(entry.prompt.id, entry.prompt.key || entry.prompt.title, label || (isOk ? "造句:自然达标" : "造句:跟读巩固"), isOk);
+  } else if (entry.item) {
+    const it = entry.item;
+    if (!Array.isArray(st.passedIds)) st.passedIds = [];
+    if (!Array.isArray(st.relearnIds)) st.relearnIds = [];
+    if (isOk) {
+      if (!st.passedIds.includes(it.id)) st.passedIds.push(it.id);
+      st.relearnIds = st.relearnIds.filter(x => x !== it.id);
+      if (it.kind === "vocab" && DATA.vocab_cards && DATA.vocab_cards[it.title]) {
+        applyMasteryAction(it.key || it.title, it.title, "pass", stamp);
+      }
+      pushSpokenRecord(`RV-${it.id}`, it.key || it.title, label || "语音收尾:准确", true);
+    } else {
+      if (!st.relearnIds.includes(it.id)) st.relearnIds.push(it.id);
+      const ob = loadOutbox();
+      ob.push([`RV:${it.point_id || it.key || it.title}`, it.title, "语音收尾:回炉", 0, new Date(stamp * 1000).toISOString()]);
+      saveOutbox(ob);
+    }
+  }
+  st.updatedAt = stamp;
+  saveAdaptiveState();
+  scheduleCloudPush(100);
+}
+
+function completeRadioVoiceWrapUp(runTok) {
+  if (rvvToken !== runTok) return;
+  const st = ensureRadioReviewState(false);
+  st.done = true;
+  st.triageIdx = getRadioReviewItems().length;
+  st.tailQueue = [];
+  st.updatedAt = nowUnixSec();
+  saveAdaptiveState();
+  renderGreenBoard();
+  updateRadioReviewEntryBadge();
+  scheduleCloudPush(80);
+  rvvState.running = false;
+  rvvState.phase = "done";
+  if (!isAnyVoiceCoachRunning()) releaseVoiceWakeLock();
+  rvMode = "done";
+  renderRadioReviewStage();
+  playGenericCoachCue("rv_done", () => rvvToken, runTok, null);
+}
+
+function advanceRadioVoiceNext(runTok) {
+  if (rvvToken !== runTok || rvMode !== "voice") return;
+  rvvState.idx += 1;
+  if (rvvState.idx >= rvvState.queue.length) {
+    completeRadioVoiceWrapUp(runTok);
+    return;
+  }
+  rvvState.activeItem = rvvState.queue[rvvState.idx];
+  runRadioVoiceCurrentStep(runTok);
+}
+
+function openRadioVoiceShadow(entry, modelUrl, modelJa, runTok) {
+  if (rvvToken !== runTok || !rvvState.running || rvMode !== "voice") return;
+  if (rvvState.audioOnly || !JA_ASR.supported()) {
+    rvvTimer = setTimeout(() => advanceRadioVoiceNext(runTok), 1000);
+    return;
+  }
+  rvvState.phase = "shadow";
+  rvvState.statusText = "照着顺口跟读一遍";
+  rvvState.heardText = "";
+  renderRadioReviewStage();
+  playZenVoiceChime("listen");
+  rvvTimer = setTimeout(() => {
+    if (rvvToken !== runTok || !rvvState.running) return;
+    JA_ASR.start("rv_voice", {
+      sentenceMode: entry.stepType !== "vocab",
+      skipStopVocab: true,
+      silenceMs: entry.stepType === "vocab" ? 950 : 1250,
+      maxCapMs: entry.stepType === "vocab" ? 5500 : 8500,
+      onInterim: (txt) => {
+        if (rvvToken !== runTok) return;
+        const el = document.getElementById("rvv-voice-heard");
+        if (el) { el.className = "vc-voice-heard"; el.textContent = `听到：${txt}`; }
+      },
+      onFinal: (alts) => {
+        if (rvvToken !== runTok || !rvvState.running) return;
+        const cmd = JA_ASR.detectVoiceCommand(alts, "");
+        if (cmd === "pause") { pauseRadioVoiceRun("已暂停"); return; }
+        rvvState.phase = "feedback";
+        rvvState.verdictTone = "ok";
+        rvvState.statusText = "很好，继续下一个";
+        rvvState.heardText = alts[0] ? `✓ ${alts[0]}` : "";
+        renderRadioReviewStage();
+        rvvTimer = setTimeout(() => advanceRadioVoiceNext(runTok), 750);
+      },
+      onEmpty: () => {
+        if (rvvToken !== runTok || !rvvState.running) return;
+        rvvTimer = setTimeout(() => advanceRadioVoiceNext(runTok), 450);
+      },
+      onError: () => {
+        if (rvvToken !== runTok || !rvvState.running) return;
+        rvvTimer = setTimeout(() => advanceRadioVoiceNext(runTok), 450);
+      }
+    });
+  }, 260);
+}
+
+function handleRadioVoiceResponse(entry, alts, isBlank, runTok) {
+  if (rvvToken !== runTok || rvMode !== "voice") return;
+  if (entry.stepType === "vocab") {
+    const it = entry.item;
+    const vcRef = (DATA.vocab_cards && DATA.vocab_cards[it.title]) || {};
+    const res = isBlank ? { ok: false, subkind: "blank", heard: "", verdict: "" } : JA_ASR.analyzePronunciation(alts, it.title, it.kana, it.ja_example);
+    commitRadioVoiceStepOutcome(entry, res.ok, res.ok ? "语音收尾:读准" : "语音收尾:再巩固");
+    rvvState.phase = "feedback";
+    rvvState.revealed = true;
+    rvvState.lastOk = res.ok;
+    rvvState.verdictTone = res.ok ? "ok" : "ng";
+    rvvState.statusText = res.ok ? "读准了" : (isBlank ? `标准读音「${it.kana || it.title}」` : res.verdict);
+    rvvState.heardText = (!isBlank && res.heard) ? (res.ok ? `✓ ${res.heard}` : `听到「${res.heard}」`) : "";
+    renderRadioReviewStage();
+
+    const modelUrl = vcRef.word_audio || it.word_audio || it.demo_audio || "";
+    const revUrl = vcRef.rev_audio || it.rev_audio || "";
+    if (res.ok) {
+      playZenVoiceChime("ok");
+      playGenericCoachCue("ok_1", () => rvvToken, runTok, () => {
+        playGenericVoiceUrl(modelUrl, it.kana || it.title, "ja-JP", () => rvvToken, runTok, () => {
+          rvvTimer = setTimeout(() => advanceRadioVoiceNext(runTok), 700);
+        }, 1.0);
+      });
+    } else {
+      playZenVoiceChime("coach");
+      const cueKey = isBlank ? "blank" : (res.subkind && VC_COACH_FALLBACK_TEXT[res.subkind] ? res.subkind : "miss");
+      playGenericCoachCue(cueKey, () => rvvToken, runTok, () => {
+        playGenericVoiceUrl(revUrl || modelUrl, it.mnemonic_card || it.mnemonic || (it.kana || it.title), revUrl ? "zh-CN" : "ja-JP", () => rvvToken, runTok, () => {
+          playGenericCoachCue("shadow_ask", () => rvvToken, runTok, () => openRadioVoiceShadow(entry, modelUrl, it.kana || it.title, runTok));
+        }, 1.0);
+      });
+    }
+    return;
+  }
+
+  if (entry.stepType === "grammar") {
+    const it = entry.item;
+    const res = isBlank
+      ? { ok: false, heard: "", verdict: "" }
+      : JA_ASR.analyzeSpokenOutput(alts, { title: it.title, model_ja: it.ja_example || "", target_stems: JA_ASR.expandGrammarStems([it.title, it.key]) });
+    commitRadioVoiceStepOutcome(entry, res.ok, res.ok ? "语音收尾:句型顺口" : "语音收尾:句型回炉");
+    rvvState.phase = "feedback";
+    rvvState.revealed = true;
+    rvvState.lastOk = res.ok;
+    rvvState.verdictTone = res.ok ? "ok" : "ng";
+    rvvState.statusText = res.ok ? "句型读顺了" : (isBlank ? "听一遍原句再巩固" : res.verdict);
+    rvvState.heardText = (!isBlank && res.heard) ? (res.ok ? `✓ ${res.heard}` : `听到「${res.heard}」`) : "";
+    renderRadioReviewStage();
+
+    const exUrl = it.ex_audio || it.demo_audio || "";
+    if (res.ok) {
+      playZenVoiceChime("ok");
+      playGenericCoachCue("ok_2", () => rvvToken, runTok, () => {
+        rvvTimer = setTimeout(() => advanceRadioVoiceNext(runTok), 700);
+      });
+    } else {
+      playZenVoiceChime("coach");
+      playGenericCoachCue("rv_spk_miss", () => rvvToken, runTok, () => {
+        playGenericVoiceUrl(exUrl, it.ja_example || it.title, "ja-JP", () => rvvToken, runTok, () => {
+          rvvTimer = setTimeout(() => advanceRadioVoiceNext(runTok), 800);
+        }, 1.0);
+      });
+    }
+    return;
+  }
+
+  // Step type === "speak" ("听中文口头造短句")
+  const p = entry.prompt;
+  const res = isBlank ? { ok: false, usedTarget: false, heard: "", traps: [], verdict: "" } : JA_ASR.analyzeSpokenOutput(alts, p);
+  commitRadioVoiceStepOutcome(entry, res.ok, res.ok ? "造句:自然达标" : "造句:示范跟读");
+  rvvState.phase = "feedback";
+  rvvState.revealed = true;
+  rvvState.lastOk = res.ok;
+  rvvState.verdictTone = res.ok ? "ok" : "ng";
+  rvvState.lastTip = p.coaching_tip || "";
+  rvvState.statusText = res.ok ? "句型用准了 · 听地道示范" : (isBlank ? "先听一遍东京日常示范" : res.verdict);
+  rvvState.heardText = (!isBlank && res.heard) ? (res.ok ? `✓ ${res.heard}` : `听到「${res.heard}」`) : "";
+  renderRadioReviewStage();
+
+  const modelUrl = p.model_audio || p.demo_audio || "";
+  if (res.ok) {
+    playZenVoiceChime("ok");
+    playGenericCoachCue("rv_spk_ok", () => rvvToken, runTok, () => {
+      playGenericVoiceUrl(modelUrl, p.model_ja || "", "ja-JP", () => rvvToken, runTok, () => {
+        rvvTimer = setTimeout(() => advanceRadioVoiceNext(runTok), 900);
+      }, 1.0);
+    });
+  } else {
+    playZenVoiceChime("coach");
+    const cueKey = (!isBlank && res.usedTarget) ? "rv_spk_near" : "rv_spk_miss";
+    playGenericCoachCue(cueKey, () => rvvToken, runTok, () => {
+      playGenericVoiceUrl(modelUrl, p.model_ja || "", "ja-JP", () => rvvToken, runTok, () => {
+        if (rvvState.audioOnly || !JA_ASR.supported()) {
+          rvvTimer = setTimeout(() => advanceRadioVoiceNext(runTok), 1000);
+          return;
+        }
+        playGenericCoachCue("shadow_ask", () => rvvToken, runTok, () => openRadioVoiceShadow(entry, modelUrl, p.model_ja || "", runTok));
+      }, 1.0);
+    });
+  }
+}
+
+function openRadioVoiceMic(entry, runTok) {
+  if (rvvToken !== runTok || !rvvState.running || rvMode !== "voice") return;
+  const isSentence = entry.stepType !== "vocab";
+  if (rvvState.audioOnly || !JA_ASR.supported()) {
+    rvvState.audioOnly = true;
+    rvvState.phase = "listening";
+    rvvState.statusText = isSentence ? "心里默造一句日语…" : "心里默念日语读音…";
+    renderRadioReviewStage();
+    rvvTimer = setTimeout(() => {
+      if (rvvToken !== runTok) return;
+      handleRadioVoiceResponse(entry, [], true, runTok);
+    }, isSentence ? 4500 : 3500);
+    return;
+  }
+  rvvState.phase = "listening";
+  rvvState.statusText = entry.stepType === "speak"
+    ? "请用日语说一句短话"
+    : (entry.stepType === "grammar" ? "请顺口跟读这句日语" : "请用日语回答");
+  rvvState.heardText = "";
+  renderRadioReviewStage();
+
+  playZenVoiceChime("listen");
+  rvvTimer = setTimeout(() => {
+    if (rvvToken !== runTok || !rvvState.running) return;
+    const started = JA_ASR.start("rv_voice", {
+      sentenceMode: isSentence,
+      skipStopVocab: true,
+      silenceMs: entry.stepType === "speak" ? 1450 : (isSentence ? 1200 : 950),
+      maxCapMs: entry.stepType === "speak" ? 10000 : (isSentence ? 8000 : 6500),
+      onInterim: (txt) => {
+        if (rvvToken !== runTok) return;
+        rvvState.heardText = `听到：${txt}`;
+        const el = document.getElementById("rvv-voice-heard");
+        if (el) { el.className = "vc-voice-heard"; el.textContent = rvvState.heardText; }
+      },
+      onFinal: (alts) => {
+        if (rvvToken !== runTok || !rvvState.running) return;
+        rvvState.silentStreak = 0;
+        const cmd = JA_ASR.detectVoiceCommand(alts, entry.item ? entry.item.kana : "");
+        if (cmd === "pause") { pauseRadioVoiceRun("已暂停"); return; }
+        if (cmd === "repeat") {
+          playGenericCoachCue("repeat", () => rvvToken, runTok, () => runRadioVoiceCurrentStep(runTok));
+          return;
+        }
+        if (cmd === "skip") {
+          handleRadioVoiceResponse(entry, [], true, runTok);
+          return;
+        }
+        handleRadioVoiceResponse(entry, alts, false, runTok);
+      },
+      onEmpty: () => {
+        if (rvvToken !== runTok || !rvvState.running) return;
+        rvvState.silentStreak = (rvvState.silentStreak || 0) + 1;
+        if (rvvState.silentStreak >= 2) {
+          pauseRadioVoiceRun("连续两项无回应，已自动暂停");
+          playGenericCoachCue("auto_pause", () => rvvToken, ++rvvToken, null);
+          return;
+        }
+        handleRadioVoiceResponse(entry, [], true, runTok);
+      },
+      onError: (msg, code) => {
+        if (rvvToken !== runTok || !rvvState.running) return;
+        if (code === "not-allowed" || code === "service-not-allowed" || code === "audio-capture") {
+          rvvState.audioOnly = true;
+          openRadioVoiceMic(entry, runTok);
+          return;
+        }
+        rvvState.silentStreak = (rvvState.silentStreak || 0) + 1;
+        if (rvvState.silentStreak >= 2) {
+          pauseRadioVoiceRun("语音识别暂不可用，已暂停");
+          return;
+        }
+        handleRadioVoiceResponse(entry, [], true, runTok);
+      }
+    });
+    if (!started && rvvToken === runTok) {
+      rvvState.audioOnly = true;
+      openRadioVoiceMic(entry, runTok);
+    }
+  }, 280);
+}
+
+function runRadioVoiceCurrentStep(runTok) {
+  if (rvvToken !== runTok || !rvvState.running || rvMode !== "voice") return;
+  const entry = rvvState.queue[rvvState.idx];
+  if (!entry) {
+    completeRadioVoiceWrapUp(runTok);
+    return;
+  }
+  rvvState.activeItem = entry;
+  rvvState.phase = "asking";
+  rvvState.revealed = false;
+  rvvState.heardText = "";
+  rvvState.verdictTone = "";
+  rvvState.lastTip = "";
+  rvvState.statusText = entry.stepType === "speak" ? "口头造短句 · 听场景…" : "正在提问…";
+  renderRadioReviewStage();
+
+  const beginAsk = () => {
+    if (rvvToken !== runTok || !rvvState.running) return;
+    if (entry.stepType === "vocab") {
+      const it = entry.item;
+      const vcRef = (DATA.vocab_cards && DATA.vocab_cards[it.title]) || {};
+      const askUrl = vcRef.ask_audio || "";
+      const askTxt = vcRef.ask_spoken || `刚才节目里聊到的「${it.zh_card || it.zh || it.title}」，日语怎么读？`;
+      playGenericVoiceUrl(askUrl, askTxt, "zh-CN", () => rvvToken, runTok, () => openRadioVoiceMic(entry, runTok), 1.0);
+    } else if (entry.stepType === "grammar") {
+      const it = entry.item;
+      const exUrl = it.ex_audio || it.demo_audio || "";
+      playGenericCoachCue("rv_grammar_ask", () => rvvToken, runTok, () => {
+        playGenericVoiceUrl(exUrl, it.ja_example || it.title, "ja-JP", () => rvvToken, runTok, () => openRadioVoiceMic(entry, runTok), 1.0);
+      });
+    } else {
+      const p = entry.prompt;
+      const askTxt = p.ask_spoken || `想表达「${p.prompt_short || p.prompt_zh || ""}」，试着用「${p.title || ""}」说一句日语。`;
+      playGenericVoiceUrl(p.ask_audio || "", askTxt, "zh-CN", () => rvvToken, runTok, () => openRadioVoiceMic(entry, runTok), 1.0);
+    }
+  };
+
+  if (entry.stepType === "speak" && !rvvState.spkIntroPlayed) {
+    rvvState.spkIntroPlayed = true;
+    playGenericCoachCue("rv_spk_intro", () => rvvToken, runTok, () => {
+      rvvTimer = setTimeout(beginAsk, 180);
+    });
+  } else {
+    beginAsk();
+  }
+}
+
+function startRadioVoiceRun(ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  unlockWordPlayerOnce();
+  if (radioInitialized && !radioPlayer.paused) {
+    radioPlayer.pause();
+    syncRadioUI(false);
+  }
+  stopRadioReviewAudio();
+  const runTok = ++rvvToken;
+  const firstTime = !rvvState.everStarted;
+  rvvState.running = true;
+  rvvState.everStarted = true;
+  rvvState.silentStreak = 0;
+  acquireVoiceWakeLock();
+  if (firstTime && rvvState.idx === 0) {
+    rvvState.phase = "asking";
+    rvvState.statusText = "开始听后语音收尾…";
+    renderRadioReviewStage();
+    playGenericCoachCue("rv_intro", () => rvvToken, runTok, () => {
+      rvvTimer = setTimeout(() => runRadioVoiceCurrentStep(runTok), 180);
+    });
+  } else {
+    runRadioVoiceCurrentStep(runTok);
+  }
+}
+
+function pauseRadioVoiceRun(msg, ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  stopRadioVoiceCoach(true);
+  if (msg) rvvState.statusText = msg;
+  renderRadioReviewStage();
+}
+
+function onRadioVoiceOrbTap(ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  if (!rvvState.running) {
+    startRadioVoiceRun();
+    return;
+  }
+  if (JA_ASR.isActive("rv_voice")) {
+    JA_ASR.finishNow();
+    return;
+  }
+  pauseRadioVoiceRun("已暂停");
+}
+
+function radioVoiceSkipOrNext(ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  if (JA_ASR.isActive("rv_voice")) JA_ASR.stop();
+  if (rvvTimer) { clearTimeout(rvvTimer); rvvTimer = null; }
+  const runTok = ++rvvToken;
+  rvvState.running = true;
+  rvvState.everStarted = true;
+  rvvState.silentStreak = 0;
+  if (rvvState.phase === "feedback" || rvvState.phase === "shadow") {
+    advanceRadioVoiceNext(runTok);
+  } else {
+    const entry = rvvState.queue[rvvState.idx];
+    if (entry) handleRadioVoiceResponse(entry, [], true, runTok);
+  }
+}
+
+function radioVoiceRepeatCurrent(ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  if (JA_ASR.isActive("rv_voice")) JA_ASR.stop();
+  if (rvvTimer) { clearTimeout(rvvTimer); rvvTimer = null; }
+  const runTok = ++rvvToken;
+  rvvState.running = true;
+  rvvState.everStarted = true;
+  rvvState.silentStreak = 0;
+  runRadioVoiceCurrentStep(runTok);
+}
+
+function renderRadioVoiceStage(host) {
+  const st = rvvState;
+  const entry = st.queue[st.idx] || null;
+  if (!entry) {
+    rvMode = "done";
+    renderRadioReviewStage();
+    return;
+  }
+  let orbCls = "vc-voice-orb";
+  let orbSvg = voiceSharedOrbSVG("idle");
+  if (st.phase === "listening" || st.phase === "shadow") {
+    orbCls += " is-listening";
+    orbSvg = voiceSharedOrbSVG("listening");
+  } else if (st.phase === "asking") {
+    orbCls += " is-speaking";
+    orbSvg = voiceSharedOrbSVG("asking");
+  } else if (st.phase === "feedback") {
+    orbCls += st.verdictTone === "ok" ? " is-ok" : " is-coach";
+    orbSvg = voiceSharedOrbSVG(st.verdictTone === "ok" ? "ok" : "feedback");
+  }
+  const statusCls = "vc-voice-status" + (st.verdictTone === "ok" ? " ok" : (st.verdictTone === "ng" ? " ng" : (st.running ? " live" : "")));
+
+  let centerHTML = "";
+  let rightMeta = "";
+  if (entry.stepType === "vocab") {
+    const it = entry.item;
+    rightMeta = "节目词汇";
+    if (st.revealed) {
+      centerHTML = `
+        <div class="vc-voice-cue-kanji" lang="ja">${escapeHtml(it.title)}</div>
+        ${it.kana ? `<div class="vc-voice-cue-zh sub">${escapeHtml(it.kana)}</div>` : ""}
+        <div class="voice-rule-line">${escapeHtml(it.mnemonic_card || it.mnemonic || it.zh_card || it.zh || "")}</div>
+        ${st.heardText ? `<div class="vc-voice-heard ${st.verdictTone}" id="rvv-voice-heard">${escapeHtml(st.heardText)}</div>` : ""}
+      `;
+    } else {
+      const hasK = /[\u4e00-\u9faf\u3400-\u4dbf]/.test(it.title || "");
+      centerHTML = `
+        ${hasK ? `<div class="vc-voice-cue-kanji" lang="ja">${escapeHtml(it.title)}</div>` : ""}
+        <div class="vc-voice-cue-zh${hasK ? " sub" : ""}">${escapeHtml(it.zh_card || it.zh || "")}</div>
+        <div class="vc-voice-heard" id="rvv-voice-heard">${escapeHtml(st.heardText || "")}</div>
+        ${!st.audioOnly ? `<div class="vc-voice-hint">可说「もういちど」重问 · 「わからない」听讲</div>` : ""}
+      `;
+    }
+  } else if (entry.stepType === "grammar") {
+    const it = entry.item;
+    rightMeta = it.is_pin ? "随手记" : "节目句型";
+    centerHTML = `
+      <span class="voice-conj-tag">${escapeHtml(it.title)}</span>
+      <div class="voice-model-ja" lang="ja">${escapeHtml(it.ja_example || it.title)}</div>
+      <div class="voice-model-zh">${escapeHtml(it.zh_card || it.zh || "")}</div>
+      <div class="vc-voice-heard ${st.verdictTone}" id="rvv-voice-heard">${escapeHtml(st.heardText || "")}</div>
+      ${!st.audioOnly && !st.revealed ? `<div class="vc-voice-hint">听完原句顺口跟读，或说「わからない」跳过</div>` : ""}
+    `;
+  } else {
+    const p = entry.prompt;
+    rightMeta = "口头造短句";
+    if (st.revealed) {
+      centerHTML = `
+        <span class="voice-conj-tag">${escapeHtml(p.title || "")}</span>
+        <div class="voice-model-ja" lang="ja">${escapeHtml(p.model_ja || "")}</div>
+        <div class="voice-model-zh">${escapeHtml(p.model_zh || p.prompt_short || "")}</div>
+        ${p.coaching_tip ? `<div class="voice-rule-line">${escapeHtml(p.coaching_tip)}</div>` : ""}
+        ${st.heardText ? `<div class="vc-voice-heard ${st.verdictTone}" id="rvv-voice-heard">${escapeHtml(st.heardText)}</div>` : ""}
+      `;
+    } else {
+      centerHTML = `
+        <span class="voice-conj-tag">用「${escapeHtml(p.title || "")}」造句</span>
+        <div class="vc-voice-cue-zh">${escapeHtml(p.prompt_short || p.prompt_zh || "")}</div>
+        <div class="vc-voice-heard" id="rvv-voice-heard">${escapeHtml(st.heardText || "")}</div>
+        ${!st.audioOnly ? `<div class="vc-voice-hint">直接用日语说一句 · 说「わからない」听东京示范</div>` : ""}
+      `;
+    }
+  }
+
+  let dockHTML = "";
+  if (st.running) {
+    const rightLbl = (st.phase === "feedback" || st.phase === "shadow") ? "下一个" : "听示范";
+    dockHTML = `
+      <button type="button" class="vc-btn mid" id="rvv-pause-btn" onclick="pauseRadioVoiceRun('已暂停', event)">暂停</button>
+      <button type="button" class="vc-btn voice-exhale" id="rvv-skip-btn" onclick="radioVoiceSkipOrNext(event)">${rightLbl}</button>
+    `;
+  } else {
+    dockHTML = `<button type="button" class="vc-btn ok" id="rvv-start-btn" onclick="startRadioVoiceRun(event)">${st.everStarted ? "继续语音收尾" : "开始语音收尾"}</button>`;
+  }
+
+  host.innerHTML = `
+    <div class="meta-bar">
+      <span class="overline">语音收尾 · ${st.idx + 1} / ${st.total}</span>
+      <span class="overline">${escapeHtml(rightMeta)}</span>
+    </div>
+
+    <div class="vc-voice-stage" id="rvv-voice-stage">
+      <button type="button" class="${orbCls}" id="rvv-voice-orb" onclick="onRadioVoiceOrbTap(event)" aria-label="${st.running ? "暂停或结束回答" : "开始语音收尾"}">${orbSvg}</button>
+      <div class="${statusCls}" id="rvv-voice-status">${escapeHtml(st.statusText || "")}</div>
+      ${centerHTML}
+    </div>
+
+    <div class="vc-aux-row">
+      <button type="button" class="vc-aux-btn seal" id="rvv-back-cards-btn" onclick="exitRadioVoiceToCards(event)">切回滑卡</button>
+      <div class="vc-aux-right">
+        <button type="button" class="vc-aux-btn" onclick="closeRadioReview()">随身听</button>
+        <button type="button" class="vc-aux-btn replay" onclick="radioVoiceRepeatCurrent(event)">重问</button>
+      </div>
+    </div>
+
+    <div class="vc-dock">${dockHTML}</div>
   `;
 }
 
@@ -18054,6 +20117,7 @@ function formatMockTime(sec) {
 }
 
 function startMockSprint() {
+  if (typeof stopAllHandsFreeVoice === "function") stopAllHandsFreeVoice();
   stopQuizAudio();
   if (!radioPlayer.paused) radioPlayer.pause();
   stopMockTimer();
@@ -23041,11 +25105,122 @@ if (!audioOnlyHtml29.includes('开始免看屏听答') || audioOnlyHtml29.includ
 }
 sb.window.webkitSpeechRecognition = function() {};
 sb.switchVocabPracticeMode('card');
+
+// Self-test 30 (v85): Whole-App Hands-Free Voice Studio (Listening 1/2/3 + Verb Conjugation + Post-Radio Voice Wrap-Up & Sentence Building)
+const reqCoachKeys30 = [
+  'listen_ok_1', 'listen_ok_2', 'listen_ok_3',
+  'listen_wrong_1', 'listen_wrong_2', 'listen_wrong_3',
+  'listen_unsure_1', 'listen_unsure_2', 'listen_unsure_3',
+  'listen_slow', 'listen_unclear', 'listen_done',
+  'conj_ranuki', 'conj_iku_te', 'conj_pass_caus', 'conj_keigo_dir', 'conj_done',
+  'rv_intro', 'rv_spk_intro', 'rv_spk_ok', 'rv_spk_near', 'rv_spk_miss', 'rv_done', 'rv_grammar_ask'
+];
+for (const ck30 of reqCoachKeys30) {
+  if (!vcCoach29[ck30] || !String(vcCoach29[ck30]).includes('.mp3')) {
+    throw new Error('Self-test 30 failed: missing v85 studio voice_coach clip for ' + ck30);
+  }
+}
+const conjDrills30 = vm.runInNewContext('DATA.conj_drills || []', sb);
+if (conjDrills30.length !== 48) {
+  throw new Error('Self-test 30 failed: expected 48 conjugation drills, got ' + conjDrills30.length);
+}
+for (const cd30 of conjDrills30) {
+  if (!cd30.ask_audio || !cd30.teach_audio || !cd30.model_audio || String(cd30.rule_zh || '').includes('—')) {
+    throw new Error('Self-test 30 failed: incomplete conjugation drill audio or em dash on ' + cd30.id);
+  }
+}
+// Voice command slow + collision guard + listening choice parser + conjugation trap diagnostics
+if (asr29.detectVoiceCommand(['ゆっくり'], 'しゅっちょう') !== 'slow' || asr29.detectVoiceCommand(['ゆっくり'], 'ゆっくり') !== '') {
+  throw new Error('Self-test 30 failed: slow voice command or ゆっくり collision guard mismatch');
+}
+const lc1 = asr29.parseListeningChoice(['いちばん'], ['A', 'B', 'C']);
+const lc2 = asr29.parseListeningChoice(['2番'], ['A', 'B', 'C']);
+const lc3 = asr29.parseListeningChoice(['さん'], ['A', 'B', 'C']);
+if (!lc1 || lc1.idx !== 0 || !lc2 || lc2.idx !== 1 || !lc3 || lc3.idx !== 2) {
+  throw new Error('Self-test 30 failed: parseListeningChoice failed: ' + JSON.stringify({ lc1, lc2, lc3 }));
+}
+const cjEat = conjDrills30.find(d => d.id === 'CJ09');
+const cjGo = conjDrills30.find(d => d.id === 'CJ01');
+const cjSuru = conjDrills30.find(d => d.id === 'CJ36');
+if (!asr29.analyzeConjugation(['食べられます'], cjEat).ok) {
+  throw new Error('Self-test 30 failed: polite 食べられます should pass CJ09');
+}
+if (asr29.analyzeConjugation(['食べれる'], cjEat).subkind !== 'conj_ranuki') {
+  throw new Error('Self-test 30 failed: 食べれる must trigger conj_ranuki trap');
+}
+if (asr29.analyzeConjugation(['いいて'], cjGo).subkind !== 'conj_iku_te') {
+  throw new Error('Self-test 30 failed: いいて must trigger conj_iku_te trap');
+}
+if (asr29.analyzeConjugation(['いたします'], cjSuru).subkind !== 'conj_keigo_dir') {
+  throw new Error('Self-test 30 failed: いたします must trigger conj_keigo_dir trap');
+}
+// Quiz Voice Sheet + Listening Voice Mode ledger sync + Conjugation Voice Mode outbox
+sb.switchMode('tutor');
+sb.openQuizVoiceSheet();
+const qvSheetHtml30 = (els['modal-content'] && els['modal-content'].innerHTML) || '';
+if (!qvSheetHtml30.includes('语音练习') || !qvSheetHtml30.includes('动词变形快问') || qvSheetHtml30.includes('—')) {
+  throw new Error('Self-test 30 failed: Quiz voice bottom sheet missing options or contains em dash');
+}
+sb.closeModal();
+const hasListening30 = vm.runInNewContext('DATA.points.some(p => p && p.primary && p.primary.is_listening)', sb);
+if (hasListening30) {
+  sb.startQuizVoiceMode('listen');
+  const qvListenHtml30 = (els['voice-card'] && els['voice-card'].innerHTML) || '';
+  const qvMeta30 = qvListenHtml30.split('qv-voice-stage')[0] || '';
+  if (!qvListenHtml30.includes('id="qv-voice-orb"') || !qvListenHtml30.includes('切回做题') || qvMeta30.includes('<button') || qvListenHtml30.includes('—')) {
+    throw new Error('Self-test 30 failed: Listening Voice stage broken or violates 上看下点');
+  }
+  const lPid30 = vm.runInNewContext('curPointId', sb);
+  const lAns30 = vm.runInNewContext('activeQuizObj.answer', sb);
+  vm.runInNewContext('qvToken += 1; qvState.running = true; qvState.replayMode = false;', sb);
+  const lTok30 = vm.runInNewContext('qvToken', sb);
+  sb.finishQuizVoiceListeningTurn(lAns30, false, 'いちばん', lTok30);
+  const lStatus30 = vm.runInNewContext(`A.pts[${JSON.stringify(lPid30)}].status`, sb);
+  if (lStatus30 !== 'green') {
+    throw new Error('Self-test 30 failed: Listening Voice correct answer did not sync green to main quiz ledger');
+  }
+}
+const obBeforeConj30 = vm.runInNewContext('loadOutbox().length', sb);
+sb.startQuizVoiceMode('conj');
+const qvConjHtml30 = (els['voice-card'] && els['voice-card'].innerHTML) || '';
+if (!qvConjHtml30.includes('id="qv-voice-orb"') || !qvConjHtml30.includes('动词变形') || qvConjHtml30.includes('—')) {
+  throw new Error('Self-test 30 failed: Conjugation Voice stage broken');
+}
+const firstConj30 = vm.runInNewContext('qvState.conjQueue[0]', sb);
+vm.runInNewContext('qvToken += 1; qvState.running = true;', sb);
+const cTok30 = vm.runInNewContext('qvToken', sb);
+sb.handleQuizVoiceConjOutcome(firstConj30, asr29.analyzeConjugation([firstConj30.target_kana], firstConj30), false, cTok30);
+const conjLogged30 = vm.runInNewContext(`loadOutbox().slice(${obBeforeConj30}).some(x => String(x[0] || '').startsWith('CONJ:'))`, sb);
+if (!conjLogged30) {
+  throw new Error('Self-test 30 failed: Conjugation Voice did not log CONJ: record to outbox');
+}
+sb.exitQuizVoiceMode();
+// Post-Radio Voice Wrap-Up & Spoken Sentence Builder
+sb.switchMode('radio', false);
+sb.openRadioReview(true);
+const rvCardsHtml30 = (els['radio-review-stage'] && els['radio-review-stage'].innerHTML) || '';
+if (!rvCardsHtml30.includes('id="rv-voice-entry-btn"') || !rvCardsHtml30.includes('语音收尾')) {
+  throw new Error('Self-test 30 failed: Radio Review missing quiet 语音收尾 trigger');
+}
+sb.openRadioVoiceWrapUp();
+const rvVoiceHtml30 = (els['radio-review-stage'] && els['radio-review-stage'].innerHTML) || '';
+const rvQueueLen30 = vm.runInNewContext('rvvState.queue.length', sb);
+const rvHasSpk30 = vm.runInNewContext('rvvState.queue.some(x => x.stepType === "speak")', sb);
+if (!rvVoiceHtml30.includes('id="rvv-voice-orb"') || !rvVoiceHtml30.includes('切回滑卡') || rvQueueLen30 < 2 || !rvHasSpk30 || rvVoiceHtml30.includes('—')) {
+  throw new Error('Self-test 30 failed: Post-Radio Voice Wrap-Up missing speaking prompts or broken UI');
+}
+vm.runInNewContext('rvvToken += 1; rvvState.running = true;', sb);
+sb.completeRadioVoiceWrapUp(vm.runInNewContext('rvvToken', sb));
+if (!vm.runInNewContext('!!(A.radioReview && A.radioReview.done)', sb)) {
+  throw new Error('Self-test 30 failed: completeRadioVoiceWrapUp did not mark radioReview.done');
+}
+sb.closeRadioReview();
+sb.switchMode('tutor');
 """
     subprocess.run(["node", "-e", smoke_js, HTML_PATH], check=True)
 
 sw_path = os.path.join(BASE_DIR, "sw.js")
-SW_CACHE_NAME = "n3-studio-tutor-v84"
+SW_CACHE_NAME = "n3-studio-tutor-v85"
 if not _IS_SIM_OUTPUT and os.path.exists(sw_path):
     with open(sw_path, encoding="utf-8") as sf:
         sw_src = sf.read()

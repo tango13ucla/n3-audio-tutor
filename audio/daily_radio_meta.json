@@ -580,7 +580,9 @@
       "demo_audio": "./audio/N3-G19_q.mp3",
       "is_new_n2": false,
       "img": "./img/ch_4.jpg?v=2026-11-26_4c5591_jp",
-      "model_audio": "./audio/spk_0.mp3?v=2026-11-26_4c5591_jp"
+      "model_audio": "./audio/spk_0.mp3?v=2026-11-26_4c5591_jp",
+      "ask_audio": "./audio/spk_0_ask.mp3?v=2026-11-26_4c5591_jp",
+      "ask_spoken": "想表达「一忙就容易忘事」，试着用「がちだ」说一句日语。"
     },
     {
       "id": "SPK-SLIP-1",
@@ -621,7 +623,9 @@
       "demo_audio": "",
       "is_new_n2": false,
       "img": "",
-      "model_audio": "./audio/spk_1.mp3?v=2026-11-26_4c5591_jp"
+      "model_audio": "./audio/spk_1.mp3?v=2026-11-26_4c5591_jp",
+      "ask_audio": "./audio/spk_1_ask.mp3?v=2026-11-26_4c5591_jp",
+      "ask_spoken": "想表达「让我早点回去」，试着用「させてもらう」说一句日语。"
     }
   ],
   "next_program": {
