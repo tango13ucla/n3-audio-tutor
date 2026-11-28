@@ -1,7 +1,7 @@
 {
   "v": 15,
   "app": "n3-zen",
-  "updatedAt": 1795815019,
+  "updatedAt": 1795836877,
   "dates": {
     "2026-11-14": {
       "resetAt": 0,
@@ -4487,13 +4487,32 @@
         1795810129
       ],
       "radioSig": "a411a7c9",
-      "greenAt": {},
+      "greenAt": {
+        "N3-G123": 1795835207,
+        "N3-G47": 1795835251,
+        "N3-G45": 1795835304
+      },
       "retestAt": {
         "N3-G45": 1795803602,
-        "N3-G123": 1795803623
+        "N3-G123": 1795803623,
+        "N3-H19": 1795835324,
+        "Q-20261114-005": 1795836297,
+        "N3-L33": 1795836353
       },
       "learning": {
         "N3-G123": [
+          1,
+          0
+        ],
+        "N3-H19": [
+          1,
+          0
+        ],
+        "Q-20261114-005": [
+          1,
+          0
+        ],
+        "N3-L33": [
           1,
           0
         ]
@@ -4547,14 +4566,46 @@
           0,
           0,
           1795810117091
+        ],
+        "N3-H19": [
+          8,
+          2,
+          1,
+          0,
+          1795835324004
+        ],
+        "Q-20261114-005": [
+          9,
+          0,
+          1,
+          0,
+          1795836297948
+        ],
+        "N3-L33": [
+          10,
+          0,
+          1,
+          0,
+          1795836353025
         ]
       },
       "cursor": [
-        "N3-G123",
-        2,
-        "N3-G123",
+        "N3-L33",
+        8,
+        "N3-L33",
         "keigo_direction",
-        1795803623156
+        1795836353025
+      ],
+      "tappedWords": [
+        "ところ",
+        "だった",
+        "なかった"
+      ],
+      "flashProg": [
+        7,
+        24,
+        0,
+        1795836831
       ]
     },
     "2026-12-06": {
@@ -5266,12 +5317,12 @@
       1795246635
     ],
     "K-008": [
-      "todo:20261126",
-      1795764575
+      "todo:20261127",
+      1795835324
     ],
     "知る → ご存じだ（尊敬）": [
-      "todo:20261126",
-      1795764575
+      "todo:20261127",
+      1795835324
     ],
     "K-014": [
       "wip1:20261125",
@@ -5283,11 +5334,11 @@
     ],
     "〜させてもらう": [
       "todo:20261127",
-      1795803623
+      1795835207
     ],
     "〜させてもらう（礼貌请求许可做…）": [
       "todo:20261127",
-      1795803623
+      1795835207
     ],
     "〜のに": [
       "done",
@@ -5378,12 +5429,12 @@
       1795638960
     ],
     "ところだった": [
-      "todo:20261126",
-      1795764560
+      "wip1:20261127",
+      1795835251
     ],
     "ところだった（差一点就险些…）": [
-      "todo:20261126",
-      1795764560
+      "wip1:20261127",
+      1795835251
     ],
     "必ずしも〜ない": [
       "wip1:20261120",
@@ -5403,11 +5454,11 @@
     ],
     "〜ながらも": [
       "todo:20261127",
-      1795803602
+      1795835304
     ],
     "〜ながらも（虽然…却依然…）": [
       "todo:20261127",
-      1795803602
+      1795835304
     ],
     "〜うえで": [
       "wip1:20261126",
@@ -5466,8 +5517,8 @@
       1795676891
     ],
     "めったに": [
-      "wip1:20261126",
-      1795724109
+      "todo:20261127",
+      1795836831
     ],
     "めったに〜ない（极少、难得）": [
       "todo:20261125",
@@ -5506,8 +5557,8 @@
       1795313985
     ],
     "こっそり": [
-      "wip1:20261125",
-      1795673698
+      "wip1:20261127",
+      1795836418
     ],
     "しゃがむ": [
       "done",
@@ -6130,8 +6181,8 @@
       1795562155
     ],
     "象徴": [
-      "todo:20261126",
-      1795742919
+      "todo:20261127",
+      1795836845
     ],
     "予算": [
       "done",
@@ -6166,8 +6217,8 @@
       1795673772
     ],
     "印象": [
-      "wip2:20261126",
-      1795723958
+      "done",
+      1795836633
     ],
     "〜気味": [
       "todo:20261124",
@@ -6418,8 +6469,8 @@
       1795723888
     ],
     "うろうろ": [
-      "todo:20261126",
-      1795742906
+      "todo:20261127",
+      1795836753
     ],
     "現象": [
       "todo:20261126",
@@ -6434,8 +6485,8 @@
       1795742934
     ],
     "実施": [
-      "todo:20261126",
-      1795760287
+      "todo:20261127",
+      1795836799
     ],
     "実際": [
       "todo:20261126",
@@ -6568,6 +6619,38 @@
     "会う → お目にかかる（謙譲）": [
       "todo:20261126",
       1795765497
+    ],
+    "N3L-199": [
+      "todo:20261127",
+      1795836297
+    ],
+    "〜させていただきます": [
+      "todo:20261127",
+      1795836297
+    ],
+    "N3L-387": [
+      "todo:20261127",
+      1795836353
+    ],
+    "発話表現・目上へのお礼": [
+      "todo:20261127",
+      1795836353
+    ],
+    "有料": [
+      "todo:20261127",
+      1795836512
+    ],
+    "発表": [
+      "todo:20261127",
+      1795836681
+    ],
+    "記憶": [
+      "todo:20261127",
+      1795836590
+    ],
+    "常識": [
+      "todo:20261127",
+      1795836784
     ]
   },
   "grammarAudit": {
@@ -7587,425 +7670,30 @@
       "contexts": [
         "date:2026-11-25"
       ]
+    },
+    "ところ": {
+      "count": 1,
+      "last_ts": "2026-11-28T03:07:43.000Z",
+      "contexts": [
+        "VAR8-09"
+      ]
+    },
+    "だった": {
+      "count": 1,
+      "last_ts": "2026-11-28T03:07:44.000Z",
+      "contexts": [
+        "VAR8-09"
+      ]
+    },
+    "なかった": {
+      "count": 1,
+      "last_ts": "2026-11-28T03:07:45.000Z",
+      "contexts": [
+        "VAR8-09"
+      ]
     }
   },
   "records": [
-    {
-      "id": "N3-G113",
-      "point": "〜のように／ような",
-      "choice": "てほしい",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:22:04.000Z"
-    },
-    {
-      "id": "RV:RVW-こうぞう",
-      "point": "構造",
-      "choice": "听后复盘:过",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:22:25.000Z"
-    },
-    {
-      "id": "RV:RVR-N3-G32",
-      "point": "〜最中に",
-      "choice": "听后复盘:过",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:22:35.000Z"
-    },
-    {
-      "id": "RV:RVW-きき",
-      "point": "危機",
-      "choice": "听后复盘:过",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:22:39.000Z"
-    },
-    {
-      "id": "RV:RVR-N3-G28",
-      "point": "〜による／によって",
-      "choice": "听后复盘:过",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:22:55.000Z"
-    },
-    {
-      "id": "RV:RVR-N3-G81",
-      "point": "〜きる／〜きれない",
-      "choice": "听后复盘:再过",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:23:08.000Z"
-    },
-    {
-      "id": "RV:RVR-N3-G47",
-      "point": "ところだった",
-      "choice": "听后复盘:再过",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:23:14.000Z"
-    },
-    {
-      "id": "RV:RVR-N3-G65",
-      "point": "〜とは限らない",
-      "choice": "听后复盘:过",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:23:20.000Z"
-    },
-    {
-      "id": "SPK:SPK-N3-G47",
-      "point": "ところだった",
-      "choice": "开口:自然达标",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:23:38.000Z"
-    },
-    {
-      "id": "SPK:SPK-N3-G28",
-      "point": "〜による／によって",
-      "choice": "开口:自然达标",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:23:52.000Z"
-    },
-    {
-      "id": "N3-G120",
-      "point": "〜結局",
-      "choice": "結局",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:24:48.000Z"
-    },
-    {
-      "id": "N3-G113",
-      "point": "〜のように／ような",
-      "choice": "そうだ",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:27:13.000Z"
-    },
-    {
-      "id": "N3-G38",
-      "point": "〜わけがない",
-      "choice": "わけがない",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:27:26.000Z"
-    },
-    {
-      "id": "N3-G117",
-      "point": "〜やすい／〜にくい",
-      "choice": "やすい",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:27:34.000Z"
-    },
-    {
-      "id": "VAR12-09",
-      "point": "〜てもかまわない",
-      "choice": "てもかまわない",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:28:24.000Z"
-    },
-    {
-      "id": "N3-G113",
-      "point": "〜のように／ような",
-      "choice": "たい",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:28:32.000Z"
-    },
-    {
-      "id": "HES:N3-G121",
-      "point": "尊敬語特殊動詞组",
-      "choice": "犹豫过关",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:28:46.000Z"
-    },
-    {
-      "id": "N3-G121",
-      "point": "尊敬語特殊動詞组",
-      "choice": "いらっしゃい",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:28:46.000Z"
-    },
-    {
-      "id": "N3-G104",
-      "point": "〜たあとで",
-      "choice": "たところ",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:29:06.000Z"
-    },
-    {
-      "id": "N3-G122",
-      "point": "謙譲語特殊動詞组",
-      "choice": "ご覧",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:29:21.000Z"
-    },
-    {
-      "id": "N3-L11",
-      "point": "N3L-003",
-      "choice": "あ、まだ決めてないんです。おすすめはありますか。",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:29:47.000Z"
-    },
-    {
-      "id": "N3-G104",
-      "point": "〜たあとで",
-      "choice": "たあとで",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:30:00.000Z"
-    },
-    {
-      "id": "N3-G122",
-      "point": "謙譲語特殊動詞组",
-      "choice": "ご覧",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:30:08.000Z"
-    },
-    {
-      "id": "VAR9-16",
-      "point": "ついてない",
-      "choice": "ついてない",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:30:18.000Z"
-    },
-    {
-      "id": "VAR5-32",
-      "point": "組む",
-      "choice": "くんで",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:30:23.000Z"
-    },
-    {
-      "id": "N3-G122",
-      "point": "謙譲語特殊動詞组",
-      "choice": "拝見",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:30:28.000Z"
-    },
-    {
-      "id": "V-20261114-05",
-      "point": "はっきり",
-      "choice": "うっかり",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:30:54.000Z"
-    },
-    {
-      "id": "N3-G70",
-      "point": "〜について",
-      "choice": "について",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:31:07.000Z"
-    },
-    {
-      "id": "HES:N3-G96",
-      "point": "〜ばよかった",
-      "choice": "犹豫过关",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:31:25.000Z"
-    },
-    {
-      "id": "N3-G96",
-      "point": "〜ばよかった",
-      "choice": "ばよかった",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:31:25.000Z"
-    },
-    {
-      "id": "VAR-V05",
-      "point": "はっきり",
-      "choice": "はっきり",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:31:31.000Z"
-    },
-    {
-      "id": "N3-G38",
-      "point": "〜わけがない",
-      "choice": "わけがない",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:31:34.000Z"
-    },
-    {
-      "id": "GA-G-026",
-      "point": "〜ながらも",
-      "choice": "盘点:陌生",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:31:47.000Z"
-    },
-    {
-      "id": "GA-G-027",
-      "point": "〜にしては",
-      "choice": "盘点:易混",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:31:51.000Z"
-    },
-    {
-      "id": "GA-GB-08",
-      "point": "〜というより",
-      "choice": "盘点:易混",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:31:57.000Z"
-    },
-    {
-      "id": "GA-GX-10",
-      "point": "〜にもかかわらず",
-      "choice": "盘点:易混",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:32:01.000Z"
-    },
-    {
-      "id": "GA-GB-05",
-      "point": "必ずしも〜ない",
-      "choice": "盘点:看懂",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:32:04.000Z"
-    },
-    {
-      "id": "GA-G-007",
-      "point": "〜にとって",
-      "choice": "盘点:看懂",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:32:10.000Z"
-    },
-    {
-      "id": "GA-G-131",
-      "point": "〜ふりをする",
-      "choice": "盘点:本能",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:32:12.000Z"
-    },
-    {
-      "id": "GA-G-071",
-      "point": "〜とは限らない",
-      "choice": "盘点:看懂",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:32:16.000Z"
-    },
-    {
-      "id": "GA-G-103",
-      "point": "〜わけではない",
-      "choice": "盘点:易混",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:32:20.000Z"
-    },
-    {
-      "id": "GA-G-077",
-      "point": "〜によっては",
-      "choice": "盘点:陌生",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:32:28.000Z"
-    },
-    {
-      "id": "GA-G-078",
-      "point": "〜によると／によれば",
-      "choice": "盘点:易混",
-      "correct": "false",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:32:31.000Z"
-    },
-    {
-      "id": "GA-G-090",
-      "point": "〜ばかりだ",
-      "choice": "盘点:看懂",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:32:34.000Z"
-    },
-    {
-      "id": "GA-G-108",
-      "point": "〜一方だ",
-      "choice": "盘点:本能",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:32:36.000Z"
-    },
-    {
-      "id": "GA-G-069",
-      "point": "〜として",
-      "choice": "盘点:看懂",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:32:38.000Z"
-    },
-    {
-      "id": "GA-G-081",
-      "point": "〜に対して",
-      "choice": "盘点:看懂",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:32:40.000Z"
-    },
-    {
-      "id": "GA-G-109",
-      "point": "〜一方で",
-      "choice": "盘点:看懂",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:32:42.000Z"
-    },
-    {
-      "id": "GA-G-116a",
-      "point": "いらっしゃる",
-      "choice": "盘点:看懂",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:32:43.000Z"
-    },
-    {
-      "id": "GA-G-116b",
-      "point": "召し上がる",
-      "choice": "盘点:本能",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:32:47.000Z"
-    },
-    {
-      "id": "GA-G-116c",
-      "point": "おっしゃる",
-      "choice": "盘点:看懂",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:32:50.000Z"
-    },
-    {
-      "id": "GA-G-116d",
-      "point": "ご覧になる",
-      "choice": "盘点:看懂",
-      "correct": "true",
-      "ask_again": "false",
-      "ts": "2026-11-26T07:32:53.000Z"
-    },
     {
       "id": "GA-G-116e",
       "point": "なさる",
@@ -9989,6 +9677,422 @@
       "correct": "true",
       "ask_again": "false",
       "ts": "2026-11-27T21:28:18.000Z"
+    },
+    {
+      "id": "HES:VAR9-09",
+      "point": "〜させてもらう",
+      "choice": "犹豫过关",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:06:47.000Z"
+    },
+    {
+      "id": "VAR9-09",
+      "point": "〜させてもらう",
+      "choice": "させてもらっ",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:06:47.000Z"
+    },
+    {
+      "id": "HES:VAR8-09",
+      "point": "ところだった",
+      "choice": "犹豫过关",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:07:31.000Z"
+    },
+    {
+      "id": "VAR8-09",
+      "point": "ところだった",
+      "choice": "ところだった",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:07:31.000Z"
+    },
+    {
+      "id": "LK:ところ",
+      "point": "VAR8-09",
+      "choice": "ところ",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:07:43.000Z"
+    },
+    {
+      "id": "LK:だった",
+      "point": "VAR8-09",
+      "choice": "だった",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:07:44.000Z"
+    },
+    {
+      "id": "LK:なかった",
+      "point": "VAR8-09",
+      "choice": "なかった",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:07:45.000Z"
+    },
+    {
+      "id": "HES:N3-G45",
+      "point": "〜ながらも",
+      "choice": "犹豫过关",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:08:24.000Z"
+    },
+    {
+      "id": "N3-G45",
+      "point": "〜ながらも",
+      "choice": "ながらも",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:08:24.000Z"
+    },
+    {
+      "id": "VAR9-32",
+      "point": "K-008",
+      "choice": "存じており",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:08:44.000Z"
+    },
+    {
+      "id": "Q-20261114-005",
+      "point": "N3L-199",
+      "choice": "不确定",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:24:57.000Z"
+    },
+    {
+      "id": "N3-L33",
+      "point": "N3L-387",
+      "choice": "不确定",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:25:53.000Z"
+    },
+    {
+      "id": "VC-有料",
+      "point": "有料",
+      "choice": "记词:没记住",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:26:24.000Z"
+    },
+    {
+      "id": "SPK:W-有料",
+      "point": "有料",
+      "choice": "试读:和「ゆうりょう」有点偏，听示范跟读一",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:26:24.000Z"
+    },
+    {
+      "id": "VC-こっそり",
+      "point": "こっそり",
+      "choice": "记词:记住",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:26:58.000Z"
+    },
+    {
+      "id": "SPK:W-こっそり",
+      "point": "こっそり",
+      "choice": "试读:准确",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:26:58.000Z"
+    },
+    {
+      "id": "VC-発表",
+      "point": "発表",
+      "choice": "记词:没记住",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:27:11.000Z"
+    },
+    {
+      "id": "SPK:W-発表",
+      "point": "発表",
+      "choice": "试读:和「はっぴょう」有点偏，听示范跟读一",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:27:11.000Z"
+    },
+    {
+      "id": "VC-記憶",
+      "point": "記憶",
+      "choice": "记词:没记住",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:27:43.000Z"
+    },
+    {
+      "id": "SPK:W-記憶",
+      "point": "記憶",
+      "choice": "试读:先听一遍口诀与读音",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:27:43.000Z"
+    },
+    {
+      "id": "VC-象徴",
+      "point": "象徴",
+      "choice": "记词:没记住",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:27:58.000Z"
+    },
+    {
+      "id": "SPK:W-象徴",
+      "point": "象徴",
+      "choice": "试读:和「しょうちょう」有点偏，听示范跟读",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:27:58.000Z"
+    },
+    {
+      "id": "VC-有料",
+      "point": "有料",
+      "choice": "记词:记住",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:28:32.000Z"
+    },
+    {
+      "id": "SPK:W-有料",
+      "point": "有料",
+      "choice": "试读:准确",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:28:32.000Z"
+    },
+    {
+      "id": "VC-常識",
+      "point": "常識",
+      "choice": "记词:没记住",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:28:45.000Z"
+    },
+    {
+      "id": "SPK:W-常識",
+      "point": "常識",
+      "choice": "试读:和「じょうしき」有点偏，听示范跟读一",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:28:45.000Z"
+    },
+    {
+      "id": "VC-発表",
+      "point": "発表",
+      "choice": "记词:没记住",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:29:19.000Z"
+    },
+    {
+      "id": "SPK:W-発表",
+      "point": "発表",
+      "choice": "试读:很接近，再核对一拍「はっぴょう」",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:29:19.000Z"
+    },
+    {
+      "id": "VC-記憶",
+      "point": "記憶",
+      "choice": "记词:记住",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:29:50.000Z"
+    },
+    {
+      "id": "SPK:W-記憶",
+      "point": "記憶",
+      "choice": "试读:准确",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:29:50.000Z"
+    },
+    {
+      "id": "VC-象徴",
+      "point": "象徴",
+      "choice": "记词:没记住",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:30:02.000Z"
+    },
+    {
+      "id": "SPK:W-象徴",
+      "point": "象徴",
+      "choice": "试读:和「しょうちょう」有点偏，听示范跟读",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:30:02.000Z"
+    },
+    {
+      "id": "VC-印象",
+      "point": "印象",
+      "choice": "记词:记住",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:30:33.000Z"
+    },
+    {
+      "id": "SPK:W-印象",
+      "point": "印象",
+      "choice": "试读:准确",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:30:33.000Z"
+    },
+    {
+      "id": "VC-常識",
+      "point": "常識",
+      "choice": "记词:没记住",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:30:47.000Z"
+    },
+    {
+      "id": "SPK:W-常識",
+      "point": "常識",
+      "choice": "试读:很接近，再核对一拍「じょうしき」",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:30:47.000Z"
+    },
+    {
+      "id": "VC-発表",
+      "point": "発表",
+      "choice": "记词:记住",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:31:21.000Z"
+    },
+    {
+      "id": "SPK:W-発表",
+      "point": "発表",
+      "choice": "试读:准确",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:31:21.000Z"
+    },
+    {
+      "id": "VC-めったに",
+      "point": "めったに",
+      "choice": "记词:没记住",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:31:38.000Z"
+    },
+    {
+      "id": "SPK:W-めったに",
+      "point": "めったに",
+      "choice": "试读:先听一遍口诀与读音",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:31:38.000Z"
+    },
+    {
+      "id": "VC-象徴",
+      "point": "象徴",
+      "choice": "记词:没记住",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:31:59.000Z"
+    },
+    {
+      "id": "SPK:W-象徴",
+      "point": "象徴",
+      "choice": "试读:和「しょうちょう」有点偏，听示范跟读",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:31:59.000Z"
+    },
+    {
+      "id": "VC-うろうろ",
+      "point": "うろうろ",
+      "choice": "记词:没记住",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:32:33.000Z"
+    },
+    {
+      "id": "SPK:W-うろうろ",
+      "point": "うろうろ",
+      "choice": "试读:和「うろうろ」有点偏，听示范跟读一遍",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:32:33.000Z"
+    },
+    {
+      "id": "VC-常識",
+      "point": "常識",
+      "choice": "记词:记住",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:33:04.000Z"
+    },
+    {
+      "id": "SPK:W-常識",
+      "point": "常識",
+      "choice": "试读:准确",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:33:04.000Z"
+    },
+    {
+      "id": "VC-実施",
+      "point": "実施",
+      "choice": "记词:没记住",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:33:19.000Z"
+    },
+    {
+      "id": "SPK:W-実施",
+      "point": "実施",
+      "choice": "试读:和「じっし」有点偏，听示范跟读一遍",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:33:19.000Z"
+    },
+    {
+      "id": "VC-めったに",
+      "point": "めったに",
+      "choice": "记词:记住",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:33:51.000Z"
+    },
+    {
+      "id": "SPK:W-めったに",
+      "point": "めったに",
+      "choice": "试读:准确",
+      "correct": "true",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:33:51.000Z"
+    },
+    {
+      "id": "VC-象徴",
+      "point": "象徴",
+      "choice": "记词:没记住",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:34:05.000Z"
+    },
+    {
+      "id": "SPK:W-象徴",
+      "point": "象徴",
+      "choice": "试读:和「しょうちょう」有点偏，听示范跟读",
+      "correct": "false",
+      "ask_again": "false",
+      "ts": "2026-11-28T03:34:05.000Z"
     }
   ]
 }
