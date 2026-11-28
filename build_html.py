@@ -3542,72 +3542,74 @@ html = r"""<!DOCTYPE html>
     display: flex;
     align-items: baseline;
     gap: 8px;
-    margin-bottom: 7px;
-    font-size: 13px;
-    line-height: 1.48;
+    margin-bottom: 5px;
+    font-size: 12.5px;
+    line-height: 1.44;
     color: var(--moss);
     font-weight: 500;
     letter-spacing: 0.015em;
   }
   .res-point-subj {
     color: var(--ink-3);
-    font-size: 11.5px;
-    font-weight: 600;
-    letter-spacing: 0.05em;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
     flex-shrink: 0;
   }
   .res-cue {
     display: grid;
     grid-template-columns: auto 1fr;
-    column-gap: 9px;
+    column-gap: 8px;
     align-items: baseline;
-    margin-bottom: 10px;
+    margin-bottom: 7px;
   }
   .cue-tag {
     font-family: var(--sans);
-    font-size: 11.5px;
-    font-weight: 600;
+    font-size: 11px;
+    font-weight: 500;
     color: var(--ink-3);
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
     padding: 0;
-    line-height: 1.56;
+    line-height: 1.5;
     white-space: nowrap;
   }
   .cue-txt {
-    font-size: 14.5px;
+    font-size: 14px;
     font-weight: 400;
     color: var(--ink-2);
-    line-height: 1.56;
+    line-height: 1.52;
     letter-spacing: 0.01em;
     text-wrap: pretty;
   }
   .res-cue.res-echo {
-    margin-top: 2px;
-    margin-bottom: 10px;
+    margin-top: 1px;
+    margin-bottom: 7px;
   }
   .res-cue.res-echo .cue-tag {
     color: var(--moss);
     opacity: 0.85;
   }
   .res-cue.res-echo .cue-txt {
-    font-size: 13.5px;
+    font-size: 13px;
     color: var(--ink-3);
-    line-height: 1.52;
+    line-height: 1.48;
   }
   .opt-breakdown {
     display: flex;
     flex-direction: column;
+    margin-top: 4px;
   }
   .opt-row {
     display: grid;
-    grid-template-columns: 20px 1fr;
-    column-gap: 9px;
-    padding: 9px 0;
-    border-top: 1px dashed var(--hairline);
+    grid-template-columns: 18px 1fr;
+    column-gap: 8px;
+    padding: 7px 0;
+    border-top: 1px solid var(--hairline);
     align-items: baseline;
+    transition: opacity 0.16s ease;
   }
   .opt-breakdown.is-listen .opt-row {
-    grid-template-columns: 34px 1fr;
+    grid-template-columns: 32px 1fr;
   }
   .opt-row:first-child {
     border-top: none;
@@ -3616,10 +3618,13 @@ html = r"""<!DOCTYPE html>
   .opt-row:last-child {
     padding-bottom: 2px;
   }
+  .opt-row.dim {
+    opacity: 0.72;
+  }
   .opt-mark {
     font-family: var(--sans);
-    font-size: 14px;
-    font-weight: 700;
+    font-size: 13.5px;
+    font-weight: 600;
     color: var(--ink-3);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
@@ -3637,14 +3642,14 @@ html = r"""<!DOCTYPE html>
     display: flex;
     align-items: baseline;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 7px;
   }
   .opt-ja {
     font-family: var(--sans-jp);
-    font-size: 17px;
-    font-weight: 600;
+    font-size: 16px;
+    font-weight: 500;
     color: var(--sumi);
-    line-height: 1.45;
+    line-height: 1.4;
   }
   .opt-row.ok .opt-ja {
     color: var(--moss);
@@ -3653,16 +3658,16 @@ html = r"""<!DOCTYPE html>
     color: var(--bengara);
   }
   .opt-row.dim .opt-ja {
-    font-weight: 500;
+    font-weight: 400;
     color: var(--ink-2);
   }
   .opt-badge {
     font-family: var(--sans);
-    font-size: 11.5px;
-    font-weight: 600;
-    padding: 1px 6px;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 1px 5px;
     border-radius: 4px;
-    line-height: 1.4;
+    line-height: 1.38;
     letter-spacing: 0.03em;
   }
   .opt-badge.ok {
@@ -3674,16 +3679,15 @@ html = r"""<!DOCTYPE html>
     background: var(--bengara-soft);
   }
   .opt-desc {
-    margin-top: 3px;
-    font-size: 14.5px;
-    line-height: 1.56;
+    margin-top: 2px;
+    font-size: 13.5px;
+    line-height: 1.5;
     color: var(--ink-2);
     letter-spacing: 0.01em;
     text-wrap: pretty;
   }
   .opt-row.dim .opt-desc {
-    color: var(--ink-2);
-    opacity: 0.84;
+    color: var(--ink-3);
   }
 
   /* Tappable Japanese words + Fixed-Geometry Zen Meaning Card (Tap anywhere on card to replay pronunciation) */
@@ -3954,29 +3958,29 @@ html = r"""<!DOCTYPE html>
   }
   .radio-center::-webkit-scrollbar { display: none; }
   .radio-chap {
-    font-size: 13.5px;
-    font-weight: 500;
-    letter-spacing: 0.1em;
-    color: var(--moss);
-    flex-shrink: 0;
+    display: none;
   }
   .radio-topic {
     margin: 0;
     font-family: var(--sans);
-    font-size: clamp(19.5px, 4.9vw, 23px);
+    font-size: clamp(19px, 4.7vw, 22px);
     font-weight: 400;
-    line-height: 1.48;
+    line-height: 1.46;
     letter-spacing: 0.02em;
     color: var(--sumi);
     text-wrap: pretty;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
     flex-shrink: 0;
   }
   .radio-ja {
-    margin: 0;
+    margin: 2px 0 0;
     font-family: var(--sans-jp);
-    font-size: clamp(17px, 4.3vw, 19.5px);
+    font-size: clamp(16.5px, 4.2vw, 19px);
     font-weight: 400;
-    line-height: 1.72;
+    line-height: 1.74;
     letter-spacing: 0.02em;
     color: var(--ink-2);
     word-break: auto-phrase;
@@ -4333,12 +4337,13 @@ html = r"""<!DOCTYPE html>
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    padding: 10px 14px;
+    padding: 8px 2px;
     margin-bottom: 0;
-    border-radius: 12px;
-    border: 1px solid var(--moss-border);
-    background: var(--moss-soft);
-    color: var(--sumi);
+    border: none;
+    border-top: 1px solid var(--hairline);
+    border-radius: 0;
+    background: transparent;
+    color: var(--ink-2);
     font-size: 13px;
     line-height: 1.35;
     text-align: left;
@@ -4988,10 +4993,17 @@ html = r"""<!DOCTYPE html>
   }
   .rv-spk-tip {
     margin-top: 12px;
-    font-size: 14px;
+    font-size: 13.5px;
     color: var(--ink-3);
-    line-height: 1.58;
+    line-height: 1.56;
     text-wrap: balance;
+    max-width: 340px;
+  }
+  @media (max-height: 720px) {
+    .rv-art-vignette { width: 152px; height: 68px; margin-bottom: 12px; }
+    .rv-spk-model { font-size: 20.5px; line-height: 1.54; }
+    .rv-spk-zh-sub { margin-top: 7px; font-size: 14.5px; }
+    .rv-spk-tip { margin-top: 8px; font-size: 12.5px; }
   }
 
   /* Dedicated All-Japanese Daily Short Video Theater (Decoupled from Grammar Flashcards) */
@@ -5156,25 +5168,56 @@ html = r"""<!DOCTYPE html>
     color: var(--moss);
     font-weight: 500;
   }
-  /* v86 SLA Kyoto Zen Extensions (100% semantic dark/light parity, zero box bloat) */
+  /* v86/v98 SLA Kyoto Zen Extensions (100% semantic dark/light parity, zero box bloat) */
   .jpv-shadow-bar {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 8px 0 4px;
+    gap: 8px;
+    width: 100%;
+    max-width: 440px;
+    margin: 14px auto 0;
+    padding: 12px 0 4px;
     border-top: 1px solid var(--hairline);
-    font-size: 12px;
+    font-size: 12.5px;
     color: var(--ink-3);
+    text-align: center;
   }
-  .jpv-shadow-note { flex: 1; min-width: 0; line-height: 1.45; }
-  .jpv-shadow-acts { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .jpv-shadow-note { line-height: 1.5; text-wrap: balance; }
+  .jpv-shadow-acts { display: flex; align-items: center; justify-content: center; gap: 22px; }
   .jpv-shadow-link {
-    background: none; border: none; padding: 6px 2px;
-    font-family: var(--sans); font-size: 12.5px; color: var(--ink-2);
+    background: none; border: none; padding: 6px 4px;
+    font-family: var(--sans); font-size: 13px; color: var(--ink-2);
     cursor: pointer; touch-action: manipulation; white-space: nowrap;
   }
   .jpv-shadow-link.is-on, .jpv-shadow-link.is-done { color: var(--moss); font-weight: 500; }
+  .jpv-words-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 14px;
+    padding: 6px 10px;
+    font-size: 12.5px;
+    color: var(--ink-3);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .jpv-words-trigger:active { opacity: 0.65; }
+  .jpv-words-dot { width: 5.5px; height: 5.5px; border-radius: 50%; background: var(--moss); opacity: 0.8; flex-shrink: 0; }
+  .jpv-words-sheet-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0 18px;
+  }
+  .jpv-words-sheet-grid .jpv-chip {
+    padding: 7px 12px;
+    border-radius: 9px;
+    background: var(--soft-bg);
+    font-size: 14.5px;
+  }
   .jpv-sub-stage.shadow-blind .jpv-sub-ja,
   .jpv-sub-stage.shadow-blind .jpv-sub-zh {
     opacity: 0.08;
@@ -5228,32 +5271,54 @@ html = r"""<!DOCTYPE html>
   .slip-reflex-pill.slow { color: var(--ochre); }
   .mr-passage {
     font-family: var(--sans-jp);
-    font-size: 15.5px;
-    line-height: 1.88;
+    font-size: 16.5px;
+    line-height: 1.98;
+    letter-spacing: 0.02em;
     color: var(--sumi);
+    padding: 14px 0 18px;
+    text-wrap: pretty;
+    word-break: auto-phrase;
+  }
+  .mr-passage.is-compact {
+    font-size: 14.5px;
+    line-height: 1.78;
     padding: 10px 0 12px;
     border-bottom: 1px solid var(--hairline);
-    text-wrap: pretty;
+    color: var(--ink-2);
   }
+  .mr-ref-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    color: var(--ink-3);
+    padding: 4px 0 10px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .mr-ref-toggle:active { opacity: 0.7; }
   .mr-q-title {
     font-family: var(--sans-jp);
-    font-size: 14.5px;
+    font-size: 15.5px;
     font-weight: 500;
     color: var(--sumi);
-    margin: 12px 0 10px;
-    line-height: 1.55;
+    margin: 6px 0 14px;
+    line-height: 1.62;
+    word-break: auto-phrase;
   }
-  .mr-opt-list { display: flex; flex-direction: column; gap: 8px; }
+  .mr-opt-list { display: flex; flex-direction: column; gap: 9px; }
   .mr-opt-btn {
     width: 100%;
     text-align: left;
     background: var(--sheet);
     border: 1px solid var(--hairline-strong);
     border-radius: 12px;
-    padding: 11px 14px;
+    padding: 12px 14px;
     font-family: var(--sans-jp);
-    font-size: 13.5px;
-    line-height: 1.55;
+    font-size: 14px;
+    line-height: 1.56;
     color: var(--sumi);
     white-space: normal;
     word-break: break-word;
@@ -5265,28 +5330,28 @@ html = r"""<!DOCTYPE html>
   .mr-opt-btn.is-right { background: var(--moss-soft); border-color: var(--moss-border); color: var(--moss); }
   .mr-opt-btn.is-wrong { border-color: var(--bengara); color: var(--bengara); }
   .mr-note {
-    margin-top: 12px;
+    margin-top: 14px;
     font-size: 13.5px;
-    line-height: 1.65;
+    line-height: 1.68;
     color: var(--ink-2);
-    padding-top: 10px;
+    padding-top: 12px;
     border-top: 1px solid var(--hairline);
   }
   .mr-speed-note { font-size: 12px; color: var(--moss); margin-top: 6px; }
-  .tm-list { display: flex; flex-direction: column; gap: 0; margin-top: 8px; }
+  .tm-list { display: flex; flex-direction: column; gap: 0; margin-top: 4px; }
   .tm-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    padding: 13px 0;
+    gap: 14px;
+    padding: 16px 0;
     border-bottom: 1px solid var(--hairline);
   }
   .tm-row:last-child { border-bottom: none; }
   .tm-main { flex: 1; min-width: 0; }
-  .tm-expr { font-family: var(--sans-jp); font-size: 16px; font-weight: 500; color: var(--sumi); }
-  .tm-starter { font-family: var(--sans-jp); font-size: 13.5px; color: var(--ink-2); margin-top: 4px; line-height: 1.55; }
-  .tm-why { font-size: 12px; color: var(--ink-3); margin-top: 3px; line-height: 1.45; }
+  .tm-expr { font-family: var(--sans-jp); font-size: 17px; font-weight: 500; color: var(--sumi); }
+  .tm-starter { font-family: var(--sans-jp); font-size: 14px; color: var(--ink-2); margin-top: 5px; line-height: 1.56; }
+  .tm-why { font-size: 12px; color: var(--ink-3); margin-top: 4px; line-height: 1.45; }
   .tm-check-btn {
     width: 30px; height: 30px; border-radius: 50%;
     border: 1.5px solid var(--hairline-strong);
@@ -5322,28 +5387,31 @@ html = r"""<!DOCTYPE html>
   }
   .vc-leech-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ochre); display: inline-block; }
 
-  /* v92: Living Kyoto Slate Blackboard & Quiet Dialogue Triggers */
+  /* v92/v98: Living Kyoto Slate Blackboard & Quiet Borderless Dialogue Triggers */
   .kb-entry-btn {
     width: 100%;
-    margin-top: 8px;
-    padding: 10px 12px;
-    border-radius: 12px;
-    border: 1px solid var(--hairline-strong);
-    background: var(--sheet);
+    margin-top: 4px;
+    margin-bottom: 2px;
+    padding: 8px 2px;
+    border-radius: 0;
+    border: none;
+    border-top: 1px solid var(--hairline);
+    border-bottom: 1px solid var(--hairline);
+    background: transparent;
     display: flex;
     align-items: center;
-    gap: 9px;
+    gap: 8px;
     text-align: left;
     white-space: normal;
     color: var(--sumi);
     cursor: pointer;
     touch-action: manipulation;
-    transition: background 0.15s ease, border-color 0.15s ease;
+    transition: opacity 0.15s ease;
   }
-  .kb-entry-btn:active { background: var(--tap-bg); }
+  .kb-entry-btn:active { opacity: 0.68; }
   .kb-entry-btn.is-done {
-    background: var(--moss-soft);
-    border-color: var(--moss-border);
+    background: transparent;
+    border-color: var(--hairline);
   }
   .kb-entry-dot {
     width: 6px; height: 6px; border-radius: 50%;
@@ -5828,7 +5896,7 @@ html = r"""<!DOCTYPE html>
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 13px 2px;
+    padding: 15px 2px;
     border-bottom: 1px solid var(--hairline);
     text-align: left;
     white-space: normal;
@@ -5843,7 +5911,7 @@ html = r"""<!DOCTYPE html>
   .kb-cat-row:last-child { border-bottom: none; }
   .kb-cat-main { flex: 1; min-width: 0; }
   .kb-cat-title { font-size: 15px; font-weight: 500; color: var(--sumi); line-height: 1.38; }
-  .kb-cat-sub { font-family: var(--sans-jp); font-size: 12.5px; color: var(--ink-3); margin-top: 3px; line-height: 1.45; white-space: normal; }
+  .kb-cat-sub { font-family: var(--sans-jp); font-size: 12.5px; color: var(--ink-3); margin-top: 3px; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .kb-cat-dur { font-size: 12.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; flex-shrink: 0; }
   .kb-cat-dur.done { color: var(--moss); font-weight: 500; }
   @media (max-height: 700px) {
@@ -6025,6 +6093,153 @@ html = r"""<!DOCTYPE html>
     }
   }
 
+  .dash-zen-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 4px 0 14px;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .dash-zen-focus {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: none;
+    padding: 4px 0;
+    text-align: left;
+    font-size: 13.5px;
+    color: var(--ink-2);
+    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .dash-zen-focus b { color: var(--sumi); font-weight: 500; }
+  .dash-tool-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 2px;
+    background: transparent;
+    border: none;
+    color: var(--sumi);
+    font-size: 13.5px;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    flex-shrink: 0;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: opacity 0.14s ease;
+  }
+  .dash-tool-trigger:active { opacity: 0.62; }
+  .dash-tool-dot {
+    width: 6.5px;
+    height: 6.5px;
+    border-radius: 50%;
+    background: var(--moss);
+    flex-shrink: 0;
+  }
+  .dash-tool-dot.warn { background: var(--ochre); }
+  .dash-tool-chev { opacity: 0.55; flex-shrink: 0; }
+  .dash-tool-list {
+    display: flex;
+    flex-direction: column;
+    margin: 4px 0 16px;
+    border-top: 1px solid var(--hairline);
+  }
+  .dash-tool-row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 15px 2px;
+    border: none;
+    border-bottom: 1px solid var(--hairline);
+    background: transparent;
+    text-align: left;
+    white-space: normal;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .dash-tool-row:active { opacity: 0.68; }
+  .dash-tool-main { flex: 1; min-width: 0; }
+  .dash-tool-title {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--sumi);
+    line-height: 1.36;
+  }
+  .dash-tool-row.is-done .dash-tool-title { color: var(--moss); font-weight: 400; }
+  .dash-tool-sub {
+    font-size: 12.5px;
+    color: var(--ink-3);
+    margin-top: 3px;
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .dash-tool-go {
+    font-size: 13px;
+    color: var(--ink-3);
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  .dash-tool-row.is-done .dash-tool-go { color: var(--moss); }
+
+  .pillar-list {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin: 14px 0 18px;
+  }
+  .pillar-row {
+    padding: 6px 0 8px;
+    border-bottom: none;
+    cursor: pointer;
+    opacity: 0.52;
+    transition: opacity 0.18s ease;
+    min-width: 0;
+  }
+  .pillar-row.active { opacity: 1; }
+  .pillar-head {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    margin-bottom: 7px;
+  }
+  .pillar-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--sumi);
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+  }
+  .pillar-stat {
+    font-size: 11.5px;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .pillar-line {
+    height: 2px;
+    background: var(--track);
+    display: flex;
+    overflow: hidden;
+    border-radius: 2px;
+  }
+  .pillar-row.active .pillar-line { height: 2.5px; }
+  .seg-moss { background: var(--moss); }
+  .seg-ochre { background: var(--ochre); }
+  .seg-bengara { background: var(--bengara); }
+
   @media (min-width: 860px) and (min-height: 521px) {
     .ledger-scroll { padding-bottom: 12px; }
     .ledger-layout {
@@ -6032,44 +6247,26 @@ html = r"""<!DOCTYPE html>
       grid-template-columns: 270px 1fr;
       gap: 46px;
       align-items: start;
+      margin-top: 18px;
     }
+    .pillar-list {
+      display: block;
+      margin: 0 0 24px;
+    }
+    .pillar-row {
+      padding: 14px 0;
+      border-bottom: 1px solid var(--hairline);
+      opacity: 0.62;
+    }
+    .pillar-head {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
+    }
+    .pillar-name { font-size: 16px; }
+    .pillar-stat { font-size: 13.5px; }
   }
-
-  .pillar-list { margin-bottom: 24px; }
-  .pillar-row {
-    padding: 14px 0;
-    border-bottom: 1px solid var(--hairline);
-    cursor: pointer;
-    opacity: 0.62;
-    transition: opacity 0.18s ease;
-  }
-  .pillar-row.active { opacity: 1; }
-  .pillar-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 8px;
-  }
-  .pillar-name {
-    font-size: 16px;
-    font-weight: 500;
-    color: var(--sumi);
-    letter-spacing: 0.04em;
-  }
-  .pillar-stat {
-    font-size: 13.5px;
-    color: var(--ink-3);
-    font-variant-numeric: tabular-nums;
-  }
-  .pillar-line {
-    height: 1.8px;
-    background: var(--track);
-    display: flex;
-    overflow: hidden;
-  }
-  .seg-moss { background: var(--moss); }
-  .seg-ochre { background: var(--ochre); }
-  .seg-bengara { background: var(--bengara); }
 
   .ledger-controls {
     display: flex;
@@ -6394,6 +6591,53 @@ html = r"""<!DOCTYPE html>
   .modal-card::-webkit-scrollbar { display: none; }
   .modal-h { margin: 0 0 12px; font-size: 18px; font-weight: 500; letter-spacing: 0.05em; }
   .modal-body { margin: 0 0 14px; font-size: 15.5px; color: var(--ink-2); line-height: 1.85; font-variant-numeric: tabular-nums; }
+  .sess-ledger {
+    display: flex;
+    flex-direction: column;
+    margin: 4px 0 16px;
+    border-top: 1px solid var(--hairline);
+  }
+  .sess-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--hairline);
+    font-size: 14.5px;
+    color: var(--ink-2);
+    font-variant-numeric: tabular-nums;
+  }
+  .sess-row strong { color: var(--sumi); font-weight: 500; }
+  .sess-row.is-score strong { color: var(--moss); }
+  .sync-row-zen {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0 0 14px;
+    padding: 4px 0;
+  }
+  .sync-row-zen .sync-note {
+    margin: 0;
+    font-size: 13px;
+    color: var(--ink-3);
+    line-height: 1.45;
+    min-width: 0;
+  }
+  .sync-row-zen .sync-btn {
+    width: auto;
+    height: auto;
+    padding: 6px 4px;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--sumi);
+    flex-shrink: 0;
+  }
+  .sync-row-zen .sync-btn.copied { color: var(--moss); }
   .modal-promise { margin: 0 0 16px; padding-top: 12px; border-top: 1px solid var(--hairline); font-size: 14.5px; color: var(--moss); line-height: 1.65; font-weight: 400; }
   .sync-box {
     margin: 0 0 16px;
@@ -6582,17 +6826,21 @@ html = r"""<!DOCTYPE html>
   .vc-deck-area {
     flex: 1;
     min-height: 0;
+    overflow-x: clip;
+    overflow-y: auto;
+    scrollbar-width: none;
     display: flex;
     flex-direction: column;
     justify-content: center;
     padding: 8px 0 6px;
     position: relative;
   }
+  .vc-deck-area::-webkit-scrollbar { display: none; }
   .vc-card {
     position: relative;
     width: 100%;
     flex: 1;
-    min-height: 240px;
+    min-height: 0;
     background: transparent;
     border: none;
     border-radius: 0;
@@ -8088,12 +8336,14 @@ html = r"""<!DOCTYPE html>
   }
   .rfb-close:active { background: var(--soft-bg); color: var(--sumi); }
   .rfb-feel-row {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
-    margin-bottom: 14px;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;
+    padding: 3px; border-radius: 12px;
+    background: var(--soft-bg);
+    margin-bottom: 16px;
   }
   .rfb-feel-btn {
-    height: 40px; border-radius: 10px; font-size: 13.5px; font-weight: 400;
-    color: var(--ink-2); background: var(--soft-bg); border: 1px solid var(--hairline);
+    height: 36px; border-radius: 9px; font-size: 13.5px; font-weight: 400;
+    color: var(--ink-2); background: transparent; border: 1px solid transparent;
     display: inline-flex; align-items: center; justify-content: center; gap: 6px;
     letter-spacing: 0.02em; transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, transform 0.12s ease;
   }
@@ -8106,13 +8356,13 @@ html = r"""<!DOCTYPE html>
   .rfb-feel-btn.active.is-ok .rfb-feel-dot { background: var(--ochre); opacity: 1; }
   .rfb-feel-btn.active.is-off { background: var(--bengara-soft); border-color: rgba(158, 62, 54, 0.36); color: var(--bengara); }
   .rfb-feel-btn.active.is-off .rfb-feel-dot { background: var(--bengara); opacity: 1; }
-  .rfb-sec { margin-bottom: 12px; }
-  .rfb-sec-lbl { font-size: 11.5px; font-weight: 400; color: var(--ink-3); letter-spacing: 0.08em; margin-bottom: 7px; }
-  .rfb-chip-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .rfb-sec { margin-bottom: 14px; }
+  .rfb-sec-lbl { font-size: 11.5px; font-weight: 400; color: var(--ink-3); letter-spacing: 0.08em; margin-bottom: 8px; }
+  .rfb-chip-grid { display: flex; flex-wrap: wrap; gap: 8px; }
   .rfb-chip {
-    min-height: 36px; padding: 7px 10px; border-radius: 9px;
+    min-height: 34px; padding: 6px 13px; border-radius: 999px;
     font-size: 13px; font-weight: 400; color: var(--ink-2);
-    background: transparent; border: 1px solid var(--hairline);
+    background: var(--soft-bg); border: 1px solid transparent;
     text-align: center; letter-spacing: 0.02em; white-space: nowrap;
     transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, transform 0.12s ease;
   }
@@ -8121,11 +8371,11 @@ html = r"""<!DOCTYPE html>
   .rfb-chip.active.is-fix { background: var(--bengara-soft); border-color: rgba(158, 62, 54, 0.36); color: var(--bengara); font-weight: 500; }
   .rfb-note-wrap {
     display: flex; align-items: center; gap: 8px;
-    background: var(--soft-bg); border: 1px solid var(--hairline);
-    border-radius: 10px; padding: 4px 6px 4px 12px;
+    background: transparent; border: none; border-bottom: 1px solid var(--hairline-strong);
+    border-radius: 0; padding: 2px 0;
     transition: border-color 0.16s ease;
   }
-  .rfb-note-wrap:focus-within { border-color: var(--hairline-strong); }
+  .rfb-note-wrap:focus-within { border-bottom-color: var(--sumi); }
   .rfb-note-in {
     flex: 1; min-width: 0; border: 0; outline: 0; background: transparent;
     font-family: inherit; font-size: 13.5px; color: var(--sumi);
@@ -8231,9 +8481,9 @@ html = r"""<!DOCTYPE html>
   .zb-waist-in:focus { border-bottom-color: var(--moss); border-bottom-style: solid; }
   .zb-waist-in::placeholder { font-family: var(--sans); font-size: 12.5px; font-weight: 400; color: var(--ink-3); }
 
-  .zb-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 14px 0 18px; border-bottom: 1px solid var(--hairline); margin-bottom: 4px; }
+  .zb-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 14px 0 18px; border-bottom: 1px solid var(--hairline); margin-bottom: 4px; }
   .zb-kpi-v { font-family: var(--sans); font-size: 21px; font-weight: 300; color: var(--sumi); font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .zb-kpi-l { font-size: 11.5px; color: var(--ink-3); margin-top: 4px; letter-spacing: 0.03em; }
+  .zb-kpi-l { font-size: 11px; color: var(--ink-3); margin-top: 4px; letter-spacing: 0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .zb-ledger-list { margin-top: 2px; }
   .zb-ledger-item { border-bottom: 1px solid var(--hairline); }
   .zb-ledger-row { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 12.5px 0; font-size: 13.5px; gap: 10px; text-align: left; }
@@ -8255,34 +8505,40 @@ html = r"""<!DOCTYPE html>
   .zb-sync-left { display: flex; align-items: center; gap: 10px; min-width: 0; flex-wrap: wrap; }
 
   .zb-guide-list { display: flex; flex-direction: column; margin: 4px 0 16px; border-top: 1px solid var(--hairline); }
-  .zb-guide-item { padding: 13px 0; border-bottom: 1px solid var(--hairline); }
-  .zb-guide-k { font-size: 12px; font-weight: 500; color: var(--moss); letter-spacing: 0.06em; margin-bottom: 5px; }
-  .zb-guide-v { font-size: 14.5px; line-height: 1.62; color: var(--sumi); }
-  .zb-guide-sub { font-size: 13px; line-height: 1.55; color: var(--ink-3); margin-top: 4px; }
-  .zb-guide-item.cur .zb-guide-k::before { content: "● "; font-size: 9px; }
+  .zb-guide-item { padding: 14px 0; border-bottom: 1px solid var(--hairline); }
+  .zb-guide-k { font-size: 12px; font-weight: 500; color: var(--moss); letter-spacing: 0.05em; margin-bottom: 5px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .zb-guide-v { font-size: 14.5px; line-height: 1.6; color: var(--sumi); text-wrap: pretty; }
+  .zb-guide-sub { font-size: 13px; line-height: 1.56; color: var(--ink-3); margin-top: 4px; text-wrap: pretty; }
+  .zb-guide-item.cur .zb-guide-k > span:first-child::before { content: "● "; font-size: 9px; margin-right: 2px; }
+  .zb-guide-item.is-foldable { cursor: pointer; }
+  .zb-guide-item.is-collapsed .zb-guide-v,
+  .zb-guide-item.is-collapsed .zb-guide-sub { display: none; }
+  .zb-guide-item.is-collapsed .zb-guide-k { margin-bottom: 0; color: var(--ink-3); font-weight: 400; }
+  .zb-guide-chev { font-size: 13px; color: var(--ink-3); opacity: 0.6; flex-shrink: 0; transition: transform 0.2s ease; }
+  .zb-guide-item.is-foldable:not(.is-collapsed) .zb-guide-chev { transform: rotate(180deg); }
 
   .zb-modal-links { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: -4px 0 14px; flex-wrap: wrap; }
   .zb-pz-tabs { display: flex; gap: 18px; margin: 2px 0 12px; border-bottom: 1px solid var(--hairline); }
   .zb-pz-tab { font-size: 13.5px; font-weight: 400; color: var(--ink-3); padding: 6px 0 8px; border-bottom: 1.5px solid transparent; }
   .zb-pz-tab.active { color: var(--sumi); font-weight: 500; border-bottom-color: var(--sumi); }
-  .zb-pz-prog { margin: 0 0 12px; }
+  .zb-pz-prog { margin: 0 0 10px; }
   .zb-pz-prog-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums; margin-bottom: 6px; }
   .zb-pz-prog-track { width: 100%; height: 2px; background: var(--track); border-radius: 2px; overflow: hidden; }
   .zb-pz-prog-fill { height: 100%; background: var(--moss); border-radius: 2px; transition: width 0.3s cubic-bezier(0.22, 1, 0.36, 1); }
-  .zb-pz-note { font-size: 12.5px; color: var(--ink-3); line-height: 1.55; margin: 0 0 12px; }
-  .zb-pz-list { display: flex; flex-direction: column; margin-bottom: 16px; max-height: 46vh; overflow-y: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .zb-pz-note { font-size: 12px; color: var(--ink-3); line-height: 1.5; margin: 0 0 10px; }
+  .zb-pz-list { display: flex; flex-direction: column; margin-bottom: 16px; max-height: 50vh; overflow-y: auto; padding-bottom: 16px; -webkit-overflow-scrolling: touch; scrollbar-width: none; -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 22px), transparent 100%); mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 22px), transparent 100%); }
   .zb-pz-list::-webkit-scrollbar { display: none; }
-  .zb-pz-wk { font-size: 11.5px; font-weight: 500; color: var(--ink-3); letter-spacing: 0.06em; padding: 12px 0 6px; border-bottom: 1px solid var(--hairline); }
-  .zb-pz-row { width: 100%; display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--hairline); text-align: left; }
+  .zb-pz-wk { font-size: 11.5px; font-weight: 500; color: var(--ink-3); letter-spacing: 0.06em; padding: 14px 0 6px; border-bottom: 1px solid var(--hairline); }
+  .zb-pz-row { width: 100%; display: flex; align-items: flex-start; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--hairline); text-align: left; }
   .zb-pz-row:active { opacity: 0.7; }
   .zb-pz-mark { width: 16px; flex-shrink: 0; font-size: 12.5px; color: var(--ink-3); text-align: center; padding-top: 2px; }
   .zb-pz-row.done .zb-pz-mark { color: var(--moss); font-weight: 500; }
   .zb-pz-row.cur .zb-pz-mark { color: var(--moss); }
   .zb-pz-info { flex: 1; min-width: 0; }
-  .zb-pz-name { font-size: 13.5px; line-height: 1.45; color: var(--sumi); }
+  .zb-pz-name { font-size: 14px; line-height: 1.45; color: var(--sumi); }
   .zb-pz-row.done .zb-pz-name { color: var(--ink-3); }
   .zb-pz-row.cur .zb-pz-name { color: var(--sumi); font-weight: 500; }
-  .zb-pz-meta { font-size: 12px; color: var(--ink-3); margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .zb-pz-meta { font-size: 12px; color: var(--ink-3); margin-top: 3px; font-variant-numeric: tabular-nums; }
   .zb-pz-min { flex-shrink: 0; font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums; padding-top: 2px; }
 
   .zb-ledger-pz { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--hairline); font-size: 13.5px; text-align: left; }
@@ -15275,6 +15531,46 @@ function openJpVideoFullscreen(ev) {
   });
 }
 
+function openJpVideoWordsSheet() {
+  const jpv = getRadioJpVideo();
+  const mc = document.getElementById("modal-content");
+  if (!jpv || !mc) return;
+  const words = Array.isArray(jpv.target_words) ? jpv.target_words : [];
+  if (!words.length) return;
+  const cues = Array.isArray(jpv.cues) ? jpv.cues : [];
+  const curCue = cues[Math.max(0, jpvLastCueIdx)] || cues[0] || {};
+  const activeHits = new Set(Array.isArray(curCue.hits) ? curCue.hits : []);
+  mc.innerHTML = `
+    <h3 class="modal-h">本片收录词汇 · ${words.length} 词</h3>
+    <p class="zb-sheet-sub">点任意一词，直接跳到它在短片里出现的句子。</p>
+    <div class="jpv-words-sheet-grid">
+      ${words.map(w => `
+        <button type="button" class="jpv-chip${activeHits.has(w.word) ? " is-now" : ""}" data-word="${escapeHtml(w.word)}" onclick="closeModal();seekJpVideoToWord('${escapeHtml(w.word)}')">
+          <span>${escapeHtml(w.word)}</span>
+          ${Number(w.hits || 1) >= 2 ? `<span class="jpv-chip-cnt">×${Number(w.hits)}</span>` : ""}
+        </button>
+      `).join("")}
+    </div>
+    <div class="dock-row">
+      <button type="button" class="ghost-btn" style="flex:1;" onclick="closeModal()">返回短片</button>
+    </div>
+  `;
+  showAppModal();
+}
+
+function setRadioImmersiveChrome(isImmersive) {
+  const sub = document.getElementById("radio-subnav");
+  if (sub) {
+    if (isImmersive) sub.style.display = "none";
+    else if (typeof renderRadioSubnav === "function") renderRadioSubnav();
+  }
+  const gStage = document.getElementById("radio-gpod-stage");
+  if (isImmersive && gStage) gStage.classList.add("hidden");
+  if (isImmersive && typeof gpodPlayer !== "undefined" && gpodPlayer && !gpodPlayer.paused) {
+    try { gpodPlayer.pause(); } catch (e) {}
+  }
+}
+
 function openRadioJpVideo() {
   const jpv = getRadioJpVideo();
   if (!jpv) return;
@@ -15290,6 +15586,7 @@ function openRadioJpVideo() {
   rvPendingLeft = false;
   rvMode = "video";
   jpvLastCueIdx = -2;
+  setRadioImmersiveChrome(true);
   const pStage = document.getElementById("radio-player-stage");
   const rStage = document.getElementById("radio-review-stage");
   if (pStage) pStage.classList.add("hidden");
@@ -15321,20 +15618,10 @@ function renderRadioJpVideoStage(host) {
        </div>`
     : "";
   const chipsHTML = words.length
-    ? `<div class="jpv-words-wrap">
-         <div class="jpv-words-head">
-           <span>本片收录词汇 · 点词跳播</span>
-           <span>${words.length} 词</span>
-         </div>
-         <div class="jpv-word-chips">
-           ${words.map(w => `
-             <button type="button" class="jpv-chip" data-word="${escapeHtml(w.word)}" onclick="seekJpVideoToWord('${escapeHtml(w.word)}')">
-               <span>${escapeHtml(w.word)}</span>
-               ${Number(w.hits || 1) >= 2 ? `<span class="jpv-chip-cnt">×${Number(w.hits)}</span>` : ""}
-             </button>
-           `).join("")}
-         </div>
-       </div>`
+    ? `<button type="button" class="jpv-words-trigger" id="jpv-words-trigger" onclick="openJpVideoWordsSheet()">
+         <span class="jpv-words-dot" aria-hidden="true"></span>
+         <span>本片 ${words.length} 词 · 点词跳播 ▾</span>
+       </button>`
     : "";
 
   host.innerHTML = `
@@ -15686,6 +15973,7 @@ function openRadioReview(forceRestart) {
     rvSpeakState = { listening: false, interim: "", result: null, blindMode: false, errorMsg: "" };
   }
   radioReviewOpen = true;
+  setRadioImmersiveChrome(true);
   const pStage = document.getElementById("radio-player-stage");
   const rStage = document.getElementById("radio-review-stage");
   if (pStage) pStage.classList.add("hidden");
@@ -15706,9 +15994,16 @@ function closeRadioReview() {
   radioReviewOpen = false;
   rvPendingLeft = false;
   const pStage = document.getElementById("radio-player-stage");
+  const gStage = document.getElementById("radio-gpod-stage");
   const rStage = document.getElementById("radio-review-stage");
   if (rStage) rStage.classList.add("hidden");
-  if (pStage) pStage.classList.remove("hidden");
+  if (radioChannel === "gpod" && gStage && GPOD_LIST.length) {
+    if (pStage) pStage.classList.add("hidden");
+    gStage.classList.remove("hidden");
+  } else if (pStage) {
+    pStage.classList.remove("hidden");
+  }
+  setRadioImmersiveChrome(false);
   popNavLayer("radio_review");
   paintRadioSeekProgress(radioPlayer.currentTime || 0);
   updateRadioReviewEntryBadge();
@@ -15726,6 +16021,7 @@ function openRadioSpeaking(startIdx) {
   ensureRadioReviewState(false);
   radioReviewOpen = true;
   rvPendingLeft = false;
+  setRadioImmersiveChrome(true);
   const pStage = document.getElementById("radio-player-stage");
   const rStage = document.getElementById("radio-review-stage");
   if (pStage) pStage.classList.add("hidden");
@@ -17363,8 +17659,9 @@ function renderTutor() {
   const confWrong = effTarget.isTwin
     ? ""
     : ((DATA.confusion_pairs && (DATA.confusion_pairs[p.point_key] || DATA.confusion_pairs[p.point])) || "");
-  const confHintHTML = isRelevantConfusionHint(confWrong, q)
-    ? `<div class="res-cue"><span class="cue-tag">常混</span><span class="cue-txt">历史易误选「${escapeHtml(confWrong)}」，注意和正解区分</span></div>`
+  const confRedundant = !isUnsure && pickedVal && confWrong && String(confWrong).trim() === String(pickedVal).trim();
+  const confHintHTML = (!confRedundant && isRelevantConfusionHint(confWrong, q))
+    ? `<div class="res-cue"><span class="cue-tag">常混</span><span class="cue-txt">易与「${escapeHtml(confWrong)}」混淆</span></div>`
     : "";
   const activeStoryEcho = effTarget.isTwin ? (q.story_echo || null) : (q.story_echo || p.story_echo || null);
   const storyEchoHTML = (activeStoryEcho && activeStoryEcho.tab && activeStoryEcho.hook)
@@ -23352,6 +23649,9 @@ function startRetell432Step() {
 }
 
 let mrOpenMs = 0;
+let mrReadMs = 0;
+let mrStage = "read";
+let mrShowRef = false;
 let mrPicked = "";
 function getMicroReadingDoneToday() {
   try {
@@ -23366,10 +23666,25 @@ function openMicroReadingModal() {
   const mm = document.getElementById("app-modal");
   if (!mr || !mc || !mm) return;
   mrOpenMs = Date.now();
+  mrReadMs = 0;
   const prev = getMicroReadingDoneToday();
+  mrStage = prev ? "quiz" : "read";
+  mrShowRef = false;
   mrPicked = prev ? prev.picked : "";
   renderMicroReadingModalBody(prev);
   showAppModal();
+}
+
+function goMicroReadingQuiz() {
+  if (!mrReadMs) mrReadMs = Date.now();
+  mrStage = "quiz";
+  mrShowRef = false;
+  renderMicroReadingModalBody(getMicroReadingDoneToday());
+}
+
+function toggleMicroReadingRef() {
+  mrShowRef = !mrShowRef;
+  renderMicroReadingModalBody(getMicroReadingDoneToday());
 }
 
 function renderMicroReadingModalBody(doneObj) {
@@ -23377,6 +23692,20 @@ function renderMicroReadingModalBody(doneObj) {
   const mc = document.getElementById("modal-content");
   if (!mr || !mc) return;
   const answered = !!doneObj;
+  const charsN = mr.char_count || String(mr.body_ja || "").length;
+  if (!answered && mrStage === "read") {
+    mc.innerHTML = `
+      <h3 class="modal-h">${escapeHtml(mr.title_ja || "今日短文精读")}</h3>
+      <p class="zb-sheet-sub">${escapeHtml(mr.topic || "")} · 约 ${charsN} 字 · 点词可查读音</p>
+      <div class="mr-passage" lang="ja">${annotateJapanese(mr.body_ja || "")}</div>
+      ${lexBoxHTML("mr-inline-lex")}
+      <div class="dock-row" style="margin-top:16px;">
+        <button type="button" class="ghost-btn" onclick="closeModal()">返回</button>
+        <button type="button" class="sumi-btn" onclick="goMicroReadingQuiz()">读完了 · 去答题</button>
+      </div>
+    `;
+    return;
+  }
   const optsHTML = (mr.choices || []).map((ch, idx) => {
     let cls = "mr-opt-btn";
     if (answered) {
@@ -23387,18 +23716,17 @@ function renderMicroReadingModalBody(doneObj) {
   }).join("");
   mc.innerHTML = `
     <h3 class="modal-h">${escapeHtml(mr.title_ja || "今日短文精读")}</h3>
-    <p class="zb-sheet-sub">${escapeHtml(mr.topic || "")} · 约 ${mr.char_count || String(mr.body_ja || "").length} 字 · 点词可查读音</p>
-    <div class="mr-passage" lang="ja">${annotateJapanese(mr.body_ja || "")}</div>
-    ${lexBoxHTML("mr-inline-lex")}
+    <button type="button" class="mr-ref-toggle" onclick="toggleMicroReadingRef()">${mrShowRef ? "收起原文 ▴" : "回看原文 ▾"}</button>
+    ${mrShowRef ? `<div class="mr-passage is-compact" lang="ja">${annotateJapanese(mr.body_ja || "")}</div>${lexBoxHTML("mr-inline-lex")}` : ""}
     <div class="mr-q-title" lang="ja">${escapeHtml(mr.question_ja || "")}</div>
     <div class="mr-opt-list">${optsHTML}</div>
     ${answered ? `
       <div class="mr-note">
         <div>${escapeHtml(mr.trap_note || "")}</div>
-        ${doneObj.cpm ? `<div class="mr-speed-note">本次读速约 ${doneObj.cpm} 字/分（N2 流畅参考线 220 字/分）</div>` : ""}
+        ${doneObj.cpm ? `<div class="mr-speed-note">本次读速约 ${doneObj.cpm} 字/分（N2 参考 220 字/分）</div>` : ""}
       </div>` : ""}
     <div class="dock-row" style="margin-top:14px;">
-      <button type="button" class="ghost-btn" style="flex:1;" onclick="closeModal()">返回总表</button>
+      <button type="button" class="ghost-btn" style="flex:1;" onclick="closeModal()">返回</button>
     </div>
   `;
 }
@@ -23409,12 +23737,14 @@ function pickMicroReadingChoice(idx) {
   const ch = (mr.choices || [])[idx] || "";
   if (!ch) return;
   const ok = ch === mr.answer;
-  const sec = Math.max(8, Math.round((Date.now() - (mrOpenMs || Date.now())) / 1000));
+  const endMs = mrReadMs || Date.now();
+  const sec = Math.max(8, Math.round((endMs - (mrOpenMs || endMs)) / 1000));
   const chars = Number(mr.char_count || String(mr.body_ja || "").length || 240);
   const cpm = Math.min(600, Math.round((chars * 60) / sec));
   const rec = { id: mr.id, ok, picked: ch, cpm, sec };
   try { localStorage.setItem("n3_mr_done_" + DATA.plan_date, JSON.stringify(rec)); } catch (e) {}
   pushSlaRecord(`READ:${mr.id}`, mr.topic || mr.id, `${ok ? "精读对" : "精读错"}:${cpm}字/分`, ok);
+  mrStage = "quiz";
   renderMicroReadingModalBody(rec);
   renderDashboard();
 }
@@ -23453,12 +23783,15 @@ function renderTutorMissionModalBody() {
   const checkSvg = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.2 8.4L6.6 11.6L12.8 4.8" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   const rowsHTML = list.map((it, idx) => {
     const isDone = !!checked[it.id || it.expr];
+    const cueTxt = String(it.cue || "").trim();
+    const isGenericCue = !cueTxt || cueTxt.includes("找一个和最近生活相关的例子");
+    const shortWhy = isGenericCue ? "" : cueTxt;
     return `
       <div class="tm-row${isDone ? " is-done" : ""}">
         <div class="tm-main">
           <div class="tm-expr" lang="ja">${escapeHtml(it.expr)}</div>
           <div class="tm-starter" lang="ja">${escapeHtml(it.starter_ja)}</div>
-          <div class="tm-why">${escapeHtml(it.why)} · ${escapeHtml(it.cue)}</div>
+          ${shortWhy ? `<div class="tm-why">${escapeHtml(shortWhy)}</div>` : ""}
         </div>
         <button type="button" class="tm-check-btn" id="tm-chk-${idx}" onclick="toggleTutorMissionItem(${idx})" aria-label="标记已在真人课用出">${checkSvg}</button>
       </div>
@@ -23466,10 +23799,10 @@ function renderTutorMissionModalBody() {
   }).join("");
   mc.innerHTML = `
     <h3 class="modal-h">真人课 3 词任务 · ${doneN}/${list.length}</h3>
-    <p class="zb-sheet-sub">从本周最容易混的点里挑了 3 个，周末和日本老师聊天时刻意用掉，用完轻点右侧圆圈。</p>
+    <p class="zb-sheet-sub">和日本老师聊天时顺口用掉，用完轻点右侧勾选。</p>
     <div class="tm-list">${rowsHTML}</div>
     <div class="dock-row" style="margin-top:14px;">
-      <button type="button" class="ghost-btn" style="flex:1;" onclick="closeModal()">返回总表</button>
+      <button type="button" class="ghost-btn" style="flex:1;" onclick="closeModal()">返回</button>
     </div>
   `;
 }
@@ -24074,7 +24407,7 @@ function seekClinicToStep(stepIdx) {
 
 function openClinicCatalogModal(pack) {
   stopClinicAudio();
-  clinicCatalogPack = pack || "confusion";
+  clinicCatalogPack = (pack === "leech" || pack === "listening") ? pack : "confusion";
   const mc = document.getElementById("modal-content");
   if (!mc) return;
   const doneMap = loadClinicDoneMap();
@@ -24100,7 +24433,6 @@ function openClinicCatalogModal(pack) {
   }).join("");
   mc.innerHTML = `
     <h3 class="modal-h">考前黑板对谈 · ${CLINIC_ITEMS.length} 组</h3>
-    <p class="zb-sheet-sub">两人对谈配动态黑板，每组半分钟，专拆最容易混的考点与钉子户。</p>
     <div class="kb-cat-tabs">${tabsHTML}</div>
     <div class="kb-cat-list">${rowsHTML}</div>
     <div class="dock-row" style="margin-top:12px;">
@@ -24776,6 +25108,126 @@ function renderMockStage() {
   }
 }
 
+const DASH_SHORT_LABELS = { grammar: "语法", henkei: "活用", listening: "听力", vocab: "词汇" };
+
+function openDashToolsSheet() {
+  const mc = document.getElementById("modal-content");
+  if (!mc) return;
+  const hist = loadMockHist();
+  const todayBest = hist[DATA.plan_date];
+  const mockN = Math.min(15, (DATA.points || []).length);
+  const rows = [];
+
+  // 1. Timed Mock Sprint 15
+  rows.push(todayBest
+    ? `<button type="button" class="dash-tool-row is-done" onclick="closeModal();startMockSprint()">
+         <div class="dash-tool-main">
+           <div class="dash-tool-title">模拟小测 · 今日最佳 ${todayBest.scaled} / 180</div>
+           <div class="dash-tool-sub">答对 ${todayBest.rightCnt}/${todayBest.total} · 错题已并入明日优先</div>
+         </div>
+         <span class="dash-tool-go">再测 ›</span>
+       </button>`
+    : `<button type="button" class="dash-tool-row" onclick="closeModal();startMockSprint()">
+         <div class="dash-tool-main">
+           <div class="dash-tool-title">模拟小测 · ${mockN} 题限时</div>
+           <div class="dash-tool-sub">${mockN >= 15 ? 15 : mockN} 分钟连续作答 · 交卷统一出分</div>
+         </div>
+         <span class="dash-tool-go">开始 ›</span>
+       </button>`);
+
+  // 2. Blackboard Dialogue Clinic
+  const featClinic = getFeaturedClinic();
+  if (featClinic) {
+    const cDone = isClinicDone(featClinic.id);
+    const cDur = Math.round(featClinic.duration || 40);
+    rows.push(`<button type="button" class="dash-tool-row${cDone ? " is-done" : ""}" id="dash-clinic-row" onclick="openBlackboardClinic('${featClinic.id}')">
+      <div class="dash-tool-main">
+        <div class="dash-tool-title">${cDone ? "考前黑板对谈 · 今日已拆雷 ✓" : `考前黑板对谈 · ${cDur}秒`}</div>
+        <div class="dash-tool-sub">${escapeHtml(featClinic.title)} · 全部 ${CLINIC_ITEMS.length} 组</div>
+      </div>
+      <span class="dash-tool-go">${cDone ? "重听 ›" : "去听 ›"}</span>
+    </button>`);
+  }
+
+  // 3. Post-N3 Micro-Reading & N3 Real Score Calibration (strictly phase-gated!)
+  if (DATA.phase === "n2_climb" || DATA.phase === "n1_sprint") {
+    const mr = DATA.micro_reading;
+    if (mr) {
+      const mrDone = getMicroReadingDoneToday();
+      rows.push(mrDone
+        ? `<button type="button" class="dash-tool-row is-done" onclick="openMicroReadingModal()">
+             <div class="dash-tool-main">
+               <div class="dash-tool-title">短文精读 · 今日已读 ✓${mrDone.cpm ? ` · ${mrDone.cpm} 字/分` : ""}</div>
+               <div class="dash-tool-sub">${escapeHtml(mr.title_ja)}</div>
+             </div>
+             <span class="dash-tool-go">重看 ›</span>
+           </button>`
+        : `<button type="button" class="dash-tool-row" onclick="openMicroReadingModal()">
+             <div class="dash-tool-main">
+               <div class="dash-tool-title">今日短文精读 · 约 ${mr.char_count || 250} 字</div>
+               <div class="dash-tool-sub">静心精读一篇，测读速与转折态度</div>
+             </div>
+             <span class="dash-tool-go">去读 ›</span>
+           </button>`);
+    }
+    const sc = getLocalN3RealScore();
+    rows.push(sc
+      ? `<button type="button" class="dash-tool-row is-done" onclick="openN3ScoreModal()">
+           <div class="dash-tool-main">
+             <div class="dash-tool-title">N3 实考 ${sc.total} / 180 · 已校准 ✓</div>
+           </div>
+           <span class="dash-tool-go">修改</span>
+         </button>`
+      : `<button type="button" class="dash-tool-row" onclick="openN3ScoreModal()">
+           <div class="dash-tool-main">
+             <div class="dash-tool-title">记下 N3 实考分</div>
+             <div class="dash-tool-sub">出分后记一次，自动校准 N2 节奏</div>
+           </div>
+           <span class="dash-tool-go">记分 ›</span>
+         </button>`);
+  }
+
+  // 4. Weekend Real-Tutor 3-Phrase Mission
+  const tmList = Array.isArray(DATA.tutor_mission) ? DATA.tutor_mission : [];
+  if (tmList.length) {
+    const tmChk = loadTutorMissionChecked();
+    const tmDoneN = tmList.filter(x => !!tmChk[x.id || x.expr]).length;
+    const tmAllDone = tmDoneN >= tmList.length;
+    const tmNames = tmList.map(x => x.expr).join(" · ");
+    rows.push(`<button type="button" class="dash-tool-row${tmAllDone ? " is-done" : ""}" onclick="openTutorMissionModal()">
+      <div class="dash-tool-main">
+        <div class="dash-tool-title">${tmAllDone ? `真人课 3 词任务 · ${tmDoneN}/${tmList.length} ✓` : `真人课 3 词任务 · ${tmDoneN}/${tmList.length}`}</div>
+        <div class="dash-tool-sub" lang="ja">${escapeHtml(tmNames)}</div>
+      </div>
+      <span class="dash-tool-go">${tmAllDone ? "查看 ›" : "去用 ›"}</span>
+    </button>`);
+  }
+
+  // 5. Grammar Audit (quietly tucked here once complete, highlighted if remaining)
+  const dm = computeDaily120Metrics();
+  const ga = dm.ga;
+  if (ga && ga.total > 0) {
+    const gaDone = ga.remaining === 0;
+    const gaSummary = `陌生 ${ga.counts[1] || 0} · 易混 ${ga.counts[2] || 0} · 看懂 ${ga.counts[3] || 0} · 本能 ${ga.counts[4] || 0}`;
+    rows.push(`<button type="button" class="dash-tool-row${gaDone ? " is-done" : ""}" onclick="${gaDone ? "closeModal();switchMode('tutor')" : "closeModal();openGrammarAuditFromAnywhere()"}">
+      <div class="dash-tool-main">
+        <div class="dash-tool-title">${gaDone ? `语法盘点 · ${ga.total}/${ga.total} 已盘完 ✓` : `语法盘点 · 已盘 ${ga.audited}/${ga.total}`}</div>
+        <div class="dash-tool-sub">${gaSummary}</div>
+      </div>
+      <span class="dash-tool-go">${gaDone ? "去补漏 ›" : "去盘点 ›"}</span>
+    </button>`);
+  }
+
+  mc.innerHTML = `
+    <h3 class="modal-h">专项练习</h3>
+    <div class="dash-tool-list">${rows.join("")}</div>
+    <div class="dock-row">
+      <button type="button" class="ghost-btn" style="flex:1;" onclick="closeModal()">返回总表</button>
+    </div>
+  `;
+  showAppModal();
+}
+
 let lastDashRenderSig = "";
 function renderDashboard(forceRefresh) {
   if (masteryDirty) applyMasteryOverrides();
@@ -24808,156 +25260,53 @@ function renderDashboard(forceRefresh) {
     return { k, m, c, wip2, staleDone, hesCnt, roi: wip2 * (m.exam_pts || 25) };
   });
 
-  // Metcalfe & Kornell (2005) Region of Proximal Learning: surface highest-ROI 2/3 near-graduation pillar!
+  // Single-row Kyoto Zen Ledger Header (Zero stacked utility walls!)
+  const dm = computeDaily120Metrics();
+  const ga = dm.ga;
   const roiEl = document.getElementById("dash-roi-focus");
   if (roiEl) {
     const best = pillarMeta.slice().sort((a, b) => (b.roi - a.roi) || (b.wip2 - a.wip2))[0];
     const totalWip2 = pillarMeta.reduce((s, x) => s + x.wip2, 0);
-    const totalStale = pillarMeta.reduce((s, x) => s + x.staleDone, 0);
-    const totalHes = pillarMeta.reduce((s, x) => s + x.hesCnt, 0);
     const dLeft = DATA.days_to_exam != null ? Number(DATA.days_to_exam) : 14;
     const isN1 = DATA.phase === "n1_sprint";
     const isN2 = DATA.phase === "n2_climb" || isN1;
     const isExamDay = DATA.phase === "exam_day" || dLeft === 0;
     const examLead = isExamDay
-      ? "<b>今日开考</b>"
+      ? "<b>今日开考</b> · 轻装上阵"
       : (isN1
-        ? `距 N1 冲刺剩 <b>${dLeft} 天</b>${DATA.is_travel_floor ? " · 旅途保底" : ""}`
+        ? `距 N1 剩 <b>${dLeft} 天</b>${totalWip2 > 0 ? ` · 临门 ${totalWip2} 项` : ""}`
         : (isN2
-          ? `距 N2 验收剩 <b>${dLeft} 天</b>${DATA.is_travel_floor ? " · 旅途保底" : ""}`
-          : `距考剩 <b>${dLeft} 天</b>`));
-    const activeConfCnt = Object.keys(DATA.confusion_pairs || {}).length;
-    const subParts = [];
-    if (isExamDay) {
-      subParts.push(`<span class="nw">12 题轻热身，稳住手感即可</span>`);
-    } else {
-      if (best && totalWip2 > 0) subParts.push(`<span class="nw">${best.m.label}最提分</span>`);
-      if (activeConfCnt > 0) subParts.push(`<span class="nw">常混 ${activeConfCnt} 组</span>`);
-      if (totalHes > 0) subParts.push(`<span class="nw">略生 ${totalHes} 项</span>`);
-      if (totalStale > 0) subParts.push(`<span class="nw">待保鲜 ${totalStale} 项</span>`);
-    }
-    const subLine = subParts.length ? `<div class="dash-roi-sub">${subParts.join("")}</div>` : "";
-    if (best && totalWip2 > 0 && !isExamDay) {
-      roiEl.innerHTML = `
-        <div class="dash-roi-bar">
-          <div class="dash-roi-txt"><div><span class="nw">${examLead}</span> · <span class="nw">临门 2/3 共 <b>${totalWip2} 项</b></span></div>${subLine}</div>
-          <button type="button" class="dash-roi-btn" onclick="jumpToRoiPillar('${best.k}')">看 ${best.m.label} ›</button>
-        </div>`;
-    } else {
-      roiEl.innerHTML = `
-        <div class="dash-roi-bar">
-          <div class="dash-roi-txt"><div><span class="nw">${examLead}</span> · <span class="nw">${isExamDay ? "轻装上阵" : "临门 2/3 已清空"}</span></div>${subLine || `<div class="dash-roi-sub">稳步攻克新点即可</div>`}</div>
-        </div>`;
-    }
+          ? `距 N2 剩 <b>${dLeft} 天</b>${totalWip2 > 0 ? ` · 临门 ${totalWip2} 项` : ""}`
+          : `距考 <b>${dLeft} 天</b>${totalWip2 > 0 ? ` · 临门 ${totalWip2} 项` : ""}`));
+    const hasPendingTool = (ga && ga.remaining > 0) || ((isN2) && !getLocalN3RealScore());
+    const focusClick = (best && totalWip2 > 0 && !isExamDay) ? `jumpToRoiPillar('${best.k}')` : "openDashToolsSheet()";
+    roiEl.innerHTML = `
+      <div class="dash-zen-head">
+        <button type="button" class="dash-zen-focus" onclick="${focusClick}">${examLead}</button>
+        <button type="button" class="dash-tool-trigger" id="dash-tools-btn" onclick="openDashToolsSheet()" aria-label="打开专项练习">
+          <span class="dash-tool-dot${hasPendingTool ? " warn" : ""}" aria-hidden="true"></span>
+          <span>专项练习</span>
+          <svg class="dash-tool-chev" width="11" height="11" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.4L6 7.9L9.5 4.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>`;
   }
 
+  // Keep auxiliary containers cleanly empty on the main ledger surface (all tucked into 专项练习 bottom sheet!)
   const mockEntryEl = document.getElementById("dash-mock-entry");
-  if (mockEntryEl) {
-    const hist = loadMockHist();
-    const todayBest = hist[DATA.plan_date];
-    const mockN = Math.min(15, (DATA.points || []).length);
-    const mockRowHTML = todayBest
-      ? `
-        <div class="dash-quiet-row is-done">
-          <div class="dash-quiet-txt">
-            <div>模拟小测 · 今日最佳 <b>${todayBest.scaled} / 180</b></div>
-            <div class="dash-quiet-sub">答对 ${todayBest.rightCnt}/${todayBest.total} · 错题已并入明日优先</div>
-          </div>
-          <button type="button" class="dash-quiet-btn moss" onclick="startMockSprint()">再测 ›</button>
-        </div>`
-      : `
-        <div class="dash-quiet-row">
-          <div class="dash-quiet-txt">
-            <div><b>模拟小测</b> · ${mockN} 题限时 ${mockN >= 15 ? 15 : mockN} 分钟</div>
-            <div class="dash-quiet-sub">连续作答 · 交卷统一出分与错题复盘</div>
-          </div>
-          <button type="button" class="dash-quiet-btn" onclick="startMockSprint()">开始 ›</button>
-        </div>`;
-
-    let n3CalRowHTML = "";
-    let mrRowHTML = "";
-    if (DATA.phase === "n2_climb" || DATA.phase === "n1_sprint") {
-      const mr = DATA.micro_reading;
-      if (mr) {
-        const mrDone = getMicroReadingDoneToday();
-        mrRowHTML = mrDone
-          ? `
-            <div class="dash-quiet-row is-done">
-              <div class="dash-quiet-txt">
-                <div>短文精读 · 今日已读 ✓${mrDone.cpm ? ` · 约 <b>${mrDone.cpm} 字/分</b>` : ""}</div>
-                <div class="dash-quiet-sub">${escapeHtml(mr.title_ja)} · ${mrDone.ok ? "态度抓准" : "已复盘陷阱"}</div>
-              </div>
-              <button type="button" class="dash-quiet-btn moss" onclick="openMicroReadingModal()">重看 ›</button>
-            </div>`
-          : `
-            <div class="dash-quiet-row">
-              <div class="dash-quiet-txt">
-                <div><b>今日短文精读</b> · 约 ${mr.char_count || 250} 字</div>
-                <div class="dash-quiet-sub">2 分钟防汉字假懂，练转折态度与读速</div>
-              </div>
-              <button type="button" class="dash-quiet-btn" onclick="openMicroReadingModal()">去读 ›</button>
-            </div>`;
-      }
-      const sc = getLocalN3RealScore();
-      n3CalRowHTML = sc
-        ? `
-          <div class="dash-quiet-row is-done">
-            <div class="dash-quiet-txt">
-              <div>N3 实考 <b>${sc.total} / 180</b> · 已校准 ✓</div>
-            </div>
-            <button type="button" class="dash-quiet-btn muted" onclick="openN3ScoreModal()">修改</button>
-          </div>`
-        : `
-          <div class="dash-quiet-row">
-            <div class="dash-quiet-txt">
-              <div><b>记下 N3 实考分</b></div>
-              <div class="dash-quiet-sub">出分后记一次，自动校准 N2 爬坡节奏</div>
-            </div>
-            <button type="button" class="dash-quiet-btn moss" onclick="openN3ScoreModal()">记分 ›</button>
-          </div>`;
-    }
-    let tmRowHTML = "";
-    const tmList = Array.isArray(DATA.tutor_mission) ? DATA.tutor_mission : [];
-    if (tmList.length) {
-      const tmChk = loadTutorMissionChecked();
-      const tmDoneN = tmList.filter(x => !!tmChk[x.id || x.expr]).length;
-      const tmAllDone = tmDoneN >= tmList.length;
-      const tmNames = tmList.map(x => x.expr).join(" · ");
-      tmRowHTML = `
-        <div class="dash-quiet-row${tmAllDone ? " is-done" : ""}">
-          <div class="dash-quiet-txt">
-            <div>${tmAllDone ? `真人课 3 词任务 · 已用完 ${tmDoneN}/${tmList.length} ✓` : `<b>真人课 3 词任务</b> · ${tmDoneN}/${tmList.length}`}</div>
-            <div class="dash-quiet-sub" lang="ja">${escapeHtml(tmNames)}</div>
-          </div>
-          <button type="button" class="dash-quiet-btn${tmAllDone ? " moss" : ""}" onclick="openTutorMissionModal()">${tmAllDone ? "查看 ›" : "去用 ›"}</button>
-        </div>`;
-    }
-    let clinicRowHTML = "";
-    const featClinic = getFeaturedClinic();
-    if (featClinic) {
-      const cDone = isClinicDone(featClinic.id);
-      const cDur = Math.round(featClinic.duration || 40);
-      clinicRowHTML = `
-        <div class="dash-quiet-row${cDone ? " is-done" : ""}" id="dash-clinic-row">
-          <div class="dash-quiet-txt">
-            <div>${cDone ? `考前黑板对谈 · 今日已拆雷 ✓` : `<b>考前黑板对谈</b> · 今日拆雷（${cDur}秒）`}</div>
-            <div class="dash-quiet-sub">${escapeHtml(featClinic.title)} · ${escapeHtml(featClinic.subtitle)}</div>
-          </div>
-          <button type="button" class="dash-quiet-btn${cDone ? " moss" : ""}" onclick="openBlackboardClinic('${featClinic.id}')">${cDone ? "重听 ›" : "去听 ›"}</button>
-        </div>`;
-    }
-    mockEntryEl.innerHTML = mockRowHTML + clinicRowHTML + mrRowHTML + tmRowHTML + n3CalRowHTML;
-  }
+  if (mockEntryEl) mockEntryEl.innerHTML = "";
+  const entryEl = document.getElementById("night-flash-entry");
+  if (entryEl) entryEl.innerHTML = "";
 
   document.getElementById("dash-summary").innerHTML = pillarMeta.map(({ k, m, c }) => {
     const pDone = ((c.done / Math.max(1, c.total)) * 100).toFixed(1);
     const pWip = ((c.wip / Math.max(1, c.total)) * 100).toFixed(1);
     const pTodo = ((c.todo / Math.max(1, c.total)) * 100).toFixed(1);
+    const shortLbl = DASH_SHORT_LABELS[k] || m.label;
     return `
       <div class="pillar-row ${dashMod === k ? 'active' : ''}" onclick="selectDashMod('${k}')">
         <div class="pillar-head">
-          <span class="pillar-name">${m.label}</span>
-          <span class="pillar-stat">已掌握 ${c.done} / ${c.total}</span>
+          <span class="pillar-name">${shortLbl}</span>
+          <span class="pillar-stat">${c.done}/${c.total}</span>
         </div>
         <div class="pillar-line">
           <div class="seg-moss" style="width:${pDone}%"></div>
@@ -24967,48 +25316,6 @@ function renderDashboard(forceRefresh) {
       </div>
     `;
   }).join("");
-
-  const dm = computeDaily120Metrics();
-  const ga = dm.ga;
-  const remVocab = countRemainingVocabPool();
-  const entryEl = document.getElementById("night-flash-entry");
-  if (entryEl) {
-    if (dashMod === "grammar" && ga && ga.total > 0) {
-      const gaHead = ga.remaining > 0 ? `已盘 ${ga.audited}/${ga.total}` : `全表 ${ga.total}/${ga.total} 已盘完`;
-      const statChips = [
-        `陌生 ${ga.counts[1] || 0}`,
-        `易混 ${ga.counts[2] || 0}`,
-        `看懂 ${ga.counts[3] || 0}`,
-        `本能 ${ga.counts[4] || 0}`,
-      ].map(s => `<span class="nw">${s}</span>`).join("");
-      entryEl.innerHTML = `
-        <div class="night-bar">
-          <div class="night-bar-txt">
-            <div class="night-bar-title">语法盘点<span class="night-bar-head-stat">${gaHead}</span></div>
-            <div class="night-bar-sub night-bar-stats">${statChips}</div>
-          </div>
-          ${ga.remaining > 0
-            ? `<button class="night-go-btn" onclick="openGrammarAuditFromAnywhere()">去盘点 ›</button>`
-            : `<button class="night-go-btn" onclick="switchMode('tutor')">去补漏 ›</button>`}
-        </div>
-      `;
-    } else if (remVocab > 0) {
-      const subTxt = dm.flashDone
-        ? `今日一组已完成 · 余 ${remVocab} 词未满 3/3`
-        : `单手右滑记住 · 左滑回炉 · 跨 3 天满 3/3 变绿`;
-      entryEl.innerHTML = `
-        <div class="night-bar">
-          <div class="night-bar-txt">
-            <div class="night-bar-title">单手记词</div>
-            <div class="night-bar-sub">${subTxt}</div>
-          </div>
-          <button class="night-go-btn" onclick="switchMode('vocab')">去记词 ›</button>
-        </div>
-      `;
-    } else {
-      entryEl.innerHTML = "";
-    }
-  }
 
   const curCounts = DATA.mastery[dashMod].counts;
   document.getElementById("tier-tabs").innerHTML = `
@@ -25386,40 +25693,36 @@ function openSessionModal() {
     ? window.ZB.getSummary()
     : { done: false, text: "0 / 3 项" };
   const gaRow = (ga && ga.showSubNav)
-    ? `　 语法盘点　<strong id="modal-ga-cnt">${ga.remaining === 0 ? `全表 ${ga.total}/${ga.total} ✓` : `今日 ${ga.gaSeen} / ${ga.gaTarget} · 总 ${ga.audited}/${ga.total}`}</strong><br/>`
+    ? `<div class="sess-row"><span>语法盘点</span><strong id="modal-ga-cnt">${ga.remaining === 0 ? `全表 ${ga.total}/${ga.total} ✓` : `今日 ${ga.gaSeen}/${ga.gaTarget} · 总 ${ga.audited}/${ga.total}`}</strong></div>`
     : "";
   const installRow = !isStandaloneApp()
     ? `<div class="install-app-row" id="install-app-row">
          <div class="install-app-copy">
            <div class="install-app-title">安装到主屏幕</div>
-           <div class="install-app-sub">去掉浏览器地址栏，全屏更像原生 App</div>
+           <div class="install-app-sub">全屏打开，体验更接近原生应用</div>
          </div>
          <button type="button" class="install-app-btn" onclick="triggerPwaInstall()">安装</button>
        </div>
        <div class="install-app-hint" id="install-app-hint" style="display:none;"></div>`
     : "";
   document.getElementById("modal-content").innerHTML = `
-    <h3 class="modal-h">今日四修 · 日语与体律</h3>
-    <p class="modal-body">
-      ① 做题　　　<strong id="modal-green-cnt">${m.greenCnt} / ${m.totalCards} 题</strong><br/>
-      ② 随身听　　<strong id="modal-radio-min">${m.listenedMins} / ${m.targetMins} 分钟</strong><br/>
-      ③ 单手记词　<strong id="modal-flash-cnt">${m.flashDone ? "今日已完成" : `${m.flashSeen} / ${m.flashTarget} 词`}</strong><br/>
+    <h3 class="modal-h">今日四修</h3>
+    <div class="sess-ledger">
+      <div class="sess-row"><span>做题</span><strong id="modal-green-cnt">${m.greenCnt} / ${m.totalCards} 题</strong></div>
+      <div class="sess-row"><span>随身听</span><strong id="modal-radio-min">${m.listenedMins} / ${m.targetMins} 分钟</strong></div>
+      <div class="sess-row"><span>单手记词</span><strong id="modal-flash-cnt">${m.flashDone ? "今日已完成" : `${m.flashSeen} / ${m.flashTarget} 词`}</strong></div>
       ${gaRow}
-      ④ 体律　　　<strong id="modal-body-cnt">${bm.done ? "今日已完成" : bm.text}</strong><br/>
-      当前预计分　<strong id="modal-proj-score">${m.projScore} / 180 分</strong>
-    </p>
-    <p class="modal-promise">${ga && ga.requiredToday
-      ? `四枚圆印不变，第 3 枚圆印兼含记词与语法盘点，盘完自动收起。`
-      : "四枚圆印依次对应做题、随身听、记词与体律；总表里每个词与考点需跨 3 天答对满 3/3 才算真正掌握。"}</p>
-    <div class="sync-box">
+      <div class="sess-row"><span>体律</span><strong id="modal-body-cnt">${bm.done ? "今日已完成" : bm.text}</strong></div>
+      <div class="sess-row is-score"><span>预计总分</span><strong id="modal-proj-score">${m.projScore} / 180 分</strong></div>
+    </div>
+    <div class="sync-row-zen">
       <p class="sync-note" id="cloud-sync-status-line">正在对齐云端进度…</p>
-      <button class="sync-btn" onclick="manualCloudSync(this)">立即对齐多端进度</button>
+      <button type="button" class="sync-btn" onclick="manualCloudSync(this)">对齐 ›</button>
     </div>
     ${installRow}
     <div class="dock-row">
-      <button class="ghost-btn" onclick="resetTodayMission()">重做题</button>
-      <button class="ghost-btn" onclick="closeModal();switchMode('body')">体律</button>
-      <button class="sumi-btn" onclick="closeModal()">继续</button>
+      <button type="button" class="ghost-btn" onclick="resetTodayMission()">重做题</button>
+      <button type="button" class="sumi-btn" onclick="closeModal()">继续</button>
     </div>
   `;
   updateSyncModalBadge();
@@ -26147,19 +26450,19 @@ window.ZB = (function() {
 
   function makePZPlan(opts) {
     const cur = opts.cur, next = getPZMeta(Math.min(PZ_LIST.length, cur.idx + 1));
-    const langTip = cur.pIdx === 0 ? "（勿进教练页、避开德语 DE 版；看不到英文版点左下角头像 → Preferences → Class Languages 开启 English）" : "";
+    const langTip = cur.pIdx === 0 ? "（避开德语 DE 版）" : "";
     const progSub = cur.allDone
-      ? "两套官方 Power Zone 项目已全部通关，按自己节奏保持稳态燃脂即可。"
-      : `当前进度 ${cur.doneInProg} / ${cur.progTotal} 节（每周稳推 2–3 节，打球多的周 1–2 节就很好，约 8–10 周从容通关，绝不照官方 5 周硬追）。`;
+      ? "两套 Power Zone 已全部通关，按节奏保持即可。"
+      : `进度 ${cur.doneInProg} / ${cur.progTotal} 节，每周稳推 2–3 节，约 8–10 周从容通关。`;
     const pzeCue = ((cur.kind === "pze" || cur.kind === "pze_long") && PROF && PROF.pze_media_tip) ? PROF.pze_media_tip : cur.cue;
     const items = [
       { k: "今天骑这节", v: `${cur.title}（${cur.coach} · ${cur.min} 分钟）`, sub: pzeCue, cur: true },
-      { k: "Bike+ 一步找到", v: cur.entry, sub: (opts.extraNote || "状态好就照这节骑；如果今天累了随时点「偏累」或「休息日」，不勉强。") + langTip }
+      { k: "Bike+ 找课入口", v: cur.entry + langTip, sub: opts.extraNote || "累了随时切「偏累」或「休息日」，不勉强。" }
     ];
     if (opts.vitalsLine) {
-      items.push({ k: "手表与秤实时状态", v: opts.vitalsLine, sub: "已结合你最新的静息心率、HRV、睡眠和运动负荷排课。" });
+      items.push({ k: "手表与秤状态", v: opts.vitalsLine, sub: "已结合最新静息心率、HRV 与睡眠排课。" });
     }
-    items.push({ k: "慢节奏推进", v: `${cur.progName}（${cur.doneInProg}/${cur.progTotal}）`, sub: progSub });
+    items.push({ k: "主线进度", v: `${cur.progName}（${cur.doneInProg}/${cur.progTotal}）`, sub: progSub });
     return {
       tier: opts.tier || "green",
       tierText: opts.tierText,
@@ -26251,6 +26554,7 @@ window.ZB = (function() {
     if (trip && !forcePZ && st.mode === "normal") {
       const tripDays = Math.max(1, daysDiff(trip.start, trip.end) + 1);
       const isLongTrip = tripDays > 5;
+      const shortTrip = String(trip.name || "").replace(/\s*(感恩节|春节|圣诞|寒假|假期|行程|周末|度假|之旅).*$/, "").trim() || trip.name;
       const tItems = [
         { k: "旅途心肺", v: "每天自然步行即算达标，不碰单车不焦虑", sub: "出门前、返程在家或酒店有单车时，点下方「想骑 Peloton」随时切回主线。", cur: true }
       ];
@@ -26267,7 +26571,7 @@ window.ZB = (function() {
         sub: "Peloton 新版项目支持暂停顺延，回来直接接上。"
       });
       return {
-        tier: "green", tierText: `旅途中 · ${trip.name}`,
+        tier: "green", tierText: `旅途中 · ${shortTrip}`,
         title: "旅途轻松步行",
         shortLine: isLongTrip
           ? `主线暂存在 ${cur.code}，隔两天可做 8 分钟徒手`
@@ -27224,7 +27528,7 @@ window.ZB = (function() {
     const rhrStale = staleTag(vt.rhr_date);
     const rhrSub = rhrStale ? (`静息${rhrStale}`) : "静息心率";
     const hrvStale = staleTag(vt.hrv_date);
-    const hrvSub = hrvStale ? (`HRV${hrvStale}`) : (vt.hrv_7d ? `HRV · 7日 ${vt.hrv_7d}` : "HRV");
+    const hrvSub = hrvStale ? (`HRV${hrvStale}`) : (vt.hrv_7d ? `HRV 均${vt.hrv_7d}` : "HRV");
     const slpSub = "睡眠" + staleTag(vt.sleep_date);
     if (kp) {
       kp.innerHTML =
@@ -27599,13 +27903,20 @@ window.ZB = (function() {
     return wb.lbf ? `GE <b>${wb.lbf[2].toFixed(1)}%</b> → ${tgt}%` : `目标 <b>${tgt}%</b>`;
   }
 
-  function showGuideModal(title, items, extraLinksHtml) {
+  function showGuideModal(title, items, extraLinksHtml, opts) {
     const mc = ge("modal-content"), mm = ge("app-modal");
     if (!mc || !mm) return;
+    const foldable = !!(opts && opts.foldable);
     mc.innerHTML = `
       <h3 class="modal-h">${escapeHtml(title)}</h3>
       <div class="zb-guide-list">
-        ${items.map(it => `<div class="zb-guide-item${it.cur ? " cur" : ""}"><div class="zb-guide-k">${escapeHtml(it.k)}</div><div class="zb-guide-v">${escapeHtml(it.v)}</div>${it.sub ? `<div class="zb-guide-sub">${escapeHtml(it.sub)}</div>` : ""}</div>`).join("")}
+        ${items.map(it => {
+          const canFold = foldable && !it.cur;
+          const cls = `zb-guide-item${it.cur ? " cur" : ""}${canFold ? " is-foldable is-collapsed" : ""}`;
+          const foldAttr = canFold ? ` onclick="this.classList.toggle('is-collapsed')"` : "";
+          const chev = canFold ? `<span class="zb-guide-chev" aria-hidden="true">▾</span>` : "";
+          return `<div class="${cls}"${foldAttr}><div class="zb-guide-k"><span>${escapeHtml(it.k)}</span>${chev}</div><div class="zb-guide-v">${escapeHtml(it.v)}</div>${it.sub ? `<div class="zb-guide-sub">${escapeHtml(it.sub)}</div>` : ""}</div>`;
+        }).join("")}
       </div>
       ${extraLinksHtml ? `<div class="zb-modal-links">${extraLinksHtml}</div>` : ""}
       <div class="dock-row">
@@ -27639,7 +27950,6 @@ window.ZB = (function() {
     const curMeta = getPZMeta(curIdx);
     const pIdx = (progHint === 0 || progHint === 1) ? progHint : curMeta.pIdx;
     PZ_VIEW_PROG = pIdx;
-    const prog = PZ_PROGS[pIdx];
     const chMap = PZ_CH_LABELS[pIdx] || {};
     const progTotal = pIdx === 0 ? 23 : 24;
     const progDone = pIdx === 0 ? Math.min(23, curIdx) : Math.max(0, Math.min(24, curIdx - 23));
@@ -27662,8 +27972,8 @@ window.ZB = (function() {
       </button>`;
     }
     const paceNote = pIdx === 0
-      ? `你每周还打 2–4 场球，绝不按官方纯骑车的 5 周硬追。每周稳推 2–3 节（球多时 1–2 节），约 8–10 周从容通关；${prog.entry}，Peloton 新版自由推进不锁课，点任意一节可校准进度。`
-      : `全 Zone 2–3 稳态燃脂，每周 2–3 节即可（75/90 分长课仅限周末不打球日，累了可换 45 分）。${prog.entry}。点任意一节可校准进度。`;
+      ? "每周稳推 2–3 节 · 点任意节校准进度"
+      : "每周 2–3 节稳态燃脂 · 点任意节校准进度";
     mc.innerHTML = `
       <h3 class="modal-h">Power Zone 完整主线课表</h3>
       <div class="zb-pz-tabs">
@@ -27675,11 +27985,18 @@ window.ZB = (function() {
         <div class="zb-pz-prog-track"><div class="zb-pz-prog-fill" style="width:${Math.max(progDone ? 4 : 0, progPct)}%;"></div></div>
       </div>
       <p class="zb-pz-note">${escapeHtml(paceNote)}</p>
-      <div class="zb-pz-list">${rowsHtml}</div>
+      <div class="zb-pz-list" id="zb-pz-list-scroll">${rowsHtml}</div>
       <div class="dock-row">
         <button type="button" class="sumi-btn" onclick="closeModal()">返回</button>
       </div>`;
     if (typeof showAppModal === "function") showAppModal(); else mm.classList.add("open");
+    if (typeof requestAnimationFrame === "function") {
+      requestAnimationFrame(() => {
+        const listEl = ge("zb-pz-list-scroll");
+        const curEl = listEl && listEl.querySelector && listEl.querySelector(".zb-pz-row.cur");
+        if (curEl && typeof curEl.scrollIntoView === "function") curEl.scrollIntoView({ block: "center" });
+      });
+    }
   }
 
   function openStateSheet() {
@@ -27771,14 +28088,14 @@ window.ZB = (function() {
     const stg = puStage();
     const bIdx = stg.idx === 0 ? 0 : (stg.idx === 1 ? 1 : 2);
     const items = [
-      { k: "阶段一 · 1 徒手起步", v: "黑带 25–65 lb（单膝约 10–15 kg）", sub: "每轮 1 个徒手 + 2 个单膝挂黑带 4 秒慢放，每日 2 轮。", cur: bIdx === 0 },
-      { k: "阶段二 · 2 徒手过渡", v: "红细带 15–35 lb（单膝约 5–8 kg）", sub: "稳拉 2 个纯徒手后降档，每轮 2 徒手 + 1 红带慢放，每日 2 轮。", cur: bIdx === 1 },
-      { k: "阶段三 · 3 连冲 5 连（不力竭多组法）", v: "彻底拆绳 0 lb · 留 1 下余力拉 3 轮", sub: "稳拉 3 个后不再每轮拉满力竭：平时每次轻松拉 2 个、隔 2 小时拉 3 轮（攒 6 下高质量纯拉），每两周满血测一次冲 4 连、5 连。", cur: bIdx === 2 }
+      { k: "阶段一 · 1 徒手起步", v: "黑带 25–65 lb（单膝约 10–15 kg）", sub: "每轮 1 个徒手 + 2 个单膝黑带 4 秒慢放，每日 2 轮。", cur: bIdx === 0 },
+      { k: "阶段二 · 2 徒手过渡", v: "红细带 15–35 lb（单膝约 5–8 kg）", sub: "稳拉 2 个纯徒手后降档，每轮 2 徒手 + 1 红带慢放。", cur: bIdx === 1 },
+      { k: "阶段三 · 3 连冲 5 连", v: "拆绳 0 lb · 留余力多轮法", sub: "平时每次轻松拉 2 个、隔 2 小时拉 3 轮，每两周满血测一次冲 4–5 连。", cur: bIdx === 2 }
     ];
     if (PROF && PROF.strength_stretch_note && PROF.strength_stretch_note.v) {
       items.push(PROF.strength_stretch_note);
     }
-    showGuideModal("弹力带换绳与冲 5 连路线", items);
+    showGuideModal("弹力带换绳与冲 5 连路线", items, "", { foldable: true });
   }
 
   function openProteinGuide() {
@@ -27801,9 +28118,9 @@ window.ZB = (function() {
       return;
     }
     showGuideModal(`每日蛋白锚点 · 目标 ${pLo}–${pHi}g`, [
-      { k: "为什么必须吃够", v: `按你近期均重 ${wt.toFixed(1)} kg，减脂护肌甜点约 ${pMid}g / 天`, sub: "多项减脂随机试验（Longland 2016 / Morton 2018）证实：体脂往 14% 压时，每天吃够 1.6–2.0 g/kg 蛋白，掉的才主要是脂肪而不是肌肉。", cur: true },
-      { k: "日常顺手凑够 145g 参考", v: "乳清蛋白 1 勺 ≈ 25g · 鸡胸/三文鱼/瘦牛 200g ≈ 45g", sub: "3 个全蛋 ≈ 20g · 一杯希腊酸奶 ≈ 18g · 一盒嫩豆腐/毛豆 ≈ 15g。早晚各 1 份高蛋白 + 午晚正餐有肉鱼，轻松过线。" },
-      { k: "配合晚间节律", v: "晚餐先吃蛋白与青菜，睡前 3 小时不爆高糖高油碳水", sub: "蛋白本身饱腹感极强，不用饿肚子也能稳稳守住热量缺口。" }
+      { k: "每天吃够才护肌", v: `按近期均重 ${wt.toFixed(1)} kg，减脂护肌甜点约 ${pMid}g / 天`, sub: "往 14% 压体脂时吃够 1.6–2.0 g/kg 蛋白，掉的才主要是脂肪而不是肌肉。", cur: true },
+      { k: "顺手凑够 145g 参考", v: "乳清 1 勺 25g · 鸡胸/三文鱼/瘦牛 200g 约 45g", sub: "3 个全蛋 20g · 希腊酸奶 18g · 嫩豆腐/毛豆 15g。早晚高蛋白配正餐肉鱼，轻松过线。" },
+      { k: "晚间节律", v: "晚餐先吃蛋白和青菜，睡前 3 小时不碰高糖油碳水", sub: "饱腹感稳，不饿肚子也能守住缺口。" }
     ]);
   }
 
@@ -28443,8 +28760,8 @@ if (pUndone.ctaDone || pUndone.cur.idx !== 1) {
 sb.ZB.openPeloGuide();
 sb.ZB.openPZList(0);
 const pzModalHtml = (els['modal-content'] && els['modal-content'].innerHTML) || '';
-if (!pzModalHtml.includes('第 1 章') || !pzModalHtml.includes('2–4 场球') || pzModalHtml.includes('—')) {
-  throw new Error('Self-test 5 failed: openPZList(0) missing chapter header or basketball pacing note or has em dash!');
+if (!pzModalHtml.includes('第 1 章') || !pzModalHtml.includes('每周稳推 2–3 节') || pzModalHtml.includes('—')) {
+  throw new Error('Self-test 5 failed: openPZList(0) missing chapter header or concise pacing note or has em dash!');
 }
 sb.ZB.openPZList(1);
 // Late-evening sleep-first protection (20:30+ PT defers hard/test/>=45m rides; daytime keeps main ride)
@@ -29065,9 +29382,15 @@ if (!chapHtml13.includes('id="radio-jpv-chap"') || !chapHtml13.includes('日语�
 }
 sb.openRadioJpVideo();
 const jpvHtml = (els['radio-review-stage'] && els['radio-review-stage'].innerHTML) || '';
-if (!jpvHtml.includes('jpv-frame') || !jpvHtml.includes('jpv-sub-ja') || !jpvHtml.includes('jpv-chip') || !jpvHtml.includes('日中字幕') || jpvHtml.includes('—')) {
+if (!jpvHtml.includes('jpv-frame') || !jpvHtml.includes('jpv-sub-ja') || !jpvHtml.includes('jpv-words-trigger') || !jpvHtml.includes('日中字幕') || jpvHtml.includes('—')) {
   throw new Error('Self-test 13 failed: All-Japanese Short Video Theater missing core controls or contains em dash!');
 }
+sb.openJpVideoWordsSheet();
+const jpvWordsHtml13 = (els['modal-content'] && els['modal-content'].innerHTML) || '';
+if (!jpvWordsHtml13.includes('jpv-chip') || jpvWordsHtml13.includes('—')) {
+  throw new Error('Self-test 13 failed: JP Video words bottom sheet missing jpv-chip buttons or contains em dash!');
+}
+sb.closeModal();
 // Cycle subtitle modes: bi -> ja -> off -> bi
 sb.cycleJpVideoSubMode();
 if (!els['jpv-sub-stage'].classList.contains('ja-only')) {
@@ -29392,16 +29715,22 @@ if (!phaseMeta22.phase || !phaseMeta22.track || !phaseMeta22.exam_date) {
 }
 sb.switchMode('dash');
 const mockEntryHtml22 = (els['dash-mock-entry'] && els['dash-mock-entry'].innerHTML) || '';
-if (!mockEntryHtml22.includes('模拟小测') || !mockEntryHtml22.includes('startMockSprint') || mockEntryHtml22.includes('—')) {
-  throw new Error('Self-test 22 failed: dashboard missing quiet Mock Sprint 15 entry row or contains em dash');
+if (mockEntryHtml22.trim() !== '') {
+  throw new Error('Self-test 22 failed: main dashboard ledger should stay uncluttered without stacked #dash-mock-entry rows');
+}
+sb.openDashToolsSheet();
+const dashToolsHtml22 = (els['modal-content'] && els['modal-content'].innerHTML) || '';
+if (!dashToolsHtml22.includes('模拟小测') || !dashToolsHtml22.includes('startMockSprint') || dashToolsHtml22.includes('—')) {
+  throw new Error('Self-test 22 failed: dashboard tools sheet missing quiet Mock Sprint 15 entry row or contains em dash');
 }
 const isPostN3_22 = phaseMeta22.phase === 'n2_climb' || phaseMeta22.phase === 'n1_sprint';
-if (isPostN3_22 && !mockEntryHtml22.includes('openN3ScoreModal')) {
-  throw new Error('Self-test 22 failed: post-N3 dashboard must expose quiet N3 real-score calibration entry');
+if (isPostN3_22 && !dashToolsHtml22.includes('openN3ScoreModal')) {
+  throw new Error('Self-test 22 failed: post-N3 dashboard tools sheet must expose quiet N3 real-score calibration entry');
 }
-if (!isPostN3_22 && mockEntryHtml22.includes('openN3ScoreModal')) {
-  throw new Error('Self-test 22 failed: pre-exam dashboard must NOT show post-exam N3 score calibration row');
+if (!isPostN3_22 && dashToolsHtml22.includes('openN3ScoreModal')) {
+  throw new Error('Self-test 22 failed: pre-exam dashboard tools sheet must NOT show post-exam N3 score calibration row');
 }
+sb.closeModal();
 const mockRes22 = vm.runInNewContext(`(() => {
   const prevObLen = loadOutbox().length;
   startMockSprint();
@@ -30046,21 +30375,28 @@ sb.exitQuizVoiceMode();
 
 // Self-test 34 (v87 SLA): N2/N1 250-Char Micro-Reading (phase-gated) & Weekend Real-Tutor 3-Phrase Mission
 sb.switchMode('dash');
-const dashEntry34 = (els['dash-mock-entry'] && els['dash-mock-entry'].innerHTML) || '';
+sb.openDashToolsSheet();
+const dashEntry34 = (els['modal-content'] && els['modal-content'].innerHTML) || '';
 const isPostN3_34 = vm.runInNewContext('DATA.phase === "n2_climb" || DATA.phase === "n1_sprint"', sb);
 if (!dashEntry34.includes('真人课 3 词任务') || dashEntry34.includes('—')) {
-  throw new Error('Self-test 34 failed: Summary missing Weekend Real-Tutor 3-Phrase Mission row');
+  throw new Error('Self-test 34 failed: Summary tools sheet missing Weekend Real-Tutor 3-Phrase Mission row');
 }
 if (isPostN3_34 && !dashEntry34.includes('今日短文精读')) {
-  throw new Error('Self-test 34 failed: N2/N1 Summary missing 今日短文精读 row');
+  throw new Error('Self-test 34 failed: N2/N1 Summary tools sheet missing 今日短文精读 row');
 }
 if (!isPostN3_34 && dashEntry34.includes('今日短文精读')) {
-  throw new Error('Self-test 34 failed: Pre-exam N3 Summary must keep N2 micro-reading hidden');
+  throw new Error('Self-test 34 failed: Pre-exam N3 Summary tools sheet must keep N2 micro-reading hidden');
 }
+sb.closeModal();
 sb.openMicroReadingModal();
-const mrModalHtml34 = (els['modal-content'] && els['modal-content'].innerHTML) || '';
-if (!mrModalHtml34.includes('mr-passage') || !mrModalHtml34.includes('mr-opt-btn') || mrModalHtml34.includes('—')) {
-  throw new Error('Self-test 34 failed: Micro-Reading modal broken');
+const mrReadHtml34 = (els['modal-content'] && els['modal-content'].innerHTML) || '';
+if (!mrReadHtml34.includes('mr-passage') || mrReadHtml34.includes('mr-opt-btn') || !mrReadHtml34.includes('goMicroReadingQuiz') || mrReadHtml34.includes('—')) {
+  throw new Error('Self-test 34 failed: Micro-Reading Step 1 should show pure passage without crammed options');
+}
+sb.goMicroReadingQuiz();
+const mrQuizHtml34 = (els['modal-content'] && els['modal-content'].innerHTML) || '';
+if (!mrQuizHtml34.includes('mr-opt-btn') || mrQuizHtml34.includes('—')) {
+  throw new Error('Self-test 34 failed: Micro-Reading Step 2 missing choices');
 }
 sb.pickMicroReadingChoice(0);
 const mrDoneHtml34 = (els['modal-content'] && els['modal-content'].innerHTML) || '';
@@ -30226,10 +30562,12 @@ if (!isPostN3_35) {
   }
   sb.closeModal();
   sb.renderDashboard(true);
-  const dashHtml36 = (els['dash-mock-entry'] && els['dash-mock-entry'].innerHTML) || '';
+  sb.openDashToolsSheet();
+  const dashHtml36 = (els['modal-content'] && els['modal-content'].innerHTML) || '';
   if (!dashHtml36.includes('dash-clinic-row') || !dashHtml36.includes('考前黑板对谈')) {
-    throw new Error('Self-test 36 failed: Summary missing quiet 考前黑板对谈 row');
+    throw new Error('Self-test 36 failed: Summary tools sheet missing quiet 考前黑板对谈 row');
   }
+  sb.closeModal();
   const exLedger36 = vm.runInNewContext('buildLedgerExtraHTML({ gid: "G-015", name: "〜くせに", sub: "明明却" })', sb);
   if (!exLedger36.includes('kb-li-btn') || !exLedger36.includes('CB03')) {
     throw new Error('Self-test 36 failed: expanded ledger row missing CB03 blackboard button');
@@ -30524,11 +30862,50 @@ if (gpods37.length > 0) {
   }
   sb.closeModal();
 }
+
+// Self-test 40 (v98): Cross-App Anti-Density Gate (Zen Dashboard drawer, Radio/Gpod zero overlap, foldable Body guides, 1-line PZ note, borderless Session modal)
+{
+  sb.switchMode('dash');
+  const dMeta40 = (els['dash-roi-focus'] && els['dash-roi-focus'].innerHTML) || '';
+  const dMock40 = (els['dash-mock-entry'] && els['dash-mock-entry'].innerHTML) || '';
+  const dNight40 = (els['night-flash-entry'] && els['night-flash-entry'].innerHTML) || '';
+  if (!dMeta40.includes('dash-zen-head') || !dMeta40.includes('dash-tools-btn') || dMock40.trim() !== '' || dNight40.trim() !== '') {
+    throw new Error('Self-test 40 failed: Dashboard must use single-row .dash-zen-head + #dash-tools-btn and keep main ledger free of stacked tool rows');
+  }
+  sb.switchMode('radio', false);
+  sb.switchRadioChannel('gpod');
+  sb.openRadioJpVideo();
+  if (!els['radio-gpod-stage'].classList.contains('hidden') || els['radio-subnav'].style.display !== 'none') {
+    throw new Error('Self-test 40 failed: entering JP Video from gpod channel leaked #radio-gpod-stage or #radio-subnav');
+  }
+  sb.closeRadioReview();
+  if (els['radio-subnav'].style.display === 'none' || els['radio-gpod-stage'].classList.contains('hidden')) {
+    throw new Error('Self-test 40 failed: closeRadioReview did not restore #radio-subnav and active #radio-gpod-stage');
+  }
+  sb.switchRadioChannel('daily');
+  sb.ZB.openBandGuide();
+  const bandHtml40 = (els['modal-content'] && els['modal-content'].innerHTML) || '';
+  if (!bandHtml40.includes('is-foldable is-collapsed') || bandHtml40.includes('—')) {
+    throw new Error('Self-test 40 failed: openBandGuide must fold non-current stages with progressive disclosure');
+  }
+  sb.ZB.openPZList(0);
+  const pzHtml40 = (els['modal-content'] && els['modal-content'].innerHTML) || '';
+  const pzNoteM40 = pzHtml40.match(/class="zb-pz-note">([^<]*)</);
+  if (!pzNoteM40 || pzNoteM40[1].trim().length > 45 || !pzHtml40.includes('id="zb-pz-list-scroll"')) {
+    throw new Error('Self-test 40 failed: openPZList pace note too dense or missing scroll container: ' + (pzNoteM40 && pzNoteM40[1]));
+  }
+  sb.openSessionModal();
+  const sessHtml40 = (els['modal-content'] && els['modal-content'].innerHTML) || '';
+  if (!sessHtml40.includes('sess-ledger') || !sessHtml40.includes('sync-row-zen') || sessHtml40.includes('class="sync-box"') || sessHtml40.includes('—')) {
+    throw new Error('Self-test 40 failed: Session modal must use borderless .sess-ledger and .sync-row-zen without .sync-box clutter');
+  }
+  sb.closeModal();
+}
 """
     subprocess.run(["node", "-", HTML_PATH], input=smoke_js, text=True, check=True)
 
 sw_path = os.path.join(BASE_DIR, "sw.js")
-SW_CACHE_NAME = "n3-studio-tutor-v97"
+SW_CACHE_NAME = "n3-studio-tutor-v98"
 if not _IS_SIM_OUTPUT and os.path.exists(sw_path):
     with open(sw_path, encoding="utf-8") as sf:
         sw_src = sf.read()
