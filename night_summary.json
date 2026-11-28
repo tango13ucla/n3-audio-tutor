@@ -1,57 +1,37 @@
 {
-  "closed_study_day": "2026-11-26",
-  "summarized_at_pt": "2026-11-27T04:05:30-08:00",
-  "day_events_count": 190,
+  "closed_study_day": "2026-11-27",
+  "summarized_at_pt": "2026-11-28T02:02:03-08:00",
+  "day_events_count": 63,
   "missed_or_unsure_points": [
-    "参る",
-    "いただく",
-    "お目にかかる",
-    "存じる／存じ上げる",
-    "〜ごとに",
-    "〜たところ",
-    "〜た結果",
-    "〜ていく",
-    "〜ついでに",
-    "〜うちに",
-    "〜かけだ",
-    "〜ずにはいられない",
-    "〜くせに",
-    "〜にしても",
-    "〜といっても",
-    "〜ばかり",
-    "〜にちがいない",
-    "〜てもかまわない",
-    "〜がちだ",
-    "記憶",
     "〜させてもらう",
-    "〜だらけ",
-    "〜ばかりに",
-    "〜だけしか〜ない",
-    "V-046",
-    "〜しかない",
-    "〜ながらも",
-    "〜おきに",
-    "〜きり",
-    "〜とともに"
+    "K-008",
+    "N3L-199",
+    "N3L-387",
+    "有料",
+    "発表",
+    "記憶",
+    "象徴",
+    "常識",
+    "めったに",
+    "うろうろ",
+    "実施"
   ],
   "missed_vocab_words": [
-    "納得",
-    "都合",
+    "有料",
+    "発表",
+    "記憶",
     "象徴",
-    "ぼろぼろ",
-    "慰める",
+    "常識",
+    "めったに",
     "うろうろ",
-    "世間",
-    "現象",
-    "実施",
-    "実際"
+    "実施"
   ],
   "top_confusion_pairs": [
     {
       "point": "K-008",
-      "wrong_choice": "お知り",
-      "count": 5,
-      "last_date": "20261126"
+      "wrong_choice": "存じており",
+      "count": 6,
+      "last_date": "20261127"
     },
     {
       "point": "はっきり",
@@ -102,8 +82,8 @@
       "last_date": "20261126"
     },
     {
-      "point": "〜にもかかわらず",
-      "wrong_choice": "音楽会は",
+      "point": "〜しだい",
+      "wrong_choice": "決めるしだい",
       "count": 3,
       "last_date": "20261126"
     },
@@ -132,20 +112,20 @@
       "last_date": "20261117"
     },
     {
-      "point": "〜がちだ",
-      "wrong_choice": "ひきがち",
-      "count": 2,
-      "last_date": "20261126"
-    },
-    {
       "point": "〜させてもらう",
-      "wrong_choice": "帰らせて",
+      "wrong_choice": "れ",
       "count": 2,
-      "last_date": "20261126"
+      "last_date": "20261127"
     },
     {
       "point": "V-046",
       "wrong_choice": "買よう",
+      "count": 2,
+      "last_date": "20261126"
+    },
+    {
+      "point": "こっそり",
+      "wrong_choice": "ばったり",
       "count": 2,
       "last_date": "20261126"
     },
@@ -178,9 +158,9 @@
     },
     {
       "word": "こっそり",
-      "wrong": 15,
-      "seen": 28,
-      "err_pct": 54,
+      "wrong": 17,
+      "seen": 32,
+      "err_pct": 53,
       "status": "yellow"
     },
     {
@@ -206,10 +186,17 @@
     },
     {
       "word": "めったに",
-      "wrong": 10,
-      "seen": 20,
+      "wrong": 11,
+      "seen": 22,
       "err_pct": 50,
-      "status": "yellow"
+      "status": "red"
+    },
+    {
+      "word": "象徴",
+      "wrong": 10,
+      "seen": 13,
+      "err_pct": 77,
+      "status": "red"
     },
     {
       "word": "そっくり",
@@ -228,21 +215,16 @@
     {
       "word": "はっきり",
       "wrong": 10,
-      "seen": 24,
-      "err_pct": 42,
+      "seen": 25,
+      "err_pct": 40,
       "status": "yellow"
-    },
-    {
-      "word": "しゃがむ",
-      "wrong": 9,
-      "seen": 16,
-      "err_pct": 56,
-      "status": "green"
     }
   ],
   "leech_points": [],
-  "looked_up_expressions": [],
-  "looked_up_words_count": 20,
+  "looked_up_expressions": [
+    "VAR8-09"
+  ],
+  "looked_up_words_count": 23,
   "top_looked_up_words": [
     {
       "surface": "こっそり",
@@ -343,8 +325,23 @@
       "surface": "面倒",
       "count": 1,
       "last_ts": "2026-11-26T06:35:15.000Z"
+    },
+    {
+      "surface": "ところ",
+      "count": 1,
+      "last_ts": "2026-11-28T03:07:43.000Z"
+    },
+    {
+      "surface": "だった",
+      "count": 1,
+      "last_ts": "2026-11-28T03:07:44.000Z"
+    },
+    {
+      "surface": "なかった",
+      "count": 1,
+      "last_ts": "2026-11-28T03:07:45.000Z"
     }
   ],
   "recent_radio_feedback": [],
-  "ever_seen_cards_count": 488
+  "ever_seen_cards_count": 503
 }
