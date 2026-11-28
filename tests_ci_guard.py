@@ -2215,6 +2215,46 @@ def test_v98_historical_footage_and_zen_cinema_guard() -> None:
     print(f"[PASS 32/32] v99 Historical Footage Vault ({len(upcoming_sids)} episodes x 15 beats + YouTube archives) & Jobs x Kyoto Zen Cinema Theater verified!")
 
 
+def test_v99_kyoto_bedtime_story_sanctuary_guard() -> None:
+    """Gate 32 (v99): Gentle Japanese Bedtime Story Sanctuary integrity, zero-check-in isolation, sw.js streaming exclusion, & workflow readiness."""
+    ss_path = BASE_DIR / "sleep_soundscape.py"
+    assert ss_path.exists(), "sleep_soundscape.py missing"
+    import sleep_soundscape  # Must import cleanly in zero-dependency CI (lazy numpy/scipy)!
+    assert hasattr(sleep_soundscape, "load_manifest") and hasattr(sleep_soundscape, "pull_latest_from_relay")
+
+    # 1. sw.js excludes /audio/sleep/ from IMMUTABLE_CACHE so 20-min MP3s stream via Range requests cleanly
+    sw_txt = (BASE_DIR / "sw.js").read_text(encoding="utf-8")
+    assert '"/audio/sleep/"' in sw_txt, "sw.js must exclude /audio/sleep/ from IMMUTABLE_CACHE"
+
+    # 2. All 3 workflows install scipy for 48kHz Kyoto Sleep Soundscape mastering
+    for wf_name in ("daily-n3-brain.yml", "morning-refresh-alarm.yml", "night-owl-relay.yml"):
+        wf_txt = (BASE_DIR / ".github" / "workflows" / wf_name).read_text(encoding="utf-8")
+        assert "numpy scipy" in wf_txt, f"{wf_name} missing scipy next to numpy for sleep_soundscape.py"
+
+    # 3. build_html.py contains full 7-channel mutex (pauseSleepSilently wired across channels) & zero Enso coupling
+    bh_txt = (BASE_DIR / "build_html.py").read_text(encoding="utf-8")
+    assert bh_txt.count("pauseSleepSilently") >= 8, "pauseSleepSilently must guard all audio channels & ASR mic"
+    assert 'id="radio-sleep-stage"' in bh_txt and 'id="rsub-sleep"' in bh_txt, "Sleep sanctuary stage/tab missing in build_html.py"
+    assert "n3_sleep_progress_v1" in bh_txt, "Sleep progress must stay local-only (zero N3 study check-in pollution)"
+
+    # 4. If audio/sleep/manifest.json exists, validate every archived bedtime episode
+    mf_path = BASE_DIR / "audio" / "sleep" / "manifest.json"
+    if mf_path.exists():
+        mf = json.loads(mf_path.read_text(encoding="utf-8"))
+        eps = mf.get("episodes") or []
+        assert len(eps) >= 1, "audio/sleep/manifest.json must contain at least 1 bedtime episode"
+        for ep in eps:
+            af = ep.get("audio_file") or ""
+            ap = BASE_DIR / "audio" / "sleep" / af
+            assert ap.exists() and ap.stat().st_size > 2_000_000, f"Bedtime story MP3 missing or too small: {ap}"
+            assert float(ep.get("duration_sec") or 0) >= 900.0, f"Bedtime story {ep.get('date')} too short (<15 min): {ep.get('duration_sec')}s"
+            for field in ("title_zh", "subtitle_zh"):
+                assert "—" not in str(ep.get(field) or ""), f"Em-dash forbidden in sleep story {field}: {ep.get(field)}"
+            for sc in (ep.get("timeline") or []):
+                assert "—" not in str(sc.get("hint_zh") or ""), f"Em-dash forbidden in sleep hint_zh: {sc.get('hint_zh')}"
+    print("[PASS 33/33] v100 Kyoto Gentle Japanese Bedtime Story Sanctuary (lazy DSP, sw.js streaming, 7-ch mutex, zero check-in, & archive integrity) verified!")
+
+
 def main() -> int:
     test_all_python_files_syntax_and_names()
     test_apply_practice_logs_all_event_types()
@@ -2248,7 +2288,8 @@ def main() -> int:
     test_v47_real_qiangqiang_pace_guard()
     test_v48_additive_daily_jp_news_45m_guard()
     test_v98_historical_footage_and_zen_cinema_guard()
-    print("[ALL PASS] tests_ci_guard.py 32/32 gates green!")
+    test_v99_kyoto_bedtime_story_sanctuary_guard()
+    print("[ALL PASS] tests_ci_guard.py 33/33 gates green!")
     return 0
 
 

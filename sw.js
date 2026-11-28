@@ -1,6 +1,6 @@
-const CACHE_NAME = "n3-studio-tutor-v99";
+const CACHE_NAME = "n3-studio-tutor-v100";
 const IMMUTABLE_CACHE = "zen-immutable-v1";
-const BUILD_STAMP = "2026-11-27_a411a7c936c596_a2cc9d04_5df642_0106aa07";
+const BUILD_STAMP = "2026-11-27_a411a7c936c596_a2cc9d04_5df642_49c48678";
 const CORE_SHELL = [
   "./",
   "./index.html",
@@ -62,7 +62,7 @@ self.addEventListener("fetch", event => {
   }
 
   if (url.origin !== self.location.origin) return;
-  if (url.pathname.includes("/api/") || url.pathname.endsWith("daily_radio.mp3") || url.pathname.endsWith(".mp4") || url.pathname.endsWith("daily_radio_meta.json")) return;
+  if (url.pathname.includes("/api/") || url.pathname.includes("/audio/sleep/") || url.pathname.endsWith("daily_radio.mp3") || url.pathname.endsWith(".mp4") || url.pathname.endsWith("daily_radio_meta.json")) return;
 
   // Network-First with offline fallback for encrypted body_vault.enc (always fresh online, resilient on flights)
   if (url.pathname.endsWith("body_vault.enc")) {

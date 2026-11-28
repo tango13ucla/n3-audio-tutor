@@ -1205,11 +1205,15 @@ def main():
         subprocess.run([sys.executable, os.path.join(BASE_DIR, "generate_daily_radio.py")], check=True)
         if os.path.exists(os.path.join(BASE_DIR, "generate_grammar_pods.py")):
             subprocess.run([sys.executable, os.path.join(BASE_DIR, "generate_grammar_pods.py"), "--daily-batch", "4"], check=False)
+        if os.path.exists(os.path.join(BASE_DIR, "sleep_soundscape.py")):
+            subprocess.run([sys.executable, os.path.join(BASE_DIR, "sleep_soundscape.py"), "--pull-relay"], check=False)
     elif not sync_only:
         subprocess.run([sys.executable, os.path.join(BASE_DIR, "generate_neural_audio.py")], check=True)
         subprocess.run([sys.executable, os.path.join(BASE_DIR, "generate_daily_radio.py")], check=True)
         if os.path.exists(os.path.join(BASE_DIR, "generate_grammar_pods.py")):
             subprocess.run([sys.executable, os.path.join(BASE_DIR, "generate_grammar_pods.py"), "--daily-batch", "4"], check=False)
+        if os.path.exists(os.path.join(BASE_DIR, "sleep_soundscape.py")):
+            subprocess.run([sys.executable, os.path.join(BASE_DIR, "sleep_soundscape.py"), "--pull-relay"], check=False)
 
     if not sync_only:
         subprocess.run([sys.executable, os.path.join(BASE_DIR, "build_html.py")], check=True)

@@ -2394,6 +2394,26 @@ if isinstance(radio_meta, dict) and isinstance(radio_meta.get("jp_video"), dict)
         except Exception:
             pass
 
+sleep_stories_payload = {"episodes": [], "updated_at": ""}
+_sleep_mf_path = os.path.join(BASE_DIR, "audio", "sleep", "manifest.json")
+if os.path.exists(_sleep_mf_path):
+    try:
+        _smf = json.loads(open(_sleep_mf_path, encoding="utf-8").read())
+        if isinstance(_smf, dict) and isinstance(_smf.get("episodes"), list):
+            _s_eps = []
+            for _sep in _smf["episodes"]:
+                if not isinstance(_sep, dict) or not _sep.get("date") or not _sep.get("audio_url"):
+                    continue
+                _s_copy = dict(_sep)
+                _sha = str(_s_copy.get("audio_sha") or "")[:10]
+                if _sha and "?v=" not in str(_s_copy["audio_url"]):
+                    _s_copy["audio_url"] = f"{_s_copy['audio_url']}?v={_sha}"
+                _s_eps.append(_s_copy)
+            sleep_stories_payload["episodes"] = _s_eps
+            sleep_stories_payload["updated_at"] = _smf.get("updated_at", "")
+    except Exception:
+        pass
+
 payload = json.dumps({
     "plan_date": plan_date_str,
     "phase": active_phase,
@@ -2406,6 +2426,7 @@ payload = json.dumps({
     "done_audio": "./audio/done.mp3",
     "radio": radio_meta,
     "grammar_pods": grammar_pods_payload,
+    "sleep_stories": sleep_stories_payload,
     "points": ordered_points,
     "words": rich_words,
     "asr_kana": asr_kana_map,
@@ -4395,10 +4416,12 @@ html = r"""<!DOCTYPE html>
 
   #radio-player-stage.hidden,
   #radio-review-stage.hidden,
-  #radio-gpod-stage.hidden { display: none !important; }
+  #radio-gpod-stage.hidden,
+  #radio-sleep-stage.hidden { display: none !important; }
   #radio-player-stage,
   #radio-review-stage,
-  #radio-gpod-stage {
+  #radio-gpod-stage,
+  #radio-sleep-stage {
     flex: 1;
     min-height: 0;
     overflow: hidden;
@@ -4406,12 +4429,13 @@ html = r"""<!DOCTYPE html>
     flex-direction: column;
   }
 
-  /* 4A-2. 《锵锵语法微课》 Zen Channel Switcher & Car-Ready Mini-Podcast Sanctuary (v92) */
+  /* 4A-2. 《锵锵语法微课》 & 《睡前故事》 Zen Channel Switcher (v98) */
   .radio-subnav {
     flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 8px;
     padding: 0 0 6px;
     border-bottom: 1px solid var(--hairline);
     margin-bottom: 4px;
@@ -4419,7 +4443,8 @@ html = r"""<!DOCTYPE html>
   .radio-subtabs {
     display: flex;
     align-items: center;
-    gap: 24px;
+    gap: 18px;
+    min-width: 0;
   }
   .radio-subtab {
     min-height: 36px;
@@ -4427,13 +4452,145 @@ html = r"""<!DOCTYPE html>
     font-weight: 500;
     color: var(--ink-3);
     padding: 6px 2px;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
     position: relative;
     transition: color 0.18s ease;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 4px;
+    white-space: nowrap;
     touch-action: manipulation;
+  }
+  @media (max-width: 400px) {
+    .radio-subnav { gap: 4px; }
+    .radio-subtabs { gap: 10px; }
+    .radio-subtab { font-size: 12.5px; letter-spacing: 0.01em; padding: 6px 1px; }
+    .gpod-sheet-trigger { font-size: 12px; gap: 4px; padding: 6px 0; }
+  }
+  /* 4A-3. Gentle Japanese Bedtime Story Sanctuary ("睡前故事" · Optional · Zero Check-in) */
+  @keyframes sleepBreath {
+    0%, 100% { transform: scale(0.96); opacity: 0.56; }
+    50% { transform: scale(1.06); opacity: 0.92; }
+  }
+  .sleep-center {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 12px 10px 6px;
+    gap: 10px;
+  }
+  .sleep-moon-wrap {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink-3);
+    opacity: 0.65;
+    margin-bottom: 2px;
+    transition: opacity 0.6s ease, color 0.6s ease;
+  }
+  .sleep-moon-wrap.is-playing {
+    color: var(--ink-2);
+    animation: sleepBreath 11s ease-in-out infinite;
+  }
+  .sleep-act-lbl {
+    font-size: 11.5px;
+    font-weight: 400;
+    letter-spacing: 0.14em;
+    color: var(--ink-3);
+  }
+  .sleep-title-ja {
+    font-family: var(--sans-jp);
+    font-size: clamp(23px, 6.2vw, 29px);
+    font-weight: 300;
+    letter-spacing: 0.06em;
+    line-height: 1.32;
+    color: var(--sumi);
+    margin: 0;
+    text-wrap: balance;
+  }
+  .sleep-title-zh {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--ink-3);
+    line-height: 1.5;
+    margin: 0;
+    max-width: 300px;
+    text-wrap: pretty;
+  }
+  .sleep-veil-wrap {
+    width: 100%;
+    max-width: 340px;
+    min-height: 68px;
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--hairline);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .sleep-veil-hint-btn {
+    font-size: 12px;
+    color: var(--ink-3);
+    opacity: 0.72;
+    letter-spacing: 0.06em;
+    padding: 8px 12px;
+  }
+  .sleep-veil-ja {
+    font-family: var(--sans-jp);
+    font-size: 14.5px;
+    font-weight: 400;
+    line-height: 1.62;
+    color: var(--ink-2);
+    margin: 0;
+    text-wrap: pretty;
+  }
+  .sleep-veil-zh {
+    font-size: 12px;
+    color: var(--ink-3);
+    line-height: 1.5;
+    margin: 0;
+    text-wrap: pretty;
+  }
+  .sleep-veil-hint-btn.hidden,
+  .sleep-veil-ja.hidden,
+  .sleep-veil-zh.hidden { display: none !important; }
+  .sleep-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ink-3);
+    opacity: 0.55;
+    flex-shrink: 0;
+    display: inline-block;
+  }
+  .sleep-dot.done {
+    background: var(--moss);
+    opacity: 0.9;
+  }
+  .sleep-date-tag {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--ink-3);
+    margin-left: 4px;
+    font-variant-numeric: tabular-nums;
+  }
+  @media (max-height: 700px) {
+    .sleep-center { padding: 4px 6px 2px; gap: 6px; }
+    .sleep-moon-wrap { width: 34px; height: 34px; margin-bottom: 0; }
+    .sleep-title-ja { font-size: 22px; }
+    .sleep-title-zh { font-size: 13px; }
+    .sleep-veil-wrap { min-height: 52px; margin-top: 4px; padding-top: 8px; }
+    .sleep-veil-ja { font-size: 13.5px; line-height: 1.5; }
   }
   .radio-subtab.active {
     color: var(--sumi);
@@ -9596,12 +9753,13 @@ html = r"""<!DOCTYPE html>
     <div class="stage-wrap" id="voice-card"></div>
   </main>
 
-  <!-- 3B. THREE-HOST CULTURAL SALON SANCTUARY ("随身听" · 今日夜话 / 语法微课) -->
+  <!-- 3B. THREE-HOST CULTURAL SALON SANCTUARY ("随身听" · 今日夜话 / 语法微课 / 睡前故事) -->
   <section class="zen-panel hidden" id="radio-view">
     <div class="radio-subnav" id="radio-subnav" style="display:none;">
       <div class="radio-subtabs">
         <button type="button" class="radio-subtab active" id="rsub-daily" onclick="switchRadioChannel('daily')">今日夜话</button>
         <button type="button" class="radio-subtab" id="rsub-gpod" onclick="switchRadioChannel('gpod')">语法微课<span class="radio-subtab-cnt" id="rsub-gpod-cnt"></span></button>
+        <button type="button" class="radio-subtab" id="rsub-sleep" onclick="switchRadioChannel('sleep')">睡前故事</button>
       </div>
       <div class="radio-submeta" id="radio-submeta"></div>
     </div>
@@ -9700,6 +9858,51 @@ html = r"""<!DOCTYPE html>
             <button class="play-toggle-btn" id="gpod-play-btn" onclick="toggleGpodPlay()">连播</button>
             <button class="step-time-btn" onclick="stepGpodEpisode(1)">下一集</button>
             <button class="radio-spd-pill radio-pin-pill" id="gpod-act-btn" onclick="onGpodRightAction()">选集</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="radio-sleep-stage" class="hidden">
+        <div class="meta-bar">
+          <span class="overline" id="sleep-overline">睡前故事 · 温柔日语 · 不打卡</span>
+          <span class="overline" id="sleep-status-pill" style="flex-shrink:0;"></span>
+        </div>
+
+        <div class="radio-body-wrap">
+          <div class="sleep-center" id="sleep-center">
+            <div class="sleep-moon-wrap" id="sleep-moon-wrap" aria-hidden="true">
+              <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                <path d="M23.5 24.5A10.5 10.5 0 0 1 12.2 8.1a10.5 10.5 0 1 0 15.7 13.7 10.4 10.4 0 0 1-4.4 2.7Z" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="sleep-act-lbl" id="sleep-act-lbl" lang="ja"></div>
+            <h2 class="sleep-title-ja" id="sleep-title-ja" lang="ja"></h2>
+            <p class="sleep-title-zh" id="sleep-title-zh"></p>
+            <div class="sleep-veil-wrap" id="sleep-veil-wrap" onclick="toggleSleepVeil()" role="button" tabindex="0" aria-label="轻点查看或收起此刻字幕">
+              <span class="sleep-veil-hint-btn" id="sleep-veil-prompt">轻点看此刻这一句</span>
+              <p class="sleep-veil-ja hidden" id="sleep-veil-ja" lang="ja"></p>
+              <p class="sleep-veil-zh hidden" id="sleep-veil-zh"></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="radio-dock">
+          <div class="chapter-strip" id="sleep-act-pills"></div>
+
+          <div class="scrub-wrap">
+            <input type="range" class="zen-range" id="sleep-seek" min="0" max="1200" value="0" step="1" oninput="onSleepScrubPreview(this.value)" onchange="onSleepScrubCommit(this.value)" />
+            <div class="time-pair">
+              <span id="sleep-cur-time">00:00</span>
+              <span id="sleep-tot-time">20:00</span>
+            </div>
+          </div>
+
+          <div class="transport-row">
+            <button class="radio-spd-pill" id="sleep-timer-btn" onclick="cycleSleepTimer()">播完停</button>
+            <button class="step-time-btn" onclick="seekSleepBy(-15)">-15s</button>
+            <button class="play-toggle-btn" id="sleep-play-btn" onclick="toggleSleepPlay()">播放</button>
+            <button class="step-time-btn" onclick="seekSleepBy(15)">+15s</button>
+            <button class="radio-spd-pill radio-pin-pill" id="sleep-lib-btn" onclick="openSleepLibrarySheet()">故事集</button>
           </div>
         </div>
       </div>
@@ -12883,6 +13086,7 @@ function playMainClip(url, kind, toggleIfSame) {
   if (!url) return;
   if (!radioPlayer.paused) radioPlayer.pause();
   try { if (typeof pauseGpodSilently === "function") pauseGpodSilently(); } catch (e) {}
+  try { if (typeof pauseSleepSilently === "function") pauseSleepSilently(); } catch (e) {}
   try { if (typeof stopClinicAudio === "function") stopClinicAudio(); } catch (e) {}
   try { if (typeof stopRadioReviewAudio === "function") stopRadioReviewAudio(); } catch (e) {}
   if (toggleIfSame && activeKind === kind && !player.paused) {
@@ -13502,44 +13706,50 @@ let activeAudioChannel = "daily";
 function setupMediaSession(segTitle) {
   if (!("mediaSession" in navigator)) return;
   const isGpod = activeAudioChannel === "gpod";
+  const isSleep = activeAudioChannel === "sleep";
   const curGp = (isGpod && typeof getCurrentGpodEpisode === "function") ? getCurrentGpodEpisode() : null;
-  const title = segTitle || (curGp ? `${curGp.point} · 锵锵语法微课 (${curGp._idx + 1}/${GPOD_LIST.length})` : getCurrentRadioSegTitle());
+  const curSl = (isSleep && typeof getCurrentSleepEpisode === "function") ? getCurrentSleepEpisode() : null;
+  const title = segTitle || (curSl ? `${curSl.title_ja} · 睡前故事` : (curGp ? `${curGp.point} · 锵锵语法微课 (${curGp._idx + 1}/${GPOD_LIST.length})` : getCurrentRadioSegTitle()));
   try {
     if (!navigator.mediaSession.metadata || lastMediaTitle !== title) {
       let artwork = [];
       try {
-        const segArt = isGpod ? "./icon-512.png" : getCurrentRadioArtworkUrl();
+        const segArt = (isGpod || isSleep) ? "./icon-512.png" : getCurrentRadioArtworkUrl();
         artwork = [
-          { src: new URL(segArt, location.href).href, sizes: isGpod ? "512x512" : "1280x720", type: isGpod ? "image/png" : "image/jpeg" },
+          { src: new URL(segArt, location.href).href, sizes: (isGpod || isSleep) ? "512x512" : "1280x720", type: (isGpod || isSleep) ? "image/png" : "image/jpeg" },
           { src: new URL("./icon-192.png", location.href).href, sizes: "192x192", type: "image/png" },
           { src: new URL("./icon-512.png", location.href).href, sizes: "512x512", type: "image/png" }
         ];
       } catch (e) {}
       navigator.mediaSession.metadata = new MediaMetadata({
         title: title,
-        artist: (DATA.radio && DATA.radio.hosts) || "文涛 · 文道 · 子东",
-        album: isGpod ? "锵锵语法微课" : "JLPT N3",
+        artist: isSleep ? "京都夜眠 · 温柔日语" : ((DATA.radio && DATA.radio.hosts) || "文涛 · 文道 · 子东"),
+        album: isSleep ? "睡前故事" : (isGpod ? "锵锵语法微课" : "JLPT N3"),
         artwork: artwork
       });
       lastMediaTitle = title;
     }
     if (!mediaSessionHandlersBound) {
       const bind = (act, fn) => { try { navigator.mediaSession.setActionHandler(act, fn); } catch (e) {} };
-      bind("play", () => activeAudioChannel === "gpod" ? toggleGpodPlay(true) : toggleRadioPlay(true));
-      bind("pause", () => activeAudioChannel === "gpod" ? toggleGpodPlay(false) : toggleRadioPlay(false));
-      bind("stop", () => activeAudioChannel === "gpod" ? toggleGpodPlay(false) : toggleRadioPlay(false));
+      bind("play", () => activeAudioChannel === "sleep" ? toggleSleepPlay(true) : (activeAudioChannel === "gpod" ? toggleGpodPlay(true) : toggleRadioPlay(true)));
+      bind("pause", () => activeAudioChannel === "sleep" ? toggleSleepPlay(false) : (activeAudioChannel === "gpod" ? toggleGpodPlay(false) : toggleRadioPlay(false)));
+      bind("stop", () => activeAudioChannel === "sleep" ? toggleSleepPlay(false) : (activeAudioChannel === "gpod" ? toggleGpodPlay(false) : toggleRadioPlay(false)));
       bind("seekbackward", details => {
         const off = -(details && details.seekOffset > 0 ? details.seekOffset : 15);
-        if (activeAudioChannel === "gpod") seekGpodBy(off); else seekRadioBy(off);
+        if (activeAudioChannel === "sleep") seekSleepBy(off); else if (activeAudioChannel === "gpod") seekGpodBy(off); else seekRadioBy(off);
       });
       bind("seekforward", details => {
         const off = details && details.seekOffset > 0 ? details.seekOffset : 15;
-        if (activeAudioChannel === "gpod") seekGpodBy(off); else seekRadioBy(off);
+        if (activeAudioChannel === "sleep") seekSleepBy(off); else if (activeAudioChannel === "gpod") seekGpodBy(off); else seekRadioBy(off);
       });
-      bind("previoustrack", () => activeAudioChannel === "gpod" ? stepGpodEpisode(-1, true) : seekRadioBy(-15));
-      bind("nexttrack", () => activeAudioChannel === "gpod" ? stepGpodEpisode(1, true) : seekRadioBy(15));
+      bind("previoustrack", () => activeAudioChannel === "sleep" ? seekSleepBy(-15) : (activeAudioChannel === "gpod" ? stepGpodEpisode(-1, true) : seekRadioBy(-15)));
+      bind("nexttrack", () => activeAudioChannel === "sleep" ? seekSleepBy(15) : (activeAudioChannel === "gpod" ? stepGpodEpisode(1, true) : seekRadioBy(15)));
       bind("seekto", details => {
         if (!details || typeof details.seekTime !== "number" || !isFinite(details.seekTime)) return;
+        if (activeAudioChannel === "sleep") {
+          seekSleepTo(details.seekTime);
+          return;
+        }
         if (activeAudioChannel === "gpod") {
           seekGpodTo(details.seekTime);
           return;
@@ -13571,6 +13781,7 @@ function toggleRadioPlay(forcePlay) {
   }
   activeAudioChannel = "daily";
   if (typeof pauseGpodSilently === "function") pauseGpodSilently();
+  if (typeof pauseSleepSilently === "function") pauseSleepSilently();
   if (typeof stopClinicAudio === "function") stopClinicAudio();
   if (typeof stopRadioReviewAudio === "function") stopRadioReviewAudio();
   if (typeof stopAllHandsFreeVoice === "function") stopAllHandsFreeVoice();
@@ -13853,7 +14064,9 @@ function updateRadioLiveDisplay(t) {
 
 function onMiniBarTap(e) {
   if (e && e.target && e.target.closest && e.target.closest(".rmb-play-btn")) return;
-  if (activeAudioChannel === "gpod" && GPOD_LIST.length) {
+  if (activeAudioChannel === "sleep" && typeof SLEEP_LIST !== "undefined" && SLEEP_LIST.length) {
+    radioChannel = "sleep";
+  } else if (activeAudioChannel === "gpod" && GPOD_LIST.length) {
     radioChannel = "gpod";
   }
   switchMode("radio", false);
@@ -13864,7 +14077,9 @@ function onMiniBarPlayToggle(e) {
     if (e.stopPropagation) e.stopPropagation();
     if (e.preventDefault) e.preventDefault();
   }
-  if (activeAudioChannel === "gpod" && typeof toggleGpodPlay === "function") {
+  if (activeAudioChannel === "sleep" && typeof toggleSleepPlay === "function") {
+    toggleSleepPlay();
+  } else if (activeAudioChannel === "gpod" && typeof toggleGpodPlay === "function") {
     toggleGpodPlay();
   } else {
     toggleRadioPlay();
@@ -13876,7 +14091,9 @@ function onMiniBarJump(e) {
     if (e.stopPropagation) e.stopPropagation();
     if (e.preventDefault) e.preventDefault();
   }
-  if (activeAudioChannel === "gpod" && GPOD_LIST.length) {
+  if (activeAudioChannel === "sleep" && typeof SLEEP_LIST !== "undefined" && SLEEP_LIST.length) {
+    radioChannel = "sleep";
+  } else if (activeAudioChannel === "gpod" && GPOD_LIST.length) {
     radioChannel = "gpod";
   }
   switchMode("radio", false);
@@ -13892,10 +14109,11 @@ function syncRadioMiniBar() {
     const shell = document.getElementById("app-shell");
     if (!bar) return;
     const isRadioTab = (activeMode === "radio");
+    const isSleepChan = (activeAudioChannel === "sleep") && typeof sleepPlayer !== "undefined" && (sleepHasPlayedOnce || !sleepPlayer.paused);
     const isGpodChan = (activeAudioChannel === "gpod") && typeof gpodPlayer !== "undefined" && (gpodHasPlayedOnce || !gpodPlayer.paused);
     const isTeachInlineGpod = isGpodChan && activeMode === "tutor" && viewStage === "teach" && gpodInlineMode;
     const hasDailySession = (typeof radioHasPlayedOnce !== "undefined" && radioHasPlayedOnce) || (typeof radioPlayer !== "undefined" && !radioPlayer.paused);
-    if (isRadioTab || isTeachInlineGpod || (!hasDailySession && !isGpodChan)) {
+    if (isRadioTab || isTeachInlineGpod || (!hasDailySession && !isGpodChan && !isSleepChan)) {
       bar.classList.add("hidden");
       if (shell) shell.classList.remove("has-mini-bar");
       if (window.ZB && typeof window.ZB.syncMiniVisibility === "function") window.ZB.syncMiniVisibility();
@@ -13904,8 +14122,8 @@ function syncRadioMiniBar() {
     bar.classList.remove("hidden");
     if (shell) shell.classList.add("has-mini-bar");
     if (window.ZB && typeof window.ZB.syncMiniVisibility === "function") window.ZB.syncMiniVisibility();
-    const isPlaying = isGpodChan ? !gpodPlayer.paused : (typeof radioPlayer !== "undefined" && !radioPlayer.paused);
-    const isBuf = isGpodChan ? false : radioBuffering;
+    const isPlaying = isSleepChan ? !sleepPlayer.paused : (isGpodChan ? !gpodPlayer.paused : (typeof radioPlayer !== "undefined" && !radioPlayer.paused));
+    const isBuf = (isGpodChan || isSleepChan) ? false : radioBuffering;
     const playBtn = document.getElementById("rmb-play-btn");
     if (playBtn) {
       playBtn.innerHTML = isPlaying ? (isBuf ? RMB_LOAD_SVG : RMB_PAUSE_SVG) : RMB_PLAY_SVG;
@@ -13914,7 +14132,12 @@ function syncRadioMiniBar() {
     const wave = document.getElementById("rmb-wave-icon");
     if (wave) wave.classList.toggle("is-playing", isPlaying);
     let dur, curT, curTitle;
-    if (isGpodChan) {
+    if (isSleepChan) {
+      const sep = typeof getCurrentSleepEpisode === "function" ? getCurrentSleepEpisode() : null;
+      dur = Math.max(1, (sleepPlayer.duration && isFinite(sleepPlayer.duration)) ? sleepPlayer.duration : ((sep && sep.duration_sec) || 1200));
+      curT = sleepPlayer.currentTime || 0;
+      curTitle = sep ? `${sep.title_zh || sep.title_ja} · 睡前故事` : "睡前故事";
+    } else if (isGpodChan) {
       const ep = getCurrentGpodEpisode();
       dur = Math.max(1, (gpodPlayer.duration && isFinite(gpodPlayer.duration)) ? gpodPlayer.duration : ((ep && ep.duration_sec) || 150));
       curT = gpodPlayer.currentTime || 0;
@@ -13939,7 +14162,8 @@ function syncRadioMiniBar() {
 function syncRadioUI(optimisticPlaying) {
   const playing = typeof optimisticPlaying === "boolean" ? optimisticPlaying : !radioPlayer.paused;
   const gpodPlaying = typeof gpodPlayer !== "undefined" && !gpodPlayer.paused;
-  const anyPlaying = playing || gpodPlaying;
+  const sleepPlaying = typeof sleepPlayer !== "undefined" && !sleepPlayer.paused;
+  const anyPlaying = playing || gpodPlaying || sleepPlaying;
   const btn = document.getElementById("radio-play-btn");
   if (btn) btn.textContent = playing ? (radioBuffering ? "缓冲中…" : "暂停") : "播放";
   const tabBtn = document.getElementById("tab-radio");
@@ -14194,19 +14418,29 @@ function pauseGpodSilently() {
 function renderRadioSubnav() {
   const nav = document.getElementById("radio-subnav");
   if (!nav) return;
-  if (!GPOD_LIST.length) {
+  const hasGpod = GPOD_LIST.length > 0;
+  const hasSleep = typeof SLEEP_LIST !== "undefined" && SLEEP_LIST.length > 0;
+  if (!hasGpod && !hasSleep) {
     nav.style.display = "none";
     return;
   }
   nav.style.display = "flex";
   const dBtn = document.getElementById("rsub-daily");
   const gBtn = document.getElementById("rsub-gpod");
+  const sBtn = document.getElementById("rsub-sleep");
   const cntEl = document.getElementById("rsub-gpod-cnt");
   const metaEl = document.getElementById("radio-submeta");
   if (dBtn) dBtn.classList.toggle("active", radioChannel === "daily");
-  if (gBtn) gBtn.classList.toggle("active", radioChannel === "gpod");
+  if (gBtn) {
+    gBtn.style.display = hasGpod ? "" : "none";
+    gBtn.classList.toggle("active", radioChannel === "gpod");
+  }
+  if (sBtn) {
+    sBtn.style.display = hasSleep ? "" : "none";
+    sBtn.classList.toggle("active", radioChannel === "sleep");
+  }
   const heardCnt = getGpodHeardCount();
-  if (cntEl) cntEl.textContent = heardCnt > 0 ? `${heardCnt}/${GPOD_LIST.length}` : `${GPOD_LIST.length}集`;
+  if (cntEl) cntEl.textContent = heardCnt > 0 ? `${heardCnt}/${GPOD_LIST.length}` : `${GPOD_LIST.length}`;
   if (metaEl) {
     if (radioChannel === "gpod") {
       const ep = getCurrentGpodEpisode();
@@ -14377,6 +14611,7 @@ function toggleGpodPlay(forcePlay) {
     return;
   }
   activeAudioChannel = "gpod";
+  if (typeof pauseSleepSilently === "function") pauseSleepSilently();
   if (typeof stopClinicAudio === "function") stopClinicAudio();
   if (typeof stopRadioReviewAudio === "function") stopRadioReviewAudio();
   if (typeof stopAllHandsFreeVoice === "function") stopAllHandsFreeVoice();
@@ -14471,8 +14706,9 @@ function onGpodRightAction() {
 }
 
 function switchRadioChannel(ch, opts) {
-  if (ch !== "daily" && ch !== "gpod") return;
+  if (ch !== "daily" && ch !== "gpod" && ch !== "sleep") return;
   if (ch === "gpod" && !GPOD_LIST.length) return;
+  if (ch === "sleep" && (typeof SLEEP_LIST === "undefined" || !SLEEP_LIST.length)) return;
   radioChannel = ch;
   if (radioReviewOpen) {
     radioReviewOpen = false;
@@ -14482,8 +14718,10 @@ function switchRadioChannel(ch, opts) {
   }
   const pStage = document.getElementById("radio-player-stage");
   const gStage = document.getElementById("radio-gpod-stage");
+  const sStage = document.getElementById("radio-sleep-stage");
   if (pStage) pStage.classList.toggle("hidden", ch !== "daily");
   if (gStage) gStage.classList.toggle("hidden", ch !== "gpod");
+  if (sStage) sStage.classList.toggle("hidden", ch !== "sleep");
   renderRadioSubnav();
   if (ch === "gpod") {
     gpodInlineMode = false;
@@ -14494,6 +14732,15 @@ function switchRadioChannel(ch, opts) {
     renderGpodStage();
     if (opts && opts.autoPlay) {
       selectGpodEpisode(curGpodIdx, true, false);
+    }
+  } else if (ch === "sleep") {
+    if (opts && typeof opts.date === "string") {
+      const idx = SLEEP_LIST.findIndex(e => e.date === opts.date);
+      if (idx >= 0) curSleepIdx = idx;
+    }
+    renderSleepStage();
+    if (opts && opts.autoPlay) {
+      selectSleepEpisode(curSleepIdx, true);
     }
   } else {
     ensureRadioReady();
@@ -14651,6 +14898,564 @@ gpodPlayer.addEventListener("ended", () => {
       selectGpodEpisode(nextIdx, true, false);
     }, 1200);
   }
+});
+
+// ================= 4B. KYOTO GENTLE BEDTIME STORY SANCTUARY ("睡前故事" · Optional · Zero Check-in) =================
+const SLEEP_LIST = (DATA.sleep_stories && Array.isArray(DATA.sleep_stories.episodes))
+  ? DATA.sleep_stories.episodes.map((ep, idx) => Object.assign({}, ep, { _idx: idx }))
+  : [];
+const SLEEP_STORE_KEY = "n3_sleep_progress_v1";
+const SLEEP_AMB_LABELS = { soft_rain: "细雨", night_breeze: "夜风", hearth_tea: "暖炉" };
+
+function loadSleepProgressMap() {
+  try {
+    const raw = localStorage.getItem(SLEEP_STORE_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    return (parsed && typeof parsed === "object") ? parsed : {};
+  } catch (e) {
+    return {};
+  }
+}
+const SLEEP_PROG = loadSleepProgressMap();
+
+function saveSleepProgressMap() {
+  try { localStorage.setItem(SLEEP_STORE_KEY, JSON.stringify(SLEEP_PROG)); } catch (e) {}
+}
+
+function getSleepRec(dateKey) {
+  if (!dateKey) return { pos: 0, done: false };
+  const r = SLEEP_PROG[dateKey];
+  return (r && typeof r === "object") ? r : { pos: 0, done: false };
+}
+
+function isSleepDone(dateKey) {
+  return !!getSleepRec(dateKey).done;
+}
+
+const sleepPlayer = new Audio();
+sleepPlayer.id = "sleep-audio";
+sleepPlayer.preload = "metadata";
+sleepPlayer.setAttribute("playsinline", "");
+sleepPlayer.style.position = "fixed";
+sleepPlayer.style.bottom = "-9999px";
+sleepPlayer.style.left = "-9999px";
+sleepPlayer.style.width = "1px";
+sleepPlayer.style.height = "1px";
+sleepPlayer.style.opacity = "0.001";
+sleepPlayer.style.pointerEvents = "none";
+try { if (document.body) document.body.appendChild(sleepPlayer); } catch (e) {}
+
+let curSleepIdx = 0;
+let sleepLoadedDate = "";
+let sleepHasPlayedOnce = false;
+let sleepScrubActive = false;
+let sleepVeilOpen = false;
+let sleepPendingSeekSec = null;
+let sleepLastSavedTick = 0;
+// Sleep timer: "end" (default: gently stop when story ends) | 15 | 30 (minutes with 12s smooth fade)
+let sleepTimerMode = "end";
+let sleepTimerEndAtMs = 0;
+let sleepTimerInterval = null;
+
+function getCurrentSleepEpisode() {
+  if (!SLEEP_LIST.length) return null;
+  const idx = Math.max(0, Math.min(SLEEP_LIST.length - 1, curSleepIdx));
+  return SLEEP_LIST[idx] || SLEEP_LIST[0];
+}
+
+function clearSleepTimerInterval() {
+  if (sleepTimerInterval) {
+    clearInterval(sleepTimerInterval);
+    sleepTimerInterval = null;
+  }
+  sleepTimerEndAtMs = 0;
+  try { sleepPlayer.volume = 1; } catch (e) {}
+}
+
+function syncSleepTimerLabel() {
+  const btn = document.getElementById("sleep-timer-btn");
+  if (!btn) return;
+  if (sleepTimerMode === "end") {
+    btn.textContent = "播完停";
+    return;
+  }
+  if (sleepTimerEndAtMs > 0 && !sleepPlayer.paused) {
+    const remSec = Math.max(0, Math.ceil((sleepTimerEndAtMs - Date.now()) / 1000));
+    const remMin = Math.max(1, Math.ceil(remSec / 60));
+    btn.textContent = `${remMin}分停`;
+  } else {
+    btn.textContent = `${sleepTimerMode}分`;
+  }
+}
+
+function armSleepTimerIfNeeded() {
+  if (sleepTimerInterval) {
+    clearInterval(sleepTimerInterval);
+    sleepTimerInterval = null;
+  }
+  if (sleepTimerMode === "end") {
+    sleepTimerEndAtMs = 0;
+    try { sleepPlayer.volume = 1; } catch (e) {}
+    syncSleepTimerLabel();
+    return;
+  }
+  sleepTimerEndAtMs = Date.now() + Number(sleepTimerMode) * 60 * 1000;
+  try { sleepPlayer.volume = 1; } catch (e) {}
+  syncSleepTimerLabel();
+  sleepTimerInterval = setInterval(() => {
+    if (sleepPlayer.paused || sleepTimerMode === "end") {
+      syncSleepTimerLabel();
+      return;
+    }
+    const remMs = sleepTimerEndAtMs - Date.now();
+    if (remMs <= 0) {
+      clearSleepTimerInterval();
+      toggleSleepPlay(false);
+      return;
+    }
+    // Smooth 12-second cosine fade-out so sleep is never startled by an abrupt cut
+    if (remMs <= 12000) {
+      const r = Math.max(0, Math.min(1, remMs / 12000));
+      const v = 0.5 - 0.5 * Math.cos(Math.PI * r);
+      try { sleepPlayer.volume = Math.max(0.01, v); } catch (e) {}
+    } else if (sleepPlayer.volume < 0.99) {
+      try { sleepPlayer.volume = 1; } catch (e) {}
+    }
+    syncSleepTimerLabel();
+  }, 500);
+}
+
+function cycleSleepTimer() {
+  if (sleepTimerMode === "end") sleepTimerMode = 15;
+  else if (sleepTimerMode === 15) sleepTimerMode = 30;
+  else sleepTimerMode = "end";
+  if (!sleepPlayer.paused) armSleepTimerIfNeeded();
+  else {
+    clearSleepTimerInterval();
+    syncSleepTimerLabel();
+  }
+}
+
+function formatSleepDateBadge(dateStr) {
+  if (!dateStr) return "";
+  if (dateStr === DATA.plan_date) return "今晚";
+  const parts = String(dateStr).split("-");
+  if (parts.length === 3) return `${parseInt(parts[1], 10)}/${parseInt(parts[2], 10)}`;
+  return dateStr;
+}
+
+function findSleepActAndScene(ep, sec) {
+  const acts = Array.isArray(ep && ep.acts) ? ep.acts : [];
+  const tl = Array.isArray(ep && ep.timeline) ? ep.timeline : [];
+  let scene = tl.length ? tl[0] : null;
+  for (let i = 0; i < tl.length; i++) {
+    if (sec >= (tl[i].start_sec || 0) - 0.4) scene = tl[i];
+    else break;
+  }
+  const actNum = scene ? Number(scene.act || 1) : 1;
+  const actObj = acts.find(a => Number(a.act) === actNum) || acts[0] || { act: actNum, name_ja: "", name_zh: "" };
+  return { actObj, scene };
+}
+
+function getSleepActStartSec(ep, actNum) {
+  const tl = Array.isArray(ep && ep.timeline) ? ep.timeline : [];
+  const hit = tl.find(s => Number(s.act) === Number(actNum));
+  return hit ? Math.max(0, Number(hit.start_sec || 0)) : 0;
+}
+
+function updateSleepLiveVeil(t) {
+  const ep = getCurrentSleepEpisode();
+  if (!ep) return;
+  const { actObj, scene } = findSleepActAndScene(ep, t);
+  const actLbl = document.getElementById("sleep-act-lbl");
+  if (actLbl && actObj) {
+    const numCn = ["", "一", "二", "三", "四"][Number(actObj.act) || 1] || String(actObj.act || "");
+    actLbl.textContent = actObj.name_ja ? `第${numCn}幕 · ${actObj.name_ja}` : (actObj.name_zh || "");
+  }
+  const pills = document.getElementById("sleep-act-pills");
+  if (pills && pills.children && actObj) {
+    for (let i = 0; i < pills.children.length; i++) {
+      const btn = pills.children[i];
+      if (btn && btn.dataset) btn.classList.toggle("active", Number(btn.dataset.act) === Number(actObj.act));
+    }
+  }
+  const promptEl = document.getElementById("sleep-veil-prompt");
+  const jaEl = document.getElementById("sleep-veil-ja");
+  const zhEl = document.getElementById("sleep-veil-zh");
+  if (promptEl) promptEl.classList.toggle("hidden", sleepVeilOpen);
+  if (jaEl) {
+    jaEl.classList.toggle("hidden", !sleepVeilOpen);
+    if (sleepVeilOpen && scene) {
+      // Show only the first 1-2 short gentle clauses so the screen stays spacious & calm
+      const rawJa = String(scene.text_ja || "");
+      const sents = rawJa.split("。").filter(Boolean);
+      jaEl.textContent = sents.length > 2 ? (sents.slice(0, 2).join("。") + "。") : rawJa;
+    }
+  }
+  if (zhEl) {
+    zhEl.classList.toggle("hidden", !sleepVeilOpen);
+    if (sleepVeilOpen && scene) zhEl.textContent = scene.hint_zh || "";
+  }
+}
+
+function toggleSleepVeil() {
+  sleepVeilOpen = !sleepVeilOpen;
+  const ep = getCurrentSleepEpisode();
+  const curT = (ep && sleepLoadedDate === ep.date) ? (sleepPlayer.currentTime || 0) : (ep ? (getSleepRec(ep.date).pos || 0) : 0);
+  updateSleepLiveVeil(curT);
+}
+
+function paintSleepSeek(curT, durOpt) {
+  const ep = getCurrentSleepEpisode();
+  const dur = Math.max(1, durOpt || ((ep && sleepLoadedDate === ep.date && sleepPlayer.duration && isFinite(sleepPlayer.duration)) ? sleepPlayer.duration : ((ep && ep.duration_sec) || 1200)));
+  const clamped = Math.max(0, Math.min(dur, curT || 0));
+  const seek = document.getElementById("sleep-seek");
+  if (seek) {
+    seek.max = Math.ceil(dur);
+    if (!sleepScrubActive) seek.value = Math.floor(clamped);
+    if (seek.style && typeof seek.style.setProperty === "function") {
+      seek.style.setProperty("--p", ((clamped / dur) * 100).toFixed(1) + "%");
+    }
+  }
+  const curEl = document.getElementById("sleep-cur-time");
+  const totEl = document.getElementById("sleep-tot-time");
+  if (curEl) curEl.textContent = formatMMSS(clamped);
+  if (totEl) totEl.textContent = formatMMSS(dur);
+}
+
+function syncSleepPlayUI(optimisticPlaying) {
+  const playing = typeof optimisticPlaying === "boolean" ? optimisticPlaying : !sleepPlayer.paused;
+  const btn = document.getElementById("sleep-play-btn");
+  if (btn) btn.textContent = playing ? "暂停" : "播放";
+  const moon = document.getElementById("sleep-moon-wrap");
+  if (moon) moon.classList.toggle("is-playing", playing);
+  const anyPlaying = playing || (typeof radioPlayer !== "undefined" && !radioPlayer.paused) || (typeof gpodPlayer !== "undefined" && !gpodPlayer.paused);
+  const tabBtn = document.getElementById("tab-radio");
+  if (tabBtn) tabBtn.classList.toggle("is-playing", anyPlaying);
+  const bTabBtn = document.getElementById("btab-radio");
+  if (bTabBtn) bTabBtn.classList.toggle("is-playing", anyPlaying);
+  syncSleepTimerLabel();
+  syncRadioMiniBar();
+}
+
+function updateSleepMediaSessionPosition() {
+  if (activeAudioChannel !== "sleep") return;
+  if (!("mediaSession" in navigator) || typeof navigator.mediaSession.setPositionState !== "function") return;
+  const ep = getCurrentSleepEpisode();
+  try {
+    const dur = (sleepPlayer.duration && isFinite(sleepPlayer.duration) && sleepPlayer.duration > 0)
+      ? sleepPlayer.duration
+      : ((ep && ep.duration_sec) || 1200);
+    const pos = Math.max(0, Math.min(dur, sleepPlayer.currentTime || 0));
+    navigator.mediaSession.setPositionState({ duration: dur, playbackRate: 1, position: pos });
+  } catch (e) {}
+}
+
+function renderSleepStage() {
+  const ep = getCurrentSleepEpisode();
+  if (!ep) return;
+  const ambCn = SLEEP_AMB_LABELS[ep.ambience] || "柔乐";
+  const mins = Math.max(1, Math.round((ep.duration_sec || 1200) / 60));
+  const dateLbl = formatSleepDateBadge(ep.date);
+  const ovEl = document.getElementById("sleep-overline");
+  if (ovEl) ovEl.textContent = `${dateLbl || "今夜"} · ${ambCn} · 约 ${mins} 分`;
+  const stEl = document.getElementById("sleep-status-pill");
+  if (stEl) {
+    const done = isSleepDone(ep.date);
+    stEl.textContent = done ? "曾听过 ✓" : "不打卡";
+    stEl.classList.toggle("ok", done);
+  }
+  const tJa = document.getElementById("sleep-title-ja");
+  if (tJa) tJa.textContent = ep.title_ja || "";
+  const tZh = document.getElementById("sleep-title-zh");
+  if (tZh) {
+    const bits = [ep.title_zh, ep.subtitle_zh].filter(Boolean);
+    tZh.textContent = bits.join(" · ");
+  }
+  const strip = document.getElementById("sleep-act-pills");
+  if (strip) {
+    const acts = Array.isArray(ep.acts) ? ep.acts : [];
+    const numCn = ["", "一", "二", "三", "四"];
+    strip.innerHTML = acts.map(a => {
+      const n = Number(a.act) || 1;
+      const lbl = a.name_zh || a.name_ja || `第${n}幕`;
+      return `<button type="button" class="chap-link" data-act="${n}" onclick="jumpSleepAct(${n})">${numCn[n] || n} · ${escapeHtml(lbl)}</button>`;
+    }).join("");
+    if (!strip._fadeBound) {
+      strip._fadeBound = true;
+      if (typeof strip.addEventListener === "function") {
+        strip.addEventListener("scroll", () => { if (typeof updateChapterStripFade === "function") updateChapterStripFade(strip); }, { passive: true });
+      }
+    }
+    if (typeof requestAnimationFrame === "function") {
+      requestAnimationFrame(() => { if (typeof updateChapterStripFade === "function") updateChapterStripFade(strip); });
+    } else if (typeof updateChapterStripFade === "function") {
+      updateChapterStripFade(strip);
+    }
+  }
+  const rec = getSleepRec(ep.date);
+  const curT = (sleepLoadedDate === ep.date) ? (sleepPlayer.currentTime || 0) : (rec.pos || 0);
+  paintSleepSeek(curT, ep.duration_sec || 1200);
+  updateSleepLiveVeil(curT);
+  syncSleepPlayUI(!sleepPlayer.paused && sleepLoadedDate === ep.date);
+}
+
+function ensureSleepLoaded(ep) {
+  if (!ep || !ep.audio_url) return;
+  if (sleepLoadedDate !== ep.date) {
+    sleepLoadedDate = ep.date;
+    sleepPlayer.src = ep.audio_url;
+    const savedPos = Number(getSleepRec(ep.date).pos || 0);
+    sleepPendingSeekSec = (savedPos > 4 && savedPos < (ep.duration_sec || 1200) - 20) ? savedPos : null;
+    try { sleepPlayer.load(); } catch (e) {}
+  }
+  sleepPlayer.defaultPlaybackRate = 1;
+  sleepPlayer.playbackRate = 1;
+  if ("preservesPitch" in sleepPlayer) sleepPlayer.preservesPitch = true;
+}
+
+function pauseSleepSilently() {
+  clearSleepTimerInterval();
+  try {
+    sleepPlayer.muted = false;
+    sleepPlayer.volume = 1;
+    if (!sleepPlayer.paused) sleepPlayer.pause();
+  } catch (e) {}
+  syncSleepPlayUI(false);
+}
+
+function selectSleepEpisode(idx, autoPlay, fromStart) {
+  if (!SLEEP_LIST.length) return;
+  curSleepIdx = ((idx % SLEEP_LIST.length) + SLEEP_LIST.length) % SLEEP_LIST.length;
+  const ep = getCurrentSleepEpisode();
+  if (!ep) return;
+  if (fromStart) {
+    SLEEP_PROG[ep.date] = { pos: 0, done: isSleepDone(ep.date), ts: nowUnixSec() };
+    saveSleepProgressMap();
+    sleepPendingSeekSec = 0;
+  }
+  sleepLoadedDate = "";
+  ensureSleepLoaded(ep);
+  if (fromStart) {
+    try { sleepPlayer.currentTime = 0; } catch (e) {}
+  }
+  renderSleepStage();
+  renderRadioSubnav();
+  if (autoPlay) toggleSleepPlay(true);
+}
+
+function toggleSleepPlay(forcePlay) {
+  if (!SLEEP_LIST.length) return;
+  const ep = getCurrentSleepEpisode();
+  if (!ep) return;
+  const wantPlay = typeof forcePlay === "boolean" ? forcePlay : sleepPlayer.paused;
+  if (!wantPlay) {
+    clearSleepTimerInterval();
+    sleepPlayer.muted = false;
+    sleepPlayer.volume = 1;
+    sleepPlayer.pause();
+    if (activeAudioChannel === "sleep") {
+      setupMediaSession();
+      setMediaSessionPlaybackState("paused");
+      updateSleepMediaSessionPosition();
+    }
+    syncSleepPlayUI(false);
+    return;
+  }
+  activeAudioChannel = "sleep";
+  if (typeof pauseGpodSilently === "function") pauseGpodSilently();
+  if (typeof stopClinicAudio === "function") stopClinicAudio();
+  if (typeof stopRadioReviewAudio === "function") stopRadioReviewAudio();
+  if (typeof stopAllHandsFreeVoice === "function") stopAllHandsFreeVoice();
+  else if (typeof stopVocabVoiceCoach === "function") stopVocabVoiceCoach(true);
+  if (activeKind !== null || (typeof player !== "undefined" && !player.paused) || (typeof wordPlayer !== "undefined" && !wordPlayer.paused)) {
+    stopQuizAudio();
+  }
+  if (radioInitialized && !radioPlayer.paused) {
+    radioPlayer.muted = false;
+    radioPlayer.pause();
+    syncRadioUI(false);
+  }
+  ensureSleepLoaded(ep);
+  sleepPlayer.muted = false;
+  sleepPlayer.volume = 1;
+  setupMediaSession();
+  setMediaSessionPlaybackState("playing");
+  armSleepTimerIfNeeded();
+  syncSleepPlayUI(true);
+  const pr = sleepPlayer.play();
+  if (pr && typeof pr.then === "function") {
+    pr.then(() => {
+      sleepHasPlayedOnce = true;
+      if (sleepPendingSeekSec !== null && sleepPlayer.readyState >= 1) {
+        try { sleepPlayer.currentTime = sleepPendingSeekSec; } catch (e) {}
+        sleepPendingSeekSec = null;
+      }
+      setMediaSessionPlaybackState("playing");
+      updateSleepMediaSessionPosition();
+      syncSleepPlayUI(true);
+    }).catch(() => {
+      setMediaSessionPlaybackState("paused");
+      syncSleepPlayUI(false);
+    });
+  } else {
+    sleepHasPlayedOnce = true;
+  }
+}
+
+function seekSleepTo(sec) {
+  const ep = getCurrentSleepEpisode();
+  if (!ep) return;
+  ensureSleepLoaded(ep);
+  const dur = Math.max(1, (sleepPlayer.duration && isFinite(sleepPlayer.duration)) ? sleepPlayer.duration : (ep.duration_sec || 1200));
+  const nextT = Math.max(0, Math.min(dur - 0.5, sec));
+  if (sleepPlayer.readyState >= 1) {
+    try { sleepPlayer.currentTime = nextT; } catch (e) {}
+    sleepPendingSeekSec = null;
+  } else {
+    sleepPendingSeekSec = nextT;
+  }
+  paintSleepSeek(nextT, dur);
+  updateSleepLiveVeil(nextT);
+  SLEEP_PROG[ep.date] = { pos: Math.floor(nextT), done: isSleepDone(ep.date), ts: nowUnixSec() };
+  saveSleepProgressMap();
+  if (activeAudioChannel === "sleep") updateSleepMediaSessionPosition();
+}
+
+function seekSleepBy(delta) {
+  const ep = getCurrentSleepEpisode();
+  if (!ep) return;
+  const base = (sleepLoadedDate === ep.date) ? (sleepPlayer.currentTime || 0) : (getSleepRec(ep.date).pos || 0);
+  seekSleepTo(base + delta);
+}
+
+function jumpSleepAct(actNum) {
+  const ep = getCurrentSleepEpisode();
+  if (!ep) return;
+  const t = getSleepActStartSec(ep, actNum);
+  seekSleepTo(t);
+  if (sleepPlayer.paused) toggleSleepPlay(true);
+}
+
+function onSleepScrubPreview(val) {
+  sleepScrubActive = true;
+  const t = parseFloat(val) || 0;
+  paintSleepSeek(t);
+  updateSleepLiveVeil(t);
+}
+
+function onSleepScrubCommit(val) {
+  sleepScrubActive = false;
+  seekSleepTo(parseFloat(val) || 0);
+}
+
+function openSleepLibrarySheet() {
+  if (!SLEEP_LIST.length) return;
+  const modal = document.getElementById("app-modal");
+  const content = document.getElementById("modal-content");
+  if (!modal || !content) return;
+  const rowsHTML = SLEEP_LIST.map((ep, idx) => {
+    const rec = getSleepRec(ep.date);
+    const done = !!rec.done;
+    const act = idx === curSleepIdx;
+    const mins = Math.max(1, Math.round((ep.duration_sec || 1200) / 60));
+    const dateLbl = formatSleepDateBadge(ep.date);
+    const rightMeta = done
+      ? '<span class="gpod-sr-done">已听 ✓</span>'
+      : (rec.pos > 15 ? `<span>续听 ${formatMMSS(rec.pos)}</span>` : `<span>${mins}分</span>`);
+    return `
+      <button type="button" class="gpod-sheet-row${act ? " active" : ""}" onclick="closeModal();selectSleepEpisode(${idx}, true, false);">
+        <span class="gpod-sr-left">
+          <span class="gpod-sr-pt" lang="ja"><span class="sleep-dot${done ? " done" : ""}"></span><span>${escapeHtml(ep.title_ja || "")}</span><span class="sleep-date-tag">${escapeHtml(dateLbl)}</span></span>
+          <span class="gpod-sr-sub">${escapeHtml([ep.title_zh, ep.subtitle_zh].filter(Boolean).join(" · "))}</span>
+        </span>
+        <span class="gpod-sr-right">${rightMeta}</span>
+      </button>
+    `;
+  }).join("");
+  const curEp = getCurrentSleepEpisode();
+  const curPos = curEp ? ((sleepLoadedDate === curEp.date) ? (sleepPlayer.currentTime || 0) : (getSleepRec(curEp.date).pos || 0)) : 0;
+  const restartHtml = (curEp && curPos > 15)
+    ? `<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--hairline);display:flex;justify-content:center;"><button type="button" class="step-time-btn" onclick="closeModal();selectSleepEpisode(${curSleepIdx}, true, true);">从头重听这一晚</button></div>`
+    : "";
+  content.innerHTML = `
+    <div class="gpod-sheet-head">
+      <h3 class="gpod-sheet-title">睡前故事集</h3>
+      <span class="gpod-sheet-stat">留存 ${SLEEP_LIST.length} 晚 · 随时可听</span>
+    </div>
+    <div class="gpod-sheet-list">${rowsHTML}</div>${restartHtml}
+  `;
+  showAppModal();
+}
+
+sleepPlayer.addEventListener("loadedmetadata", () => {
+  const ep = getCurrentSleepEpisode();
+  if (!ep) return;
+  if (sleepPendingSeekSec !== null) {
+    try { sleepPlayer.currentTime = sleepPendingSeekSec; } catch (e) {}
+    sleepPendingSeekSec = null;
+  }
+  const curT = sleepPlayer.currentTime || 0;
+  paintSleepSeek(curT, sleepPlayer.duration || ep.duration_sec || 1200);
+  updateSleepLiveVeil(curT);
+  if (activeAudioChannel === "sleep") updateSleepMediaSessionPosition();
+});
+
+sleepPlayer.addEventListener("timeupdate", () => {
+  const ep = getCurrentSleepEpisode();
+  if (!ep) return;
+  const t = sleepPlayer.currentTime || 0;
+  const dur = Math.max(1, (sleepPlayer.duration && isFinite(sleepPlayer.duration)) ? sleepPlayer.duration : (ep.duration_sec || 1200));
+  paintSleepSeek(t, dur);
+  updateSleepLiveVeil(t);
+  syncRadioMiniBar();
+  if (Math.abs(t - sleepLastSavedTick) >= 5) {
+    sleepLastSavedTick = t;
+    const wasDone = isSleepDone(ep.date) || (t / dur >= 0.88);
+    SLEEP_PROG[ep.date] = { pos: Math.floor(t), done: wasDone, ts: nowUnixSec() };
+    saveSleepProgressMap();
+  }
+});
+
+sleepPlayer.addEventListener("play", () => {
+  sleepHasPlayedOnce = true;
+  activeAudioChannel = "sleep";
+  sleepPlayer.muted = false;
+  setupMediaSession();
+  setMediaSessionPlaybackState("playing");
+  updateSleepMediaSessionPosition();
+  syncSleepPlayUI(true);
+});
+
+sleepPlayer.addEventListener("pause", () => {
+  sleepPlayer.muted = false;
+  const ep = getCurrentSleepEpisode();
+  if (ep && sleepLoadedDate === ep.date) {
+    const t = Math.floor(sleepPlayer.currentTime || 0);
+    if (t > 2) {
+      SLEEP_PROG[ep.date] = { pos: t, done: isSleepDone(ep.date), ts: nowUnixSec() };
+      saveSleepProgressMap();
+    }
+  }
+  if (activeAudioChannel === "sleep") {
+    setMediaSessionPlaybackState("paused");
+    updateSleepMediaSessionPosition();
+  }
+  syncSleepPlayUI(false);
+});
+
+sleepPlayer.addEventListener("ended", () => {
+  clearSleepTimerInterval();
+  const ep = getCurrentSleepEpisode();
+  if (ep) {
+    // Gently mark listened & reset to start; NEVER auto-play the next story so sleep stays undisturbed!
+    SLEEP_PROG[ep.date] = { pos: 0, done: true, ts: nowUnixSec() };
+    saveSleepProgressMap();
+    renderSleepStage();
+    renderRadioSubnav();
+  }
+  if (activeAudioChannel === "sleep") setMediaSessionPlaybackState("paused");
+  syncSleepPlayUI(false);
 });
 
 // ================= REAL VOICE ACTIVE OUTPUT & PRONUNCIATION MIRROR (Web Speech ja-JP) =================
@@ -15270,6 +16075,7 @@ const JA_ASR = (() => {
     }
     try { if (typeof stopRadioReviewAudio === "function") stopRadioReviewAudio(); } catch (e) {}
     try { if (typeof pauseGpodSilently === "function") pauseGpodSilently(); } catch (e) {}
+    try { if (typeof pauseSleepSilently === "function") pauseSleepSilently(); } catch (e) {}
     try { if (typeof stopClinicAudio === "function") stopClinicAudio(); } catch (e) {}
     try {
       if (typeof radioInitialized !== "undefined" && radioInitialized && radioPlayer && !radioPlayer.paused) {
@@ -16172,6 +16978,7 @@ function openYtArchivalViewer(idx) {
   if (jpvVideoEl && !jpvVideoEl.paused) {
     try { jpvVideoEl.pause(); } catch (e) {}
   }
+  if (typeof pauseSleepSilently === "function") pauseSleepSilently();
   jpvLandscapeOpen = true;
   applyPortraitGuard();
   try {
@@ -16243,6 +17050,7 @@ function openRadioJpVideo() {
   const jpv = getRadioJpVideo();
   if (!jpv) return;
   if (typeof stopRadioVoiceCoach === "function") stopRadioVoiceCoach(false);
+  if (typeof pauseSleepSilently === "function") pauseSleepSilently();
   if (radioInitialized && !radioPlayer.paused) {
     radioPlayer.pause();
     syncRadioUI(false);
@@ -16256,8 +17064,10 @@ function openRadioJpVideo() {
   jpvLastCueIdx = -2;
   setRadioImmersiveChrome(true);
   const pStage = document.getElementById("radio-player-stage");
+  const sStage = document.getElementById("radio-sleep-stage");
   const rStage = document.getElementById("radio-review-stage");
   if (pStage) pStage.classList.add("hidden");
+  if (sStage) sStage.classList.add("hidden");
   if (rStage) rStage.classList.remove("hidden");
   pushNavLayer("radio_review");
   renderRadioReviewStage();
@@ -16447,6 +17257,7 @@ function playReviewPodcastClip(item, rateVal, toggleKey, forcePlay) {
   }
   stopRadioReviewAudio();
   try { if (typeof pauseGpodSilently === "function") pauseGpodSilently(); } catch (e) {}
+  try { if (typeof pauseSleepSilently === "function") pauseSleepSilently(); } catch (e) {}
   try { if (typeof stopClinicAudio === "function") stopClinicAudio(); } catch (e) {}
   try { if (typeof stopQuizAudio === "function") stopQuizAudio(); } catch (e) {}
   if (radioInitialized && !radioPlayer.paused) {
@@ -16510,6 +17321,7 @@ function playReviewZoneAudio(item, zone) {
   if (!item) return;
   stopRadioReviewAudio();
   try { if (typeof pauseGpodSilently === "function") pauseGpodSilently(); } catch (e) {}
+  try { if (typeof pauseSleepSilently === "function") pauseSleepSilently(); } catch (e) {}
   try { if (typeof stopClinicAudio === "function") stopClinicAudio(); } catch (e) {}
   try { if (typeof stopQuizAudio === "function") stopQuizAudio(); } catch (e) {}
   if (radioInitialized && !radioPlayer.paused) {
@@ -16684,12 +17496,20 @@ function closeRadioReview() {
   rvPendingLeft = false;
   const pStage = document.getElementById("radio-player-stage");
   const gStage = document.getElementById("radio-gpod-stage");
+  const sStage = document.getElementById("radio-sleep-stage");
   const rStage = document.getElementById("radio-review-stage");
   if (rStage) rStage.classList.add("hidden");
-  if (radioChannel === "gpod" && gStage && GPOD_LIST.length) {
+  if (radioChannel === "sleep" && sStage && typeof SLEEP_LIST !== "undefined" && SLEEP_LIST.length) {
     if (pStage) pStage.classList.add("hidden");
+    if (gStage) gStage.classList.add("hidden");
+    sStage.classList.remove("hidden");
+  } else if (radioChannel === "gpod" && gStage && GPOD_LIST.length) {
+    if (pStage) pStage.classList.add("hidden");
+    if (sStage) sStage.classList.add("hidden");
     gStage.classList.remove("hidden");
   } else if (pStage) {
+    if (gStage) gStage.classList.add("hidden");
+    if (sStage) sStage.classList.add("hidden");
     pStage.classList.remove("hidden");
   }
   setRadioImmersiveChrome(false);
@@ -19017,20 +19837,27 @@ function switchMode(m, autoPlayRadio) {
     ensureRadioReady();
     updateRadioReviewEntryBadge();
     renderRadioSubnav();
-    if (radioChannel === "gpod" && GPOD_LIST.length && !radioReviewOpen) {
-      const pStage = document.getElementById("radio-player-stage");
-      const gStage = document.getElementById("radio-gpod-stage");
+    const pStage = document.getElementById("radio-player-stage");
+    const gStage = document.getElementById("radio-gpod-stage");
+    const sStage = document.getElementById("radio-sleep-stage");
+    if (radioChannel === "sleep" && typeof SLEEP_LIST !== "undefined" && SLEEP_LIST.length && !radioReviewOpen) {
+      if (pStage) pStage.classList.add("hidden");
+      if (gStage) gStage.classList.add("hidden");
+      if (sStage) sStage.classList.remove("hidden");
+      renderSleepStage();
+    } else if (radioChannel === "gpod" && GPOD_LIST.length && !radioReviewOpen) {
       if (pStage) pStage.classList.add("hidden");
       if (gStage) gStage.classList.remove("hidden");
+      if (sStage) sStage.classList.add("hidden");
       renderGpodStage();
     } else {
       if (!radioReviewOpen) {
-        const pStage = document.getElementById("radio-player-stage");
-        const gStage = document.getElementById("radio-gpod-stage");
         if (pStage) pStage.classList.remove("hidden");
         if (gStage) gStage.classList.add("hidden");
+        if (sStage) sStage.classList.add("hidden");
       }
-      if (!radioReviewOpen && autoPlayRadio && radioPlayer.paused && (!gpodPlayer || gpodPlayer.paused)) {
+      const sleepBusy = typeof sleepPlayer !== "undefined" && !sleepPlayer.paused;
+      if (!radioReviewOpen && autoPlayRadio && radioPlayer.paused && (!gpodPlayer || gpodPlayer.paused) && !sleepBusy) {
         toggleRadioPlay(true);
       } else {
         syncRadioUI();
@@ -24997,6 +25824,7 @@ function pauseNonClinicAudio() {
     }
   } catch (e) {}
   try { if (typeof pauseGpodSilently === "function") pauseGpodSilently(); } catch (e) {}
+  try { if (typeof pauseSleepSilently === "function") pauseSleepSilently(); } catch (e) {}
 }
 
 function openBlackboardClinic(clinicId, opts) {
@@ -31630,11 +32458,70 @@ if (gpods37.length > 0) {
   }
   sb.closeRadioReview();
 }
+
+// Self-test 42 (v100): Gentle Japanese Bedtime Story Sanctuary ("睡前故事" · Optional · Zero Check-in · 7-channel mutex)
+if (Array.isArray(vm.runInNewContext('SLEEP_LIST', sb)) && vm.runInNewContext('SLEEP_LIST.length', sb) > 0) {
+  const ensoBefore = (els['enso-trio'] && els['enso-trio'].innerHTML) || '';
+  const obBefore = sb.loadOutbox().length;
+  sb.switchMode('radio', false);
+  sb.switchRadioChannel('sleep');
+  if (vm.runInNewContext('radioChannel', sb) !== 'sleep') {
+    throw new Error('Self-test 42 failed: switchRadioChannel(sleep) did not activate sleep channel');
+  }
+  if (!els['radio-sleep-stage'] || els['radio-sleep-stage'].classList.contains('hidden')) {
+    throw new Error('Self-test 42 failed: #radio-sleep-stage remained hidden on sleep channel');
+  }
+  if (!(els['sleep-title-ja'] && els['sleep-title-ja'].textContent.trim().length > 0)) {
+    throw new Error('Self-test 42 failed: sleep-title-ja empty after renderSleepStage');
+  }
+  if ((els['sleep-timer-btn'] && els['sleep-timer-btn'].textContent) !== '播完停') {
+    throw new Error('Self-test 42 failed: sleep timer should default to 播完停');
+  }
+  sb.cycleSleepTimer();
+  if ((els['sleep-timer-btn'] && els['sleep-timer-btn'].textContent) !== '15分') {
+    throw new Error('Self-test 42 failed: cycleSleepTimer step 1 should show 15分');
+  }
+  sb.cycleSleepTimer();
+  sb.cycleSleepTimer();
+  if ((els['sleep-timer-btn'] && els['sleep-timer-btn'].textContent) !== '播完停') {
+    throw new Error('Self-test 42 failed: cycleSleepTimer did not wrap back to 播完停');
+  }
+  if (!els['sleep-veil-ja'] || !els['sleep-veil-ja'].classList.contains('hidden')) {
+    throw new Error('Self-test 42 failed: whisper veil must default hidden so bedroom stays calm');
+  }
+  sb.toggleSleepVeil();
+  if (els['sleep-veil-ja'].classList.contains('hidden') || !els['sleep-veil-ja'].textContent.trim()) {
+    throw new Error('Self-test 42 failed: toggleSleepVeil did not reveal current Japanese sentence');
+  }
+  sb.toggleSleepVeil();
+  sb.openSleepLibrarySheet();
+  const sLibHtml = (els['modal-content'] && els['modal-content'].innerHTML) || '';
+  if (!sLibHtml.includes('睡前故事集') || !sLibHtml.includes('随时可听')) {
+    throw new Error('Self-test 42 failed: openSleepLibrarySheet missing expected library header');
+  }
+  sb.closeModal();
+  sb.toggleSleepPlay(true);
+  if (vm.runInNewContext('activeAudioChannel', sb) !== 'sleep') {
+    throw new Error('Self-test 42 failed: toggleSleepPlay did not claim activeAudioChannel=sleep');
+  }
+  sb.toggleRadioPlay(true);
+  if (!vm.runInNewContext('sleepPlayer.paused', sb)) {
+    throw new Error('Self-test 42 failed: toggleRadioPlay did not pause sleepPlayer');
+  }
+  sb.toggleRadioPlay(false);
+  if (sb.loadOutbox().length !== obBefore) {
+    throw new Error('Self-test 42 failed: optional bedtime story must NEVER push study telemetry to outbox');
+  }
+  if (ensoBefore && els['enso-trio'] && els['enso-trio'].innerHTML !== ensoBefore) {
+    throw new Error('Self-test 42 failed: optional bedtime story must NEVER modify daily Enso check-in rings');
+  }
+  sb.switchRadioChannel('daily');
+}
 """
     subprocess.run(["node", "-", HTML_PATH], input=smoke_js, text=True, check=True)
 
 sw_path = os.path.join(BASE_DIR, "sw.js")
-SW_CACHE_NAME = "n3-studio-tutor-v99"
+SW_CACHE_NAME = "n3-studio-tutor-v100"
 if not _IS_SIM_OUTPUT and os.path.exists(sw_path):
     with open(sw_path, encoding="utf-8") as sf:
         sw_src = sf.read()
