@@ -11,7 +11,7 @@ grammar intuition mini-podcasts for unfamiliar, confusing, and newly unlocked gr
   * X (许子东): zh-CN-YunjianNeural, right pan (+0.22)
   * Native Tokyo Japanese sentences: ja-JP-KeitaNeural (-10% crisp listening pace + 0.24s breath)
   * Equal-power stereo soundstage + subtle early room reflections + WordGuard boundary protection
-  * Short 2.4s authentic 《锵锵》 opening stinger (car-friendly continuous auto-advance)
+  * Zero opening stinger/intro music: WenTao starts speaking directly (clean 0.06s Bluetooth lead-in)
 - Hand-crafted scripts for all 19 current unfamiliar ("陌生") N3 grammar points
 - Daily batch auto-authoring for remaining confusing ("易混") N3 points & daily new N2/N1 syllabus points
 - 100% Zero-PII public study module.
@@ -49,7 +49,7 @@ STATE_PATH = os.path.join(BASE_DIR, "n3_live_state.json")
 SNAP_PATH = os.path.join(BASE_DIR, "cloud_state_snapshot.json")
 PT_TZ = datetime.timezone(datetime.timedelta(hours=-8))
 
-POD_ENGINE_VER = "gpod_v2_qq_real_pace"
+POD_ENGINE_VER = "gpod_v3_qq_real_pace_no_intro"
 
 # ---------------------------------------------------------------------------
 # 19 Hand-Crafted Broadcast-Grade 《锵锵三人行》 Mini-Podcast Scripts (~2:00-2:50 each)
@@ -564,38 +564,6 @@ def _format_mmss(sec: float) -> str:
     return f"{s // 60}:{s % 60:02d}"
 
 
-def _load_qq_short_stinger(gdr) -> "np.ndarray | None":
-    """Extract a crisp 2.35s authentic 《锵锵》 opening stinger from audio/qq_real_intro.wav."""
-    if np is None:
-        return None
-    for cand in (
-        os.path.join(BASE_DIR, "audio", "qq_real_intro.wav"),
-        os.path.join(BASE_DIR, "audio", "qq_sting.mp3"),
-    ):
-        if os.path.exists(cand) and os.path.getsize(cand) > 4000:
-            try:
-                pcm = gdr.decode_to_pcm_f32(cand, trim_speech=False)
-                if pcm is None or len(pcm) < int(gdr.SR * 0.8):
-                    continue
-                target_n = min(len(pcm), int(gdr.SR * 2.45))
-                clip = pcm[:target_n].copy()
-                # Smooth fade-in (40ms) and gentle broadcast fade-out under WenTao's entrance (last 0.95s)
-                fi = min(int(gdr.SR * 0.04), len(clip) // 4)
-                fo = min(int(gdr.SR * 0.95), len(clip) // 2)
-                if fi > 4:
-                    clip[:fi] *= np.linspace(0.0, 1.0, fi, dtype=np.float32)
-                if fo > 8:
-                    clip[-fo:] *= np.linspace(1.0, 0.0, fo, dtype=np.float32) ** 1.4
-                # Normalize stinger softly to -16 dB relative to voice so it feels classy in the car
-                rms = float(np.sqrt(np.mean(clip * clip) + 1e-12))
-                if rms > 1e-5:
-                    clip *= min(0.22 / rms, 1.6)
-                return clip.astype(np.float32)
-            except Exception:
-                continue
-    return None
-
-
 def _render_mp3_64k(mixer, out_mp3: str, sr: int = 24000) -> float:
     """Render stereo studio timeline to crisp 64kbps voice MP3 (~1MB per 2.2 min episode)."""
     total_n = max(1, mixer.max_written)
@@ -825,12 +793,9 @@ async def synth_one_grammar_pod(
                 if arr is not None and len(arr) > 0:
                     clip_pcm[key] = arr
 
-        # Stage 3: Mix into stereo StudioTimelineMixer with gentle 《锵锵》 opening stinger
+        # Stage 3: Mix into stereo StudioTimelineMixer with zero opening stinger (direct voice entry)
         mixer = gdr.StudioTimelineMixer(est_minutes=4.0, stereo=True)
-        if stinger_pcm is not None and len(stinger_pcm) > 0:
-            mixer.place_at(0.0, stinger_pcm, gain=0.82, pan=0.0, room_glue=False)
-            # WenTao comes in smoothly right as the stinger begins fading out (1.45s)
-            mixer.advance(1.45)
+        mixer.advance(0.06)
 
         pending_latch = 0.0
         prev_was_ja = False
@@ -1195,7 +1160,7 @@ async def build_grammar_pods_async(
                 if not dry_test
                 else {"W": ("W", "+7%", "-2Hz")}
             )
-            stinger_pcm = None if dry_test else _load_qq_short_stinger(gdr)
+            stinger_pcm = None
             sem = asyncio.Semaphore(6)
             for idx, (pod, sig, fpath) in enumerate(need_synth, 1):
                 dur = await synth_one_grammar_pod(pod, gdr, voice_map, stinger_pcm, sem, fpath, dry_test=dry_test)

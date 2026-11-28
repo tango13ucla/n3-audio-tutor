@@ -30218,7 +30218,7 @@ if (gpods37.length > 0) {
     subprocess.run(["node", "-", HTML_PATH], input=smoke_js, text=True, check=True)
 
 sw_path = os.path.join(BASE_DIR, "sw.js")
-SW_CACHE_NAME = "n3-studio-tutor-v95"
+SW_CACHE_NAME = "n3-studio-tutor-v96"
 if not _IS_SIM_OUTPUT and os.path.exists(sw_path):
     with open(sw_path, encoding="utf-8") as sf:
         sw_src = sf.read()

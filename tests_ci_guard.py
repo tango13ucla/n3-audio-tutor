@@ -2061,12 +2061,18 @@ def test_v47_real_qiangqiang_pace_guard() -> None:
         rm = json.loads(rm_path.read_text(encoding="utf-8"))
         if str(rm.get("date") or "") >= "2026-11-27":
             assert str(rm.get("radio_ver") or "").startswith("v47_"), f"daily_radio_meta.json not on v47 real-pace: {rm.get('radio_ver')}"
-    assert ggp.POD_ENGINE_VER == "gpod_v2_qq_real_pace", f"Unexpected POD_ENGINE_VER: {ggp.POD_ENGINE_VER}"
+    assert ggp.POD_ENGINE_VER == "gpod_v3_qq_real_pace_no_intro", f"Unexpected POD_ENGINE_VER: {ggp.POD_ENGINE_VER}"
+    ggp_src = (BASE_DIR / "generate_grammar_pods.py").read_text(encoding="utf-8")
+    assert "_load_qq_short_stinger" not in ggp_src and "qq_real_intro" not in ggp_src and "qq_sting" not in ggp_src, (
+        "Regression: grammar mini-podcasts MUST NOT include an opening stinger/intro sound!"
+    )
     gmf_path = BASE_DIR / "audio" / "grammar_pods" / "manifest.json"
     if gmf_path.exists():
         gmf = json.loads(gmf_path.read_text(encoding="utf-8"))
-        assert gmf.get("version") == "gpod_v2_qq_real_pace", f"grammar_pods manifest not rebuilt on gpod_v2_qq_real_pace: {gmf.get('version')}"
-    print(f"[PASS 30/30] v47 real-Qiangqiang calibrated pace (W={vmap['W_MID'][1]}, D={vmap['D_MID'][1]}, X={vmap['X_MID'][1]}, 3 distinct zero-fail voices & relaxed cadence) verified!")
+        assert gmf.get("version") == "gpod_v3_qq_real_pace_no_intro", (
+            f"grammar_pods manifest not rebuilt on gpod_v3_qq_real_pace_no_intro: {gmf.get('version')}"
+        )
+    print(f"[PASS 30/30] v47 real-Qiangqiang calibrated pace + zero-intro grammar pods (W={vmap['W_MID'][1]}, D={vmap['D_MID'][1]}, X={vmap['X_MID'][1]}, 3 distinct zero-fail voices & relaxed cadence) verified!")
 
 
 def test_v48_additive_daily_jp_news_45m_guard() -> None:
