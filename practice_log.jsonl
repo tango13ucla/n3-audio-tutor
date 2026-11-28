@@ -2077,3 +2077,13 @@
 {"id": "TUTOR_USE:TM-0bf0e3", "point": "はっきり", "choice": "真人课实战已用出", "correct": "true", "ask_again": "false", "ts": "2026-11-27T08:08:59.000Z"}
 {"id": "TUTOR_USE:TM-0d1099", "point": "からから", "choice": "真人课实战已用出", "correct": "true", "ask_again": "false", "ts": "2026-11-27T08:09:01.000Z"}
 {"id": "VAR9-09", "point": "〜させてもらう", "choice": "させてくれ", "correct": "false", "ask_again": "false", "ts": "2026-11-27T18:20:23.000Z"}
+{"id": "RV:RVW-あかじ", "point": "赤字", "choice": "听后复盘:过", "correct": "true", "ask_again": "false", "ts": "2026-11-27T20:29:12.000Z"}
+{"id": "RV:RVR-N3-G33", "point": "〜しかない", "choice": "听后复盘:过", "correct": "true", "ask_again": "false", "ts": "2026-11-27T20:29:16.000Z"}
+{"id": "RV:RVR-N3-G47", "point": "ところだった", "choice": "听后复盘:过", "correct": "true", "ask_again": "false", "ts": "2026-11-27T20:33:27.000Z"}
+{"id": "RV:RVW-きき", "point": "危機", "choice": "听后复盘:过", "correct": "true", "ask_again": "false", "ts": "2026-11-27T21:27:15.000Z"}
+{"id": "RV:RVR-N3-G123", "point": "〜させてもらう", "choice": "听后复盘:过", "correct": "true", "ask_again": "false", "ts": "2026-11-27T21:27:38.000Z"}
+{"id": "RV:RVR-N3-G80", "point": "〜きり", "choice": "听后复盘:过", "correct": "true", "ask_again": "false", "ts": "2026-11-27T21:27:42.000Z"}
+{"id": "RV:RVR-N3-G45", "point": "〜ながらも", "choice": "听后复盘:过", "correct": "true", "ask_again": "false", "ts": "2026-11-27T21:27:48.000Z"}
+{"id": "RV:RVR-N3-G74", "point": "〜によると／によれば", "choice": "听后复盘:过", "correct": "true", "ask_again": "false", "ts": "2026-11-27T21:27:50.000Z"}
+{"id": "SPK:SPK-N3-G47", "point": "ところだった", "choice": "开口:自然达标", "correct": "true", "ask_again": "false", "ts": "2026-11-27T21:28:08.000Z"}
+{"id": "SPK:SPK-N3-G123", "point": "〜させてもらう", "choice": "开口:自然达标", "correct": "true", "ask_again": "false", "ts": "2026-11-27T21:28:18.000Z"}
