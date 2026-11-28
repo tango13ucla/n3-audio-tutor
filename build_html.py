@@ -2463,6 +2463,16 @@ html = r"""<!DOCTYPE html>
     /* Unified Pan-CJK Kyoto Zen Retreat Typography (一砚墨 · Noto Sans JP + SC 300/400/500) */
     --sans: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", -apple-system, BlinkMacSystemFont, sans-serif;
     --sans-jp: "Noto Sans JP", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans SC", -apple-system, BlinkMacSystemFont, sans-serif;
+    /* Living Kyoto Blackboard (Single-Focus Zen Stage: Warm Stone-Washi Day / Deep Matte Slate Night) */
+    --kb-surface: #EFECE3;
+    --kb-border: rgba(28, 27, 24, 0.08);
+    --kb-divider: rgba(28, 27, 24, 0.09);
+    --kb-ink: #1C1B18;
+    --kb-ink-2: #48443C;
+    --kb-ink-3: #847E72;
+    --kb-red: #A43B32;
+    --kb-moss: #2B5F49;
+    --kb-ochre: #9A6B2C;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -2489,6 +2499,15 @@ html = r"""<!DOCTYPE html>
       --cta-fg: #F2EDE3;
       --cta-border: rgba(234, 229, 218, 0.22);
       --cta-hover: #33312C;
+      --kb-surface: #151715;
+      --kb-border: rgba(234, 229, 218, 0.09);
+      --kb-divider: rgba(234, 229, 218, 0.11);
+      --kb-ink: #F3EFE7;
+      --kb-ink-2: #C8C2B6;
+      --kb-ink-3: #8E887C;
+      --kb-red: #EA8F7E;
+      --kb-moss: #7EC39C;
+      --kb-ochre: #E1B773;
     }
   }
 
@@ -4187,7 +4206,7 @@ html = r"""<!DOCTYPE html>
   .radio-pin-pill.is-pinned {
     border-color: var(--moss);
     color: var(--moss);
-    background: var(--moss-tint);
+    background: var(--moss-soft);
   }
   .step-time-btn {
     height: 46px;
@@ -5193,8 +5212,8 @@ html = r"""<!DOCTYPE html>
   .mp-choice-btn.is-right { background: var(--moss-soft); border-color: var(--moss-border); }
   .mp-choice-btn.is-wrong { border-color: var(--bengara); }
   .mp-choice-num { font-size: 11px; color: var(--ink-3); letter-spacing: 0.08em; }
-  .mp-choice-ja { font-family: var(--ja-sans); font-size: 20px; font-weight: 400; color: var(--sumi); line-height: 1.25; }
-  .mp-choice-kana { font-family: var(--ja-sans); font-size: 12px; color: var(--ink-3); }
+  .mp-choice-ja { font-family: var(--sans-jp); font-size: 20px; font-weight: 400; color: var(--sumi); line-height: 1.25; }
+  .mp-choice-kana { font-family: var(--sans-jp); font-size: 12px; color: var(--ink-3); }
   .mp-choice-zh { font-size: 12px; color: var(--ink-2); }
   .mp-pitch-svg { display: block; margin: 2px auto 0; height: 14px; color: var(--ink-2); }
   .slip-cue-bal { max-width: 310px; margin-left: auto; margin-right: auto; text-wrap: balance; }
@@ -5208,7 +5227,7 @@ html = r"""<!DOCTYPE html>
   .slip-reflex-pill.fast { color: var(--moss); }
   .slip-reflex-pill.slow { color: var(--ochre); }
   .mr-passage {
-    font-family: var(--ja-sans);
+    font-family: var(--sans-jp);
     font-size: 15.5px;
     line-height: 1.88;
     color: var(--sumi);
@@ -5217,7 +5236,7 @@ html = r"""<!DOCTYPE html>
     text-wrap: pretty;
   }
   .mr-q-title {
-    font-family: var(--ja-sans);
+    font-family: var(--sans-jp);
     font-size: 14.5px;
     font-weight: 500;
     color: var(--sumi);
@@ -5232,7 +5251,7 @@ html = r"""<!DOCTYPE html>
     border: 1px solid var(--hairline-strong);
     border-radius: 12px;
     padding: 11px 14px;
-    font-family: var(--ja-sans);
+    font-family: var(--sans-jp);
     font-size: 13.5px;
     line-height: 1.55;
     color: var(--sumi);
@@ -5265,8 +5284,8 @@ html = r"""<!DOCTYPE html>
   }
   .tm-row:last-child { border-bottom: none; }
   .tm-main { flex: 1; min-width: 0; }
-  .tm-expr { font-family: var(--ja-sans); font-size: 16px; font-weight: 500; color: var(--sumi); }
-  .tm-starter { font-family: var(--ja-sans); font-size: 13.5px; color: var(--ink-2); margin-top: 4px; line-height: 1.55; }
+  .tm-expr { font-family: var(--sans-jp); font-size: 16px; font-weight: 500; color: var(--sumi); }
+  .tm-starter { font-family: var(--sans-jp); font-size: 13.5px; color: var(--ink-2); margin-top: 4px; line-height: 1.55; }
   .tm-why { font-size: 12px; color: var(--ink-3); margin-top: 3px; line-height: 1.45; }
   .tm-check-btn {
     width: 30px; height: 30px; border-radius: 50%;
@@ -5292,7 +5311,7 @@ html = r"""<!DOCTYPE html>
   .ret432-step.is-cur { color: var(--sumi); border-color: var(--sumi); font-weight: 500; }
   .ret432-step.is-done { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-border); }
   .ret432-timer {
-    font-family: var(--ja-sans);
+    font-family: var(--sans-jp);
     font-size: 46px; font-weight: 300; letter-spacing: 0.04em;
     color: var(--sumi); line-height: 1.1; margin: 10px 0 8px;
   }
@@ -5376,223 +5395,339 @@ html = r"""<!DOCTYPE html>
   }
   .kb-li-btn:active { background: var(--tap-bg); }
   .kb-li-btn b { font-weight: 500; color: var(--sumi); }
-  .kb-head {
+  .kb-top-bar {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 10px;
+    gap: 12px;
+    margin-bottom: 8px;
   }
-  .kb-head-main { flex: 1; min-width: 0; }
   .kb-tag {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    font-size: 11.5px;
-    letter-spacing: 0.08em;
-    color: var(--ink-3);
-    margin-bottom: 3px;
-  }
-  .kb-tag-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ochre); }
-  .kb-title {
-    font-size: 17px;
-    font-weight: 600;
-    color: var(--sumi);
-    line-height: 1.3;
-    text-wrap: balance;
-    margin: 0;
-  }
-  .kb-sub {
-    font-family: var(--ja-sans);
     font-size: 12px;
+    letter-spacing: 0.06em;
     color: var(--ink-3);
-    margin-top: 3px;
-    line-height: 1.42;
-    text-wrap: balance;
   }
+  .kb-tag-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ochre); flex-shrink: 0; }
   .kb-head-acts {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 6px;
     flex-shrink: 0;
   }
-  .kb-pill-btn {
-    height: 28px;
-    padding: 0 9px;
-    border-radius: 999px;
-    border: 1px solid var(--hairline-strong);
+  .kb-quiet-act {
+    padding: 4px 2px;
+    border: none;
     background: transparent;
     color: var(--ink-2);
-    font-size: 11.5px;
+    font-size: 12.5px;
     font-variant-numeric: tabular-nums;
     display: inline-flex;
     align-items: center;
-    justify-content: center;
     cursor: pointer;
     touch-action: manipulation;
     white-space: nowrap;
   }
-  .kb-pill-btn:active { background: var(--tap-bg); color: var(--sumi); }
-  .kb-slate {
-    background: #171B18;
-    color: #F2EEE6;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 14px;
-    padding: 11px;
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  .kb-quiet-act:active { opacity: 0.6; color: var(--sumi); }
+  .kb-act-sep { color: var(--ink-3); opacity: 0.45; font-size: 12px; }
+  .kb-head {
+    margin-bottom: 14px;
   }
-  .kb-step {
-    border-radius: 10px;
-    padding: 9px 10px;
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    background: rgba(255, 255, 255, 0.02);
-    opacity: 0.48;
+  .kb-title {
+    font-size: 19px;
+    font-weight: 500;
+    color: var(--sumi);
+    line-height: 1.32;
+    letter-spacing: 0.01em;
+    text-wrap: balance;
+    margin: 0;
+  }
+  .kb-sub {
+    font-family: var(--sans-jp);
+    font-size: 13px;
+    color: var(--ink-3);
+    margin-top: 4px;
+    line-height: 1.45;
+    text-wrap: pretty;
+  }
+  .kb-tabs {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+    border-bottom: 1px solid var(--hairline);
+    margin-bottom: 14px;
+  }
+  .kb-tab {
+    position: relative;
+    padding: 7px 2px 10px;
+    border: none;
+    background: transparent;
+    color: var(--ink-3);
+    font-size: 13px;
+    font-weight: 400;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
     cursor: pointer;
     touch-action: manipulation;
-    transition: opacity 0.24s ease, border-color 0.24s ease, background 0.24s ease;
-    text-align: left;
-    white-space: normal;
-    display: block;
+    white-space: nowrap;
+    transition: color 0.18s ease;
+  }
+  .kb-tab-num {
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    opacity: 0.58;
+  }
+  .kb-tab.is-drawn { color: var(--ink-2); }
+  .kb-tab.is-active {
+    color: var(--sumi);
+    font-weight: 500;
+  }
+  .kb-tab.is-active .kb-tab-num { opacity: 0.9; }
+  .kb-tab.is-active::after {
+    content: "";
+    position: absolute;
+    left: 16%;
+    right: 16%;
+    bottom: -1px;
+    height: 1.5px;
+    background: var(--sumi);
+    border-radius: 2px;
+  }
+  @keyframes kbSlideIn {
+    from { opacity: 0; transform: translate3d(0, 4px, 0); }
+    to { opacity: 1; transform: translate3d(0, 0, 0); }
+  }
+  .kb-slate {
+    background: var(--kb-surface);
+    color: var(--kb-ink);
+    border: 1px solid var(--kb-border);
+    border-radius: 16px;
+    padding: 22px 20px;
+    min-height: 224px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    touch-action: pan-y;
+  }
+  .kb-step {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
-    overflow: hidden;
+    text-align: left;
+    white-space: normal;
     color: inherit;
+    padding: 0;
+    border: none;
+    background: transparent;
   }
-  .kb-step.is-drawn { opacity: 0.88; }
   .kb-step.is-active {
-    opacity: 1;
-    border-color: rgba(242, 238, 230, 0.36);
-    background: rgba(255, 255, 255, 0.07);
+    display: flex;
+    animation: kbSlideIn 0.2s cubic-bezier(0.22, 1, 0.36, 1);
   }
-  .kb-step-badge {
-    display: inline-block;
-    font-size: 10.5px;
-    letter-spacing: 0.07em;
-    color: #A8A69E;
-    margin-bottom: 4px;
+  .kb-s-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: var(--kb-ink-3);
+    margin-bottom: 10px;
   }
-  .kb-step-badge.red { color: #E27D68; }
-  .kb-step-badge.moss { color: #8AC097; }
+  .kb-s-eyebrow.red { color: var(--kb-red); }
+  .kb-s-eyebrow.moss { color: var(--kb-moss); }
+  .kb-s-eyebrow.ochre { color: var(--kb-ochre); }
+  .kb-s-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--kb-ink-3);
+    flex-shrink: 0;
+  }
+  .kb-s-dot.red { background: var(--kb-red); }
+  .kb-s-dot.moss { background: var(--kb-moss); }
+  .kb-s-dot.ochre { background: var(--kb-ochre); }
   .kb-pitfall-ja {
-    font-family: var(--ja-sans);
-    font-size: 13px;
-    line-height: 1.48;
-    color: #F09887;
-    text-decoration: line-through;
-    text-decoration-thickness: 1.6px;
-    text-decoration-color: #DF6650;
+    font-family: var(--sans-jp);
+    font-size: 17px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--kb-red);
     white-space: normal;
     word-break: break-word;
-    overflow-wrap: anywhere;
+    text-wrap: pretty;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .kb-pitfall-ja.is-prose {
+    font-family: var(--sans);
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.56;
+    color: var(--kb-ink);
+    text-wrap: pretty;
+  }
+  .kb-wrong-line {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+  }
+  .kb-wrong-x {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--kb-red);
+    opacity: 0.85;
+    flex-shrink: 0;
+  }
+  .kb-mini-rule {
+    width: 28px;
+    height: 1px;
+    background: var(--kb-divider);
+    margin: 13px 0;
   }
   .kb-pitfall-why {
-    font-size: 12px;
-    line-height: 1.48;
-    color: #CBC8BF;
-    margin-top: 3px;
+    font-size: 14.5px;
+    line-height: 1.7;
+    color: var(--kb-ink-2);
     white-space: normal;
     text-wrap: pretty;
   }
   .kb-split-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
     width: 100%;
   }
   .kb-split-col {
-    background: rgba(255, 255, 255, 0.035);
-    border-radius: 8px;
-    padding: 7px 8px;
-    border: 1px solid rgba(255, 255, 255, 0.06);
     min-width: 0;
-    overflow: hidden;
+  }
+  .kb-split-col + .kb-split-col {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--kb-divider);
   }
   .kb-split-tag {
-    font-size: 10.5px;
-    letter-spacing: 0.03em;
-    margin-bottom: 3px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    margin-bottom: 5px;
     white-space: normal;
   }
-  .kb-split-tag.left { color: #8AC097; }
-  .kb-split-tag.right { color: #E0B572; }
+  .kb-split-tag.left { color: var(--kb-moss); }
+  .kb-split-tag.right { color: var(--kb-ochre); }
   .kb-split-ja {
-    font-family: var(--ja-sans);
-    font-size: 12.5px;
+    font-family: var(--sans-jp);
+    font-size: 16.5px;
     font-weight: 500;
-    color: #F6F2EA;
-    line-height: 1.4;
+    color: var(--kb-ink);
+    line-height: 1.46;
     white-space: normal;
     word-break: break-word;
-    overflow-wrap: anywhere;
+    text-wrap: pretty;
   }
   .kb-split-zh {
-    font-size: 11.5px;
-    color: #C4C1B8;
-    margin-top: 3px;
-    line-height: 1.42;
+    font-size: 13.5px;
+    color: var(--kb-ink-2);
+    margin-top: 4px;
+    line-height: 1.58;
     white-space: normal;
     text-wrap: pretty;
   }
-  .kb-ex-list { display: flex; flex-direction: column; gap: 6px; }
-  .kb-ex-line { display: flex; align-items: flex-start; gap: 7px; min-width: 0; }
-  .kb-ex-tag {
-    font-size: 10px;
-    padding: 2px 6px;
-    border-radius: 999px;
-    background: rgba(138, 192, 151, 0.16);
-    color: #9BD0A8;
-    flex-shrink: 0;
-    margin-top: 2px;
-    white-space: nowrap;
+  .kb-ex-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
   }
-  .kb-ex-body { flex: 1; min-width: 0; }
+  .kb-ex-line {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .kb-ex-line + .kb-ex-line {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--kb-divider);
+  }
+  .kb-ex-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--kb-moss);
+    margin-bottom: 5px;
+  }
   .kb-ex-ja {
-    font-family: var(--ja-sans);
-    font-size: 13px;
-    color: #F6F2EA;
-    line-height: 1.45;
+    font-family: var(--sans-jp);
+    font-size: 16.5px;
+    font-weight: 400;
+    color: var(--kb-ink);
+    line-height: 1.52;
     white-space: normal;
     word-break: break-word;
-    overflow-wrap: anywhere;
+    text-wrap: pretty;
   }
   .kb-ex-zh {
-    font-size: 11.5px;
-    color: #B9B6AE;
-    line-height: 1.4;
-    margin-top: 1px;
+    font-size: 13.5px;
+    color: var(--kb-ink-2);
+    line-height: 1.52;
+    margin-top: 4px;
     white-space: normal;
+    text-wrap: pretty;
   }
   .kb-rule-txt {
-    font-size: 12.5px;
-    line-height: 1.5;
-    color: #EDF3EE;
+    font-size: 17px;
+    line-height: 1.76;
+    color: var(--kb-ink);
     font-weight: 500;
     white-space: normal;
     text-wrap: pretty;
   }
   .kb-voice-strip {
-    margin-top: 10px;
-    padding: 9px 11px;
-    border-radius: 12px;
-    border: 1px solid var(--hairline);
-    background: var(--sheet);
+    margin-top: 12px;
+    padding: 0 2px;
+  }
+  .kb-prog-hit {
+    padding: 8px 0 9px;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .kb-prog-track {
+    height: 2.5px;
+    border-radius: 999px;
+    background: var(--hairline-strong);
+    overflow: hidden;
+  }
+  .kb-prog-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--moss);
+    transition: width 0.15s linear;
   }
   .kb-voice-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    margin-bottom: 5px;
+    margin-bottom: 6px;
   }
   .kb-spk-pill {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    font-size: 11.5px;
+    font-size: 12px;
     font-weight: 500;
     color: var(--sumi);
   }
@@ -5603,46 +5738,33 @@ html = r"""<!DOCTYPE html>
   .kb-spk-dot.teacher { background: var(--moss); }
   .kb-spk-dot.ja { background: var(--bengara); }
   .kb-time-lbl {
-    font-size: 11.5px;
+    font-size: 12px;
     color: var(--ink-3);
     font-variant-numeric: tabular-nums;
   }
   .kb-caption {
-    font-size: 13px;
-    line-height: 1.52;
+    font-size: 14px;
+    line-height: 1.62;
     color: var(--ink-2);
-    min-height: 38px;
+    min-height: 46px;
     white-space: normal;
     text-wrap: pretty;
     word-break: break-word;
-  }
-  .kb-prog-track {
-    height: 2px;
-    border-radius: 999px;
-    background: var(--hairline);
-    margin-top: 7px;
-    overflow: hidden;
-  }
-  .kb-prog-fill {
-    height: 100%;
-    width: 0%;
-    background: var(--moss);
-    transition: width 0.15s linear;
   }
   .kb-ctrl-row {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-top: 10px;
+    margin-top: 14px;
   }
   .kb-play-btn {
     flex: 1;
-    height: 44px;
+    height: 46px;
     border-radius: 12px;
-    border: 1px solid var(--sumi);
-    background: var(--sumi);
-    color: var(--washi);
-    font-size: 14px;
+    border: 1px solid var(--cta-border);
+    background: var(--cta-bg);
+    color: var(--cta-fg);
+    font-size: 14.5px;
     font-weight: 500;
     letter-spacing: 0.04em;
     display: inline-flex;
@@ -5651,7 +5773,9 @@ html = r"""<!DOCTYPE html>
     gap: 6px;
     cursor: pointer;
     touch-action: manipulation;
+    transition: opacity 0.15s ease, background 0.18s ease, border-color 0.18s ease;
   }
+  .kb-play-btn:active { opacity: 0.84; }
   .kb-play-btn.is-done {
     background: var(--moss-soft);
     border-color: var(--moss-border);
@@ -5659,40 +5783,52 @@ html = r"""<!DOCTYPE html>
   }
   .kb-cat-tabs {
     display: flex;
-    gap: 6px;
-    margin: 8px 0 10px;
+    gap: 18px;
+    border-bottom: 1px solid var(--hairline);
+    margin: 10px 0 6px;
   }
   .kb-cat-tab {
-    flex: 1;
-    height: 32px;
-    border-radius: 999px;
-    border: 1px solid var(--hairline-strong);
+    position: relative;
+    padding: 7px 0 9px;
+    border: none;
     background: transparent;
-    color: var(--ink-2);
-    font-size: 12px;
+    color: var(--ink-3);
+    font-size: 13.5px;
     cursor: pointer;
     touch-action: manipulation;
+    white-space: nowrap;
   }
   .kb-cat-tab.on {
-    background: var(--sumi);
-    border-color: var(--sumi);
-    color: var(--washi);
+    color: var(--sumi);
     font-weight: 500;
+  }
+  .kb-cat-tab.on::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 1.5px;
+    background: var(--sumi);
+    border-radius: 2px;
   }
   .kb-cat-list {
     display: flex;
     flex-direction: column;
     max-height: 52dvh;
     overflow-y: auto;
+    padding-bottom: 12px;
     scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 22px), transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 22px), transparent 100%);
   }
   .kb-cat-list::-webkit-scrollbar { display: none; }
   .kb-cat-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
-    padding: 11px 2px;
+    gap: 12px;
+    padding: 13px 2px;
     border-bottom: 1px solid var(--hairline);
     text-align: left;
     white-space: normal;
@@ -5706,16 +5842,32 @@ html = r"""<!DOCTYPE html>
   }
   .kb-cat-row:last-child { border-bottom: none; }
   .kb-cat-main { flex: 1; min-width: 0; }
-  .kb-cat-title { font-size: 14px; font-weight: 500; color: var(--sumi); }
-  .kb-cat-sub { font-family: var(--ja-sans); font-size: 12px; color: var(--ink-3); margin-top: 2px; white-space: normal; }
-  .kb-cat-dur { font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums; flex-shrink: 0; }
+  .kb-cat-title { font-size: 15px; font-weight: 500; color: var(--sumi); line-height: 1.38; }
+  .kb-cat-sub { font-family: var(--sans-jp); font-size: 12.5px; color: var(--ink-3); margin-top: 3px; line-height: 1.45; white-space: normal; }
+  .kb-cat-dur { font-size: 12.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; flex-shrink: 0; }
   .kb-cat-dur.done { color: var(--moss); font-weight: 500; }
-  @media (max-height: 720px) {
-    .kb-slate { padding: 9px; gap: 6px; }
-    .kb-step { padding: 7px 9px; }
-    .kb-voice-strip { margin-top: 8px; padding: 8px 10px; }
-    .kb-caption { font-size: 12.5px; min-height: 34px; }
-    .kb-ctrl-row { margin-top: 8px; }
+  @media (max-height: 700px) {
+    .kb-top-bar { margin-bottom: 5px; }
+    .kb-head { margin-bottom: 8px; }
+    .kb-title { font-size: 17px; }
+    .kb-sub { font-size: 12px; margin-top: 2px; }
+    .kb-tabs { margin-bottom: 8px; }
+    .kb-tab { padding: 5px 2px 8px; font-size: 12.5px; }
+    .kb-slate { padding: 15px 15px; min-height: 168px; }
+    .kb-s-eyebrow { margin-bottom: 7px; }
+    .kb-pitfall-ja { font-size: 15.5px; gap: 4px; }
+    .kb-pitfall-ja.is-prose { font-size: 15px; }
+    .kb-mini-rule { margin: 10px 0; }
+    .kb-pitfall-why { font-size: 13.5px; line-height: 1.6; }
+    .kb-split-ja, .kb-ex-ja, .kb-rule-txt { font-size: 15.5px; }
+    .kb-split-zh, .kb-ex-zh { font-size: 13px; line-height: 1.48; }
+    .kb-split-col + .kb-split-col, .kb-ex-line + .kb-ex-line { margin-top: 10px; padding-top: 10px; }
+    .kb-voice-strip { margin-top: 6px; }
+    .kb-prog-hit { padding: 6px 0 6px; }
+    .kb-voice-top { margin-bottom: 4px; }
+    .kb-caption { font-size: 13px; line-height: 1.5; min-height: 36px; }
+    .kb-ctrl-row { margin-top: 10px; }
+    .kb-play-btn { height: 42px; }
   }
 
   @keyframes rvAudioPulse {
@@ -23519,11 +23671,21 @@ function findClinicForQuiz(p, q) {
   return findClinicForText(idStr, headStr, modHint);
 }
 
+let clinicPendingSeekSec = null;
+let clinicPendingSeekStep = null;
+
 function ensureClinicAudio() {
   if (clinicAudioEl) return clinicAudioEl;
   if (typeof Audio !== "function") return null;
   const a = new Audio();
   a.preload = "auto";
+  const applyPendingSeek = () => {
+    if (clinicPendingSeekSec !== null && (typeof a.readyState === "undefined" || a.readyState >= 1)) {
+      try { a.currentTime = clinicPendingSeekSec; } catch (e) {}
+    }
+  };
+  a.addEventListener("loadedmetadata", applyPendingSeek);
+  a.addEventListener("canplay", applyPendingSeek);
   a.addEventListener("timeupdate", () => syncClinicPlaybackUI(false));
   a.addEventListener("play", () => {
     clinicPlaying = true;
@@ -23535,6 +23697,8 @@ function ensureClinicAudio() {
   });
   a.addEventListener("ended", () => {
     clinicPlaying = false;
+    clinicPendingSeekSec = null;
+    clinicPendingSeekStep = null;
     if (activeClinicId) {
       markClinicDone(activeClinicId);
       const c = CLINIC_BY_ID[activeClinicId];
@@ -23562,50 +23726,94 @@ function formatClinicSec(sec) {
   return `${m}:${r < 10 ? "0" : ""}${r}`;
 }
 
+function getClinicStepShortLabel(st, pack, idx) {
+  if (!st) return String(idx + 1);
+  if (st.kind === "pitfall") {
+    if (pack === "leech") return "卡点";
+    if (pack === "listening") return "陷阱";
+    return "踩坑";
+  }
+  if (st.kind === "split") return "拆解";
+  if (st.kind === "example") return "例句";
+  return "口诀";
+}
+
 function renderBlackboardStepHTML(st, idx) {
   if (!st) return "";
   const stateCls = idx === clinicCurStep ? " is-active" : (idx < clinicCurStep ? " is-drawn" : "");
   if (st.kind === "pitfall") {
-    return `<button type="button" class="kb-step${stateCls}" data-kb-step="${idx}" onclick="seekClinicToStep(${idx})">
-      <span class="kb-step-badge red">${escapeHtml(st.badge || "常踩坑")}</span>
-      <div class="kb-pitfall-ja" lang="ja">${escapeHtml(st.wrong_ja || "")}</div>
+    const rawWrong = String(st.wrong_ja || "").trim();
+    const isWrongJa = rawWrong.startsWith("×");
+    let headHTML = "";
+    if (isWrongJa) {
+      const parts = rawWrong.split(/\s*\/\s*(?=×)/).map(s => s.replace(/^×\s*/, "").trim()).filter(Boolean);
+      const lines = (parts.length ? parts : [rawWrong.replace(/^×\s*/, "")]).map(ln => `
+        <div class="kb-wrong-line"><span class="kb-wrong-x" aria-hidden="true">×</span><span lang="ja">${escapeHtml(ln)}</span></div>
+      `).join("");
+      headHTML = `<div class="kb-pitfall-ja">${lines}</div>`;
+    } else {
+      headHTML = `<div class="kb-pitfall-ja is-prose">${escapeHtml(rawWrong)}</div>`;
+    }
+    return `<div class="kb-step${stateCls}" data-kb-step="${idx}">
+      <div class="kb-s-eyebrow red"><span class="kb-s-dot red"></span><span>${escapeHtml(st.badge || "常踩坑")}</span></div>
+      ${headHTML}
+      <div class="kb-mini-rule" aria-hidden="true"></div>
       <div class="kb-pitfall-why">${escapeHtml(st.why_zh || "")}</div>
-    </button>`;
+    </div>`;
   }
   if (st.kind === "split") {
-    return `<button type="button" class="kb-step${stateCls}" data-kb-step="${idx}" onclick="seekClinicToStep(${idx})">
+    return `<div class="kb-step${stateCls}" data-kb-step="${idx}">
       <div class="kb-split-grid">
         <div class="kb-split-col">
-          <div class="kb-split-tag left">${escapeHtml(st.left_tag || "")}</div>
+          <div class="kb-split-tag left"><span class="kb-s-dot moss"></span><span>${escapeHtml(st.left_tag || "")}</span></div>
           <div class="kb-split-ja" lang="ja">${escapeHtml(st.left_ja || "")}</div>
           <div class="kb-split-zh">${escapeHtml(st.left_zh || "")}</div>
         </div>
         <div class="kb-split-col">
-          <div class="kb-split-tag right">${escapeHtml(st.right_tag || "")}</div>
+          <div class="kb-split-tag right"><span class="kb-s-dot ochre"></span><span>${escapeHtml(st.right_tag || "")}</span></div>
           <div class="kb-split-ja" lang="ja">${escapeHtml(st.right_ja || "")}</div>
           <div class="kb-split-zh">${escapeHtml(st.right_zh || "")}</div>
         </div>
       </div>
-    </button>`;
+    </div>`;
   }
   if (st.kind === "example") {
     const linesHTML = (st.lines || []).map(ln => `
       <div class="kb-ex-line">
-        <span class="kb-ex-tag">${escapeHtml(ln.tag || "例")}</span>
-        <div class="kb-ex-body">
-          <div class="kb-ex-ja" lang="ja">${escapeHtml(ln.ja || "")}</div>
-          <div class="kb-ex-zh">${escapeHtml(ln.zh || "")}</div>
-        </div>
+        <div class="kb-ex-tag"><span class="kb-s-dot moss"></span><span>${escapeHtml(ln.tag || "例句")}</span></div>
+        <div class="kb-ex-ja" lang="ja">${escapeHtml(ln.ja || "")}</div>
+        <div class="kb-ex-zh">${escapeHtml(ln.zh || "")}</div>
       </div>`).join("");
-    return `<button type="button" class="kb-step${stateCls}" data-kb-step="${idx}" onclick="seekClinicToStep(${idx})">
-      <span class="kb-step-badge moss">${escapeHtml(st.badge || "考场对照")}</span>
+    return `<div class="kb-step${stateCls}" data-kb-step="${idx}">
       <div class="kb-ex-list">${linesHTML}</div>
-    </button>`;
+    </div>`;
   }
-  return `<button type="button" class="kb-step${stateCls}" data-kb-step="${idx}" onclick="seekClinicToStep(${idx})">
-    <span class="kb-step-badge moss">${escapeHtml(st.badge || "一秒定胜负")}</span>
+  return `<div class="kb-step${stateCls}" data-kb-step="${idx}">
+    <div class="kb-s-eyebrow moss"><span class="kb-s-dot moss"></span><span>${escapeHtml(st.badge || "一秒定胜负")}</span></div>
     <div class="kb-rule-txt">${escapeHtml(st.rule_zh || "")}</div>
-  </button>`;
+  </div>`;
+}
+
+let kbTouchStartX = 0;
+let kbTouchStartY = 0;
+
+function onClinicSlateTouchStart(ev) {
+  const t = ev && ev.changedTouches && ev.changedTouches[0];
+  if (!t) return;
+  kbTouchStartX = t.clientX;
+  kbTouchStartY = t.clientY;
+}
+
+function onClinicSlateTouchEnd(ev) {
+  const t = ev && ev.changedTouches && ev.changedTouches[0];
+  const c = CLINIC_BY_ID[activeClinicId];
+  if (!t || !c || !Array.isArray(c.board_steps)) return;
+  const dx = t.clientX - kbTouchStartX;
+  const dy = t.clientY - kbTouchStartY;
+  if (Math.abs(dx) < 42 || Math.abs(dx) < Math.abs(dy) * 1.4) return;
+  const total = c.board_steps.length;
+  const nextIdx = dx < 0 ? Math.min(total - 1, clinicCurStep + 1) : Math.max(0, clinicCurStep - 1);
+  if (nextIdx !== clinicCurStep) seekClinicToStep(nextIdx);
 }
 
 function renderBlackboardClinicModal(clinic) {
@@ -23615,28 +23823,37 @@ function renderBlackboardClinicModal(clinic) {
   const initCue = cues[clinicCurCueIdx] || cues[0] || { spk: "partner", label: "搭档", text: "" };
   const spkCls = initCue.spk === "teacher" ? "teacher" : ((initCue.spk === "ja_m" || initCue.spk === "ja_f") ? "ja" : "");
   const doneNow = isClinicDone(clinic.id);
-  const stepsHTML = (clinic.board_steps || []).map((st, i) => renderBlackboardStepHTML(st, i)).join("");
+  const steps = Array.isArray(clinic.board_steps) ? clinic.board_steps : [];
+  const tabsHTML = steps.map((st, i) => {
+    const stateCls = i === clinicCurStep ? " is-active" : (i < clinicCurStep ? " is-drawn" : "");
+    return `<button type="button" class="kb-tab${stateCls}" data-kb-tab="${i}" onclick="seekClinicToStep(${i})"><span class="kb-tab-num">${i + 1}</span><span>${escapeHtml(getClinicStepShortLabel(st, clinic.pack, i))}</span></button>`;
+  }).join("");
+  const stepsHTML = steps.map((st, i) => renderBlackboardStepHTML(st, i)).join("");
   const playLabel = clinicPlaying ? "暂停对谈" : (doneNow ? "已听完 ✓ · 重听" : "开始听对谈");
   mc.innerHTML = `
-    <div class="kb-head">
-      <div class="kb-head-main">
-        <div class="kb-tag"><span class="kb-tag-dot"></span><span>${escapeHtml(clinic.tag || "黑板对谈")}</span></div>
-        <h3 class="kb-title">${escapeHtml(clinic.title || "")}</h3>
-        <div class="kb-sub">${escapeHtml(clinic.subtitle || "")}</div>
-      </div>
+    <div class="kb-top-bar">
+      <div class="kb-tag"><span class="kb-tag-dot"></span><span>${escapeHtml(clinic.tag || "黑板对谈")}</span></div>
       <div class="kb-head-acts">
-        <button type="button" class="kb-pill-btn" id="kb-spd-btn" onclick="toggleClinicSpeed()">${clinicSpeed === 0.85 ? "0.85x" : "1.0x"}</button>
-        <button type="button" class="kb-pill-btn" onclick="openClinicCatalogModal('${clinic.pack || "confusion"}')">全部 ${CLINIC_ITEMS.length} 组</button>
+        <button type="button" class="kb-quiet-act" id="kb-spd-btn" onclick="toggleClinicSpeed()">${clinicSpeed === 0.85 ? "0.85x" : "1.0x"}</button>
+        <span class="kb-act-sep" aria-hidden="true">·</span>
+        <button type="button" class="kb-quiet-act" onclick="openClinicCatalogModal('${clinic.pack || "confusion"}')">全部 ${CLINIC_ITEMS.length} 组 ›</button>
       </div>
     </div>
-    <div class="kb-slate" id="kb-slate-board">${stepsHTML}</div>
+    <div class="kb-head">
+      <h3 class="kb-title">${escapeHtml(clinic.title || "")}</h3>
+      <div class="kb-sub" lang="ja">${escapeHtml(clinic.subtitle || "")}</div>
+    </div>
+    <div class="kb-tabs" id="kb-step-tabs">${tabsHTML}</div>
+    <div class="kb-slate" id="kb-slate-board" ontouchstart="onClinicSlateTouchStart(event)" ontouchend="onClinicSlateTouchEnd(event)">${stepsHTML}</div>
     <div class="kb-voice-strip">
+      <div class="kb-prog-hit" id="kb-prog-hit" onclick="seekClinicByTrack(event)">
+        <div class="kb-prog-track"><div class="kb-prog-fill" id="kb-prog-fill"></div></div>
+      </div>
       <div class="kb-voice-top">
         <span class="kb-spk-pill" id="kb-spk-pill"><span class="kb-spk-dot ${spkCls}"></span><span>${escapeHtml(initCue.label || "老师")}</span></span>
         <span class="kb-time-lbl" id="kb-time-lbl">0:00 / ${formatClinicSec(clinic.duration)}</span>
       </div>
       <div class="kb-caption" id="kb-caption">${escapeHtml(initCue.text || "")}</div>
-      <div class="kb-prog-track"><div class="kb-prog-fill" id="kb-prog-fill"></div></div>
     </div>
     <div class="kb-ctrl-row">
       <button type="button" class="kb-play-btn${doneNow && !clinicPlaying ? " is-done" : ""}" id="kb-play-btn" onclick="toggleClinicPlay()">${playLabel}</button>
@@ -23654,22 +23871,45 @@ function syncClinicControlsUI() {
   btn.classList.toggle("is-done", doneNow && !clinicPlaying);
 }
 
-function syncClinicPlaybackUI(forceEnd) {
+function syncClinicPlaybackUI(forceEnd, manualStepOverride) {
   const c = CLINIC_BY_ID[activeClinicId];
   if (!c) return;
   const a = clinicAudioEl;
   const dur = (a && isFinite(a.duration) && a.duration > 1) ? a.duration : Number(c.duration || 35);
-  const cur = forceEnd ? dur : (a ? Number(a.currentTime || 0) : 0);
   const cues = Array.isArray(c.cues) ? c.cues : [];
+  let cur = forceEnd ? dur : (a ? Number(a.currentTime || 0) : 0);
   let cueIdx = 0;
-  for (let i = 0; i < cues.length; i++) {
-    if (cur + 0.08 >= Number(cues[i].t || 0)) cueIdx = i;
+  if (typeof manualStepOverride === "number") {
+    const mCue = cues.find(x => Number(x.step) === manualStepOverride);
+    if (mCue) {
+      cueIdx = cues.indexOf(mCue);
+      cur = Number(mCue.t || 0);
+    }
+    clinicCurStep = manualStepOverride;
+  } else {
+    if (!forceEnd && clinicPendingSeekSec !== null) {
+      if (Math.abs(cur - clinicPendingSeekSec) <= 1.2 || cur > clinicPendingSeekSec) {
+        clinicPendingSeekSec = null;
+        clinicPendingSeekStep = null;
+      } else {
+        cur = clinicPendingSeekSec;
+        if (a && (typeof a.readyState === "undefined" || a.readyState >= 1)) {
+          try { a.currentTime = clinicPendingSeekSec; } catch (e) {}
+        }
+      }
+    }
+    for (let i = 0; i < cues.length; i++) {
+      if (cur + 0.08 >= Number(cues[i].t || 0)) cueIdx = i;
+    }
+    const cue0 = cues[cueIdx] || cues[0];
+    if (clinicPendingSeekStep !== null && !forceEnd) {
+      clinicCurStep = clinicPendingSeekStep;
+    } else if (cue0 && typeof cue0.step === "number") {
+      clinicCurStep = cue0.step;
+    }
   }
   clinicCurCueIdx = cueIdx;
   const cue = cues[cueIdx] || cues[0];
-  if (cue && typeof cue.step === "number") {
-    clinicCurStep = cue.step;
-  }
   if (dur > 5 && cur / dur >= 0.85 && !isClinicDone(activeClinicId)) {
     markClinicDone(activeClinicId);
   }
@@ -23677,6 +23917,14 @@ function syncClinicPlaybackUI(forceEnd) {
   if (board && board.querySelectorAll) {
     const stepNodes = board.querySelectorAll(".kb-step");
     stepNodes.forEach((el, idx) => {
+      el.classList.toggle("is-active", idx === clinicCurStep);
+      el.classList.toggle("is-drawn", idx < clinicCurStep || !!forceEnd);
+    });
+  }
+  const tabBar = document.getElementById("kb-step-tabs");
+  if (tabBar && tabBar.querySelectorAll) {
+    const tabNodes = tabBar.querySelectorAll(".kb-tab");
+    tabNodes.forEach((el, idx) => {
       el.classList.toggle("is-active", idx === clinicCurStep);
       el.classList.toggle("is-drawn", idx < clinicCurStep || !!forceEnd);
     });
@@ -23692,6 +23940,26 @@ function syncClinicPlaybackUI(forceEnd) {
   if (timeEl) timeEl.textContent = `${formatClinicSec(cur)} / ${formatClinicSec(dur)}`;
   const fillEl = document.getElementById("kb-prog-fill");
   if (fillEl) fillEl.style.width = `${Math.min(100, Math.max(0, (cur / Math.max(1, dur)) * 100)).toFixed(1)}%`;
+}
+
+function seekClinicByTrack(ev) {
+  const c = CLINIC_BY_ID[activeClinicId];
+  const hit = document.getElementById("kb-prog-hit");
+  const a = ensureClinicAudio();
+  if (!c || !hit || !a || !ev) return;
+  const rect = hit.getBoundingClientRect ? hit.getBoundingClientRect() : null;
+  if (!rect || !rect.width) return;
+  const frac = Math.min(1, Math.max(0, (ev.clientX - rect.left) / rect.width));
+  const dur = (isFinite(a.duration) && a.duration > 1) ? a.duration : Number(c.duration || 35);
+  const targetSec = frac * dur;
+  clinicPendingSeekSec = targetSec;
+  clinicPendingSeekStep = null;
+  try {
+    if (!a.src || !a.src.includes(c.id)) a.src = c.audio;
+    if (typeof a.readyState === "undefined" || a.readyState >= 1) a.currentTime = targetSec;
+    a.playbackRate = clinicSpeed;
+  } catch (e) {}
+  syncClinicPlaybackUI(false);
 }
 
 function pauseNonClinicAudio() {
@@ -23715,6 +23983,8 @@ function openBlackboardClinic(clinicId, opts) {
   clinicCurStep = 0;
   clinicCurCueIdx = 0;
   clinicPlaying = false;
+  clinicPendingSeekSec = null;
+  clinicPendingSeekStep = null;
   renderBlackboardClinicModal(clinic);
   showAppModal();
   const a = ensureClinicAudio();
@@ -23759,10 +24029,12 @@ function replayClinicAudio() {
   pauseNonClinicAudio();
   clinicCurStep = 0;
   clinicCurCueIdx = 0;
+  clinicPendingSeekSec = null;
+  clinicPendingSeekStep = null;
   a.src = c.audio;
   a.playbackRate = clinicSpeed;
   a.currentTime = 0;
-  syncClinicPlaybackUI(false);
+  syncClinicPlaybackUI(false, 0);
   const p = a.play();
   if (p && typeof p.catch === "function") p.catch(() => {});
 }
@@ -23779,21 +24051,25 @@ function toggleClinicSpeed() {
 function seekClinicToStep(stepIdx) {
   const c = CLINIC_BY_ID[activeClinicId];
   if (!c) return;
+  const targetStep = Number(stepIdx);
   const cues = Array.isArray(c.cues) ? c.cues : [];
-  const targetCue = cues.find(x => Number(x.step) === Number(stepIdx));
-  clinicCurStep = Number(stepIdx);
+  const targetCue = cues.find(x => Number(x.step) === targetStep);
+  const targetSec = Math.max(0, Number((targetCue && targetCue.t) || 0));
+  clinicCurStep = targetStep;
   if (targetCue) clinicCurCueIdx = cues.indexOf(targetCue);
+  clinicPendingSeekSec = targetSec;
+  clinicPendingSeekStep = targetStep;
   const a = ensureClinicAudio();
   if (a && targetCue) {
     try {
       if (!a.src || !a.src.includes(c.id)) a.src = c.audio;
-      a.currentTime = Math.max(0, Number(targetCue.t || 0));
+      if (typeof a.readyState === "undefined" || a.readyState >= 1) a.currentTime = targetSec;
       a.playbackRate = clinicSpeed;
       const p = a.play();
       if (p && typeof p.catch === "function") p.catch(() => {});
     } catch (e) {}
   }
-  syncClinicPlaybackUI(false);
+  syncClinicPlaybackUI(false, targetStep);
 }
 
 function openClinicCatalogModal(pack) {
@@ -30214,11 +30490,45 @@ if (gpods37.length > 0) {
   }
   sb.closeModal();
 }
+
+// Self-test 39 (v97): Jobs x Kyoto Zen Single-Focus Living Blackboard Gate (anti-density, zero strikethrough, full-width contrast, dark-safe CTA & zero undefined CSS vars)
+{
+  if (html.includes('var(--ja-sans)') || html.includes('var(--moss-tint)')) {
+    throw new Error('Self-test 39 failed: undefined CSS var(--ja-sans) or var(--moss-tint) found in compiled HTML');
+  }
+  if (!/\.kb-step\s*\{[^}]*display:\s*none/.test(html) || !/\.kb-step\.is-active\s*\{[^}]*display:\s*flex/.test(html)) {
+    throw new Error('Self-test 39 failed: .kb-step must default to display:none and reveal only .is-active (single-focus zen stage)');
+  }
+  if (/\.kb-pitfall-ja\s*\{[^}]*line-through/.test(html)) {
+    throw new Error('Self-test 39 failed: .kb-pitfall-ja must NOT slash red line-through across kana or Chinese');
+  }
+  if (/\.kb-split-grid\s*\{[^}]*grid-template-columns/.test(html)) {
+    throw new Error('Self-test 39 failed: .kb-split-grid must stack full-width vertically instead of cramped 2-column grid');
+  }
+  if (/\.kb-play-btn\s*\{[^}]*background:\s*var\(--sumi\)/.test(html)) {
+    throw new Error('Self-test 39 failed: .kb-play-btn must use var(--cta-bg) for dark-mode stone parity');
+  }
+  sb.openBlackboardClinic('CB07', { autoplay: false });
+  const kb07Html = (els['modal-content'] && els['modal-content'].innerHTML) || '';
+  if (!kb07Html.includes('kb-step-tabs') || !kb07Html.includes('kb-prog-hit') || !kb07Html.includes('kb-wrong-x')) {
+    throw new Error('Self-test 39 failed: CB07 modal missing 4-step tabs, scrub bar, or clean wrong-x prefix');
+  }
+  sb.openBlackboardClinic('LN01', { autoplay: false });
+  const ln01Html = (els['modal-content'] && els['modal-content'].innerHTML) || '';
+  if (!ln01Html.includes('kb-pitfall-ja is-prose') || ln01Html.includes('kb-wrong-x')) {
+    throw new Error('Self-test 39 failed: Chinese prose pitfall LN01 should render cleanly with is-prose and zero wrong-x');
+  }
+  sb.seekClinicToStep(3);
+  if (vm.runInNewContext('clinicCurStep', sb) !== 3) {
+    throw new Error('Self-test 39 failed: seekClinicToStep(3) did not switch active step to 3');
+  }
+  sb.closeModal();
+}
 """
     subprocess.run(["node", "-", HTML_PATH], input=smoke_js, text=True, check=True)
 
 sw_path = os.path.join(BASE_DIR, "sw.js")
-SW_CACHE_NAME = "n3-studio-tutor-v96"
+SW_CACHE_NAME = "n3-studio-tutor-v97"
 if not _IS_SIM_OUTPUT and os.path.exists(sw_path):
     with open(sw_path, encoding="utf-8") as sf:
         sw_src = sf.read()
