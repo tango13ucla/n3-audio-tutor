@@ -2162,7 +2162,57 @@ def test_v48_additive_daily_jp_news_45m_guard() -> None:
     shifted = rvs._resolve_jp_video_script(mock_blocks_7, tw, [], today_str="2026-11-28")
     chs = [int(ln["ch"]) for ln in shifted.get("lines") or []]
     assert min(chs) == 1 and max(chs) == 6, f"Expected curated JP video ch shifted to 1..6 for 7-ch live news, got {min(chs)}..{max(chs)}"
-    print(f"[PASS 31/31] v48 ~45m additive daily Japan news opener (chunked ntfy relay, 7-ch assembly preserving Act 1 & ch-shifted JP video) verified!")
+    print(f"[PASS 31/32] v48 ~45m additive daily Japan news opener (chunked ntfy relay, 7-ch assembly preserving Act 1 & ch-shifted JP video) verified!")
+
+
+def test_v98_historical_footage_and_zen_cinema_guard() -> None:
+    """Gate 32 (v98): Guard 9 curated pre-exam historical storyboards (Vol.26 11/28 .. Vol.17 12/06), YouTube archival footage refs, IA unquote fix, static-MP4 rejection & Jobs x Kyoto Zen video theater."""
+    import visual_storyboards_vault as vsv
+
+    # 1. All 9 upcoming episodes (starting tomorrow 2026-11-28 Vol.26 through 2026-12-06 Vol.17) have 15-beat storyboards
+    upcoming_sids = (
+        "uchi26_s2a_otogawa_zen_part1",
+        "uchi12_s2a_seikan_part1",
+        "uchi24_s2a_renaissance_ukiyoe_part1",
+        "uchi13_s2a_heisei_1989_part1",
+        "uchi14_s2a_hanshin_1995_part1",
+        "uchi25_s2a_nemawashi_ringi_part1",
+        "uchi15_s2a_super_cub_1958_part1",
+        "uchi16_s2a_toto_washlet_1980_part1",
+        "uchi17_s2a_jnr_part1",
+    )
+    for sid in upcoming_sids:
+        board = vsv.CURATED_BEAT_STORYBOARDS.get(sid) or []
+        assert len(board) == 15, f"Expected 15 historical beats for {sid}, got {len(board)}"
+        moving = sum(1 for b in board if b.get("kind") in ("ia_video", "wm_video", "yt_video"))
+        assert moving >= 6, f"Expected >=6 real moving archival video beats in {sid}, got {moving}"
+        for b in board:
+            stamp = str(b.get("stamp") or "")
+            assert "—" not in stamp and "——" not in stamp, f"Em dash leaked into stamp ({sid}): {stamp!r}"
+        yt_refs = vsv.CURATED_YOUTUBE_ARCHIVES.get(sid) or []
+        assert len(yt_refs) >= 1, f"Expected >=1 verified YouTube archival clip for {sid}"
+        for yt in yt_refs:
+            assert yt.get("vid") and yt.get("title") and "—" not in str(yt.get("title")), f"Bad YT ref in {sid}: {yt}"
+            assert str(yt.get("vid")) not in ("", "None"), f"Empty vid in {sid}"
+
+    # 2. Vol.26 tomorrow (2026-11-28) must showcase REAL historical Steve Jobs / San Francisco / Macintosh / NeXT / Walkman footage
+    vol26_ids = {str(b.get("id") or "") for b in vsv.CURATED_BEAT_STORYBOARDS["uchi26_s2a_otogawa_zen_part1"]}
+    for must_id in ("SanFrancisco1955CinemascopeFilm", "Mac_Intro_Jan1984", "SteveJobsPresentsNextAndNextstepPart1Of2", "wwdc-1997-fireside-chat-steve-jobs"):
+        assert must_id in vol26_ids, f"Vol.26 missing verified real historical footage: {must_id}"
+
+    # 3. radio_visual_studio.py fixes: IA video info resolver, static-MP4 motion rejection, Vol.26 TTS proper nouns, archival_youtube output
+    rvs_src = (BASE_DIR / "radio_visual_studio.py").read_text(encoding="utf-8")
+    for sym in ("_resolve_ia_video_info", "_pace_ia_media", "max(diffs) < 1.35", "おとがわこうぶん", "かわせはすい", "archival_youtube"):
+        assert sym in rvs_src, f"radio_visual_studio.py missing v98 guard symbol: {sym}"
+
+    # 4. build_html.py v99 Jobs x Kyoto Zen Video Theater invariants
+    bh_src = (BASE_DIR / "build_html.py").read_text(encoding="utf-8")
+    for sym in ("function openJpVideoSheet(", "function openJpVideoLandscape(", "function openYtArchivalViewer(", "function bindJpVideoScrubDrag(", "jpvLandscapeOpen", "jpv-thumb-bar", "jpv-fs-overlay"):
+        assert sym in bh_src, f"build_html.py missing v99 cinema theater symbol: {sym}"
+    m_sw = re.search(r'SW_CACHE_NAME\s*=\s*"n3-studio-tutor-v(\d+)"', bh_src)
+    assert m_sw and int(m_sw.group(1)) >= 99, f"build_html.py SW_CACHE_NAME must be >= v99, got {m_sw}"
+
+    print(f"[PASS 32/32] v99 Historical Footage Vault ({len(upcoming_sids)} episodes x 15 beats + YouTube archives) & Jobs x Kyoto Zen Cinema Theater verified!")
 
 
 def main() -> int:
@@ -2197,7 +2247,8 @@ def main() -> int:
     test_v94_whole_app_cross_match_integrity_guard()
     test_v47_real_qiangqiang_pace_guard()
     test_v48_additive_daily_jp_news_45m_guard()
-    print("[ALL PASS] tests_ci_guard.py 31/31 gates green!")
+    test_v98_historical_footage_and_zen_cinema_guard()
+    print("[ALL PASS] tests_ci_guard.py 32/32 gates green!")
     return 0
 
 

@@ -2365,6 +2365,35 @@ if os.path.exists(_gpod_mf_path):
     except Exception:
         pass
 
+if isinstance(radio_meta, dict) and isinstance(radio_meta.get("jp_video"), dict):
+    _jpv_meta = radio_meta["jp_video"]
+    if not _jpv_meta.get("archival_youtube"):
+        try:
+            from visual_storyboards_vault import CURATED_YOUTUBE_ARCHIVES as _YT_ARCH_MAP
+            _sid_match = str(_jpv_meta.get("storyboard_id") or "").strip()
+            if not _sid_match:
+                _t_blob = f"{_jpv_meta.get('title_ja','')} {_jpv_meta.get('title_zh','')}"
+                _title_to_sid = (
+                    ("よど号", "uchi18_s2a_yodogo_part1"),
+                    ("ジョブズ", "uchi26_s2a_otogawa_zen_part1"),
+                    ("青函トンネル", "uchi12_s2a_seikan_part1"),
+                    ("桂離宮", "uchi24_s2a_renaissance_ukiyoe_part1"),
+                    ("平成元年", "uchi13_s2a_heisei_1989_part1"),
+                    ("阪神大震災", "uchi14_s2a_hanshin_1995_part1"),
+                    ("地下神殿", "uchi25_s2a_nemawashi_ringi_part1"),
+                    ("スーパーカブ", "uchi15_s2a_super_cub_1958_part1"),
+                    ("ふるさと納税", "uchi16_s2a_toto_washlet_1980_part1"),
+                    ("国鉄分割", "uchi17_s2a_jnr_part1"),
+                )
+                for _kw, _cand_sid in _title_to_sid:
+                    if _kw in _t_blob:
+                        _sid_match = _cand_sid
+                        break
+            if _sid_match and _sid_match in _YT_ARCH_MAP:
+                _jpv_meta["archival_youtube"] = [dict(x) for x in _YT_ARCH_MAP[_sid_match]]
+        except Exception:
+            pass
+
 payload = json.dumps({
     "plan_date": plan_date_str,
     "phase": active_phase,
@@ -5006,7 +5035,7 @@ html = r"""<!DOCTYPE html>
     .rv-spk-tip { margin-top: 8px; font-size: 12.5px; }
   }
 
-  /* Dedicated All-Japanese Daily Short Video Theater (Decoupled from Grammar Flashcards) */
+  /* v99 Jobs x Kyoto Zen All-Japanese Documentary Cinema Theater (Zero Clutter, 0px Overflow, True Landscape Support) */
   .jpv-stage {
     flex: 1;
     min-height: 0;
@@ -5018,30 +5047,30 @@ html = r"""<!DOCTYPE html>
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-start;
-    padding: 4px 0 12px;
+    justify-content: safe center;
+    padding: 4px 0 8px;
   }
   .jpv-stage::-webkit-scrollbar {
     display: none;
   }
   .jpv-title-ja {
     font-family: var(--sans-jp);
-    font-size: 17.5px;
+    font-size: 16.5px;
     font-weight: 400;
     letter-spacing: 0.03em;
     color: var(--sumi);
-    line-height: 1.48;
+    line-height: 1.46;
     text-align: center;
     text-wrap: balance;
     word-break: auto-phrase;
-    margin: 0 0 10px;
+    margin: 0 0 12px;
+    max-width: 500px;
     flex-shrink: 0;
   }
   .jpv-frame {
     position: relative;
-    width: min(100%, calc(min(32vh, 232px) * 16 / 9));
-    width: min(100%, calc(min(32dvh, 232px) * 16 / 9));
-    max-width: 540px;
+    width: 100%;
+    max-width: min(480px, calc(35dvh * 16 / 9));
     aspect-ratio: 16 / 9;
     border-radius: 12px;
     overflow: hidden;
@@ -5050,6 +5079,7 @@ html = r"""<!DOCTYPE html>
     flex-shrink: 0;
     cursor: pointer;
     user-select: none;
+    -webkit-tap-highlight-color: transparent;
   }
   .jpv-video {
     width: 100%;
@@ -5061,14 +5091,84 @@ html = r"""<!DOCTYPE html>
   .jpv-frame.is-paused .rv-cinema-pause-badge {
     opacity: 1;
   }
+  .jpv-scrub-wrap {
+    width: 100%;
+    max-width: min(480px, calc(35dvh * 16 / 9));
+    margin: 6px auto 0;
+    flex-shrink: 0;
+  }
+  .jpv-scrub-rail {
+    position: relative;
+    width: 100%;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    touch-action: none;
+    user-select: none;
+  }
+  .jpv-scrub-track {
+    position: relative;
+    width: 100%;
+    height: 2.5px;
+    border-radius: 2px;
+    background: var(--hairline-strong);
+    overflow: visible;
+  }
+  .jpv-scrub-fill {
+    position: relative;
+    height: 100%;
+    width: 0%;
+    border-radius: 2px;
+    background: var(--moss);
+    transition: width 0.12s linear;
+  }
+  .jpv-scrub-rail.is-dragging .jpv-scrub-fill {
+    transition: none;
+  }
+  .jpv-scrub-knob {
+    position: absolute;
+    right: -5px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--moss);
+    box-shadow: 0 0 0 3px var(--moss-soft);
+    pointer-events: none;
+  }
+  .jpv-scrub-tick {
+    position: absolute;
+    top: -1.5px;
+    width: 1.5px;
+    height: 5.5px;
+    border-radius: 1px;
+    background: var(--ink-3);
+    opacity: 0.35;
+    pointer-events: none;
+  }
+  .jpv-time-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: -3px;
+    font-size: 11.5px;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.04em;
+  }
   .jpv-sub-stage {
     width: 100%;
-    max-width: 520px;
-    min-height: 62px;
-    margin: 12px auto 0;
-    padding: 0 4px;
+    max-width: 500px;
+    min-height: 78px;
+    margin: 14px auto 0;
+    padding: 0 6px;
     text-align: center;
     flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     transition: opacity 0.2s ease;
   }
   .jpv-sub-stage.sub-hidden {
@@ -5080,70 +5180,241 @@ html = r"""<!DOCTYPE html>
     font-size: 18px;
     font-weight: 400;
     color: var(--sumi);
-    line-height: 1.68;
+    line-height: 1.62;
     letter-spacing: 0.02em;
     text-wrap: balance;
     word-break: auto-phrase;
     overflow-wrap: break-word;
-    min-height: 30px;
+    min-height: 28px;
   }
   .jpv-sub-ja .jpv-hl {
     color: var(--moss);
     font-weight: 500;
   }
   .jpv-sub-zh {
-    margin-top: 5px;
+    margin-top: 6px;
     font-size: 13.5px;
     color: var(--ink-3);
     line-height: 1.48;
-    text-wrap: balance;
-    min-height: 19px;
+    text-wrap: pretty;
+    min-height: 20px;
   }
   .jpv-sub-stage.ja-only .jpv-sub-zh {
     display: none;
   }
-  .jpv-words-wrap {
+  .jpv-thumb-bar {
     width: 100%;
-    max-width: 520px;
-    margin: 10px auto 0;
-    padding-top: 10px;
-    border-top: 1px solid var(--hairline);
+    max-width: 560px;
+    margin: 0 auto 10px;
+    padding-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
     flex-shrink: 0;
   }
-  @media (max-height: 700px) {
-    .jpv-title-ja { font-size: 15px; line-height: 1.38; margin-bottom: 6px; }
-    .jpv-frame { width: min(100%, calc(min(26dvh, 168px) * 16 / 9)); }
-    .jpv-sub-stage { margin-top: 8px; min-height: 50px; }
-    .jpv-sub-ja { font-size: 15.5px; line-height: 1.5; min-height: 24px; }
-    .jpv-sub-zh { font-size: 12.5px; margin-top: 3px; }
-  }
-  .jpv-words-head {
-    font-size: 11.5px;
+  .jpv-back-link {
+    background: none;
+    border: none;
+    padding: 8px 4px 8px 0;
+    min-height: 38px;
+    font-family: var(--sans);
+    font-size: 13.5px;
     color: var(--ink-3);
-    letter-spacing: 0.06em;
-    margin-bottom: 8px;
+    letter-spacing: 0.03em;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: color 0.16s ease, opacity 0.16s ease;
+  }
+  .jpv-back-link:active { color: var(--sumi); opacity: 0.7; }
+  .jpv-thumb-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-shrink: 0;
+  }
+  .jpv-lite-btn {
+    background: none;
+    border: none;
+    padding: 8px 2px;
+    min-height: 38px;
+    font-family: var(--sans);
+    font-size: 13.5px;
+    color: var(--ink-2);
+    letter-spacing: 0.03em;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    touch-action: manipulation;
+    white-space: nowrap;
+    transition: color 0.16s ease, opacity 0.16s ease;
+  }
+  .jpv-lite-btn:active { opacity: 0.6; }
+  .jpv-lite-btn.is-on { color: var(--moss); font-weight: 500; }
+  .jpv-dot-pip {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--moss);
+    flex-shrink: 0;
+  }
+  .jpv-icon-circle {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid var(--hairline-strong);
+    background: var(--sheet);
+    color: var(--ink-2);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    touch-action: manipulation;
+    flex-shrink: 0;
+    transition: background 0.16s ease, color 0.16s ease;
+  }
+  .jpv-icon-circle:active { background: var(--tap-bg); color: var(--sumi); }
+  .jpv-primary-dock {
+    width: 100%;
+    max-width: 560px;
+    margin: 0 auto;
+    flex-shrink: 0;
+  }
+  .jpv-primary-cta {
+    width: 100%;
+    height: 48px;
+    border-radius: 12px;
+    border: 1px solid var(--cta-border, transparent);
+    background: var(--cta-bg);
+    color: var(--cta-fg);
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: opacity 0.16s ease, transform 0.12s ease;
+  }
+  .jpv-primary-cta:active { opacity: 0.84; transform: scale(0.992); }
+  @media (max-height: 700px) {
+    .jpv-stage { padding: 2px 0 4px; }
+    .jpv-title-ja { font-size: 14.5px; line-height: 1.36; margin-bottom: 6px; }
+    .jpv-frame, .jpv-scrub-wrap { max-width: min(100%, calc(min(26dvh, 174px) * 16 / 9)); }
+    .jpv-scrub-wrap { margin-top: 3px; }
+    .jpv-scrub-rail { height: 24px; }
+    .jpv-sub-stage { margin-top: 6px; min-height: 54px; }
+    .jpv-sub-ja { font-size: 15.5px; line-height: 1.48; min-height: 22px; }
+    .jpv-sub-zh { font-size: 12px; margin-top: 3px; line-height: 1.4; }
+    .jpv-thumb-bar { margin-bottom: 6px; padding-top: 4px; }
+    .jpv-primary-cta { height: 44px; font-size: 14.5px; }
+  }
+
+  /* Kyoto Zen Cinema Bottom Sheet (Speed + Shadowing + Vocab Jump + YouTube Historical Archives) */
+  .jpv-sheet {
+    padding: 4px 2px 6px;
+  }
+  .jpv-sheet-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .jpv-sheet-title {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--sumi);
+    letter-spacing: 0.04em;
+  }
+  .jpv-sheet-close {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid var(--hairline);
+    background: transparent;
+    color: var(--ink-3);
+    font-size: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .jpv-sheet-sec {
+    padding: 13px 0;
+    border-top: 1px solid var(--hairline);
+  }
+  .jpv-sheet-sec:first-of-type {
+    border-top: none;
+    padding-top: 2px;
+  }
+  .jpv-sheet-sec-head {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    font-size: 12px;
+    color: var(--ink-3);
+    letter-spacing: 0.06em;
+    margin-bottom: 10px;
+  }
+  .jpv-ctrl-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    min-height: 40px;
+  }
+  .jpv-ctrl-lbl {
+    font-size: 14px;
+    color: var(--ink-2);
+  }
+  .jpv-seg-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .jpv-seg-btn {
+    padding: 6px 11px;
+    border-radius: 9px;
+    border: 1px solid var(--hairline-strong);
+    background: transparent;
+    color: var(--ink-2);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  .jpv-seg-btn.is-on {
+    background: var(--moss-soft);
+    border-color: var(--moss-border);
+    color: var(--moss);
+    font-weight: 500;
   }
   .jpv-word-chips {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px 6px;
+    gap: 6px 8px;
   }
   .jpv-chip {
     display: inline-flex;
     align-items: baseline;
-    gap: 3px;
-    padding: 4px 8px;
-    border-radius: 7px;
-    border: 1px solid transparent;
-    background: transparent;
+    gap: 4px;
+    padding: 6px 10px;
+    border-radius: 9px;
+    border: 1px solid var(--hairline);
+    background: var(--sheet);
     color: var(--ink-2);
     font-family: var(--sans-jp);
     font-size: 13.5px;
     font-weight: 400;
     line-height: 1.25;
+    cursor: pointer;
     touch-action: manipulation;
     transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease;
   }
@@ -5164,11 +5435,197 @@ html = r"""<!DOCTYPE html>
     color: var(--moss);
     opacity: 0.9;
   }
+  .jpv-yt-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .jpv-yt-row {
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    cursor: pointer;
+    touch-action: manipulation;
+    white-space: normal;
+    transition: background 0.15s ease;
+  }
+  .jpv-yt-row:active { background: var(--tap-bg); }
+  .jpv-yt-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    flex: 1;
+  }
+  .jpv-yt-title {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--sumi);
+    line-height: 1.42;
+  }
+  .jpv-yt-meta {
+    font-size: 12px;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .jpv-yt-chev {
+    color: var(--ink-3);
+    font-size: 16px;
+    flex-shrink: 0;
+    opacity: 0.65;
+  }
+
+  /* Pure Obsidian True Landscape Cinema Overlay (Natural horizontal viewing) */
+  .jpv-fs-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 950;
+    background: #0d0c0b;
+    color: #f2eee6;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: max(10px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+    overflow: hidden;
+  }
+  .jpv-fs-overlay.open {
+    display: flex;
+  }
+  .jpv-fs-top {
+    width: 100%;
+    max-width: 960px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 6px;
+    flex-shrink: 0;
+  }
+  .jpv-fs-title {
+    font-family: var(--sans-jp);
+    font-size: 13.5px;
+    color: rgba(242, 238, 230, 0.72);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .jpv-fs-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .jpv-fs-pill {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-size: 12.5px;
+    color: #f2eee6;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .jpv-fs-close {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.08);
+    color: #f2eee6;
+    font-size: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .jpv-fs-stage {
+    position: relative;
+    width: 100%;
+    max-width: 960px;
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .jpv-fs-video-box {
+    position: relative;
+    height: 100%;
+    max-height: 100%;
+    max-width: 100%;
+    width: auto;
+    aspect-ratio: 16 / 9;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #000;
+    cursor: pointer;
+  }
+  @media (orientation: portrait) {
+    .jpv-fs-video-box {
+      width: 100%;
+      height: auto;
+      max-height: 100%;
+    }
+  }
+  .jpv-fs-video-box iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+  }
+  .jpv-fs-sub {
+    width: 100%;
+    max-width: 820px;
+    text-align: center;
+    margin-top: 8px;
+    flex-shrink: 0;
+  }
+  .jpv-fs-sub-ja {
+    font-family: var(--sans-jp);
+    font-size: 17px;
+    color: #f5f2eb;
+    line-height: 1.48;
+    text-wrap: balance;
+  }
+  .jpv-fs-sub-zh {
+    margin-top: 2px;
+    font-size: 12.5px;
+    color: rgba(242, 238, 230, 0.62);
+  }
+  .jpv-fs-sub.ja-only .jpv-fs-sub-zh { display: none; }
+  .jpv-fs-sub.sub-hidden { opacity: 0; }
+  .jpv-fs-rail-wrap {
+    width: 100%;
+    max-width: 820px;
+    margin-top: 4px;
+    flex-shrink: 0;
+  }
+  .jpv-fs-overlay .jpv-scrub-rail { height: 24px; }
+  .jpv-fs-overlay .jpv-scrub-track { background: rgba(255, 255, 255, 0.22); }
+  .jpv-fs-overlay .jpv-time-row { color: rgba(242, 238, 230, 0.62); }
+  @media (orientation: landscape) and (max-height: 500px) {
+    .jpv-fs-overlay { padding: 8px max(18px, env(safe-area-inset-right)) 8px max(18px, env(safe-area-inset-left)); }
+    .jpv-fs-top { margin-bottom: 4px; }
+    .jpv-fs-sub { margin-top: 5px; }
+    .jpv-fs-sub-ja { font-size: 15px; line-height: 1.36; }
+    .jpv-fs-sub-zh { font-size: 11.5px; }
+    .jpv-fs-rail-wrap { margin-top: 2px; }
+  }
+
   .vc-aux-btn.is-on {
     color: var(--moss);
     font-weight: 500;
   }
-  /* v86/v98 SLA Kyoto Zen Extensions (100% semantic dark/light parity, zero box bloat) */
+  /* v86/v98/v99 SLA Kyoto Zen Extensions (100% semantic dark/light parity, zero box bloat) */
   .jpv-shadow-bar {
     display: flex;
     flex-direction: column;
@@ -5182,6 +5639,7 @@ html = r"""<!DOCTYPE html>
     font-size: 12.5px;
     color: var(--ink-3);
     text-align: center;
+    flex-shrink: 0;
   }
   .jpv-shadow-note { line-height: 1.5; text-wrap: balance; }
   .jpv-shadow-acts { display: flex; align-items: center; justify-content: center; gap: 22px; }
@@ -5191,33 +5649,6 @@ html = r"""<!DOCTYPE html>
     cursor: pointer; touch-action: manipulation; white-space: nowrap;
   }
   .jpv-shadow-link.is-on, .jpv-shadow-link.is-done { color: var(--moss); font-weight: 500; }
-  .jpv-words-trigger {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 14px;
-    padding: 6px 10px;
-    font-size: 12.5px;
-    color: var(--ink-3);
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    touch-action: manipulation;
-  }
-  .jpv-words-trigger:active { opacity: 0.65; }
-  .jpv-words-dot { width: 5.5px; height: 5.5px; border-radius: 50%; background: var(--moss); opacity: 0.8; flex-shrink: 0; }
-  .jpv-words-sheet-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin: 12px 0 18px;
-  }
-  .jpv-words-sheet-grid .jpv-chip {
-    padding: 7px 12px;
-    border-radius: 9px;
-    background: var(--soft-bg);
-    font-size: 14.5px;
-  }
   .jpv-sub-stage.shadow-blind .jpv-sub-ja,
   .jpv-sub-stage.shadow-blind .jpv-sub-zh {
     opacity: 0.08;
@@ -9580,6 +10011,8 @@ html = r"""<!DOCTYPE html>
   <div class="modal-card" id="modal-content"></div>
 </div>
 
+<div class="jpv-fs-overlay" id="jpv-fs-overlay" aria-hidden="true"></div>
+
 <script>
 const DATA = __PAYLOAD__;
 const SPEEDS = [1.0, 1.15, 1.3, 1.5];
@@ -9594,7 +10027,9 @@ const BAKED_EPOCH = Number(DATA.baked_epoch || 0);
 const MIN_REAL_TS = 1700000000;
 const VOCAB_BATCH_SIZE = Number(DATA.vocab_daily_count || 24);
 
+let jpvLandscapeOpen = false;
 function tryLockPortrait() {
+  if (jpvLandscapeOpen) return;
   try {
     if (screen && screen.orientation && typeof screen.orientation.lock === "function") {
       screen.orientation.lock("portrait").catch(() => {});
@@ -9606,7 +10041,7 @@ document.addEventListener("pointerdown", tryLockPortrait, { once: true, passive:
 document.addEventListener("touchstart", tryLockPortrait, { once: true, passive: true });
 
 // Portrait guard: if the phone still auto-rotates to landscape (system lock unsupported in this launch mode),
-// counter-rotate the whole app so it stays upright relative to the phone, like a real portrait-only app.
+// counter-rotate the whole app so it stays upright relative to the phone, EXCEPT when watching fullscreen video horizontally.
 let FP_ANGLE = 0;
 function currentScreenAngle() {
   try {
@@ -9617,6 +10052,11 @@ function currentScreenAngle() {
 }
 function applyPortraitGuard() {
   const root = document.documentElement;
+  if (jpvLandscapeOpen) {
+    FP_ANGLE = 0;
+    root.classList.remove("fp", "fp-90", "fp-270");
+    return;
+  }
   const w = window.innerWidth || 0;
   const h = window.innerHeight || 0;
   const sw = (screen && screen.width) || w;
@@ -9822,7 +10262,10 @@ window.addEventListener("popstate", () => {
   handlingPopstate = true;
   try {
     const mm = document.getElementById("app-modal");
-    if (top === "modal" || (mm && mm.classList.contains("open"))) {
+    const jfs = document.getElementById("jpv-fs-overlay");
+    if (top === "jpv_fs" || (jfs && jfs.classList.contains("open"))) {
+      if (typeof closeJpVideoLandscape === "function") closeJpVideoLandscape(true);
+    } else if (top === "modal" || (mm && mm.classList.contains("open"))) {
       if (typeof closeModal === "function") closeModal(true);
     } else if (top === "mock") {
       if (typeof exitMockSprint === "function") exitMockSprint();
@@ -15305,10 +15748,19 @@ function syncJpVideoCue(curSec) {
   const cues = Array.isArray(jpv.cues) ? jpv.cues : [];
   const dur = Math.max(1, Number((jpvVideoEl && jpvVideoEl.duration && isFinite(jpvVideoEl.duration)) ? jpvVideoEl.duration : (jpv.duration_sec || 80)));
   const t = Math.max(0, Number(curSec || 0));
+  const pctStr = `${Math.max(0, Math.min(100, (t / dur) * 100)).toFixed(1)}%`;
   const fillEl = document.getElementById("jpv-rail-fill");
-  if (fillEl) fillEl.style.width = `${Math.max(0, Math.min(100, (t / dur) * 100)).toFixed(1)}%`;
+  if (fillEl) fillEl.style.width = pctStr;
+  const fsFillEl = document.getElementById("jpv-fs-rail-fill");
+  if (fsFillEl) fsFillEl.style.width = pctStr;
+  const curTxt = formatMMSS(t);
+  const totTxt = jpv.duration_label || formatMMSS(dur);
+  const curEl = document.getElementById("jpv-time-cur");
+  if (curEl) curEl.textContent = curTxt;
+  const fsCurEl = document.getElementById("jpv-fs-time-cur");
+  if (fsCurEl) fsCurEl.textContent = curTxt;
   const timeEl = document.getElementById("jpv-time-lbl");
-  if (timeEl) timeEl.textContent = `${formatMMSS(t)} / ${jpv.duration_label || formatMMSS(dur)}`;
+  if (timeEl) timeEl.textContent = `${curTxt} / ${totTxt}`;
 
   if (jpvShadowMode && jpvShadowLoop && jpvLastCueIdx >= 0 && cues[jpvLastCueIdx] && jpvVideoEl && !jpvVideoEl.paused) {
     const loopCue = cues[jpvLastCueIdx];
@@ -15329,15 +15781,20 @@ function syncJpVideoCue(curSec) {
   if (idx !== jpvLastCueIdx && cues[idx]) {
     jpvLastCueIdx = idx;
     const cue = cues[idx];
+    const lineHtml = formatJpVideoLineHTML(cue);
     const jaEl = document.getElementById("jpv-sub-ja");
     const zhEl = document.getElementById("jpv-sub-zh");
-    if (jaEl) jaEl.innerHTML = formatJpVideoLineHTML(cue);
+    if (jaEl) jaEl.innerHTML = lineHtml;
     if (zhEl) zhEl.textContent = cue.zh || "";
+    const fsJaEl = document.getElementById("jpv-fs-sub-ja");
+    const fsZhEl = document.getElementById("jpv-fs-sub-zh");
+    if (fsJaEl) fsJaEl.textContent = cue.ja || "";
+    if (fsZhEl) fsZhEl.textContent = cue.zh || "";
     const ovEl = document.getElementById("jpv-ch-overline");
     if (ovEl && !jpvShadowMode) {
       const chIdx = Number(cue.ch);
       const chObj = (DATA.radio && Array.isArray(DATA.radio.chapters)) ? DATA.radio.chapters[chIdx] : null;
-      const chTitle = chObj && chObj.title ? String(chObj.title).trim() : "";
+      const chTitle = chObj && chObj.title ? String(chObj.title).replace(/^[①②③④⑤⑥⑦]\s*/, "").trim() : "";
       ovEl.textContent = chTitle ? `今日日语短片 · ${chTitle}` : "今日日语短片 · 全日语";
     }
     const activeHits = new Set(Array.isArray(cue.hits) ? cue.hits : []);
@@ -15348,14 +15805,15 @@ function syncJpVideoCue(curSec) {
   }
 }
 
-function scrubJpVideoRail(ev) {
+function scrubJpVideoRail(ev, railOverride) {
   if (ev && ev.stopPropagation) ev.stopPropagation();
-  const rail = ev && ev.currentTarget ? ev.currentTarget : document.getElementById("jpv-scrub-rail");
+  const rail = railOverride || (ev && ev.currentTarget) || document.getElementById("jpv-scrub-rail");
   const jpv = getRadioJpVideo();
   if (!rail || !jpv) return;
   const rect = rail.getBoundingClientRect ? rail.getBoundingClientRect() : null;
   if (!rect || !rect.width) return;
-  const clientX = (ev && ev.touches && ev.touches[0]) ? ev.touches[0].clientX : Number((ev && ev.clientX) || 0);
+  const pt = (ev && ev.touches && ev.touches[0]) ? ev.touches[0] : ev;
+  const clientX = Number((pt && pt.clientX) || 0);
   const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
   const v = ensureJpVideoEl();
   const dur = Math.max(1, Number((v && v.duration && isFinite(v.duration)) ? v.duration : (jpv.duration_sec || 80)));
@@ -15365,6 +15823,29 @@ function scrubJpVideoRail(ev) {
   }
   jpvLastCueIdx = -2;
   syncJpVideoCue(targetSec);
+}
+
+function bindJpVideoScrubDrag(railEl) {
+  if (!railEl || !railEl.addEventListener || railEl._scrubBound) return;
+  railEl._scrubBound = true;
+  let dragging = false;
+  railEl.addEventListener("pointerdown", e => {
+    dragging = true;
+    railEl.classList.add("is-dragging");
+    try { if (railEl.setPointerCapture) railEl.setPointerCapture(e.pointerId); } catch (err) {}
+    scrubJpVideoRail(e, railEl);
+  });
+  railEl.addEventListener("pointermove", e => {
+    if (!dragging) return;
+    scrubJpVideoRail(e, railEl);
+  });
+  const endDrag = () => {
+    if (!dragging) return;
+    dragging = false;
+    railEl.classList.remove("is-dragging");
+  };
+  railEl.addEventListener("pointerup", endDrag);
+  railEl.addEventListener("pointercancel", endDrag);
 }
 
 function ensureJpVideoEl() {
@@ -15390,6 +15871,8 @@ function ensureJpVideoEl() {
     jpvVideoEl.addEventListener("ended", () => {
       const fillEl = document.getElementById("jpv-rail-fill");
       if (fillEl) fillEl.style.width = "100%";
+      const fsFillEl = document.getElementById("jpv-fs-rail-fill");
+      if (fsFillEl) fsFillEl.style.width = "100%";
       const fr = document.getElementById("jpv-frame");
       if (fr) fr.classList.add("is-paused");
     });
@@ -15428,20 +15911,33 @@ function isJpVideoShadowDoneToday() {
   try { return localStorage.getItem("n3_jpv_shad_" + DATA.plan_date) === "1"; } catch (e) { return false; }
 }
 
+function setJpVideoSpeed(val, ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  const next = Number(val || 1.0);
+  jpvSpeed = [0.85, 1.0, 1.1].includes(next) ? next : 1.0;
+  if (jpvVideoEl) jpvVideoEl.playbackRate = jpvSpeed;
+  const spdTag = document.getElementById("jpv-spd-tag");
+  if (spdTag) spdTag.textContent = jpvSpeed !== 1.0 ? `${jpvSpeed}x` : "";
+  const btn = document.getElementById("jpv-spd-btn");
+  if (btn) btn.textContent = `${jpvSpeed}x`;
+  document.querySelectorAll(".jpv-spd-opt").forEach(el => {
+    el.classList.toggle("is-on", Number(el.getAttribute("data-spd")) === jpvSpeed);
+  });
+}
+
 function toggleJpVideoSpeed(ev) {
   if (ev && ev.stopPropagation) ev.stopPropagation();
   const order = [1.0, 0.85, 1.1];
   const curIdx = order.indexOf(jpvSpeed);
-  jpvSpeed = order[(curIdx + 1) % order.length];
-  if (jpvVideoEl) jpvVideoEl.playbackRate = jpvSpeed;
-  const btn = document.getElementById("jpv-spd-btn");
-  if (btn) btn.textContent = `${jpvSpeed}x`;
+  setJpVideoSpeed(order[(curIdx + 1) % order.length]);
 }
 
 function toggleJpVideoShadowMode(ev) {
   if (ev && ev.stopPropagation) ev.stopPropagation();
   jpvShadowMode = !jpvShadowMode;
   if (!jpvShadowMode) jpvShadowLoop = false;
+  const mm = document.getElementById("app-modal");
+  if (mm && mm.classList.contains("open")) closeModal();
   const host = document.getElementById("radio-review-stage");
   if (host && rvMode === "video") renderRadioJpVideoStage(host);
 }
@@ -15491,8 +15987,16 @@ function cycleJpVideoSubMode(ev) {
     stEl.classList.toggle("ja-only", jpvSubMode === "ja");
     stEl.classList.toggle("sub-hidden", jpvSubMode === "off");
   }
+  const fsSub = document.getElementById("jpv-fs-sub");
+  if (fsSub) {
+    fsSub.classList.toggle("ja-only", jpvSubMode === "ja");
+    fsSub.classList.toggle("sub-hidden", jpvSubMode === "off");
+  }
+  const lbl = jpvSubMode === "bi" ? "日中字幕" : (jpvSubMode === "ja" ? "纯日字幕" : "无字幕");
   const btn = document.getElementById("jpv-sub-btn");
-  if (btn) btn.textContent = jpvSubMode === "bi" ? "日中字幕" : (jpvSubMode === "ja" ? "纯日字幕" : "无字幕");
+  if (btn) btn.textContent = lbl;
+  const fsBtn = document.getElementById("jpv-fs-sub-btn");
+  if (fsBtn) fsBtn.textContent = lbl;
 }
 
 function seekJpVideoToWord(word) {
@@ -15500,6 +16004,8 @@ function seekJpVideoToWord(word) {
   if (!jpv) return;
   const entry = (jpv.target_words || []).find(x => x && x.word === word);
   if (!entry) return;
+  const mm = document.getElementById("app-modal");
+  if (mm && mm.classList.contains("open")) closeModal();
   const times = (Array.isArray(entry.times) && entry.times.length) ? entry.times : [Number(entry.first_sec || 0)];
   const curIdx = Number(jpvWordCycleMap[word] || 0);
   const targetSec = Math.max(0, Number(times[curIdx % times.length] || 0) - 0.15);
@@ -15518,44 +16024,206 @@ function seekJpVideoToWord(word) {
   }
 }
 
-function openJpVideoFullscreen(ev) {
+function openJpVideoSheet(ev) {
   if (ev && ev.stopPropagation) ev.stopPropagation();
   const jpv = getRadioJpVideo();
   if (!jpv) return;
-  openStoryArtModal(-1, {
-    title: jpv.title_ja || "今日日语短片",
-    subtitle: jpv.title_zh || "",
-    img: jpv.poster_url || "",
-    video_url: jpv.video_url || "",
-    vtt_url: jpv.vtt_url || ""
-  });
-}
-
-function openJpVideoWordsSheet() {
-  const jpv = getRadioJpVideo();
-  const mc = document.getElementById("modal-content");
-  if (!jpv || !mc) return;
   const words = Array.isArray(jpv.target_words) ? jpv.target_words : [];
-  if (!words.length) return;
+  const ytList = Array.isArray(jpv.archival_youtube) ? jpv.archival_youtube : [];
   const cues = Array.isArray(jpv.cues) ? jpv.cues : [];
-  const curCue = cues[Math.max(0, jpvLastCueIdx)] || cues[0] || {};
-  const activeHits = new Set(Array.isArray(curCue.hits) ? curCue.hits : []);
-  mc.innerHTML = `
-    <h3 class="modal-h">本片收录词汇 · ${words.length} 词</h3>
-    <p class="zb-sheet-sub">点任意一词，直接跳到它在短片里出现的句子。</p>
-    <div class="jpv-words-sheet-grid">
-      ${words.map(w => `
-        <button type="button" class="jpv-chip${activeHits.has(w.word) ? " is-now" : ""}" data-word="${escapeHtml(w.word)}" onclick="closeModal();seekJpVideoToWord('${escapeHtml(w.word)}')">
-          <span>${escapeHtml(w.word)}</span>
-          ${Number(w.hits || 1) >= 2 ? `<span class="jpv-chip-cnt">×${Number(w.hits)}</span>` : ""}
-        </button>
-      `).join("")}
-    </div>
-    <div class="dock-row">
-      <button type="button" class="ghost-btn" style="flex:1;" onclick="closeModal()">返回短片</button>
+  const curCue = (jpvLastCueIdx >= 0 && cues[jpvLastCueIdx]) ? cues[jpvLastCueIdx] : null;
+  const activeHits = new Set(curCue && Array.isArray(curCue.hits) ? curCue.hits : []);
+
+  const wordsSecHTML = words.length
+    ? `<div class="jpv-sheet-sec">
+         <div class="jpv-sheet-sec-head">
+           <span>本片收录词汇 · 点词跳播</span>
+           <span>${words.length} 词</span>
+         </div>
+         <div class="jpv-word-chips">
+           ${words.map(w => `
+             <button type="button" class="jpv-chip${activeHits.has(w.word) ? " is-now" : ""}" data-word="${escapeHtml(w.word)}" onclick="seekJpVideoToWord('${escapeHtml(w.word)}')">
+               <span>${escapeHtml(w.word)}</span>
+               ${Number(w.hits || 1) >= 2 ? `<span class="jpv-chip-cnt">×${Number(w.hits)}</span>` : ""}
+             </button>
+           `).join("")}
+         </div>
+       </div>`
+    : "";
+
+  const ytSecHTML = ytList.length
+    ? `<div class="jpv-sheet-sec">
+         <div class="jpv-sheet-sec-head">
+           <span>历史原片 · YouTube 横屏</span>
+           <span>${ytList.length} 段</span>
+         </div>
+         <div class="jpv-yt-list">
+           ${ytList.map((yt, idx) => `
+             <button type="button" class="jpv-yt-row" onclick="openYtArchivalViewer(${idx})">
+               <div class="jpv-yt-text">
+                 <span class="jpv-yt-title">${escapeHtml(yt.title || "历史影像档案")}</span>
+                 <span class="jpv-yt-meta">${escapeHtml(yt.source || "历史档案")}${yt.dur ? ` · ${escapeHtml(yt.dur)}` : ""}</span>
+               </div>
+               <span class="jpv-yt-chev" aria-hidden="true">›</span>
+             </button>
+           `).join("")}
+         </div>
+       </div>`
+    : "";
+
+  const content = document.getElementById("modal-content");
+  if (!content) return;
+  content.innerHTML = `
+    <div class="jpv-sheet">
+      <div class="jpv-sheet-head">
+        <span class="jpv-sheet-title">短片词汇与播放</span>
+        <button type="button" class="jpv-sheet-close" onclick="closeModal()" aria-label="关闭">×</button>
+      </div>
+      <div class="jpv-sheet-sec">
+        <div class="jpv-ctrl-row">
+          <span class="jpv-ctrl-lbl">语速</span>
+          <div class="jpv-seg-group">
+            ${[0.85, 1.0, 1.1].map(sp => `<button type="button" class="jpv-seg-btn jpv-spd-opt${jpvSpeed === sp ? " is-on" : ""}" data-spd="${sp}" onclick="setJpVideoSpeed(${sp}, event)">${sp}x</button>`).join("")}
+          </div>
+        </div>
+        <div class="jpv-ctrl-row" style="margin-top:6px;">
+          <span class="jpv-ctrl-lbl">影子跟读（盲听跟念）</span>
+          <div class="jpv-seg-group">
+            <button type="button" class="jpv-seg-btn${jpvShadowMode ? " is-on" : ""}" onclick="toggleJpVideoShadowMode(event)">${jpvShadowMode ? "已开启" : "开启"}</button>
+            <button type="button" class="jpv-seg-btn" onclick="closeModal(); if(jpvVideoEl){jpvVideoEl.currentTime=0;jpvVideoEl.muted=false;jpvVideoEl.play().catch(()=>{});}">重播</button>
+          </div>
+        </div>
+      </div>
+      ${wordsSecHTML}
+      ${ytSecHTML}
     </div>
   `;
   showAppModal();
+}
+
+function openJpVideoWordsSheet(ev) {
+  openJpVideoSheet(ev);
+}
+
+function openJpVideoLandscape(ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  const jpv = getRadioJpVideo();
+  const overlay = document.getElementById("jpv-fs-overlay");
+  if (!jpv || !overlay) return;
+  jpvLandscapeOpen = true;
+  applyPortraitGuard();
+  try {
+    if (screen && screen.orientation && typeof screen.orientation.unlock === "function") {
+      screen.orientation.unlock();
+    }
+  } catch (e) {}
+
+  const cues = Array.isArray(jpv.cues) ? jpv.cues : [];
+  const initCue = (jpvLastCueIdx >= 0 && cues[jpvLastCueIdx]) ? cues[jpvLastCueIdx] : (cues[0] || { ja: "", zh: "" });
+  const subCls = jpvSubMode === "ja" ? " ja-only" : (jpvSubMode === "off" ? " sub-hidden" : "");
+  const subLbl = jpvSubMode === "bi" ? "日中字幕" : (jpvSubMode === "ja" ? "纯日字幕" : "无字幕");
+
+  overlay.innerHTML = `
+    <div class="jpv-fs-top">
+      <span class="jpv-fs-title" lang="ja">${escapeHtml(jpv.title_ja || "今日日语短片")}</span>
+      <div class="jpv-fs-actions">
+        <button type="button" class="jpv-fs-pill" id="jpv-fs-sub-btn" onclick="cycleJpVideoSubMode(event)">${subLbl}</button>
+        <button type="button" class="jpv-fs-close" onclick="closeJpVideoLandscape()" aria-label="退出横屏">×</button>
+      </div>
+    </div>
+    <div class="jpv-fs-stage">
+      <div class="jpv-fs-video-box" id="jpv-fs-slot" onclick="toggleJpVideoPlay(event)"></div>
+    </div>
+    <div class="jpv-fs-sub${subCls}" id="jpv-fs-sub">
+      <div class="jpv-fs-sub-ja" lang="ja" id="jpv-fs-sub-ja">${escapeHtml(initCue.ja || "")}</div>
+      <div class="jpv-fs-sub-zh" id="jpv-fs-sub-zh">${escapeHtml(initCue.zh || "")}</div>
+    </div>
+    <div class="jpv-fs-rail-wrap">
+      <div class="jpv-scrub-rail" id="jpv-fs-scrub-rail" onclick="scrubJpVideoRail(event, this)" role="slider" aria-label="横屏进度">
+        <div class="jpv-scrub-track"><div class="jpv-scrub-fill" id="jpv-fs-rail-fill"><span class="jpv-scrub-knob"></span></div></div>
+      </div>
+      <div class="jpv-time-row">
+        <span id="jpv-fs-time-cur">00:00</span>
+        <span>${escapeHtml(jpv.duration_label || "02:00")}</span>
+      </div>
+    </div>
+  `;
+  const fsSlot = document.getElementById("jpv-fs-slot");
+  const v = ensureJpVideoEl();
+  if (fsSlot && v) {
+    fsSlot.innerHTML = "";
+    fsSlot.appendChild(v);
+  }
+  bindJpVideoScrubDrag(document.getElementById("jpv-fs-scrub-rail"));
+  overlay.classList.add("open");
+  overlay.setAttribute("aria-hidden", "false");
+  pushNavLayer("jpv_fs");
+  syncJpVideoCue(v ? (v.currentTime || 0) : 0);
+}
+
+function openYtArchivalViewer(idx) {
+  const jpv = getRadioJpVideo();
+  const ytList = (jpv && Array.isArray(jpv.archival_youtube)) ? jpv.archival_youtube : [];
+  const yt = ytList[Number(idx || 0)];
+  const overlay = document.getElementById("jpv-fs-overlay");
+  if (!yt || !yt.vid || !overlay) return;
+  const mm = document.getElementById("app-modal");
+  if (mm && mm.classList.contains("open")) closeModal();
+  if (jpvVideoEl && !jpvVideoEl.paused) {
+    try { jpvVideoEl.pause(); } catch (e) {}
+  }
+  jpvLandscapeOpen = true;
+  applyPortraitGuard();
+  try {
+    if (screen && screen.orientation && typeof screen.orientation.unlock === "function") {
+      screen.orientation.unlock();
+    }
+  } catch (e) {}
+
+  const stSec = Math.max(0, Number(yt.start || 0));
+  const embedUrl = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(yt.vid)}?start=${stSec}&autoplay=1&rel=0&playsinline=1&modestbranding=1`;
+  const watchUrl = `https://www.youtube.com/watch?v=${encodeURIComponent(yt.vid)}${stSec > 0 ? `&t=${stSec}s` : ""}`;
+  overlay.innerHTML = `
+    <div class="jpv-fs-top">
+      <span class="jpv-fs-title">${escapeHtml(yt.title || "历史原片")}</span>
+      <div class="jpv-fs-actions">
+        <a class="jpv-fs-pill" href="${watchUrl}" target="_blank" rel="noopener">YouTube 打开</a>
+        <button type="button" class="jpv-fs-close" onclick="closeJpVideoLandscape()" aria-label="关闭原片">×</button>
+      </div>
+    </div>
+    <div class="jpv-fs-stage">
+      <div class="jpv-fs-video-box">
+        <iframe src="${embedUrl}" title="${escapeHtml(yt.title || "历史影像")}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe>
+      </div>
+    </div>
+    <div class="jpv-fs-sub">
+      <div class="jpv-fs-sub-zh">${escapeHtml(yt.source || "历史档案")} · 横握手机即可宽屏观看</div>
+    </div>
+  `;
+  overlay.classList.add("open");
+  overlay.setAttribute("aria-hidden", "false");
+  pushNavLayer("jpv_fs");
+}
+
+function closeJpVideoLandscape(fromPopstate) {
+  const overlay = document.getElementById("jpv-fs-overlay");
+  if (!overlay) return;
+  const slot = document.getElementById("jpv-slot");
+  if (slot && jpvVideoEl && jpvVideoEl.parentNode !== slot) {
+    slot.innerHTML = "";
+    slot.appendChild(jpvVideoEl);
+  }
+  overlay.classList.remove("open");
+  overlay.setAttribute("aria-hidden", "true");
+  overlay.innerHTML = "";
+  jpvLandscapeOpen = false;
+  tryLockPortrait();
+  applyPortraitGuard();
+  if (!fromPopstate) popNavLayer("jpv_fs");
+}
+
+function openJpVideoFullscreen(ev) {
+  openJpVideoLandscape(ev);
 }
 
 function setRadioImmersiveChrome(isImmersive) {
@@ -15605,6 +16273,7 @@ function renderRadioJpVideoStage(host) {
   const cues = Array.isArray(jpv.cues) ? jpv.cues : [];
   const initCue = cues[Math.max(0, jpvLastCueIdx)] || cues[0] || { ja: jpv.title_ja || "", zh: jpv.title_zh || "", hits: [] };
   const words = Array.isArray(jpv.target_words) ? jpv.target_words : [];
+  const ytList = Array.isArray(jpv.archival_youtube) ? jpv.archival_youtube : [];
   const subLabel = jpvSubMode === "bi" ? "日中字幕" : (jpvSubMode === "ja" ? "纯日字幕" : "无字幕");
   const subStageCls = (jpvShadowMode ? " shadow-blind" : "") + (jpvSubMode === "ja" ? " ja-only" : (jpvSubMode === "off" ? " sub-hidden" : ""));
   const shadDone = isJpVideoShadowDoneToday();
@@ -15617,17 +16286,26 @@ function renderRadioJpVideoStage(host) {
          </div>
        </div>`
     : "";
-  const chipsHTML = words.length
-    ? `<button type="button" class="jpv-words-trigger" id="jpv-words-trigger" onclick="openJpVideoWordsSheet()">
-         <span class="jpv-words-dot" aria-hidden="true"></span>
-         <span>本片 ${words.length} 词 · 点词跳播 ▾</span>
-       </button>`
-    : "";
+
+  const durSec = Math.max(1, Number(jpv.duration_sec || 80));
+  const ticks = [];
+  for (let i = 1; i < cues.length; i++) {
+    if (cues[i].ch !== cues[i - 1].ch) {
+      const pct = Math.max(2, Math.min(98, (Number(cues[i].s || 0) / durSec) * 100));
+      ticks.push(`<span class="jpv-scrub-tick" style="left:${pct.toFixed(1)}%"></span>`);
+    }
+  }
+
+  const sheetLbl = ytList.length
+    ? "词汇与原片"
+    : (words.length ? `词汇 ${words.length}` : "更多");
+  const ctaAction = st.done ? "openRadioSpeaking(0)" : "openRadioReview(false)";
+  const ctaLabel = st.done ? "开口跟读 2 句" : "去重点过点";
 
   host.innerHTML = `
     <div class="meta-bar">
       <span class="overline ok" id="jpv-ch-overline">${jpvShadowMode ? `影子跟读 · ${jpvSpeed}x` : "今日日语短片 · 全日语"}</span>
-      <span class="overline" id="jpv-time-lbl">00:00 / ${escapeHtml(jpv.duration_label || "01:30")}</span>
+      <span class="overline" id="jpv-spd-tag">${jpvSpeed !== 1.0 ? `${jpvSpeed}x` : ""}</span>
     </div>
 
     <div class="jpv-stage">
@@ -15636,12 +16314,20 @@ function renderRadioJpVideoStage(host) {
         <div class="rv-cinema-slot" id="jpv-slot">
           ${jpv.poster_url ? `<img class="rv-cinema-poster" src="${escapeHtml(jpv.poster_url)}" alt="" />` : ""}
         </div>
-        <div class="rv-cinema-ctrls">
-          <button type="button" class="rv-cinema-pill" id="jpv-spd-btn" onclick="toggleJpVideoSpeed(event)">${jpvSpeed}x</button>
-          <button type="button" class="rv-cinema-pill" onclick="openJpVideoFullscreen(event)" aria-label="全屏播放">⤢</button>
-        </div>
         <div class="rv-cinema-pause-badge" aria-hidden="true">▶</div>
-        <div class="rv-cinema-rail jpv-scrub-rail" id="jpv-scrub-rail" onclick="scrubJpVideoRail(event)" role="slider" aria-label="短片进度"><div class="rv-cinema-fill" id="jpv-rail-fill"></div></div>
+      </div>
+
+      <div class="jpv-scrub-wrap">
+        <div class="jpv-scrub-rail" id="jpv-scrub-rail" onclick="scrubJpVideoRail(event, this)" role="slider" aria-label="短片进度">
+          <div class="jpv-scrub-track">
+            ${ticks.join("")}
+            <div class="jpv-scrub-fill" id="jpv-rail-fill"><span class="jpv-scrub-knob"></span></div>
+          </div>
+        </div>
+        <div class="jpv-time-row">
+          <span id="jpv-time-cur">00:00</span>
+          <span id="jpv-time-tot">${escapeHtml(jpv.duration_label || "02:00")}</span>
+        </div>
       </div>
 
       <div class="jpv-sub-stage${subStageCls}" id="jpv-sub-stage" onclick="if(jpvShadowMode){peekJpVideoShadowLine(event);} if(event.target && event.target.closest && event.target.closest('.w-tok') && jpvVideoEl && !jpvVideoEl.paused) jpvVideoEl.pause()">
@@ -15649,25 +16335,26 @@ function renderRadioJpVideoStage(host) {
         <div class="jpv-sub-zh" id="jpv-sub-zh">${escapeHtml(initCue.zh || "")}</div>
       </div>
       ${shadowBarHTML}
-
       ${lexBoxHTML("rv-inline-lex")}
-      ${chipsHTML}
     </div>
 
-    <div class="vc-aux-row">
-      ${(!st.done && Array.isArray(DATA.radio && DATA.radio.speaking_prompts) && DATA.radio.speaking_prompts.length) ? `<button type="button" class="vc-aux-btn seal" onclick="openRadioSpeaking(0)">开口2句</button>` : `<span></span>`}
-      <div class="vc-aux-right">
-        <button type="button" class="vc-aux-btn${jpvShadowMode ? " is-on" : ""}" id="jpv-shad-btn" onclick="toggleJpVideoShadowMode(event)">影子跟读</button>
-        <button type="button" class="vc-aux-btn" id="jpv-sub-btn" onclick="cycleJpVideoSubMode(event)">${subLabel}</button>
-        <button type="button" class="vc-aux-btn replay" onclick="if(jpvVideoEl){jpvVideoEl.currentTime=0;jpvVideoEl.muted=false;jpvVideoEl.play().catch(()=>{});}">重播</button>
+    <div class="jpv-thumb-bar">
+      <button type="button" class="jpv-back-link" onclick="closeRadioReview()">‹ 随身听</button>
+      <div class="jpv-thumb-right">
+        <button type="button" class="jpv-lite-btn" id="jpv-sub-btn" onclick="cycleJpVideoSubMode(event)">${subLabel}</button>
+        <button type="button" class="jpv-lite-btn${jpvShadowMode ? " is-on" : ""}" id="jpv-more-btn" onclick="openJpVideoSheet(event)">${ytList.length ? `<span class="jpv-dot-pip" aria-hidden="true"></span>` : ""}${sheetLbl} ▾</button>
+        <button type="button" class="jpv-icon-circle" id="jpv-fs-btn" onclick="openJpVideoLandscape(event)" aria-label="横屏全屏">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2.5 6V3.5C2.5 2.95 2.95 2.5 3.5 2.5H6M10 2.5H12.5C13.05 2.5 13.5 2.95 13.5 3.5V6M13.5 10V12.5C13.5 13.05 13.05 13.5 12.5 13.5H10M6 13.5H3.5C2.95 13.5 2.5 13.05 2.5 12.5V10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </button>
       </div>
     </div>
 
-    <div class="vc-dock">
-      <button type="button" class="vc-btn mid" onclick="closeRadioReview()">回随身听</button>
-      <button type="button" class="vc-btn ok" onclick="${st.done ? "openRadioSpeaking(0)" : "openRadioReview(false)"}">${st.done ? "开口跟读 2 句" : "去重点过点"}</button>
+    <div class="jpv-primary-dock">
+      <button type="button" class="jpv-primary-cta" onclick="${ctaAction}">${ctaLabel}</button>
     </div>
   `;
+
+  bindJpVideoScrubDrag(document.getElementById("jpv-scrub-rail"));
 
   const slot = document.getElementById("jpv-slot");
   if (slot) {
@@ -15957,6 +16644,7 @@ function advanceRadioReviewPointer() {
 
 function openRadioReview(forceRestart) {
   hideZenToast();
+  if (jpvLandscapeOpen && typeof closeJpVideoLandscape === "function") closeJpVideoLandscape(true);
   const items = getRadioReviewItems();
   if (!items.length) return;
   if (radioInitialized && !radioPlayer.paused) {
@@ -15987,6 +16675,7 @@ function openRadioReview(forceRestart) {
 }
 
 function closeRadioReview() {
+  if (jpvLandscapeOpen && typeof closeJpVideoLandscape === "function") closeJpVideoLandscape(true);
   if (typeof stopRadioVoiceCoach === "function") stopRadioVoiceCoach(false);
   JA_ASR.stop();
   stopRadioReviewAudio();
@@ -16010,6 +16699,7 @@ function closeRadioReview() {
 }
 
 function openRadioSpeaking(startIdx) {
+  if (jpvLandscapeOpen && typeof closeJpVideoLandscape === "function") closeJpVideoLandscape(true);
   const prompts = getRadioSpeakingPrompts();
   if (!prompts.length) return;
   if (radioInitialized && !radioPlayer.paused) {
@@ -18279,6 +18969,7 @@ function switchMode(m, autoPlayRadio) {
     stopVocabAudioAndTimers();
   }
   if (m !== "radio") {
+    if (jpvLandscapeOpen && typeof closeJpVideoLandscape === "function") closeJpVideoLandscape(true);
     if (typeof stopRadioVoiceCoach === "function") stopRadioVoiceCoach(true);
     stopRadioReviewAudio();
   }
@@ -29382,7 +30073,7 @@ if (!chapHtml13.includes('id="radio-jpv-chap"') || !chapHtml13.includes('日语�
 }
 sb.openRadioJpVideo();
 const jpvHtml = (els['radio-review-stage'] && els['radio-review-stage'].innerHTML) || '';
-if (!jpvHtml.includes('jpv-frame') || !jpvHtml.includes('jpv-sub-ja') || !jpvHtml.includes('jpv-words-trigger') || !jpvHtml.includes('日中字幕') || jpvHtml.includes('—')) {
+if (!jpvHtml.includes('jpv-frame') || !jpvHtml.includes('jpv-sub-ja') || !jpvHtml.includes('jpv-scrub-rail') || !jpvHtml.includes('jpv-thumb-bar') || !jpvHtml.includes('日中字幕') || jpvHtml.includes('—')) {
   throw new Error('Self-test 13 failed: All-Japanese Short Video Theater missing core controls or contains em dash!');
 }
 sb.openJpVideoWordsSheet();
@@ -29404,19 +30095,23 @@ sb.cycleJpVideoSubMode();
 if (els['jpv-sub-stage'].classList.contains('ja-only') || els['jpv-sub-stage'].classList.contains('sub-hidden')) {
   throw new Error('Self-test 13 failed: cycleJpVideoSubMode off->bi did not restore bilingual subtitles!');
 }
-// Speed toggle 1x -> 0.85x -> 1x & word-jump seek
+// Speed toggle 1x -> 0.85x -> 1.1x -> 1x & word-jump seek
 sb.toggleJpVideoSpeed();
-if (els['jpv-spd-btn'].textContent !== '0.85x') {
+if (els['jpv-spd-tag'].textContent !== '0.85x') {
   throw new Error('Self-test 13 failed: toggleJpVideoSpeed did not switch to 0.85x!');
+}
+sb.toggleJpVideoSpeed();
+if (els['jpv-spd-tag'].textContent !== '1.1x') {
+  throw new Error('Self-test 13 failed: toggleJpVideoSpeed did not switch to 1.1x!');
 }
 sb.toggleJpVideoSpeed();
 sb.seekJpVideoToWord(jpv.target_words[0].word);
 sb.openJpVideoFullscreen();
-const jpvModHtml = (els['modal-content'] && els['modal-content'].innerHTML) || '';
-if (!jpvModHtml.includes('<video') || !jpvModHtml.includes('<track kind="subtitles"') || !jpvModHtml.includes('srclang="ja"')) {
-  throw new Error('Self-test 13 failed: fullscreen JP video modal missing native <video> and ja WebVTT <track>!');
+const jpvFsHtml = (els['jpv-fs-overlay'] && els['jpv-fs-overlay'].innerHTML) || '';
+if (!els['jpv-fs-overlay'].classList.contains('open') || !jpvFsHtml.includes('jpv-fs-slot') || !jpvFsHtml.includes('jpv-fs-sub-ja') || !jpvFsHtml.includes('jpv-fs-scrub-rail')) {
+  throw new Error('Self-test 13 failed: landscape JP video theater overlay missing slot, subtitles, or scrub rail!');
 }
-sb.closeModal();
+sb.closeJpVideoLandscape();
 sb.closeRadioReview();
 
 // Self-test 14: Adaptive Engine v7.0 Closed-Loop Invariants (Blind-Front Review Pass + Transfer-Variant Retry + Confusion Cue + Vocab Spacing)
@@ -30901,11 +31596,45 @@ if (gpods37.length > 0) {
   }
   sb.closeModal();
 }
+
+// Self-test 41 (v99): Jobs x Kyoto Zen Video Theater + Historical YouTube Archives + True Landscape Mode
+{
+  sb.switchMode('radio', false);
+  sb.openRadioJpVideo();
+  const jpvStage41 = (els['radio-review-stage'] && els['radio-review-stage'].innerHTML) || '';
+  if (jpvStage41.includes('rv-cinema-ctrls') || jpvStage41.includes('回随身听') || !jpvStage41.includes('jpv-thumb-bar') || !jpvStage41.includes('jpv-primary-cta')) {
+    throw new Error('Self-test 41 failed: JP Video theater must remove corner pill overlay & dual boxed bottom buttons in favor of quiet thumb bar + single CTA');
+  }
+  sb.openJpVideoSheet();
+  const sheetHtml41 = (els['modal-content'] && els['modal-content'].innerHTML) || '';
+  if (!sheetHtml41.includes('jpv-chip') || !sheetHtml41.includes('历史原片') || sheetHtml41.includes('—')) {
+    throw new Error('Self-test 41 failed: JP Video bottom sheet missing vocab jump chips or curated historical YouTube archives');
+  }
+  sb.closeModal();
+  sb.openJpVideoLandscape();
+  if (!vm.runInNewContext('jpvLandscapeOpen', sb) || !els['jpv-fs-overlay'].classList.contains('open')) {
+    throw new Error('Self-test 41 failed: openJpVideoLandscape did not unlock portrait guard or open #jpv-fs-overlay');
+  }
+  sb.closeJpVideoLandscape();
+  if (vm.runInNewContext('jpvLandscapeOpen', sb) || els['jpv-fs-overlay'].classList.contains('open')) {
+    throw new Error('Self-test 41 failed: closeJpVideoLandscape did not restore portrait lock or close overlay');
+  }
+  sb.openYtArchivalViewer(0);
+  const ytFsHtml41 = (els['jpv-fs-overlay'] && els['jpv-fs-overlay'].innerHTML) || '';
+  if (!vm.runInNewContext('jpvLandscapeOpen', sb) || !ytFsHtml41.includes('youtube-nocookie.com/embed/')) {
+    throw new Error('Self-test 41 failed: openYtArchivalViewer(0) did not open landscape YouTube archival embed');
+  }
+  sb.closeJpVideoLandscape();
+  if (vm.runInNewContext('jpvLandscapeOpen', sb)) {
+    throw new Error('Self-test 41 failed: closing YouTube archival viewer did not restore portrait lock');
+  }
+  sb.closeRadioReview();
+}
 """
     subprocess.run(["node", "-", HTML_PATH], input=smoke_js, text=True, check=True)
 
 sw_path = os.path.join(BASE_DIR, "sw.js")
-SW_CACHE_NAME = "n3-studio-tutor-v98"
+SW_CACHE_NAME = "n3-studio-tutor-v99"
 if not _IS_SIM_OUTPUT and os.path.exists(sw_path):
     with open(sw_path, encoding="utf-8") as sf:
         sw_src = sf.read()

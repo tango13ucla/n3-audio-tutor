@@ -717,14 +717,17 @@ except Exception:
 
 CURATED_BEAT_STORYBOARDS: dict[str, list[dict[str, Any]]] = {}
 CURATED_CHAPTER_POSTERS: dict[str, dict[int, str]] = {}
+CURATED_YOUTUBE_ARCHIVES: dict[str, list[dict[str, Any]]] = {}
 try:
     from visual_storyboards_vault import (
         CURATED_BEAT_STORYBOARDS as _BEAT_BOARDS,
         CURATED_CHAPTER_POSTERS as _CH_POSTERS,
+        CURATED_YOUTUBE_ARCHIVES as _YT_ARCHIVES,
         VERIFIED_ARCHIVAL_FOOTAGE_V4 as _V4_FOOTAGE,
     )
     CURATED_BEAT_STORYBOARDS.update(_BEAT_BOARDS)
     CURATED_CHAPTER_POSTERS.update(_CH_POSTERS)
+    CURATED_YOUTUBE_ARCHIVES.update(_YT_ARCHIVES)
     CURATED_ARCHIVAL_FOOTAGE.update(_V4_FOOTAGE)
 except ImportError:
     pass
@@ -742,6 +745,7 @@ def _find_ffmpeg() -> str:
 
 
 _WM_LAST_MEDIA_TS = 0.0
+_IA_LAST_MEDIA_TS = 0.0
 
 
 def _pace_wikimedia_media(min_gap_sec: float = 1.6) -> None:
@@ -752,6 +756,16 @@ def _pace_wikimedia_media(min_gap_sec: float = 1.6) -> None:
     if wait > 0:
         time.sleep(wait)
     _WM_LAST_MEDIA_TS = time.monotonic()
+
+
+def _pace_ia_media(min_gap_sec: float = 1.1) -> None:
+    """Polite pacing for archive.org streaming to avoid connection throttling."""
+    global _IA_LAST_MEDIA_TS
+    now = time.monotonic()
+    wait = min_gap_sec - (now - _IA_LAST_MEDIA_TS)
+    if wait > 0:
+        time.sleep(wait)
+    _IA_LAST_MEDIA_TS = time.monotonic()
 
 
 def _http_get_json(url: str, timeout: int = 10) -> Any:
@@ -1117,17 +1131,21 @@ def _download_chapter_shots(
     return saved
 
 
-_IA_URL_CACHE: dict[str, str] = {}
+_IA_INFO_CACHE: dict[str, tuple[str, float]] = {}
 _WM_VIDEO_INFO_CACHE: dict[str, tuple[str, float]] = {}
 
 
-def _resolve_ia_mp4_url(ident: str) -> str:
-    """Resolve a direct streaming MP4 URL for a public-domain Internet Archive archival film."""
-    if ident in _IA_URL_CACHE:
-        return _IA_URL_CACHE[ident]
+def _resolve_ia_video_info(ident: str) -> tuple[str, float]:
+    """
+    Resolve a direct streaming MP4 URL + duration for a public-domain Internet Archive archival film.
+    Fixes double-percent-encoding (`%20` -> `%2520`) and picks crisp video streams over tiny 512kb rips.
+    """
+    if ident in _IA_INFO_CACHE:
+        return _IA_INFO_CACHE[ident]
     try:
+        _pace_ia_media(0.8)
         meta_u = f"https://archive.org/metadata/{urllib.parse.quote(ident)}/files"
-        data = _http_get_json(meta_u, timeout=10)
+        data = _http_get_json(meta_u, timeout=14)
         files = data.get("result") or []
         mp4s = [
             f for f in files
@@ -1137,14 +1155,33 @@ def _resolve_ia_mp4_url(ident: str) -> str:
         if not mp4s:
             mp4s = [f for f in files if str(f.get("name") or "").lower().endswith(".mp4")]
         if not mp4s:
-            return ""
-        mp4s.sort(key=lambda f: int(f.get("size") or 999_999_999))
-        name = str(mp4s[0]["name"])
-        url = f"https://archive.org/download/{urllib.parse.quote(ident)}/{urllib.parse.quote(name)}"
-        _IA_URL_CACHE[ident] = url
-        return url
+            return "", 0.0
+
+        def _ia_rank(f: dict[str, Any]) -> tuple[int, int, int]:
+            w = int(float(f.get("width") or 0))
+            sz = int(float(f.get("size") or 999_999_999))
+            good_res = 1 if w >= 480 else (0 if w >= 300 else -1)
+            size_ok = 1 if sz <= 650_000_000 else 0
+            return (good_res, size_ok, -abs(w - 720) if w > 0 else -sz // 1_000_000)
+
+        mp4s.sort(key=_ia_rank, reverse=True)
+        pick = mp4s[0]
+        raw_name = str(pick["name"])
+        url = f"https://archive.org/download/{urllib.parse.quote(ident)}/{urllib.parse.quote(raw_name, safe='/')}"
+        try:
+            dur = float(pick.get("length") or 0.0)
+        except (TypeError, ValueError):
+            dur = 0.0
+        _IA_INFO_CACHE[ident] = (url, dur)
+        return url, dur
     except Exception:
-        return ""
+        return "", 0.0
+
+
+def _resolve_ia_mp4_url(ident: str) -> str:
+    """Resolve a direct streaming MP4 URL for a public-domain Internet Archive archival film."""
+    url, _dur = _resolve_ia_video_info(ident)
+    return url
 
 
 def _resolve_wm_video_info(file_title: str) -> tuple[str, float]:
@@ -1201,7 +1238,7 @@ def _resolve_wm_video_url(file_title: str) -> str:
 def _detect_video_active_crop(clip_path: str, ffmpeg_bin: str) -> tuple[bool, tuple[int, int, int, int] | None]:
     """
     Sample 4 evenly-spaced frames from an extracted clip to:
-      1. Reject blackout frames, white film tears, or corrupt decodes.
+      1. Reject blackout frames, white film tears, corrupt decodes, OR static-image audiobook MP4s.
       2. Compute the active non-black bounding box (w, h, x, y) to trim 4:3 pillarboxes cleanly!
     Returns (is_clean, crop_box_or_None).
     """
@@ -1231,12 +1268,16 @@ def _detect_video_active_crop(clip_path: str, ffmpeg_bin: str) -> tuple[bool, tu
                 with Image.open(fp) as im:
                     orig_w, orig_h = im.size
                     frames_rgb.append(np.asarray(im.convert("L"), dtype=np.float32))
-        if len(frames_rgb) < 2 or orig_w < 320 or orig_h < 180:
+        if len(frames_rgb) < 2 or orig_w < 300 or orig_h < 180:
             return False, None
 
         # Check for white film-tear flashes or total blackout
         means = [float(f.mean()) for f in frames_rgb]
         if any(m > 240.0 or m < 6.0 for m in means):
+            return False, None
+        # Reject static-picture audiobook/slideshow MP4s (zero motion across the clip)
+        diffs = [float(np.abs(frames_rgb[j + 1] - frames_rgb[j]).mean()) for j in range(len(frames_rgb) - 1)]
+        if max(diffs) < 1.35:
             return False, None
         # Compute median luminance frame to detect static pillarboxes / letterboxes cleanly
         med = np.median(np.stack(frames_rgb, axis=0), axis=0)
@@ -1276,8 +1317,8 @@ def _extract_verified_video_clip(
 ) -> bool:
     """
     Download & verify a crisp 1280x720 24fps H.264 clip from Wikimedia Commons (720p/1080p VP9
-    derivative) or Internet Archive with polite rate-limit pacing, 429 retry, and automatic
-    pillarbox/film-border cropping + glitch audit.
+    derivative) or Internet Archive (real historical films) with polite rate-limit pacing,
+    429/timeout retry, static-MP4 rejection, and automatic pillarbox/film-border cropping.
     """
     if not ffmpeg_bin or os.path.basename(ffmpeg_bin) == "true":
         return False
@@ -1286,7 +1327,7 @@ def _extract_verified_video_clip(
     if src == "wm":
         media_url, dur_avail = _resolve_wm_video_info(ident)
     elif src == "ia":
-        media_url = _resolve_ia_mp4_url(ident)
+        media_url, dur_avail = _resolve_ia_video_info(ident)
     else:
         return False
     if not media_url:
@@ -1297,14 +1338,15 @@ def _extract_verified_video_clip(
     if dur_avail > 0 and eff_ss + clip_dur + 0.5 > dur_avail:
         eff_ss = max(0, int(dur_avail - clip_dur - 0.8))
 
+    min_w, min_h = (310, 210) if src == "ia" else (480, 300)
     raw_mp4 = out_mp4 + ".raw.mp4"
     dl_tmp = out_mp4 + ".src.webm"
     ok_dl = False
     for attempt in range(3):
         if src == "wm":
             _pace_wikimedia_media(2.2 if attempt == 0 else (5.5 if attempt == 1 else 9.0))
-        elif src == "ia" and attempt > 0:
-            time.sleep(2.5 * attempt)
+        elif src == "ia":
+            _pace_ia_media(1.2 if attempt == 0 else (3.5 if attempt == 1 else 6.0))
 
         in_target = media_url
         use_remote_flags = True
@@ -1326,7 +1368,7 @@ def _extract_verified_video_clip(
                 "-user_agent", UA_HEADER["User-Agent"],
                 "-multiple_requests", "1",
                 "-reconnect", "1", "-reconnect_streamed", "1", "-reconnect_delay_max", "2",
-                "-rw_timeout", "12000000",
+                "-rw_timeout", "15000000",
             ])
         cmd.extend([
             "-ss", str(eff_ss),
@@ -1339,10 +1381,10 @@ def _extract_verified_video_clip(
             raw_mp4,
         ])
         try:
-            res = subprocess.run(cmd, timeout=28, check=False)
-            if res.returncode == 0 and os.path.exists(raw_mp4) and os.path.getsize(raw_mp4) > 35000:
+            res = subprocess.run(cmd, timeout=34, check=False)
+            if res.returncode == 0 and os.path.exists(raw_mp4) and os.path.getsize(raw_mp4) > 25000:
                 w, h = _probe_image_dims(raw_mp4, ffmpeg_bin=ffmpeg_bin)
-                if w >= 480 and h >= 300:
+                if w >= min_w and h >= min_h:
                     ok_dl = True
                     break
         except Exception:
@@ -2583,6 +2625,22 @@ async def _build_jp_documentary_video(
         ("前田家", "まえだけ"),
         ("辰巳用水", "たつみようすい"),
         ("鈴木大拙", "すずきだいせつ"),
+        ("鈴木俊隆", "すずきしゅんりゅう"),
+        ("乙川弘文", "おとがわこうぶん"),
+        ("川瀬巴水", "かわせはすい"),
+        ("西芳寺", "さいほうじ"),
+        ("盛田昭夫", "もりたあきお"),
+        ("三宅一生", "みやけいっせい"),
+        ("燕三条", "つばめさんじょう"),
+        ("稲盛和夫", "いなもりかずお"),
+        ("柳宗悦", "やなぎむねよし"),
+        ("葛飾北斎", "かつしかほくさい"),
+        ("桂離宮", "かつらりきゅう"),
+        ("坂口志文", "さかぐちしもん"),
+        ("小渕恵三", "おぶちけいぞう"),
+        ("大野耐一", "おおのたいいち"),
+        ("白石義明", "しらいしよしあき"),
+        ("渋沢栄一", "しぶさわえいいち"),
     )
 
     line_mp3s: list[str] = []
@@ -2909,6 +2967,8 @@ async def _build_jp_documentary_video(
     dur_label = f"{mm:02d}:{ss:02d}"
     poster_url = chapter_posters.get(0) or chapter_posters.get(1) or ""
 
+    yt_archives = [dict(x) for x in (CURATED_YOUTUBE_ARCHIVES.get(storyboard_id) or [])]
+
     return {
         "title_ja": str(script.get("title_ja") or "今日の日本ストーリー"),
         "title_zh": str(script.get("title_zh") or "今日日本故事"),
@@ -2920,9 +2980,11 @@ async def _build_jp_documentary_video(
         "resolution": f"{VID_W}x{VID_H}",
         "audio_channels": 2,
         "cinema_ver": CINEMA_VER,
+        "storyboard_id": storyboard_id,
         "shot_count": n_shots,
         "archival_clip_count": archival_clip_count,
         "archival_sources": used_archival_labels,
+        "archival_youtube": yt_archives,
         "stamps": used_stamps,
         "target_words": ranked_words,
         "target_grammar": gram_hits[:6],
