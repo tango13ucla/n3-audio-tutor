@@ -129,7 +129,15 @@
       "uchi18_s3a_kanazawa_part1",
       "uchi18_s3b_kanazawa_part2",
       "uchi18_s4_world_europe_defense"
+    ],
+    "2026-11-28": [
+      "uchi26_s1_news_fallback",
+      "uchi26_s2a_otogawa_zen_part1",
+      "uchi26_s2b_otogawa_next_part2",
+      "uchi26_s3a_hasui_kyoto_part1",
+      "uchi26_s3b_miyake_craft_part2",
+      "uchi26_s4_world_attention_neuro"
     ]
   },
-  "last_date": "2026-11-27"
+  "last_date": "2026-11-28"
 }
